@@ -30,10 +30,19 @@ class CNOT( Operation ):
         self.type = 'cnot'
         # A list of parameter names which are used to evaluate the matrix of the operation
         self.parameters = list()
+        
         # The index of the qubit on which the operation acts (target_qbit >= 0) 
+        if target_qbit >= qbit_num:
+            raise BaseException('target qubit index should be 0<=target_qbit<qbit_num')   
         self.target_qbit = target_qbit
+        
+        
         # The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
+        if control_qbit >= qbit_num:
+            raise BaseException('control qubit index should be 0<=target_qbit<qbit_num')   
         self.control_qbit = control_qbit
+        
+        
         # constructing the matrix of the operation             
         self.matrix = self.composite_cnot( control_qbit, target_qbit )
         
@@ -42,7 +51,7 @@ class CNOT( Operation ):
     # @param qbit_num The number of qubits
     def set_qbit_num( self, qbit_num ):
         # setting the number of qubits
-        self.qbit_num = qbit_num
+        Operation.set_qbit_num( self, qbit_num )
         
         # recreate the operation matrix
         self.matrix = self.composite_cnot( self.control_qbit, self.target_qbit )
@@ -101,14 +110,8 @@ class CNOT( Operation ):
     
     def reorder_qubits( self, qbit_array ):
         
-        # check the number of qubits
-        if len( qbit_array ) != self.qbit_num:
-            raise('Wrong number of qubits')
-        
-        # setting the new value for the target qubit
-        if not(self.target_qbit is None) :
-            self.target_qbit = qbit_array[-self.target_qbit-1]
-        
+        Operation.reorder_qubits( self, qbit_array )
+                
         #% setting the new value for the control qubit
         if not(self.control_qbit is None) :
             self.control_qbit = qbit_array[-self.control_qbit-1]

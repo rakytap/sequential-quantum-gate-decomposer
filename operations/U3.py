@@ -24,7 +24,9 @@ class U3( Operation ):
     ##
     # @brief Constructor of the class.
     # @param qbit_num The number of qubits in the unitaries
-    # @return An instance of the class
+    # @param 'theta' Logical value. Set to true if parameter theta should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case theta = 0 is set.
+    # @param 'phi' Logical value. Set to true if parameter phi should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case phi = 0 is set.
+    # @param 'lambda' Logical value. Set to true if parameter lambda should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case lambda = 0 is set.
     def __init__(self, qbit_num, target_qbit, Theta=False, Phi=False, Lambda=False):
         # number of qubits spanning the matrix of the operation
         self.qbit_num = qbit_num

@@ -43,7 +43,7 @@ class Operation():
         
         # check the number of qubits
         if len( qbit_array ) != self.qbit_num:
-            raise('Wrong number of qubits')
+            raise BaseException('Wrong number of qubits')
         
         # setting the new value for the target qubit
         if self.target_qbit != None :
