@@ -440,11 +440,7 @@ class Decomposition_Base( Operations ):
             
     
        
-    
- # public methods    
 
-
-methods(Static)
     
 
 
@@ -453,13 +449,12 @@ methods(Static)
 # @param operation_mtx The matrix of the operation.
 # @param inpu_matrix The input matrix to be transformed.
 # @return Returns with the transformed matrix
-    def new_matrix = apply_operation( operation_mtx, input_matrix )
+    @staticmethod
+    def apply_operation( operation_mtx, input_matrix ):
         
         # Getting the transfored state upon the transformation given by operation
-        new_matrix = operation_mtx*input_matrix;
+        return np.dot(operation_mtx,input_matrix)
     
-    
- # static methods    
     
     
 
