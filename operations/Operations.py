@@ -155,8 +155,8 @@ class  Operations():
 
 ## list_operation_inverses
 # @brief Lists the operations decomposing the initial unitary. (These operations are the inverse operations of the operations bringing the intial matrix into unity.)
-# ??????????????
-# ?????????????
+# @param parameters The parameters of the operations that should be inverted
+# @param start_index The index of the first inverse operation
     def list_operation_inverses( self, parameters, start_index = 1 ):
                
         parameter_idx = 0;

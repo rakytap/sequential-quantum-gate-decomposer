@@ -1,0 +1,465 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Sun Jun 28 10:57:35 2020
+
+@author: rakytap
+"""
+
+import numpy as np
+from numpy import linalg as LA
+from operations.Operations import Operations
+from scipy.optimize import minimize
+from random import random
+
+##
+# @brief A class containing basic methods for the decomposition process.
+
+class Decomposition_Base( Operations ):
+ 
+    
+
+## Contructor of the class
+# @brief Constructor of the class.
+# @param Umtx The unitary matrix to be decomposed
+# @return An instance of the class
+    def __init__( self, Umtx ):
+        
+        # determine the number of qubits
+        qbit_num = round( np.log2( len(Umtx) ) )
+        self = self@Operations( qbit_num )
+        
+        # the unitary operator to be decomposed
+        self.Umtx = Umtx            
+        
+        # The corrent optimized parameters for the operations
+        self.optimized_parameters = list()
+        
+        # logical value describing whether the decomposition was finalized or not
+        self.decomposition_finalized = False        
+        
+        # error of the unitarity of the final decomposition
+        self.decomposition_error = None
+        
+        # number of finalizing (deterministic) opertaions counted from the top of the array of operations
+        self.finalizing_operations_num = 0
+        
+        # the number of the finalizing (deterministic) parameters counted from the top of the optimized_parameters list
+        self.finalizing_parameters_num = 0
+        
+        # The current minimum of the optimalization problem
+        self.current_minimum = None                       
+        
+        # The global minimum of the optimalization problem
+        self.global_target_minimum = None
+        
+        # logical value describing whether the optimalization problem was solved or not
+        self.optimalization_problem_solved = False;
+        
+        # number of iteratrion loops in the finale optimalization
+        self.iteration_loops = None
+        
+        # The maximal allowed error of the optimalization problem
+        self.optimalization_tolerance = None
+        
+        # Maximal number of iteartions in the optimalization process
+        self.max_iterations = 1e4
+    
+        # number of operators in one sub-layer of the optimalization process
+        self.operation_layer = None
+        
+        # The maximal number of C-NOT gates allowed in the decomposition
+        self.max_layer_num = None
+    
+        
+        
+     
+    
+    
+    
+    
+## finalize_decomposition
+# @brief After the main optimalization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
+    def finalize_decomposition(self):       
+            
+        # get the transformed matrix resulted by the operations in the list
+        matrix_new = self.get_transformed_matrix(self.optimized_parameters, self.operations )    
+          
+        # obtaining the final operations of the decomposition
+        finalizing_operations, finalizing_parameters, matrix_new = self.get_finalizing_operations( matrix_new )
+            
+        # adding the finalizing operations to the list of operations
+        # adding the opeartion block to the operations
+        self.add_operation_to_front( finalizing_operations )
+        self.optimized_parameters = finalizing_parameters.append( self.optimized_parameters )
+        self.parameter_num = len(self.optimized_parameters)
+        self.finalizing_operations_num = len(finalizing_operations)
+        self.finalizing_parameters_num = len(finalizing_parameters)
+        
+        # indicat that the decomposition was finalized    
+        self.decomposition_finalized = True
+            
+        # calculating the final error of the decomposition
+        self.decomposition_error = LA.norm(matrix_new*np.exp(np.complex(0,-np.phase(matrix_new[1,1]))) - np.identity(len(matrix_new))*abs(matrix_new[1,1]))
+            
+        print( 'In the decomposition with error = ' + str(self.decomposition_error) + ' was used ' + str(self.layer_num) + ' layers with '  + str(2*self.layer_num) + ' U3 operations and ' + str(self.layer_num) + ' CNOT gates.' )        
+            
+
+##
+# @brief Lists the operations decomposing the initial unitary. (These operations are the inverse operations of the operations bringing the intial matrix into unity.)
+# @param start_index The index of the first inverse operation
+    def list_operation_inverses( self, start_index = 1 ):
+       
+        Operations.list_operation_inverses(self, self.optimized_parameters, start_index = start_index )
+       
+
+                
+##
+# @brief This method determine the operations needed to rotate the indepent qubits into the state |0>
+# @param mtx The unitary describing indepent qubits.
+# @return [1] The operations needed to rotate the qubits into the state |0>
+# @return [2] The parameters of the U3 operations needed to rotate the qubits into the state |0>
+# @return [3] The resulted diagonalized matrix.
+    def get_finalizing_operations( self, mtx ):
+        
+        # creating block of operations
+        finalizing_operations = operation_block( self.qbit_num )
+                        
+                                    
+        finalizing_parameters = None      
+               
+        # the list of qubits
+        qbit_list = list( range(self.qbit_num-1,-1,-1) )
+        mtx_new = mtx
+        
+        for target_qbit in range(0,self.qbit_num):
+            # contruct the permutation to get the basis for the reordered qbit list
+            qbits_reordered = qbit_list
+            del qbits_reordered[-target_qbit-1]
+            qbits_reordered = qbits_reordered + [target_qbit]
+            bases_reorder_indexes = self.reorder_qubits( qbits_reordered )
+            
+            # construct the 2x2 submatrix
+            matrix_reordered = mtx[bases_reorder_indexes, bases_reorder_indexes]
+            submatrix = matrix_reordered[0:1, 0:1];         
+            
+            
+            # finalize the 2x2 submatrix with z-y-z rotation
+            cos_theta_2 = abs(submatrix[0,0])/np.sqrt(abs(submatrix[0,0])**2 + abs(submatrix[0,1])**2)
+            Theta = 2*np.acos( cos_theta_2 )
+            Phi = np.phase( submatrix[1,0]*np.conj(submatrix[0,0]))
+            Lambda = np.phase( -submatrix[0,1]*np.conj(submatrix[0,0]))
+            parameters_loc = [vartheta, pi-varlambda, pi-varphi]
+            u3_loc = U3( self.qbit_num, target_qbit, 'Theta', True, 'Phi', True, 'Lambda', True)           
+            
+            # adding the new operation to the list of finalizing operations
+            finalizing_parameters = parameters_loc + finalizing_parameters
+            finalizing_operations.add_operation_to_front( u3_loc )
+            
+            
+            # get the new matrix
+            mtx_new = self.apply_operation( u3_loc.matrix(parameters_loc), mtx_new )    
+            
+            return finalizing_operations,finalizing_parameters, mtx_new
+            
+        
+                
+    
+        
+    
+    
+
+    
+## solve_optimalization_problem
+# @brief This method can be used to solve the main optimalization problem which is devidid into sub-layer optimalization processes. (The aim of the optimalization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute @optimized_parameters.
+# @param varargin Cell array of optional parameters:
+# @param 'optimalization_problem' def handle of the cost def to be optimalized
+# @param 'solution_guess' Array of guessed parameters
+    def solve_optimalization_problem(self, optimalization_problem = self.optimalization_problem, solution_guess=np.zeros(self.parameter_num)): 
+        
+        if len(self.operations) == 0:
+            return
+        
+        
+        # array containing minimums to check convergence of the solution
+        minimum_vec = [None]*10
+               
+        # store the operations
+        operations = self.operations
+        
+        # store the number of parameters
+        parameter_num = self.parameter_num  
+        
+        # store the optimized parameters
+        optimized_parameters = solution_guess
+        
+        pre_operation_parameter_num = 0
+        
+        
+        for iter_idx in range(0,self.max_iterations+1):
+            
+            # determine the index of the current block under optimalization
+            block_idx = (iter_idx % (len(operations)/self.operation_layer) ) + 1
+            
+            # determine the number of free parameters
+            block_parameter_num = 0
+            for jdx in range(1,self.operation_layer+1):
+                block_parameter_num = block_parameter_num + len( operations[-(jdx+block_idx-2)-1].parameters )
+            
+            
+            
+            
+            #get the fixed operations
+            # matrix of the fixed operations aplied befor the operations to be varied
+            #fixed_parameters_pre = optimized_parameters( -(block_idx-1)*self.operation_layer*block_parameter_num+1 :  );
+            fixed_parameters_pre = optimized_parameters[ -pre_operation_parameter_num+1-1 : -1]
+            fixed_operations_pre = operations[ -(block_idx-1)*self.operation_layer+1-1 : -1 ]
+            operations_mtx_pre = self.get_transformed_matrix( fixed_parameters_pre, fixed_operations_pre, initial_matrix = np.identity(len(self.Umtx)) )
+            
+            
+            fixed_operation_pre = Operation( self.qbit_num )
+            fixed_operation_pre.matrix = operations_mtx_pre
+            
+            # matrix of the fixed operations aplied after the operations to be varied
+            #fixed_parameters_post = optimized_parameters( 1:-block_idx*self.operation_layer*block_parameter_num );
+            fixed_parameters_post = optimized_parameters[ 0:len(optimized_parameters)-1-pre_operation_parameter_num-block_parameter_num ]
+            fixed_operations_post = operations[ 0:len(operations)-1-block_idx*self.operation_layer ]
+            operations_mtx_post = self.get_transformed_matrix( fixed_parameters_post, fixed_operations_post, initial_matrix = np.identity(len(self.Umtx)) );
+            
+            
+            fixed_operation_post = Operation( self.qbit_num )
+            fixed_operation_post.matrix = operations_mtx_post
+                        
+            # operations in the optimalization process
+            self.operations = fixed_operation_post + operations[-block_idx*self.operation_layer+1-1:-(block_idx-1)*self.operation_layer-1] + fixed_operation_pre
+            
+            # solve the optimalization problem of the block
+            
+            #solution_guess = optimized_parameters( -block_idx*self.operation_layer*block_parameter_num+1:-(block_idx-1)*self.operation_layer*block_parameter_num );
+            solution_guess = optimized_parameters[ -pre_operation_parameter_num-block_parameter_num+1-1 : -pre_operation_parameter_num-1]
+            self.solve_layer_optimalization_problem( optimalization_problem=optimalization_problem, solution_guess=solution_guess)
+            
+            
+            # add the current minimum to the array of minimums
+            minimum_vec = minimum_vec[1:] + [self.current_minimum]
+            
+            # store the obtained optimalized parameters for the block
+            #optimized_parameters( -block_idx*self.operation_layer*block_parameter_num+1:-(block_idx-1)*self.operation_layer*block_parameter_num ) = self.optimized_parameters;
+            optimized_parameters[ -pre_operation_parameter_num-block_parameter_num+1-1 : -pre_operation_parameter_num-1 ] = self.optimized_parameters
+            
+            # update the index of paramateres corresponding to the operations applied before the operations to be optimalized in the iteration cycle
+            if block_idx == len(operations)/self.operation_layer:
+                pre_operation_parameter_num = 0
+            else:
+                pre_operation_parameter_num = pre_operation_parameter_num + block_parameter_num
+            
+            
+            if np.std(minimum_vec)/minimum_vec() < 1e-7:
+                break
+            elif self.check_optimalization_solution():
+                break
+            
+            
+            if self.current_minimum < 0.1 and (iter_idx+1 % length(operations)) == 0 and iter_idx > 0:
+                self.operation_layer = 1
+            
+        
+        
+        if iter_idx == self.max_iterations:
+            print('Reached maximal number of iterations')
+            print(' ')
+        
+        
+        # store the obtained optimalizated parameters
+        self.operations = operations
+        self.optimized_parameters = optimized_parameters
+        self.parameter_num = parameter_num
+        
+        
+    
+    
+
+    
+## solve_layer_optimalization_problem
+# @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
+# @param 'optimalization_problem' def handle of the cost def to be optimalized
+# @param 'solution_guess' Array of guessed parameters
+    def solve_layer_optimalization_problem(self, optimalization_problem = self.optimalization_problem, solution_guess=np.zeros(self.parameter_num)): 
+                
+        if len(self.operations) == 0:
+            return
+        
+        
+        self.current_minimum = None
+        optimized_parameters = None
+        for idx  in range(1,self.iteration_loops+1):
+            
+            res = minimize(optimalization_problem, solution_guess, method='nelder-mead', options={'xatol': 1e-8, 'disp': False})
+            solution = res.x
+            minimum = res.fun
+                        
+            if self.current_minimor is None or self.current_minimum > minimum:
+                self.current_minimum = minimum
+                optimized_parameters = solution
+                solution_guess = solution + (2*random(len(solution))-1)*np.pi/10  
+            else:
+                solution_guess = solution_guess + (2*random(len(solution))-1)*np.pi 
+              
+                      
+        
+
+        
+        # storing the solution of the optimalization problem
+        self.optimized_parameters = optimized_parameters
+        
+             
+                
+        
+    
+    
+    
+    
+## optimalization_problem
+# @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
+# @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+# @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
+# @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
+    def optimalization_problem( self, parameters, operations_post, operations_pre ):       
+        return None
+        
+        
+       
+    
+    
+    
+## check_optimalization_solution
+# @brief Checks the convergence of the optimalization problem.
+# @return Returns with true if the target global minimum was reached during the optimalization process, or false otherwise.
+    def check_optimalization_solution(self):
+        
+        if abs(self.current_minimum - self.global_target_minimum) > self.optimalization_tolerance:
+            print('The mimimum = ' + str(self.current_minimum) + ' in the optimalization process found at ' + str(self.layer_num) + ' operation layers is above the tolerance yet.')
+            ret = False
+        elif abs(self.current_minimum - self.global_target_minimum) < self.optimalization_tolerance:
+            disp('Correct minimum ' + str(self.current_minimum) + ' was found in the optimalization process with ' + str(self.layer_num) + ' operation layers.')           
+            ret = True
+        else:
+            disp('Correct minimum was not reached yet.')           
+            ret = False
+        
+        return ret
+        
+    
+    
+    
+    
+    
+            
+        
+## get_transformed_matrix
+# @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
+# @param parameters An array containing the parameters of the U3 operations.
+# @param operations The array of the operations to be applied on a unitary
+# @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
+# @return Returns with the transformed matrix.
+    def get_transformed_matrix(self, parameters, operations, initial_matrix = self.Umtx ):
+                
+        
+        parameter_idx = len(parameters)-1
+        
+        
+        
+        
+        for idx in range(len(operations),-1,0):
+            
+            operation = operations[idx]
+            
+            if operation.type == 'cnot':
+                operation_mtx = operation.matrix
+                
+            elif operation.type == 'u3':
+                
+                if len(operation.parameters) == 1:
+                    operation_mtx = operation.matrix( parameters[parameter_idx] )
+                    parameter_idx = parameter_idx - 1
+                    
+                elif len(operation.parameters) == 2:
+                    operation_mtx = operation.matrix( parameters[parameter_idx-1:parameter_idx] )
+                    parameter_idx = parameter_idx - 2
+                    
+                elif len(operation.parameters) == 3:
+                    operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )
+                    parameter_idx = parameter_idx - 3
+                else:
+                    print('The U3 operation has wrong number of parameters')
+                
+                                
+            elif operation.type == 'block':
+                parameters_num = len(operation.parameters)
+                operation_mtx = operation.matrix( parameters[parameter_idx-parameters_num+1:parameter_idx] );
+                parameter_idx = parameter_idx - parameters_num
+                
+            elif operation.type == 'general':
+                operation_mtx = operation.matrix
+            
+            
+            initial_matrix = self.apply_operation( operation_mtx, initial_matrix )
+        
+        
+        return initial_matrix
+    
+    
+    
+## get_decomposed_matrix
+# @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
+# @return Returns with the decomposed matrix.
+    def get_decomposed_matrix(self):
+        
+        return self.get_transformed_matrix( self.optimized_parameters, self.operations )
+        
+            
+    
+    
+## reorder_qubits
+# @brief Gives an array of permutation indexes that can be used to permute the basis in the N-qubit unitary according to the flip in the qubit order.
+# @param qbit_list An array of the permutation of the qubits (for example [1 3 0 2])
+# @retrun Returns with the reordering indexes of the basis     
+    def reorder_qubits(self, qbit_list):
+        
+        bases_reorder_indexes  = np.zeros(2**self.qbit_num)
+        
+        # generate the reordered  basis set
+        for idx in range(0,2**self.qbit_num):
+            reordered_state = bin(idx)
+            reordered_state = reordered_state[2:].zfill(self.qbit_num)
+            reordered_state = [int(i) for i in reordered_state ]
+            reordered_state.reverse()
+            bases_reorder_indexes[idx] = np.dot( [2**power for power in qbit_list], reordered_state) + 1
+        
+        return bases_reorder_indexes
+        
+            
+    
+       
+    
+ # public methods    
+
+
+methods(Static)
+    
+
+
+## apply_operation
+# @brief Apply an operation on the input matrix
+# @param operation_mtx The matrix of the operation.
+# @param inpu_matrix The input matrix to be transformed.
+# @return Returns with the transformed matrix
+    def new_matrix = apply_operation( operation_mtx, input_matrix )
+        
+        # Getting the transfored state upon the transformation given by operation
+        new_matrix = operation_mtx*input_matrix;
+    
+    
+ # static methods    
+    
+    
+
