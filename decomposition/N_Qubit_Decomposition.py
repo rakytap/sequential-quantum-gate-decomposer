@@ -242,7 +242,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         
         cost_function = np.sum( np.multiply(matrix_new, matrix_new.conj() ) )
         
-        return cost_function
+        return np.real(cost_function)
         
        
         

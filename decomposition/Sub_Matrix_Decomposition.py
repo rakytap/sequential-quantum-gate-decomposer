@@ -181,7 +181,7 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
                 submatrix_prod= submatrix_prod - np.identity(len(submatrix_prod))*submatrix_prod[0,0]
                 cost_function = cost_function + np.sum( np.multiply(submatrix_prod, submatrix_prod.conj() ) )
             
-        return cost_function
+        return np.real(cost_function)
         
         
        
