@@ -105,7 +105,9 @@ class Decomposition_Base( Operations ):
         # calculating the final error of the decomposition
         self.decomposition_error = LA.norm(matrix_new*np.exp(np.complex(0,-np.angle(matrix_new[0,0]))) - np.identity(len(matrix_new))*abs(matrix_new[0,0]))
             
-        print( 'In the decomposition with error = ' + str(self.decomposition_error) + ' was used ' + str(self.layer_num) + ' layers with '  + str(2*self.layer_num) + ' U3 operations and ' + str(self.layer_num) + ' CNOT gates.' )        
+        # get the number of gates used in the decomposition
+        gates_num = self.get_gate_nums()
+        print( 'In the decomposition with error = ' + str(self.decomposition_error) + ' were used ' + str(self.layer_num) + ' layers with '  + str(gates_num['u3']) + ' U3 operations and ' + str(gates_num['cnot']) + ' CNOT gates.' )        
             
 
 ##
@@ -282,11 +284,9 @@ class Decomposition_Base( Operations ):
         self.parameter_num = parameter_num
         
         
-    
-    
 
     
-## solve_layer_optimalization_problem
+##
 # @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
 # @param 'optimalization_problem' def handle of the cost def to be optimalized
 # @param 'solution_guess' Array of guessed parameters

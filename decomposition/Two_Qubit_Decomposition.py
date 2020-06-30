@@ -24,7 +24,7 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
 # @param Umtx The unitary matrix
 # ?????????????
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=True ):
+    def __init__( self, Umtx, optimize_layer_num=False ):
         
         Decomposition_Base.__init__( self, Umtx )
          
@@ -97,7 +97,7 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
                 self.operation_layer = self.layer_num
                 
                 # Do the optimalization
-                if not self.optimize_layer_num or self.layer_num >= self.max_layer_num :
+                if self.optimize_layer_num or self.layer_num >= self.max_layer_num :
                     # solve the optzimalization problem to find the correct mninimum
                     self.solve_optimalization_problem( optimalization_problem = self.optimalization_problem)
 

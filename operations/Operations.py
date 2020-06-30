@@ -171,7 +171,7 @@ class  Operations():
                 operation_idx = operation_idx + 1
                                 
             elif operation.type == 'block':
-                parameters_layer = parameters[ (parameter_idx): (parameter_idx+operation.parameter_num-1) ]
+                parameters_layer = parameters[ (parameter_idx): (parameter_idx+operation.parameter_num) ]
                 operation.list_operation_inverses( parameters_layer, start_index=operation_idx )
                 operation_idx = operation_idx + len(operation.operations)
                 parameter_idx = parameter_idx + operation.parameter_num
@@ -232,6 +232,34 @@ class  Operations():
                 
             
             print( message )
+            
+            
+            
+##
+# @brief Call to get the number of specific gates in the decomposition
+# @return Returns with a dictionary containing the number of specific gates. 
+    def get_gate_nums(self): 
+        
+        gate_nums = dict()
+        
+        
+        for operation_idx in range(0,len(self.operations)):
+            
+            # get the specific operation or block of operations
+            operation = self.operations[operation_idx]
+            if operation.type == 'block':
+                
+                gate_nums_loc = operation.get_gate_nums()
+                for key in gate_nums_loc.keys():
+                    gate_nums[key] = gate_nums.get(key, 0) + gate_nums_loc[key]
+                    
+            elif operation.type == 'u3':
+                gate_nums['u3'] = gate_nums.get('u3', 0) + 1
+            elif operation.type == 'cnot':
+                gate_nums['cnot'] = gate_nums.get('cnot', 0) + 1
+                
+        return gate_nums
+            
             
 
          
