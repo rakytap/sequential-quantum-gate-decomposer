@@ -12,7 +12,11 @@ from operations.Operation import Operation
 from operations.U3 import U3
 from operations.operation_block import operation_block
 from scipy.optimize import minimize
-from random import random
+
+# default number of layers in the decomposition as a function of number of qubits
+def_layer_num = { '2': 3, '3':20, '4':198 }
+
+
 
 ##
 # @brief A class containing basic methods for the decomposition process.
@@ -334,9 +338,7 @@ class Decomposition_Base( Operations ):
 ## optimalization_problem
 # @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
 # @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-# @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
-# @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
-    def optimalization_problem( self, parameters, operations_post, operations_pre ):       
+    def optimalization_problem( self, parameters ):       
         return None
         
         
@@ -349,10 +351,10 @@ class Decomposition_Base( Operations ):
 # @return Returns with true if the target global minimum was reached during the optimalization process, or false otherwise.
     def check_optimalization_solution(self):
         
-        if abs(self.current_minimum - self.global_target_minimum) > self.optimalization_tolerance:
+        if (not (self.current_minimum is None )) and abs(self.current_minimum - self.global_target_minimum) > self.optimalization_tolerance:
             print('The mimimum = ' + str(self.current_minimum) + ' in the optimalization process found at ' + str(self.layer_num) + ' operation layers is above the tolerance yet.')
             ret = False
-        elif abs(self.current_minimum - self.global_target_minimum) < self.optimalization_tolerance:
+        elif (not (self.current_minimum is None )) and abs(self.current_minimum - self.global_target_minimum) < self.optimalization_tolerance:
             print('Correct minimum ' + str(self.current_minimum) + ' was found in the optimalization process with ' + str(self.layer_num) + ' operation layers.')           
             ret = True
         else:

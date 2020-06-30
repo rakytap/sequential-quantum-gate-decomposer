@@ -11,7 +11,7 @@ from operations.operation_block import operation_block
 import numpy as np
 
 
-
+##
 # @brief A class for the decomposition of two-qubit unitaries.
 
 class Two_Qubit_Decomposition( Decomposition_Base ):
