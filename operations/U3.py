@@ -77,8 +77,6 @@ class U3( Operation ):
         else:
             raise BaseException('Input error in the ceration of the operator U3')
         
-        # set the function to calculate the matrix of the operation as a function of a given parameters
-        self.matrix = self.composite_u3
         
         
     ##    

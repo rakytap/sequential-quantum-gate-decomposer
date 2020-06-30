@@ -8,6 +8,9 @@ Created on Sun Jun 28 10:57:35 2020
 import numpy as np
 from numpy import linalg as LA
 from operations.Operations import Operations
+from operations.Operation import Operation
+from operations.U3 import U3
+from operations.operation_block import operation_block
 from scipy.optimize import minimize
 from random import random
 
@@ -25,14 +28,14 @@ class Decomposition_Base( Operations ):
     def __init__( self, Umtx ):
         
         # determine the number of qubits
-        qbit_num = round( np.log2( len(Umtx) ) )
-        self = self@Operations( qbit_num )
+        qbit_num = int(round( np.log2( len(Umtx) ) ))
+        Operations.__init__( self, qbit_num )
         
         # the unitary operator to be decomposed
         self.Umtx = Umtx            
         
         # The corrent optimized parameters for the operations
-        self.optimized_parameters = list()
+        self.optimized_parameters = np.empty(0)
         
         # logical value describing whether the decomposition was finalized or not
         self.decomposition_finalized = False        
@@ -62,7 +65,7 @@ class Decomposition_Base( Operations ):
         self.optimalization_tolerance = None
         
         # Maximal number of iteartions in the optimalization process
-        self.max_iterations = 1e4
+        self.max_iterations = int(1e4)
     
         # number of operators in one sub-layer of the optimalization process
         self.operation_layer = None
@@ -82,7 +85,8 @@ class Decomposition_Base( Operations ):
     def finalize_decomposition(self):       
             
         # get the transformed matrix resulted by the operations in the list
-        matrix_new = self.get_transformed_matrix(self.optimized_parameters, self.operations )    
+        matrix_new = self.get_transformed_matrix(self.optimized_parameters, self.operations ) 
+        print( self.optimalization_problem( self.optimized_parameters ) )
           
         # obtaining the final operations of the decomposition
         finalizing_operations, finalizing_parameters, matrix_new = self.get_finalizing_operations( matrix_new )
@@ -90,16 +94,16 @@ class Decomposition_Base( Operations ):
         # adding the finalizing operations to the list of operations
         # adding the opeartion block to the operations
         self.add_operation_to_front( finalizing_operations )
-        self.optimized_parameters = finalizing_parameters.append( self.optimized_parameters )
+        self.optimized_parameters = np.concatenate((finalizing_parameters, self.optimized_parameters))
         self.parameter_num = len(self.optimized_parameters)
-        self.finalizing_operations_num = len(finalizing_operations)
+        self.finalizing_operations_num = len(finalizing_operations.operations)
         self.finalizing_parameters_num = len(finalizing_parameters)
         
         # indicat that the decomposition was finalized    
         self.decomposition_finalized = True
             
         # calculating the final error of the decomposition
-        self.decomposition_error = LA.norm(matrix_new*np.exp(np.complex(0,-np.phase(matrix_new[1,1]))) - np.identity(len(matrix_new))*abs(matrix_new[1,1]))
+        self.decomposition_error = LA.norm(matrix_new*np.exp(np.complex(0,-np.angle(matrix_new[0,0]))) - np.identity(len(matrix_new))*abs(matrix_new[0,0]))
             
         print( 'In the decomposition with error = ' + str(self.decomposition_error) + ' was used ' + str(self.layer_num) + ' layers with '  + str(2*self.layer_num) + ' U3 operations and ' + str(self.layer_num) + ' CNOT gates.' )        
             
@@ -121,45 +125,46 @@ class Decomposition_Base( Operations ):
 # @return [3] The resulted diagonalized matrix.
     def get_finalizing_operations( self, mtx ):
         
-        # creating block of operations
+        # creating block of operations to store the finalization operations
         finalizing_operations = operation_block( self.qbit_num )
-                        
                                     
-        finalizing_parameters = None      
+        finalizing_parameters = np.empty(0)     
                
-        # the list of qubits
-        qbit_list = list( range(self.qbit_num-1,-1,-1) )
         mtx_new = mtx
         
         for target_qbit in range(0,self.qbit_num):
-            # contruct the permutation to get the basis for the reordered qbit list
-            qbits_reordered = qbit_list
-            del qbits_reordered[-target_qbit-1]
+                        
+            # contructing the list of reordered qubits
+            qbits_reordered = list( range(self.qbit_num-1,-1,-1) )
+            del qbits_reordered[len(qbits_reordered)-target_qbit-1]
             qbits_reordered = qbits_reordered + [target_qbit]
+            
+            # contruct the permutation to get the basis for the reordered qbit list
             bases_reorder_indexes = self.reorder_qubits( qbits_reordered )
             
-            # construct the 2x2 submatrix
-            matrix_reordered = mtx[bases_reorder_indexes, bases_reorder_indexes]
-            submatrix = matrix_reordered[0:1, 0:1];         
+            # construct the 2x2 submatrix for the given qubit to be rorarted to axis z
+            # first reorder the matrix elements to get the submatrix representing the given qubit into the corner
+            matrix_reordered = mtx[:, bases_reorder_indexes][bases_reorder_indexes]
+            submatrix = matrix_reordered[0:2, 0:2]
             
             
             # finalize the 2x2 submatrix with z-y-z rotation
             cos_theta_2 = abs(submatrix[0,0])/np.sqrt(abs(submatrix[0,0])**2 + abs(submatrix[0,1])**2)
-            Theta = 2*np.acos( cos_theta_2 )
-            Phi = np.phase( submatrix[1,0]*np.conj(submatrix[0,0]))
-            Lambda = np.phase( -submatrix[0,1]*np.conj(submatrix[0,0]))
-            parameters_loc = [vartheta, pi-varlambda, pi-varphi]
-            u3_loc = U3( self.qbit_num, target_qbit, 'Theta', True, 'Phi', True, 'Lambda', True)           
+            Theta = 2*np.arccos( cos_theta_2 )
+            Phi = np.angle( submatrix[1,0]*np.conj(submatrix[0,0]))
+            Lambda = np.angle( -submatrix[0,1]*np.conj(submatrix[0,0]))
+            parameters_loc = np.array([Theta, np.pi-Lambda, np.pi-Phi])
+            u3_loc = U3( self.qbit_num, target_qbit, Theta=True, Phi=True, Lambda=True)           
             
             # adding the new operation to the list of finalizing operations
-            finalizing_parameters = parameters_loc + finalizing_parameters
+            finalizing_parameters = np.concatenate((parameters_loc, finalizing_parameters))
             finalizing_operations.add_operation_to_front( u3_loc )
             
             
             # get the new matrix
             mtx_new = self.apply_operation( u3_loc.matrix(parameters_loc), mtx_new )    
             
-            return finalizing_operations,finalizing_parameters, mtx_new
+        return finalizing_operations,finalizing_parameters, mtx_new
             
         
                 
@@ -174,14 +179,20 @@ class Decomposition_Base( Operations ):
 # @param varargin Cell array of optional parameters:
 # @param 'optimalization_problem' def handle of the cost def to be optimalized
 # @param 'solution_guess' Array of guessed parameters
-    def solve_optimalization_problem(self, optimalization_problem = self.optimalization_problem, solution_guess=np.zeros(self.parameter_num)): 
+    def solve_optimalization_problem(self, optimalization_problem = None, solution_guess=None): 
         
         if len(self.operations) == 0:
             return
         
+        if optimalization_problem is None:
+            optimalization_problem = self.optimalization_problem
+            
+        if solution_guess is None:
+            solution_guess = np.zeros(self.parameter_num)
+        
         
         # array containing minimums to check convergence of the solution
-        minimum_vec = [None]*10
+        minimum_vec = [0]*10
                
         # store the operations
         operations = self.operations
@@ -198,7 +209,7 @@ class Decomposition_Base( Operations ):
         for iter_idx in range(0,self.max_iterations+1):
             
             # determine the index of the current block under optimalization
-            block_idx = (iter_idx % (len(operations)/self.operation_layer) ) + 1
+            block_idx = int((iter_idx % (len(operations)/self.operation_layer) ) + 1)
             
             # determine the number of free parameters
             block_parameter_num = 0
@@ -210,9 +221,8 @@ class Decomposition_Base( Operations ):
             
             #get the fixed operations
             # matrix of the fixed operations aplied befor the operations to be varied
-            #fixed_parameters_pre = optimized_parameters( -(block_idx-1)*self.operation_layer*block_parameter_num+1 :  );
-            fixed_parameters_pre = optimized_parameters[ -pre_operation_parameter_num+1-1 : -1]
-            fixed_operations_pre = operations[ -(block_idx-1)*self.operation_layer+1-1 : -1 ]
+            fixed_parameters_pre = optimized_parameters[ len(optimized_parameters)-pre_operation_parameter_num+1-1 : len(optimized_parameters)]
+            fixed_operations_pre = operations[ len(operations)-(block_idx-1)*self.operation_layer+1-1 : len(operations) ]
             operations_mtx_pre = self.get_transformed_matrix( fixed_parameters_pre, fixed_operations_pre, initial_matrix = np.identity(len(self.Umtx)) )
             
             
@@ -220,9 +230,8 @@ class Decomposition_Base( Operations ):
             fixed_operation_pre.matrix = operations_mtx_pre
             
             # matrix of the fixed operations aplied after the operations to be varied
-            #fixed_parameters_post = optimized_parameters( 1:-block_idx*self.operation_layer*block_parameter_num );
-            fixed_parameters_post = optimized_parameters[ 0:len(optimized_parameters)-1-pre_operation_parameter_num-block_parameter_num ]
-            fixed_operations_post = operations[ 0:len(operations)-1-block_idx*self.operation_layer ]
+            fixed_parameters_post = optimized_parameters[ 0:len(optimized_parameters)-pre_operation_parameter_num-block_parameter_num ]
+            fixed_operations_post = operations[ 0:len(operations)-block_idx*self.operation_layer ]
             operations_mtx_post = self.get_transformed_matrix( fixed_parameters_post, fixed_operations_post, initial_matrix = np.identity(len(self.Umtx)) );
             
             
@@ -230,12 +239,10 @@ class Decomposition_Base( Operations ):
             fixed_operation_post.matrix = operations_mtx_post
                         
             # operations in the optimalization process
-            self.operations = fixed_operation_post + operations[-block_idx*self.operation_layer+1-1:-(block_idx-1)*self.operation_layer-1] + fixed_operation_pre
+            self.operations = [fixed_operation_post] + operations[len(operations)-block_idx*self.operation_layer:len(operations)-(block_idx-1)*self.operation_layer] + [fixed_operation_pre]
             
-            # solve the optimalization problem of the block
-            
-            #solution_guess = optimized_parameters( -block_idx*self.operation_layer*block_parameter_num+1:-(block_idx-1)*self.operation_layer*block_parameter_num );
-            solution_guess = optimized_parameters[ -pre_operation_parameter_num-block_parameter_num+1-1 : -pre_operation_parameter_num-1]
+            # solve the optimalization problem of the block            
+            solution_guess = optimized_parameters[ len(optimized_parameters)-pre_operation_parameter_num-block_parameter_num+1-1 : len(optimized_parameters)-pre_operation_parameter_num]
             self.solve_layer_optimalization_problem( optimalization_problem=optimalization_problem, solution_guess=solution_guess)
             
             
@@ -244,7 +251,7 @@ class Decomposition_Base( Operations ):
             
             # store the obtained optimalized parameters for the block
             #optimized_parameters( -block_idx*self.operation_layer*block_parameter_num+1:-(block_idx-1)*self.operation_layer*block_parameter_num ) = self.optimized_parameters;
-            optimized_parameters[ -pre_operation_parameter_num-block_parameter_num+1-1 : -pre_operation_parameter_num-1 ] = self.optimized_parameters
+            optimized_parameters[ len(optimized_parameters)-pre_operation_parameter_num-block_parameter_num+1-1 : len(optimized_parameters)-pre_operation_parameter_num ] = self.optimized_parameters
             
             # update the index of paramateres corresponding to the operations applied before the operations to be optimalized in the iteration cycle
             if block_idx == len(operations)/self.operation_layer:
@@ -253,13 +260,13 @@ class Decomposition_Base( Operations ):
                 pre_operation_parameter_num = pre_operation_parameter_num + block_parameter_num
             
             
-            if np.std(minimum_vec)/minimum_vec() < 1e-7:
+            if np.std(minimum_vec)/minimum_vec[-1] < 1e-7:
                 break
             elif self.check_optimalization_solution():
                 break
             
             
-            if self.current_minimum < 0.1 and (iter_idx+1 % length(operations)) == 0 and iter_idx > 0:
+            if self.current_minimum < 0.1 and (iter_idx+1 % len(operations)) == 0 and iter_idx > 0:
                 self.operation_layer = 1
             
         
@@ -283,26 +290,32 @@ class Decomposition_Base( Operations ):
 # @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
 # @param 'optimalization_problem' def handle of the cost def to be optimalized
 # @param 'solution_guess' Array of guessed parameters
-    def solve_layer_optimalization_problem(self, optimalization_problem = self.optimalization_problem, solution_guess=np.zeros(self.parameter_num)): 
+    def solve_layer_optimalization_problem(self, optimalization_problem = None, solution_guess = None): 
                 
         if len(self.operations) == 0:
             return
+        
+        if optimalization_problem is None:
+            optimalization_problem = self.optimalization_problem
+            
+        if solution_guess is None:
+            solution_guess = np.zeros(self.parameter_num)
         
         
         self.current_minimum = None
         optimized_parameters = None
         for idx  in range(1,self.iteration_loops+1):
             
-            res = minimize(optimalization_problem, solution_guess, method='nelder-mead', options={'xatol': 1e-8, 'disp': False})
+            res = minimize(optimalization_problem, solution_guess, method='nelder-mead', options={'xatol': 1e-7, 'disp': False})
             solution = res.x
             minimum = res.fun
                         
-            if self.current_minimor is None or self.current_minimum > minimum:
+            if self.current_minimum is None or self.current_minimum > minimum:
                 self.current_minimum = minimum
                 optimized_parameters = solution
-                solution_guess = solution + (2*random(len(solution))-1)*np.pi/10  
+                solution_guess = solution + (2*np.random.rand(len(solution))-1)*np.pi/10  
             else:
-                solution_guess = solution_guess + (2*random(len(solution))-1)*np.pi 
+                solution_guess = solution_guess + (2*np.random.rand(len(solution))-1)*np.pi 
               
                       
         
@@ -340,10 +353,10 @@ class Decomposition_Base( Operations ):
             print('The mimimum = ' + str(self.current_minimum) + ' in the optimalization process found at ' + str(self.layer_num) + ' operation layers is above the tolerance yet.')
             ret = False
         elif abs(self.current_minimum - self.global_target_minimum) < self.optimalization_tolerance:
-            disp('Correct minimum ' + str(self.current_minimum) + ' was found in the optimalization process with ' + str(self.layer_num) + ' operation layers.')           
+            print('Correct minimum ' + str(self.current_minimum) + ' was found in the optimalization process with ' + str(self.layer_num) + ' operation layers.')           
             ret = True
         else:
-            disp('Correct minimum was not reached yet.')           
+            print('Correct minimum was not reached yet.')           
             ret = False
         
         return ret
@@ -361,15 +374,16 @@ class Decomposition_Base( Operations ):
 # @param operations The array of the operations to be applied on a unitary
 # @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
 # @return Returns with the transformed matrix.
-    def get_transformed_matrix(self, parameters, operations, initial_matrix = self.Umtx ):
+    def get_transformed_matrix(self, parameters, operations, initial_matrix = None ):
                 
         
-        parameter_idx = len(parameters)-1
+        parameter_idx = len(parameters)
+        
+        if initial_matrix is None:
+            initial_matrix = self.Umtx
         
         
-        
-        
-        for idx in range(len(operations),-1,0):
+        for idx in range(len(operations)-1,-1,-1):
             
             operation = operations[idx]
             
@@ -395,7 +409,7 @@ class Decomposition_Base( Operations ):
                                 
             elif operation.type == 'block':
                 parameters_num = len(operation.parameters)
-                operation_mtx = operation.matrix( parameters[parameter_idx-parameters_num+1:parameter_idx] );
+                operation_mtx = operation.matrix( parameters[parameter_idx-parameters_num:parameter_idx] )
                 parameter_idx = parameter_idx - parameters_num
                 
             elif operation.type == 'general':
@@ -425,16 +439,18 @@ class Decomposition_Base( Operations ):
 # @retrun Returns with the reordering indexes of the basis     
     def reorder_qubits(self, qbit_list):
         
-        bases_reorder_indexes  = np.zeros(2**self.qbit_num)
+        bases_reorder_indexes  = list()
         
         # generate the reordered  basis set
         for idx in range(0,2**self.qbit_num):
             reordered_state = bin(idx)
             reordered_state = reordered_state[2:].zfill(self.qbit_num)
             reordered_state = [int(i) for i in reordered_state ]
-            reordered_state.reverse()
-            bases_reorder_indexes[idx] = np.dot( [2**power for power in qbit_list], reordered_state) + 1
+            #reordered_state.reverse()
+            bases_reorder_indexes.append(int(np.dot( [2**power for power in qbit_list], reordered_state)))
         
+        #print(qbit_list)
+        #print(bases_reorder_indexes)
         return bases_reorder_indexes
         
             

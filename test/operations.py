@@ -59,7 +59,7 @@ def test_U3_operation():
     
     # check the matrix
     print('The matrix of ' + str(qbit_num) + ' qubit U3 operator acting on target qubit ' + str(op.target_qbit) )
-    matrix = op.matrix(1,2,3)
+    matrix = op.matrix([1,2])
     print(matrix)
     print(' ')
     
@@ -72,7 +72,7 @@ def test_U3_operation():
     
     # check the reordered matrix
     print('The matrix of ' + str(qbit_num) + ' qubit U3 operator acting on target qubit ' + str(op.target_qbit) )
-    matrix = op.matrix(1,2,3)
+    matrix = op.matrix([1,2])
     print(matrix)
     print(' ')
     

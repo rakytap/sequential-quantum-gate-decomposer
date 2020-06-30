@@ -69,7 +69,7 @@ class CNOT( Operation ):
         
                 
         # find base indices where the control qubit is in state |0>
-        indexes_control_qubit = None
+        indexes_control_qubit = None        
         for iidx in range(0,self.qbit_num):
             if iidx == control_qubit:
                 if indexes_control_qubit is None:
