@@ -13,8 +13,9 @@ from operations.U3 import U3
 from operations.operation_block import operation_block
 from scipy.optimize import minimize
 
+
 # default number of layers in the decomposition as a function of number of qubits
-def_layer_num = { '2': 3, '3':20, '4':198 }
+def_layer_num = { '2': 3, '3':20, '4':60 }
 
 
 
@@ -90,7 +91,6 @@ class Decomposition_Base( Operations ):
             
         # get the transformed matrix resulted by the operations in the list
         matrix_new = self.get_transformed_matrix(self.optimized_parameters, self.operations ) 
-        print( self.optimalization_problem( self.optimized_parameters ) )
           
         # obtaining the final operations of the decomposition
         finalizing_operations, finalizing_parameters, matrix_new = self.get_finalizing_operations( matrix_new )
@@ -265,15 +265,22 @@ class Decomposition_Base( Operations ):
             else:
                 pre_operation_parameter_num = pre_operation_parameter_num + block_parameter_num
             
+            # optimalization result is displayed in each 10th iteration
+            if iter_idx % 50 == 0:
+                print('The minimum after ' + str(iter_idx) + ' iterations is ' + str(self.current_minimum))
+                
             
             if np.std(minimum_vec)/minimum_vec[-1] < 1e-7:
+                print('The minimum after ' + str(iter_idx) + ' iterations is ' + str(self.current_minimum))
                 break
             elif self.check_optimalization_solution():
+                print('The minimum after ' + str(iter_idx) + ' iterations is ' + str(self.current_minimum))
                 break
             
             
             if self.current_minimum < 0.1 and (iter_idx+1 % len(operations)) == 0 and iter_idx > 0:
-                self.operation_layer = 1
+                pass
+                #self.operation_layer = 1
             
         
         
@@ -310,9 +317,11 @@ class Decomposition_Base( Operations ):
         optimized_parameters = None
         for idx  in range(1,self.iteration_loops+1):
             
-            res = minimize(optimalization_problem, solution_guess, method='nelder-mead', options={'xatol': 1e-7, 'disp': False})
+            ##res = minimize(optimalization_problem, solution_guess, method='nelder-mead', options={'xatol': 1e-7, 'disp': False})
+            res = minimize(optimalization_problem, solution_guess, method='BFGS', options={'disp': False})
+            ##res = minimize(optimalization_problem, solution_guess, method='CG', options={'disp': False})
             solution = res.x
-            minimum = res.fun
+            minimum = res.fun        
                         
             if self.current_minimum is None or self.current_minimum > minimum:
                 self.current_minimum = minimum
@@ -351,17 +360,22 @@ class Decomposition_Base( Operations ):
 # @return Returns with true if the target global minimum was reached during the optimalization process, or false otherwise.
     def check_optimalization_solution(self):
         
-        if (not (self.current_minimum is None )) and abs(self.current_minimum - self.global_target_minimum) > self.optimalization_tolerance:
-            print('The mimimum = ' + str(self.current_minimum) + ' in the optimalization process found at ' + str(self.layer_num) + ' operation layers is above the tolerance yet.')
-            ret = False
-        elif (not (self.current_minimum is None )) and abs(self.current_minimum - self.global_target_minimum) < self.optimalization_tolerance:
-            print('Correct minimum ' + str(self.current_minimum) + ' was found in the optimalization process with ' + str(self.layer_num) + ' operation layers.')           
-            ret = True
-        else:
-            print('Correct minimum was not reached yet.')           
-            ret = False
+        if (not (self.current_minimum is None )):
+            return (abs(self.current_minimum - self.global_target_minimum) < self.optimalization_tolerance)
         
-        return ret
+        return False
+        
+        #if (not (self.current_minimum is None )) and abs(self.current_minimum - self.global_target_minimum) > self.optimalization_tolerance:
+        #    print('The mimimum = ' + str(self.current_minimum) + ' in the optimalization process found at ' + str(self.layer_num) + ' operation layers is above the tolerance yet.')
+        #    ret = False
+        #elif (not (self.current_minimum is None )) and abs(self.current_minimum - self.global_target_minimum) < self.optimalization_tolerance:
+        #    print('Correct minimum ' + str(self.current_minimum) + ' was found in the optimalization process with ' + str(self.layer_num) + ' operation layers.')           
+         #   ret = True
+        #else:
+        #    print('Correct minimum was not reached yet.')           
+        #    ret = False
+        
+        #return ret
         
     
     
@@ -458,7 +472,10 @@ class Decomposition_Base( Operations ):
             
     
        
-
+##
+# @brief Call to contruct Qiskit compatible quantum circuit from the operations
+    def get_quantum_circuit(self, circuit=None):
+        return Operations.get_quantum_circuit( self, self.optimized_parameters, circuit=circuit)
     
 
 
