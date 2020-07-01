@@ -10,6 +10,8 @@ from .CNOT import CNOT
 from .U3 import U3
 from .Operation import Operation
 
+from qiskit import QuantumCircuit
+
 
 ##
 # @brief A class to group quantum gate operations into layers (or blocks)
@@ -159,7 +161,7 @@ class  Operations():
 # @param start_index The index of the first inverse operation
     def list_operation_inverses( self, parameters, start_index = 1 ):
                
-        parameter_idx = 0;
+        parameter_idx = 0
         operation_idx = start_index
         for idx in range(0,len(self.operations)):
             message = str(operation_idx) + 'th operation:'
@@ -262,7 +264,80 @@ class  Operations():
             
             
 
-         
-
+##
+# @brief Call to contruct Qiskit compatible quantum circuit from the operations
+    def get_quantum_circuit(self, parameters, circuit=None):
+        
+        parameter_idx = 0
+            
+        if circuit is None:
+            circuit = QuantumCircuit(self.qbit_num)
+            
+            
+        # adding the operations to the circuit
+        for idx in range(0, len(self.operations)):
+            
+            operation = self.operations[idx]
+           
+            if operation.type == 'cnot':
+                circuit.cx(operation.control_qbit, operation.target_qbit)
+                                
+            elif operation.type == 'block':
+                parameters_layer = parameters[ (parameter_idx): (parameter_idx+operation.parameter_num) ]
+                circuit = operation.get_quantum_circuit( parameters_layer, circuit=circuit )
+                parameter_idx = parameter_idx + operation.parameter_num
+                continue
+               
+            elif operation.type == 'u3':
+                
+                # get the inverse parameters of the U3 rotation
+                
+                if len(operation.parameters) == 1 and operation.parameters[0] == 'Theta':
+                    vartheta = parameters[ parameter_idx ]
+                    varphi = np.pi
+                    varlambda = np.pi
+                    parameter_idx = parameter_idx + 1;
+                    
+                elif len(operation.parameters) == 1 and operation.parameters[0] == 'Phi':
+                    vartheta = 0;
+                    varphi = np.pi;
+                    varlambda = np.pi-parameters[ parameter_idx ];
+                    parameter_idx = parameter_idx + 1;
+                    
+                elif len(operation.parameters) == 1 and operation.parameters[0] == 'Lambda':
+                    vartheta = 0;
+                    varphi = np.pi-parameters[ parameter_idx ]
+                    varlambda = np.pi;
+                    parameter_idx = parameter_idx + 1
+                    
+                elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Phi' in operation.parameters:
+                    vartheta = parameters[ parameter_idx ]
+                    varphi = np.pi;
+                    varlambda = np.pi-parameters[ parameter_idx+1 ];
+                    parameter_idx = parameter_idx + 2
+                
+                elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Lambda' in operation.parameters:
+                    vartheta = parameters[ parameter_idx ]
+                    varphi = np.pi-parameters[ parameter_idx ]
+                    varlambda = np.pi;
+                    parameter_idx = parameter_idx + 2
+                
+                elif len(operation.parameters) == 2 and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
+                    vartheta = 0;
+                    varphi = np.pi-parameters[ parameter_idx ]
+                    varlambda = np.pi-parameters[ parameter_idx+1 ]
+                    parameter_idx = parameter_idx + 2
+                
+                elif len(operation.parameters) == 3 and 'Theta' in operation.parameters and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
+                    vartheta = parameters[ parameter_idx ]
+                    varphi = np.pi-parameters[ parameter_idx+2 ]
+                    varlambda = np.pi-parameters[ parameter_idx+1 ]
+                    parameter_idx = parameter_idx + 3
+                    
+                circuit.u3(vartheta, varphi, varlambda, operation.target_qbit)
+            
+                    
+            
+        return circuit
         
     
