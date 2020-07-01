@@ -9,7 +9,6 @@ Created on Mon Jun 29 17:23:58 2020
 def two_qubit_decomposition():
  
     from decomposition.Two_Qubit_Decomposition import Two_Qubit_Decomposition
-    import numpy as np
     
     print('****************************************')
     print('Test of two qubit decomposition')
@@ -34,10 +33,19 @@ def two_qubit_decomposition():
     # finalize the decomposition
     cDecomposition.finalize_decomposition()
     
-    print(' ')
+    print('')
     print('The matrix can be decomposed into operations:')
     print(' ')
     cDecomposition.list_operation_inverses()
+    
+    print(' ')
+    print('Constructing quantum circuit:')
+    print(' ')
+    quantum_circuit = cDecomposition.get_quantum_circuit()
+    
+    print(quantum_circuit)
+    
+    #quantum_circuit.draw()
     
     
     
@@ -94,6 +102,9 @@ def four_qubit_decomposition():
     print(' ')
 
     cDecomposition = N_Qubit_Decomposition( Umtx )
+    
+    # Maximal number of iteartions in the optimalization process
+    cDecomposition.max_iterations = int(1e5)
     
     #start the decomposition
     cDecomposition.start_decomposition()
