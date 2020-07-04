@@ -22,16 +22,17 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
 ##
 # @brief Constructor of the class.
 # @param Umtx The unitary matrix
-# ?????????????
+# @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
+# @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @operation_layer) is at least 10). For False (default) sequential optimalization is applied
+# @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False ):
+    def __init__( self, Umtx, optimize_layer_num=False, parallel= False, method='L-BFGS-B' ):
         
-        Decomposition_Base.__init__( self, Umtx )
+        Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method )
          
         
         # logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
-        self.optimize_layer_num  = optimize_layer_num        
-        
+        self.optimize_layer_num  = optimize_layer_num
         
         # The global minimum of the optimalization problem
         self.global_target_minimum = 0
@@ -58,17 +59,12 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
     
 ## start_decomposition
 # @brief Start the decompostion process of the two-qubit unitary
-# @param operation_layer ?????????????????    
-    def start_decomposition(self, operation_layer=None):
+        # @param finalize_decomposition Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
+    def start_decomposition(self, finalize_decomposition=True):
         
         if self.decomposition_finalized:
             print('Decomposition was already finalized')
             return
-        
-
-        if not (operation_layer is None):
-            self.operation_layer = operation_layer
-        
         
         
         # setting the global target minimum
@@ -117,6 +113,10 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
             # setting the logical variable to true even if no optimalization was needed
             self.optimalization_problem_solved = False
         
+        
+        # finalize the decomposition
+        if finalize_decomposition:
+            self.finalize_decomposition()
                 
         
     

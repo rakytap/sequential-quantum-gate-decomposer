@@ -16,11 +16,13 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
 ## 
 # @brief Constructor of the class.
 # @param Umtx The unitary matrix
-# @param optimize_layer_num A logical value. Set true in order to optimize the number of C-NOT gates in the decomposition (this can significantly slow down the decomposition process), or false to use the maximal number of C-NOT gates.
+# @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
+# @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @operation_layer) is at least 10). For False (default) sequential optimalization is applied
+# @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False ):  
+    def __init__( self, Umtx, optimize_layer_num=False, parallel= False, method='L-BFGS-B' ):  
         
-        Decomposition_Base.__init__( self, Umtx ) 
+        Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method ) 
             
         
         # logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
@@ -107,9 +109,9 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
                 self.layer_num = len(self.operations)
                                                  
                 # Do the optimalization
-                if self.optimize_layer_num and ((self.layer_num % self.operation_layer) == 0) or self.layer_num >= self.max_layer_num:
+                if (self.optimize_layer_num and self.layer_num % (2*(self.qbit_num-1)) == 0) or self.layer_num >= self.max_layer_num:
                     # solve the optzimalization problem to find the correct mninimum
-                    self.solve_optimalization_problem( optimalization_problem=self.subdisentaglement_problem)   
+                    self.solve_optimalization_problem( optimalization_problem=self.subdisentaglement_problem, solution_guess=self.optimized_parameters)   
 
                     if self.check_optimalization_solution():
                         break

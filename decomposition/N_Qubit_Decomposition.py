@@ -12,6 +12,7 @@ from .Two_Qubit_Decomposition import Two_Qubit_Decomposition
 from .Sub_Matrix_Decomposition import Sub_Matrix_Decomposition
 import numpy as np
 from numpy import linalg as LA
+import time
 
 ##
 # @brief A class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
@@ -22,17 +23,20 @@ class N_Qubit_Decomposition(Decomposition_Base):
 ## 
 # @brief Constructor of the class.
 # @param Umtx The unitary matrix
+# @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
+# @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @operation_layer) is at least 10). For False (default) sequential optimalization is applied
+# @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False ):  
+    def __init__( self, Umtx, optimize_layer_num=False, parallel= False, method='L-BFGS-B' ):  
         
-        Decomposition_Base.__init__( self, Umtx ) 
+        Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method ) 
             
-        
+                
         # logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
         self.optimize_layer_num  = optimize_layer_num
         
         # number of iteratrion loops in the finale optimalization
-        self.iteration_loops = 5
+        self.iteration_loops = 3
         
         # The maximal allowed error of the optimalization problem
         self.optimalization_tolerance = 1e-7
@@ -41,7 +45,9 @@ class N_Qubit_Decomposition(Decomposition_Base):
         self.max_iterations = int(1e4)
     
         # number of operators in one sub-layer of the optimalization process
-        self.operation_layer = 1       
+        self.operation_layer = 1    
+        if parallel:
+            self.operation_layer = 10  
         
         # The number of gate blocks used in the decomposition
         self.max_layer_num = def_layer_num.get(str(self.qbit_num), 200)
@@ -54,32 +60,21 @@ class N_Qubit_Decomposition(Decomposition_Base):
     
 ## start_decomposition
 # @brief Start the disentanglig process of the least significant two qubit unitary
-# @param varargin Cell array of optional parameters:
-# @param 'param_num_layer' number of parameters in one sub-layer of the disentangling process
-# @param 'operation_layer' number of operators in one sub-layer of the disentangling process
-# @param 'max_iterations' Maximal number of iterations in the disentangling process
-# @param 'max_layer_num' The maximal number of C-NOT gates allowed in the disentangling process
-# ??????????????????????????????????
-    def start_decomposition(self, operation_layer=None, max_iterations=None, max_layer_num=None, finalize_decomposition=True):
+# @param finalize_decomposition Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
+    def start_decomposition(self, finalize_decomposition=True):
         
         
-        if operation_layer is None:
-            operation_layer = self.operation_layer
-            
-        if max_iterations is None:
-            max_iterations = self.max_iterations
-            
-        if max_layer_num is None:
-            max_layer_num = self.max_layer_num
             
         
         print('***************************************************************')
         print('Starting to disentangle ' + str(self.qbit_num) + '-qubit matrix')
         print('***************************************************************')
         
+        #measure the time for the decompositin        
+        start_time = time.time()
             
         # create an instance of class to disentangle the given qubit pair
-        cSub_decomposition = Sub_Matrix_Decomposition(self.Umtx, optimize_layer_num=self.optimize_layer_num)   
+        cSub_decomposition = Sub_Matrix_Decomposition(self.Umtx, optimize_layer_num=self.optimize_layer_num, parallel=self.parallel)   
         
         # The maximal error of the optimalization problem
         cSub_decomposition.optimalization_tolerance = self.optimalization_tolerance
@@ -88,13 +83,13 @@ class N_Qubit_Decomposition(Decomposition_Base):
         # ---------- setting the decomposition parameters  --------
         
         # setting the maximal number of iterations in the disentangling process
-        cSub_decomposition.operation_layer = operation_layer
+        cSub_decomposition.operation_layer = self.operation_layer
         
         # setting the number of operators in one sub-layer of the disentangling process
-        cSub_decomposition.max_iterations = max_iterations
+        cSub_decomposition.max_iterations = self.max_iterations
         
         # setting the number of parameters in one sub-layer of the disentangling process
-        cSub_decomposition.max_layer_num = max_layer_num
+        cSub_decomposition.max_layer_num = self.max_layer_num
             
         # start to disentangle the qubit pair
         cSub_decomposition.disentangle_submatrices()
@@ -126,7 +121,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
             print( 'In the decomposition with error = ' + str(self.decomposition_error) + ' were used ' + str(self.layer_num) + ' layers with '  + str(gates_num['u3']) + ' U3 operations and ' + str(gates_num['cnot']) + ' CNOT gates.' )        
             
         
-        
+        print("--- In total %s seconds elapsed during the decomposition ---" % (time.time() - start_time))            
         
     
         
@@ -191,17 +186,27 @@ class N_Qubit_Decomposition(Decomposition_Base):
         
         # if the qubit number in the submatirx is greater than 2 new N-qubit decomposition is started
         if len(most_unitary_submatrix) > 4:
-            cdecomposition = N_Qubit_Decomposition(most_unitary_submatrix, optimize_layer_num=False)
+            cdecomposition = N_Qubit_Decomposition(most_unitary_submatrix, optimize_layer_num=True)
+            
+            # setting operation layer
+            if len(most_unitary_submatrix) <= 8:
+                # for three qubits
+                cdecomposition.set_operation_layers(1)
+                cdecomposition.set_parallel( False )
+            else:
+                # for 4 or more qubits
+                cdecomposition.set_operation_layers( self.operation_layer )
+                cdecomposition.set_parallel( self.parallel )
 
             # starting the decomposition of the random unitary
-            cdecomposition.start_decomposition(max_iterations=int(1e5), operation_layer=1, finalize_decomposition=False)
+            cdecomposition.start_decomposition(finalize_decomposition=False)
         else:
 
             # decompose the chosen 2-qubit unitary
             cdecomposition = Two_Qubit_Decomposition(most_unitary_submatrix)
         
             # starting the decomposition of the random unitary
-            cdecomposition.start_decomposition()
+            cdecomposition.start_decomposition(finalize_decomposition=False)
         
                 
         # saving the decomposition operations

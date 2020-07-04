@@ -30,9 +30,6 @@ def two_qubit_decomposition():
     #start the decomposition
     cDecomposition.start_decomposition()
     
-    # finalize the decomposition
-    cDecomposition.finalize_decomposition()
-    
     print('')
     print('The matrix can be decomposed into operations:')
     print(' ')
@@ -70,15 +67,15 @@ def three_qubit_decomposition():
     print(' ')
     #print(np.dot(Umtx, Umtx.conj().T))
 
-    cDecomposition = N_Qubit_Decomposition( Umtx )
+    cDecomposition = N_Qubit_Decomposition( Umtx, optimize_layer_num=False )
     
     #start the decomposition
     cDecomposition.start_decomposition()
     
-    print(' ')
-    print('The matrix can be decomposed into operations:')
-    print(' ')
-    cDecomposition.list_operation_inverses()    
+    #print(' ')
+    #print('The matrix can be decomposed into operations:')
+    #print(' ')
+    #cDecomposition.list_operation_inverses()    
     
     
     
@@ -101,18 +98,18 @@ def four_qubit_decomposition():
     print(Umtx)
     print(' ')
 
-    cDecomposition = N_Qubit_Decomposition( Umtx )
+    cDecomposition = N_Qubit_Decomposition( Umtx, parallel = True )
     
     # Maximal number of iteartions in the optimalization process
-    cDecomposition.max_iterations = int(1e5)
+    cDecomposition.set_max_iteration( int(1e6) )
     
     #start the decomposition
     cDecomposition.start_decomposition()
         
-    print(' ')
-    print('The matrix can be decomposed into operations:')
-    print(' ')
-    cDecomposition.list_operation_inverses() 
+    #print(' ')
+    #print('The matrix can be decomposed into operations:')
+    #print(' ')
+    #cDecomposition.list_operation_inverses() 
 
 
 
