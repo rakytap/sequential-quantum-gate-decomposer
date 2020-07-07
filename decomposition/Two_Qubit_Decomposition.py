@@ -72,7 +72,7 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
         self.global_target_minimum = 0
         
         # check whether the problem can be solved without optimalization
-        if True:#not self.test_indepency():
+        if not self.test_indepency():
             
             # Do the optimalization of the parameters
             while self.layer_num < self.max_layer_num :  
@@ -84,8 +84,8 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
                 block.add_cnot_to_end(1, 0)      
                     
                 # adding U3 operation to the block
-                block.add_u3_to_end(1, Theta=True, Lambda=True) 
-                block.add_u3_to_end(0, Theta=True, Lambda=True)
+                block.add_u3_to_end(1, ['Theta', 'Lambda']) 
+                block.add_u3_to_end(0, ['Theta', 'Lambda'])
                     
                 # adding the opeartion block to the operations
                 self.add_operation_to_end( block )

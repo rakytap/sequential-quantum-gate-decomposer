@@ -212,7 +212,7 @@ def IBM_challenge_decomposition():
     # set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
     identical_blocks = { '4':2, '3':1}
 
-    cDecomposition = N_Qubit_Decomposition( Umtx, optimize_layer_num=True, identical_blocks=identical_blocks )
+    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, identical_blocks=identical_blocks )
     cDecomposition.max_layer_num = 9
     cDecomposition.optimalization_block = 1
     
@@ -229,7 +229,7 @@ def IBM_challenge_decomposition():
     print(' ')
     print('Constructing quantum circuit:')
     print(' ')
-    quantum_circuit = cDecomposition.get_quantum_circuit()
+    quantum_circuit = cDecomposition.get_quantum_circuit_decomposition()
     
     #print(quantum_circuit)
     
@@ -245,7 +245,7 @@ def IBM_challenge_decomposition():
     decomposed_matrix = result.get_unitary(quantum_circuit)
     
     # get the error of the decomposition
-    product_matrix = np.dot(cDecomposition.Umtx, decomposed_matrix.conj().T)
+    product_matrix = np.dot(Umtx, decomposed_matrix.conj().T)
     decomposition_error =  np.linalg.norm(product_matrix - np.identity(16)*product_matrix[0,0], 2)
     
     print('The error of the decomposition is ' + str(decomposition_error))

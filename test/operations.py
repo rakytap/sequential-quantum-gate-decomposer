@@ -50,7 +50,7 @@ def test_U3_operation():
         
 
     # creating gereal operation
-    op = U3( qbit_num, target_qbit, Theta = True, Lambda = True )    
+    op = U3( qbit_num, target_qbit, ['Theta', 'Lambda'] )    
     
     # print the parameter identifiers
     print('The parameetrs of the U3 operation:')
@@ -138,7 +138,7 @@ def test_operations():
     operations = Operations( qbit_num )
     
     # adding operations to the list
-    operations.add_u3_to_end(1, Theta=True, Lambda=True)
+    operations.add_u3_to_end(1, ['Theta', 'Lambda'])
     operations.add_cnot_to_end(1, 2)
     
     # get the number of parameters

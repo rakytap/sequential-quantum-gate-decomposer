@@ -104,8 +104,8 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
                         block.add_cnot_to_end(control_qbit, target_qbit)       
                     
                         # adding U3 operation to the block
-                        block.add_u3_to_end(target_qbit, Theta=True, Lambda=True) 
-                        block.add_u3_to_end(control_qbit, Theta=True, Lambda=True) 
+                        block.add_u3_to_end(target_qbit, ['Theta', 'Lambda']) 
+                        block.add_u3_to_end(control_qbit, ['Theta', 'Lambda']) 
                     
                     # adding the opeartion block to the operations
                     self.add_operation_to_end( block )                    

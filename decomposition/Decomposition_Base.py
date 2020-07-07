@@ -186,10 +186,19 @@ class Decomposition_Base( Operations ):
             # finalize the 2x2 submatrix with z-y-z rotation
             cos_theta_2 = abs(submatrix[0,0])/np.sqrt(abs(submatrix[0,0])**2 + abs(submatrix[0,1])**2)
             Theta = 2*np.arccos( cos_theta_2 )
-            Phi = np.angle( submatrix[1,0]*np.conj(submatrix[0,0]))
-            Lambda = np.angle( -submatrix[0,1]*np.conj(submatrix[0,0]))
+            
+            if abs(submatrix[0,0]) < 1e-7:
+                Phi = 0
+                Lambda = np.angle( -submatrix[0,1] )
+            elif abs(submatrix[1,0]) < 1e-7 :
+                Phi = 0
+                Lambda = np.angle( submatrix[1,1]*np.conj(submatrix[0,0]))
+            else:            
+                Phi = np.angle( submatrix[1,0]*np.conj(submatrix[0,0]))
+                Lambda = np.angle( -submatrix[0,1]*np.conj(submatrix[0,0]))
+                
             parameters_loc = np.array([Theta, np.pi-Lambda, np.pi-Phi])
-            u3_loc = U3( self.qbit_num, target_qbit, Theta=True, Phi=True, Lambda=True)           
+            u3_loc = U3( self.qbit_num, target_qbit, ['Theta', 'Phi', 'Lambda'])           
             
             # adding the new operation to the list of finalizing operations
             finalizing_parameters = np.concatenate((parameters_loc, finalizing_parameters))

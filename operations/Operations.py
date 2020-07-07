@@ -42,13 +42,11 @@ class  Operations():
 ##
 # @brief Append a U3 gate to the list of operations
 # @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-# @param 'theta' Logical value. Set to true if parameter theta should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case theta = 0 is set.
-# @param 'phi' Logical value. Set to true if parameter phi should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case phi = 0 is set.
-# @param 'lambda' Logical value. Set to true if parameter lambda should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case lambda = 0 is set.
-    def add_u3_to_end(self, target_qbit, Theta=False, Phi=False, Lambda=False):        
+# @param parameter_labels A list of strings 'Theta', 'Phi' or 'Lambda' indicating the free parameters of the U3 operations. (Paremetrs which are not labeled are set to zero)
+    def add_u3_to_end(self, target_qbit, parameter_labels):        
         
         # create the operation
-        operation = U3( self.qbit_num, target_qbit, Theta=Theta, Phi=Phi, Lambda=Lambda )
+        operation = U3( self.qbit_num, target_qbit, parameter_labels )
         
         # adding the operation to the end of the list of operations
         self.add_operation_to_end( operation )              
@@ -56,13 +54,11 @@ class  Operations():
 ##
 # @brief Add a U3 gate to the front of the list of operations
 # @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-# @param 'theta' Logical value. Set to true if parameter theta should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case theta = 0 is set.
-# @param 'phi' Logical value. Set to true if parameter phi should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case phi = 0 is set.
-# @param 'lambda' Logical value. Set to true if parameter lambda should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case lambda = 0 is set.
-    def add_u3_to_front(self, target_qbit, Theta=False, Phi=False, Lambda=False):
+# @param parameter_labels A list of strings 'Theta', 'Phi' or 'Lambda' indicating the free parameters of the U3 operations. (Paremetrs which are not labeled are set to zero)
+    def add_u3_to_front(self, target_qbit, parameter_labels):
         
         # create the operation
-        operation = U3( self.qbit_num, target_qbit, Theta=Theta, Phi=Phi, Lambda=Lambda );
+        operation = U3( self.qbit_num, target_qbit, parameter_labels );
         
         # adding the operation to the front of the list of operations
         self.add_operation_to_front( operation )
@@ -373,7 +369,7 @@ class  Operations():
             
         parameter_idx = len(parameters)
         
-        initial_matrix = np.identity(4)
+        initial_matrix = np.identity(2**self.qbit_num)
         
         
         for idx in range(len(self.operations)-1,-1,-1):

@@ -10,6 +10,9 @@ from .Decomposition_Base import def_layer_num
 from .Decomposition_Base import Decomposition_Base
 from .Two_Qubit_Decomposition import Two_Qubit_Decomposition
 from .Sub_Matrix_Decomposition import Sub_Matrix_Decomposition
+from operations.operation_block import operation_block
+from operations.CNOT import CNOT
+from operations.U3 import U3
 import numpy as np
 from numpy import linalg as LA
 import time
@@ -114,7 +117,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
             self.finalize_decomposition()
             
             # simplify layers
-            #self.simplify_layers()
+            self.simplify_layers()
             
             # final tuning of the decomposition parameters
             self.final_optimalization()
@@ -265,95 +268,127 @@ class N_Qubit_Decomposition(Decomposition_Base):
 # @brief Call to simplify the gate structure in each layers if possible
     def simplify_layers(self):
         
+        print(' ')
+        print('Try to simplify layers')
+        
+        # current starting index of the optimized parameters
         parameter_idx = 0
         
-        # the number of parameters after the simplification
-        parameter_num = 0
-        
         operations = list()
-        optimized_parameters = np.array()
+        optimized_parameters = np.array([])
         
-        for block_idx in range(0,len(self.operations)):
-            block = self.operations[block_idx]
+        for layer_idx in range(0,len(self.operations)):
+            layer = self.operations[layer_idx]
              
             #number of perations in the block
-            parameter_num_layer = len(block.parameters)
+            parameter_num_layer = len(layer.parameters)
             
             # get the number of CNOT gates and store the block operations if the number of CNOT gates cannot be reduced
-            gate_nums = block.get_gate_nums()
+            gate_nums = layer.get_gate_nums()
             if gate_nums.get('cnot',0) < 2:
-                operations.append(block)
+                operations.append(layer)
                 optimized_parameters = np.concatenate(( optimized_parameters, self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_layer] ))
                 parameter_idx = parameter_idx + parameter_num_layer
                 continue
             
-            full_matrix = block.matrix( self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_layer])
+            # simplify the given layer
+            simplified_layer, simplified_parameters = self.simplify_layer( layer, self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_layer], gate_nums['cnot']-1 )
+            parameter_idx = parameter_idx + parameter_num_layer
             
-            # get the target bit
-            target_qbit = None
-            control_qbit = None
-            for block_op_idx in range(0,len(block.operations)):
-                operation = block.operations[block_op_idx]
-                if operation.type == 'cnot':
-                    target_qbit = operation.target_qbit
-                    control_qbit = operation.control_qbit
-                    break
+            # adding the simplified operations
+            operations.append( simplified_layer )
+            optimized_parameters = np.concatenate(( optimized_parameters, simplified_parameters ))
             
-            if target_qbit is None or control_qbit is None:
-                continue
-            
-            # get the matrix of the two qubit space
-            qbits_reordered = list()
-            for qbit_idx in range(self.qbit_num-1,-1,-1):
-                if qbit_idx != target_qbit and qbit_idx != control_qbit:
-                    qbits_reordered.append(qbit_idx)
-            
-            qbits_reordered.append(control_qbit)
-            qbits_reordered.append(target_qbit)            
-            
-            # contruct the permutation to get the basis for the reordered qbit list
-            bases_reorder_indexes = self.get_basis_of_reordered_qubits( qbits_reordered )
-            
-            # reorder the matrix elements to get the submatrix representing the given 2-qubit matrix into the corner
-            full_matrix_reordered = full_matrix[:, bases_reorder_indexes][bases_reorder_indexes]
-            submatrix = full_matrix_reordered[0:4, 0:4]
-            
-            # decompose the chosen 2-qubit unitary
-            cdecomposition = Two_Qubit_Decomposition(submatrix, optimize_layer_num=True, initial_guess=self.initial_guess)
-            
-            # set the maximal number of layers
-            cdecomposition.max_layer_num = gate_nums['cnot']-1
         
-            # starting the decomposition of the random unitary
-            cdecomposition.start_decomposition(finalize_decomposition=True)
+        # store the modified list of operations and parameters
+        self.operations = operations
+        self.optimized_parameters = optimized_parameters
+        self.parameter_num = len(optimized_parameters)
+    
+    
+    
+    
+    
+##  
+# @brief Call to simplify the gate structure in one layer if possible
+# @param layer An instance of class operation_block containing the 2-qubit gate structure to be simplified
+# @parameters An array of parameters to calculate the matrix of the layer.
+# @max_layer_num The maximal number of layers containing CNOT gates
+    def simplify_layer(self, layer, parameters, max_layer_num):        
+        
+        print(' ')
+        print('Try to simplify layer')
+                       
+        # get the target bit
+        target_qbit = None
+        control_qbit = None
+        for layer_op_idx in range(0,len(layer.operations)):
+            operation = layer.operations[layer_op_idx]
+            if operation.type == 'cnot':
+                target_qbit = operation.target_qbit
+                control_qbit = operation.control_qbit
+                break
             
-            # check whether simplification was succesfull
-            if not cdecomposition.check_optimalization_solution():
-                continue
+        # if there are no target or control qubits, return the initial values
+        if target_qbit is None or control_qbit is None:
+            return layer, parameters
             
-            # replace the block with the simplified one
-            for operation_idx in range(0,len(cdecomposition.operations)):
-                operation = cdecomposition.operations[operation_idx]
+        # get the N-qubit matrix of the layer
+        full_matrix = layer.matrix( parameters )
+            
+        # get the matrix of the two qubit space
+            
+        # reorder the control and target qubits to the end of the list
+        qbits_reordered = list()
+        for qbit_idx in range(self.qbit_num-1,-1,-1):
+            if qbit_idx != target_qbit and qbit_idx != control_qbit:
+                qbits_reordered.append(qbit_idx)
+            
+        qbits_reordered.append(control_qbit)
+        qbits_reordered.append(target_qbit)            
+            
+        # contruct the permutation to get the basis for the reordered qbit list
+        bases_reorder_indexes = self.get_basis_of_reordered_qubits( qbits_reordered )
+            
+        # reorder the matrix elements to get the submatrix representing the given 2-qubit matrix into the corner
+        full_matrix_reordered = full_matrix[:, bases_reorder_indexes][bases_reorder_indexes]
+        submatrix = full_matrix_reordered[0:4, 0:4]
+            
+        # decompose the chosen 2-qubit unitary
+        cdecomposition = Two_Qubit_Decomposition(submatrix.conj().T, optimize_layer_num=True, initial_guess=self.initial_guess)
+            
+        # set the maximal number of layers in the decompoisition
+        cdecomposition.max_layer_num = max_layer_num
+        
+        # starting the decomposition of the random unitary
+        cdecomposition.start_decomposition(finalize_decomposition=True)
+            
+        # check whether simplification was succesfull
+        if not cdecomposition.check_optimalization_solution():
+            # return with the original layer, if the simplification wa snot successfull
+            return layer, parameters
+            
+        # contruct the layer containing the simplified operations in the N-qubit space
+        layer_simplified = operation_block( self.qbit_num )
+        for operation_block_idx in range(0,len(cdecomposition.operations)):
+            op_block = cdecomposition.operations[operation_block_idx]
                 
-                #reorder the qubits and increase the number of qubits
-                operation.set_qbit_num( self.qbit_num )
-                
+            for operation_idx in range(0,len(op_block.operations)):
+                operation = op_block.operations[operation_idx]
+            
                 if operation.type == 'cnot':
-                    operation.control_qbit = control_qbit
-                    operation.target_qbit = target_qbit
+                    operation_new = CNOT(self.qbit_num, control_qbit, target_qbit)
+                    #operation_new = CNOT(2, 1, 0)
                 elif operation.type == 'u3':
-                    pass
-                
-                
-                
-                operations.append(cdecomposition.operations[LLLLLLLLLLLL])
+                    if operation.target_qbit == 0:
+                        operation_new = U3(self.qbit_num, target_qbit, operation.parameters)
+                    elif operation.target_qbit == 1:
+                        operation_new = U3(self.qbit_num, control_qbit, operation.parameters)
+                    #operation_new = U3(2, operation.target_qbit, operation.parameters)
+
+                layer_simplified.add_operation_to_end( operation_new )
             
             
-            print(parameter_num_layer)
-    
-    
-    
-    
-    
-
-
+        return layer_simplified, cdecomposition.optimized_parameters
+#LA.norm( np.dot(layer.matrix(parameters).conj().T, layer_simplified.matrix(cdecomposition.optimized_parameters)))
+#np.dot(submatrix.conj().T, cdecomposition.get_transformed_matrix( cdecomposition.optimized_parameters, cdecomposition.operations, initial_matrix=np.identity(4)) ) #OK

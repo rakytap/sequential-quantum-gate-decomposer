@@ -24,10 +24,8 @@ class U3( Operation ):
     ##
     # @brief Constructor of the class.
     # @param qbit_num The number of qubits in the unitaries
-    # @param 'theta' Logical value. Set to true if parameter theta should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case theta = 0 is set.
-    # @param 'phi' Logical value. Set to true if parameter phi should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case phi = 0 is set.
-    # @param 'lambda' Logical value. Set to true if parameter lambda should be added as a free parameter to the U3 operations, or false (def ault) otherwised. In this case lambda = 0 is set.
-    def __init__(self, qbit_num, target_qbit, Theta=False, Phi=False, Lambda=False):
+    # @param parameter_labels A list of strings 'Theta', 'Phi' or 'Lambda' indicating the free parameters of the U3 operations. (Paremetrs which are not labeled are set to zero)
+    def __init__(self, qbit_num, target_qbit, parameter_labels):
         # number of qubits spanning the matrix of the operation
         self.qbit_num = qbit_num
         # A string describing the type of the operation
@@ -39,37 +37,37 @@ class U3( Operation ):
         # The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
         self.control_qbit = None     
         
-        if Theta and Phi and Lambda:
+        if 'Theta' in parameter_labels and 'Phi' in parameter_labels and 'Lambda' in parameter_labels :
             # function handle to calculate the operation on the target qubit
             self.matrix = self.composite_u3_Theta_Phi_Lambda
             self.parameters = ["Theta", "Phi", "Lambda"]
             
-        elif (not Theta) and Phi and Lambda:
+        elif not ('Theta' in parameter_labels) and 'Phi' in parameter_labels and 'Lambda' in parameter_labels:
             # function handle to calculate the operation on the target qubit
             self.matrix = self.composite_u3_Phi_Lambda
             self.parameters = ["phi", "Lambda"]
             
-        elif Theta and (not Phi) and Lambda:
+        elif 'Theta' in parameter_labels and (not ('Phi' in parameter_labels)) and 'Lambda' in parameter_labels :
             # function handle to calculate the operation on the target qubit
             self.matrix = self.composite_u3_Theta_Lambda
             self.parameters = ["Theta", "Lambda"]
            
-        elif Theta and Phi and (not Lambda)  :          
+        elif 'Theta' in parameter_labels and 'Phi' in parameter_labels and (not ('Lambda' in parameter_labels))  :          
             # function handle to calculate the operation on the target qubit
             self.matrix = self.composite_u3_Theta_Phi
             self.parameters = ["Theta", "Phi"]
             
-        elif (not Theta) and (not Phi) and Lambda:
+        elif (not ('Theta' in parameter_labels)) and (not ('Phi' in parameter_labels) ) and 'Lambda' in parameter_labels:
             # function handle to calculate the operation on the target qubit
             self.matrix = self.composite_u3_Lambda
             self.parameters = ["Lambda"]
              
-        elif (not Theta) and Phi and (not Lambda):
+        elif (not ('Theta' in parameter_labels)) and 'Phi' in parameter_labels and (not ('Lambda' in parameter_labels)):
             # function handle to calculate the operation on the target qubit
             self.matrix = self.composite_u3_Phi
             self.parameters = ["Phi"]
         
-        elif Theta and (not Phi) and (not Lambda):
+        elif 'Theta' in parameter_labels and (not ('Phi' in parameter_labels)) and (not ('Lambda' in parameter_labels)):
             # function handle to calculate the operation on the target qubit
             self.matrix = self.composite_u3_Theta
             self.parameters = ["Theta"]
