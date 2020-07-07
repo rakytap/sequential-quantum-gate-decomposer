@@ -37,7 +37,7 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
 # @brief Constructor of the class.
 # @param Umtx The unitary matrix
 # @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
-# @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
+# @param parallel Optional logical value. If true, parallelized optimalization is used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random'
 # @return An instance of the class
