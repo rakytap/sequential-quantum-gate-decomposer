@@ -82,7 +82,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         start_time = time.time()
             
         # create an instance of class to disentangle the given qubit pair
-        cSub_decomposition = Sub_Matrix_Decomposition(self.Umtx, optimize_layer_num=self.optimize_layer_num, parallel=self.parallel, identical_blocks=self.identical_blocks)   
+        cSub_decomposition = Sub_Matrix_Decomposition(self.Umtx, optimize_layer_num=self.optimize_layer_num, initial_guess=self.initial_guess, parallel=self.parallel, identical_blocks=self.identical_blocks)   
         
         # The maximal error of the optimalization problem
         cSub_decomposition.optimalization_tolerance = self.optimalization_tolerance

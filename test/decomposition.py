@@ -212,11 +212,10 @@ def IBM_challenge_decomposition():
     # set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
     identical_blocks = { '4':2, '3':1}
 
-    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, identical_blocks=identical_blocks )
+    # creating class to decompose the matrix
+    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, identical_blocks=identical_blocks, initial_guess= 'random' )
     cDecomposition.max_layer_num = 9
     cDecomposition.optimalization_block = 1
-    
-    cDecomposition.reorder_qubits([3, 2, 1, 0])
     
     #start the decomposition
     cDecomposition.start_decomposition()
