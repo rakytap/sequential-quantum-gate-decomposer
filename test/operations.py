@@ -28,8 +28,8 @@ def test_general_operation():
     op = Operation( qbit_num )    
     
     # reorder qubits
-    qbit_array = np.array([2, 1, 0, 3])
-    op.reorder_qubits( qbit_array )
+    qbit_list = [2, 1, 0, 3]
+    op.reorder_qubits( qbit_list )
     
     
     
@@ -64,9 +64,9 @@ def test_U3_operation():
     print(' ')
     
     # reorder qubits, and test the modified target qubit
-    qbit_array = np.array([0, 1])
-    op.reorder_qubits( qbit_array )
-    if op.target_qbit != qbit_array[-target_qbit-1]:
+    qbit_list = [0, 1]
+    op.reorder_qubits( qbit_list )
+    if op.target_qbit != qbit_list[-target_qbit-1]:
         raise('Reordering qubits does not work properly')
         
     
@@ -107,9 +107,9 @@ def test_CNOT_operation():
     print(' ')
     
     # reorder qubits, and test the modified target qubit
-    qbit_array = np.array([2, 0, 1])
-    op.reorder_qubits( qbit_array )
-    if op.target_qbit != qbit_array[-target_qbit-1]:
+    qbit_list = [2, 0, 1]
+    op.reorder_qubits( qbit_list )
+    if op.target_qbit != qbit_list[-target_qbit-1]:
         raise('Reordering qubits does not work properly')
         
     

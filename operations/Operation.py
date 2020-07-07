@@ -38,14 +38,14 @@ class Operation():
      
     ##
     # @brief Call to reored the qubits in the matrix of the operation
-    # @param qbit_array The array of qubits spanning the matrix
-    def reorder_qubits( self, qbit_array ):
+    # @param qbit_list The list of qubits spanning the matrix
+    def reorder_qubits( self, qbit_list ):
         
         # check the number of qubits
-        if len( qbit_array ) != self.qbit_num:
+        if len( qbit_list ) != self.qbit_num:
             raise BaseException('Wrong number of qubits')
         
         # setting the new value for the target qubit
         if self.target_qbit != None :
-            self.target_qbit = qbit_array[-self.target_qbit-1]
+            self.target_qbit = qbit_list[-self.target_qbit-1]
         

@@ -17,12 +17,14 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
 # @brief Constructor of the class.
 # @param Umtx The unitary matrix
 # @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
-# @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @operation_layer) is at least 10). For False (default) sequential optimalization is applied
+# @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
+# @param identical_blocks A dictionary {'n': integer} indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
+# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random'
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False, parallel= False, method='L-BFGS-B' ):  
+    def __init__( self, Umtx, optimize_layer_num=False, parallel= False, method='L-BFGS-B', identical_blocks=dict(), initial_guess= 'zeros' ):  
         
-        Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method ) 
+        Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method, initial_guess=initial_guess ) 
             
         
         # logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
@@ -38,14 +40,16 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
         self.max_iterations = int(1e4)
         
         # number of operators in one sub-layer of the optimalization process
-        self.operation_layer = 1     
+        self.optimalization_block = 1     
         
         # logical value indicating whether the quasi-unitarization of the submatrices was done or not 
         self.subdisentaglement_done = False
         
         # The subunitarized matrix
         self.subunitarized_mtx = None
-                        
+                
+        # The number of successive identical blocks in one leyer
+        self.identical_blocks = identical_blocks        
     
     
     
@@ -93,23 +97,25 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
                     # creating block of operations
                     block = operation_block( self.qbit_num )
                     
-                    # add CNOT gate to the block
-                    block.add_cnot_to_end(control_qbit, target_qbit)       
+                    for idx in range(0,self.identical_blocks.get(str(self.qbit_num),1)):
+                        
                     
-                    # adding U3 operation to the block
-                    block.add_u3_to_end(target_qbit, Theta=True, Lambda=True) 
-                    block.add_u3_to_end(control_qbit, Theta=True, Lambda=True) 
+                        # add CNOT gate to the block
+                        block.add_cnot_to_end(control_qbit, target_qbit)       
+                    
+                        # adding U3 operation to the block
+                        block.add_u3_to_end(target_qbit, Theta=True, Lambda=True) 
+                        block.add_u3_to_end(control_qbit, Theta=True, Lambda=True) 
                     
                     # adding the opeartion block to the operations
-                    self.add_operation_to_end( block )
-                    
+                    self.add_operation_to_end( block )                    
                 
                 
                 # get the number of blocks
                 self.layer_num = len(self.operations)
                                                  
                 # Do the optimalization
-                if (self.optimize_layer_num and self.layer_num % (2*(self.qbit_num-1)) == 0) or self.layer_num >= self.max_layer_num:
+                if self.optimize_layer_num  or self.layer_num >= self.max_layer_num:
                     # solve the optzimalization problem to find the correct mninimum
                     self.solve_optimalization_problem( optimalization_problem=self.subdisentaglement_problem, solution_guess=self.optimized_parameters)   
 

@@ -107,14 +107,16 @@ class CNOT( Operation ):
         return ret
         
     
-    
-    def reorder_qubits( self, qbit_array ):
+    ##
+    # @brief Call to reored the qubits in the matrix of the operation
+    # @param qbit_list The list of qubits spanning the matrix
+    def reorder_qubits( self, qbit_list ):
         
-        Operation.reorder_qubits( self, qbit_array )
+        Operation.reorder_qubits( self, qbit_list )
                 
         #% setting the new value for the control qubit
         if not(self.control_qbit is None) :
-            self.control_qbit = qbit_array[-self.control_qbit-1]
+            self.control_qbit = qbit_list[-self.control_qbit-1]
         
         # recreate the operation matrix
         self.matrix = self.composite_cnot( self.control_qbit, self.target_qbit )
