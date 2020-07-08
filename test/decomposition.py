@@ -170,9 +170,8 @@ def IBM_challenge_decomposition():
     identical_blocks = { '4':2, '3':1}
 
     # creating class to decompose the matrix
-    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, identical_blocks=identical_blocks, initial_guess= 'random' )
+    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, identical_blocks=identical_blocks, initial_guess= 'zeros' )
     cDecomposition.max_layer_num = 9
-    cDecomposition.optimalization_block = 1
     
     #start the decomposition
     cDecomposition.start_decomposition()
@@ -228,13 +227,13 @@ def four_qubit_decomposition():
     print(Umtx)
     print(' ')
 
-    cDecomposition = N_Qubit_Decomposition( Umtx, parallel = True, identical_blocks={'4':2, '3':1} )
+    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, parallel = True, identical_blocks={'4':2, '3':1} )
     
     # Maximal number of iteartions in the optimalization process
     cDecomposition.set_max_iteration( int(1e6) )
     
     # Set the tolerance of the minimum of the cost function during the optimalization
-    cDecomposition.optimalization_tolerance = 1e-13
+    cDecomposition.optimalization_tolerance = 1e-7
     
     #start the decomposition
     cDecomposition.start_decomposition()
