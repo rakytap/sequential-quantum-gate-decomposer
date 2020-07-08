@@ -101,7 +101,37 @@ class operation_block(Operations):
             
         return operation_mtx_tot
         
-         
+
+##
+# @biref Call to get the involved qubits in the operations stored in the block
+# @return Return with an array of the invovled qubits
+    def get_involved_qubits(self):
+        
+        involved_qbits = list()
+        
+        for op_idx in range(0,len(self.operations)):
+            operation = self.operations[op_idx]
+            if not operation.target_qbit is None:
+                if not operation.target_qbit in involved_qbits:
+                    involved_qbits.append(operation.target_qbit)
+                    
+            if not operation.control_qbit is None:
+                if not operation.control_qbit in involved_qbits:
+                    involved_qbits.append(operation.control_qbit)
+            
+        involved_qbits.sort()
+        return np.array(involved_qbits)
+    
+    
+##
+# @biref Call to append the operations of an operation bolck to the current block
+# @param an instance of class @operation_block
+    def combine(self, op_block):
+        
+        for op_idx in range(0, len(op_block.operations)):
+            operation = op_block.operations[op_idx]
+            
+            self.add_operation_to_end(operation)
     
     
 ## 

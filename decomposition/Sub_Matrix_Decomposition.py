@@ -108,11 +108,12 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
                 
                 for target_qbit in range(self.qbit_num-2,-1,-1):
                     
-                    # creating block of operations
-                    block = operation_block( self.qbit_num )
+                    
                     
                     for idx in range(0,self.identical_blocks.get(str(self.qbit_num),1)):
                         
+                        # creating block of operations
+                        block = operation_block( self.qbit_num )
                     
                         # add CNOT gate to the block
                         block.add_cnot_to_end(control_qbit, target_qbit)       
@@ -121,8 +122,8 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
                         block.add_u3_to_end(target_qbit, ['Theta', 'Lambda']) 
                         block.add_u3_to_end(control_qbit, ['Theta', 'Lambda']) 
                     
-                    # adding the opeartion block to the operations
-                    self.add_operation_to_end( block )                    
+                        # adding the opeartion block to the operations
+                        self.add_operation_to_end( block )                    
                 
                 
                 # get the number of blocks

@@ -36,8 +36,9 @@ decomposition.two_qubit_decomposition()
 #%% Test of general three-qubit decomposition
 decomposition.three_qubit_decomposition()
 
+#%% Test of three-qubit decomposition
+decomposition.IBM_challenge_decomposition()
+
 #%% Test of general four-qubit decomposition
 decomposition.four_qubit_decomposition()
 
-#%% Test of three-qubit decomposition
-decomposition.IBM_challenge_decomposition()

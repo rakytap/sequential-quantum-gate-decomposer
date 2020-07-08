@@ -279,7 +279,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         
       
 ##  
-# @brief Call to simplify the gate structure in each layers if possible
+# @brief Call to simplify the gate structure in each layers if possible (i.e. tries to reduce the number of CNOT gates)
     def simplify_layers(self):
         
         print(' ')
@@ -291,26 +291,73 @@ class N_Qubit_Decomposition(Decomposition_Base):
         operations = list()
         optimized_parameters = np.array([])
         
-        for layer_idx in range(0,len(self.operations)):
-            layer = self.operations[layer_idx]
+        layer_idx = 0
+        
+        while layer_idx < len(self.operations):
+            
+            # generate a block of operations to be simplified 
+            # (containg only successive two-qubit operations)
+            block_to_simplify = operation_block( self.qbit_num )
+            
+            involved_qbits = None
+            # layers in the block to be simplified
+            layers_in_block = list()
+            
+            # get the successive operations involving the same qubits
+            while True:
+                
+                if layer_idx >= len(self.operations):
+                    break 
+                
+                # get the current layer of operations
+                layer = self.operations[layer_idx] 
+                layer_idx = layer_idx + 1
+                
+                
+                
+                #get the involved qubits
+                involved_qbits_loc = layer.get_involved_qubits()
+                #print(str(layer_idx-1) + ': ' + str(involved_qbits_loc))
+                
+                if involved_qbits is None:
+                    involved_qbits = involved_qbits_loc
+                else :
+                    involved_qbits = np.concatenate(( involved_qbits, involved_qbits_loc ))
+                    involved_qbits = np.unique(involved_qbits)
+                     
+                if len(involved_qbits)> 2 and len(layers_in_block) > 0: 
+                    layer_idx = layer_idx -1
+                    break       
+                
+                layers_in_block.append(layer)
+                
+                # adding the operations to teh block if they act on the same qubits
+                block_to_simplify.combine(layer)                
+                
+                
+                            
              
             #number of perations in the block
-            parameter_num_layer = len(layer.parameters)
+            parameter_num_block = len(block_to_simplify.parameters)
+                                       
             
             # get the number of CNOT gates and store the block operations if the number of CNOT gates cannot be reduced
-            gate_nums = layer.get_gate_nums()
+            gate_nums = block_to_simplify.get_gate_nums()
             if gate_nums.get('cnot',0) < 2:
-                operations.append(layer)
-                optimized_parameters = np.concatenate(( optimized_parameters, self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_layer] ))
-                parameter_idx = parameter_idx + parameter_num_layer
+                operations = operations + layers_in_block
+                optimized_parameters = np.concatenate(( optimized_parameters, self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_block] ))
+                parameter_idx = parameter_idx + parameter_num_block                    
                 continue
             
             # simplify the given layer
-            simplified_layer, simplified_parameters = self.simplify_layer( layer, self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_layer], gate_nums['cnot']-1 )
-            parameter_idx = parameter_idx + parameter_num_layer
+            simplified_layer, simplified_parameters, simplification_status = self.simplify_layer( block_to_simplify, self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_block], gate_nums['cnot']-1 )
+            parameter_idx = parameter_idx + parameter_num_block
             
-            # adding the simplified operations
-            operations.append( simplified_layer )
+            # adding the simplified operations (or the non-simplified if the simplification was not successfull)
+            if simplification_status:
+                operations.append( simplified_layer )
+            else:
+                operations = operations + layers_in_block
             optimized_parameters = np.concatenate(( optimized_parameters, simplified_parameters ))
             
         
@@ -318,16 +365,18 @@ class N_Qubit_Decomposition(Decomposition_Base):
         self.operations = operations
         self.optimized_parameters = optimized_parameters
         self.parameter_num = len(optimized_parameters)
+        self.layer_num = len(operations)
     
     
     
     
     
 ##  
-# @brief Call to simplify the gate structure in one layer if possible
+# @brief Call to simplify the gate structure (i.e. tries to reduce the number of CNOT gates) in one layer if possible
 # @param layer An instance of class operation_block containing the 2-qubit gate structure to be simplified
 # @parameters An array of parameters to calculate the matrix of the layer.
 # @max_layer_num The maximal number of layers containing CNOT gates
+# @return An instance of class operation_block containing the simplified gate operations.       
     def simplify_layer(self, layer, parameters, max_layer_num):        
         
         print(' ')
@@ -345,7 +394,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
             
         # if there are no target or control qubits, return the initial values
         if target_qbit is None or control_qbit is None:
-            return layer, parameters
+            return layer, parameters, False
             
         # get the N-qubit matrix of the layer
         full_matrix = layer.matrix( parameters )
@@ -380,7 +429,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         # check whether simplification was succesfull
         if not cdecomposition.check_optimalization_solution():
             # return with the original layer, if the simplification wa snot successfull
-            return layer, parameters
+            return layer, parameters, False
             
         # contruct the layer containing the simplified operations in the N-qubit space
         layer_simplified = operation_block( self.qbit_num )
@@ -403,6 +452,6 @@ class N_Qubit_Decomposition(Decomposition_Base):
                 layer_simplified.add_operation_to_end( operation_new )
             
             
-        return layer_simplified, cdecomposition.optimized_parameters
+        return layer_simplified, cdecomposition.optimized_parameters, True
 #LA.norm( np.dot(layer.matrix(parameters).conj().T, layer_simplified.matrix(cdecomposition.optimized_parameters)))
 #np.dot(submatrix.conj().T, cdecomposition.get_transformed_matrix( cdecomposition.optimized_parameters, cdecomposition.operations, initial_matrix=np.identity(4)) ) #OK

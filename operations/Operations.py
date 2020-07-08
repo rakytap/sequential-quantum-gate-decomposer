@@ -195,93 +195,93 @@ class  Operations():
     
     
     
-## list_operation_inverses
+##
 # @brief Lists the operations decomposing the initial unitary. (These operations are the inverse operations of the operations bringing the intial matrix into unity.)
 # @param parameters The parameters of the operations that should be inverted
 # @param start_index The index of the first inverse operation
-    def list_operation_inverses( self, parameters, start_index = 1 ):
+    def list_operations( self, parameters, start_index = 1 ):
                
-        parameter_idx = 0
-        operation_idx = start_index
+        operation_idx = start_index        
+        parameter_idx = len(parameters)
         
-        for idx in range(0, len(self.operations)):#range(len(self.operations)-1,-1,-1):
+        for idx in range(len(self.operations)-1,-1,-1):
             message = str(operation_idx) + 'th operation:'
             
             operation = self.operations[idx]
-           
+            
             if operation.type == 'cnot':
                 message = message + ' CNOT with control qubit: ' + str(operation.control_qbit) + ' and target qubit: '  + str(operation.target_qbit)
                 operation_idx = operation_idx + 1
-                                
-            elif operation.type == 'block':
-                parameters_layer = parameters[ (parameter_idx): (parameter_idx+operation.parameter_num) ]
-                operation.list_operation_inverses( parameters_layer, start_index=operation_idx )
-                operation_idx = operation_idx + len(operation.operations)
-                parameter_idx = parameter_idx + operation.parameter_num
-                continue
-               
+                
             elif operation.type == 'u3':
-               
-                message = message + ' U3 on target qubit: ' + str(operation.target_qbit)
                 
                 # get the inverse parameters of the U3 rotation
                 
                 if len(operation.parameters) == 1 and operation.parameters[0] == 'Theta':
-                    vartheta = parameters[ parameter_idx ]
-                    varphi = np.pi
-                    varlambda = np.pi
-                    parameter_idx = parameter_idx + 1
+                    vartheta = parameters[ parameter_idx-1 ]
+                    varphi = 0
+                    varlambda =0
+                    
+                    parameter_idx = parameter_idx - 1                    
+                    
                     
                 elif len(operation.parameters) == 1 and operation.parameters[0] == 'Phi':
-                    vartheta = 0;
-                    varphi = np.pi;
-                    varlambda = np.pi-parameters[ parameter_idx ];
-                    parameter_idx = parameter_idx + 1
+                    vartheta = 0
+                    varphi = parameters[ parameter_idx-1 ]
+                    varlambda =0
+                    
+                    parameter_idx = parameter_idx - 1                    
                     
                 elif len(operation.parameters) == 1 and operation.parameters[0] == 'Lambda':
-                    vartheta = 0;
-                    varphi = np.pi-parameters[ parameter_idx ]
-                    varlambda = np.pi;
-                    parameter_idx = parameter_idx + 1
+                    vartheta = 0
+                    varphi =  0
+                    varlambda =parameters[ parameter_idx-1 ]                  
+                    parameter_idx = parameter_idx - 1   
                     
-                elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Phi' in operation.parameters:
-                    vartheta = parameters[ parameter_idx ]
-                    varphi = np.pi;
-                    varlambda = np.pi-parameters[ parameter_idx+1 ]
-                    parameter_idx = parameter_idx + 2
+                elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Phi' in operation.parameters:                    
+                    vartheta = parameters[ parameter_idx-2 ]
+                    varphi = parameters[ parameter_idx-1 ]
+                    varlambda = 0       
+                    parameter_idx = parameter_idx - 2
                     
+                
                 elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Lambda' in operation.parameters:
-                    vartheta = parameters[ parameter_idx ]
-                    varphi = np.pi-parameters[ parameter_idx+1 ]
-                    varlambda = np.pi;
-                    parameter_idx = parameter_idx + 2
-                    
+                    vartheta = parameters[ parameter_idx-2 ]
+                    varphi = 0
+                    varlambda = parameters[ parameter_idx-1 ]                    
+                    parameter_idx = parameter_idx - 2
+                
                 elif len(operation.parameters) == 2 and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
-                    vartheta = 0;
-                    varphi = np.pi-parameters[ parameter_idx+1 ]
-                    varlambda = np.pi-parameters[ parameter_idx ]
-                    parameter_idx = parameter_idx + 2
+                    vartheta = 0
+                    varphi = parameters[ parameter_idx-2]
+                    varlambda = parameters[ parameter_idx-1 ]                    
+                    parameter_idx = parameter_idx - 2
                     
                 elif len(operation.parameters) == 3 and 'Theta' in operation.parameters and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
-                    vartheta = parameters[ parameter_idx ]
-                    varphi = np.pi-parameters[ parameter_idx+2 ]
-                    varlambda = np.pi-parameters[ parameter_idx+1 ]
-                    parameter_idx = parameter_idx + 3
-                
-                
-                
+                    vartheta = parameters[ parameter_idx-3 ]
+                    varphi = parameters[ parameter_idx-2 ]
+                    varlambda = parameters[ parameter_idx-1 ]                    
+                    parameter_idx = parameter_idx - 3
+                    
                 message = message + ' with parameters theta = ' + str(vartheta) + ', phi = ' + str(varphi) + ' and lambda = ' + str(varlambda)
-                operation_idx = operation_idx + 1
+                operation_idx = operation_idx + 1 
                 
+            elif operation.type == 'block':
+                parameters_layer = parameters[ (parameter_idx-operation.parameter_num): (parameter_idx) ]            
+                operation.list_operations( parameters_layer, start_index = start_index )   
+                parameter_idx = parameter_idx - operation.parameter_num
+                operation_idx = operation_idx + len(operation.operations)                
+                continue
+                    
             
             print( message )
-    
+            
             
 ##
 # @brief Call to contruct Qiskit compatible quantum circuit from the operations reproducing the initial unitary.
 # @param parameters Array of parameters corresponding to the U3 operation
 # @param circuit Qiskit circut. Optional parameter
-    def get_quantum_circuit(self, parameters, circuit=None):
+    def get_quantum_circuit_inverse(self, parameters, circuit=None):
         
         if circuit is None:
             circuit = QuantumCircuit(self.qbit_num)
@@ -356,7 +356,7 @@ class  Operations():
                 
             elif operation.type == 'block':
                 parameters_layer = parameters[ (parameter_idx): (parameter_idx+operation.parameter_num) ]            
-                circuit = operation.get_quantum_circuit( parameters_layer, circuit=circuit )   
+                circuit = operation.get_quantum_circuit_inverse( parameters_layer, circuit=circuit )   
                 parameter_idx = parameter_idx + operation.parameter_num
                 
                 continue
@@ -376,14 +376,14 @@ class  Operations():
 # @brief Call to contruct Qiskit compatible quantum circuit from the operations that brings the original unitary into identity
 # @param parameters Array of parameters corresponding to the U3 operation
 # @param circuit Qiskit circut. Optional parameter
-    def get_quantum_circuit_decomposition(self, parameters, circuit=None):
+    def get_quantum_circuit(self, parameters, circuit=None):
         
         if circuit is None:
             circuit = QuantumCircuit(self.qbit_num)
             
         parameter_idx = len(parameters)
         
-        initial_matrix = np.identity(2**self.qbit_num)
+        #initial_matrix = np.identity(2**self.qbit_num)
         
         
         for idx in range(len(self.operations)-1,-1,-1):
@@ -391,7 +391,7 @@ class  Operations():
             operation = self.operations[idx]
             
             if operation.type == 'cnot':
-                operation_mtx = operation.matrix
+                #operation_mtx = operation.matrix
                 circuit.cx(operation.control_qbit, operation.target_qbit)
                 
             elif operation.type == 'u3':
@@ -399,7 +399,7 @@ class  Operations():
                 # get the inverse parameters of the U3 rotation
                 
                 if len(operation.parameters) == 1 and operation.parameters[0] == 'Theta':
-                    operation_mtx = operation.matrix( parameters[parameter_idx-1] )
+                    #operation_mtx = operation.matrix( parameters[parameter_idx-1] )
                     vartheta = parameters[ parameter_idx-1 ]
                     varphi = 0#np.pi
                     varlambda =0#np.pi
@@ -408,7 +408,7 @@ class  Operations():
                     
                     
                 elif len(operation.parameters) == 1 and operation.parameters[0] == 'Phi':
-                    operation_mtx = operation.matrix( parameters[parameter_idx-1] )
+                    #operation_mtx = operation.matrix( parameters[parameter_idx-1] )
                     vartheta = 0
                     varphi = parameters[ parameter_idx-1 ]#np.pi;
                     varlambda =0#np.pi
@@ -416,14 +416,14 @@ class  Operations():
                     parameter_idx = parameter_idx - 1                    
                     
                 elif len(operation.parameters) == 1 and operation.parameters[0] == 'Lambda':
-                    operation_mtx = operation.matrix( parameters[parameter_idx-1] )
+                    #operation_mtx = operation.matrix( parameters[parameter_idx-1] )
                     vartheta = 0
                     varphi =  0
                     varlambda =parameters[ parameter_idx-1 ]#np.pi;                    
                     parameter_idx = parameter_idx - 1   
                     
                 elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Phi' in operation.parameters:
-                    operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )                  
+                    #operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )                  
                     
                     vartheta = parameters[ parameter_idx-2 ]
                     varphi = parameters[ parameter_idx-1 ]#np.pi;
@@ -432,14 +432,14 @@ class  Operations():
                     
                 
                 elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Lambda' in operation.parameters:
-                    operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )                    
+                    #operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )                    
                     vartheta = parameters[ parameter_idx-2 ]
                     varphi = 0
                     varlambda = parameters[ parameter_idx-1 ]                    
                     parameter_idx = parameter_idx - 2
                 
                 elif len(operation.parameters) == 2 and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
-                    operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )
+                    #operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )
                     vartheta = 0
                     varphi = parameters[ parameter_idx-2]
                     varlambda = parameters[ parameter_idx-1 ]
@@ -447,7 +447,7 @@ class  Operations():
                     parameter_idx = parameter_idx - 2
                     
                 elif len(operation.parameters) == 3 and 'Theta' in operation.parameters and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
-                    operation_mtx = operation.matrix( parameters[parameter_idx-3:parameter_idx] )
+                    #operation_mtx = operation.matrix( parameters[parameter_idx-3:parameter_idx] )
                     vartheta = parameters[ parameter_idx-3 ]
                     varphi = parameters[ parameter_idx-2 ]
                     varlambda = parameters[ parameter_idx-1 ]                    
@@ -457,16 +457,16 @@ class  Operations():
                 circuit.u3(vartheta, varphi, varlambda, operation.target_qbit)
                 
             elif operation.type == 'block':
-                parameters_num = len(operation.parameters)
-                operation_mtx = operation.matrix( parameters[parameter_idx-parameters_num:parameter_idx] )   
+                #parameters_num = len(operation.parameters)
+                #operation_mtx = operation.matrix( parameters[parameter_idx-parameters_num:parameter_idx] )   
                 parameters_layer = parameters[ (parameter_idx-operation.parameter_num): (parameter_idx) ]            
-                circuit = operation.get_quantum_circuit_decomposition( parameters_layer, circuit=circuit )   
+                circuit = operation.get_quantum_circuit( parameters_layer, circuit=circuit )   
                 parameter_idx = parameter_idx - operation.parameter_num
                 
                 continue
                     
             
-            initial_matrix = np.dot( operation_mtx, initial_matrix )
+            #initial_matrix = np.dot( operation_mtx, initial_matrix )
             
             
         return circuit

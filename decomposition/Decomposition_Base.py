@@ -160,9 +160,9 @@ class Decomposition_Base( Operations ):
 ##
 # @brief Lists the operations decomposing the initial unitary. (These operations are the inverse operations of the operations bringing the intial matrix into unity.)
 # @param start_index The index of the first inverse operation
-    def list_operation_inverses( self, start_index = 1 ):
+    def list_operations( self, start_index = 1 ):
        
-        Operations.list_operation_inverses(self, self.optimized_parameters, start_index = start_index )
+        Operations.list_operations(self, self.optimized_parameters, start_index = start_index )
        
 
                 
@@ -586,13 +586,13 @@ class Decomposition_Base( Operations ):
        
 ##
 # @brief Call to contruct Qiskit compatible quantum circuit from the operations
-    def get_quantum_circuit(self, circuit=None):
-        return Operations.get_quantum_circuit( self, self.optimized_parameters, circuit=circuit)
+    def get_quantum_circuit_inverse(self, circuit=None):
+        return Operations.get_quantum_circuit_inverse( self, self.optimized_parameters, circuit=circuit)
     
 ##
 # @brief Call to contruct Qiskit compatible quantum circuit from the operations that brings the original unitary into identity
-    def get_quantum_circuit_decomposition(self, circuit=None):    
-        return Operations.get_quantum_circuit_decomposition( self, self.optimized_parameters, circuit=circuit)
+    def get_quantum_circuit(self, circuit=None):    
+        return Operations.get_quantum_circuit( self, self.optimized_parameters, circuit=circuit)
 
 
 ## apply_operation
