@@ -218,7 +218,7 @@ class  Operations():
                 # get the inverse parameters of the U3 rotation
                 
                 if len(operation.parameters) == 1 and operation.parameters[0] == 'Theta':
-                    vartheta = parameters[ parameter_idx-1 ]
+                    vartheta = parameters[ parameter_idx-1 ]  % (4*np.pi) 
                     varphi = 0
                     varlambda =0
                     
@@ -227,7 +227,7 @@ class  Operations():
                     
                 elif len(operation.parameters) == 1 and operation.parameters[0] == 'Phi':
                     vartheta = 0
-                    varphi = parameters[ parameter_idx-1 ]
+                    varphi = parameters[ parameter_idx-1 ] % (2*np.pi) 
                     varlambda =0
                     
                     parameter_idx = parameter_idx - 1                    
@@ -235,32 +235,32 @@ class  Operations():
                 elif len(operation.parameters) == 1 and operation.parameters[0] == 'Lambda':
                     vartheta = 0
                     varphi =  0
-                    varlambda =parameters[ parameter_idx-1 ]                  
+                    varlambda =parameters[ parameter_idx-1 ]    % (2*np.pi)                
                     parameter_idx = parameter_idx - 1   
                     
                 elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Phi' in operation.parameters:                    
-                    vartheta = parameters[ parameter_idx-2 ]
-                    varphi = parameters[ parameter_idx-1 ]
+                    vartheta = parameters[ parameter_idx-2 ]  % (4*np.pi) 
+                    varphi = parameters[ parameter_idx-1 ]  % (2*np.pi) 
                     varlambda = 0       
                     parameter_idx = parameter_idx - 2
                     
                 
                 elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Lambda' in operation.parameters:
-                    vartheta = parameters[ parameter_idx-2 ]
+                    vartheta = parameters[ parameter_idx-2 ]  % (4*np.pi) 
                     varphi = 0
-                    varlambda = parameters[ parameter_idx-1 ]                    
+                    varlambda = parameters[ parameter_idx-1 ]  % (2*np.pi)                 
                     parameter_idx = parameter_idx - 2
                 
                 elif len(operation.parameters) == 2 and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
                     vartheta = 0
-                    varphi = parameters[ parameter_idx-2]
-                    varlambda = parameters[ parameter_idx-1 ]                    
+                    varphi = parameters[ parameter_idx-2] % (2*np.pi) 
+                    varlambda = parameters[ parameter_idx-1 ]   % (2*np.pi)                  
                     parameter_idx = parameter_idx - 2
                     
                 elif len(operation.parameters) == 3 and 'Theta' in operation.parameters and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
-                    vartheta = parameters[ parameter_idx-3 ]
-                    varphi = parameters[ parameter_idx-2 ]
-                    varlambda = parameters[ parameter_idx-1 ]                    
+                    vartheta = parameters[ parameter_idx-3 ]  % (4*np.pi) 
+                    varphi = parameters[ parameter_idx-2 ]  % (2*np.pi) 
+                    varlambda = parameters[ parameter_idx-1 ]   % (2*np.pi)                    
                     parameter_idx = parameter_idx - 3
                     
                 message = message + ' with parameters theta = ' + str(vartheta) + ', phi = ' + str(varphi) + ' and lambda = ' + str(varlambda)
@@ -301,7 +301,7 @@ class  Operations():
                 # get the inverse parameters of the U3 rotation
                 
                 if len(operation.parameters) == 1 and operation.parameters[0] == 'Theta':
-                    vartheta = parameters[ parameter_idx ]
+                    vartheta = parameters[ parameter_idx ]  % (4*np.pi) 
                     varphi = np.pi
                     varlambda = np.pi
                     
@@ -311,43 +311,43 @@ class  Operations():
                 elif len(operation.parameters) == 1 and operation.parameters[0] == 'Phi':
                     vartheta = 0
                     varphi = np.pi
-                    varlambda = np.pi- parameters[ parameter_idx ]
+                    varlambda = (np.pi- parameters[ parameter_idx ])  % (2*np.pi) 
                     
                     parameter_idx = parameter_idx + 1                    
                     
                 elif len(operation.parameters) == 1 and operation.parameters[0] == 'Lambda':
                     vartheta = 0
-                    varphi =  np.pi-parameters[ parameter_idx ]
+                    varphi =  (np.pi-parameters[ parameter_idx ])  % (2*np.pi) 
                     varlambda = np.pi
                     
                     parameter_idx = parameter_idx + 1   
                     
                 elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Phi' in operation.parameters:                    
-                    vartheta = parameters[ parameter_idx ]
+                    vartheta = parameters[ parameter_idx ]  % (4*np.pi) 
                     varphi = np.pi
-                    varlambda = np.pi-parameters[ parameter_idx+1 ]
+                    varlambda = (np.pi-parameters[ parameter_idx+1 ])  % (2*np.pi) 
                     
                     parameter_idx = parameter_idx + 2
                     
                 
                 elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Lambda' in operation.parameters:
-                    vartheta = parameters[ parameter_idx ]
-                    varphi = np.pi-parameters[ parameter_idx+1 ]
+                    vartheta = parameters[ parameter_idx ] % (4*np.pi) 
+                    varphi = (np.pi-parameters[ parameter_idx+1 ]) % (2*np.pi) 
                     varlambda = np.pi
                     
                     parameter_idx = parameter_idx + 2
                 
                 elif len(operation.parameters) == 2 and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
                     vartheta = 0
-                    varphi = np.pi-parameters[ parameter_idx+1 ]
-                    varlambda = np.pi-parameters[ parameter_idx ]
+                    varphi = (np.pi-parameters[ parameter_idx+1 ])  % (2*np.pi) 
+                    varlambda = (np.pi-parameters[ parameter_idx ])  % (2*np.pi)  
                     
                     parameter_idx = parameter_idx + 2
                     
                 elif len(operation.parameters) == 3 and 'Theta' in operation.parameters and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
-                    vartheta = parameters[ parameter_idx ]
-                    varphi = np.pi-parameters[ parameter_idx+2 ]
-                    varlambda = np.pi-parameters[ parameter_idx+1 ]
+                    vartheta = parameters[ parameter_idx ]  % 4*np.pi
+                    varphi = (np.pi-parameters[ parameter_idx+2 ])  % (2*np.pi) 
+                    varlambda = (np.pi-parameters[ parameter_idx+1 ])  % (2*np.pi) 
                     
                     parameter_idx = parameter_idx + 3
                     
@@ -400,9 +400,9 @@ class  Operations():
                 
                 if len(operation.parameters) == 1 and operation.parameters[0] == 'Theta':
                     #operation_mtx = operation.matrix( parameters[parameter_idx-1] )
-                    vartheta = parameters[ parameter_idx-1 ]
-                    varphi = 0#np.pi
-                    varlambda =0#np.pi
+                    vartheta = parameters[ parameter_idx-1 ] % (4*np.pi)  
+                    varphi = 0
+                    varlambda =0
                     
                     parameter_idx = parameter_idx - 1                    
                     
@@ -410,8 +410,8 @@ class  Operations():
                 elif len(operation.parameters) == 1 and operation.parameters[0] == 'Phi':
                     #operation_mtx = operation.matrix( parameters[parameter_idx-1] )
                     vartheta = 0
-                    varphi = parameters[ parameter_idx-1 ]#np.pi;
-                    varlambda =0#np.pi
+                    varphi = parameters[ parameter_idx-1 ]     % (2*np.pi)  
+                    varlambda =0
                     
                     parameter_idx = parameter_idx - 1                    
                     
@@ -419,38 +419,38 @@ class  Operations():
                     #operation_mtx = operation.matrix( parameters[parameter_idx-1] )
                     vartheta = 0
                     varphi =  0
-                    varlambda =parameters[ parameter_idx-1 ]#np.pi;                    
+                    varlambda =parameters[ parameter_idx-1 ]    % (2*np.pi)
                     parameter_idx = parameter_idx - 1   
                     
                 elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Phi' in operation.parameters:
                     #operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )                  
                     
-                    vartheta = parameters[ parameter_idx-2 ]
-                    varphi = parameters[ parameter_idx-1 ]#np.pi;
-                    varlambda = 0#np.pi-parameters[ parameter_idx+1 ]                    
+                    vartheta = parameters[ parameter_idx-2 ] % (4*np.pi)  
+                    varphi = parameters[ parameter_idx-1 ]     % (2*np.pi)  
+                    varlambda = 0                  
                     parameter_idx = parameter_idx - 2
                     
                 
                 elif len(operation.parameters) == 2 and 'Theta' in operation.parameters and 'Lambda' in operation.parameters:
                     #operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )                    
-                    vartheta = parameters[ parameter_idx-2 ]
+                    vartheta = parameters[ parameter_idx-2 ]  % (4*np.pi)  
                     varphi = 0
-                    varlambda = parameters[ parameter_idx-1 ]                    
+                    varlambda = parameters[ parameter_idx-1 ]    % (2*np.pi)    
                     parameter_idx = parameter_idx - 2
                 
                 elif len(operation.parameters) == 2 and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
                     #operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )
                     vartheta = 0
-                    varphi = parameters[ parameter_idx-2]
-                    varlambda = parameters[ parameter_idx-1 ]
+                    varphi = parameters[ parameter_idx-2]    % (2*np.pi)  
+                    varlambda = parameters[ parameter_idx-1 ]    % (2*np.pi)
                     
                     parameter_idx = parameter_idx - 2
                     
                 elif len(operation.parameters) == 3 and 'Theta' in operation.parameters and 'Phi' in operation.parameters and 'Lambda' in operation.parameters :
                     #operation_mtx = operation.matrix( parameters[parameter_idx-3:parameter_idx] )
-                    vartheta = parameters[ parameter_idx-3 ]
-                    varphi = parameters[ parameter_idx-2 ]
-                    varlambda = parameters[ parameter_idx-1 ]                    
+                    vartheta = parameters[ parameter_idx-3 ]  % (4*np.pi)  
+                    varphi = parameters[ parameter_idx-2 ]    % (2*np.pi)  
+                    varlambda = parameters[ parameter_idx-1 ]    % (2*np.pi)           
                     parameter_idx = parameter_idx - 3
                     
                     
