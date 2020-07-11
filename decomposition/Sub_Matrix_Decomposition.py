@@ -20,6 +20,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 """
 
+from .Decomposition_Base import def_layer_num
 from .Decomposition_Base import Decomposition_Base
 from operations.operation_block import operation_block
 import numpy as np
@@ -34,9 +35,9 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
 # @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @param identical_blocks A dictionary {'n': integer} indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
-# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random'
+# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False, parallel= False, method='L-BFGS-B', identical_blocks=dict(), initial_guess= 'zeros' ):  
+    def __init__( self, Umtx, optimize_layer_num=False, max_layer_num=def_layer_num, parallel= False, method='L-BFGS-B', identical_blocks=dict(), initial_guess= 'zeros' ):
         
         Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method, initial_guess=initial_guess ) 
             
@@ -63,7 +64,10 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
         self.subunitarized_mtx = None
                 
         # The number of successive identical blocks in one leyer
-        self.identical_blocks = identical_blocks        
+        self.identical_blocks = identical_blocks
+
+        # The number of gate blocks used in the decomposition
+        self.max_layer_num = max_layer_num
     
     
     
@@ -102,7 +106,7 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
             start_time = time.time()
             
             # variable for local counting of C-NOT gates
-            while self.layer_num < self.max_layer_num  : 
+            while self.layer_num < self.max_layer_num.get(str(self.qbit_num), 3)  :
                 
                 control_qbit = self.qbit_num-1
                 
@@ -110,7 +114,7 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
                     
                     
                     
-                    for idx in range(0,self.identical_blocks.get(str(self.qbit_num),1)):
+                    for idx in range(0,self.identical_blocks.get(str(self.qbit_num),200)):
                         
                         # creating block of operations
                         block = operation_block( self.qbit_num )
@@ -130,7 +134,7 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
                 self.layer_num = len(self.operations)
                                                  
                 # Do the optimalization
-                if self.optimize_layer_num  or self.layer_num >= self.max_layer_num:
+                if self.optimize_layer_num or self.layer_num >= self.max_layer_num.get(str(self.qbit_num), 200):
                     # solve the optzimalization problem to find the correct mninimum
                     self.solve_optimalization_problem( optimalization_problem=self.subdisentaglement_problem, solution_guess=self.optimized_parameters)   
 

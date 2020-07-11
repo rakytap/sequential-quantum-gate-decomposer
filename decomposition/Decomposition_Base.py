@@ -31,7 +31,7 @@ import time
 
 
 # default number of layers in the decomposition as a function of number of qubits
-def_layer_num = { '2': 3, '3':20, '4':60 }
+def_layer_num = { '2': 3, '3':20, '4':60, '5':200 }
 
 
 
@@ -47,7 +47,7 @@ class Decomposition_Base( Operations ):
 # @param Umtx The unitary matrix to be decomposed
 # @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalizatapply_operation
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
-# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random'
+# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 # @return An instance of the class
     def __init__( self, Umtx, parallel= False, method='L-BFGS-B', initial_guess= 'zeros' ):
         
@@ -86,7 +86,7 @@ class Decomposition_Base( Operations ):
         self.global_target_minimum = None
         
         # logical value describing whether the optimalization problem was solved or not
-        self.optimalization_problem_solved = False;
+        self.optimalization_problem_solved = False
         
         # number of iteratrion loops in the finale optimalization
         self.iteration_loops = None
@@ -103,7 +103,7 @@ class Decomposition_Base( Operations ):
         # The maximal number of C-NOT gates allowed in the decomposition
         self.max_layer_num = None
         
-        # method to guess initial values for the optimalization. POssible values: 'zeros', 'random'
+        # method to guess initial values for the optimalization. POssible values: 'zeros', 'random', 'close_to_zero'
         self.initial_guess = initial_guess
     
         
@@ -154,7 +154,8 @@ class Decomposition_Base( Operations ):
             
         # get the number of gates used in the decomposition
         gates_num = self.get_gate_nums()
-        print( 'In the decomposition with error = ' + str(self.decomposition_error) + ' were used ' + str(self.layer_num) + ' layers with '  + str(gates_num.get('u3',0)) + ' U3 operations and ' + str(gates_num.get('cnot',0)) + ' CNOT gates.' )        
+        print( 'The error of the decomposition after finalyzing operations is ' + str(self.decomposition_error) + ' with ' + str(self.layer_num) + ' layers containing '  + str(gates_num.get('u3',0)) + ' U3 operations and ' + str(gates_num.get('cnot',0)) + ' CNOT gates.' )
+        print(' ')
             
 
 ##
@@ -202,9 +203,9 @@ class Decomposition_Base( Operations ):
             Theta = 2*np.arccos( cos_theta_2 )
             
             if abs(submatrix[0,0]) < 1e-7:
-                Phi = 0
+                Phi = np.angle( submatrix[1,0] )
                 Lambda = np.angle( -submatrix[0,1] )
-            elif abs(submatrix[1,0]) < 1e-7 :
+            elif abs(submatrix[1,0]) < 1e-7:
                 Phi = 0
                 Lambda = np.angle( submatrix[1,1]*np.conj(submatrix[0,0]))
             else:            
@@ -267,6 +268,8 @@ class Decomposition_Base( Operations ):
                 optimized_parameters = np.zeros(self.parameter_num)
             elif self.initial_guess=='random':
                 optimized_parameters = (2*np.random.rand(self.parameter_num)-1)*2*np.pi
+            elif self.initial_guess=='close_to_zero':
+                optimized_parameters = (2*np.random.rand(self.parameter_num)-1)*2*np.pi/100
             else:
                 raise BaseException('bad value for initial guess')
         else:     
@@ -274,6 +277,8 @@ class Decomposition_Base( Operations ):
                 optimized_parameters = np.concatenate(( np.zeros(self.parameter_num-len(solution_guess)), solution_guess ))
             elif self.initial_guess=='random':
                 optimized_parameters = np.concatenate(( (2*np.random.rand(self.parameter_num-len(solution_guess))-1)*2*np.pi, solution_guess ))
+            elif self.initial_guess=='close_to_zero':
+                optimized_parameters = np.concatenate(( (2*np.random.rand(self.parameter_num-len(solution_guess))-1)*2*np.pi/100, solution_guess ))
             else:
                 raise BaseException('bad value for initial guess')
             

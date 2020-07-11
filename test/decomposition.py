@@ -138,9 +138,6 @@ def three_qubit_decomposition():
     decomposition_error =  np.linalg.norm(product_matrix - np.identity(2**qbit_num)*product_matrix[0,0], 2)
     
     print('The error of the decomposition is ' + str(decomposition_error))
-    
-    
-    
 
 
 def IBM_challenge_decomposition():
@@ -169,10 +166,12 @@ def IBM_challenge_decomposition():
     # set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
     identical_blocks = { '4':2, '3':1}
 
+    # set the maximal number of layers in the decomposition
+    max_layer_num = {'4': 9, '3': 4}
+
     # creating class to decompose the matrix
-    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, identical_blocks=identical_blocks, initial_guess= 'zeros' )
-    cDecomposition.max_layer_num = 9
-    
+    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, max_layer_num=max_layer_num, identical_blocks=identical_blocks, initial_guess= 'zeros' )
+
     #start the decomposition
     cDecomposition.start_decomposition()
         
@@ -204,8 +203,7 @@ def IBM_challenge_decomposition():
     decomposition_error =  LA.norm(product_matrix - np.identity(16)*product_matrix[0,0], 2)
     
     print('The error of the decomposition is ' + str(decomposition_error))
-    
-    
+
     
 def four_qubit_decomposition():
  
@@ -263,5 +261,75 @@ def four_qubit_decomposition():
     product_matrix = np.dot(Umtx, decomposed_matrix.conj().T)
     decomposition_error =  np.linalg.norm(product_matrix - np.identity(2**qbit_num)*product_matrix[0,0], 2)
     
-    print('The error of the decomposition is ' + str(decomposition_error))    
-        
+    print('The error of the decomposition is ' + str(decomposition_error))
+
+
+def few_CNOT_unitary_decomposition():
+    from decomposition.N_Qubit_Decomposition import N_Qubit_Decomposition
+    from random_unitary.few_CNOT_unitary import few_CNOT_unitary
+
+    print('****************************************')
+    print('Test of few CNOT unitary decomposition')
+    print(' ')
+
+    # cerate unitary q-bit matrix
+    import numpy as np
+    import numpy.linalg as LA
+    from scipy.io import loadmat
+
+    # The number of qubits
+    qbit_num = 5
+
+    # The number of CNOT gates
+    cnot_num = 4
+
+    # load the matrix from file
+    Umtx = few_CNOT_unitary( qbit_num, cnot_num)
+
+    print(Umtx)
+
+    # set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
+    identical_blocks = {'5':2, '4': 2, '3': 2}
+
+    # set the maximal number of layers in the decomposition
+    max_layer_num = {'5':24, '4':18, '3':12}
+
+    # creating class to decompose the matrix
+    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, optimize_layer_num=False, max_layer_num=max_layer_num,
+                                           identical_blocks=identical_blocks, initial_guess='random')
+
+    # set the number of optimalization layers in the decomposition
+    cDecomposition.max_layer_num = 16
+
+    # start the decomposition
+    cDecomposition.start_decomposition()
+
+    print(' ')
+    print('The matrix can be decomposed into operations:')
+    print(' ')
+    cDecomposition.list_operations()
+
+    print(' ')
+    print('Constructing quantum circuit:')
+    print(' ')
+    quantum_circuit = cDecomposition.get_quantum_circuit()
+
+    print(quantum_circuit)
+
+    # test the decomposition of the matrix
+    # Changing the simulator
+    backend = Aer.get_backend('unitary_simulator')
+
+    # job execution and getting the result as an object
+    job = execute(quantum_circuit, backend)
+    result = job.result()
+
+    # get the unitary matrix from the result object
+    decomposed_matrix = result.get_unitary(quantum_circuit)
+
+    # get the error of the decomposition
+    product_matrix = np.dot(Umtx, decomposed_matrix.conj().T)
+    decomposition_error = LA.norm(product_matrix - np.identity(2**qbit_num) * product_matrix[0, 0], 2)
+
+    print('The error of the decomposition is ' + str(decomposition_error))
+

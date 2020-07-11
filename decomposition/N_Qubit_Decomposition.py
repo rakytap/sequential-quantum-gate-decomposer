@@ -41,12 +41,13 @@ class N_Qubit_Decomposition(Decomposition_Base):
 # @brief Constructor of the class.
 # @param Umtx The unitary matrix
 # @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
+# @param max_leyer_num Optional parameter. A dictionary of the form {'n': integer} indicating that how many layers should be used in the disentaglement of the n-th qubit.
 # @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @param identical_blocks A dictionary of the form {'n': integer} indicating that how many CNOT gates should be included in one layer during the disentanglement of the n-th qubit from the others
-# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random'
+# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False, parallel= False, method='L-BFGS-B',  identical_blocks = dict(), initial_guess= 'zeros'):  
+    def __init__( self, Umtx, optimize_layer_num=False, max_layer_num=def_layer_num, parallel= False, method='L-BFGS-B',  identical_blocks = dict(), initial_guess= 'zeros'):
         
         Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method, initial_guess=initial_guess   ) 
             
@@ -69,7 +70,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
             self.optimalization_block = 10  
         
         # The number of gate blocks used in the decomposition
-        self.max_layer_num = def_layer_num.get(str(self.qbit_num), 200)
+        self.max_layer_num = max_layer_num
         
         # The number of successive identical blocks
         self.identical_blocks = identical_blocks  
@@ -96,22 +97,16 @@ class N_Qubit_Decomposition(Decomposition_Base):
         start_time = time.time()
             
         # create an instance of class to disentangle the given qubit pair
-        cSub_decomposition = Sub_Matrix_Decomposition(self.Umtx, optimize_layer_num=self.optimize_layer_num, initial_guess=self.initial_guess, parallel=self.parallel, identical_blocks=self.identical_blocks)   
+        cSub_decomposition = Sub_Matrix_Decomposition(self.Umtx, optimize_layer_num=self.optimize_layer_num, max_layer_num=self.max_layer_num, initial_guess=self.initial_guess, parallel=self.parallel, identical_blocks=self.identical_blocks)
         
         # The maximal error of the optimalization problem
         cSub_decomposition.optimalization_tolerance = self.optimalization_tolerance
-        
-        
-        # ---------- setting the decomposition parameters  --------
         
         # setting the maximal number of iterations in the disentangling process
         cSub_decomposition.optimalization_block = self.optimalization_block
         
         # setting the number of operators in one sub-layer of the disentangling process
         cSub_decomposition.max_iterations = self.max_iterations
-        
-        # setting the number of parameters in one sub-layer of the disentangling process
-        cSub_decomposition.max_layer_num = self.max_layer_num
             
         # start to disentangle the qubit pair
         cSub_decomposition.disentangle_submatrices()
@@ -211,7 +206,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         
         # if the qubit number in the submatirx is greater than 2 new N-qubit decomposition is started
         if len(most_unitary_submatrix) > 4:
-            cdecomposition = N_Qubit_Decomposition(most_unitary_submatrix, optimize_layer_num=True, initial_guess=self.initial_guess, identical_blocks=self.identical_blocks)
+            cdecomposition = N_Qubit_Decomposition(most_unitary_submatrix, optimize_layer_num=True, max_layer_num=self.max_layer_num, initial_guess=self.initial_guess, identical_blocks=self.identical_blocks)
             
             # setting operation layer
             if len(most_unitary_submatrix) <= 8:
@@ -227,8 +222,12 @@ class N_Qubit_Decomposition(Decomposition_Base):
             cdecomposition.start_decomposition(finalize_decomposition=False)
         else:
 
+            print('***************************************************************')
+            print('Decomposing the final 2-qubit matrix')
+            print('***************************************************************')
+
             # decompose the chosen 2-qubit unitary
-            cdecomposition = Two_Qubit_Decomposition(most_unitary_submatrix, optimize_layer_num=True, initial_guess=self.initial_guess)
+            cdecomposition = Two_Qubit_Decomposition(most_unitary_submatrix, optimize_layer_num=True, max_layer_num=self.max_layer_num, initial_guess=self.initial_guess)
         
             # starting the decomposition of the random unitary
             cdecomposition.start_decomposition(finalize_decomposition=False)
@@ -245,9 +244,11 @@ class N_Qubit_Decomposition(Decomposition_Base):
 ##
 # @brief final optimalization procedure improving the accuracy of the decompositin when all the qubits were already disentangled.
     def final_optimalization( self ):
-        
-        print(' ')
+
+        print('***************************************************************')
         print('Final fine tuning of the parameters')
+        print('***************************************************************')
+
         
         # setting the global minimum
         self.global_target_minimum = 0
@@ -281,9 +282,10 @@ class N_Qubit_Decomposition(Decomposition_Base):
 ##  
 # @brief Call to simplify the gate structure in each layers if possible (i.e. tries to reduce the number of CNOT gates)
     def simplify_layers(self):
-        
-        print(' ')
+
+        print('***************************************************************')
         print('Try to simplify layers')
+        print('***************************************************************')
         
         # current starting index of the optimized parameters
         parameter_idx = 0
@@ -350,7 +352,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
                 continue
             
             # simplify the given layer
-            simplified_layer, simplified_parameters, simplification_status = self.simplify_layer( block_to_simplify, self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_block], gate_nums['cnot']-1 )
+            simplified_layer, simplified_parameters, simplification_status = self.simplify_layer( block_to_simplify, self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_block], {'2': gate_nums['cnot']-1} )
             parameter_idx = parameter_idx + parameter_num_block
             
             # adding the simplified operations (or the non-simplified if the simplification was not successfull)
@@ -377,11 +379,10 @@ class N_Qubit_Decomposition(Decomposition_Base):
 # @parameters An array of parameters to calculate the matrix of the layer.
 # @max_layer_num The maximal number of layers containing CNOT gates
 # @return An instance of class operation_block containing the simplified gate operations.       
-    def simplify_layer(self, layer, parameters, max_layer_num):        
-        
-        print(' ')
-        print('Try to simplify layer')
-                       
+    def simplify_layer(self, layer, parameters, max_layer_num):
+
+        print('Try to simplify sub-structure')
+
         # get the target bit
         target_qbit = None
         control_qbit = None
@@ -418,10 +419,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         submatrix = full_matrix_reordered[0:4, 0:4]
             
         # decompose the chosen 2-qubit unitary
-        cdecomposition = Two_Qubit_Decomposition(submatrix.conj().T, optimize_layer_num=True, initial_guess=self.initial_guess)
-            
-        # set the maximal number of layers in the decompoisition
-        cdecomposition.max_layer_num = max_layer_num
+        cdecomposition = Two_Qubit_Decomposition(submatrix.conj().T, optimize_layer_num=True, max_layer_num=max_layer_num, initial_guess=self.initial_guess)
         
         # starting the decomposition of the random unitary
         cdecomposition.start_decomposition(finalize_decomposition=True)
@@ -429,6 +427,8 @@ class N_Qubit_Decomposition(Decomposition_Base):
         # check whether simplification was succesfull
         if not cdecomposition.check_optimalization_solution():
             # return with the original layer, if the simplification wa snot successfull
+            print('The simplification of the sub-structure was not possible')
+            print(' ')
             return layer, parameters, False
             
         # contruct the layer containing the simplified operations in the N-qubit space
@@ -450,8 +450,11 @@ class N_Qubit_Decomposition(Decomposition_Base):
                     #operation_new = U3(2, operation.target_qbit, operation.parameters)
 
                 layer_simplified.add_operation_to_end( operation_new )
-            
-            
+
+        gate_nums_layer = layer.get_gate_nums()
+        gate_nums_simplified = layer_simplified.get_gate_nums()
+        print(str(gate_nums_layer['cnot']) + ' CNOT gates successfully simplified to ' + str(gate_nums_simplified.get('cnot', 0)) + ' CNOT gates')
+        print(' ')
         return layer_simplified, cdecomposition.optimized_parameters, True
 #LA.norm( np.dot(layer.matrix(parameters).conj().T, layer_simplified.matrix(cdecomposition.optimized_parameters)))
 #np.dot(submatrix.conj().T, cdecomposition.get_transformed_matrix( cdecomposition.optimized_parameters, cdecomposition.operations, initial_matrix=np.identity(4)) ) #OK

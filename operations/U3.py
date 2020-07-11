@@ -93,48 +93,48 @@ class U3( Operation ):
         
     ##    
     # @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    # @param parameters Three component array conating the parameters in order Theta, Phi, Lambda
+    # @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     def composite_u3_Theta_Phi_Lambda(self, parameters ):
         return self.composite_u3( Theta = parameters[0], Phi = parameters[1], Lambda = parameters[2] )
         
     ##    
     # @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    # @param parameters Three component array conating the parameters in order Theta, Phi, Lambda
+    # @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     # @return Returns with the matrix of the U3 gate.
     def composite_u3_Phi_Lambda(self, parameters ):
         return self.composite_u3( Theta = 0, Phi = parameters[0], Lambda = parameters[1] )
         
     ##    
     # @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    # @param parameters Three component array conating the parameters in order Theta, Phi, Lambda
+    # @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     # @return Returns with the matrix of the U3 gate.
     def composite_u3_Theta_Lambda(self, parameters ):
         return self.composite_u3( Theta = parameters[0], Phi = 0, Lambda = parameters[1] )
         
     ##    
     # @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    # @param parameters Three component array conating the parameters in order Theta, Phi, Lambda
+    # @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     # @return Returns with the matrix of the U3 gate.
     def composite_u3_Theta_Phi(self, parameters ):
         return self.composite_u3( Theta = parameters[0], Phi = parameters[1], Lambda = 0 )
         
     ##    
     # @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    # @param parameters Three component array conating the parameters in order Theta, Phi, Lambda
+    # @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     # @return Returns with the matrix of the U3 gate.
     def composite_u3_Lambda(self, parameters ):
         return self.composite_u3( Theta = 0, Phi = 0, Lambda = parameters[0] )
         
     ##    
     # @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    # @param parameters Three component array conating the parameters in order Theta, Phi, Lambda
+    # @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     # @return Returns with the matrix of the U3 gate.
     def composite_u3_Phi(self, parameters ):
         return self.composite_u3( Theta = 0, Phi = parameters[0], Lambda = 0 )
         
     ##    
     # @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    # @param parameters Three component array conating the parameters in order Theta, Phi, Lambda
+    # @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     # @return Returns with the matrix of the U3 gate.
     def composite_u3_Theta(self, parameters ):
         return self.composite_u3( Theta = parameters[0], Phi = 0, Lambda = 0 )
