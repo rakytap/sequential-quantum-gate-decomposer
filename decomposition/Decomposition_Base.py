@@ -28,8 +28,7 @@ from operations.operation_block import operation_block
 from scipy.optimize import minimize
 from optimparallel import minimize_parallel
 import time
-
-
+from functools import reduce
 
 
 # default number of layers in the decomposition as a function of number of qubits
@@ -47,7 +46,7 @@ class Decomposition_Base( Operations ):
 ## Contructor of the class
 # @brief Constructor of the class.
 # @param Umtx The unitary matrix to be decomposed
-# @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalizatapply_operation
+# @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 # @return An instance of the class
@@ -223,7 +222,7 @@ class Decomposition_Base( Operations ):
             
             
             # get the new matrix
-            mtx_new = self.apply_operation( u3_loc.matrix(parameters_loc), mtx_new )    
+            mtx_new = self.apply_operation( u3_loc.matrix(parameters_loc), mtx_new )
             
         return finalizing_operations,finalizing_parameters, mtx_new
             
@@ -505,13 +504,15 @@ class Decomposition_Base( Operations ):
     def get_transformed_matrix(self, parameters, operations, initial_matrix = None ):
                 
         
-        parameter_idx = len(parameters)
+        parameter_idx = 0
         
         if initial_matrix is None:
             initial_matrix = self.Umtx
         
-        
-        for idx in range(len(operations)-1,-1,-1):
+        # construct the list of matrix representation of the gates
+        operation_mtxs = list()
+
+        for idx in range(0,len(operations)):
             
             operation = operations[idx]
             
@@ -521,33 +522,32 @@ class Decomposition_Base( Operations ):
             elif operation.type == 'u3':
                 
                 if len(operation.parameters) == 1:
-                    operation_mtx = operation.matrix( parameters[parameter_idx-1] )
-                    parameter_idx = parameter_idx - 1
+                    operation_mtx = operation.matrix( parameters[parameter_idx] )
+                    parameter_idx = parameter_idx + 1
                     
                 elif len(operation.parameters) == 2:
-                    operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )
-                    parameter_idx = parameter_idx - 2
+                    operation_mtx = operation.matrix( parameters[parameter_idx:parameter_idx+2] )
+                    parameter_idx = parameter_idx +- 2
                     
                 elif len(operation.parameters) == 3:
-                    operation_mtx = operation.matrix( parameters[parameter_idx-3:parameter_idx] )
-                    parameter_idx = parameter_idx - 3
+                    operation_mtx = operation.matrix( parameters[parameter_idx:parameter_idx+3] )
+                    parameter_idx = parameter_idx + 3
                 else:
                     print('The U3 operation has wrong number of parameters')
                 
                                 
             elif operation.type == 'block':
                 parameters_num = len(operation.parameters)
-                operation_mtx = operation.matrix( parameters[parameter_idx-parameters_num:parameter_idx] )
-                parameter_idx = parameter_idx - parameters_num
+                operation_mtx = operation.matrix( parameters[parameter_idx:parameter_idx+parameters_num] )
+                parameter_idx = parameter_idx + parameters_num
                 
             elif operation.type == 'general':
                 operation_mtx = operation.matrix
-            
-            
-            initial_matrix = self.apply_operation( operation_mtx, initial_matrix )
+
+            operation_mtxs.append(operation_mtx)
         
         
-        return initial_matrix
+        return self.apply_operations( operation_mtxs, initial_matrix )
     
     
     
@@ -607,17 +607,30 @@ class Decomposition_Base( Operations ):
         return Operations.get_quantum_circuit( self, self.optimized_parameters, circuit=circuit)
 
 
-## apply_operation
-# @brief Apply an operation on the input matrix
+##
+# @brief Apply an operations on the input matrix
 # @param operation_mtx The matrix of the operation.
-# @param inpu_matrix The input matrix to be transformed.
+# @param input_matrix The input matrix to be transformed.
 # @return Returns with the transformed matrix
     @staticmethod
     def apply_operation( operation_mtx, input_matrix ):
-        
-        # Getting the transfored state upon the transformation given by operation
-        return np.dot(operation_mtx,input_matrix)
-    
-    
+
+        # Getting the transformed state upon the transformation given by operation
+        return np.dot(operation_mtx, input_matrix)
+
+
+##
+# @brief Apply a list of operations on the input matrix
+# @param operation_mtxs The list containing matrix representations of the gates.
+# @param input_matrix The input matrix to be transformed.
+# @return Returns with the transformed matrix
+    @staticmethod
+    def apply_operations(operation_mtxs, input_matrix):
+        operation_mtxs.append(input_matrix)
+
+        # Getting the transformed state upon the transformation given by operation
+        #return reduce(np.dot, [A for A in operation_mtxs])
+        return reduce(np.dot, operation_mtxs)
+
     
 
