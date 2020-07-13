@@ -30,8 +30,10 @@ from optimparallel import minimize_parallel
 import time
 
 
+
+
 # default number of layers in the decomposition as a function of number of qubits
-def_layer_num = { '2': 3, '3':20, '4':60, '5':200 }
+def_layer_num = { '2': 3, '3':20, '4':60, '5':100 }
 
 
 
@@ -250,7 +252,7 @@ class Decomposition_Base( Operations ):
         
         
         # array containing minimums to check convergence of the solution
-        minimum_vec = [0]*10
+        minimum_vec = [0]*40
                
         # store the operations
         operations = self.operations
@@ -281,20 +283,21 @@ class Decomposition_Base( Operations ):
                 optimized_parameters = np.concatenate(( (2*np.random.rand(self.parameter_num-len(solution_guess))-1)*2*np.pi/100, solution_guess ))
             else:
                 raise BaseException('bad value for initial guess')
-            
-        
-        # Determine the starting indexes of the optimalization iterations
-        
+
         # starting number of operation block applied prior to the optimalized operation blocks
         pre_operation_parameter_num = 0
-        
+
         # starting index of the block group to be optimalized
         block_idx_start = len(operations)
-        
-        if not (solution_guess is None) and len(solution_guess) < parameter_num:
-            while pre_operation_parameter_num < len(solution_guess):
-                pre_operation_parameter_num = pre_operation_parameter_num + len(operations[block_idx_start-1].parameters)
-                block_idx_start = block_idx_start - 1
+
+        # Determine the starting indexes of the optimalization iterations if the initial guess of the new parameters is set to zero
+
+        if self.initial_guess=='zeros':
+            if not (solution_guess is None) and len(solution_guess) < parameter_num:
+                while pre_operation_parameter_num < len(solution_guess):
+                    pre_operation_parameter_num = pre_operation_parameter_num + len(operations[block_idx_start-1].parameters)
+                    block_idx_start = block_idx_start - 1
+
         
         #measure the time for the decompositin        
         start_time = time.time()
@@ -335,7 +338,7 @@ class Decomposition_Base( Operations ):
             fixed_parameters_post = optimized_parameters[ 0:len(optimized_parameters)-pre_operation_parameter_num-block_parameter_num ]
             #fixed_operations_post = operations[ 0:len(operations)-block_idx*self.optimalization_block ]
             fixed_operations_post = operations[ 0:block_idx_end ]
-            operations_mtx_post = self.get_transformed_matrix( fixed_parameters_post, fixed_operations_post, initial_matrix = np.identity(len(self.Umtx)) );
+            operations_mtx_post = self.get_transformed_matrix( fixed_parameters_post, fixed_operations_post, initial_matrix = np.identity(len(self.Umtx)) )
             
             
             fixed_operation_post = Operation( self.qbit_num )
@@ -382,8 +385,12 @@ class Decomposition_Base( Operations ):
                 print('The minimum with ' + str(self.layer_num) + ' layers after ' + str(iter_idx) + ' iterations is ' + str(self.current_minimum))
             
             # conditions to break the iteration cycles
-            if np.std(minimum_vec)/minimum_vec[-1] < self.optimalization_tolerance:
-                print('The iterations converget to minimum ' + str(self.current_minimum) + ' after ' + str(iter_idx) + ' iterations with ' + str(self.layer_num) + ' layers '  )
+            if np.std(minimum_vec[30:40])/minimum_vec[39] < self.optimalization_tolerance or \
+                np.std(minimum_vec[20:40])/minimum_vec[39] < self.optimalization_tolerance*1e2 or \
+                np.std(minimum_vec[10:40])/minimum_vec[39] < self.optimalization_tolerance*1e4 or \
+                np.std(minimum_vec[0:40])/minimum_vec[39] < self.optimalization_tolerance*1e6:
+
+                print('The iterations converged to minimum ' + str(self.current_minimum) + ' after ' + str(iter_idx) + ' iterations with ' + str(self.layer_num) + ' layers '  )
                 print(' ')
                 break
             elif self.check_optimalization_solution():

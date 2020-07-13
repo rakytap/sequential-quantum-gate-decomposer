@@ -41,16 +41,16 @@ class  Operations():
     def __init__(self, qbit_num):   
         
         # setting the number of qubits
-        self.qbit_num = qbit_num;
+        self.qbit_num = qbit_num
         
         # reset the list of operations
-        self.operations = list();
+        self.operations = list()
         
         # the current number of parameters
-        self.parameter_num = 0;
+        self.parameter_num = 0
                 
         # number of operation layers
-        self.layer_num = 0;        
+        self.layer_num = 0
         
    
 ##
@@ -72,7 +72,7 @@ class  Operations():
     def add_u3_to_front(self, target_qbit, parameter_labels):
         
         # create the operation
-        operation = U3( self.qbit_num, target_qbit, parameter_labels );
+        operation = U3( self.qbit_num, target_qbit, parameter_labels )
         
         # adding the operation to the front of the list of operations
         self.add_operation_to_front( operation )

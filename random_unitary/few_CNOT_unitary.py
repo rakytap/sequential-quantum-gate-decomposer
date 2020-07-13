@@ -45,7 +45,7 @@ def few_CNOT_unitary( qbit_num, cnot_num):
             parameters = np.array([ np.random.uniform(0,4*np.pi), np.random.uniform(0,2*np.pi), np.random.uniform(0,2*np.pi)])
 
             # randomly choose the target qbit
-            target_qbit = np.random.randint(0,qbit_num-1)
+            target_qbit = np.random.randint(0,qbit_num)
 
             # creating the U3 gate
             op = U3(qbit_num, target_qbit, ['Theta', 'Phi', 'Lambda'])

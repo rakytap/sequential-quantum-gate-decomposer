@@ -292,14 +292,12 @@ def few_CNOT_unitary_decomposition():
     identical_blocks = {'5':2, '4': 2, '3': 2}
 
     # set the maximal number of layers in the decomposition
-    max_layer_num = {'5':24, '4':18, '3':12}
+    max_layer_num = {'5':60, '4':60, '3':20}
 
     # creating class to decompose the matrix
-    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, optimize_layer_num=False, max_layer_num=max_layer_num,
-                                           identical_blocks=identical_blocks, initial_guess='random')
-
-    # set the number of optimalization layers in the decomposition
-    cDecomposition.max_layer_num = 16
+    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, optimize_layer_num=True, max_layer_num=max_layer_num,
+                                           identical_blocks=identical_blocks, initial_guess='close_to_zero',
+                                           parallel=True)
 
     # start the decomposition
     cDecomposition.start_decomposition()
@@ -333,3 +331,60 @@ def few_CNOT_unitary_decomposition():
 
     print('The error of the decomposition is ' + str(decomposition_error))
 
+
+def five_qubit_decomposition():
+    from decomposition.N_Qubit_Decomposition import N_Qubit_Decomposition
+
+    print('****************************************')
+    print('Test of four-qubit decomposition')
+    print('This might take about ???? hour')
+    print(' ')
+
+    # cerate unitary q-bit matrix
+    from scipy.stats import unitary_group
+
+    # the number of qubits
+    qbit_num = 5
+
+    Umtx = unitary_group.rvs(int(2 ** qbit_num))
+    print('The test matrix to be decomposed is:')
+    print(Umtx)
+    print(' ')
+
+    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, parallel=True, identical_blocks={'5':1, '4': 1, '3': 1})
+
+    # Maximal number of iteartions in the optimalization process
+    cDecomposition.set_max_iteration(int(1e6))
+
+    # Set the tolerance of the minimum of the cost function during the optimalization
+    cDecomposition.optimalization_tolerance = 1e-7
+
+    # start the decomposition
+    cDecomposition.start_decomposition()
+
+    print(' ')
+    print('The matrix can be decomposed into operations:')
+    print(' ')
+    cDecomposition.list_operations()
+
+    # Constructing quantum circuit
+    quantum_circuit = cDecomposition.get_quantum_circuit()
+
+    # print(quantum_circuit)
+
+    # test the decomposition of the matrix
+    # Changing the simulator
+    backend = Aer.get_backend('unitary_simulator')
+
+    # job execution and getting the result as an object
+    job = execute(quantum_circuit, backend)
+    result = job.result()
+
+    # get the unitary matrix from the result object
+    decomposed_matrix = result.get_unitary(quantum_circuit)
+
+    # get the error of the decomposition
+    product_matrix = np.dot(Umtx, decomposed_matrix.conj().T)
+    decomposition_error = np.linalg.norm(product_matrix - np.identity(2 ** qbit_num) * product_matrix[0, 0], 2)
+
+    print('The error of the decomposition is ' + str(decomposition_error))

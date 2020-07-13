@@ -361,14 +361,23 @@ class N_Qubit_Decomposition(Decomposition_Base):
             else:
                 operations = operations + layers_in_block
             optimized_parameters = np.concatenate(( optimized_parameters, simplified_parameters ))
-            
-        
+
+        # get the number of CNOT gates in the initial structure
+        gate_num_initial = self.get_gate_nums()
+        cnot_num_initial = gate_num_initial.get('cnot',0)
+
         # store the modified list of operations and parameters
         self.operations = operations
         self.optimized_parameters = optimized_parameters
         self.parameter_num = len(optimized_parameters)
         self.layer_num = len(operations)
-    
+
+        gate_num_simplified = self.get_gate_nums()
+        cnot_num_simplified = gate_num_simplified.get('cnot',0)
+
+        print('Initial gate structure with ' + str(cnot_num_initial) + ' CNOT gates simplified to a structure containing ' + str(cnot_num_simplified) + ' CNOT gates.')
+        print('************************************')
+        print(' ')
     
     
     

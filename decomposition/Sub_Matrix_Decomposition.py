@@ -26,6 +26,7 @@ from operations.operation_block import operation_block
 import numpy as np
 import time
 
+
 class Sub_Matrix_Decomposition(Decomposition_Base):
     
 ## 
@@ -90,7 +91,7 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
         
         # check if it needed to do the subunitarization
         #if self.subdisentaglement_problem( [], eye(size(self.Umtx)), eye(size(self.Umtx)) ) <= self.optimalization_tolerance 
-        if self.subdisentaglement_problem( [] ) <= self.optimalization_tolerance :
+        if self.subdisentaglement_problem() <= self.optimalization_tolerance :
             print('Disentanglig not needed')
             self.subunitarized_mtx = self.Umtx
             self.subdisentaglement_done = True
@@ -106,7 +107,7 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
             start_time = time.time()
             
             # variable for local counting of C-NOT gates
-            while self.layer_num < self.max_layer_num.get(str(self.qbit_num), 3)  :
+            while self.layer_num < self.max_layer_num.get(str(self.qbit_num), 200)  :
                 
                 control_qbit = self.qbit_num-1
                 
@@ -176,41 +177,48 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
 # @brief The optimalization problem to be solved in order to disentangle the two least significant qubits
 # @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 # @return Returns with the value representing the entaglement of the most significant qubit from the others. (gives zero if the most significant qubit is decoupled from the others.)
-    def subdisentaglement_problem( self, parameters ):
+    def subdisentaglement_problem( self, parameters=None ):
        
-        
-        # get the transformed matrix with the operations in the list
-        matrix_new = self.get_transformed_matrix( parameters, self.operations, initial_matrix=self.Umtx)
-                
+        if parameters is None:
+            matrix_new = self.Umtx
+        else:
+            # get the transformed matrix with the operations in the list
+            matrix_new = self.get_transformed_matrix( parameters, self.operations, initial_matrix=self.Umtx)
+
+
         # get the number of 2qubit submatrices
         submatrices_num_row = 2
         submatrices_num = submatrices_num_row*submatrices_num_row
-        
+
         # get the size of the submatrix
         submatrix_size = int(2**(self.qbit_num-1))
-        
+
         # allocating cell array for submatrices
         submatrices = []
-        
+
         # fill up the submatrices
         for idx in range(0,submatrices_num_row):
             for jdx in range(0,submatrices_num_row):
                 submatrices.append( matrix_new[ (idx*submatrix_size):((idx+1)*submatrix_size), (jdx*submatrix_size):((jdx+1)*submatrix_size)] )
-            
-        
-        
+
+
+
         # create the cost function
-        cost_function = 0   
+        cost_function = 0
 
         for idx in range(0,submatrices_num):
             for jdx in range(0,submatrices_num_row):
                 submatrix_prod = np.dot(submatrices[idx],submatrices[jdx].conj().T)
                 submatrix_prod= submatrix_prod - np.identity(len(submatrix_prod))*submatrix_prod[0,0]
                 cost_function = cost_function + np.sum( np.multiply(submatrix_prod, submatrix_prod.conj() ) )
-            
+
         return np.real(cost_function)
-        
-        
+
+
+
+
+
+
        
         
       
