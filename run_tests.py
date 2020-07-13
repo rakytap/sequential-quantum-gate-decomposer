@@ -31,16 +31,19 @@ operations.test_CNOT_operation()
 operations.test_operations()
 
 #%% Test of two-qubit decomposition
-#decomposition.two_qubit_decomposition()
+decomposition.two_qubit_decomposition()
 
 #%% Test of general three-qubit decomposition
-#decomposition.three_qubit_decomposition()
+decomposition.three_qubit_decomposition()
 
 #%% Test of the decomposition of the IBM challenge
 decomposition.IBM_challenge_decomposition()
 
 #%% Test of general four-qubit decomposition
-#decomposition.four_qubit_decomposition()
+decomposition.four_qubit_decomposition()
 
 #%% Test of the decomposition of "few CNOT unitary"
-#decomposition.few_CNOT_unitary_decomposition()
+decomposition.few_CNOT_unitary_decomposition()
+
+#%% Test of general five-qubit decomposition
+decomposition.five_qubit_decomposition()

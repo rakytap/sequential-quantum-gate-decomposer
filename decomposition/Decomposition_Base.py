@@ -29,6 +29,7 @@ from scipy.optimize import minimize
 from optimparallel import minimize_parallel
 import time
 from functools import reduce
+import multiprocessing as mp
 
 
 # default number of layers in the decomposition as a function of number of qubits
@@ -386,8 +387,8 @@ class Decomposition_Base( Operations ):
             # conditions to break the iteration cycles
             if np.std(minimum_vec[30:40])/minimum_vec[39] < self.optimalization_tolerance or \
                 np.std(minimum_vec[20:40])/minimum_vec[39] < self.optimalization_tolerance*1e2 or \
-                np.std(minimum_vec[10:40])/minimum_vec[39] < self.optimalization_tolerance*1e4 or \
-                np.std(minimum_vec[0:40])/minimum_vec[39] < self.optimalization_tolerance*1e6:
+                np.std(minimum_vec[10:40])/minimum_vec[39] < self.optimalization_tolerance*1e3 or \
+                np.std(minimum_vec[0:40])/minimum_vec[39] < self.optimalization_tolerance*1e4:
 
                 print('The iterations converged to minimum ' + str(self.current_minimum) + ' after ' + str(iter_idx) + ' iterations with ' + str(self.layer_num) + ' layers '  )
                 print(' ')
@@ -545,9 +546,9 @@ class Decomposition_Base( Operations ):
                 operation_mtx = operation.matrix
 
             operation_mtxs.append(operation_mtx)
-        
-        
-        return self.apply_operations( operation_mtxs, initial_matrix )
+
+        operation_mtxs.append(initial_matrix)
+        return self.apply_operations( operation_mtxs, mp.cpu_count() )
     
     
     
@@ -624,13 +625,32 @@ class Decomposition_Base( Operations ):
 # @param operation_mtxs The list containing matrix representations of the gates.
 # @param input_matrix The input matrix to be transformed.
 # @return Returns with the transformed matrix
-    @staticmethod
-    def apply_operations(operation_mtxs, input_matrix):
-        operation_mtxs.append(input_matrix)
+    def apply_operations(self, operation_mtxs, numCPUs, connection=None):
+
 
         # Getting the transformed state upon the transformation given by operation
-        #return reduce(np.dot, [A for A in operation_mtxs])
-        return reduce(np.dot, operation_mtxs)
+        #return reduce(np.dot, operation_mtxs)
 
-    
+
+
+        if numCPUs == 1 or len(operation_mtxs) <= 100:
+            returnVal = reduce(np.dot, operation_mtxs)
+            if connection != None:
+                connection.send(returnVal)
+            return returnVal
+
+        parent1, child1 = mp.Pipe()
+        parent2, child2 = mp.Pipe()
+        p1 = mp.Process(target=self.apply_operations, args=(operation_mtxs[:len(operation_mtxs) // 2], numCPUs // 2, child1,))
+        p2 = mp.Process(target=self.apply_operations, args=(operation_mtxs[len(operation_mtxs) // 2:], numCPUs // 2 + numCPUs % 2, child2,))
+        p1.start()
+        p2.start()
+        leftReturn, rightReturn = parent1.recv(), parent2.recv()
+        p1.join()
+        p2.join()
+        returnVal = np.dot(leftReturn, rightReturn)
+        if connection != None:
+            connection.send(returnVal)
+
+        return returnVal
 
