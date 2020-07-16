@@ -301,51 +301,40 @@ class Decomposition_Base( Operations ):
         
         #measure the time for the decompositin        
         start_time = time.time()
-        
+
         for iter_idx in range(0,self.max_iterations+1):
-            
-            # determine the index of the current block under optimalization
-            #block_idx = int((iter_idx % (len(operations)/self.optimalization_block) ) + 1)
-            
+
             #determine the range of blocks to be optimalized togedther
             block_idx_end = block_idx_start - self.optimalization_block
             if block_idx_end < 0 :
                 block_idx_end = 0
-                
-            ## determine the number of free parameters to be optimized
-            #block_parameter_num = 0
-            #for jdx in range(1,self.optimalization_block+1):
-            #    block_parameter_num = block_parameter_num + len( operations[-(jdx+block_idx-2)-1].parameters )
-            
+
             # determine the number of free parameters to be optimized
             block_parameter_num = 0
             for block_idx in range(block_idx_start-1,block_idx_end-1,-1):
                 block_parameter_num = block_parameter_num + len( operations[block_idx].parameters )
-                    
-            
-            
+
+
+
             #get the fixed operations
-            # matrix of the fixed operations aplied befor the operations to be varied
-            fixed_parameters_pre = optimized_parameters[ len(optimized_parameters)-pre_operation_parameter_num+1-1 : len(optimized_parameters)]
-            #fixed_operations_pre = operations[ len(operations)-(block_idx-1)*self.optimalization_block+1-1 : len(operations) ]
+            fixed_parameters_pre = optimized_parameters[ len(optimized_parameters)-pre_operation_parameter_num : len(optimized_parameters)]
             fixed_operations_pre = operations[ block_idx_start : len(operations) ]
             operations_mtx_pre = self.get_transformed_matrix( fixed_parameters_pre, fixed_operations_pre, initial_matrix = np.identity(len(self.Umtx)) )
                         
             fixed_operation_pre = Operation( self.qbit_num )
             fixed_operation_pre.matrix = operations_mtx_pre
-            
-            # matrix of the fixed operations aplied after the operations to be varied
-            fixed_parameters_post = optimized_parameters[ 0:len(optimized_parameters)-pre_operation_parameter_num-block_parameter_num ]
-            #fixed_operations_post = operations[ 0:len(operations)-block_idx*self.optimalization_block ]
-            fixed_operations_post = operations[ 0:block_idx_end ]
-            operations_mtx_post = self.get_transformed_matrix( fixed_parameters_post, fixed_operations_post, initial_matrix = np.identity(len(self.Umtx)) )
-            
+
+            # create a list of post operations matrices
+            if block_idx_start == len(operations):
+                # matrix of the fixed operations aplied after the operations to be varied
+                fixed_parameters_post = optimized_parameters[0:len(optimized_parameters) - block_parameter_num]
+                fixed_operations_post = operations[0:block_idx_end]
+                operations_mtxs_post = self.get_operation_products(fixed_parameters_post, fixed_operations_post)
             
             fixed_operation_post = Operation( self.qbit_num )
-            fixed_operation_post.matrix = operations_mtx_post
+            fixed_operation_post.matrix = operations_mtxs_post.pop( -1)
                         
             # operations in the optimalization process
-            #self.operations = [fixed_operation_post] + operations[len(operations)-block_idx*self.optimalization_block:len(operations)-(block_idx-1)*self.optimalization_block] + [fixed_operation_pre]
             self.operations = [fixed_operation_post] + operations[block_idx_end:block_idx_start] + [fixed_operation_pre]
             
             
@@ -359,14 +348,8 @@ class Decomposition_Base( Operations ):
             minimum_vec = minimum_vec[1:] + [self.current_minimum]
             
             # store the obtained optimalized parameters for the block
-            #optimized_parameters( -block_idx*self.optimalization_block*block_parameter_num+1:-(block_idx-1)*self.optimalization_block*block_parameter_num ) = self.optimized_parameters;
             optimized_parameters[ len(optimized_parameters)-pre_operation_parameter_num-block_parameter_num+1-1 : len(optimized_parameters)-pre_operation_parameter_num ] = self.optimized_parameters
-            
-            # update the index of paramateres corresponding to the operations applied before the operations to be optimalized in the iteration cycle
-            #if block_idx == len(operations)/self.optimalization_block:
-            #    pre_operation_parameter_num = 0
-            #else:
-            #    pre_operation_parameter_num = pre_operation_parameter_num + block_parameter_num
+
             
             if block_idx_end == 0:
                 block_idx_start = len(operations)
@@ -493,10 +476,60 @@ class Decomposition_Base( Operations ):
             return (abs(self.current_minimum - self.global_target_minimum) < self.optimalization_tolerance)
         
         return False
+
+
+##
+# @brief Calculate the list of cumulated gate operation matrices such that the i>0-th element in the result list is the product of the operations of all 0<=n<i operations from the input list and the 0th element in the result list is the identity.
+# @param parameters An array containing the parameters of the U3 operations.
+# @param operations The array of the operations to be applied on a unitary
+# @return Returns with the transformed matrix.
+    def get_operation_products(self, parameters, operations):
+
+        parameter_idx = 0
+
+        # construct the list of matrix representation of the gates
+        operation_mtxs = None
+
+        block_idx = 0
+        operation_product = np.identity(2 ** self.qbit_num)
+
+        for idx in range(0,len(operations)):
+
+            operation = operations.pop(0)
+
+            if operation.type == 'cnot':
+                operation_mtx = operation.matrix
+
+            elif operation.type == 'general':
+                operation_mtx = operation.matrix
+
+            else:
+                parameters_num = len(operation.parameters)
+                operation_mtx = operation.matrix(parameters[parameter_idx:parameter_idx+parameters_num])
+                parameter_idx = parameter_idx + parameters_num
+
+            operation_product = np.dot(operation_product,operation_mtx)
+            block_idx = block_idx + 1
+
+            if block_idx == self.optimalization_block:
+
+                if operation_mtxs is None:
+                    operation_mtxs = [operation_product]
+                else:
+                    operation_mtxs.append(np.dot(operation_mtxs[-1], operation_product))
+
+                block_idx = 0
+                operation_product = np.identity(2**self.qbit_num)
+
+        if operation_mtxs is None:
+            operation_mtxs = [np.identity(2**self.qbit_num)]
+        else:
+            operation_mtxs = [np.identity(2 ** self.qbit_num)] + operation_mtxs
+
+        return operation_mtxs
+
         
-            
-        
-## get_transformed_matrix
+##
 # @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
 # @param parameters An array containing the parameters of the U3 operations.
 # @param operations The array of the operations to be applied on a unitary
@@ -518,37 +551,22 @@ class Decomposition_Base( Operations ):
             operation = operations[idx]
             
             if operation.type == 'cnot':
-                operation_mtx = [operation.matrix]
-                
-            elif operation.type == 'u3':
-                
-                if len(operation.parameters) == 1:
-                    operation_mtx = [operation.matrix( parameters[parameter_idx] )]
-                    parameter_idx = parameter_idx + 1
-                    
-                elif len(operation.parameters) == 2:
-                    operation_mtx = [operation.matrix( parameters[parameter_idx:parameter_idx+2] )]
-                    parameter_idx = parameter_idx + 2
-                    
-                elif len(operation.parameters) == 3:
-                    operation_mtx = [operation.matrix( parameters[parameter_idx:parameter_idx+3] )]
-                    parameter_idx = parameter_idx + 3
-                else:
-                    print('The U3 operation has wrong number of parameters')
-                
+                operation_mtx = operation.matrix
+
+            elif operation.type == 'general':
+                operation_mtx = operation.matrix
                                 
-            elif operation.type == 'block':
+            else:
                 parameters_num = len(operation.parameters)
-                operation_mtx = operation.get_matrices( parameters[parameter_idx:parameter_idx+parameters_num] )
+                operation_mtx = operation.matrix( parameters[parameter_idx:parameter_idx+parameters_num] )
                 parameter_idx = parameter_idx + parameters_num
                 
-            elif operation.type == 'general':
-                operation_mtx = [operation.matrix]
 
-            operation_mtxs = operation_mtxs + operation_mtx
+
+            operation_mtxs.append(operation_mtx)
 
         operation_mtxs.append(initial_matrix)
-        return self.apply_operations( operation_mtxs, mp.cpu_count() )
+        return self.apply_operations( operation_mtxs )
     
     
     
@@ -623,34 +641,11 @@ class Decomposition_Base( Operations ):
 ##
 # @brief Apply a list of operations on the input matrix
 # @param operation_mtxs The list containing matrix representations of the gates.
-# @param input_matrix The input matrix to be transformed.
 # @return Returns with the transformed matrix
-    def apply_operations(self, operation_mtxs, numCPUs, connection=None):
-
+    @staticmethod
+    def apply_operations(operation_mtxs ):
 
         # Getting the transformed state upon the transformation given by operation
-        #return reduce(np.dot, operation_mtxs)
+        return reduce(np.dot, operation_mtxs)
 
-
-
-        if numCPUs == 1 or len(operation_mtxs) <= 500 or self.qbit_num < 6:
-            returnVal = reduce(np.dot, operation_mtxs)
-            if connection != None:
-                connection.send(returnVal)
-            return returnVal
-
-        parent1, child1 = mp.Pipe()
-        parent2, child2 = mp.Pipe()
-        p1 = mp.Process(target=self.apply_operations, args=(operation_mtxs[:len(operation_mtxs) // 2], numCPUs // 2, child1,))
-        p2 = mp.Process(target=self.apply_operations, args=(operation_mtxs[len(operation_mtxs) // 2:], numCPUs // 2 + numCPUs % 2, child2,))
-        p1.start()
-        p2.start()
-        leftReturn, rightReturn = parent1.recv(), parent2.recv()
-        p1.join()
-        p2.join()
-        returnVal = np.dot(leftReturn, rightReturn)
-        if connection != None:
-            connection.send(returnVal)
-
-        return returnVal
 
