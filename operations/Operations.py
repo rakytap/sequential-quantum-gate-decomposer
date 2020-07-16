@@ -268,7 +268,7 @@ class  Operations():
                 
             elif operation.type == 'block':
                 parameters_layer = parameters[ (parameter_idx-operation.parameter_num): (parameter_idx) ]            
-                operation.list_operations( parameters_layer, start_index = start_index )   
+                operation.list_operations( parameters_layer, start_index = operation_idx )   
                 parameter_idx = parameter_idx - operation.parameter_num
                 operation_idx = operation_idx + len(operation.operations)                
                 continue

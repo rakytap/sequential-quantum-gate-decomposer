@@ -22,6 +22,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 from operations.Operations import Operations
 import numpy as np
+from functools import reduce
 
 
 ##
@@ -50,26 +51,39 @@ class operation_block(Operations):
     
     
 ##
-# @brief Constructor of the class.
+# @brief Call to get the product of the matrices of the operations grouped in the block.
 # @param parameters List of parameters to calculate the matrix of the operation block
 # @return Returns with the matrix of the operation
-    def matrix( self, parameters )  :
-        
-        operation_mtx_tot = np.identity(2**self.qbit_num )
-        
+    def matrix( self, parameters ) :
+
+        # get the matrices of the operations grouped in the block
+        operation_mtxs = self.get_matrices( parameters )
+
+        if len(operation_mtxs) == 0:
+            return np.identity(2 ** self.qbit_num)
+
+        return reduce(np.dot, operation_mtxs)
+
+##
+# @brief Call to get the list of matrix representation of the operations grouped in the block.
+# @param parameters List of parameters to calculate the matrix of the operation block
+# @return Returns with the matrix of the operation
+    def get_matrices(self, parameters):
+
+        matrices = []
+
         # return with identity if not active
         if not self.active:
-            return operation_mtx_tot
+            return matrices
          
         if len(parameters) != len(self.parameters):
-            raise BaseException('Number of parameters shoould be ' + str(len(self.parameters)) + ' instead of ' + str(len(parameters)) )
+            raise BaseException('Number of parameters should be ' + str(len(self.parameters)) + ' instead of ' + str(len(parameters)) )
          
                 
-        parameter_idx = len(parameters)
+        parameter_idx = 0
         
         
-        
-        for idx in range(len(self.operations)-1,-1,-1):
+        for idx in range(0,len(self.operations)):
             
             operation = self.operations[idx]
             
@@ -79,27 +93,26 @@ class operation_block(Operations):
             elif operation.type == 'u3': 
                 
                 if len(operation.parameters) == 1:
-                    operation_mtx = operation.matrix( parameters[parameter_idx-1] )
-                    parameter_idx = parameter_idx - 1
+                    operation_mtx = operation.matrix( parameters[parameter_idx] )
+                    parameter_idx = parameter_idx + 1
                     
                 elif len(operation.parameters) == 2:
-                    operation_mtx = operation.matrix( parameters[parameter_idx-2:parameter_idx] )
-                    parameter_idx = parameter_idx - 2
+                    operation_mtx = operation.matrix( parameters[parameter_idx:parameter_idx+2] )
+                    parameter_idx = parameter_idx + 2
                     
                 elif len(operation.parameters) == 3:
-                    operation_mtx = operation.matrix( parameters[parameter_idx-3:parameter_idx] )
-                    parameter_idx = parameter_idx - 3
+                    operation_mtx = operation.matrix( parameters[parameter_idx:parameter_idx+3] )
+                    parameter_idx = parameter_idx + 3
                 else:
                     raise BaseException('The U3 operation has wrong number of parameters')
                                  
             elif operation.type == 'general':
                 operation_mtx = operation.matrix
-             
-        
+
+
+            matrices.append(operation_mtx)
             
-            operation_mtx_tot = np.dot(operation_mtx,operation_mtx_tot)
-            
-        return operation_mtx_tot
+        return matrices
         
 
 ##

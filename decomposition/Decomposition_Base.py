@@ -33,7 +33,7 @@ import multiprocessing as mp
 
 
 # default number of layers in the decomposition as a function of number of qubits
-def_layer_num = { '2': 3, '3':20, '4':60, '5':100 }
+def_layer_num = { '2': 3, '3':20, '4':60, '5':250 }
 
 
 
@@ -386,9 +386,9 @@ class Decomposition_Base( Operations ):
             
             # conditions to break the iteration cycles
             if np.std(minimum_vec[30:40])/minimum_vec[39] < self.optimalization_tolerance or \
-                np.std(minimum_vec[20:40])/minimum_vec[39] < self.optimalization_tolerance*1e2 or \
-                np.std(minimum_vec[10:40])/minimum_vec[39] < self.optimalization_tolerance*1e3 or \
-                np.std(minimum_vec[0:40])/minimum_vec[39] < self.optimalization_tolerance*1e4:
+                np.std(minimum_vec[20:40])/minimum_vec[39] < self.optimalization_tolerance*1e1 or \
+                np.std(minimum_vec[10:40])/minimum_vec[39] < self.optimalization_tolerance*1e2 or \
+                np.std(minimum_vec[0:40])/minimum_vec[39] < self.optimalization_tolerance*1e3:
 
                 print('The iterations converged to minimum ' + str(self.current_minimum) + ' after ' + str(iter_idx) + ' iterations with ' + str(self.layer_num) + ' layers '  )
                 print(' ')
@@ -439,7 +439,7 @@ class Decomposition_Base( Operations ):
         
         self.current_minimum = None
         optimized_parameters = None
-        for idx  in range(1,self.iteration_loops+1):
+        for idx  in range(0,self.iteration_loops):
             
             if self.parallel:
                 res = minimize_parallel(optimalization_problem, solution_guess, options={'disp': False})
@@ -518,20 +518,20 @@ class Decomposition_Base( Operations ):
             operation = operations[idx]
             
             if operation.type == 'cnot':
-                operation_mtx = operation.matrix
+                operation_mtx = [operation.matrix]
                 
             elif operation.type == 'u3':
                 
                 if len(operation.parameters) == 1:
-                    operation_mtx = operation.matrix( parameters[parameter_idx] )
+                    operation_mtx = [operation.matrix( parameters[parameter_idx] )]
                     parameter_idx = parameter_idx + 1
                     
                 elif len(operation.parameters) == 2:
-                    operation_mtx = operation.matrix( parameters[parameter_idx:parameter_idx+2] )
-                    parameter_idx = parameter_idx +- 2
+                    operation_mtx = [operation.matrix( parameters[parameter_idx:parameter_idx+2] )]
+                    parameter_idx = parameter_idx + 2
                     
                 elif len(operation.parameters) == 3:
-                    operation_mtx = operation.matrix( parameters[parameter_idx:parameter_idx+3] )
+                    operation_mtx = [operation.matrix( parameters[parameter_idx:parameter_idx+3] )]
                     parameter_idx = parameter_idx + 3
                 else:
                     print('The U3 operation has wrong number of parameters')
@@ -539,13 +539,13 @@ class Decomposition_Base( Operations ):
                                 
             elif operation.type == 'block':
                 parameters_num = len(operation.parameters)
-                operation_mtx = operation.matrix( parameters[parameter_idx:parameter_idx+parameters_num] )
+                operation_mtx = operation.get_matrices( parameters[parameter_idx:parameter_idx+parameters_num] )
                 parameter_idx = parameter_idx + parameters_num
                 
             elif operation.type == 'general':
-                operation_mtx = operation.matrix
+                operation_mtx = [operation.matrix]
 
-            operation_mtxs.append(operation_mtx)
+            operation_mtxs = operation_mtxs + operation_mtx
 
         operation_mtxs.append(initial_matrix)
         return self.apply_operations( operation_mtxs, mp.cpu_count() )
@@ -633,7 +633,7 @@ class Decomposition_Base( Operations ):
 
 
 
-        if numCPUs == 1 or len(operation_mtxs) <= 100:
+        if numCPUs == 1 or len(operation_mtxs) <= 500 or self.qbit_num < 6:
             returnVal = reduce(np.dot, operation_mtxs)
             if connection != None:
                 connection.send(returnVal)
