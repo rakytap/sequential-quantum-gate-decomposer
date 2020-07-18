@@ -65,7 +65,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         self.max_iterations = int(1e4)
     
         # number of operators in one sub-layer of the optimalization process
-        self.optimalization_block = 1    
+        self.optimalization_block = 1
         if parallel:
             self.optimalization_block = 10  
         

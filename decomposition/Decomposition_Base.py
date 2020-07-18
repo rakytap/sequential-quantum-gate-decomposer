@@ -258,7 +258,10 @@ class Decomposition_Base( Operations ):
         operations = self.operations
         
         # store the number of parameters
-        parameter_num = self.parameter_num  
+        parameter_num = self.parameter_num
+
+        # store the initial unitary to be decomposed
+        Umtx = self.Umtx
         
         # storing the initial computational parameters
         optimalization_block = self.optimalization_block
@@ -290,14 +293,6 @@ class Decomposition_Base( Operations ):
         # starting index of the block group to be optimalized
         block_idx_start = len(operations)
 
-        # Determine the starting indexes of the optimalization iterations if the initial guess of the new parameters is set to zero
-
-        if self.initial_guess=='zeros':
-            if not (solution_guess is None) and len(solution_guess) < parameter_num:
-                while pre_operation_parameter_num < len(solution_guess):
-                    pre_operation_parameter_num = pre_operation_parameter_num + len(operations[block_idx_start-1].parameters)
-                    block_idx_start = block_idx_start - 1
-
         
         #measure the time for the decompositin        
         start_time = time.time()
@@ -316,39 +311,52 @@ class Decomposition_Base( Operations ):
 
 
 
-            #get the fixed operations
-            fixed_parameters_pre = optimized_parameters[ len(optimized_parameters)-pre_operation_parameter_num : len(optimized_parameters)]
-            fixed_operations_pre = operations[ block_idx_start : len(operations) ]
-            operations_mtx_pre = self.get_transformed_matrix( fixed_parameters_pre, fixed_operations_pre, initial_matrix = np.identity(len(self.Umtx)) )
-                        
+            # ***** get the fixed operations applied before the optimized operations *****
+            #fixed_parameters_pre = optimized_parameters[len(optimized_parameters) - pre_operation_parameter_num:len(optimized_parameters)]
+            #fixed_operations_pre = operations[block_idx_start:]
+            #operations_mtx_pre = self.get_transformed_matrix(fixed_parameters_pre, fixed_operations_pre, initial_matrix=np.identity(2 ** self.qbit_num))
+            if block_idx_start < len(operations):
+                fixed_parameters_pre = self.optimized_parameters
+                fixed_operations_pre =self.operations[1:len(self.operations)]
+                operations_mtx_pre = self.get_transformed_matrix(fixed_parameters_pre, fixed_operations_pre, initial_matrix=operations_mtx_pre)
+            else:
+                operations_mtx_pre = np.identity(2**self.qbit_num)
+
+            # Transform the initial unitary upon the fixed pre-optimalization operations
+            self.Umtx = self.apply_operation(operations_mtx_pre, Umtx)
+
+            # Create a general operation describing the cumulative effect of gates applied before the optimized operations
             fixed_operation_pre = Operation( self.qbit_num )
             fixed_operation_pre.matrix = operations_mtx_pre
 
+            # ***** get the fixed operations applied after the optimized operations *****
             # create a list of post operations matrices
             if block_idx_start == len(operations):
                 # matrix of the fixed operations aplied after the operations to be varied
                 fixed_parameters_post = optimized_parameters[0:len(optimized_parameters) - block_parameter_num]
                 fixed_operations_post = operations[0:block_idx_end]
                 operations_mtxs_post = self.get_operation_products(fixed_parameters_post, fixed_operations_post)
-            
+
+            # Create a general operation describing the cumulative effect of gates following the optimized operations
             fixed_operation_post = Operation( self.qbit_num )
-            fixed_operation_post.matrix = operations_mtxs_post.pop( -1)
+            if block_idx_end > 0:
+                fixed_operation_post.matrix = operations_mtxs_post[block_idx_end-1]
+            else:
+                operations_mtxs_post.clear()
+                fixed_operation_post.matrix = np.identity(2**self.qbit_num)
                         
-            # operations in the optimalization process
-            self.operations = [fixed_operation_post] + operations[block_idx_end:block_idx_start] + [fixed_operation_pre]
-            
-            
-            
+            # create a list of operations for the optimalization process
+            self.operations = [fixed_operation_post] + operations[block_idx_end:block_idx_start]
+
             # solve the optimalization problem of the block            
             solution_guess = optimized_parameters[ len(optimized_parameters)-pre_operation_parameter_num-block_parameter_num : len(optimized_parameters)-pre_operation_parameter_num]
             self.solve_layer_optimalization_problem( optimalization_problem=optimalization_problem, solution_guess=solution_guess)
-            
-                        
+
             # add the current minimum to the array of minimums
             minimum_vec = minimum_vec[1:] + [self.current_minimum]
             
             # store the obtained optimalized parameters for the block
-            optimized_parameters[ len(optimized_parameters)-pre_operation_parameter_num-block_parameter_num+1-1 : len(optimized_parameters)-pre_operation_parameter_num ] = self.optimized_parameters
+            optimized_parameters[ len(optimized_parameters)-pre_operation_parameter_num-block_parameter_num : len(optimized_parameters)-pre_operation_parameter_num ] = self.optimized_parameters
 
             
             if block_idx_end == 0:
@@ -396,10 +404,13 @@ class Decomposition_Base( Operations ):
         self.optimalization_block = optimalization_block
         self.parallel = parallel
         
-        # store the obtained optimalizated parameters
+        # store the obtained optimized parameters
         self.operations = operations
         self.optimized_parameters = optimized_parameters
         self.parameter_num = parameter_num
+
+        # restore the original unitary
+        self.Umtx = Umtx
         
         
 
@@ -490,9 +501,6 @@ class Decomposition_Base( Operations ):
         # construct the list of matrix representation of the gates
         operation_mtxs = None
 
-        block_idx = 0
-        operation_product = np.identity(2 ** self.qbit_num)
-
         for idx in range(0,len(operations)):
 
             operation = operations.pop(0)
@@ -508,23 +516,16 @@ class Decomposition_Base( Operations ):
                 operation_mtx = operation.matrix(parameters[parameter_idx:parameter_idx+parameters_num])
                 parameter_idx = parameter_idx + parameters_num
 
-            operation_product = np.dot(operation_product,operation_mtx)
-            block_idx = block_idx + 1
 
-            if block_idx == self.optimalization_block:
+            if operation_mtxs is None:
+                operation_mtxs = [operation_mtx]
+            else:
+                operation_mtxs.append(np.dot(operation_mtxs[-1], operation_mtx))
 
-                if operation_mtxs is None:
-                    operation_mtxs = [operation_product]
-                else:
-                    operation_mtxs.append(np.dot(operation_mtxs[-1], operation_product))
 
-                block_idx = 0
-                operation_product = np.identity(2**self.qbit_num)
 
         if operation_mtxs is None:
             operation_mtxs = [np.identity(2**self.qbit_num)]
-        else:
-            operation_mtxs = [np.identity(2 ** self.qbit_num)] + operation_mtxs
 
         return operation_mtxs
 
