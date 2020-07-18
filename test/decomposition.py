@@ -24,6 +24,8 @@ from qiskit import execute
 from qiskit import Aer
 import numpy as np
 
+##
+# @brief Decomposition of general two-qubit matrix into U3 and CNOT gates
 def two_qubit_decomposition():
  
     from decomposition.Two_Qubit_Decomposition import Two_Qubit_Decomposition
@@ -83,14 +85,15 @@ def two_qubit_decomposition():
     
     
     
-    
+##
+# @brief Decomposition of general three-qubit matrix into U3 and CNOT gates
 def three_qubit_decomposition():
  
     from decomposition.N_Qubit_Decomposition import N_Qubit_Decomposition
     
     print('****************************************')
     print('Test of three-qubit decomposition')
-    print('This might take about 1 mins')
+    print('This might take about 1 min')
     print(' ')
     
     # cerate unitary q-bit matrix
@@ -139,7 +142,8 @@ def three_qubit_decomposition():
     
     print('The error of the decomposition is ' + str(decomposition_error))
 
-
+##
+# @brief Decomposition of the IBM challenge matrix into U3 and CNOT gates
 def IBM_challenge_decomposition():
  
     from decomposition.N_Qubit_Decomposition import N_Qubit_Decomposition
@@ -204,14 +208,15 @@ def IBM_challenge_decomposition():
     
     print('The error of the decomposition is ' + str(decomposition_error))
 
-    
+##
+# @brief Decomposition of general four-qubit matrix into U3 and CNOT gates
 def four_qubit_decomposition():
  
     from decomposition.N_Qubit_Decomposition import N_Qubit_Decomposition
     
     print('****************************************')
     print('Test of four-qubit decomposition')
-    print('This might take about 1.5 hour')
+    print('This might take about 1.5 hours')
     print(' ')
     
     # cerate unitary q-bit matrix
@@ -225,7 +230,7 @@ def four_qubit_decomposition():
     print(Umtx)
     print(' ')
 
-    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, parallel = True, identical_blocks={'4':2, '3':1} )
+    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, parallel = False, identical_blocks={'4':2, '3':2} )
     
     # Maximal number of iteartions in the optimalization process
     cDecomposition.set_max_iteration( int(1e6) )
@@ -264,6 +269,8 @@ def four_qubit_decomposition():
     print('The error of the decomposition is ' + str(decomposition_error))
 
 
+##
+# @brief Decomposition of five-qubit matrix consisting of few CNOT gates into U3 and CNOT gates
 def few_CNOT_unitary_decomposition():
     from decomposition.N_Qubit_Decomposition import N_Qubit_Decomposition
     from random_unitary.few_CNOT_unitary import few_CNOT_unitary
@@ -331,13 +338,14 @@ def few_CNOT_unitary_decomposition():
 
     print('The error of the decomposition is ' + str(decomposition_error))
 
-
+##
+# @brief Decomposition of general five-qubit matrix into U3 and CNOT gates
 def five_qubit_decomposition():
     from decomposition.N_Qubit_Decomposition import N_Qubit_Decomposition
 
     print('****************************************')
     print('Test of four-qubit decomposition')
-    print('This might take about ???? hour')
+    print('This might take about 24 hours')
     print(' ')
 
     # cerate unitary q-bit matrix
@@ -351,7 +359,7 @@ def five_qubit_decomposition():
     print(Umtx)
     print(' ')
 
-    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, parallel=False, identical_blocks={'5':1, '4': 1, '3': 1})
+    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, parallel=False, identical_blocks={'5':2, '4': 2, '3': 2})
 
     # Maximal number of iteartions in the optimalization process
     cDecomposition.set_max_iteration(int(1e6))
