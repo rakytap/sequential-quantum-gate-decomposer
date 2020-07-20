@@ -33,7 +33,7 @@ import multiprocessing as mp
 
 
 # default number of layers in the decomposition as a function of number of qubits
-def_layer_num = { '2': 3, '3':20, '4':60, '5':250 }
+def_layer_num = { '2': 3, '3':20, '4':60, '5':240 }
 
 
 
@@ -91,7 +91,7 @@ class Decomposition_Base( Operations ):
         self.optimalization_problem_solved = False
         
         # number of iteratrion loops in the finale optimalization
-        self.iteration_loops = None
+        self.iteration_loops = dict()
         
         # The maximal allowed error of the optimalization problem
         self.optimalization_tolerance = None
@@ -252,7 +252,7 @@ class Decomposition_Base( Operations ):
         
         
         # array containing minimums to check convergence of the solution
-        minimum_vec = [0]*40
+        minimum_vec = [0]*10
                
         # store the operations
         operations = self.operations
@@ -376,10 +376,7 @@ class Decomposition_Base( Operations ):
                 print('The minimum with ' + str(self.layer_num) + ' layers after ' + str(iter_idx) + ' iterations is ' + str(self.current_minimum))
             
             # conditions to break the iteration cycles
-            if np.std(minimum_vec[30:40])/minimum_vec[39] < self.optimalization_tolerance or \
-                np.std(minimum_vec[20:40])/minimum_vec[39] < self.optimalization_tolerance*1e1 or \
-                np.std(minimum_vec[10:40])/minimum_vec[39] < self.optimalization_tolerance*1e2 or \
-                np.std(minimum_vec[0:40])/minimum_vec[39] < self.optimalization_tolerance*1e3:
+            if np.std(minimum_vec)/minimum_vec[-1] < self.optimalization_tolerance:
 
                 print('The iterations converged to minimum ' + str(self.current_minimum) + ' after ' + str(iter_idx) + ' iterations with ' + str(self.layer_num) + ' layers '  )
                 print(' ')
@@ -433,7 +430,7 @@ class Decomposition_Base( Operations ):
         
         self.current_minimum = None
         optimized_parameters = None
-        for idx  in range(0,self.iteration_loops):
+        for idx  in range(0,self.iteration_loops.get(str(self.qbit_num),1)):
             
             if self.parallel:
                 res = minimize_parallel(optimalization_problem, solution_guess, options={'disp': False})

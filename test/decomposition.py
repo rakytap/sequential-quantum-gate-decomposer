@@ -173,8 +173,12 @@ def IBM_challenge_decomposition():
     # set the maximal number of layers in the decomposition
     max_layer_num = {'4': 9, '3': 4}
 
+    # set the number of iteration loops in the decomposition
+    iteration_loops = {'4': 3, '3': 3, '2':3}
+
     # creating class to decompose the matrix
-    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, max_layer_num=max_layer_num, identical_blocks=identical_blocks, initial_guess= 'zeros' )
+    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, max_layer_num=max_layer_num,
+                    identical_blocks=identical_blocks, initial_guess= 'close_to_zero', iteration_loops=iteration_loops )
 
     #start the decomposition
     cDecomposition.start_decomposition()
@@ -230,7 +234,7 @@ def four_qubit_decomposition():
     print(Umtx)
     print(' ')
 
-    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, parallel = False, identical_blocks={'4':2, '3':2} )
+    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, parallel = True, identical_blocks={'4':1, '3':1} )
     
     # Maximal number of iteartions in the optimalization process
     cDecomposition.set_max_iteration( int(1e6) )
@@ -359,7 +363,7 @@ def five_qubit_decomposition():
     print(Umtx)
     print(' ')
 
-    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, parallel=False, identical_blocks={'5':2, '4': 2, '3': 2})
+    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, parallel=False, identical_blocks={'5':1, '4': 1, '3': 1})
 
     # Maximal number of iteartions in the optimalization process
     cDecomposition.set_max_iteration(int(1e6))

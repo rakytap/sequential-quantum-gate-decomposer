@@ -36,9 +36,11 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
 # @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @param identical_blocks A dictionary {'n': integer} indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
+# @param iteration_loops A dictionary {'n': integer} giving the number of optimalization subloops done for each step in the optimalization process. (For general matrices 1 works fine, higher value increase both the convergence tendency, but also the running time.)
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False, max_layer_num=def_layer_num, parallel= False, method='L-BFGS-B', identical_blocks=dict(), initial_guess= 'zeros' ):
+    def __init__( self, Umtx, optimize_layer_num=False, max_layer_num=def_layer_num, parallel= False, method='L-BFGS-B',
+                  identical_blocks=dict(), initial_guess= 'zeros', iteration_loops=dict() ):
         
         Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method, initial_guess=initial_guess ) 
             
@@ -47,7 +49,7 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
         self.optimize_layer_num  = optimize_layer_num
         
         # number of iteratrion loops in the finale optimalization
-        self.iteration_loops = 3
+        self.iteration_loops = iteration_loops
         
         # The maximal allowed error of the optimalization problem
         self.optimalization_tolerance = 1e-7

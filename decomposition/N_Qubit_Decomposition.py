@@ -45,9 +45,11 @@ class N_Qubit_Decomposition(Decomposition_Base):
 # @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @param identical_blocks A dictionary of the form {'n': integer} indicating that how many CNOT gates should be included in one layer during the disentanglement of the n-th qubit from the others
+# @param iteration_loops A dictionary {'n': integer} giving the number of optimalization subloops done for each step in the optimalization process. (For general matrices 1 works fine, higher value increase both the convergence tendency, but also the running time.)
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False, max_layer_num=def_layer_num, parallel= False, method='L-BFGS-B',  identical_blocks = dict(), initial_guess= 'zeros'):
+    def __init__( self, Umtx, optimize_layer_num=False, max_layer_num=def_layer_num, parallel= False, method='L-BFGS-B',
+                  identical_blocks = dict(), initial_guess= 'zeros', iteration_loops=dict() ):
         
         Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method, initial_guess=initial_guess   ) 
             
@@ -56,7 +58,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         self.optimize_layer_num  = optimize_layer_num
         
         # number of iteratrion loops in the finale optimalization
-        self.iteration_loops = 3
+        self.iteration_loops = iteration_loops
         
         # The maximal allowed error of the optimalization problem
         self.optimalization_tolerance = 1e-7
@@ -67,7 +69,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         # number of operators in one sub-layer of the optimalization process
         self.optimalization_block = 1
         if parallel:
-            self.optimalization_block = 10  
+            self.optimalization_block = 10
         
         # The number of gate blocks used in the decomposition
         self.max_layer_num = max_layer_num
@@ -116,7 +118,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         
         
         # saving the subunitarization operations
-        self.save_subdecomposition_results( cSub_decomposition )
+        self.extract_subdecomposition_results( cSub_decomposition )
         
         # decompose the qubits in the disentangled submatrices
         self.decompose_submatrix()
@@ -147,11 +149,11 @@ class N_Qubit_Decomposition(Decomposition_Base):
         
     
     
-## save_subdecomposition_results
+##
 # @brief stores the calculated parameters and operations of the sub-decomposition processes
 # @param cSub_decomposition An instance of class Sub_Two_Qubit_Decomposition used to disentangle qubit pairs from the others.
 # @param qbits_reordered A permutation of qubits that was applied on the initial unitary in prior of the sub decomposition. (This is needed to restore the correct qubit indices.)
-    def save_subdecomposition_results( self, cSub_decomposition ):
+    def extract_subdecomposition_results( self, cSub_decomposition ):
                 
         # get the unitarization operations
         operations = cSub_decomposition.operations
@@ -234,7 +236,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         
                 
         # saving the decomposition operations
-        self.save_subdecomposition_results( cdecomposition )
+        self.extract_subdecomposition_results( cdecomposition )
         
         
      
