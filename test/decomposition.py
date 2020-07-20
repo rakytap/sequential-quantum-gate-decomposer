@@ -234,7 +234,7 @@ def four_qubit_decomposition():
     print(Umtx)
     print(' ')
 
-    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, parallel = True, identical_blocks={'4':1, '3':1} )
+    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, parallel = False, identical_blocks={'4':1, '3':1} )
     
     # Maximal number of iteartions in the optimalization process
     cDecomposition.set_max_iteration( int(1e6) )
