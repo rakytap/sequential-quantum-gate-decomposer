@@ -49,6 +49,7 @@ For the decomposition of N-qubit unitaries use class **decomposition/N_Qubit_Dec
 * *method* Optional string value labeling the optimalization method used in the calculations. Deafult is 'L-BFGS-B'. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 * *initial_guess* String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random'
 * *identical_blocks* A dictionary of the form {'n': integer} indicating that how many CNOT gates should be included in one layer during the disentanglement of the n-th qubit from the others
+* *iteration_loops* A dictionary {'n': integer} giving the number of optimalization subloops done for each step in the optimalization process. (For general matrices 1 works fine, higher value increase both the convergence tendency, but also the running time.)
 
 The decomposition of the unitary can be start with the method
 
