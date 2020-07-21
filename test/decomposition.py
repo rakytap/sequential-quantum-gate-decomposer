@@ -178,7 +178,7 @@ def IBM_challenge_decomposition():
 
     # creating class to decompose the matrix
     cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, max_layer_num=max_layer_num,
-                    identical_blocks=identical_blocks, initial_guess= 'close_to_zero', iteration_loops=iteration_loops )
+                    identical_blocks=identical_blocks, initial_guess= 'zeros', iteration_loops=iteration_loops )
 
     #start the decomposition
     cDecomposition.start_decomposition()

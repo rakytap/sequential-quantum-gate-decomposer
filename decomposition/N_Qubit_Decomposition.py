@@ -64,7 +64,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         self.optimalization_tolerance = 1e-7
         
         # Maximal number of iterations in the optimalization process
-        self.max_iterations = int(1e4)
+        self.max_iterations = int(1e5)
     
         # number of operators in one sub-layer of the optimalization process
         self.optimalization_block = 1
@@ -96,7 +96,9 @@ class N_Qubit_Decomposition(Decomposition_Base):
         start_time = time.time()
             
         # create an instance of class to disentangle the given qubit pair
-        cSub_decomposition = Sub_Matrix_Decomposition(self.Umtx, optimize_layer_num=self.optimize_layer_num, max_layer_num=self.max_layer_num, initial_guess=self.initial_guess, parallel=self.parallel, identical_blocks=self.identical_blocks)
+        cSub_decomposition = Sub_Matrix_Decomposition(self.Umtx, optimize_layer_num=self.optimize_layer_num,
+                    max_layer_num=self.max_layer_num, initial_guess=self.initial_guess, parallel=self.parallel,
+                    identical_blocks=self.identical_blocks, iteration_loops=self.iteration_loops)
         
         # The maximal error of the optimalization problem
         cSub_decomposition.optimalization_tolerance = self.optimalization_tolerance
@@ -210,7 +212,12 @@ class N_Qubit_Decomposition(Decomposition_Base):
             else:
                 optimize_layer_num = False
 
-            cdecomposition = N_Qubit_Decomposition(most_unitary_submatrix, optimize_layer_num=optimize_layer_num, max_layer_num=self.max_layer_num, initial_guess=self.initial_guess, identical_blocks=self.identical_blocks)
+            cdecomposition = N_Qubit_Decomposition(most_unitary_submatrix, optimize_layer_num=optimize_layer_num,
+                            max_layer_num=self.max_layer_num, initial_guess=self.initial_guess,
+                            identical_blocks=self.identical_blocks, iteration_loops=self.iteration_loops)
+
+            # Maximal number of iteartions in the optimalization process
+            cdecomposition.set_max_iteration(self.max_iterations)
             
             # setting operation layer
             if len(most_unitary_submatrix) <= 8:
