@@ -78,14 +78,11 @@ class N_Qubit_Decomposition(Decomposition_Base):
         self.identical_blocks = identical_blocks  
         
         
-                        
-    
-    
-    
-    
-## start_decomposition
+
+##
 # @brief Start the disentanglig process of the least significant two qubit unitary
-# @param finalize_decomposition Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
+# @param finalize_decomposition Optional logical parameter. If true (default), the decoupled qubits are rotated into
+# state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
     def start_decomposition(self, finalize_decomposition=True):
         
         
@@ -143,16 +140,14 @@ class N_Qubit_Decomposition(Decomposition_Base):
             print( 'In the decomposition with error = ' + str(self.decomposition_error) + ' were used ' + str(self.layer_num) + ' layers with '  + str(gates_num['u3']) + ' U3 operations and ' + str(gates_num['cnot']) + ' CNOT gates.' )        
             
         
-        print("--- In total %s seconds elapsed during the decomposition ---" % (time.time() - start_time))            
-        
-    
-        
-    
-    
+        print("--- In total %s seconds elapsed during the decomposition ---" % (time.time() - start_time))
+
+
 ##
 # @brief stores the calculated parameters and operations of the sub-decomposition processes
 # @param cSub_decomposition An instance of class Sub_Two_Qubit_Decomposition used to disentangle qubit pairs from the others.
-# @param qbits_reordered A permutation of qubits that was applied on the initial unitary in prior of the sub decomposition. (This is needed to restore the correct qubit indices.)
+# @param qbits_reordered A permutation of qubits that was applied on the initial unitary in prior of the sub decomposition.
+# (This is needed to restore the correct qubit indices.)
     def extract_subdecomposition_results( self, cSub_decomposition ):
                 
         # get the unitarization operations
@@ -208,7 +203,14 @@ class N_Qubit_Decomposition(Decomposition_Base):
         
         # if the qubit number in the submatirx is greater than 2 new N-qubit decomposition is started
         if len(most_unitary_submatrix) > 4:
-            cdecomposition = N_Qubit_Decomposition(most_unitary_submatrix, optimize_layer_num=True, max_layer_num=self.max_layer_num, initial_guess=self.initial_guess, identical_blocks=self.identical_blocks)
+
+            # use optimization of the layer numbers only for 3qubits
+            if len(most_unitary_submatrix) == 8:
+                optimize_layer_num = True
+            else:
+                optimize_layer_num = False
+
+            cdecomposition = N_Qubit_Decomposition(most_unitary_submatrix, optimize_layer_num=optimize_layer_num, max_layer_num=self.max_layer_num, initial_guess=self.initial_guess, identical_blocks=self.identical_blocks)
             
             # setting operation layer
             if len(most_unitary_submatrix) <= 8:
@@ -251,7 +253,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         print('Final fine tuning of the parameters')
         print('***************************************************************')
 
-        
+
         # setting the global minimum
         self.global_target_minimum = 0
         

@@ -33,7 +33,7 @@ import multiprocessing as mp
 
 
 # default number of layers in the decomposition as a function of number of qubits
-def_layer_num = { '2': 3, '3':20, '4':60, '5':240 }
+def_layer_num = { '2': 3, '3':20, '4':60, '5':230 }
 
 
 

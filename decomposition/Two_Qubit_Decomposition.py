@@ -55,7 +55,7 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
         self.global_target_minimum = 0
         
         # number of iteratrion loops in the finale optimalization
-        self.iteration_loops = 3
+        self.iteration_loops = {'2':3}
         
         # The maximal allowed error of the optimalization problem
         self.optimalization_tolerance = 1e-7
@@ -159,7 +159,7 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
         submatrices.append(matrix_new[2:4, 0:2])
         submatrices.append(matrix_new[2:4, 2:4])
         
-        cost_function = 0;
+        cost_function = 0
         
         for idx in range(0,4):
             for jdx in range(idx,4):
