@@ -123,7 +123,7 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
                         block = operation_block( self.qbit_num )
                     
                         # add CNOT gate to the block
-                        block.add_cnot_to_end(control_qbit, target_qbit)       
+                        block.add_cz_to_end(control_qbit, target_qbit)
                     
                         # adding U3 operation to the block
                         block.add_u3_to_end(target_qbit, ['Theta', 'Lambda']) 

@@ -87,7 +87,7 @@ class operation_block(Operations):
             
             operation = self.operations[idx]
             
-            if operation.type == 'cnot':
+            if operation.type == 'cz':
                 operation_mtx = operation.matrix
                 
             elif operation.type == 'u3': 

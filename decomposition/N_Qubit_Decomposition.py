@@ -25,14 +25,14 @@ from .Decomposition_Base import Decomposition_Base
 from .Two_Qubit_Decomposition import Two_Qubit_Decomposition
 from .Sub_Matrix_Decomposition import Sub_Matrix_Decomposition
 from operations.operation_block import operation_block
-from operations.CNOT import CNOT
+from operations.CZ import CZ
 from operations.U3 import U3
 import numpy as np
 from numpy import linalg as LA
 import time
 
 ##
-# @brief A class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
+# @brief A class for the decomposition of N-qubit unitaries into U3 and cz gates.
 
 class N_Qubit_Decomposition(Decomposition_Base):
     
@@ -44,7 +44,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
 # @param max_leyer_num Optional parameter. A dictionary of the form {'n': integer} indicating that how many layers should be used in the disentaglement of the n-th qubit.
 # @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
-# @param identical_blocks A dictionary of the form {'n': integer} indicating that how many CNOT gates should be included in one layer during the disentanglement of the n-th qubit from the others
+# @param identical_blocks A dictionary of the form {'n': integer} indicating that how many cz gates should be included in one layer during the disentanglement of the n-th qubit from the others
 # @param iteration_loops A dictionary {'n': integer} giving the number of optimalization subloops done for each step in the optimalization process during the disentanglement of the n-th qubit from the others. (For general matrices 1 works fine, higher value increase both the convergence tendency, but also the running time.)
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 # @return An instance of the class
@@ -54,7 +54,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method, initial_guess=initial_guess   ) 
             
                 
-        # logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
+        # logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of cz gates is used (ideal for general unitaries).
         self.optimize_layer_num  = optimize_layer_num
         
         # number of iteratrion loops in the finale optimalization
@@ -139,7 +139,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
             
             # get the number of gates used in the decomposition
             gates_num = self.get_gate_nums()
-            print( 'In the decomposition with error = ' + str(self.decomposition_error) + ' were used ' + str(self.layer_num) + ' layers with '  + str(gates_num['u3']) + ' U3 operations and ' + str(gates_num['cnot']) + ' CNOT gates.' )        
+            print( 'In the decomposition with error = ' + str(self.decomposition_error) + ' were used ' + str(self.layer_num) + ' layers with '  + str(gates_num['u3']) + ' U3 operations and ' + str(gates_num['cz']) + ' CZ gates.' )
             
         
         print("--- In total %s seconds elapsed during the decomposition ---" % (time.time() - start_time))
@@ -291,7 +291,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         
       
 ##  
-# @brief Call to simplify the gate structure in each layers if possible (i.e. tries to reduce the number of CNOT gates)
+# @brief Call to simplify the gate structure in each layers if possible (i.e. tries to reduce the number of cz gates)
     def simplify_layers(self):
 
         print('***************************************************************')
@@ -354,16 +354,16 @@ class N_Qubit_Decomposition(Decomposition_Base):
             parameter_num_block = len(block_to_simplify.parameters)
                                        
             
-            # get the number of CNOT gates and store the block operations if the number of CNOT gates cannot be reduced
+            # get the number of cz gates and store the block operations if the number of cz gates cannot be reduced
             gate_nums = block_to_simplify.get_gate_nums()
-            if gate_nums.get('cnot',0) < 2:
+            if gate_nums.get('cz',0) < 2:
                 operations = operations + layers_in_block
                 optimized_parameters = np.concatenate(( optimized_parameters, self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_block] ))
                 parameter_idx = parameter_idx + parameter_num_block                    
                 continue
             
             # simplify the given layer
-            simplified_layer, simplified_parameters, simplification_status = self.simplify_layer( block_to_simplify, self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_block], {'2': gate_nums['cnot']-1} )
+            simplified_layer, simplified_parameters, simplification_status = self.simplify_layer( block_to_simplify, self.optimized_parameters[parameter_idx:parameter_idx+parameter_num_block], {'2': gate_nums['cz']-1} )
             parameter_idx = parameter_idx + parameter_num_block
             
             # adding the simplified operations (or the non-simplified if the simplification was not successfull)
@@ -373,9 +373,9 @@ class N_Qubit_Decomposition(Decomposition_Base):
                 operations = operations + layers_in_block
             optimized_parameters = np.concatenate(( optimized_parameters, simplified_parameters ))
 
-        # get the number of CNOT gates in the initial structure
+        # get the number of cz gates in the initial structure
         gate_num_initial = self.get_gate_nums()
-        cnot_num_initial = gate_num_initial.get('cnot',0)
+        cz_num_initial = gate_num_initial.get('cz',0)
 
         # store the modified list of operations and parameters
         self.operations = operations
@@ -384,9 +384,9 @@ class N_Qubit_Decomposition(Decomposition_Base):
         self.layer_num = len(operations)
 
         gate_num_simplified = self.get_gate_nums()
-        cnot_num_simplified = gate_num_simplified.get('cnot',0)
+        cz_num_simplified = gate_num_simplified.get('cz',0)
 
-        print('Initial gate structure with ' + str(cnot_num_initial) + ' CNOT gates simplified to a structure containing ' + str(cnot_num_simplified) + ' CNOT gates.')
+        print('Initial gate structure with ' + str(cz_num_initial) + ' cz gates simplified to a structure containing ' + str(cz_num_simplified) + ' cz gates.')
         print('************************************')
         print(' ')
     
@@ -394,10 +394,10 @@ class N_Qubit_Decomposition(Decomposition_Base):
     
     
 ##  
-# @brief Call to simplify the gate structure (i.e. tries to reduce the number of CNOT gates) in one layer if possible
+# @brief Call to simplify the gate structure (i.e. tries to reduce the number of cz gates) in one layer if possible
 # @param layer An instance of class operation_block containing the 2-qubit gate structure to be simplified
 # @parameters An array of parameters to calculate the matrix of the layer.
-# @max_layer_num The maximal number of layers containing CNOT gates
+# @max_layer_num The maximal number of layers containing cz gates
 # @return An instance of class operation_block containing the simplified gate operations.       
     def simplify_layer(self, layer, parameters, max_layer_num):
 
@@ -408,7 +408,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         control_qbit = None
         for layer_op_idx in range(0,len(layer.operations)):
             operation = layer.operations[layer_op_idx]
-            if operation.type == 'cnot':
+            if operation.type == 'cz':
                 target_qbit = operation.target_qbit
                 control_qbit = operation.control_qbit
                 break
@@ -459,9 +459,9 @@ class N_Qubit_Decomposition(Decomposition_Base):
             for operation_idx in range(0,len(op_block.operations)):
                 operation = op_block.operations[operation_idx]
             
-                if operation.type == 'cnot':
-                    operation_new = CNOT(self.qbit_num, control_qbit, target_qbit)
-                    #operation_new = CNOT(2, 1, 0)
+                if operation.type == 'cz':
+                    operation_new = CZ(self.qbit_num, control_qbit, target_qbit)
+                    #operation_new = cz(2, 1, 0)
                 elif operation.type == 'u3':
                     if operation.target_qbit == 0:
                         operation_new = U3(self.qbit_num, target_qbit, operation.parameters)
@@ -473,7 +473,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
 
         gate_nums_layer = layer.get_gate_nums()
         gate_nums_simplified = layer_simplified.get_gate_nums()
-        print(str(gate_nums_layer['cnot']) + ' CNOT gates successfully simplified to ' + str(gate_nums_simplified.get('cnot', 0)) + ' CNOT gates')
+        print(str(gate_nums_layer['cz']) + ' CZ gates successfully simplified to ' + str(gate_nums_simplified.get('cz', 0)) + ' CZ gates')
         print(' ')
         return layer_simplified, cdecomposition.optimized_parameters, True
 #LA.norm( np.dot(layer.matrix(parameters).conj().T, layer_simplified.matrix(cdecomposition.optimized_parameters)))

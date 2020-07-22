@@ -156,7 +156,7 @@ class Decomposition_Base( Operations ):
             
         # get the number of gates used in the decomposition
         gates_num = self.get_gate_nums()
-        print( 'The error of the decomposition after finalyzing operations is ' + str(self.decomposition_error) + ' with ' + str(self.layer_num) + ' layers containing '  + str(gates_num.get('u3',0)) + ' U3 operations and ' + str(gates_num.get('cnot',0)) + ' CNOT gates.' )
+        print( 'The error of the decomposition after finalyzing operations is ' + str(self.decomposition_error) + ' with ' + str(self.layer_num) + ' layers containing '  + str(gates_num.get('u3',0)) + ' U3 operations and ' + str(gates_num.get('cz',0)) + ' CZ gates.' )
         print(' ')
             
 
@@ -502,7 +502,7 @@ class Decomposition_Base( Operations ):
 
             operation = operations.pop(0)
 
-            if operation.type == 'cnot':
+            if operation.type == 'cz':
                 operation_mtx = operation.matrix
 
             elif operation.type == 'general':
@@ -548,7 +548,7 @@ class Decomposition_Base( Operations ):
             
             operation = operations[idx]
             
-            if operation.type == 'cnot':
+            if operation.type == 'cz':
                 operation_mtx = operation.matrix
 
             elif operation.type == 'general':

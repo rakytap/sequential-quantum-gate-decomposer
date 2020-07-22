@@ -48,7 +48,7 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
         Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method, initial_guess=initial_guess )
          
         
-        # logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
+        # logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of cz gates is used (ideal for general unitaries).
         self.optimize_layer_num  = optimize_layer_num
         
         # The global minimum of the optimalization problem
@@ -96,8 +96,8 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
                 # creating block of operations
                 block = operation_block( self.qbit_num )
                     
-                # add CNOT gate to the block
-                block.add_cnot_to_end(1, 0)      
+                # add cz gate to the block
+                block.add_cz_to_end(1, 0)      
                     
                 # adding U3 operation to the block
                 block.add_u3_to_end(1, ['Theta', 'Lambda']) 

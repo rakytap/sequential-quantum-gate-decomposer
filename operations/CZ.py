@@ -23,13 +23,13 @@ from .Operation import Operation
 import numpy as np
 
 ##
-# @brief A class responsible for constructing matrices of CNOT
+# @brief A class responsible for constructing matrices of controlled z operation
 # gates acting on the N-qubit space
 
-class CNOT( Operation ):
+class CZ( Operation ):
     
     # Pauli x matrix
-    pauli_x = np.array([[0,1],[1,0]])
+    pauli_z = np.array([[1,0],[0,-1]])
     
     ##
     # @brief Constructor of the class.
@@ -41,7 +41,7 @@ class CNOT( Operation ):
         # number of qubits spanning the matrix of the operation
         self.qbit_num = qbit_num
         # A string describing the type of the operation
-        self.type = 'cnot'
+        self.type = 'cz'
         # A list of parameter names which are used to evaluate the matrix of the operation
         self.parameters = list()
         
@@ -58,7 +58,7 @@ class CNOT( Operation ):
         
         
         # constructing the matrix of the operation             
-        self.matrix = self.composite_cnot( control_qbit, target_qbit )
+        self.matrix = self.composite_cz( control_qbit, target_qbit )
         
     ##
     # @brief Sets the number of qubits spanning the matrix of the operation
@@ -68,15 +68,15 @@ class CNOT( Operation ):
         Operation.set_qbit_num( self, qbit_num )
         
         # recreate the operation matrix
-        self.matrix = self.composite_cnot( self.control_qbit, self.target_qbit )
+        self.matrix = self.composite_cz( self.control_qbit, self.target_qbit )
         
         
         
-    # @brief Calculate the matrix of a C_NOT gate operation acting on the space of qbit_num qubits.
+    # @brief Calculate the matrix of a CZ gate operation acting on the space of qbit_num qubits.
     # @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
     # @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
     # @return Returns with the matrix of the C-NOT gate.
-    def composite_cnot(self, control_qubit, target_qubit ):
+    def composite_cz(self, control_qubit, target_qubit ):
         
         if control_qubit == target_qubit:
             raise BaseException('control qubit and target qubit should be different')
@@ -103,14 +103,14 @@ class CNOT( Operation ):
         for iidx in range(0,self.qbit_num):
             if iidx == target_qubit:
                 if ret is None:
-                   ret = self.pauli_x
+                   ret = self.pauli_z
                 else:
-                    ret = np.kron(self.pauli_x, ret)
+                    ret = np.kron(self.pauli_z, ret)
             else:
                 if ret is None:
                    ret = np.identity(2)
                 else:
-                    ret = np.kron(np.identity(2), ret); 
+                    ret = np.kron(np.identity(2), ret)
         
         for index in range(0, len(indexes_control_qubit)):
             if indexes_control_qubit[index] == 1:
@@ -122,7 +122,7 @@ class CNOT( Operation ):
         
     
     ##
-    # @brief Call to reored the qubits in the matrix of the operation
+    # @brief Call to reorder the qubits in the matrix of the operation
     # @param qbit_list The list of qubits spanning the matrix
     def reorder_qubits( self, qbit_list ):
         
@@ -133,7 +133,7 @@ class CNOT( Operation ):
             self.control_qbit = qbit_list[-self.control_qbit-1]
         
         # recreate the operation matrix
-        self.matrix = self.composite_cnot( self.control_qbit, self.target_qbit )
+        self.matrix = self.composite_cz( self.control_qbit, self.target_qbit )
         
     
                    

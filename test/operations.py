@@ -92,13 +92,13 @@ def test_U3_operation():
     
     
     
-def test_CNOT_operation():
+def test_CZ_operation():
  
-    from operations.CNOT import CNOT
+    from operations.CZ import CZ
     import numpy as np
     
     print('****************************************')
-    print('Test of operation CNOT')
+    print('Test of operation CZ')
     print(' ')
 
     # define the nmumber of qubits spanning the matrices
@@ -112,11 +112,11 @@ def test_CNOT_operation():
         
 
     # creating gereal operation
-    op = CNOT( qbit_num, control_qbit, target_qbit )  
+    op = CZ( qbit_num, control_qbit, target_qbit )
     
     # check the CNOT matrix
     matrix = op.matrix
-    print('The matrix of ' + str(qbit_num) + ' qubit CNOT operator with control qubit ' + str(op.control_qbit) + ' and target qubit ' + str(op.target_qbit) )
+    print('The matrix of ' + str(qbit_num) + ' qubit CZ operator with control qubit ' + str(op.control_qbit) + ' and target qubit ' + str(op.target_qbit) )
     print(matrix)
     print(' ')
     
@@ -129,7 +129,7 @@ def test_CNOT_operation():
     
     # check the reordered CNOT matrix
     matrix = op.matrix
-    print('The matrix of ' + str(qbit_num) + ' qubit CNOT operator with control qubit ' + str(op.control_qbit) + ' and target qubit ' + str(op.target_qbit) )
+    print('The matrix of ' + str(qbit_num) + ' qubit CZ operator with control qubit ' + str(op.control_qbit) + ' and target qubit ' + str(op.target_qbit) )
     print(matrix)
     print(' ')    
     
@@ -153,7 +153,7 @@ def test_operations():
     
     # adding operations to the list
     operations.add_u3_to_end(1, ['Theta', 'Lambda'])
-    operations.add_cnot_to_end(1, 2)
+    operations.add_cz_to_end(1, 2)
     
     # get the number of parameters
     print( 'The number of parameters in the list of operations is ' + str(operations.parameter_num))

@@ -20,7 +20,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 """
 
 import numpy as np
-from .CNOT import CNOT
+from .CZ import CZ
 from .U3 import U3
 from .Operation import Operation
 
@@ -81,24 +81,24 @@ class  Operations():
 # @brief Append a C_NOT gate operation to the list of operations
 # @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 # @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
-    def add_cnot_to_end(self, control_qbit, target_qbit) :  
+    def add_cz_to_end(self, control_qbit, target_qbit) :
         
-        # new cnot operation
-        operation = CNOT(self.qbit_num, control_qbit, target_qbit )
+        # new cz operation
+        operation = CZ(self.qbit_num, control_qbit, target_qbit )
         
         # append the operation to the list
         self.add_operation_to_end(operation)       
         
         
     
-## add_cnot_to_front
+##
 # @brief Add a C_NOT gate operation to the front of the list of operations
 # @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 # @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
-    def add_cnot_to_front(self, control_qbit, target_qbit):
+    def add_cz_to_front(self, control_qbit, target_qbit):
         
-        # new cnot operation
-        operation = CNOT(self.qbit_num, control_qbit, target_qbit )
+        # new cz operation
+        operation = CZ(self.qbit_num, control_qbit, target_qbit )
         
         # put the operation to tghe front of the list
         self.add_operation_to_front(operation)        
@@ -159,7 +159,7 @@ class  Operations():
         # increase the number of U3 gate parameters by the number of parameters
         self.parameter_num = self.parameter_num + len(operation.parameters)
         
-        # increase the number of CNOT operations if necessary
+        # increase the number of CZ operations if necessary
         if operation.type == 'block':
             self.layer_num = self.layer_num + 1
     
@@ -187,8 +187,8 @@ class  Operations():
                     
             elif operation.type == 'u3':
                 gate_nums['u3'] = gate_nums.get('u3', 0) + 1
-            elif operation.type == 'cnot':
-                gate_nums['cnot'] = gate_nums.get('cnot', 0) + 1
+            elif operation.type == 'cz':
+                gate_nums['cz'] = gate_nums.get('cz', 0) + 1
                 
         return gate_nums
     
@@ -209,8 +209,8 @@ class  Operations():
             
             operation = self.operations[idx]
             
-            if operation.type == 'cnot':
-                message = message + ' CNOT with control qubit: ' + str(operation.control_qbit) + ' and target qubit: '  + str(operation.target_qbit)
+            if operation.type == 'cz':
+                message = message + ' CZ with control qubit: ' + str(operation.control_qbit) + ' and target qubit: '  + str(operation.target_qbit)
                 operation_idx = operation_idx + 1
                 
             elif operation.type == 'u3':
@@ -293,7 +293,7 @@ class  Operations():
             
             operation = self.operations[idx]
             
-            if operation.type == 'cnot':
+            if operation.type == 'cz':
                 circuit.cx(operation.control_qbit, operation.target_qbit)
                 
             elif operation.type == 'u3':
@@ -390,9 +390,9 @@ class  Operations():
             
             operation = self.operations[idx]
             
-            if operation.type == 'cnot':
+            if operation.type == 'cz':
                 #operation_mtx = operation.matrix
-                circuit.cx(operation.control_qbit, operation.target_qbit)
+                circuit.cz(operation.control_qbit, operation.target_qbit)
                 
             elif operation.type == 'u3':
                 
