@@ -39,13 +39,12 @@ class Two_Qubit_Decomposition( Decomposition_Base ):
 # @param Umtx The unitary matrix
 # @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
 # @param max_leyer_num Optional parameter. A dictionary of the form {'n': integer} indicating that how many layers should be used in the disentaglement of the n-th qubit.
-# @param parallel Optional logical value. If true, parallelized optimalization is used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False, max_layer_num=def_layer_num, parallel= False, method='L-BFGS-B', initial_guess= 'zeros' ):
+    def __init__( self, Umtx, optimize_layer_num=False, max_layer_num=def_layer_num, method='L-BFGS-B', initial_guess= 'zeros' ):
         
-        Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method, initial_guess=initial_guess )
+        Decomposition_Base.__init__( self, Umtx, method=method, initial_guess=initial_guess )
          
         
         # logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).

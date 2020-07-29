@@ -11,8 +11,8 @@ Quantum Gate Decomposer needs the following packages to be installed on the syst
 
 * [Qiskit](https://qiskit.org/documentation/install.html)
 * [Numpy](https://numpy.org/install/)
-* [optimparallel](https://pypi.org/project/optimparallel/)
 * [scipy](https://www.scipy.org/install.html)
+* [Numba](http://numba.pydata.org/)
 
 
 ## How to use
@@ -26,7 +26,6 @@ For the decomposition of two-qubit unitaries use class **decomposition/Two_Qubit
 
 * *Umtx* The unitary matrix to be decomposed. (In order to get the decomposition of a unitary into U3 and CNOT gates instead of operation chain transforming it to unity, one should give the complex transpose of the unitary as the input for the decomposition.)
 * *optimize_layer_num* Optional logical value. If true, then the optimalization tries to determine the lowest number of the operation layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers. (each operation layers consists of 0,1,2,3 CNOT gates and several U3 gates)
-* *parallel* Optional logical value. If true, parallelized optimalization is used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute *optimalization_block*) is at least 10). For False (default) sequential optimalization is applied.
 * *method* Optional string value labeling the optimalization method used in the calculations. Deafult is 'L-BFGS-B'. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 * *initial_guess* String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random'
 
@@ -45,7 +44,6 @@ For the decomposition of N-qubit unitaries use class **decomposition/N_Qubit_Dec
 
 * *Umtx* The unitary matrix to be decomposed. (In order to get the decomposition of a unitary into U3 and CNOT gates instead of operation chain transforming it to unity, one should give the complex transpose of the unitary as the input for the decomposition.)
 * *optimize_layer_num* Optional logical value. If true, then the optimalization tries to determine the lowest number of the operation layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers. (each operation layers consists of 0,1,2,3 CNOT gates and several U3 gates)
-* *parallel* Optional logical value. If true, parallelized optimalization is used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute *optimalization_block*) is at least 10). For False (default) sequential optimalization is applied.
 * *method* Optional string value labeling the optimalization method used in the calculations. Deafult is 'L-BFGS-B'. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 * *initial_guess* String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random'
 * *identical_blocks* A dictionary of the form {'n': integer} indicating that how many CNOT gates should be included in one layer during the disentanglement of the n-th qubit from the others

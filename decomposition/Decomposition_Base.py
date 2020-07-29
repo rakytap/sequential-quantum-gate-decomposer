@@ -26,7 +26,6 @@ from operations.Operation import Operation
 from operations.U3 import U3
 from operations.operation_block import operation_block
 from scipy.optimize import minimize
-from optimparallel import minimize_parallel
 import time
 from functools import reduce
 from numba import njit
@@ -47,11 +46,10 @@ class Decomposition_Base( Operations ):
 ## Contructor of the class
 # @brief Constructor of the class.
 # @param Umtx The unitary matrix to be decomposed
-# @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 # @return An instance of the class
-    def __init__( self, Umtx, parallel= False, method='L-BFGS-B', initial_guess= 'zeros' ):
+    def __init__( self, Umtx, method='L-BFGS-B', initial_guess= 'zeros' ):
         
         # determine the number of qubits
         qbit_num = int(round( np.log2( len(Umtx) ) ))
@@ -62,9 +60,6 @@ class Decomposition_Base( Operations ):
 
         # the optimalization method used in the calculations (default is L-BFGS-B)
         self.method = method
-        
-        # logical value to use paralllelized optimalization
-        self.parallel = parallel
         
         # The corrent optimized parameters for the operations
         self.optimized_parameters = np.empty(0)
@@ -265,7 +260,6 @@ class Decomposition_Base( Operations ):
         
         # storing the initial computational parameters
         optimalization_block = self.optimalization_block
-        parallel = self.parallel
         
         # store the optimized parameters
         if solution_guess is None:
@@ -368,11 +362,7 @@ class Decomposition_Base( Operations ):
                 
             
             # optimalization result is displayed in each 10th iteration
-            if iter_idx % 5 == 0 and self.parallel:
-                print('The minimum with ' + str(self.layer_num) + ' layers after ' + str(iter_idx) + ' iterations is ' + str(self.current_minimum))
-                print("--- %s seconds elapsed during the decomposition cycle ---" % (time.time() - start_time))            
-                start_time = time.time()
-            elif iter_idx % 500 == 0 and not self.parallel:
+            if iter_idx % 500 == 0 :
                 print('The minimum with ' + str(self.layer_num) + ' layers after ' + str(iter_idx) + ' iterations is ' + str(self.current_minimum) +
                       ' calculated in ' + str(round(time.time() - start_time,2)) + ' seconds')
                 start_time = time.time()
@@ -391,7 +381,6 @@ class Decomposition_Base( Operations ):
             # the convergence at low minimums is much faster if only one layer is considered in the optimalization at once
             if self.current_minimum < 1e-0:
                 self.optimalization_block = 1
-                self.parallel = False
             
         
         
@@ -401,7 +390,6 @@ class Decomposition_Base( Operations ):
         
         # restoring the parameters to originals
         self.optimalization_block = optimalization_block
-        self.parallel = parallel
         
         # store the obtained optimized parameters
         self.operations = operations
@@ -434,10 +422,7 @@ class Decomposition_Base( Operations ):
         optimized_parameters = None
         for idx  in range(0,self.iteration_loops.get(str(self.qbit_num),1)):
             
-            if self.parallel:
-                res = minimize_parallel(optimalization_problem, solution_guess, options={'disp': False})
-            else:
-                res = minimize(optimalization_problem, solution_guess, method=self.method, options={'disp': False})    
+            res = minimize(optimalization_problem, solution_guess, method=self.method, options={'disp': False})
             ##res = minimize(optimalization_problem, solution_guess, method='nelder-mead', options={'xatol': 1e-7, 'disp': False})
             #res = minimize(optimalization_problem, solution_guess, method='BFGS', options={'disp': False})
             #res = minimize(optimalization_problem, solution_guess, method='L-BFGS-B', options={'disp': False})

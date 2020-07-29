@@ -42,16 +42,15 @@ class N_Qubit_Decomposition(Decomposition_Base):
 # @param Umtx The unitary matrix
 # @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
 # @param max_leyer_num Optional parameter. A dictionary of the form {'n': integer} indicating that how many layers should be used in the disentaglement of the n-th qubit.
-# @param parallel Optional logical value. I true, parallelized optimalization id used in the decomposition. The parallelized optimalization is efficient if the number of blocks optimized in one shot (given by attribute @optimalization_block) is at least 10). For False (default) sequential optimalization is applied
 # @param method Optional string value labeling the optimalization method used in the calculations. Deafult is L-BFGS-B. For details see https://docs.scipy.org/doc/scipy/reference/generated/scipy.optimize.minimize.html#scipy.optimize.minimize
 # @param identical_blocks A dictionary of the form {'n': integer} indicating that how many CNOT gates should be included in one layer during the disentanglement of the n-th qubit from the others
 # @param iteration_loops A dictionary {'n': integer} giving the number of optimalization subloops done for each step in the optimalization process during the disentanglement of the n-th qubit from the others. (For general matrices 1 works fine, higher value increase both the convergence tendency, but also the running time.)
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False, max_layer_num=def_layer_num, parallel= False, method='L-BFGS-B',
+    def __init__( self, Umtx, optimize_layer_num=False, max_layer_num=def_layer_num, method='L-BFGS-B',
                   identical_blocks = dict(), initial_guess= 'zeros', iteration_loops=dict() ):
         
-        Decomposition_Base.__init__( self, Umtx, parallel=parallel, method=method, initial_guess=initial_guess   ) 
+        Decomposition_Base.__init__( self, Umtx, method=method, initial_guess=initial_guess   )
             
                 
         # logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
@@ -68,8 +67,6 @@ class N_Qubit_Decomposition(Decomposition_Base):
     
         # number of operators in one sub-layer of the optimalization process
         self.optimalization_block = 1
-        if parallel:
-            self.optimalization_block = 10
         
         # The number of gate blocks used in the decomposition
         self.max_layer_num = max_layer_num
@@ -97,7 +94,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
             
         # create an instance of class to disentangle the given qubit pair
         cSub_decomposition = Sub_Matrix_Decomposition(self.Umtx, optimize_layer_num=self.optimize_layer_num,
-                    max_layer_num=self.max_layer_num, initial_guess=self.initial_guess, parallel=self.parallel,
+                    max_layer_num=self.max_layer_num, initial_guess=self.initial_guess,
                     identical_blocks=self.identical_blocks, iteration_loops=self.iteration_loops)
         
         # The maximal error of the optimalization problem
@@ -224,11 +221,9 @@ class N_Qubit_Decomposition(Decomposition_Base):
             if len(most_unitary_submatrix) <= 8:
                 # for three qubits
                 cdecomposition.set_optimalization_blocks(self.optimalization_block)
-                cdecomposition.set_parallel( False )
             else:
                 # for 4 or more qubits
                 cdecomposition.set_optimalization_blocks( self.optimalization_block )
-                cdecomposition.set_parallel( self.parallel )
 
             # starting the decomposition of the random unitary
             cdecomposition.start_decomposition(finalize_decomposition=False)

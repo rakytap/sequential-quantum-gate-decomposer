@@ -234,7 +234,7 @@ def four_qubit_decomposition():
     print(Umtx)
     print(' ')
 
-    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, parallel = False, identical_blocks={'4':1, '3':1} )
+    cDecomposition = N_Qubit_Decomposition( Umtx.conj().T, identical_blocks={'4':1, '3':1} )
     
     # Maximal number of iteartions in the optimalization process
     cDecomposition.set_max_iteration( int(1e6) )
@@ -307,8 +307,7 @@ def few_CNOT_unitary_decomposition():
 
     # creating class to decompose the matrix
     cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, optimize_layer_num=True, max_layer_num=max_layer_num,
-                                           identical_blocks=identical_blocks, initial_guess='close_to_zero',
-                                           parallel=True)
+                                           identical_blocks=identical_blocks, initial_guess='close_to_zero')
 
     # start the decomposition
     cDecomposition.start_decomposition()
@@ -363,7 +362,7 @@ def five_qubit_decomposition():
     print(Umtx)
     print(' ')
 
-    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, parallel=False, identical_blocks={'5':1, '4': 1, '3': 1}, initial_guess='close_to_zero')
+    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, identical_blocks={'5':1, '4': 1, '3': 1}, initial_guess='close_to_zero')
 
     # Maximal number of iteartions in the optimalization process
     cDecomposition.set_max_iteration(int(1e8))
