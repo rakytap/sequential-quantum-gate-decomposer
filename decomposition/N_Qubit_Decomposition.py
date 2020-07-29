@@ -64,7 +64,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
         self.optimalization_tolerance = 1e-7
         
         # Maximal number of iterations in the optimalization process
-        self.max_iterations = int(1e5)
+        self.max_iterations = int(1e8)
     
         # number of operators in one sub-layer of the optimalization process
         self.optimalization_block = 1
@@ -201,7 +201,8 @@ class N_Qubit_Decomposition(Decomposition_Base):
                     most_unitary_submatrix = submatrix
                 
             
-        
+        # tranform to contiguous array in the memore
+        most_unitary_submatrix = np.ascontiguousarray(most_unitary_submatrix, dtype=np.complex128)
         
         # if the qubit number in the submatirx is greater than 2 new N-qubit decomposition is started
         if len(most_unitary_submatrix) > 4:

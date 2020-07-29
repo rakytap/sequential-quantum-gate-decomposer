@@ -29,11 +29,11 @@ from scipy.optimize import minimize
 from optimparallel import minimize_parallel
 import time
 from functools import reduce
-import multiprocessing as mp
+from numba import njit
 
 
 # default number of layers in the decomposition as a function of number of qubits
-def_layer_num = { '2': 3, '3':20, '4':60, '5':238 }
+def_layer_num = { '2': 3, '3':20, '4':60, '5':238, '6':1475 }
 
 
 
@@ -320,7 +320,7 @@ class Decomposition_Base( Operations ):
                 fixed_operations_pre =self.operations[1:len(self.operations)]
                 operations_mtx_pre = self.get_transformed_matrix(fixed_parameters_pre, fixed_operations_pre, initial_matrix=operations_mtx_pre)
             else:
-                operations_mtx_pre = np.identity(2**self.qbit_num)
+                operations_mtx_pre = np.identity(2**self.qbit_num, dtype=complex)
 
             # Transform the initial unitary upon the fixed pre-optimalization operations
             self.Umtx = self.apply_operation(operations_mtx_pre, Umtx)
@@ -343,7 +343,7 @@ class Decomposition_Base( Operations ):
                 fixed_operation_post.matrix = operations_mtxs_post[block_idx_end-1]
             else:
                 operations_mtxs_post.clear()
-                fixed_operation_post.matrix = np.identity(2**self.qbit_num)
+                fixed_operation_post.matrix = np.identity(2**self.qbit_num, dtype=complex)
                         
             # create a list of operations for the optimalization process
             self.operations = [fixed_operation_post] + operations[block_idx_end:block_idx_start]
@@ -372,8 +372,10 @@ class Decomposition_Base( Operations ):
                 print('The minimum with ' + str(self.layer_num) + ' layers after ' + str(iter_idx) + ' iterations is ' + str(self.current_minimum))
                 print("--- %s seconds elapsed during the decomposition cycle ---" % (time.time() - start_time))            
                 start_time = time.time()
-            elif iter_idx % 50 == 0 and not self.parallel:
-                print('The minimum with ' + str(self.layer_num) + ' layers after ' + str(iter_idx) + ' iterations is ' + str(self.current_minimum))
+            elif iter_idx % 500 == 0 and not self.parallel:
+                print('The minimum with ' + str(self.layer_num) + ' layers after ' + str(iter_idx) + ' iterations is ' + str(self.current_minimum) +
+                      ' calculated in ' + str(round(time.time() - start_time,2)) + ' seconds')
+                start_time = time.time()
             
             # conditions to break the iteration cycles
             if np.std(minimum_vec)/minimum_vec[-1] < self.optimalization_tolerance:
@@ -491,7 +493,9 @@ class Decomposition_Base( Operations ):
 # @param parameters An array containing the parameters of the U3 operations.
 # @param operations The array of the operations to be applied on a unitary
 # @return Returns with the transformed matrix.
+
     def get_operation_products(self, parameters, operations):
+
 
         parameter_idx = 0
 
@@ -517,12 +521,10 @@ class Decomposition_Base( Operations ):
             if operation_mtxs is None:
                 operation_mtxs = [operation_mtx]
             else:
-                operation_mtxs.append(np.dot(operation_mtxs[-1], operation_mtx))
-
-
+                operation_mtxs.append(self.apply_operation(operation_mtxs[-1], operation_mtx))
 
         if operation_mtxs is None:
-            operation_mtxs = [np.identity(2**self.qbit_num)]
+            operation_mtxs = [np.identity(2**self.qbit_num, dtype=complex)]
 
         return operation_mtxs
 
@@ -630,6 +632,7 @@ class Decomposition_Base( Operations ):
 # @param input_matrix The input matrix to be transformed.
 # @return Returns with the transformed matrix
     @staticmethod
+    @njit(fastmath=True)
     def apply_operation( operation_mtx, input_matrix ):
 
         # Getting the transformed state upon the transformation given by operation
@@ -640,10 +643,8 @@ class Decomposition_Base( Operations ):
 # @brief Apply a list of operations on the input matrix
 # @param operation_mtxs The list containing matrix representations of the gates.
 # @return Returns with the transformed matrix
-    @staticmethod
-    def apply_operations(operation_mtxs ):
+    def apply_operations(self, operation_mtxs ):
 
         # Getting the transformed state upon the transformation given by operation
-        return reduce(np.dot, operation_mtxs)
-
+        return reduce(self.apply_operation, operation_mtxs)
 

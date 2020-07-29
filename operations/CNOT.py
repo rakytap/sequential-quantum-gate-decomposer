@@ -59,6 +59,9 @@ class CNOT( Operation ):
         
         # constructing the matrix of the operation             
         self.matrix = self.composite_cnot( control_qbit, target_qbit )
+
+        #converting the float matrix into complex type
+        self.matrix = self.matrix.astype(complex)
         
     ##
     # @brief Sets the number of qubits spanning the matrix of the operation

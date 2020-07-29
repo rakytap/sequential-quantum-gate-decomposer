@@ -363,10 +363,10 @@ def five_qubit_decomposition():
     print(Umtx)
     print(' ')
 
-    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, parallel=False, identical_blocks={'5':1, '4': 1, '3': 1})
+    cDecomposition = N_Qubit_Decomposition(Umtx.conj().T, parallel=False, identical_blocks={'5':1, '4': 1, '3': 1}, initial_guess='close_to_zero')
 
     # Maximal number of iteartions in the optimalization process
-    cDecomposition.set_max_iteration(int(1e6))
+    cDecomposition.set_max_iteration(int(1e8))
 
     # Set the tolerance of the minimum of the cost function during the optimalization
     cDecomposition.optimalization_tolerance = 1e-7

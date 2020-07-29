@@ -60,7 +60,7 @@ class operation_block(Operations):
         operation_mtxs = self.get_matrices( parameters )
 
         if len(operation_mtxs) == 0:
-            return np.identity(2 ** self.qbit_num)
+            return np.identity(2 ** self.qbit_num, dtype=complex)
 
         return reduce(np.dot, operation_mtxs)
 
