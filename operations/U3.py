@@ -27,13 +27,6 @@ import numpy as np
 # gates acting on the N-qubit space
 
 class U3( Operation ):
-    
-    # Pauli x matrix
-    pauli_x = np.array([[0,1],[1,0]])
-    # Pauli y matrix
-    pauli_y = np.array([[0,np.complex(0,-1)],[np.complex(0,1),0]])
-    # Pauli z matrix
-    pauli_z = np.array([[1,0],[0,-1]])
 
     ##
     # @brief Constructor of the class.
@@ -49,7 +42,14 @@ class U3( Operation ):
         # The index of the qubit on which the operation acts (target_qbit >= 0) 
         self.target_qbit = target_qbit
         # The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
-        self.control_qbit = None     
+        self.control_qbit = None
+        # the base indices of the target qubit
+        self.target_qbit_indices = None
+        # the preallocated memory for the matrix function
+        self.matrix_prealloc = np.identity( 2**self.qbit_num, dtype=np.complex128)
+
+        # determione the basis indices of the |0> and |1> states of the target qubit
+        self.get_base_indices()
         
         if 'Theta' in parameter_labels and 'Phi' in parameter_labels and 'Lambda' in parameter_labels :
             # function handle to calculate the operation on the target qubit
@@ -147,22 +147,66 @@ class U3( Operation ):
     # @param Lambda Real parameter standing for the parameter lambda.
     # @return Returns with the matrix of the U3 gate.
     def composite_u3(self, Theta, Phi, Lambda ):
+
+        u3 = self.u3( Theta, Phi, Lambda )
+
+        self.matrix_prealloc[self.indexes_target_qubit['0'], self.indexes_target_qubit['0']] = u3[0,0]
+        self.matrix_prealloc[self.indexes_target_qubit['0'], self.indexes_target_qubit['1']] = u3[0,1]
+        self.matrix_prealloc[self.indexes_target_qubit['1'], self.indexes_target_qubit['0']] = u3[1,0]
+        self.matrix_prealloc[self.indexes_target_qubit['1'], self.indexes_target_qubit['1']] = u3[1,1]
+
+        return self.matrix_prealloc
+
+    ##
+    # @brief Determine the base indices corresponding to the target qubit state of |0> and |1>
+    # @return Returns with the matrix of the U3 gate.
+    def get_base_indices(self):
         
-        ret = None
-        for idx in range(0, self.qbit_num):
-            if idx == self.target_qbit:
-                if ret is None:
-                    ret = self.u3( Theta, Phi, Lambda )
-                else:
-                    ret = np.kron(self.u3(Theta, Phi, Lambda), ret)
+        number_of_basis = 2**self.qbit_num
+
+        indexes_target_qubit_1 = list()
+        indexes_target_qubit_0 = list()
+
+        # generate the reordered  basis set
+        for idx in range(0, 2 ** self.qbit_num):
+            state = bin(idx)
+            state = state[2:].zfill(self.qbit_num)
+            if state[-self.target_qbit-1] == '0':
+                indexes_target_qubit_0.append(idx)
             else:
-                if ret is None:
-                    ret = np.identity(2)
-                else:
-                    ret = np.kron(np.identity(2), ret)
-                    
-        return ret
-    
+                indexes_target_qubit_1.append(idx)
+
+        self.indexes_target_qubit = {'0':indexes_target_qubit_0, '1':indexes_target_qubit_1}
+        #print(indexes_target_qubit_0)
+        #print(indexes_target_qubit_1)
+
+    ##
+    # @brief Sets the number of qubits spanning the matrix of the operation
+    # @param qbit_num The number of qubits
+    def set_qbit_num(self, qbit_num):
+        # setting the number of qubits
+        Operation.set_qbit_num(self, qbit_num)
+
+        # get the base indices of the target qubit
+        self.get_base_indices()
+
+        # preallocate array for the u3 operation
+        self.matrix_prealloc = np.identity(2 ** self.qbit_num, dtype=np.complex128)
+
+    ##
+    # @brief Call to reorder the qubits in the matrix of the operation
+    # @param qbit_list The list of qubits spanning the matrix
+    def reorder_qubits(self, qbit_list):
+
+        Operation.reorder_qubits(self, qbit_list)
+
+        # get the base indices of the target qubit
+        self.get_base_indices()
+
+        # preallocate array for the u3 operation
+        self.matrix_prealloc = np.identity(2 ** self.qbit_num, dtype=np.complex128)
+
+
     
     ##   
     # @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on a single qbit space.

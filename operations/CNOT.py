@@ -113,7 +113,7 @@ class CNOT( Operation ):
                 if ret is None:
                    ret = np.identity(2)
                 else:
-                    ret = np.kron(np.identity(2), ret); 
+                    ret = np.kron(np.identity(2), ret)
         
         for index in range(0, len(indexes_control_qubit)):
             if indexes_control_qubit[index] == 1:

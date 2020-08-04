@@ -51,7 +51,7 @@ class Operation():
         self.qbit_num = qbit_num
      
     ##
-    # @brief Call to reored the qubits in the matrix of the operation
+    # @brief Call to reorder the qubits in the matrix of the operation
     # @param qbit_list The list of qubits spanning the matrix
     def reorder_qubits( self, qbit_list ):
         
