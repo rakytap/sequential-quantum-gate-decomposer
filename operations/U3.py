@@ -45,8 +45,6 @@ class U3( Operation ):
         self.control_qbit = None
         # the base indices of the target qubit
         self.target_qbit_indices = None
-        # the preallocated memory for the matrix function
-        self.matrix_prealloc = np.identity( 2**self.qbit_num, dtype=np.complex128)
 
         # determione the basis indices of the |0> and |1> states of the target qubit
         self.get_base_indices()
@@ -148,14 +146,17 @@ class U3( Operation ):
     # @return Returns with the matrix of the U3 gate.
     def composite_u3(self, Theta, Phi, Lambda ):
 
+        # preallocate array for the composite u3 operation
+        matrix = np.identity(2 ** self.qbit_num, dtype=np.complex128)
+
         u3 = self.u3( Theta, Phi, Lambda )
 
-        self.matrix_prealloc[self.indexes_target_qubit['0'], self.indexes_target_qubit['0']] = u3[0,0]
-        self.matrix_prealloc[self.indexes_target_qubit['0'], self.indexes_target_qubit['1']] = u3[0,1]
-        self.matrix_prealloc[self.indexes_target_qubit['1'], self.indexes_target_qubit['0']] = u3[1,0]
-        self.matrix_prealloc[self.indexes_target_qubit['1'], self.indexes_target_qubit['1']] = u3[1,1]
+        matrix[self.indexes_target_qubit['0'], self.indexes_target_qubit['0']] = u3[0,0]
+        matrix[self.indexes_target_qubit['0'], self.indexes_target_qubit['1']] = u3[0,1]
+        matrix[self.indexes_target_qubit['1'], self.indexes_target_qubit['0']] = u3[1,0]
+        matrix[self.indexes_target_qubit['1'], self.indexes_target_qubit['1']] = u3[1,1]
 
-        return self.matrix_prealloc
+        return matrix
 
     ##
     # @brief Determine the base indices corresponding to the target qubit state of |0> and |1>
@@ -190,8 +191,7 @@ class U3( Operation ):
         # get the base indices of the target qubit
         self.get_base_indices()
 
-        # preallocate array for the u3 operation
-        self.matrix_prealloc = np.identity(2 ** self.qbit_num, dtype=np.complex128)
+
 
     ##
     # @brief Call to reorder the qubits in the matrix of the operation
@@ -203,8 +203,6 @@ class U3( Operation ):
         # get the base indices of the target qubit
         self.get_base_indices()
 
-        # preallocate array for the u3 operation
-        self.matrix_prealloc = np.identity(2 ** self.qbit_num, dtype=np.complex128)
 
 
     
