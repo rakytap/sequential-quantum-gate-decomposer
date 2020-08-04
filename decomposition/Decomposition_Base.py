@@ -32,7 +32,7 @@ from numba import njit
 
 
 # default number of layers in the decomposition as a function of number of qubits
-def_layer_num = { '2': 3, '3':20, '4':60, '5':238, '6':1475 }
+def_layer_num = { '2': 3, '3':20, '4':60, '5':240, '6':1350, '7':6180 }
 
 
 
@@ -622,6 +622,20 @@ class Decomposition_Base( Operations ):
 
         # Getting the transformed state upon the transformation given by operation
         return np.dot(operation_mtx, input_matrix)
+
+
+
+##
+# @brief Nambu decaorated function to calculate the element-wise product of two matrices
+# @param matrix1 The first NxN matrix
+# @param matrix2 The second NxN matrix
+# @return Returns with the transformed matrix
+    @staticmethod
+    @njit(fastmath=True)
+    def multiply( matrix1, matrix2 ):
+
+        # Getting the transformed state upon the transformation given by operation
+        return np.multiply(matrix1, matrix2)
 
 
 ##

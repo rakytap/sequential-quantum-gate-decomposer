@@ -278,7 +278,7 @@ class N_Qubit_Decomposition(Decomposition_Base):
                 
         matrix_new = matrix_new - np.identity(len(matrix_new))*matrix_new[0,0]
         
-        cost_function = np.sum( np.multiply(matrix_new, matrix_new.conj() ) )
+        cost_function = np.sum( self.multiply(matrix_new, matrix_new.conj() ) )
         #cost_function = np.linalg.norm( matrix_new, 2 )
         
         return np.real(cost_function)

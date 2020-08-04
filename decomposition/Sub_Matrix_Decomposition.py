@@ -54,7 +54,7 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
         self.optimalization_tolerance = 1e-7
         
         # Maximal number of iteartions in the optimalization process
-        self.max_iterations = int(1e4)
+        self.max_iterations = int(1e8)
         
         # number of operators in one sub-layer of the optimalization process
         self.optimalization_block = 1     
@@ -209,9 +209,9 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
 
         for idx in range(0,submatrices_num):
             for jdx in range(0,submatrices_num_row):
-                submatrix_prod = np.dot(submatrices[idx],submatrices[jdx].conj().T)
+                submatrix_prod = self.apply_operation(submatrices[idx],submatrices[jdx].conj().T)
                 submatrix_prod= submatrix_prod - np.identity(len(submatrix_prod))*submatrix_prod[0,0]
-                cost_function = cost_function + np.sum( np.multiply(submatrix_prod, submatrix_prod.conj() ) )
+                cost_function = cost_function + np.sum( self.multiply(submatrix_prod, submatrix_prod.conj() ) )
 
         return np.real(cost_function)
 
