@@ -200,7 +200,7 @@ class Sub_Matrix_Decomposition(Decomposition_Base):
         # fill up the submatrices
         for idx in range(0,submatrices_num_row):
             for jdx in range(0,submatrices_num_row):
-                submatrices.append( matrix_new[ (idx*submatrix_size):((idx+1)*submatrix_size), (jdx*submatrix_size):((jdx+1)*submatrix_size)] )
+                submatrices.append( np.ascontiguousarray(matrix_new[ (idx*submatrix_size):((idx+1)*submatrix_size), (jdx*submatrix_size):((jdx+1)*submatrix_size)]) )
 
 
 
