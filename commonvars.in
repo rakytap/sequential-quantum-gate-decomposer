@@ -1,0 +1,45 @@
+# Set configuration if not given
+# Possible configurations: GNU, INTEL
+ifndef COMPILER
+COMPILER = INTEL
+endif
+
+# Possible configurations: static, dynamic
+ifndef LINKING
+LINKING = dynamic
+endif
+
+ifndef QGDDIR
+QGDDIR = /home/rakytap/quantum-gate-decomposer_C
+endif
+
+
+ifndef THREAD
+THREAD = PAR
+endif
+
+PLATFORM = Linux
+
+QGDLIBDIR=$(QGDDIR)/lib/bin
+QGDOBJDIR=$(QGDDIR)/lib/bin/$(PLATFORM)
+
+
+LIBNAME = qgd
+
+
+
+
+
+# Set the compiler and the compiler specific flags
+COMPILER_C = icc 
+LD = icpc
+
+# Variables to export to sub-makes
+export PLATFORM
+export COMPILER
+export COMPILER_C
+export LD
+export QGDLIBDIR
+export QGDMODDIR
+export QGDOBJDIR
+export LIBNAME
