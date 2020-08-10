@@ -46,6 +46,11 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         matrix_size = Power_of_2(qbit_num);
         // A string describing the type of the operation
         type = "u3";
+
+        if (target_qbit_in >= qbit_num) {
+            printf("The index of the target qubit is larger than the number of qubits");
+            throw "The index of the target qubit is larger than the number of qubits";
+        }
         // The index of the qubit on which the operation acts (target_qbit >= 0) 
         target_qbit = target_qbit_in;
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
@@ -65,6 +70,20 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         // determione the basis indices of the |0> and |1> states of the target qubit
         get_base_indices();
 
+}
+
+
+//
+// @brief Destructor of the class
+U3::~U3() {
+    
+    if ( indexes_target_qubit_0 != NULL ) {
+        mkl_free(indexes_target_qubit_0);
+    }
+
+    if ( indexes_target_qubit_1 != NULL ) {
+        mkl_free(indexes_target_qubit_1);
+    }
 }
 
 ////    
@@ -185,7 +204,7 @@ MKL_Complex16* U3::composite_u3(double Theta, double Phi, double Lambda ) {
         MKL_Complex16* u3_1qbit = one_qubit_u3(Theta, Phi, Lambda );
 
         // preallocate array for the composite u3 operation
-        MKL_Complex16* matrix_array = (MKL_Complex16*)mkl_calloc(matrix_size*matrix_size, sizeof(MKL_Complex16), 64);
+        MKL_Complex16* U3_matrix = (MKL_Complex16*)mkl_calloc(matrix_size*matrix_size, sizeof(MKL_Complex16), 64);
 
         // setting the operation elements
         #pragma omp parallel for
@@ -195,19 +214,19 @@ MKL_Complex16* U3::composite_u3(double Theta, double Phi, double Lambda ) {
 
             // element |0> -> |0>
             element_index = indexes_target_qubit_0[idx]*matrix_size + indexes_target_qubit_0[idx];
-            matrix_array[element_index] = u3_1qbit[0];
+            U3_matrix[element_index] = u3_1qbit[0];
 
             // element |1> -> |0>
             element_index = indexes_target_qubit_0[idx]*matrix_size + indexes_target_qubit_1[idx];
-            matrix_array[element_index] = u3_1qbit[1];
+            U3_matrix[element_index] = u3_1qbit[1];
 
             // element |0> -> |1>
             element_index = indexes_target_qubit_1[idx]*matrix_size + indexes_target_qubit_0[idx];
-            matrix_array[element_index] = u3_1qbit[2];
+            U3_matrix[element_index] = u3_1qbit[2];
 
             // element |1> -> |1>
             element_index = indexes_target_qubit_1[idx]*matrix_size + indexes_target_qubit_1[idx];
-            matrix_array[element_index] = u3_1qbit[3];
+            U3_matrix[element_index] = u3_1qbit[3];
 
 
         }
@@ -217,7 +236,7 @@ MKL_Complex16* U3::composite_u3(double Theta, double Phi, double Lambda ) {
         mkl_free( u3_1qbit );
 
 
-        return matrix_array;
+        return U3_matrix;
 }
 
 /*np.identity(2 ** self.qbit_num, dtype=np.complex128)

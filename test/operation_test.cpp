@@ -27,6 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Operation.h"
 #include "U3.h"
+#include "CNOT.h"
 
 using namespace std;
 
@@ -97,5 +98,50 @@ void test_U3_operation() {
     print_mtx( matrix, Power_of_2(qbit_num));
 
 };
+
+
+void test_CNOT_operation() {
+ 
+    printf("****************************************\n");
+    printf("Test of operation CNOT\n\n");
+
+
+    // define the nmumber of qubits spanning the matrices
+    int qbit_num = 3;
+    
+    // the target qbit of the U3 operation
+    int target_qbit = 0;
+    
+    // the control qbit of the U3 operation
+    int control_qbit = 1;
+        
+
+    // creating gereal operation
+    CNOT op = CNOT( qbit_num, target_qbit, control_qbit );  
+    
+    // check the CNOT matrix
+    MKL_Complex16* matrix = op.matrix();
+    printf("The matrix of %d qubit CNOT operator acting on target qubit %d with control qubit %d\n", qbit_num, op.get_target_qbit(), op.get_control_qbit() );
+    print_CNOT( matrix, Power_of_2(qbit_num));
+    
+    // reorder qubits, and test the modified target qubit
+    vector<int> qbit_list;
+    qbit_list.push_back(2);
+    qbit_list.push_back(0);
+    qbit_list.push_back(1);
+    op.reorder_qubits( qbit_list );
+    if (op.get_target_qbit() != qbit_list[qbit_list.size()-target_qbit-1] ) {
+        printf("Reordering qubits does not work properly");
+        //throw "Reordering qubits does not work properly";
+    }
+        
+    
+    // check the reordered CNOT matrix
+    matrix = op.matrix();
+    printf("The matrix of %d qubit CNOT operator acting on target qubit %d with control qubit %d\n", qbit_num, op.get_target_qbit(), op.get_control_qbit() );
+    print_CNOT( matrix, Power_of_2(qbit_num));
+};
+
+
 
 }

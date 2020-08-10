@@ -59,6 +59,10 @@ public:
     // @return An instance of the class
     Operation();
 
+    //
+    // @brief Destructor of the class
+    ~Operation();
+
 
     //
     // @brief Constructor of the class.

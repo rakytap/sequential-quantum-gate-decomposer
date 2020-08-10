@@ -19,7 +19,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 //
-// @brief A base class responsible for constructing matrices of C-NOT, U3
+// @brief A base class responsible for constructing matrices of U3
 // gates acting on the N-qubit space
 
 #include "Operation.h"
@@ -27,7 +27,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 using namespace std;
 
-extern "C" {
 class U3: public Operation {
 
 protected:
@@ -50,6 +49,10 @@ public:
 // @param qbit_num The number of qubits in the unitaries
 // @param parameter_labels A list of strings 'Theta', 'Phi' or 'Lambda' indicating the free parameters of the U3 operations. (Paremetrs which are not labeled are set to zero)
 U3(int, int, bool, bool, bool);
+
+//
+// @brief Destructor of the class
+~U3();
 
 //
 // @brief Call to terive the operation matrix
@@ -133,5 +136,5 @@ void reorder_qubits( vector<int> qbit_list);
 MKL_Complex16* one_qubit_u3(double Theta, double Phi, double Lambda );
 
 };
-}
+
                    

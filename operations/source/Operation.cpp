@@ -69,6 +69,17 @@ Operation::Operation(int qbit_num_in) {
     // The matrix (or function handle to generate the matrix) of the operation
     matrix_alloc = NULL;
 }
+
+
+//
+// @brief Destructor of the class
+Operation::~Operation() {
+    
+    if ( matrix_alloc != NULL ) {
+        mkl_free(matrix_alloc);
+        printf("matrix freed\n");
+    }
+}
    
 //
 // @brief Set the number of qubits spanning the matrix of the operation

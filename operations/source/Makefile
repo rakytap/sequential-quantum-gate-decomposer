@@ -4,7 +4,8 @@ include ../../commonvars.in
 OBJECTDIR = $(QGDDIR)/operations/bin/$(PLATFORM)
 
 TARGETS = Operation \
-          U3
+          U3 \
+          CNOT
 
 SOURCES := $(patsubst %.cxx,%,$(wildcard *.cxx) ) 
 
