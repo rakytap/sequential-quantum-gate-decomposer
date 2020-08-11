@@ -9,7 +9,7 @@ SOURCES := $(patsubst %.cxx,%,$(wildcard *.cxx) )
 
 
 # Compiler options for the mkl_QGD library
-FLAGS_COMPILE =  -c -I$(QGDDIR)/common/include -I$(MKLROOT)/include -fPIC -g -O2 
+FLAGS_COMPILE =  -c -fopenmp -I$(QGDDIR)/common/include -I$(MKLROOT)/include -fPIC -g -O2 
 
 ifeq ($(THREAD),MIC)
   FLAGS_COMPILE += -DMIC -offload-attribute-target=mic -offload-option,mic,compiler," -L${MKLROOT}/lib/mic -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5"

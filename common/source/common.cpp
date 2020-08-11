@@ -64,23 +64,81 @@ void print_CNOT( MKL_Complex16* matrix, int size ) {
 }
 
 
-// converts integer to string
-string int_to_string( int input ) {
 
-    ostringstream strg;
-    strg<< input;
-    string str = strg.str();
-    return str;
+// @brief Calculate the product of complex matrices stored in a vector of matrices
+MKL_Complex16* reduce_zgemm( vector<MKL_Complex16*> mtxs, int matrix_size ) {
+    
+
+    if (mtxs.size() == 0 ) {
+        
+        MKL_Complex16* matrix = (MKL_Complex16*)mkl_calloc(matrix_size*matrix_size, sizeof(MKL_Complex16), 64);
+
+        // setting the giagonal elelments to identity
+        #pragma omp parallel for
+        for(int idx = 0; idx < matrix_size; ++idx)
+        {
+            int element_index = idx*matrix_size + idx;
+
+            matrix[element_index].real = 1;
+        }
+
+        return matrix;
+    }
+
+
+    // parameters alpha and beta for the cblas_zgemm3m function
+    double alpha = 1;
+    double beta = 0;
+
+
+    // pointers to matrices to be used in the multiplications
+    MKL_Complex16* A = NULL;
+    MKL_Complex16* B = NULL;
+
+    // the iteration number
+    int iteration = 0;
+
+
+    std::vector<MKL_Complex16*>::iterator it = mtxs.begin();
+    MKL_Complex16* C = *it;
+    it++;   
+ 
+    // calculate the product of complex matrices
+    for(it; it != mtxs.end(); ++it) {
+
+        iteration++;
+
+        A = C;
+        B = *it;
+
+/*printf("The matrix A:\n");
+print_mtx( A, matrix_size );
+printf("\n");
+printf("The matrix B:\n");
+print_mtx( B, matrix_size );
+printf("\n");*/
+
+        // preallocate array for the result
+        C = (MKL_Complex16*)mkl_calloc(matrix_size*matrix_size, sizeof(MKL_Complex16), 64); 
+
+        // calculate the product of A and B
+        cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
+
+        // free the memory of previously allocated matrix A which is irrelevant for the further calculations
+        if ( iteration>1 ) {
+            mkl_free(A);
+        }
+
+/*printf("The product matrix C:\n");
+print_mtx( C, matrix_size );
+printf("\n");*/
+
+
+    }
+
+
+    return C;
 }
 
-
-// converts integer to string
-string double_to_string( double input ) {
-
-    ostringstream strg;
-    strg<< input;
-    string str = strg.str();
-    return str;
-}
 
 

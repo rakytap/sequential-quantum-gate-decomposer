@@ -28,6 +28,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Operation.h"
 #include "U3.h"
 #include "CNOT.h"
+#include "Operations.h"
+#include "Operation_block.h"
 
 using namespace std;
 
@@ -67,7 +69,7 @@ void test_U3_operation() {
     int target_qbit = 1;
         
 
-    // creating gereal operation
+    // creating U3 operation
     bool Theta = true;
     bool Phi = false;
     bool Lambda = true;
@@ -142,6 +144,87 @@ void test_CNOT_operation() {
     print_CNOT( matrix, Power_of_2(qbit_num));
 };
 
+
+
+void test_operations() {
+    
+    printf("****************************************\n");
+    printf("Test of operations\n\n");
+
+    // define the nmumber of qubits spanning the matrices
+    int qbit_num = 3;
+    
+    // create class intance storing quantum gate operations
+    Operations operations = Operations( qbit_num );
+
+
+    // adding operations to the list
+    bool Theta = true;
+    bool Phi = false;
+    bool Lambda = true;
+    operations.add_u3_to_end(1, Theta, Phi, Lambda);
+
+    int target_qbit = 1;
+    int control_qbit = 2;
+    operations.add_cnot_to_end(target_qbit, control_qbit);
+
+    
+    // get the number of parameters
+    printf( "The number of parameters in the list of operations is %d\n", operations.get_parameter_num());
+    
+};
+
+
+
+
+void test_operation_block() {
+    
+    printf("****************************************\n");
+    printf("Test of operation_block\n\n");
+
+    // define the nmumber of qubits spanning the matrices
+    int qbit_num = 2;
+    
+    // create class intance storing quantum gate operations
+    Operation_block op_block = Operation_block( qbit_num );
+    
+    // adding operations to the list
+    bool Theta = true;
+    bool Phi = false;
+    bool Lambda = true;
+    // adding a U3 operation on target qubit 1
+    op_block.add_u3_to_end(1, Theta, Phi, Lambda);
+    // adding a U3 operation on target qubit 0
+    op_block.add_u3_to_end(0, Theta, Phi, Lambda);
+
+    int target_qbit = 0;
+    int control_qbit = 1;
+    // adding CNOT operation
+    op_block.add_cnot_to_end(target_qbit, control_qbit);
+    
+    // get the number of parameters
+    printf( "The number of parameters in the list of operations is %d\n", op_block.get_parameter_num());
+
+
+    // construct parameters for the two U3 operations
+    double* parameters = new double[4];
+    parameters[0] = 0;
+    parameters[1] = 1.2;
+    parameters[2] = 0.3;
+    parameters[3] = 0.67;
+
+    // calculate the matrix product stored in the operation block
+    MKL_Complex16* mtx = op_block.matrix( parameters );
+
+
+    // check the block matrix
+    printf("The matrix of %d qubit operators consisting of 2 U3 operations and 1 CNOT operation is:\n", qbit_num);
+    print_mtx( mtx, Power_of_2(qbit_num));
+
+
+    
+    
+};
 
 
 }

@@ -21,6 +21,54 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 # @brief Automatic test procedures to test the functionalities of the code
 
+
+import ctypes
+
+#load test library for operations
+_operation_test_library = ctypes.cdll.LoadLibrary('lib/operation_test.so')  
+
+# *******************************
+# test of general operations
+
+# defining the input argument
+_operation_test_library.test_general_operation.argtypes = (ctypes.c_int,)
+
+# calling the test for general operation
+qbit_num = 4
+_operation_test_library.test_general_operation(ctypes.c_int(qbit_num))
+
+
+
+# *******************************
+# test of U3 operations
+
+_operation_test_library.test_U3_operation()
+
+
+# *******************************
+# test of CNOT operations
+
+_operation_test_library.test_CNOT_operation()
+
+
+
+# *******************************
+# test of operations
+
+_operation_test_library.test_operations()
+
+
+# *******************************
+# test of operation block
+
+_operation_test_library.test_operation_block()
+
+
+fff
+
+
+
+
 from test import operations
 from test import decomposition
 

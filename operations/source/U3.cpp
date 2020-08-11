@@ -62,11 +62,11 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         indexes_target_qubit_1 = NULL;
 
         // logical value indicating whether the matrix creation takes an argument theta
-        bool theta = theta_in;
+        theta = theta_in;
         // logical value indicating whether the matrix creation takes an argument phi
-        bool phi = phi_in;
+        phi = phi_in;
         // logical value indicating whether the matrix creation takes an argument lambda
-        bool lambda = lambda_in;    
+        lambda = lambda_in;    
 
        
         // The number of free parameters
@@ -127,8 +127,7 @@ U3::~U3() {
 // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
 // @param parameters One, Two or Three component array containing the parameters in order Theta, Phi, Lambda
 MKL_Complex16* U3::matrix( const double* parameters ) {
-        
-        
+ 
         if (theta && !phi && lambda) {
             // function handle to calculate the operation on the target qubit
             return composite_u3_Theta_Lambda( parameters );
@@ -271,7 +270,6 @@ MKL_Complex16* U3::composite_u3(double Theta, double Phi, double Lambda ) {
 
         // free the allocated single qubit matrix
         mkl_free( u3_1qbit );
-
 
         return U3_matrix;
 }

@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <stdio.h>
 #include <iostream>
 #include <cmath>
+#include <vector>
 
 
 int Power_of_2(int n);
@@ -47,6 +48,10 @@ struct gates_num {
   int u3;
   int cnot;
 };
+
+
+// @brief Calculate the product of complex matrices stored in a vector of matrices
+MKL_Complex16* reduce_zgemm( std::vector<MKL_Complex16*>, int );
 
 
 
