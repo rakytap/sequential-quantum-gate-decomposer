@@ -21,13 +21,33 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #pragma once
 #include <mkl_types.h>
 #include <mkl.h>
+#include <string>
 #include <stdio.h>
 #include <iostream>
+#include <cmath>
+
 
 int Power_of_2(int n);
 
 // print the matrix
 void print_mtx( MKL_Complex16* , int );
+
+// print a CNOT
+void print_CNOT( MKL_Complex16* , int );
+
+
+// converts integer to string
+std::string int_to_string( int input );
+
+// converts double to string
+std::string double_to_string( double input );
+
+// @brief Structure type conatining gate numbers
+struct gates_num {
+  int u3;
+  int cnot;
+};
+
 
 
 

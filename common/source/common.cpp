@@ -23,6 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 // gates acting on the N-qubit space
 
 #include <common.h> 
+#include <sstream>
 
 using namespace std;
 
@@ -46,6 +47,40 @@ void print_mtx( MKL_Complex16* matrix, int size ) {
         printf("\n");
     }
     printf("\n\n\n");
+}
+
+
+// print a CNOT
+void print_CNOT( MKL_Complex16* matrix, int size ) {
+
+    for ( int row_idx=0; row_idx < size; row_idx++ ) {
+        for ( int col_idx=0; col_idx < size; col_idx++ ) {
+            int element_idx = row_idx*size+col_idx;    
+            printf("%d,  ", int(matrix[element_idx].real));
+        }
+        printf("\n");
+    }
+    printf("\n\n\n");
+}
+
+
+// converts integer to string
+string int_to_string( int input ) {
+
+    ostringstream strg;
+    strg<< input;
+    string str = strg.str();
+    return str;
+}
+
+
+// converts integer to string
+string double_to_string( double input ) {
+
+    ostringstream strg;
+    strg<< input;
+    string str = strg.str();
+    return str;
 }
 
 

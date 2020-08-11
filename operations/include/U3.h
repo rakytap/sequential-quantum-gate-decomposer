@@ -47,7 +47,7 @@ public:
 ////
 // @brief Constructor of the class.
 // @param qbit_num The number of qubits in the unitaries
-// @param parameter_labels A list of strings 'Theta', 'Phi' or 'Lambda' indicating the free parameters of the U3 operations. (Paremetrs which are not labeled are set to zero)
+// @param theta_in ...
 U3(int, int, bool, bool, bool);
 
 //
@@ -120,10 +120,25 @@ void set_qbit_num(int qbit_num);
 
 
 
-    ////
-    // @brief Call to reorder the qubits in the matrix of the operation
-    // @param qbit_list The list of qubits spanning the matrix
+////
+// @brief Call to reorder the qubits in the matrix of the operation
+// @param qbit_list The list of qubits spanning the matrix
 void reorder_qubits( vector<int> qbit_list);
+
+////
+// @brief Call to check whethet theta is a free parameter of the gate
+// @return Retturns with true if theta is a free parameter of the gate, or false otherwise.
+bool is_theta_parameter();
+
+////
+// @brief Call to check whethet Phi is a free parameter of the gate
+// @return Retturns with true if Phi is a free parameter of the gate, or false otherwise.
+bool is_phi_parameter();
+
+////
+// @brief Call to check whethet Lambda is a free parameter of the gate
+// @return Retturns with true if Lambda is a free parameter of the gate, or false otherwise.
+bool is_lambda_parameter();
 
 
     

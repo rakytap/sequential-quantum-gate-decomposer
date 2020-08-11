@@ -30,7 +30,6 @@ using namespace std;
 
 //
 // @brief Constructor of the class.
-// @param qbit_num The number of qubits in the unitaries
 // @return An instance of the class
 Operation::Operation() {
 
@@ -121,6 +120,21 @@ void Operation::reorder_qubits( vector<int> qbit_list ) {
 // @return Return with the index of the target qubit (return with -1 if target qubit was not set)
 int Operation::get_target_qbit() {
     return target_qbit;
+}
+
+//
+// @brief Call to get the number of free parameters
+// @return Return with the index of the target qubit (return with -1 if target qubit was not set)
+int Operation::get_parameter_num() {
+    return parameter_num;
+}
+
+
+//
+// @brief Call to get the type of the operation
+// @return Return with the string indicating the type of the operation
+string Operation::get_type() {
+    return type;
 }
 
 

@@ -37,7 +37,7 @@ using namespace std;
     ////
     // @brief Constructor of the class.
     // @param qbit_num The number of qubits in the unitaries
-    // @param parameter_labels A list of strings 'Theta', 'Phi' or 'Lambda' indicating the free parameters of the U3 operations. (Paremetrs which are not labeled are set to zero)
+    // @param theta_in ...
 U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lambda_in) {
 
         // number of qubits spanning the matrix of the operation
@@ -46,6 +46,7 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         matrix_size = Power_of_2(qbit_num);
         // A string describing the type of the operation
         type = "u3";
+        
 
         if (target_qbit_in >= qbit_num) {
             printf("The index of the target qubit is larger than the number of qubits");
@@ -65,7 +66,43 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         // logical value indicating whether the matrix creation takes an argument phi
         bool phi = phi_in;
         // logical value indicating whether the matrix creation takes an argument lambda
-        bool lambda = lambda_in;        
+        bool lambda = lambda_in;    
+
+       
+        // The number of free parameters
+        if (theta && !phi && lambda) {
+            parameter_num = 2;
+        }
+
+        else if (theta && phi && lambda) {
+            parameter_num = 3;
+        }
+            
+        else if (!theta && phi && lambda) {
+            parameter_num = 2;
+        }
+           
+        else if (theta && phi && !lambda) {
+            parameter_num = 2;
+        }
+            
+        else if (!theta && !phi && lambda) { 
+            parameter_num = 1;
+        }
+             
+        else if (!theta && phi && !lambda) {
+            parameter_num = 1;
+        }
+        
+        else if (theta && !phi && !lambda) {
+            parameter_num = 1;
+        }
+            
+        else {
+            parameter_num = 0;
+        }
+
+        
 
         // determione the basis indices of the |0> and |1> states of the target qubit
         get_base_indices();
@@ -130,7 +167,7 @@ MKL_Complex16* U3::matrix( const double* parameters ) {
         }
             
         else {
-            throw "Input error in the ceration of the operator U3";
+            return composite_u3(0, 0, 0 );
         }
 
 }
@@ -318,6 +355,30 @@ void U3::reorder_qubits( vector<int> qbit_list) {
 
         // get the base indices of the target qubit
         get_base_indices();
+}
+
+
+
+////
+// @brief Call to check whethet theta is a free parameter of the gate
+// @return Retturns with true if theta is a free parameter of the gate, or false otherwise.
+bool U3::is_theta_parameter() {
+    return theta;
+}
+
+
+////
+// @brief Call to check whethet Phi is a free parameter of the gate
+// @return Retturns with true if Phi is a free parameter of the gate, or false otherwise.
+bool U3::is_phi_parameter() {
+    return phi;
+}
+
+////
+// @brief Call to check whethet Lambda is a free parameter of the gate
+// @return Retturns with true if Lambda is a free parameter of the gate, or false otherwise.
+bool U3::is_lambda_parameter() {
+    return lambda;
 }
 
 

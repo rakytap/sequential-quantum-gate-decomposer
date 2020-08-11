@@ -24,7 +24,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 #pragma once
-#include <string>
 #include <vector> 
 
 
@@ -50,6 +49,8 @@ protected:
     int matrix_size;
     // The allocated array of the operatrion matrix
     MKL_Complex16* matrix_alloc;
+    // the number of free parameters
+    int parameter_num;
     
 
 
@@ -90,6 +91,18 @@ public:
     // @brief Call to get the index of the target qubit
     // @return Return with the index of the target qubit (return with -1 if target qubit was not set)
     int get_target_qbit();
+
+
+    //
+    // @brief Call to get the number of free parameters
+    // @return Return with the index of the target qubit (return with -1 if target qubit was not set)
+    int get_parameter_num();
+
+
+    //
+    // @brief Call to get the type of the operation
+    // @return Return with the string indicating the type of the operation
+    string get_type();
 
 
     //

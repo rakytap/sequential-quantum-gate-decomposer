@@ -42,6 +42,8 @@ CNOT::CNOT(int qbit_num_in, int target_qbit_in,  int control_qbit_in) {
         matrix_size = Power_of_2(qbit_num);
         // A string describing the type of the operation
         type = "cnot";
+        // The number of free parameters
+        parameter_num = 0;
 
         if (target_qbit_in >= qbit_num) {
             printf("The index of the target qubit is larger than the number of qubits");

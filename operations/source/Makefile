@@ -5,7 +5,8 @@ OBJECTDIR = $(QGDDIR)/operations/bin/$(PLATFORM)
 
 TARGETS = Operation \
           U3 \
-          CNOT
+          CNOT \
+          Operations
 
 SOURCES := $(patsubst %.cxx,%,$(wildcard *.cxx) ) 
 
