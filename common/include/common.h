@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <stdio.h>
 #include <iostream>
 #include <cmath>
+#include <vector>
 
 
 int Power_of_2(int n);
@@ -47,6 +48,13 @@ struct gates_num {
   int u3;
   int cnot;
 };
+
+// @brief Add an integer to an integer vector if the integer is not already an element of the vector. The sorted order is kept during the process
+void add_unique_elelement( std::vector<int>& involved_qbits, int qbit );
+
+
+// @brief Calculate the product of complex matrices stored in a vector of matrices
+MKL_Complex16* reduce_zgemm( std::vector<MKL_Complex16*>, int );
 
 
 
