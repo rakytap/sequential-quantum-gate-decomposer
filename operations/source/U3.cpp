@@ -113,7 +113,7 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
 //
 // @brief Destructor of the class
 U3::~U3() {
-    
+  
     if ( indexes_target_qubit_0 != NULL ) {
         mkl_free(indexes_target_qubit_0);
     }

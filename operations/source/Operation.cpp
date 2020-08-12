@@ -77,7 +77,6 @@ Operation::Operation(int qbit_num_in) {
 //
 // @brief Destructor of the class
 Operation::~Operation() {
-    
     if ( matrix_alloc != NULL ) {
         mkl_free(matrix_alloc);
     }
