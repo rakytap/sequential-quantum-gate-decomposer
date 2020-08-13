@@ -1,0 +1,76 @@
+/*
+Created on Fri Jun 26 14:13:26 2020
+Copyright (C) 2020 Peter Rakyta, Ph.D.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see http://www.gnu.org/licenses/.
+
+@author: Peter Rakyta, Ph.D.
+*/
+
+//
+// @brief A base class responsible for constructing matrices of C-NOT gates
+// gates acting on the N-qubit space
+
+#pragma once
+#include "Decomposition_Base.h"
+
+
+////
+// @brief A class containing basic methods for the decomposition process.
+
+class Two_Qubit_Decomposition : public Decomposition_Base {
+
+
+public:
+
+protected:
+
+    // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
+    bool optimize_layer_num;
+
+
+public:
+
+//// Contructor of the class
+// @brief Constructor of the class.
+// @param Umtx The unitary matrix to be decomposed
+// @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
+// @return An instance of the class
+Two_Qubit_Decomposition( MKL_Complex16*, int, bool, string );
+
+
+
+//// start_decomposition
+// @brief Start the decompostion process of the two-qubit unitary
+// @param finalize_decomposition Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
+void  start_decomposition( bool finalize_decomposition );
+
+
+//
+// @brief The optimalization problem to be solved in order to disentangle the qubits
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+// @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
+// @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
+// @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
+double optimalization_problem( double* );
+
+
+// 
+// @brief Check whether qubits are indepent or not
+// @returns Return with true if qubits are disentangled, or false otherwise.
+bool test_indepency();
+
+
+
+};

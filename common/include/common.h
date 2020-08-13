@@ -52,13 +52,18 @@ struct gates_num {
 // @brief Add an integer to an integer vector if the integer is not already an element of the vector. The sorted order is kept during the process
 void add_unique_elelement( std::vector<int>& involved_qbits, int qbit );
 
+// @brief Create an identity matrix
+MKL_Complex16* create_identity( int );
+
+// @brief Call to calculate the product of two matrices using cblas_zgemm3m
+MKL_Complex16* zgemm3m_wrapper( MKL_Complex16* , MKL_Complex16*, int);
 
 // @brief Calculate the product of complex matrices stored in a vector of matrices
 MKL_Complex16* reduce_zgemm( std::vector<MKL_Complex16*>, int );
 
 
-// @brief Calculate the product of complex matrices stored in a vector of matrices
-MKL_Complex16* reduce_zgemm( std::vector<MKL_Complex16*>, int );
+// @brief subtract a scalar from the diagonal of a matrix
+void subtract_diag( MKL_Complex16* & , int, MKL_Complex16 ); 
 
 
 

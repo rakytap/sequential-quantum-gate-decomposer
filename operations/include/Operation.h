@@ -74,6 +74,10 @@ public:
     //
     // @brief Call to terive the operation matrix
     MKL_Complex16* matrix();
+
+    //
+    // @brief Call to set the stored matrix in the operation
+    void set_matrix( MKL_Complex16* );
    
     //
     // @brief Set the number of qubits spanning the matrix of the operation

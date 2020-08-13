@@ -97,6 +97,13 @@ MKL_Complex16* Operation::matrix() {
     return matrix_alloc;
 }
 
+//
+// @brief Call to set the stored matrix in the operation
+// @param The pointer pointing to the matrix to be set
+void Operation::set_matrix( MKL_Complex16* input) {
+    matrix_alloc = input;
+}
+
      
 //
 // @brief Call to reorder the qubits in the matrix of the operation
