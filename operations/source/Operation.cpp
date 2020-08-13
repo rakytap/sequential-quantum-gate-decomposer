@@ -77,7 +77,6 @@ Operation::Operation(int qbit_num_in) {
 //
 // @brief Destructor of the class
 Operation::~Operation() {
-    
     if ( matrix_alloc != NULL ) {
         mkl_free(matrix_alloc);
     }
@@ -126,6 +125,13 @@ int Operation::get_target_qbit() {
 }
 
 //
+// @brief Call to get the index of the control qubit
+// @return Return with the index of the control qubit (return with -1 if control qubit was not set)
+int Operation::get_control_qbit()  {
+    return control_qbit;
+}
+
+//
 // @brief Call to get the number of free parameters
 // @return Return with the index of the target qubit (return with -1 if target qubit was not set)
 int Operation::get_parameter_num() {
@@ -140,11 +146,4 @@ string Operation::get_type() {
     return type;
 }
 
-
-//
-// @brief Call to get the index of the control qubit
-// @return Return with the index of the control qubit (return with -1 if control qubit was not set)
-int Operation::get_control_qbit() {
-    return control_qbit;
-}
   

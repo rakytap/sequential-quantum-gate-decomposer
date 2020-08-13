@@ -186,24 +186,27 @@ void test_operation_block() {
     int qbit_num = 2;
     
     // create class intance storing quantum gate operations
-    Operation_block op_block = Operation_block( qbit_num );
+    Operation_block* op_block = new Operation_block( qbit_num );
     
     // adding operations to the list
     bool Theta = true;
     bool Phi = false;
     bool Lambda = true;
     // adding a U3 operation on target qubit 1
-    op_block.add_u3_to_end(1, Theta, Phi, Lambda);
+    printf("adding a U3 operation on target qubit %d \n", 1);
+    op_block->add_u3_to_end(1, Theta, Phi, Lambda);
     // adding a U3 operation on target qubit 0
-    op_block.add_u3_to_end(0, Theta, Phi, Lambda);
+    printf("adding a U3 operation on target qubit %d \n", 0);
+    op_block->add_u3_to_end(0, Theta, Phi, Lambda);
 
     int target_qbit = 0;
     int control_qbit = 1;
     // adding CNOT operation
-    op_block.add_cnot_to_end(target_qbit, control_qbit);
+    printf("adding a CNOT operation on target qubit %d and control qubit %d\n", 0, 1);
+    op_block->add_cnot_to_end(target_qbit, control_qbit);
     
     // get the number of parameters
-    printf( "The number of parameters in the list of operations is %d\n", op_block.get_parameter_num());
+    printf( "The number of parameters in the list of operations is %d\n", op_block->get_parameter_num());
 
 
     // construct parameters for the two U3 operations
@@ -214,7 +217,7 @@ void test_operation_block() {
     parameters[3] = 0.67;
 
     // calculate the matrix product stored in the operation block
-    MKL_Complex16* mtx = op_block.matrix( parameters );
+    MKL_Complex16* mtx = op_block->matrix( parameters );
 
 
     // check the block matrix
@@ -222,7 +225,51 @@ void test_operation_block() {
     print_mtx( mtx, Power_of_2(qbit_num));
 
 
+    delete( op_block );
+
+
+
+
+    // define the nmumber of qubits spanning the matrices
+    qbit_num = 5;
+
+
+    printf("Testing getting involved qubits for operation block consisting of %d qubits\n", qbit_num);
     
+    // create class intance storing quantum gate operations
+    op_block = new Operation_block( qbit_num );
+    
+    // adding operations to the list
+    // adding a U3 operation on target qubit 1
+    printf("adding a U3 operation on target qubit %d \n", 1);
+    op_block->add_u3_to_end(1, Theta, Phi, Lambda);
+    printf("adding a U3 operation on target qubit %d \n", 0);
+    // adding a U3 operation on target qubit 0
+    op_block->add_u3_to_end(0, Theta, Phi, Lambda);
+    printf("adding a U3 operation on target qubit %d \n", 3);
+    // adding a U3 operation on target qubit 3
+    op_block->add_u3_to_end(3, Theta, Phi, Lambda);
+    
+
+    target_qbit = 0;
+    control_qbit = 1;
+    // adding CNOT operation
+    printf("adding a CNOT operation on target qubit %d and control qubit %d\n", 0, 1);
+    op_block->add_cnot_to_end(target_qbit, control_qbit);
+
+
+    // get the number of parameters
+    printf( "The number of parameters in the list of operations is %d\n", op_block->get_parameter_num());
+
+    printf("The involved qubits are:\n");
+    std::vector<int> involved_qbits = op_block->get_involved_qubits();
+    for(std::vector<int>::iterator it = involved_qbits.begin(); it != involved_qbits.end(); ++it) {
+        int current_val = *it;
+        printf("%d\n", current_val);
+    }
+
+
+    delete( op_block );
     
 };
 

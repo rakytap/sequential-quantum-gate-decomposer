@@ -64,6 +64,51 @@ _operation_test_library.test_operations()
 _operation_test_library.test_operation_block()
 
 
+#**********************************************************************
+#*********************************************************************
+# decomposition test
+
+
+
+#load test library for operations
+_decomposition_test_library = ctypes.cdll.LoadLibrary('lib/decomposition_test.so')  
+
+
+
+
+
+# *******************************
+# test of general two qubit decomposition
+
+# defining the input argument
+_decomposition_test_library.two_qubit_decomposition.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int,)
+
+
+
+# cerate unitary q-bit matrix
+from scipy.stats import unitary_group
+import numpy as np
+
+    
+# the number of qubits
+qbit_num = 2
+    
+matrix_size = int(2**qbit_num)
+
+Umtx = unitary_group.rvs(matrix_size)
+print('The test matrix to be decomposed is:')
+print(Umtx)
+print(' ')
+
+# arranging all the elements of the matrix into one row (row major order)
+Umtx_real = np.real(Umtx).reshape(matrix_size*matrix_size)
+Umtx_imag = np.imag(Umtx).reshape(matrix_size*matrix_size)
+
+# calling the test function
+array_type = ctypes.c_double * (matrix_size*matrix_size)
+_decomposition_test_library.two_qubit_decomposition( array_type(*Umtx_real), array_type(*Umtx_imag), ctypes.c_int(matrix_size) )
+
+
 fff
 
 

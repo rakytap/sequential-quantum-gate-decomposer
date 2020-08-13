@@ -93,6 +93,12 @@ public:
 
 
     //
+    // @brief Call to get the index of the control qubit
+    // @return Return with the index of the control qubit (return with -1 if control qubit was not set)
+    int get_control_qbit();
+
+
+    //
     // @brief Call to get the number of free parameters
     // @return Return with the index of the target qubit (return with -1 if target qubit was not set)
     int get_parameter_num();
@@ -102,12 +108,6 @@ public:
     // @brief Call to get the type of the operation
     // @return Return with the string indicating the type of the operation
     string get_type();
-
-
-    //
-    // @brief Call to get the index of the control qubit
-    // @return Return with the index of the control qubit (return with -1 if control qubit was not set)
-    int get_control_qbit();
 
 };
 
