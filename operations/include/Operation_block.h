@@ -57,13 +57,13 @@ Operation_block(int);
 
 //
 // @brief Call to terive the operation matrix
-MKL_Complex16* matrix( double* );
+MKL_Complex16* matrix( const double* );
 
 ////
 // @brief Call to get the list of matrix representation of the operations grouped in the block.
 // @param parameters List of parameters to calculate the matrix of the operation block
 // @return Returns with a vector conatining the matrices of the operations
-std::vector<MKL_Complex16*> get_matrices(double* parameters);
+std::vector<MKL_Complex16*> get_matrices(const double* parameters);
 
 ////
 // @brief Append a U3 gate to the list of operations
@@ -137,7 +137,7 @@ int get_operation_num();
 // @brief Lists the operations decomposing the initial unitary. (These operations are the inverse operations of the operations bringing the intial matrix into unity.)
 // @param parameters The parameters of the operations that should be inverted
 // @param start_index The index of the first inverse operation
-void list_operations( double*, int );
+void list_operations( const double*, int );
     
     
 ////

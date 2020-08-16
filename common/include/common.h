@@ -31,7 +31,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 int Power_of_2(int n);
 
 // print the matrix
-void print_mtx( MKL_Complex16* , int );
+void print_mtx( MKL_Complex16* , int, int );
 
 // print a CNOT
 void print_CNOT( MKL_Complex16* , int );
@@ -65,7 +65,8 @@ MKL_Complex16* reduce_zgemm( std::vector<MKL_Complex16*>, int );
 // @brief subtract a scalar from the diagonal of a matrix
 void subtract_diag( MKL_Complex16* & , int, MKL_Complex16 ); 
 
-
+// calculate the cost funtion from the submatrices of the given matrix 
+double get_submatrix_cost_function(MKL_Complex16* matrix_new, int matrix_size);
 
 
 

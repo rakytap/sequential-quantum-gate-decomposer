@@ -93,7 +93,7 @@ Operation_block::~Operation_block() {
 // @brief Call to get the product of the matrices of the operations grouped in the block.
 // @param parameters List of parameters to calculate the matrix of the operation block
 // @return Returns with the matrix of the operation
-MKL_Complex16* Operation_block::matrix( double* parameters ) {
+MKL_Complex16* Operation_block::matrix( const double* parameters ) {
 
     // get the matrices of the operations grouped in the block
     vector<MKL_Complex16*> operation_mtxs = get_matrices( parameters );
@@ -108,7 +108,7 @@ MKL_Complex16* Operation_block::matrix( double* parameters ) {
 // @brief Call to get the list of matrix representation of the operations grouped in the block.
 // @param parameters List of parameters to calculate the matrix of the operation block
 // @return Returns with the matrix of the operation
-std::vector<MKL_Complex16*> Operation_block::get_matrices( double* parameters) {
+std::vector<MKL_Complex16*> Operation_block::get_matrices( const double* parameters) {
 
     std::vector<MKL_Complex16*> matrices;
     MKL_Complex16* operation_mtx;
@@ -301,10 +301,10 @@ gates_num Operation_block::get_gate_nums() {
             Operation* operation = *it;
 
             if (operation->get_type().compare("block")==0) {
-/*                operation_block* block_operation = static_cast<operation_block*>(operation);
+                Operation_block* block_operation = static_cast<Operation_block*>(operation);
                 gates_num gate_nums_loc = block_operation->get_gate_nums();
                 gate_nums.u3   = gate_nums.u3 + gate_nums_loc.u3;
-                gate_nums.cnot = gate_nums.cnot + gate_nums_loc.cnot;*/
+                gate_nums.cnot = gate_nums.cnot + gate_nums_loc.cnot;
             }
             else if (operation->get_type().compare("u3")==0) {
                 gate_nums.u3   = gate_nums.u3 + 1;
@@ -341,7 +341,7 @@ int Operation_block::get_operation_num() {
 // @brief Lists the operations decomposing the initial unitary. (These operations are the inverse operations of the operations bringing the intial matrix into unity.)
 // @param parameters The parameters of the operations that should be inverted
 // @param start_index The index of the first inverse operation
-void Operation_block::list_operations( double* parameters, int start_index ) {
+void Operation_block::list_operations( const double* parameters, int start_index ) {
                
         int operation_idx = start_index;        
         int parameter_idx = parameter_num;
@@ -419,7 +419,7 @@ void Operation_block::list_operations( double* parameters, int start_index ) {
             }    
             else if (operation->get_type().compare("block")==0) {
                 Operation_block* block_operation = static_cast<Operation_block*>(operation);
-                double* parameters_layer = parameters + parameter_idx -operation->get_parameter_num();
+                const double* parameters_layer = parameters + parameter_idx -operation->get_parameter_num();
                 block_operation->list_operations( parameters_layer, operation_idx );   
                 parameter_idx = parameter_idx - block_operation->get_parameter_num();
                 operation_idx = operation_idx + block_operation->get_operation_num();

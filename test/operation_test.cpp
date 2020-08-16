@@ -85,7 +85,7 @@ void test_U3_operation() {
     MKL_Complex16* matrix = op.matrix( parameters );
 
     // print the matrix
-    print_mtx( matrix, Power_of_2(qbit_num));
+    print_mtx( matrix, Power_of_2(qbit_num), Power_of_2(qbit_num));
    
 
     // reorder qubits, and test the modified target qubit (1,0) -> (0,1)
@@ -97,7 +97,7 @@ void test_U3_operation() {
     // check the reordered matrix
     printf("The matrix of %d qubit U3 operator acting on target qubit %d\n", qbit_num, op.get_target_qbit() );
     matrix = op.matrix(parameters);
-    print_mtx( matrix, Power_of_2(qbit_num));
+    print_mtx( matrix, Power_of_2(qbit_num), Power_of_2(qbit_num));
 
 };
 
@@ -222,7 +222,7 @@ void test_operation_block() {
 
     // check the block matrix
     printf("The matrix of %d qubit operators consisting of 2 U3 operations and 1 CNOT operation is:\n", qbit_num);
-    print_mtx( mtx, Power_of_2(qbit_num));
+    print_mtx( mtx, Power_of_2(qbit_num), Power_of_2(qbit_num));
 
 
     delete( op_block );

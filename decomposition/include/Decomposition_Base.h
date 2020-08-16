@@ -30,11 +30,19 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <cstdlib>
 #include <time.h> 
 #include <ctime>
+#include "gsl/gsl_multimin.h"
+#include "gsl/gsl_deriv.h"
+
+
+struct deriv {
+    int idx;
+    const gsl_vector* parameters;
+    void* instance;
+};
 
 
 ////
 // @brief A class containing basic methods for the decomposition process.
-
 class Decomposition_Base : public Operation_block {
 
 
@@ -86,6 +94,9 @@ protected:
     // method to guess initial values for the optimalization. POssible values: 'zeros', 'random', 'close_to_zero'
     string initial_guess;
 
+    // current minimum evaluated by the LBFGS library
+    double* m_x;
+
 
 public:
 
@@ -95,6 +106,10 @@ public:
 // @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 // @return An instance of the class
 Decomposition_Base( MKL_Complex16*, int, string );
+
+//// 
+// @brief Destructor of the class
+~Decomposition_Base();
 
 
 ////   
@@ -138,13 +153,24 @@ void solve_optimalization_problem();
 // @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
 // @param 'solution_guess' Array of guessed parameters
 // @param 'num_of_parameters' NUmber of free parameters to be optimized
-void solve_layer_optimalization_problem( long num_of_parameters, double* solution_guess);
+virtual void solve_layer_optimalization_problem( int num_of_parameters, double* solution_guess);
+
 
 
 ////
 // @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
 // @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-double optimalization_problem( double* parameters );
+double optimalization_problem( const double* parameters );
+
+////
+// @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+//double optimalization_problem_grad( const double* parameters, void*, gsl_vector* );
+
+////
+// @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+//double optimalization_problem_combined( const double* parameters, void*, gsl_vector* );
 
 
 //// check_optimalization_solution
@@ -162,13 +188,24 @@ bool check_optimalization_solution();
 std::vector<MKL_Complex16*> get_operation_products(double* , std::vector<Operation*>::iterator, long );
 
 
+//
+// @brief Call to get the unitary to be transformed
+// @return Return with a pointer pointing to the unitary
+MKL_Complex16* get_Umtx();
+
+//
+// @brief Call to get the size of the unitary to be transformed
+// @return Return with the size of the unitary
+int get_Umtx_size();
+
+
 ////
 // @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
 // @param parameters An array containing the parameters of the U3 operations.
 // @param operations The array of the operations to be applied on a unitary
 // @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
 // @return Returns with the transformed matrix.
-MKL_Complex16* get_transformed_matrix( double* parameters, std::vector<Operation*>::iterator operations, long num_of_operations, MKL_Complex16* initial_matrix );
+MKL_Complex16* get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, long num_of_operations, MKL_Complex16* initial_matrix );
 
 
 ////
@@ -193,6 +230,22 @@ void reorder_qubits( vector<int> );
 // @param input_matrix The input matrix to be transformed.
 // @return Returns with the transformed matrix
 MKL_Complex16* apply_operation( MKL_Complex16*, MKL_Complex16*  );
+
+//double evaluate(const double *, double *, const int, const double);
+
+
+//int progress(const double *x, const double *g, const double fx, const double xnorm, const double gnorm, const double step, int n, int k, int ls);
+
+
+
+
+//static double _evaluate( void *instance, const double *x, double *g, const int n, const double step );
+
+
+    
+
+//static int _progress(void *instance, const double *x, const double *g, const double fx, const double xnorm, const double gnorm, const double step, int n, int k, int ls);
+
 
 
 };

@@ -51,14 +51,21 @@ printf("%d\n", idx);
     }
 
     printf("The test matrix to be decomposed is:\n");
-    print_mtx( Umtx, matrix_size );
+    print_mtx( Umtx, matrix_size, matrix_size );
 
     
     
     // Creating the class to decompose the 2-qubit unitary
     // as the input the hermitian conjugate id given ti the class 
     // (The decomposition procedure brings the input matrix into identity)
-    Two_Qubit_Decomposition cDecomposition = Two_Qubit_Decomposition( Umtx, 2, false, "zeros" );
+    Two_Qubit_Decomposition cDecomposition = Two_Qubit_Decomposition( Umtx, 2, false, "close_to_zero" );
+
+    printf("Calculating the cost function for the input matrix:\n");    
+    cDecomposition.test_indepency();
+
+
+    printf("Starting the decompsition\n");
+    cDecomposition.start_decomposition(true);
     
 /*
     #start the decomposition

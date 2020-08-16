@@ -13,6 +13,9 @@ ifndef QGDDIR
 QGDDIR = /home/rakytap/quantum-gate-decomposer_C
 endif
 
+ifndef GSLDIR
+GSLDIR = /home/rakytap/gsl
+endif
 
 ifndef THREAD
 THREAD = PAR
@@ -22,6 +25,10 @@ PLATFORM = Linux
 
 QGDLIBDIR=$(QGDDIR)/lib/bin
 QGDOBJDIR=$(QGDDIR)/lib/bin/$(PLATFORM)
+
+GSLINCLUDEDIR = $(GSLDIR)/include
+GSLLIBDIR = $(GSLDIR)/lib
+
 
 
 LIBNAME = qgd

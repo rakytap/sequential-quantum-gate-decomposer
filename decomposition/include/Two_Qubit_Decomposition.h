@@ -57,13 +57,45 @@ Two_Qubit_Decomposition( MKL_Complex16*, int, bool, string );
 void  start_decomposition( bool finalize_decomposition );
 
 
+////
+// @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
+// @param 'solution_guess' Array of guessed parameters
+// @param 'num_of_parameters' NUmber of free parameters to be optimized
+void solve_layer_optimalization_problem( int num_of_parameters, double* solution_guess);
+
 //
 // @brief The optimalization problem to be solved in order to disentangle the qubits
 // @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 // @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
 // @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
 // @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
-double optimalization_problem( double* );
+double optimalization_problem( const double* );
+
+//
+// @brief The optimalization problem to be solved in order to disentangle the qubits
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+// @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
+// @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
+// @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
+static double optimalization_problem( const gsl_vector*, void*  );
+
+//
+// @brief The optimalization problem to be solved in order to disentangle the qubits
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+// @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
+// @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
+// @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
+static double optimalization_problem_deriv( double x, void*  );
+
+////
+// @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+static void optimalization_problem_grad( const gsl_vector* parameters, void*, gsl_vector*  );
+
+////
+// @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+static void optimalization_problem_combined( const gsl_vector* parameters, void* , double* , gsl_vector*  );
 
 
 // 
@@ -72,5 +104,8 @@ double optimalization_problem( double* );
 bool test_indepency();
 
 
+//static double _evaluate( void *instance, const double *x, double *g, const int n, const double step );
+
+//static int _progress(void *instance, const double *x, const double *g, const double fx, const double xnorm, const double gnorm, const double step, int n, int k, int ls);
 
 };
