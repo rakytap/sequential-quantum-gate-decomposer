@@ -70,10 +70,17 @@ public:
     // @return An instance of the class
     Operation(int);
 
+    //
+    // @brief Call to terive the operation matrix
+    // @return Returns with a pointer to the operation matrix
+    MKL_Complex16* matrix();
+
 
     //
     // @brief Call to terive the operation matrix
-    MKL_Complex16* matrix();
+    // @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
+    // @return Returns with a pointer to the operation matrix
+    MKL_Complex16* matrix( bool& free_after_used );
 
     //
     // @brief Call to set the stored matrix in the operation

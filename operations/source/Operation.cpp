@@ -77,6 +77,7 @@ Operation::Operation(int qbit_num_in) {
 //
 // @brief Destructor of the class
 Operation::~Operation() {
+
     if ( matrix_alloc != NULL ) {
         mkl_free(matrix_alloc);
     }
@@ -94,6 +95,13 @@ void Operation::set_qbit_num( int qbit_num_in ) {
 //
 // @brief Call to terive the operation matrix
 MKL_Complex16* Operation::matrix() {
+    return matrix_alloc;
+}
+
+//
+// @brief Call to terive the operation matrix
+MKL_Complex16* Operation::matrix( bool& free_after_used ) {
+    free_after_used = false;
     return matrix_alloc;
 }
 

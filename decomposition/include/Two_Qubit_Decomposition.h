@@ -61,7 +61,7 @@ void  start_decomposition( bool finalize_decomposition );
 // @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
 // @param 'solution_guess' Array of guessed parameters
 // @param 'num_of_parameters' NUmber of free parameters to be optimized
-void solve_layer_optimalization_problem( int num_of_parameters, double* solution_guess);
+void solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 //
 // @brief The optimalization problem to be solved in order to disentangle the qubits

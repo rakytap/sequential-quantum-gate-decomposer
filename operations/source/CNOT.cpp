@@ -71,16 +71,11 @@ CNOT::~CNOT() {
 }
 
 
-////    
-// @brief Retrives the matrix of a CNOT gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-MKL_Complex16* CNOT::matrix() {
-        return matrix_alloc;
-}
         
 
-    ////    
-    // @brief Calculate the matrix of a CNOT gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    // @return Returns with the matrix of the CNOT gate.
+////    
+// @brief Calculate the matrix of a CNOT gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
+// @return Returns with the matrix of the CNOT gate.
 MKL_Complex16* CNOT::composite_cnot() {
 
 

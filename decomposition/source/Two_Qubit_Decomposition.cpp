@@ -37,6 +37,9 @@ Two_Qubit_Decomposition::Two_Qubit_Decomposition( MKL_Complex16* Umtx_in, int qb
         
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
+
+    // A string describing the type of the class
+    type = "Two_Qubit_Decomposition";
         
     // The global minimum of the optimalization problem
     global_target_minimum = 0;
@@ -72,7 +75,6 @@ void  Two_Qubit_Decomposition::start_decomposition( bool to_finalize_decompositi
         catch (...) {
             max_layer_num_loc = 3;
         }
-printf("max layer num: %d", max_layer_num_loc );
             
         // Do the optimalization of the parameters
         while (layer_num < max_layer_num_loc) {
@@ -138,15 +140,16 @@ printf("max layer num: %d", max_layer_num_loc );
 // @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
 // @param 'solution_guess' Array of guessed parameters
 // @param 'num_of_parameters' NUmber of free parameters to be optimized
-void Two_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_parameters, double* solution_guess = NULL) { 
-printf("solve_layer_optimalization a\n");                
+void Two_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) { 
+
         if (operations.size() == 0 ) {
             return;
         }
        
           
-        if (solution_guess == NULL) {
-            solution_guess = (double*)mkl_calloc(parameter_num, sizeof(double), 64);
+        if (solution_guess_gsl == NULL) {
+            //solution_guess = (double*)mkl_calloc(parameter_num, sizeof(double), 64);
+            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
         }
         
         if (optimized_parameters == NULL) {
@@ -161,9 +164,8 @@ printf("solve_layer_optimalization a\n");
         catch (...) {
             iteration_loops_max = 1;
         }
-printf("solve_layer_optimalization starting iterations. Iteration loops max: %d\n", iteration_loops_max);
+
         // do the optimalization loops
-        double minimum;
         double* solution;
         for (int idx=0; idx<iteration_loops_max; idx++) {
             
@@ -175,7 +177,7 @@ printf("solve_layer_optimalization starting iterations. Iteration loops max: %d\
 
             Two_Qubit_Decomposition* par = this;
 
-            gsl_vector *x;
+            
             gsl_multimin_function_fdf my_func;
 
 
@@ -185,16 +187,13 @@ printf("solve_layer_optimalization starting iterations. Iteration loops max: %d\
             my_func.fdf = optimalization_problem_combined;
             my_func.params = par;
 
-            /* Starting point, x = (5,7) */
-            x = gsl_vector_alloc (num_of_parameters);
-            for (int jdx=0; jdx<num_of_parameters; jdx++) {
-                gsl_vector_set (x, jdx, solution_guess[jdx]);
-            }
-
+            
             T = gsl_multimin_fdfminimizer_vector_bfgs2;
             s = gsl_multimin_fdfminimizer_alloc (T, num_of_parameters);
 
-            gsl_multimin_fdfminimizer_set (s, &my_func, x, 0.01, 0.1);
+
+            gsl_multimin_fdfminimizer_set (s, &my_func, solution_guess_gsl, 0.01, 0.1);
+
             do {
                 iter++;
                 status = gsl_multimin_fdfminimizer_iterate (s);
@@ -203,38 +202,33 @@ printf("solve_layer_optimalization starting iterations. Iteration loops max: %d\
                 }
 
                 status = gsl_multimin_test_gradient (s->gradient, 1e-3);
-                if (status == GSL_SUCCESS) {
+                /*if (status == GSL_SUCCESS) {
                     printf ("Minimum found\n");
-                }
+                }*/
 
-            } while (status == GSL_CONTINUE && iter < 100);
-
-printf("iter: %d, status: %d, current_minimum: %f\n", iter, status, s->f);
+            } while (status == GSL_CONTINUE && iter < 10000);
        
                         
-            if (current_minimum > minimum) {
-                current_minimum = minimum;
+            if (current_minimum > s->f) {
+                current_minimum = s->f;
                 #pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess[jdx] = x->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
-                    optimized_parameters[jdx] = x->data[jdx];
+                    solution_guess_gsl->data[jdx] = s->x->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                    optimized_parameters[jdx] = s->x->data[jdx];
                 }
             }
             else {
                 #pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess[jdx] = solution_guess[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
                 }
             }
 
-            gsl_vector_free (x);
             gsl_multimin_fdfminimizer_free (s);
               
-        }              
-        
+        }         
 
-        // storing the solution of the optimalization problem
-        //optimized_parameters = optimized_parameters
+
         
              
 }  
@@ -249,11 +243,9 @@ printf("iter: %d, status: %d, current_minimum: %f\n", iter, status, s->f);
 // @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
 // @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
 double Two_Qubit_Decomposition::optimalization_problem( const double* parameters ) {
-//printf("getting the transformed matrix:\n");               
+
         // get the transformed matrix with the operations in the list
         MKL_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
-//print_mtx( matrix_new, matrix_size, matrix_size );
-//printf("Calculating the cost function\n");
         return get_submatrix_cost_function(matrix_new, matrix_size);              
 }               
 
@@ -270,9 +262,7 @@ double Two_Qubit_Decomposition::optimalization_problem( const gsl_vector* parame
 
     MKL_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
 
-double cost_fnc = get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());         
-
-    return   cost_fnc; 
+    return   get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());         
 }  
 
 
@@ -331,7 +321,6 @@ void Two_Qubit_Decomposition::optimalization_problem_grad( const gsl_vector* par
     }
 
 /*
-printf("The gradients:");
     for (int idx = 0; idx<parameter_num_loc; idx++) {
         gsl_function F;
         double result, abserr;
@@ -344,19 +333,15 @@ printf("The gradients:");
         F.params = &params_diff;
         gsl_deriv_central (&F, parameters_d[idx], 1e-8, &result, &abserr);
         gsl_vector_set(grad, idx, result);
-printf("%f, ", result);
    }
-printf("\n");*/
+*/
 
-//printf("The gradients check:");
     for (int idx = 0; idx<parameter_num_loc; idx++) {
         parameters_d[idx] = parameters_d[idx] + dparam;
         double f = instance->optimalization_problem(parameters, params);
         gsl_vector_set(grad, idx, (f-f0)/dparam);
-//printf("%f, ", (f-f0)/dparam);
         parameters_d[idx] = parameters_d[idx] - dparam;
     }
-//printf("\n");
           
 
 }     

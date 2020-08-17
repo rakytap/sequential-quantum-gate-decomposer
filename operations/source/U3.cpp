@@ -113,7 +113,7 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
 //
 // @brief Destructor of the class
 U3::~U3() {
-  
+
     if ( indexes_target_qubit_0 != NULL ) {
         mkl_free(indexes_target_qubit_0);
     }
@@ -125,7 +125,21 @@ U3::~U3() {
 
 ////    
 // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-// @param parameters One, Two or Three component array containing the parameters in order Theta, Phi, Lambda
+// @param parameters List of parameters to calculate the matrix of the operation block
+// @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
+// @return Returns with a pointer to the operation matrix
+MKL_Complex16* U3::matrix( const double* parameters, bool& free_after_used ) {
+
+    free_after_used = true;
+    return matrix( parameters );
+}
+
+
+
+////    
+// @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
+// @param parameters List of parameters to calculate the matrix of the operation block
+// @return Returns with a pointer to the operation matrix
 MKL_Complex16* U3::matrix( const double* parameters ) {
  
         if (theta && !phi && lambda) {

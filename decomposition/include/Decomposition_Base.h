@@ -32,6 +32,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <ctime>
 #include "gsl/gsl_multimin.h"
 #include "gsl/gsl_deriv.h"
+#include <gsl/gsl_statistics.h>
 
 
 struct deriv {
@@ -77,7 +78,7 @@ protected:
     long finalizing_operations_num;
         
     // the number of the finalizing (deterministic) parameters counted from the top of the optimized_parameters list
-    long finalizing_parameter_num;
+    int finalizing_parameter_num;
         
     // The current minimum of the optimalization problem
     double current_minimum;
@@ -109,7 +110,7 @@ Decomposition_Base( MKL_Complex16*, int, string );
 
 //// 
 // @brief Destructor of the class
-~Decomposition_Base();
+virtual ~Decomposition_Base();
 
 
 ////   
@@ -139,7 +140,7 @@ void list_operations( int );
 // @return [1] The operations needed to rotate the qubits into the state |0>
 // @return [2] The parameters of the U3 operations needed to rotate the qubits into the state |0>
 // @return [3] The resulted diagonalized matrix.
-MKL_Complex16* get_finalizing_operations( MKL_Complex16* mtx, Operation_block* & finalizing_operations, double* & finalizing_parameters);
+MKL_Complex16* get_finalizing_operations( MKL_Complex16* mtx, Operation_block* & finalizing_operations, double* &finalizing_parameters);
 
 
 //// 
@@ -153,14 +154,14 @@ void solve_optimalization_problem();
 // @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
 // @param 'solution_guess' Array of guessed parameters
 // @param 'num_of_parameters' NUmber of free parameters to be optimized
-virtual void solve_layer_optimalization_problem( int num_of_parameters, double* solution_guess);
+virtual void solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 
 
 ////
 // @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
 // @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-double optimalization_problem( const double* parameters );
+virtual double optimalization_problem( const double* parameters );
 
 ////
 // @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.

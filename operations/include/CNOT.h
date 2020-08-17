@@ -51,10 +51,6 @@ CNOT(int, int, int);
 // @brief Destructor of the class
 ~CNOT();
 
-//
-// @brief Call to terive the operation matrix
-MKL_Complex16* matrix();
-
 
 
 ////

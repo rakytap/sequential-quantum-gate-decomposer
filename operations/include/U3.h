@@ -55,9 +55,19 @@ U3(int, int, bool, bool, bool);
 // @brief Destructor of the class
 ~U3();
 
+
 //
 // @brief Call to terive the operation matrix
+// @param parameters List of parameters to calculate the matrix of the operation block
+// @return Returns with a pointer to the operation matrix
 MKL_Complex16* matrix( const double* );
+
+//
+// @brief Call to terive the operation matrix
+// @param parameters List of parameters to calculate the matrix of the operation block
+// @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
+// @return Returns with a pointer to the operation matrix
+MKL_Complex16* matrix( const double*, bool& free_after_used );
 
 
         
