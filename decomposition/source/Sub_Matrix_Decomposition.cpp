@@ -22,7 +22,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 // @brief A base class responsible for constructing matrices of C-NOT gates
 // gates acting on the N-qubit space
 
-#include "Two_Qubit_Decomposition.h"
+#include "Sub_Matrix_Decomposition.h"
 
  
     
@@ -31,125 +31,182 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //// Contructor of the class
 // @brief Constructor of the class.
 // @param Umtx The unitary matrix to be decomposed
-// @param max_layer_num_in A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process at the subdecomposing of n-th qubits.
 // @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
+// @param max_layer_num_in A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process at the subdecomposing of n-th qubits.
+// @param identical_blocks_in A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
 // @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 // @return An instance of the class
-Two_Qubit_Decomposition::Two_Qubit_Decomposition( MKL_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, bool optimize_layer_num_in=false, string initial_guess_in="close_to_zero" ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
+Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( MKL_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in=false, string initial_guess_in="close_to_zero" ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
         
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
 
     // A string describing the type of the class
-    type = "Two_Qubit_Decomposition";
+    type = "Sub_Matrix_Decomposition";
         
     // The global minimum of the optimalization problem
     global_target_minimum = 0;
         
     // number of iteratrion loops in the optimalization
-    iteration_loops[2] = 1;
-    
-    // number of operators in one sub-layer of the optimalization process
-    optimalization_block = 1;
+    iteration_loops[2] = 3;
+    iteration_loops[3] = 1;
+    iteration_loops[4] = 1;
+    iteration_loops[5] = 1;
+    iteration_loops[6] = 1;
+    iteration_loops[7] = 1;
+    iteration_loops[8] = 1;
+
+    // logical value indicating whether the quasi-unitarization of the submatrices was done or not 
+    subdisentaglement_done = false;
+        
+    // The subunitarized matrix
+    subunitarized_mtx = NULL;
+                
+    // The number of successive identical blocks in one leyer
+    identical_blocks = identical_blocks_in;
 
     // layer number used in the decomposition
     max_layer_num = max_layer_num_in;
-    if ( max_layer_num.count( 2 ) == 0 ) {
-        max_layer_num.insert( std::pair<int, int>(2,  max_layer_num_def[2]) );
+   
+    // filling in numbers that were not given in the input
+    for ( std::map<int,int>::iterator it = max_layer_num_def.begin(); it!=max_layer_num_def.end(); it++) {      
+        if ( max_layer_num.count( it->first ) == 0 ) {
+            max_layer_num.insert( std::pair<int, int>(it->first,  it->second) );
+        }
     }
-    
 
 
 }
 
 
 
-//// start_decomposition
-// @brief Start the decompostion process of the two-qubit unitary
-// @param finalize_decomposition Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
-void  Two_Qubit_Decomposition::start_decomposition( bool to_finalize_decomposition=true ) {
+
+////
+// @brief Start the optimalization process to disentangle the most significant qubit from the others. The optimized parameters and operations are stored in the attributes @optimized_parameters and @operations.
+void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         
-    if ( decomposition_finalized ) {
-        printf("Decomposition was already finalized");
+    if (subdisentaglement_done) {
+        printf("Sub-disentaglement already done.\n");
         return;
     }
         
-    //check whether the problem can be solved without optimalization
-    if ( !test_indepency() ) {
-
+        
+    printf("\nDisentagling submatrices.\n");
+        
+    // setting the global target minimum
+    global_target_minimum = 0;   
+          
+    // check if it needed to do the subunitarization
+    if (optimalization_problem(NULL) < optimalization_tolerance) {
+        printf("Disentanglig not needed\n");
+        subunitarized_mtx = Umtx;
+        subdisentaglement_done = true;
+        return;
+    }
+        
+                  
+        
+        
+    if ( !check_optimalization_solution() ) {
+        // Adding the operations of the successive layers
+            
+        //measure the time for the decompositin       
+        clock_t start_time = clock();
+            
+        // the maximal number of layers in the subdeconposition
         long max_layer_num_loc;
         try {
             max_layer_num_loc = max_layer_num[qbit_num];
         }
         catch (...) {
-            max_layer_num_loc = 3;
+            throw "Layer number not given";
+        }
+
+
+        // the  number of succeeding identicallayers in the subdeconposition
+        long identical_blocks_loc;
+        try {
+            identical_blocks_loc = identical_blocks[qbit_num];
+        }
+        catch (...) {
+            identical_blocks_loc=1;
+        }
+
+        while ( layer_num < max_layer_num_loc ) {
+                
+            int control_qbit_loc = qbit_num-1;
+             
+            for (int target_qbit_loc = 0; target_qbit_loc<control_qbit_loc; target_qbit_loc++ ) {                    
+                    
+                    
+                for (int idx=0;  idx<identical_blocks_loc; idx++) {
+                        
+                    // creating block of operations
+                    Operation_block* block = new Operation_block( qbit_num );
+                    
+                    // add CNOT gate to the block
+                    block->add_cnot_to_end(control_qbit_loc, target_qbit_loc);       
+                    
+                    // adding U3 operation to the block
+                    bool Theta = true;
+                    bool Phi = false;
+                    bool Lambda = true;
+                    block->add_u3_to_end(target_qbit_loc, Theta, Phi, Lambda);
+                    block->add_u3_to_end(control_qbit_loc, Theta, Phi, Lambda); 
+                    
+                    // adding the opeartion block to the operations
+                    add_operation_to_end( block );
+
+                }                   
+            }   
+                
+            // get the number of blocks
+            layer_num = operations.size();
+                                                 
+            // Do the optimalization
+            if (optimize_layer_num || layer_num >= max_layer_num_loc ) {
+                // solve the optzimalization problem to find the correct mninimum
+                solve_optimalization_problem();   
+
+                if (check_optimalization_solution()) {
+                    break;
+                }
+            }
+                    
         }
             
-        // Do the optimalization of the parameters
-        while (layer_num < max_layer_num_loc) {
+        printf("--- %f seconds elapsed during the decomposition ---\n\n", (clock() - start_time));
                 
-                // creating block of operations
-                Operation_block* block = new Operation_block( qbit_num );
-                    
-                // add CNOT gate to the block
-                block->add_cnot_to_end(1, 0);
-                    
-                // adding U3 operation to the block
-                bool Theta = true;
-                bool Phi = false;
-                bool Lambda = true;
-                block->add_u3_to_end(1, Theta, Phi, Lambda); 
-                block->add_u3_to_end(0, Theta, Phi, Lambda);
-                    
-                // adding the opeartion block to the operations
-                add_operation_to_end( block );
-                
-                // set the number of layers in the optimalization
-                optimalization_block = 1;//layer_num;
-                
-                // Do the optimalization
-                if (optimize_layer_num || layer_num >= max_layer_num_loc) {
-                    // solve the optzimalization problem to find the correct mninimum
-                    solve_optimalization_problem();
-
-                    if (check_optimalization_solution()) {
-                        break;
-                    }
-                }
-    
-        }
-                    
-                
+           
     }
-
+                       
         
-    // check the solution
-    if (check_optimalization_solution() ) {
-                
-        // logical value describing whether the first optimalization problem was solved or not
-        optimalization_problem_solved = true;
-    }        
+        
+    if (check_optimalization_solution()) {            
+        printf("Sub-disentaglement was succesfull.\n\n");
+    }
     else {
-        // setting the logical variable to true even if no optimalization was needed
-        optimalization_problem_solved = false;
+        printf("Sub-disentaglement did not reach the tolerance limit.\n\n");
     }
         
+        
+    // indicate that the unitarization of the sumbatrices was done
+    subdisentaglement_done = true;
+        
+    // The subunitarized matrix
+    subunitarized_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
        
-    //finalize the decomposition
-    if ( to_finalize_decomposition ) {
-        finalize_decomposition();
-    }
+}
 
 
-                
-}       
-    
+
+   
         
 ////
 // @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
 // @param 'solution_guess' Array of guessed parameters
 // @param 'num_of_parameters' NUmber of free parameters to be optimized
-void Two_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) { 
+void Sub_Matrix_Decomposition::solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) { 
 
         if (operations.size() == 0 ) {
             return;
@@ -184,7 +241,7 @@ void Two_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_par
             const gsl_multimin_fdfminimizer_type *T;
             gsl_multimin_fdfminimizer *s;
 
-            Two_Qubit_Decomposition* par = this;
+            Sub_Matrix_Decomposition* par = this;
 
             
             gsl_multimin_function_fdf my_func;
@@ -251,7 +308,7 @@ void Two_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_par
 // @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
 // @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
 // @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
-double Two_Qubit_Decomposition::optimalization_problem( const double* parameters ) {
+double Sub_Matrix_Decomposition::optimalization_problem( const double* parameters ) {
 
         // get the transformed matrix with the operations in the list
         MKL_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
@@ -264,24 +321,13 @@ double Two_Qubit_Decomposition::optimalization_problem( const double* parameters
 // @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
 // @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
 // @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
-double Two_Qubit_Decomposition::optimalization_problem( const gsl_vector* parameters, void* params ) {
-/*
-printf("parameters:");
-for (int idx = 0; idx<4; idx++) {
-printf("%f, ", parameters->data[idx]);
-}
-printf("\n");*/
+double Sub_Matrix_Decomposition::optimalization_problem( const gsl_vector* parameters, void* params ) {
 
-    Two_Qubit_Decomposition* instance = reinterpret_cast<Two_Qubit_Decomposition*>(params);
+    Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(params);
     std::vector<Operation*> operations_loc = instance->get_operations(); 
 
-//print_mtx( instance->get_Umtx(), 4, 4);
-
     MKL_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
-
-//print_mtx( matrix_new, 4, 4);
-
-    return   get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());         
+    return get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());   
 }  
 
 
@@ -292,10 +338,10 @@ printf("\n");*/
 // @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
 // @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
 // @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
-double Two_Qubit_Decomposition::optimalization_problem_deriv( double x, void* params  ) {
+double Sub_Matrix_Decomposition::optimalization_problem_deriv( double x, void* params  ) {
     
     deriv* params_diff = reinterpret_cast<deriv*>(params);
-    Two_Qubit_Decomposition* instance = reinterpret_cast<Two_Qubit_Decomposition*>(params_diff->instance);
+    Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(params_diff->instance);
 
 
     double x_orig = params_diff->parameters->data[params_diff->idx];
@@ -317,9 +363,9 @@ double Two_Qubit_Decomposition::optimalization_problem_deriv( double x, void* pa
 // @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
 // @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
 // @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
-void Two_Qubit_Decomposition::optimalization_problem_grad( const gsl_vector* parameters, void* params, gsl_vector* grad ) {
+void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* parameters, void* params, gsl_vector* grad ) {
 
-    Two_Qubit_Decomposition* instance = reinterpret_cast<Two_Qubit_Decomposition*>(params);
+    Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(params);
 
     double f0 = instance->optimalization_problem(parameters, params);
 
@@ -339,7 +385,7 @@ void Two_Qubit_Decomposition::optimalization_problem_grad( const gsl_vector* par
         grad = gsl_vector_alloc(parameter_num_loc);
     }
 
-/*
+/*printf("Derivates:");
     for (int idx = 0; idx<parameter_num_loc; idx++) {
         gsl_function F;
         double result, abserr;
@@ -351,33 +397,17 @@ void Two_Qubit_Decomposition::optimalization_problem_grad( const gsl_vector* par
         F.function = instance->optimalization_problem_deriv;
         F.params = &params_diff;
         gsl_deriv_central (&F, parameters_d[idx], 1e-8, &result, &abserr);
+printf("%f, ", result);
         gsl_vector_set(grad, idx, result);
    }
-*/
-/*
-printf("f0: %f\n", f0);
-f0 = instance->optimalization_problem(parameters, params);
-printf("f0: %f\n", f0);
+printf("\n");*/
 
-printf("%d parameters:", parameter_num_loc);
-for (int idx = 0; idx<parameter_num_loc; idx++) {
-printf("%f, ", parameters_d[idx]);
-}
-printf("\n");
-printf("Derivates check:");*/
     for (int idx = 0; idx<parameter_num_loc; idx++) {
         parameters_d[idx] = parameters_d[idx] + dparam;
         double f = instance->optimalization_problem(parameters, params);
         gsl_vector_set(grad, idx, (f-f0)/dparam);
-//printf("%f, ", (f-f0)/dparam);
         parameters_d[idx] = parameters_d[idx] - dparam;
     }
-//printf("\n");
-
-//f0 = instance->optimalization_problem(parameters, params);
-//printf("f0: %f\n", f0);
-
-//throw "jjjjjjjjjjj";
           
 
 }     
@@ -389,31 +419,9 @@ printf("Derivates check:");*/
 // @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
 // @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
 // @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
-void Two_Qubit_Decomposition::optimalization_problem_combined( const gsl_vector* parameters, void* params, double* cost_function, gsl_vector* grad ) {
+void Sub_Matrix_Decomposition::optimalization_problem_combined( const gsl_vector* parameters, void* params, double* cost_function, gsl_vector* grad ) {
     *cost_function = optimalization_problem(parameters, params);
     optimalization_problem_grad(parameters, params, grad);
 }                                        
-                                        
-                    
-
-    
-//// 
-// @brief Check whether qubits are indepent or not
-// @returns Return with true if qubits are disentangled, or false otherwise.
-bool Two_Qubit_Decomposition::test_indepency() {
-       
-        current_minimum = optimalization_problem( optimized_parameters );
-        
-        return check_optimalization_solution();     
-        
-}        
    
-/*      
-double Two_Qubit_Decomposition::_evaluate( void *instance, const double *x, double *g, const int n, const double step ) {
-    return reinterpret_cast<Two_Qubit_Decomposition*>(instance)->evaluate(x, g, n, step);
-}
 
-
-int Two_Qubit_Decomposition::_progress(void *instance, const double *x, const double *g, const double fx, const double xnorm, const double gnorm, const double step, int n, int k, int ls) {
-    return reinterpret_cast<Two_Qubit_Decomposition*>(instance)->progress(x, g, fx, xnorm, gnorm, step, n, k, ls);
-}*/

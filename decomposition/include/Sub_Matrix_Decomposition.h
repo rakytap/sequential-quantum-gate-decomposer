@@ -29,15 +29,22 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 ////
 // @brief A class containing basic methods for the decomposition process.
 
-class Two_Qubit_Decomposition : public Decomposition_Base {
+class Sub_Matrix_Decomposition : public Decomposition_Base {
 
 
 public:
 
-protected:
+    // logical value indicating whether the quasi-unitarization of the submatrices was done or not 
+    bool subdisentaglement_done;
+
+    // The subunitarized matrix
+    MKL_Complex16* subunitarized_mtx;
 
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     bool optimize_layer_num;
+
+    // The number of successive identical blocks in one leyer
+    std::map<int,int> identical_blocks;
 
 
 public:
@@ -46,17 +53,16 @@ public:
 // @brief Constructor of the class.
 // @param Umtx The unitary matrix to be decomposed
 // @param max_layer_num_in A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process at the subdecomposing of n-th qubits.
+// @param identical_blocks_in A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
 // @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
 // @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 // @return An instance of the class
-Two_Qubit_Decomposition( MKL_Complex16*, int, std::map<int,int>, bool, string );
+Sub_Matrix_Decomposition( MKL_Complex16*, int, std::map<int,int>, std::map<int,int>, bool, string );
 
 
-
-//// start_decomposition
-// @brief Start the decompostion process of the two-qubit unitary
-// @param finalize_decomposition Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
-void  start_decomposition( bool finalize_decomposition );
+////
+// @brief Start the optimalization process to disentangle the most significant qubit from the others. The optimized parameters and operations are stored in the attributes @optimized_parameters and @operations.
+void disentangle_submatrices();
 
 
 ////
@@ -65,6 +71,9 @@ void  start_decomposition( bool finalize_decomposition );
 // @param 'num_of_parameters' NUmber of free parameters to be optimized
 void solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
+
+
+
 //
 // @brief The optimalization problem to be solved in order to disentangle the qubits
 // @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
@@ -72,6 +81,8 @@ void solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solu
 // @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
 // @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
 double optimalization_problem( const double* );
+
+
 
 //
 // @brief The optimalization problem to be solved in order to disentangle the qubits
@@ -100,6 +111,8 @@ static void optimalization_problem_grad( const gsl_vector* parameters, void*, gs
 static void optimalization_problem_combined( const gsl_vector* parameters, void* , double* , gsl_vector*  );
 
 
+/*
+
 // 
 // @brief Check whether qubits are indepent or not
 // @returns Return with true if qubits are disentangled, or false otherwise.
@@ -109,5 +122,5 @@ bool test_indepency();
 //static double _evaluate( void *instance, const double *x, double *g, const int n, const double step );
 
 //static int _progress(void *instance, const double *x, const double *g, const double fx, const double xnorm, const double gnorm, const double step, int n, int k, int ls);
-
+*/
 };

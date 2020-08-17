@@ -48,19 +48,25 @@ class Decomposition_Base : public Operation_block {
 
 
 public:
-    // default number of layers in the decomposition as a function of number of qubits
-    std::map<int,int> max_layer_num;
 
-    // number of iteratrion loops in the optimalization
-    std::map<int,int> iteration_loops;
-
-    // number of operators in one sub-layer of the optimalization process
+    // number of operator blocks in one sub-layer of the optimalization process
     int optimalization_block;
+
+    // default number of layers in the decomposition as a function of number of qubits
+    static std::map<int,int> max_layer_num_def;
 
     // The maximal allowed error of the optimalization problem
     double optimalization_tolerance;
 
 protected:
+
+
+
+    //  number of layers in the decomposition as a function of number of qubits
+    std::map<int,int> max_layer_num;
+
+    // number of iteratrion loops in the optimalization
+    std::map<int,int> iteration_loops;
 
     // The unitary to be decomposed
     MKL_Complex16* Umtx;
@@ -231,6 +237,10 @@ void reorder_qubits( vector<int> );
 // @param input_matrix The input matrix to be transformed.
 // @return Returns with the transformed matrix
 MKL_Complex16* apply_operation( MKL_Complex16*, MKL_Complex16*  );
+
+////
+// @briefinitializes default layer numbers
+static void Init_max_layer_num();
 
 //double evaluate(const double *, double *, const int, const double);
 

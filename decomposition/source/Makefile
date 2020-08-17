@@ -4,7 +4,9 @@ include ../../commonvars.in
 OBJECTDIR = $(QGDDIR)/decomposition/bin/$(PLATFORM)
 
 TARGETS = Decomposition_Base \
-          Two_Qubit_Decomposition
+          Two_Qubit_Decomposition \
+          Sub_Matrix_Decomposition \
+          N_Qubit_Decomposition
 
 
 

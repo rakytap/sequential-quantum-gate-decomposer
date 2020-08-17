@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <vector>
 
 #include "Two_Qubit_Decomposition.h"
+#include "N_Qubit_Decomposition.h"
 
 using namespace std;
 
@@ -35,8 +36,9 @@ extern "C" {
 // @brief Decomposition of general two-qubit matrix into U3 and CNOT gates
 void two_qubit_decomposition( double* mtx_real, double* mtx_imag, int matrix_size) {
     
-    printf("****************************************\n");
+    printf("\n\n****************************************\n");
     printf("Test of two qubit decomposition\n");
+    printf("****************************************\n\n\n");
 
 
     // combining real and imaginary parts of the matrix inti MKL complex matrix
@@ -45,7 +47,6 @@ void two_qubit_decomposition( double* mtx_real, double* mtx_imag, int matrix_siz
 
     #pragma omp parallel for    
     for(int idx = 0; idx < element_num; idx++) {
-printf("%d\n", idx);
         Umtx[idx].real = mtx_real[idx];
         Umtx[idx].imag = mtx_imag[idx];
     }
@@ -56,9 +57,11 @@ printf("%d\n", idx);
     
     
     // Creating the class to decompose the 2-qubit unitary
-    // as the input the hermitian conjugate id given ti the class 
-    // (The decomposition procedure brings the input matrix into identity)
-    Two_Qubit_Decomposition cDecomposition = Two_Qubit_Decomposition( Umtx, 2, false, "close_to_zero" );
+
+    std::map<int,int> num_of_layers;
+    num_of_layers[2] = 3;
+
+    Two_Qubit_Decomposition cDecomposition = Two_Qubit_Decomposition( Umtx, 2, num_of_layers, false, "close_to_zero" );
 
     printf("Calculating the cost function for the input matrix:\n");    
     cDecomposition.test_indepency();
@@ -101,6 +104,48 @@ printf("%d\n", idx);
     print('The error of the decomposition is ' + str(decomposition_error))
     
 */
+
+};
+
+
+
+//
+// @brief Decomposition of general four-qubit matrix into U3 and CNOT gates
+void four_qubit_decomposition( double* mtx_real, double* mtx_imag, int matrix_size) {
+    
+    printf("\n\n****************************************\n");
+    printf("Test of four qubit decomposition\n");
+    printf("****************************************\n\n\n");
+
+    // combining real and imaginary parts of the matrix inti MKL complex matrix
+    int element_num = matrix_size*matrix_size;
+    MKL_Complex16* Umtx = (MKL_Complex16*)mkl_malloc(element_num*sizeof(MKL_Complex16), 64);
+
+    #pragma omp parallel for    
+    for(int idx = 0; idx < element_num; idx++) {
+        Umtx[idx].real = mtx_real[idx];
+        Umtx[idx].imag = mtx_imag[idx];
+    }
+    
+    
+    // Creating the class to decompose the four-qubit unitary
+
+    std::map<int,int> num_of_layers;
+    num_of_layers[2] = 3;
+    num_of_layers[3] = 20;
+    num_of_layers[4] = 60;
+
+    std::map<int,int> identical_blocks;
+    identical_blocks[2] = 1;
+    identical_blocks[3] = 1;
+    identical_blocks[4] = 1;
+
+    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, 4, num_of_layers, identical_blocks, false, "zeros" );
+
+
+
+    printf("Starting the decompsition\n");
+    cDecomposition.start_decomposition(true);
 
 };
 

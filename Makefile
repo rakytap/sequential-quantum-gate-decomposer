@@ -1,7 +1,7 @@
 include commonvars.in
 
 
-all: help inform compilecomomon compileoperations compiledecomposition compiletest
+all: help inform compilecomomon compiledecomposition compiletest
 
 help:
 	@echo "To build Quantum Gate Decomposer package:"

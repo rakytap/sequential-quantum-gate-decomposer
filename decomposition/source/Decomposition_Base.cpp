@@ -25,24 +25,19 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Decomposition_Base.h"
 
  
-    
+// default layer numbers
+std::map<int,int> Decomposition_Base::max_layer_num_def;    
 
 
 //// Contructor of the class
 // @brief Constructor of the class.
 // @param Umtx The unitary matrix to be decomposed
-// @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
+// @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
+// @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" (deafult),"random", "close_to_zero"
 // @return An instance of the class
 Decomposition_Base::Decomposition_Base( MKL_Complex16* Umtx_in, int qbit_num_in, string initial_guess_in= "close_to_zero" ) : Operation_block(qbit_num_in) {
         
-
-    // default layer numbers
-    max_layer_num[2] = 3;
-    max_layer_num[3] = 20;
-    max_layer_num[4] = 60;
-    max_layer_num[5] = 240;
-    max_layer_num[6] = 1350;
-    max_layer_num[7] = 6180;
+    Init_max_layer_num();
         
     // the unitary operator to be decomposed
     Umtx = Umtx_in;
@@ -78,7 +73,7 @@ Decomposition_Base::Decomposition_Base( MKL_Complex16* Umtx_in, int qbit_num_in,
     optimalization_tolerance = 1e-7;
         
     // Maximal number of iteartions in the optimalization process
-    max_iterations = 10000000000;
+    max_iterations = 1e8;
   
     // number of operators in one sub-layer of the optimalization process
     optimalization_block = 1;
@@ -306,7 +301,6 @@ void  Decomposition_Base::solve_optimalization_problem() {
 
         // the array storing the optimized parameters
         gsl_vector* optimized_parameters_gsl = gsl_vector_alloc (parameter_num_loc);
-        //double* optimized_parameters_loc = (double*)mkl_malloc(parameter_num*sizeof(double), 64);
 
         // store the optimized parameters
         if ( initial_guess.compare("zeros")==0 ) {
@@ -389,7 +383,6 @@ void  Decomposition_Base::solve_optimalization_problem() {
 
             // Transform the initial unitary upon the fixed pre-optimalization operations
             Umtx = apply_operation(operations_mtx_pre, Umtx_loc);
-
             // Create a general operation describing the cumulative effect of gates applied before the optimized operations
             fixed_operation_pre->set_matrix( operations_mtx_pre );
 
@@ -406,6 +399,8 @@ void  Decomposition_Base::solve_optimalization_problem() {
             // Create a general operation describing the cumulative effect of gates following the optimized operations
             if (block_idx_end > 0) {
                 fixed_operation_post->set_matrix( operations_mtxs_post[block_idx_end-1] );
+//printf("operations_mtxs_post with prefixed:\n");
+//print_mtx(operations_mtxs_post[block_idx_end-1], matrix_size, matrix_size); 
             }
             else {
                 for (std::vector<MKL_Complex16*>::iterator mtxs_it=operations_mtxs_post.begin(); mtxs_it != operations_mtxs_post.end(); mtxs_it++ ) {
@@ -445,7 +440,7 @@ void  Decomposition_Base::solve_optimalization_problem() {
 
             // add the current minimum to the array of minimums and calculate the mean
             double minvec_mean = 0;
-            for (int idx=1; idx<10; idx++) {
+            for (int idx=9; idx>0; idx--) {
                 minimum_vec[idx] = minimum_vec[idx-1];
                 minvec_mean = minvec_mean + minimum_vec[idx-1];
             }
@@ -579,7 +574,7 @@ std::vector<MKL_Complex16*> Decomposition_Base::get_operation_products(double* p
     operation_mtxs.reserve(num_of_operations);
     MKL_Complex16* operation_mtx = NULL;
 
-    bool free_the_last_matrix;
+    bool free_matrix;
 
     for (long idx=0; idx<num_of_operations; idx++) {
 
@@ -587,19 +582,19 @@ std::vector<MKL_Complex16*> Decomposition_Base::get_operation_products(double* p
 
         if (operation->get_type().compare("cnot")==0 ) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            operation_mtx = cnot_operation->matrix(free_the_last_matrix);
+            operation_mtx = cnot_operation->matrix(free_matrix);
         }
         else if (operation->get_type().compare("general")==0 ) {
-            operation_mtx = operation->matrix(free_the_last_matrix);
+            operation_mtx = operation->matrix(free_matrix);
         }
         else if (operation->get_type().compare("U3")==0 ) {
             U3* u3_operation = static_cast<U3*>(operation);
-            operation_mtx = u3_operation->matrix(parameters, free_the_last_matrix);
+            operation_mtx = u3_operation->matrix(parameters, free_matrix);
             parameters = parameters + u3_operation->get_parameter_num();
         }
         else if (operation->get_type().compare("block")==0 ) {
             Operation_block* block_operation = static_cast<Operation_block*>(operation);
-            operation_mtx = block_operation->matrix(parameters, free_the_last_matrix);
+            operation_mtx = block_operation->matrix(parameters, free_matrix);
             parameters = parameters + block_operation->get_parameter_num();
         }
 
@@ -608,6 +603,9 @@ std::vector<MKL_Complex16*> Decomposition_Base::get_operation_products(double* p
         }
         else {
             operation_mtxs.push_back( apply_operation(operation_mtxs.back(), operation_mtx));
+            if (free_matrix) {
+                mkl_free(operation_mtx);
+            }
         }
 
      
@@ -616,9 +614,6 @@ std::vector<MKL_Complex16*> Decomposition_Base::get_operation_products(double* p
 
     if (operation_mtxs.size()==0) {
         operation_mtxs.push_back( create_identity( matrix_size ) );
-    }
-    else if (free_the_last_matrix) {
-        mkl_free( operation_mtx );
     }
 
     return operation_mtxs;
@@ -672,21 +667,21 @@ MKL_Complex16* Decomposition_Base::get_transformed_matrix( const double* paramet
             Operation* operation = *operations_it;      
             if (operation->get_type().compare("cnot") == 0 ) {
                 CNOT* cnot_operation = static_cast<CNOT*>( operation );
-                operation_mtx = cnot_operation->matrix(free_operation_product);
+                operation_mtx = cnot_operation->matrix(free_operation_mtx);
             }
             else if (operation->get_type().compare("general") == 0 ) {
-                operation_mtx = operation->matrix(free_operation_product);
+                operation_mtx = operation->matrix(free_operation_mtx);
             }                                
             else if (operation->get_type().compare("U3") == 0 ) {
                 U3* u3_operation = static_cast<U3*>( operation );
                 long parameters_num = u3_operation->get_parameter_num();
-                operation_mtx = u3_operation->matrix( parameters, free_operation_product );
+                operation_mtx = u3_operation->matrix( parameters, free_operation_mtx );
                 parameters = parameters + parameters_num;
             }
             else if (operation->get_type().compare("block") == 0 ) {
                 Operation_block* block_operation = static_cast<Operation_block*>( operation );
                 long parameters_num = block_operation->get_parameter_num();
-                operation_mtx = block_operation->matrix( parameters, free_operation_product );
+                operation_mtx = block_operation->matrix( parameters, free_operation_mtx );
                 parameters = parameters + parameters_num;
             }
 
@@ -795,6 +790,22 @@ MKL_Complex16* Decomposition_Base::apply_operation( MKL_Complex16* operation_mtx
     // Getting the transformed state upon the transformation given by operation
     return zgemm3m_wrapper( operation_mtx, input_matrix, matrix_size);
 }
+
+
+////
+// @briefinitializes default layer numbers
+void Decomposition_Base::Init_max_layer_num() {
+
+    // default layer numbers
+    max_layer_num_def[2] = 3;
+    max_layer_num_def[3] = 20;
+    max_layer_num_def[4] = 60;
+    max_layer_num_def[5] = 240;
+    max_layer_num_def[6] = 1350;
+    max_layer_num_def[7] = 6180;    
+
+}
+
 
 
 /*

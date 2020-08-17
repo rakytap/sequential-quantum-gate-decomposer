@@ -58,3 +58,7 @@ The decomposition can be retrived in a Qiskit compatible form using method
 *N_Qubit_Decomposition.get_quantum_circuit()*
 
 The method returns with a [quantum circuit](https://qiskit.org/documentation/apidoc/circuit.html) defined in the framework of the Qiskit package.
+
+
+
+./configure --prefix=/home/rakytap/gsl FC=ifort CC=icc CFLAGS="-O2 -m64 -mieee-fp -march=core2 -mtune=core2 -Wpointer-arith -fno-strict-aliasing "
