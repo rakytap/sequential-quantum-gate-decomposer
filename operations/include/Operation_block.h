@@ -68,9 +68,9 @@ MKL_Complex16* matrix( const double* parameters, bool& free_after_used );
 ////
 // @brief Call to get the list of matrix representation of the operations grouped in the block.
 // @param parameters List of parameters to calculate the matrix of the operation block
-// @param free_after_used Logical value indicating to the method matrix whether the cteated matrix would be allowed to free after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
+// @param free_after_used Array of logical value indicating whether the cteated matrixes can bee freed after they were used or not. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
 // @return Returns with a pointer to the operation matrix
-std::vector<MKL_Complex16*> get_matrices(const double* parameters, bool& free_after_used );
+std::vector<MKL_Complex16*> get_matrices(const double* parameters, bool* &free_after_used );
 
 ////
 // @brief Append a U3 gate to the list of operations

@@ -104,8 +104,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         return;
     }
         
-                  
-        
+                       
         
     if ( !check_optimalization_solution() ) {
         // Adding the operations of the successive layers
@@ -127,6 +126,9 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         long identical_blocks_loc;
         try {
             identical_blocks_loc = identical_blocks[qbit_num];
+            if (identical_blocks_loc==0) {
+                identical_blocks_loc = 1;
+            }
         }
         catch (...) {
             identical_blocks_loc=1;
@@ -162,10 +164,12 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
                 
             // get the number of blocks
             layer_num = operations.size();
+//printf("layer_num: %d\n", layer_num );
                                                  
             // Do the optimalization
             if (optimize_layer_num || layer_num >= max_layer_num_loc ) {
                 // solve the optzimalization problem to find the correct mninimum
+
                 solve_optimalization_problem();   
 
                 if (check_optimalization_solution()) {
@@ -175,7 +179,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
                     
         }
             
-        printf("--- %f seconds elapsed during the decomposition ---\n\n", (clock() - start_time));
+        printf("--- %f seconds elapsed during the decomposition ---\n\n", float(clock() - start_time)/CLOCKS_PER_SEC);
                 
            
     }
@@ -208,6 +212,21 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 // @param 'num_of_parameters' NUmber of free parameters to be optimized
 void Sub_Matrix_Decomposition::solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) { 
 
+////////////////////////////////////
+/*
+if (optimized_parameters == NULL) {
+     optimized_parameters = (double*)mkl_malloc(num_of_parameters*sizeof(double), 64);
+}
+
+
+for (int idx =0; idx<num_of_parameters; idx++) {
+    optimized_parameters[idx] = solution_guess_gsl->data[idx];
+}
+
+
+return;*/
+///////////////////////////////////
+
         if (operations.size() == 0 ) {
             return;
         }
@@ -215,6 +234,7 @@ void Sub_Matrix_Decomposition::solve_layer_optimalization_problem( int num_of_pa
           
         if (solution_guess_gsl == NULL) {
             //solution_guess = (double*)mkl_calloc(parameter_num, sizeof(double), 64);
+printf("solve_layer_optimalization_problem::Allocating solution guess\n");
             solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
         }
         
@@ -258,7 +278,7 @@ void Sub_Matrix_Decomposition::solve_layer_optimalization_problem( int num_of_pa
             s = gsl_multimin_fdfminimizer_alloc (T, num_of_parameters);
 
 
-            gsl_multimin_fdfminimizer_set (s, &my_func, solution_guess_gsl, 0.01, 0.1);
+            gsl_multimin_fdfminimizer_set (s, &my_func, solution_guess_gsl, 0.1, 0.1);
 
             do {
                 iter++;
@@ -267,12 +287,12 @@ void Sub_Matrix_Decomposition::solve_layer_optimalization_problem( int num_of_pa
                   break;
                 }
 
-                status = gsl_multimin_test_gradient (s->gradient, 1e-3);
+                status = gsl_multimin_test_gradient (s->gradient, 1e-1);
                 /*if (status == GSL_SUCCESS) {
                     printf ("Minimum found\n");
                 }*/
 
-            } while (status == GSL_CONTINUE && iter < 10000);
+            } while (status == GSL_CONTINUE && iter < 100);
        
                         
             if (current_minimum > s->f) {
@@ -312,7 +332,15 @@ double Sub_Matrix_Decomposition::optimalization_problem( const double* parameter
 
         // get the transformed matrix with the operations in the list
         MKL_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
-        return get_submatrix_cost_function(matrix_new, matrix_size);              
+
+        double cost_function = get_submatrix_cost_function(matrix_new, matrix_size);
+
+        // free the allocated matrix and returning with the cost function
+        if ( matrix_new != Umtx ) {
+            mkl_free( matrix_new );              
+        }
+
+        return cost_function;
 }               
 
 //
@@ -327,7 +355,15 @@ double Sub_Matrix_Decomposition::optimalization_problem( const gsl_vector* param
     std::vector<Operation*> operations_loc = instance->get_operations(); 
 
     MKL_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
-    return get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());   
+
+    double cost_function = get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());  
+
+    // free the allocated matrix and returning with the cost function
+    if ( matrix_new != instance->get_Umtx() ) {
+        mkl_free( matrix_new );              
+    }     
+
+    return cost_function; 
 }  
 
 
@@ -365,6 +401,7 @@ double Sub_Matrix_Decomposition::optimalization_problem_deriv( double x, void* p
 // @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
 void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* parameters, void* params, gsl_vector* grad ) {
 
+
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(params);
 
     double f0 = instance->optimalization_problem(parameters, params);
@@ -381,11 +418,11 @@ void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* pa
     parameters_d = parameters->data;
 
     // calculate the gradient components
-    if ( grad == NULL ) {
-        grad = gsl_vector_alloc(parameter_num_loc);
-    }
-
-/*printf("Derivates:");
+//    if ( grad == NULL ) {
+//        grad = gsl_vector_alloc(parameter_num_loc);
+//    }
+/*
+//printf("Derivates:");
     for (int idx = 0; idx<parameter_num_loc; idx++) {
         gsl_function F;
         double result, abserr;
@@ -397,10 +434,10 @@ void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* pa
         F.function = instance->optimalization_problem_deriv;
         F.params = &params_diff;
         gsl_deriv_central (&F, parameters_d[idx], 1e-8, &result, &abserr);
-printf("%f, ", result);
+//printf("%f, ", result);
         gsl_vector_set(grad, idx, result);
    }
-printf("\n");*/
+//printf("\n");*/
 
     for (int idx = 0; idx<parameter_num_loc; idx++) {
         parameters_d[idx] = parameters_d[idx] + dparam;
@@ -408,7 +445,7 @@ printf("\n");*/
         gsl_vector_set(grad, idx, (f-f0)/dparam);
         parameters_d[idx] = parameters_d[idx] - dparam;
     }
-          
+        
 
 }     
 

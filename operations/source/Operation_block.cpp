@@ -88,21 +88,6 @@ Operation_block::~Operation_block() {
 }
 
 
-
-////
-// @brief Call to get the product of the matrices of the operations grouped in the block.
-// @param parameters List of parameters to calculate the matrix of the operation block
-// @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
-// @return Returns with the matrix of the operation
-MKL_Complex16* Operation_block::matrix( const double* parameters, bool& free_after_used  ) {
-
-    // get the matrices of the operations grouped in the block
-    vector<MKL_Complex16*> operation_mtxs = get_matrices( parameters, free_after_used );
-
-    // calculate the product of the matrices
-    return reduce_zgemm( operation_mtxs, matrix_size );
-}
-
 ////
 // @brief Call to get the product of the matrices of the operations grouped in the block.
 // @param parameters List of parameters to calculate the matrix of the operation block
@@ -110,13 +95,46 @@ MKL_Complex16* Operation_block::matrix( const double* parameters, bool& free_aft
 // @return Returns with the matrix of the operation
 MKL_Complex16* Operation_block::matrix( const double* parameters  ) {
 
+    bool free_ret_after_used;
+    return matrix( parameters, free_ret_after_used  );
+}
+
+
+
+
+////
+// @brief Call to get the product of the matrices of the operations grouped in the block.
+// @param parameters List of parameters to calculate the matrix of the operation block
+// @param free_ret_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
+// @return Returns with the matrix of the operation
+MKL_Complex16* Operation_block::matrix( const double* parameters, bool& free_ret_after_used  ) {
+
     // get the matrices of the operations grouped in the block
-    bool free_after_used;
+    bool* free_after_used = NULL;
+
+    // get the matrices of the operations grouped in the block
     vector<MKL_Complex16*> operation_mtxs = get_matrices( parameters, free_after_used );
 
     // calculate the product of the matrices
-    return reduce_zgemm( operation_mtxs, matrix_size );
+    MKL_Complex16* ret = reduce_zgemm( operation_mtxs, matrix_size );
+
+    // free the constituent matrices if possible    
+    int idx=0;
+    for ( std::vector<MKL_Complex16*>::iterator it=operation_mtxs.begin(); it!=operation_mtxs.end(); it++) {
+        if (free_after_used[idx]) {
+            mkl_free(*it);
+            free_ret_after_used = true;
+        }
+        idx++;
+    }
+    operation_mtxs.clear();
+    if (free_after_used != NULL) {
+        mkl_free(free_after_used);
+    }
+
+    return ret;
 }
+
 
 
 
@@ -125,13 +143,17 @@ MKL_Complex16* Operation_block::matrix( const double* parameters  ) {
 // @param parameters List of parameters to calculate the matrix of the operation block
 // @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
 // @return Returns with the matrix of the operation
-std::vector<MKL_Complex16*> Operation_block::get_matrices( const double* parameters, bool& free_after_used) {
+std::vector<MKL_Complex16*> Operation_block::get_matrices( const double* parameters, bool* & free_after_used) {
 
     std::vector<MKL_Complex16*> matrices;
     MKL_Complex16* operation_mtx;
-              
-    free_after_used = false;
 
+    if ( free_after_used == NULL ) {
+        free_after_used = (bool*)mkl_malloc( operations.size()*sizeof(bool), 64 );
+    }
+             
+
+    int idx = 0;
     for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
       
         Operation* operation = *it;
@@ -140,11 +162,12 @@ std::vector<MKL_Complex16*> Operation_block::get_matrices( const double* paramet
         if (operation->get_type().compare("cnot")==0) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
             operation_mtx = cnot_operation->matrix();
+            free_after_used[idx] = false;
         }                
         else if (operation->get_type().compare("u3")==0) {
 
             U3* u3_operation = static_cast<U3*>(operation);
-            free_after_used = true;
+            free_after_used[idx] = true;
                 
             if (u3_operation->get_parameter_num() == 1 ) {
                 operation_mtx = u3_operation->matrix( parameters );
@@ -166,9 +189,11 @@ std::vector<MKL_Complex16*> Operation_block::get_matrices( const double* paramet
         }                                 
         else if (operation->get_type().compare("general")==0) {
             operation_mtx = operation->matrix();
+            free_after_used[idx] = false;
         }
 
         matrices.push_back(operation_mtx);
+        idx++;
 
     }
             

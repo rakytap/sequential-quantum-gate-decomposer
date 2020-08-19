@@ -223,6 +223,7 @@ double get_submatrix_cost_function(MKL_Complex16* matrix, int matrix_size) {
     MKL_Complex16* submatrix_prods = (MKL_Complex16*)mkl_malloc(element_num*sizeof(MKL_Complex16), 64);
 
 
+
     // calculate the elements of the submatirx products by row
     #pragma omp parallel for
     for ( int row_idx=0; row_idx<rows_submatrix_prods; row_idx++ ) {
@@ -369,6 +370,8 @@ double get_submatrix_cost_function(MKL_Complex16* matrix, int matrix_size) {
     }
 
 //printf("The cost function is: %f\n", cost_function);
+
+    mkl_free( submatrix_prods );
 
     return cost_function;
 

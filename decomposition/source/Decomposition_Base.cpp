@@ -91,6 +91,10 @@ Decomposition_Base::Decomposition_Base( MKL_Complex16* Umtx_in, int qbit_num_in,
 //// 
 // @brief Destructor of the class
 Decomposition_Base::~Decomposition_Base() {
+
+    if (optimized_parameters != NULL ) {
+        mkl_free( optimized_parameters );
+    }
 /*    if (m_x != NULL) {
         lbfgs_free(m_x);
         m_x = NULL;
@@ -119,6 +123,7 @@ void Decomposition_Base::finalize_decomposition() {
 
         // get the transformed matrix resulted by the operations in the list
         MKL_Complex16* transformed_matrix = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+
      
         // obtaining the final operations of the decomposition
         Operation_block* finalizing_operations;
@@ -142,6 +147,7 @@ void Decomposition_Base::finalize_decomposition() {
         mkl_free( optimized_parameters );
         mkl_free( finalizing_parameters);
         optimized_parameters = optimized_parameters_tmp;
+        optimized_parameters_tmp = NULL;
 
         finalizing_operations_num = finalizing_operations->get_operation_num();
 
@@ -278,8 +284,8 @@ void  Decomposition_Base::solve_optimalization_problem() {
         
                 
         // array containing minimums to check convergence of the solution
-        double minimum_vec[10];
-        for ( int idx=1; idx<10; idx++) {
+        double minimum_vec[20];
+        for ( int idx=1; idx<20; idx++) {
             minimum_vec[idx] = 0;
         }
 
@@ -335,9 +341,11 @@ void  Decomposition_Base::solve_optimalization_problem() {
         operations.clear();
         int block_parameter_num;
         MKL_Complex16* operations_mtx_pre, *operations_mtx_pre_tmp;
-        Operation* fixed_operation_pre = new Operation( qbit_num );
         Operation* fixed_operation_post = new Operation( qbit_num );
         std::vector<MKL_Complex16*> operations_mtxs_post;
+
+        // the identity matrix used in the calcualtions
+        MKL_Complex16* Identity =  create_identity( matrix_size );
 
         gsl_vector *solution_guess_gsl = NULL;// = optimized_parameters_gsl;
 
@@ -347,6 +355,7 @@ void  Decomposition_Base::solve_optimalization_problem() {
 
         long iter_idx;
         for ( iter_idx=1;  iter_idx<max_iterations+1; iter_idx++) {
+        //for ( iter_idx=1;  iter_idx<2000; iter_idx++) {
 
             //determine the range of blocks to be optimalized togedther
             block_idx_end = block_idx_start - optimalization_block;
@@ -363,16 +372,19 @@ void  Decomposition_Base::solve_optimalization_problem() {
 
             // ***** get the fixed operations applied before the optimized operations *****
             if (block_idx_start < operations_loc.size() ) { //if block_idx_start < len(operations):
-                double* fixed_parameters_pre = optimized_parameters;
                 std::vector<Operation*>::iterator fixed_operations_pre_it = operations.begin() + 1;
-                operations_mtx_pre_tmp = get_transformed_matrix(fixed_parameters_pre, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre);
+                operations_mtx_pre_tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre);
                 mkl_free(operations_mtx_pre);
-                operations_mtx_pre = operations_mtx_pre_tmp;                
+                operations_mtx_pre = operations_mtx_pre_tmp;    
+                operations_mtx_pre_tmp = NULL;            
             }
             else {
                 operations_mtx_pre = create_identity( matrix_size );
             }
 
+//////////////////////////
+//operations_mtx_pre = Identity;
+/////////////////////
             // clear the operation list used in the previous iterations
             operations.clear();
 
@@ -383,8 +395,6 @@ void  Decomposition_Base::solve_optimalization_problem() {
 
             // Transform the initial unitary upon the fixed pre-optimalization operations
             Umtx = apply_operation(operations_mtx_pre, Umtx_loc);
-            // Create a general operation describing the cumulative effect of gates applied before the optimized operations
-            fixed_operation_pre->set_matrix( operations_mtx_pre );
 
             // ***** get the fixed operations applied after the optimized operations *****
             // create a list of post operations matrices
@@ -407,8 +417,13 @@ void  Decomposition_Base::solve_optimalization_problem() {
                     mkl_free( *mtxs_it );
                 }
                 operations_mtxs_post.clear();
-                fixed_operation_post->set_matrix( create_identity( matrix_size ) );
+                fixed_operation_post->set_matrix( Identity );
             }
+
+
+////////////////////////
+//fixed_operation_post->set_matrix( Identity );
+////////////////////
             
             // create a list of operations for the optimalization process
             operations.push_back( fixed_operation_post );
@@ -446,7 +461,7 @@ void  Decomposition_Base::solve_optimalization_problem() {
             }
             minimum_vec[0] = current_minimum;
             minvec_mean = minvec_mean + current_minimum;
-            minvec_mean = minvec_mean/10;
+            minvec_mean = minvec_mean/20;
             
             // store the obtained optimalized parameters for the block
             #pragma omp parallel for
@@ -467,15 +482,15 @@ void  Decomposition_Base::solve_optimalization_problem() {
             
             // optimalization result is displayed in each 500th iteration
             if (iter_idx % 500 == 0) {
-                printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, clock() - start_time);
+                printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, float(clock() - start_time)/CLOCKS_PER_SEC);
                 start_time = clock();
             }
             
             // calculate the variance of the last 10 minimums
-            double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, 10, minvec_mean));
+            double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, 20, minvec_mean));
 
             // conditions to break the iteration cycles
-            if (minvec_std/minimum_vec[9] < optimalization_tolerance ) {
+            if (minvec_std/minimum_vec[19] < optimalization_tolerance ) {
                 printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
                 break;
             }
@@ -492,10 +507,10 @@ void  Decomposition_Base::solve_optimalization_problem() {
             // free the allocated temporary Umtx
             mkl_free(Umtx);
 
-            
+          
         }
 
-        
+
         if (iter_idx == max_iterations ) {
             printf("Reached maximal number of iterations\n\n");
         }
@@ -506,7 +521,7 @@ void  Decomposition_Base::solve_optimalization_problem() {
         // store the result of the optimalization
         operations.clear();
         operations = operations_loc;
-
+   
         parameter_num = parameter_num_loc;
         if (optimized_parameters != NULL ) {
             mkl_free( optimized_parameters );
@@ -515,11 +530,26 @@ void  Decomposition_Base::solve_optimalization_problem() {
         for ( int idx=0; idx<parameter_num; idx++) {
             optimized_parameters[idx] = optimized_parameters_gsl->data[idx];
         }
+     
   
         // free unnecessary resources
         gsl_vector_free(optimized_parameters_gsl);
         gsl_vector_free(solution_guess_gsl);
-        delete(fixed_operation_pre);
+        optimized_parameters_gsl = NULL;
+        solution_guess_gsl = NULL;
+
+        MKL_Complex16* operations_mtx_post = fixed_operation_post->matrix();
+
+        // Identity can be freed if operations_mtx_post and operations_mtx_pre are not equal to identity
+        if ( operations_mtx_post!=Identity ) {
+            mkl_free(Identity);
+        }
+        else {
+            Identity = NULL;
+        }
+
+        mkl_free( operations_mtx_pre );
+        operations_mtx_pre = NULL;
         delete(fixed_operation_post);
 
         // restore the original unitary
@@ -571,10 +601,10 @@ std::vector<MKL_Complex16*> Decomposition_Base::get_operation_products(double* p
 
     // construct the list of matrix representation of the gates
     std::vector<MKL_Complex16*> operation_mtxs;
-    operation_mtxs.reserve(num_of_operations);
+//    operation_mtxs.reserve(num_of_operations);
     MKL_Complex16* operation_mtx = NULL;
 
-    bool free_matrix;
+    bool free_matrix_after_used;
 
     for (long idx=0; idx<num_of_operations; idx++) {
 
@@ -582,29 +612,30 @@ std::vector<MKL_Complex16*> Decomposition_Base::get_operation_products(double* p
 
         if (operation->get_type().compare("cnot")==0 ) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            operation_mtx = cnot_operation->matrix(free_matrix);
+            operation_mtx = cnot_operation->matrix(free_matrix_after_used);
         }
         else if (operation->get_type().compare("general")==0 ) {
-            operation_mtx = operation->matrix(free_matrix);
+            operation_mtx = operation->matrix(free_matrix_after_used);
         }
         else if (operation->get_type().compare("U3")==0 ) {
             U3* u3_operation = static_cast<U3*>(operation);
-            operation_mtx = u3_operation->matrix(parameters, free_matrix);
+            operation_mtx = u3_operation->matrix(parameters, free_matrix_after_used);
             parameters = parameters + u3_operation->get_parameter_num();
         }
         else if (operation->get_type().compare("block")==0 ) {
             Operation_block* block_operation = static_cast<Operation_block*>(operation);
-            operation_mtx = block_operation->matrix(parameters, free_matrix);
+            operation_mtx = block_operation->matrix(parameters, free_matrix_after_used);
             parameters = parameters + block_operation->get_parameter_num();
         }
 
         if (operation_mtxs.size() == 0) {
             operation_mtxs.push_back(operation_mtx);
+//TODO: if operation_mtx origintes from general or CNOT, memory copy is needed instead of directly passing operation_mtx
         }
         else {
             operation_mtxs.push_back( apply_operation(operation_mtxs.back(), operation_mtx));
-            if (free_matrix) {
-                mkl_free(operation_mtx);
+            if (free_matrix_after_used) {
+                mkl_free(operation_mtx); 
             }
         }
 
@@ -689,16 +720,12 @@ MKL_Complex16* Decomposition_Base::get_transformed_matrix( const double* paramet
             if ( idx == 0 ) {
                 Operation_product = operation_mtx;
                 // free the dynamic operation matrices
-                /*if ((operation->get_type().compare("block") == 0 ) || (operation->get_type().compare("U3") == 0 )) {
-                    free_operation_product = true;
-                }*/
                 free_operation_product = free_operation_mtx;
             }
             else {
                 Operation_product_tmp = apply_operation( Operation_product, operation_mtx );
 
                 // free the dynamic operation matrices
-                //if ((operation->get_type().compare("block") == 0 ) || (operation->get_type().compare("U3") == 0 )) {
                 if ( free_operation_mtx ) {
                     mkl_free( operation_mtx );
                 }
@@ -716,6 +743,7 @@ MKL_Complex16* Decomposition_Base::get_transformed_matrix( const double* paramet
         Operation_product_tmp = apply_operation( Operation_product, initial_matrix );
         mkl_free( Operation_product );
         Operation_product = Operation_product_tmp;
+        Operation_product_tmp = NULL;
 
 
         return Operation_product;

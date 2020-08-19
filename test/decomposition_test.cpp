@@ -134,13 +134,17 @@ void four_qubit_decomposition( double* mtx_real, double* mtx_imag, int matrix_si
     num_of_layers[2] = 3;
     num_of_layers[3] = 20;
     num_of_layers[4] = 60;
+    num_of_layers[5] = 240;
 
     std::map<int,int> identical_blocks;
     identical_blocks[2] = 1;
     identical_blocks[3] = 1;
     identical_blocks[4] = 1;
+    identical_blocks[5] = 1;
+    identical_blocks[6] = 1;
+    identical_blocks[7] = 1;
 
-    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, 4, num_of_layers, identical_blocks, false, "zeros" );
+    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, 5, num_of_layers, identical_blocks, false, "close_to_zero" );
 
 
 

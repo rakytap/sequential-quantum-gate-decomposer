@@ -80,6 +80,7 @@ Operation::~Operation() {
 
     if ( matrix_alloc != NULL ) {
         mkl_free(matrix_alloc);
+        matrix_alloc = NULL;
     }
 }
    

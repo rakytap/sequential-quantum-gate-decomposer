@@ -151,6 +151,22 @@ void  Two_Qubit_Decomposition::start_decomposition( bool to_finalize_decompositi
 // @param 'num_of_parameters' NUmber of free parameters to be optimized
 void Two_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) { 
 
+
+/////////////////////////////////////////
+/*
+        if (optimized_parameters == NULL) {
+            optimized_parameters = (double*)mkl_malloc(num_of_parameters*sizeof(double), 64);
+        }
+
+for (int idx=0; idx<num_of_parameters; idx++  ) {
+optimized_parameters[idx] = solution_guess_gsl->data[idx];
+
+}
+
+return;*/
+///////////////////////////////////////
+
+
         if (operations.size() == 0 ) {
             return;
         }
@@ -255,7 +271,15 @@ double Two_Qubit_Decomposition::optimalization_problem( const double* parameters
 
         // get the transformed matrix with the operations in the list
         MKL_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
-        return get_submatrix_cost_function(matrix_new, matrix_size);              
+        
+
+        double cost_function = get_submatrix_cost_function(matrix_new, matrix_size);
+
+        // free the allocated matrix and returning with the cost function
+        if ( matrix_new != Umtx ) {
+            mkl_free( matrix_new );              
+        }
+        return cost_function;            
 }               
 
 //
@@ -265,23 +289,20 @@ double Two_Qubit_Decomposition::optimalization_problem( const double* parameters
 // @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
 // @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
 double Two_Qubit_Decomposition::optimalization_problem( const gsl_vector* parameters, void* params ) {
-/*
-printf("parameters:");
-for (int idx = 0; idx<4; idx++) {
-printf("%f, ", parameters->data[idx]);
-}
-printf("\n");*/
 
     Two_Qubit_Decomposition* instance = reinterpret_cast<Two_Qubit_Decomposition*>(params);
     std::vector<Operation*> operations_loc = instance->get_operations(); 
 
-//print_mtx( instance->get_Umtx(), 4, 4);
-
     MKL_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
 
-//print_mtx( matrix_new, 4, 4);
+    double cost_function = get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());  
 
-    return   get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());         
+    // free the allocated matrix and returning with the cost function
+    if ( matrix_new != instance->get_Umtx() ) {
+        mkl_free( matrix_new );              
+    }     
+
+    return cost_function;        
 }  
 
 

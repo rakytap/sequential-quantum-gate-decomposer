@@ -1,7 +1,7 @@
 include commonvars.in
 
 
-all: help inform compilecomomon compiledecomposition compiletest
+all: help inform compilecomomon compileoperations compiledecomposition compiletest
 
 help:
 	@echo "To build Quantum Gate Decomposer package:"
@@ -43,6 +43,9 @@ inform:
 
 compiletest:
 	@$(MAKE) $(DEBUG) -C ./test/
+
+compilestandalone:
+	@$(MAKE) $(DEBUG) -C ./test_standalone/
 
 compilelbfgs:
 	@$(MAKE) $(DEBUG) -C ./lbfgs/

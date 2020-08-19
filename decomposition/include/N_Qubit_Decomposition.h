@@ -64,4 +64,11 @@ N_Qubit_Decomposition( MKL_Complex16*, int, std::map<int,int>, std::map<int,int>
 // state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
 void start_decomposition(bool finalize_decomposition);
 
+////
+// @brief stores the calculated parameters and operations of the sub-decomposition processes
+// @param cSub_decomposition An instance of class Sub_Two_Qubit_Decomposition used to disentangle qubit pairs from the others.
+// @param qbits_reordered A permutation of qubits that was applied on the initial unitary in prior of the sub decomposition.
+// (This is needed to restore the correct qubit indices.)
+void  extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposition );
+
 };

@@ -88,22 +88,22 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomposition=true
             
 
     // create an instance of class to disentangle the given qubit pair
-    Sub_Matrix_Decomposition cSub_decomposition = Sub_Matrix_Decomposition(Umtx, qbit_num, max_layer_num, 
+    Sub_Matrix_Decomposition* cSub_decomposition = new Sub_Matrix_Decomposition(Umtx, qbit_num, max_layer_num, 
                           identical_blocks, optimize_layer_num, initial_guess);
         
     // The maximal error of the optimalization problem 
-    //cSub_decomposition.optimalization_tolerance = self.optimalization_tolerance
+    //cSub_decomposition->optimalization_tolerance = self.optimalization_tolerance
         
     // setting the maximal number of iterations in the disentangling process
-    cSub_decomposition.optimalization_block = optimalization_block;
+    cSub_decomposition->optimalization_block = optimalization_block;
         
     // setting the number of operators in one sub-layer of the disentangling process
-    //cSub_decomposition.max_iterations = self.max_iterations
+    //cSub_decomposition->max_iterations = self.max_iterations
             
     //start to disentangle the qubit pair
-    cSub_decomposition.disentangle_submatrices();
+    cSub_decomposition->disentangle_submatrices();
                                 
-    if ( !cSub_decomposition.subdisentaglement_done) {
+    if ( !cSub_decomposition->subdisentaglement_done) {
         return;
     }
 
@@ -134,9 +134,36 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomposition=true
         # get the number of gates used in the decomposition
         gates_num = self.get_gate_nums()
         print( 'In the decomposition with error = ' + str(self.decomposition_error) + ' were used ' + str(self.layer_num) + ' layers with '  + str(gates_num['u3']) + ' U3 operations and ' + str(gates_num['cnot']) + ' CNOT gates.' )        
-*/            
+*/     
+
+    delete cSub_decomposition;       
+    cSub_decomposition = NULL;
         
-    printf("--- In total %f seconds elapsed during the decomposition ---\n", (clock() - start_time));
+    printf("--- In total %f seconds elapsed during the decomposition ---\n", float(clock() - start_time)/CLOCKS_PER_SEC);
+
+}
+
+
+////
+// @brief stores the calculated parameters and operations of the sub-decomposition processes
+// @param cSub_decomposition An instance of class Sub_Two_Qubit_Decomposition used to disentangle qubit pairs from the others.
+// @param qbits_reordered A permutation of qubits that was applied on the initial unitary in prior of the sub decomposition.
+// (This is needed to restore the correct qubit indices.)
+void  N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposition ) {
+                
+        // get the unitarization operations
+        std::vector<Operation*> operations = cSub_decomposition->get_operations();
+        
+/*        // get the unitarization parameters
+        parameters = cSub_decomposition.optimized_parameters
+        
+        // create new operations in the original, not reordered qubit list
+        for idx in range(len(operations)-1,-1,-1):
+            operation = operations[idx]
+            self.add_operation_to_front( operation )   
+            
+        self.optimized_parameters = np.concatenate((parameters, self.optimized_parameters))
+*/
 
 }
 
