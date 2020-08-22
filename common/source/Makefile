@@ -1,4 +1,4 @@
-# Makefile MEX shared libraries
+# Makefile
 include ../../commonvars.in
 
 OBJECTDIR = $(QGDDIR)/common/bin/$(PLATFORM)
@@ -12,17 +12,15 @@ SOURCES := $(patsubst %.cxx,%,$(wildcard *.cxx) )
 FLAGS_COMPILE =  -c -fopenmp -I$(QGDDIR)/common/include -I$(MKLROOT)/include -fPIC -g -O2 
 
 ifeq ($(THREAD),MIC)
-  FLAGS_COMPILE += -DMIC -offload-attribute-target=mic -offload-option,mic,compiler," -L${MKLROOT}/lib/mic -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5"
+  FLAGS_COMPILE += -DMIC -mmic
 endif
 
 all: cleanup createoutputdir createObjects $(TARGETS) createstatic
 
 # Set the DEBUG flag
 debug: FLAGS_COMPILE += -DDEBUG
-debug: OUTPUTDIR = $(QGDDIR)/bin/DEBUG
 debug: all
 
-nodebug: OUTPUTDIR = $(QGDDIR)/bin
 nodebug: all
 
 cleanup :
@@ -44,7 +42,7 @@ createObjects : $(TARGETS)
 $(TARGETS) :
 	@echo
 	@echo "--------------------"
-	@echo "Creating executable: "$@
+	@echo "Creating library: "$@
 	@echo "--------------------"
 	$(COMPILER_C) $(FLAGS_COMPILE) ./$@.cpp -o $(OBJECTDIR)/$@.o ;\
 

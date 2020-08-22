@@ -62,3 +62,12 @@ The method returns with a [quantum circuit](https://qiskit.org/documentation/api
 
 
 ./configure --prefix=/home/rakytap/gsl FC=ifort CC=icc CFLAGS="-O2 -m64 -mieee-fp -march=core2 -mtune=core2 -Wpointer-arith -fno-strict-aliasing "
+./configure --prefix=/home/rakytap/gsl_MIC FC=ifort CC=icc CFLAGS="-O2 -mmic -m64 -mieee-fp -Wpointer-arith -fno-strict-aliasing "
+sed -i 's/CFLAGS = -O2 -m64 -mieee-fp/CFLAGS = -O2 -mmic -m64 -mieee-fp/g' */Makefile
+sed -i 's/CFLAGS = -O2 -m64 -mieee-fp/CFLAGS = -O2 -mmic -m64 -mieee-fp/g' doc/examples/Makefile
+sed -i 's/CFLAGS = -O2 -m64 -mieee-fp/CFLAGS = -O2 -mmic -m64 -mieee-fp/g' Makefile
+
+sed -i 's/O2 -m64 -mieee-fp  -Wpointer-arith -fno-strict-aliasing/O2 -mmic -m64 -mieee-fp  -Wpointer-arith -fno-strict-aliasing/g' libtool
+
+wrong mkl include in gsl_blas_types.h
+

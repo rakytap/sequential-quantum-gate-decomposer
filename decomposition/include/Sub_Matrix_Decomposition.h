@@ -105,6 +105,12 @@ static double optimalization_problem_deriv( double x, void*  );
 // @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 static void optimalization_problem_grad( const gsl_vector* parameters, void*, gsl_vector*  );
 
+
+////
+// @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+static void optimalization_problem_grad( const gsl_vector* parameters, void*, gsl_vector*, double f0  );
+
 ////
 // @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
 // @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
@@ -123,4 +129,5 @@ bool test_indepency();
 
 //static int _progress(void *instance, const double *x, const double *g, const double fx, const double xnorm, const double gnorm, const double step, int n, int k, int ls);
 */
+
 };

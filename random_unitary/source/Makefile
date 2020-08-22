@@ -1,17 +1,14 @@
 # Makefile MEX shared libraries
 include ../../commonvars.in
 
-OBJECTDIR = $(QGDDIR)/decomposition/bin/$(PLATFORM)
+OBJECTDIR = $(QGDDIR)/random_unitary/bin/$(PLATFORM)
 
-TARGETS = Decomposition_Base \
-          Two_Qubit_Decomposition \
-          Sub_Matrix_Decomposition \
-          N_Qubit_Decomposition
+TARGETS = Random_Unitary 
 
 
 
 # Compiler options for the mkl_QGD library
-FLAGS_COMPILE =  -c -fopenmp -I$(GSLINCLUDEDIR) -I$(QGDDIR)/lbfgs/include -I$(QGDDIR)/decomposition/include -I$(QGDDIR)/operations/include -I$(QGDDIR)/common/include -I$(MKLROOT)/include  -g -O2 -fPIC
+FLAGS_COMPILE =  -c -fopenmp -I$(GSLINCLUDEDIR) -I$(QGDDIR)/random_unitary/include -I$(QGDDIR)/common/include -I$(MKLROOT)/include  -g -O2 -fPIC
 
 ifeq ($(THREAD),MIC)
   FLAGS_COMPILE += -DMIC -mmic
@@ -21,10 +18,8 @@ all: cleanup createoutputdir createObjects $(TARGETS) createstatic
 
 # Set the DEBUG flag
 debug: FLAGS_COMPILE += -DDEBUG
-debug: OUTPUTDIR = $(QGDDIR)/bin/DEBUG
 debug: all
 
-nodebug: OUTPUTDIR = $(QGDDIR)/bin
 nodebug: all
 
 cleanup :
@@ -35,7 +30,7 @@ createoutputdir:
 
 
 createstatic :
-	ar rc $(OBJECTDIR)/libdecomposition.a $(OBJECTDIR)/*.o
+	ar rc $(OBJECTDIR)/librandomunitary.a $(OBJECTDIR)/*.o
 
 
 
@@ -47,7 +42,7 @@ createObjects : $(TARGETS)
 $(TARGETS) :
 	@echo
 	@echo "--------------------"
-	@echo "Creating executable: "$@
+	@echo "Creating library: "$@
 	@echo "--------------------"
 	$(COMPILER_C) $(FLAGS_COMPILE) ./$@.cpp -o $(OBJECTDIR)/$@.o ;\
 

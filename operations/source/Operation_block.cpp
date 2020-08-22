@@ -85,6 +85,8 @@ Operation_block::~Operation_block() {
         }
     }
 
+    operations.clear();
+
 }
 
 

@@ -57,6 +57,10 @@ public:
 // @return An instance of the class
 N_Qubit_Decomposition( MKL_Complex16*, int, std::map<int,int>, std::map<int,int>, bool, string );
 
+//// 
+// @brief Destructor of the class
+~N_Qubit_Decomposition();
+
 
 ////
 // @brief Start the disentanglig process of the least significant two qubit unitary

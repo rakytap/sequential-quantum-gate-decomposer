@@ -70,6 +70,15 @@ N_Qubit_Decomposition::N_Qubit_Decomposition( MKL_Complex16* Umtx_in, int qbit_n
 }
 
 
+
+//// 
+// @brief Destructor of the class
+N_Qubit_Decomposition::~N_Qubit_Decomposition() {
+
+    Decomposition_Base::~Decomposition_Base();
+}    
+
+
 ////
 // @brief Start the disentanglig process of the least significant two qubit unitary
 // @param finalize_decomposition Optional logical parameter. If true (default), the decoupled qubits are rotated into
@@ -84,7 +93,7 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomposition=true
     printf("***************************************************************\n\n\n");
         
     //measure the time for the decompositin       
-    clock_t start_time = clock();
+    clock_t start_time = time(NULL);
             
 
     // create an instance of class to disentangle the given qubit pair
@@ -139,7 +148,7 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomposition=true
     delete cSub_decomposition;       
     cSub_decomposition = NULL;
         
-    printf("--- In total %f seconds elapsed during the decomposition ---\n", float(clock() - start_time)/CLOCKS_PER_SEC);
+    printf("--- In total %f seconds elapsed during the decomposition ---\n", float(time(NULL) - start_time));
 
 }
 

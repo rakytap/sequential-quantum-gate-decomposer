@@ -43,26 +43,17 @@ _operation_test_library.test_general_operation(ctypes.c_int(qbit_num))
 
 # *******************************
 # test of U3 operations
-
 _operation_test_library.test_U3_operation()
 
 
 # *******************************
 # test of CNOT operations
-
 _operation_test_library.test_CNOT_operation()
 
 
 
 # *******************************
-# test of operations
-
-_operation_test_library.test_operations()
-
-
-# *******************************
 # test of operation block
-
 _operation_test_library.test_operation_block()
 
 
@@ -124,7 +115,7 @@ import numpy as np
 
     
 # the number of qubits
-qbit_num = 5
+qbit_num = 4
     
 matrix_size = int(2**qbit_num)
 
@@ -136,7 +127,7 @@ Umtx_imag = np.imag(Umtx).reshape(matrix_size*matrix_size)
 
 # calling the test function
 array_type = ctypes.c_double * (matrix_size*matrix_size)
-_decomposition_test_library.four_qubit_decomposition( array_type(*Umtx_real), array_type(*Umtx_imag), ctypes.c_int(matrix_size) )
+_decomposition_test_library.four_qubit_decomposition( array_type(*Umtx_real), array_type(*Umtx_imag), ctypes.c_int(qbit_num) )
 
 
 

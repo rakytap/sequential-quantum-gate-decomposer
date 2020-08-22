@@ -28,9 +28,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "U3.h"
 #include "CNOT.h"
 #include "N_Qubit_Decomposition.h"
+#include "Random_Unitary.h"
 
 using namespace std;
-
+/*
 ////
 // @brief Call to create a random unitary containing a given number of CNOT gates between randomly chosen qubits
 // @param qbit_num The number of qubits spanning the unitary
@@ -134,7 +135,7 @@ MKL_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
     }
 
 }
-
+*/
 //
 // @brief Decomposition of general two-qubit matrix into U3 and CNOT gates
 void main() {
@@ -143,20 +144,42 @@ void main() {
     printf("Test of N qubit decomposition\n");
     printf("****************************************\n\n\n");
 
+#ifdef MIC
+#pragma offload target(mic)
+      {
+#endif
 
     // creating random unitary
     int qbit_num = 3;
-    int cnot_num = 10;
 
-    MKL_Complex16* Umtx = few_CNOT_unitary( qbit_num, cnot_num);
+    //int cnot_num = 800;
+    //MKL_Complex16* Umtx = few_CNOT_unitary( qbit_num, cnot_num);
 
 
     // the size of the matrix
     int matrix_size = Power_of_2(qbit_num);
-    printf("The test matrix to be decomposed is:\n");
-    print_mtx( Umtx, matrix_size, matrix_size );
+    //printf("The test matrix to be decomposed is:\n");
+    //print_mtx( Umtx, matrix_size, matrix_size );
 
-    
+
+    Random_Unitary ru = Random_Unitary(matrix_size); 
+
+    MKL_Complex16* Umtx = ru.Construct_Unitary_Matrix();
+printf("resulting random matrix:\n");
+print_mtx( Umtx, matrix_size,matrix_size);
+
+// parameters alpha and beta for the cblas_zgemm3m function
+    double alpha = 1;
+    double beta = 0;
+
+    // preallocate array for the result
+    MKL_Complex16* C = (MKL_Complex16*)mkl_malloc(matrix_size*matrix_size*sizeof(MKL_Complex16), 64); 
+
+    // calculate the product of A and B
+    cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, Umtx, matrix_size, Umtx, matrix_size, &beta, C, matrix_size);    
+print_mtx( C, matrix_size,matrix_size);
+    mkl_free(C);
+
     
     // Creating the class to decompose the 2-qubit unitary
 
@@ -178,6 +201,13 @@ void main() {
 
     printf("Starting the decompsition\n");
     cDecomposition.start_decomposition(true);
+
+    mkl_free( Umtx );
+
+#ifdef MIC
+      }
+#endif
+
     
 
 };

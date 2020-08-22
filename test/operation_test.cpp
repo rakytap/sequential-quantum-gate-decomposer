@@ -182,6 +182,7 @@ void test_operation_block() {
     printf("****************************************\n");
     printf("Test of operation_block\n\n");
 
+
     // define the nmumber of qubits spanning the matrices
     int qbit_num = 2;
     
@@ -210,7 +211,7 @@ void test_operation_block() {
 
 
     // construct parameters for the two U3 operations
-    double* parameters = new double[4];
+    double parameters[4];
     parameters[0] = 0;
     parameters[1] = 1.2;
     parameters[2] = 0.3;
@@ -224,7 +225,7 @@ void test_operation_block() {
     printf("The matrix of %d qubit operators consisting of 2 U3 operations and 1 CNOT operation is:\n", qbit_num);
     print_mtx( mtx, Power_of_2(qbit_num), Power_of_2(qbit_num));
 
-
+    mkl_free(mtx);
     delete( op_block );
 
 
@@ -270,7 +271,8 @@ void test_operation_block() {
 
 
     delete( op_block );
-    
+  
+
 };
 
 

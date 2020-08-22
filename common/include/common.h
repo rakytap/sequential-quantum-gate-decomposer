@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <iostream>
 #include <cmath>
 #include <vector>
+#include <cstring>
 
 
 int Power_of_2(int n);
@@ -68,5 +69,15 @@ void subtract_diag( MKL_Complex16* & , int, MKL_Complex16 );
 // calculate the cost funtion from the submatrices of the given matrix 
 double get_submatrix_cost_function(MKL_Complex16* matrix_new, int matrix_size);
 
+double get_submatrix_cost_function_2(MKL_Complex16* matrix, int matrix_size);
 
+
+// calculate the product of two scalars
+MKL_Complex16 mult( MKL_Complex16 a, MKL_Complex16 b );
+
+// calculate the product of two scalars
+MKL_Complex16 mult( double a, MKL_Complex16 b );
+
+// Multiply the elements of matrix "b" by a scalar "a".
+void mult( MKL_Complex16 a, MKL_Complex16* b, int matrix_size );
 

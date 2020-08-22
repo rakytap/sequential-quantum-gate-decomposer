@@ -94,6 +94,7 @@ Decomposition_Base::~Decomposition_Base() {
 
     if (optimized_parameters != NULL ) {
         mkl_free( optimized_parameters );
+        optimized_parameters = NULL;
     }
 /*    if (m_x != NULL) {
         lbfgs_free(m_x);
@@ -284,8 +285,8 @@ void  Decomposition_Base::solve_optimalization_problem() {
         
                 
         // array containing minimums to check convergence of the solution
-        double minimum_vec[20];
-        for ( int idx=1; idx<20; idx++) {
+        double minimum_vec[10];
+        for ( int idx=1; idx<10; idx++) {
             minimum_vec[idx] = 0;
         }
 
@@ -340,7 +341,7 @@ void  Decomposition_Base::solve_optimalization_problem() {
         long block_idx_start = operations.size();
         operations.clear();
         int block_parameter_num;
-        MKL_Complex16* operations_mtx_pre, *operations_mtx_pre_tmp;
+        MKL_Complex16* operations_mtx_pre = NULL;
         Operation* fixed_operation_post = new Operation( qbit_num );
         std::vector<MKL_Complex16*> operations_mtxs_post;
 
@@ -351,11 +352,18 @@ void  Decomposition_Base::solve_optimalization_problem() {
 
         
         //measure the time for the decompositin        
-        clock_t start_time = clock();
+        clock_t start_time = time(NULL);
+
+FILE *f = fopen("output.txt", "w");
+if (f == NULL)
+{
+    printf("Error opening file!\n");
+    exit(1);
+}
 
         long iter_idx;
-        for ( iter_idx=1;  iter_idx<max_iterations+1; iter_idx++) {
-        //for ( iter_idx=1;  iter_idx<2000; iter_idx++) {
+        for ( iter_idx=0;  iter_idx<max_iterations+1; iter_idx++) {
+        //for ( iter_idx=0;  iter_idx<2000; iter_idx++) {
 
             //determine the range of blocks to be optimalized togedther
             block_idx_end = block_idx_start - optimalization_block;
@@ -373,12 +381,15 @@ void  Decomposition_Base::solve_optimalization_problem() {
             // ***** get the fixed operations applied before the optimized operations *****
             if (block_idx_start < operations_loc.size() ) { //if block_idx_start < len(operations):
                 std::vector<Operation*>::iterator fixed_operations_pre_it = operations.begin() + 1;
-                operations_mtx_pre_tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre);
+                MKL_Complex16* operations_mtx_pre_tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre);
                 mkl_free(operations_mtx_pre);
                 operations_mtx_pre = operations_mtx_pre_tmp;    
                 operations_mtx_pre_tmp = NULL;            
             }
             else {
+                if ( operations_mtx_pre!=NULL ) {
+                    mkl_free(operations_mtx_pre);
+                }
                 operations_mtx_pre = create_identity( matrix_size );
             }
 
@@ -461,8 +472,8 @@ void  Decomposition_Base::solve_optimalization_problem() {
             }
             minimum_vec[0] = current_minimum;
             minvec_mean = minvec_mean + current_minimum;
-            minvec_mean = minvec_mean/20;
-            
+            minvec_mean = minvec_mean/10;
+ 
             // store the obtained optimalized parameters for the block
             #pragma omp parallel for
             for (int idx=0; idx<parameter_num; idx++) {
@@ -482,17 +493,21 @@ void  Decomposition_Base::solve_optimalization_problem() {
             
             // optimalization result is displayed in each 500th iteration
             if (iter_idx % 500 == 0) {
-                printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, float(clock() - start_time)/CLOCKS_PER_SEC);
-                start_time = clock();
+                printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, float(time(NULL) - start_time));
+                fprintf(f, "The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, float(time(NULL) - start_time));
+                fflush(f);
+                start_time = time(NULL);
             }
             
             // calculate the variance of the last 10 minimums
-            double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, 20, minvec_mean));
+            double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, 10, minvec_mean));
 
             // conditions to break the iteration cycles
-            if (minvec_std/minimum_vec[19] < optimalization_tolerance ) {
+            if (minvec_std/minimum_vec[9] < optimalization_tolerance ) {
                 printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
-                break;
+                fprintf(f, "The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
+                fflush(f);
+                break; 
             }
             else if (check_optimalization_solution()) {
                 printf("The minimum with %d layers after %d iterations is %e\n", layer_num, iter_idx, current_minimum);
@@ -509,6 +524,8 @@ void  Decomposition_Base::solve_optimalization_problem() {
 
           
         }
+
+fclose(f);
 
 
         if (iter_idx == max_iterations ) {

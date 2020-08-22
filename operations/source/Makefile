@@ -17,7 +17,7 @@ SOURCES := $(patsubst %.cxx,%,$(wildcard *.cxx) )
 FLAGS_COMPILE =  -c -fopenmp -I$(QGDDIR)/operations/include -I$(QGDDIR)/common/include -I$(MKLROOT)/include  -g -O2 -fPIC
 
 ifeq ($(THREAD),MIC)
-  FLAGS_COMPILE += -DMIC -offload-attribute-target=mic -offload-option,mic,compiler," -L${MKLROOT}/lib/mic -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5"
+  FLAGS_COMPILE += -DMIC -mmic
 endif
 
 all: cleanup createoutputdir createObjects $(TARGETS) createstatic
@@ -50,7 +50,7 @@ createObjects : $(TARGETS)
 $(TARGETS) :
 	@echo
 	@echo "--------------------"
-	@echo "Creating executable: "$@
+	@echo "Creating library: "$@
 	@echo "--------------------"
 	$(COMPILER_C) $(FLAGS_COMPILE) ./$@.cpp -o $(OBJECTDIR)/$@.o ;\
 

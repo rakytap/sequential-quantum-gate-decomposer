@@ -116,7 +116,7 @@ Decomposition_Base( MKL_Complex16*, int, string );
 
 //// 
 // @brief Destructor of the class
-virtual ~Decomposition_Base();
+~Decomposition_Base();
 
 
 ////   

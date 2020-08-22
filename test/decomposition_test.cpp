@@ -111,11 +111,14 @@ void two_qubit_decomposition( double* mtx_real, double* mtx_imag, int matrix_siz
 
 //
 // @brief Decomposition of general four-qubit matrix into U3 and CNOT gates
-void four_qubit_decomposition( double* mtx_real, double* mtx_imag, int matrix_size) {
+void four_qubit_decomposition( double* mtx_real, double* mtx_imag, int qbit_num) {
     
     printf("\n\n****************************************\n");
     printf("Test of four qubit decomposition\n");
     printf("****************************************\n\n\n");
+
+
+    int matrix_size = Power_of_2(qbit_num);
 
     // combining real and imaginary parts of the matrix inti MKL complex matrix
     int element_num = matrix_size*matrix_size;
@@ -144,7 +147,7 @@ void four_qubit_decomposition( double* mtx_real, double* mtx_imag, int matrix_si
     identical_blocks[6] = 1;
     identical_blocks[7] = 1;
 
-    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, 5, num_of_layers, identical_blocks, false, "close_to_zero" );
+    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, false, "close_to_zero" );
 
 
 
