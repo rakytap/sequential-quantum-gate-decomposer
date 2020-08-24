@@ -67,12 +67,15 @@ MKL_Complex16* composite_cnot();
 
 
 
-    ////
-    // @brief Call to reorder the qubits in the matrix of the operation
-    // @param qbit_list The list of qubits spanning the matrix
+////
+// @brief Call to reorder the qubits in the matrix of the operation
+// @param qbit_list The list of qubits spanning the matrix
 void reorder_qubits( vector<int> qbit_list);
 
-
+//
+// @brief Create a clone of the present class
+// @return Return with a pointer pointing to the cloned object
+CNOT* clone();
 
 };
 

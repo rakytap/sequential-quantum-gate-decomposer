@@ -48,6 +48,7 @@ class Decomposition_Base : public Operation_block {
 
 
 public:
+bool verbose;
 
     // number of operator blocks in one sub-layer of the optimalization process
     int optimalization_block;
@@ -204,6 +205,11 @@ MKL_Complex16* get_Umtx();
 // @brief Call to get the size of the unitary to be transformed
 // @return Return with the size of the unitary
 int get_Umtx_size();
+
+//
+// @brief Call to get the optimized parameters
+// @return Return with the pointer pointing to the array storing the optimized parameters
+double* get_optimized_parameters();
 
 
 ////

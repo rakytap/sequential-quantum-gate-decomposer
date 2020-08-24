@@ -147,9 +147,13 @@ MKL_Complex16* CNOT::composite_cnot() {
 ////
 // @brief Sets the number of qubits spanning the matrix of the operation
 // @param qbit_num The number of qubits
-void CNOT::set_qbit_num(int qbit_num) {
+void CNOT::set_qbit_num(int qbit_num_in) {
         // setting the number of qubits
-        Operation::set_qbit_num(qbit_num);
+        Operation::set_qbit_num(qbit_num_in);
+
+        if ( matrix_alloc != NULL ) {
+            mkl_free( matrix_alloc );
+        }
 
         // Contruct the matrix of the operation
         matrix_alloc = composite_cnot();
@@ -170,8 +174,32 @@ void CNOT::reorder_qubits( vector<int> qbit_list) {
             control_qbit = qbit_list[qbit_list.size()-control_qbit-1];
         }
 
+        if ( matrix_alloc != NULL ) {
+            mkl_free( matrix_alloc );
+        }
+
         // Contruct the matrix of the operation
         matrix_alloc = composite_cnot();
+}
+
+
+
+//
+// @brief Create a clone of the present class
+// @return Return with a pointer pointing to the cloned object
+CNOT* CNOT::clone() {
+
+    CNOT* ret = new CNOT( qbit_num, target_qbit, control_qbit );
+ 
+    if (matrix_alloc != NULL) {
+        MKL_Complex16* mtx = (MKL_Complex16*)mkl_malloc( matrix_size*matrix_size*sizeof(MKL_Complex16), 64);
+        memcpy( mtx, matrix_alloc, matrix_size*matrix_size*sizeof(MKL_Complex16) );
+        ret->set_matrix( mtx);
+    }
+    
+
+    return ret;
+
 }
 
 

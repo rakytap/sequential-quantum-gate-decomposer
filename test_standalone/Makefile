@@ -14,11 +14,11 @@ LINKFLAGS = -g -O2 -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lpthrea
 
 
 ifeq ($(THREAD),MIC)
-  FLAGS_COMPILE += -DMIC -offload-attribute-target=mic
-  LINKFLAGS += -offload-attribute-target=mic -offload-option,mic,compiler,"-Wl,--start-group $(GSLLIBDIR)/libgsl.a $(QGDDIR)/random_unitary/bin/$(PLATFORM)/librandomunitary.a  $(QGDDIR)/decomposition/bin/$(PLATFORM)/libdecomposition.a $(QGDDIR)/operations/bin/$(PLATFORM)/liboperations.a $(QGDDIR)/common/bin/$(PLATFORM)/libcommon.a -Wl,--end-group -L${MKLROOT}/lib/mic -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5" 
+  FLAGS_COMPILE +=  -DMIC -offload-attribute-target=mic
+  LINKFLAGS += -offload-attribute-target=mic -offload-option,mic,compiler,"-Wl,--start-group $(GSLLIBDIR)/libgsl.a $(QGDDIR)/random_unitary/bin/$(PLATFORM)/librandomunitary.a  $(QGDDIR)/decomposition/bin/$(PLATFORM)/libdecomposition.a $(QGDDIR)/operations/bin/$(PLATFORM)/liboperations.a $(QGDDIR)/common/bin/$(PLATFORM)/libcommon.a -Wl,--end-group -L${MKLROOT}/lib/mic -L${INTEL_COMPILER_HOME}/lib/mic -lmkl_intel_lp64 -lmkl_intel_thread -lmkl_core -liomp5" 
   OUTPUTDIR_POSTFIX = /MIC
 else
-  LINKFLAGS = -g -O2 -Wl,--start-group $(GSLLIBDIR)/libgsl.a $(QGDDIR)/random_unitary/bin/$(PLATFORM)/librandomunitary.a  $(QGDDIR)/decomposition/bin/$(PLATFORM)/libdecomposition.a $(QGDDIR)/operations/bin/$(PLATFORM)/liboperations.a $(QGDDIR)/common/bin/$(PLATFORM)/libcommon.a -Wl,--end-group -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl  -lmkl_avx -lmkl_def  -lmkl_intel_thread -liomp5
+  LINKFLAGS = -static-intel -g -O2 -Wl,--start-group $(GSLLIBDIR)/libgsl.a $(QGDDIR)/random_unitary/bin/$(PLATFORM)/librandomunitary.a  $(QGDDIR)/decomposition/bin/$(PLATFORM)/libdecomposition.a $(QGDDIR)/operations/bin/$(PLATFORM)/liboperations.a $(QGDDIR)/common/bin/$(PLATFORM)/libcommon.a -Wl,--end-group -L$(MKLROOT)/lib/intel64 -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl  -lmkl_avx -lmkl_def  -lmkl_intel_thread -liomp5
   OUTPUTDIR_POSTFIX = 
 endif
 

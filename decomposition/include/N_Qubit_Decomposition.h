@@ -57,7 +57,9 @@ public:
 // @return An instance of the class
 N_Qubit_Decomposition( MKL_Complex16*, int, std::map<int,int>, std::map<int,int>, bool, string );
 
-//// 
+
+
+/// 
 // @brief Destructor of the class
 ~N_Qubit_Decomposition();
 
@@ -74,5 +76,9 @@ void start_decomposition(bool finalize_decomposition);
 // @param qbits_reordered A permutation of qubits that was applied on the initial unitary in prior of the sub decomposition.
 // (This is needed to restore the correct qubit indices.)
 void  extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposition );
+
+////
+// @brief Start the decompostion process to disentangle the submatrices
+void  decompose_submatrix();
 
 };

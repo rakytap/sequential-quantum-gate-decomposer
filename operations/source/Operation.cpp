@@ -91,6 +91,9 @@ void Operation::set_qbit_num( int qbit_num_in ) {
     // setting the number of qubits
     qbit_num = qbit_num_in;
 
+    // update the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+
 }
 
 //
@@ -160,6 +163,25 @@ int Operation::get_parameter_num() {
 // @return Return with the string indicating the type of the operation
 string Operation::get_type() {
     return type;
+}
+
+
+//
+// @brief Create a clone of the present class
+// @return Return with a pointer pointing to the cloned object
+Operation* Operation::clone() {
+
+    Operation* ret = new Operation( qbit_num );
+ 
+    if (matrix_alloc != NULL) {
+        MKL_Complex16* mtx = (MKL_Complex16*)mkl_malloc( matrix_size*matrix_size*sizeof(MKL_Complex16), 64);
+        memcpy( mtx, matrix_alloc, matrix_size*matrix_size*sizeof(MKL_Complex16) );
+        ret->set_matrix( mtx);
+    }
+    
+
+    return ret;
+
 }
 
   

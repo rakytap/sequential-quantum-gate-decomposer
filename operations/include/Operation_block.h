@@ -174,6 +174,12 @@ void combine(Operation_block* op_block);
 // @param qbit_num_in The number of qubits spanning the matrix
 void set_qbit_num( int qbit_num_in );
 
+
+//
+// @brief Create a clone of the present class
+// @return Return with a pointer pointing to the cloned object
+Operation_block* clone();
+
 };
 
 

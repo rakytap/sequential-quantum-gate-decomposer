@@ -86,6 +86,8 @@ Decomposition_Base::Decomposition_Base( MKL_Complex16* Umtx_in, int qbit_num_in,
 
     // current minimum evaluated by the LBFGS library
     m_x = NULL;
+
+verbose = false;
 }
 
 //// 
@@ -121,10 +123,8 @@ void Decomposition_Base::set_max_iteration( long max_iterations_in) {
 //// 
 // @brief After the main optimalization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
 void Decomposition_Base::finalize_decomposition() {
-
         // get the transformed matrix resulted by the operations in the list
         MKL_Complex16* transformed_matrix = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
-
      
         // obtaining the final operations of the decomposition
         Operation_block* finalizing_operations;
@@ -137,7 +137,7 @@ void Decomposition_Base::finalize_decomposition() {
         // adding the finalizing operations to the list of operations
         // adding the opeartion block to the operations
         add_operation_to_front( finalizing_operations );
-
+// TODO: use memcpy
         double* optimized_parameters_tmp = (double*)mkl_malloc( (parameter_num)*sizeof(double), 64 );
         for (long idx=0; idx < finalizing_parameter_num; idx++) {
             optimized_parameters_tmp[idx] = finalizing_parameters[idx];
@@ -354,12 +354,12 @@ void  Decomposition_Base::solve_optimalization_problem() {
         //measure the time for the decompositin        
         clock_t start_time = time(NULL);
 
-FILE *f = fopen("output.txt", "w");
+/*FILE *f = fopen("/home/rakytap/quantum-gate-decomposer_C/test_standalone/bin/MIC/output.txt", "w");
 if (f == NULL)
 {
     printf("Error opening file!\n");
     exit(1);
-}
+}*/
 
         long iter_idx;
         for ( iter_idx=0;  iter_idx<max_iterations+1; iter_idx++) {
@@ -494,8 +494,7 @@ if (f == NULL)
             // optimalization result is displayed in each 500th iteration
             if (iter_idx % 500 == 0) {
                 printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, float(time(NULL) - start_time));
-                fprintf(f, "The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, float(time(NULL) - start_time));
-                fflush(f);
+                fflush(stdout);
                 start_time = time(NULL);
             }
             
@@ -505,8 +504,8 @@ if (f == NULL)
             // conditions to break the iteration cycles
             if (minvec_std/minimum_vec[9] < optimalization_tolerance ) {
                 printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
-                fprintf(f, "The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
-                fflush(f);
+                fflush(stdout);
+current_minimum = 1e8;
                 break; 
             }
             else if (check_optimalization_solution()) {
@@ -525,7 +524,7 @@ if (f == NULL)
           
         }
 
-fclose(f);
+//fclose(f);
 
 
         if (iter_idx == max_iterations ) {
@@ -683,6 +682,15 @@ int Decomposition_Base::get_Umtx_size() {
     return matrix_size;
 }
 
+//
+// @brief Call to get the optimized parameters
+// @return Return with the pointer pointing to the array storing the (memory copied) optimized parameters 
+double* Decomposition_Base::get_optimized_parameters() {
+    double *ret = (double*)mkl_malloc( parameter_num*sizeof(double), 64);
+    memcpy(ret, optimized_parameters, parameter_num*sizeof(double));
+    return ret;
+}
+
       
 ////
 // @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
@@ -736,6 +744,7 @@ MKL_Complex16* Decomposition_Base::get_transformed_matrix( const double* paramet
 
             if ( idx == 0 ) {
                 Operation_product = operation_mtx;
+
                 // free the dynamic operation matrices
                 free_operation_product = free_operation_mtx;
             }
@@ -751,17 +760,18 @@ MKL_Complex16* Decomposition_Base::get_transformed_matrix( const double* paramet
                     mkl_free( Operation_product );
                 }
                 Operation_product = Operation_product_tmp;
+
                 free_operation_product = true;
             }
 
             operations_it++;
         }
 
+
         Operation_product_tmp = apply_operation( Operation_product, initial_matrix );
         mkl_free( Operation_product );
         Operation_product = Operation_product_tmp;
         Operation_product_tmp = NULL;
-
 
         return Operation_product;
 }    
@@ -847,7 +857,7 @@ void Decomposition_Base::Init_max_layer_num() {
     max_layer_num_def[4] = 60;
     max_layer_num_def[5] = 240;
     max_layer_num_def[6] = 1350;
-    max_layer_num_def[7] = 6180;    
+    max_layer_num_def[7] = 6700;//6180;    
 
 }
 

@@ -566,14 +566,63 @@ void Operation_block::combine(Operation_block* op_block) {
 // @param qbit_num_in The number of qubits spanning the matrix
 void Operation_block::set_qbit_num( int qbit_num_in ) {
         
-    qbit_num = qbit_num_in;
+    // setting the number of qubits
+    Operation::set_qbit_num(qbit_num_in);
 
     // setting the number of qubit in the operations
     for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
-        (*it)->set_qbit_num( qbit_num );
+        Operation* op = *it;
+
+        if (op->get_type().compare("cnot")==0) {
+            CNOT* cnot_op = static_cast<CNOT*>( op );
+            cnot_op->set_qbit_num( qbit_num_in );         
+        }
+        else if (op->get_type().compare("u3")==0) {
+            U3* u3_op = static_cast<U3*>( op ); 
+            u3_op->set_qbit_num( qbit_num_in );               
+        }
+        else if (op->get_type().compare("block")==0) {
+            Operation_block* block_op = static_cast<Operation_block*>( op );          
+            block_op->set_qbit_num( qbit_num_in );          
+        }
     }
 }
          
 
+//
+// @brief Create a clone of the present class
+// @return Return with a pointer pointing to the cloned object
+Operation_block* Operation_block::clone() {
+
+    Operation_block* ret = new Operation_block( qbit_num );
+ 
+    for ( std::vector<Operation*>::iterator it=operations.begin(); it != operations.end(); ++it ) {
+        Operation* op = *it;
+
+        if (op->get_type().compare("cnot")==0) {
+            CNOT* cnot_op = static_cast<CNOT*>( op );
+            CNOT* cnot_op_cloned = cnot_op->clone();
+            Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
+            ret->add_operation_to_end( op_cloned );            
+        }
+        else if (op->get_type().compare("u3")==0) {
+            U3* u3_op = static_cast<U3*>( op );
+            U3* u3_op_cloned = u3_op->clone();
+            Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
+            ret->add_operation_to_end( op_cloned );            
+        }
+        else if (op->get_type().compare("block")==0) {
+            Operation_block* block_op = static_cast<Operation_block*>( op );
+            Operation_block* block_op_cloned = block_op->clone();
+            Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
+            ret->add_operation_to_end( op_cloned );            
+        }
+        
+    }
+ 
+
+    return ret;
+
+}
 
 

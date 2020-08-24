@@ -161,6 +161,12 @@ bool is_lambda_parameter();
     // @return Returns with the matrix of the U3 gate.
 MKL_Complex16* one_qubit_u3(double Theta, double Phi, double Lambda );
 
+
+//
+// @brief Create a clone of the present class
+// @return Return with a pointer pointing to the cloned object
+U3* clone();
+
 };
 
                    

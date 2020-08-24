@@ -42,7 +42,7 @@ void print_mtx( MKL_Complex16* matrix, int rows, int cols ) {
     for ( int row_idx=0; row_idx < rows; row_idx++ ) {
         for ( int col_idx=0; col_idx < cols; col_idx++ ) {
             int element_idx = row_idx*cols + col_idx;    
-            printf("%f + i*%f,  ", matrix[element_idx].real, matrix[element_idx].imag);
+            printf("%1.3f + i*%1.3f,  ", matrix[element_idx].real, matrix[element_idx].imag);
         }
         printf("\n");
     }
@@ -165,6 +165,7 @@ MKL_Complex16* zgemm3m_wrapper( MKL_Complex16* A, MKL_Complex16* B, int matrix_s
 }
 
 
+
 // @brief Calculate the product of complex matrices stored in a vector of matrices
 MKL_Complex16* reduce_zgemm( vector<MKL_Complex16*> mtxs, int matrix_size ) {
     
@@ -271,6 +272,7 @@ double get_submatrix_cost_function(MKL_Complex16* matrix, int matrix_size) {
                 memcpy(submatrices[submatirx_index]+submatrix_offset, matrix+matrix_offset, submatrix_size*sizeof(MKL_Complex16));
 
             }
+
         }
     }
 
@@ -321,8 +323,9 @@ double get_submatrix_cost_function(MKL_Complex16* matrix, int matrix_size) {
                 // for performance reason we leave the imaginary part intact (we dont neet it anymore)
                 //submatrix_prods[idx].imag = 0;
             }
-            
+
             #pragma omp barrier
+            
 
             // summing up elements and calculate the final cost function
 
@@ -346,7 +349,6 @@ double get_submatrix_cost_function(MKL_Complex16* matrix, int matrix_size) {
     }
 
         
-//printf("The cost function is: %f\n", cost_function);
 
     
     for (int idx=0; idx<submatrices_num; idx++) {
@@ -461,7 +463,7 @@ double get_submatrix_cost_function_2(MKL_Complex16* matrix, int matrix_size) {
                 tmp.real = tmp.real + a.real*b.real + a.imag*b.imag;
                 tmp.imag = tmp.imag + a.imag*b.real - a.real*b.imag;
             }
-
+//printf("%f + i*%f\n", tmp.real, tmp.imag);
             // setting the element in the matrix conating the submatrix products
             submatrix_prods[row_idx*submatrix_size + col_idx] = tmp;
         }

@@ -165,7 +165,7 @@ void main() {
     Random_Unitary ru = Random_Unitary(matrix_size); 
 
     MKL_Complex16* Umtx = ru.Construct_Unitary_Matrix();
-printf("resulting random matrix:\n");
+/*printf("resulting random matrix:\n");
 print_mtx( Umtx, matrix_size,matrix_size);
 
 // parameters alpha and beta for the cblas_zgemm3m function
@@ -179,7 +179,7 @@ print_mtx( Umtx, matrix_size,matrix_size);
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, Umtx, matrix_size, Umtx, matrix_size, &beta, C, matrix_size);    
 print_mtx( C, matrix_size,matrix_size);
     mkl_free(C);
-
+*/
     
     // Creating the class to decompose the 2-qubit unitary
 
@@ -196,7 +196,7 @@ print_mtx( C, matrix_size,matrix_size);
     identical_blocks[6] = 1;
     identical_blocks[7] = 1;
 
-    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, false, "close_to_zero" );
+    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, true, "close_to_zero" );
 
 
     printf("Starting the decompsition\n");

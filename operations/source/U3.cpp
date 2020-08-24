@@ -347,9 +347,9 @@ void U3::get_base_indices() {
 ////
 // @brief Sets the number of qubits spanning the matrix of the operation
 // @param qbit_num The number of qubits
-void U3::set_qbit_num(int qbit_num) {
+void U3::set_qbit_num(int qbit_num_in) {
         // setting the number of qubits
-        Operation::set_qbit_num(qbit_num);
+        Operation::set_qbit_num(qbit_num_in);
 
         // get the base indices of the target qubit
         get_base_indices();
@@ -426,4 +426,16 @@ MKL_Complex16* U3::one_qubit_u3(double Theta, double Phi, double Lambda ) {
     return matrix_array;
 
 }
-                   
+
+
+//
+// @brief Create a clone of the present class
+// @return Return with a pointer pointing to the cloned object
+U3* U3::clone() {
+  
+    U3* ret = new U3(qbit_num, target_qbit, theta, phi, lambda);
+ 
+    
+    return ret;       
+
+}          

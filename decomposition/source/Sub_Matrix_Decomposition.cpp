@@ -60,7 +60,7 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( MKL_Complex16* Umtx_in, int 
     subdisentaglement_done = false;
         
     // The subunitarized matrix
-    subunitarized_mtx = NULL;
+    subdecomposed_mtx = NULL;
                 
     // The number of successive identical blocks in one leyer
     identical_blocks = identical_blocks_in;
@@ -99,7 +99,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     // check if it needed to do the subunitarization
     if (optimalization_problem(NULL) < optimalization_tolerance) {
         printf("Disentanglig not needed\n");
-        subunitarized_mtx = Umtx;
+        subdecomposed_mtx = Umtx;
         subdisentaglement_done = true;
         return;
     }
@@ -133,14 +133,14 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         catch (...) {
             identical_blocks_loc=1;
         }
-
+   
         while ( layer_num < max_layer_num_loc ) {
                 
             int control_qbit_loc = qbit_num-1;
              
             for (int target_qbit_loc = 0; target_qbit_loc<control_qbit_loc; target_qbit_loc++ ) {                    
                     
-                    
+               
                 for (int idx=0;  idx<identical_blocks_loc; idx++) {
                         
                     // creating block of operations
@@ -164,7 +164,6 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
                 
             // get the number of blocks
             layer_num = operations.size();
-//printf("layer_num: %d\n", layer_num );
                                                  
             // Do the optimalization
             if (optimize_layer_num || layer_num >= max_layer_num_loc ) {
@@ -198,8 +197,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     subdisentaglement_done = true;
         
     // The subunitarized matrix
-    subunitarized_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
-       
+    subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
 }
 
 
@@ -227,21 +225,22 @@ printf("hhhhhhhhhhhhhhhh\n");
 clock_t start_time = clock();
 for (int idx =0; idx<1; idx++) {
 //optimalization_problem( solution_guess_gsl, this );
-optimalization_problem( solution_guess_gsl->data ); 
+printf("%f\n", optimalization_problem( solution_guess_gsl->data )); 
 }
-printf("%f\n", float((clock()-start_time)));
-//printf("%e\n", float((clock()-start_time)/CLOCKS_PER_SEC));
+//printf("%f\n", float((clock()-start_time)));
+printf("%e\n", float((clock()-start_time)/CLOCKS_PER_SEC));
 
 
 start_time = clock();
-for (int idx =0; idx<1; idx++) {
+for (int idx =0; idx<100; idx++) {
 optimalization_problem( solution_guess_gsl, this ); 
 //optimalization_problem( optimized_parameters);
 }
-printf("%f\n", float((clock()-start_time)));
-//printf("%e\n", float((clock()-start_time)/CLOCKS_PER_SEC));
+//printf("%f\n", float((clock()-start_time)));
+printf("%e\n", float((clock()-start_time)/CLOCKS_PER_SEC));
 
-printf("%f, diff: %e\n", optimalization_problem( solution_guess_gsl, this ), optimalization_problem( solution_guess_gsl, this )-optimalization_problem( solution_guess_gsl->data) );
+//printf("%f, diff: %e\n", optimalization_problem( solution_guess_gsl, this ), optimalization_problem( solution_guess_gsl, this )-optimalization_problem( solution_guess_gsl->data) );
+printf("%f\n", optimalization_problem( solution_guess_gsl, this ) );
 return; */
 ///////////////////////////////////
 

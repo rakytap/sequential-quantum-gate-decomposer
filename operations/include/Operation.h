@@ -120,6 +120,11 @@ public:
     // @return Return with the string indicating the type of the operation
     string get_type();
 
+    //
+    // @brief Create a clone of the present class
+    // @return Return with a pointer pointing to the cloned object
+    Operation* clone();
+
 };
 
         

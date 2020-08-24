@@ -38,7 +38,7 @@ public:
     bool subdisentaglement_done;
 
     // The subunitarized matrix
-    MKL_Complex16* subunitarized_mtx;
+    MKL_Complex16* subdecomposed_mtx;
 
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     bool optimize_layer_num;
@@ -129,5 +129,4 @@ bool test_indepency();
 
 //static int _progress(void *instance, const double *x, const double *g, const double fx, const double xnorm, const double gnorm, const double step, int n, int k, int ls);
 */
-
 };
