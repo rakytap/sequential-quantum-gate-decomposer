@@ -23,9 +23,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 // gates acting on the N-qubit space
 
 #pragma once
-#include "Operation_block.h"
-#include "CNOT.h"
-#include "U3.h"
+#include "qgd/Operation_block.h"
+#include "qgd/CNOT.h"
+#include "qgd/U3.h"
 #include <map>
 #include <cstdlib>
 #include <time.h> 
@@ -82,7 +82,7 @@ protected:
     double decomposition_error;
         
     // number of finalizing (deterministic) opertaions counted from the top of the array of operations
-    long finalizing_operations_num;
+    int finalizing_operations_num;
         
     // the number of the finalizing (deterministic) parameters counted from the top of the optimized_parameters list
     int finalizing_parameter_num;
@@ -97,14 +97,14 @@ protected:
     bool optimalization_problem_solved;
         
     // Maximal number of iteartions in the optimalization process
-    long max_iterations;
+    int max_iterations;
         
     // method to guess initial values for the optimalization. POssible values: 'zeros', 'random', 'close_to_zero'
     string initial_guess;
-
+/*
     // current minimum evaluated by the LBFGS library
     double* m_x;
-
+*/
 
 public:
 
@@ -128,7 +128,7 @@ void set_optimalization_blocks( int);
 ////   
 // @brief Call to set the maximal number of the iterations in the optimalization process
 // @param max_iterations aximal number of iteartions in the optimalization process
-void set_max_iteration( long);
+void set_max_iteration( int);
 
 
 //// 
@@ -153,9 +153,8 @@ MKL_Complex16* get_finalizing_operations( MKL_Complex16* mtx, Operation_block* &
 //// 
 // @brief This method can be used to solve the main optimalization problem which is devidid into sub-layer optimalization processes. (The aim of the optimalization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute @optimized_parameters.
 // @param varargin Cell array of optional parameters:
-// @param 'optimalization_problem' def handle of the cost def to be optimalized
 // @param 'solution_guess' Array of guessed parameters
-void solve_optimalization_problem();
+void solve_optimalization_problem( double* solution_guess, int solution_guess_num );
 
 ////
 // @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
@@ -193,7 +192,7 @@ bool check_optimalization_solution();
 // @param operations Iterator pointing to the first element in a vector of operations to be considered in the multiplications.
 // @param num_of_operations The number of operations counted from the first element of the operations.
 // @return Returns with a vector of the product matrices.
-std::vector<MKL_Complex16*> get_operation_products(double* , std::vector<Operation*>::iterator, long );
+std::vector<MKL_Complex16*> get_operation_products(double* , std::vector<Operation*>::iterator, int );
 
 
 //
@@ -218,7 +217,17 @@ double* get_optimized_parameters();
 // @param operations The array of the operations to be applied on a unitary
 // @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
 // @return Returns with the transformed matrix.
-MKL_Complex16* get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, long num_of_operations, MKL_Complex16* initial_matrix );
+MKL_Complex16* get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, int num_of_operations, MKL_Complex16* initial_matrix );
+
+
+////
+// @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
+// @param parameters An array containing the parameters of the U3 operations.
+// @param operations The array of the operations to be applied on a unitary
+// @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
+// @return Returns with the transformed matrix.
+int get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, int num_of_operations, MKL_Complex16* initial_matrix, MKL_Complex16* ret_matrix );
+
 
 
 ////
@@ -243,6 +252,13 @@ void reorder_qubits( vector<int> );
 // @param input_matrix The input matrix to be transformed.
 // @return Returns with the transformed matrix
 MKL_Complex16* apply_operation( MKL_Complex16*, MKL_Complex16*  );
+
+////
+// @brief Apply an operations on the input matrix
+// @param operation_mtx The matrix of the operation.
+// @param input_matrix The input matrix to be transformed.
+// @return Returns with the transformed matrix
+int apply_operation( MKL_Complex16*, MKL_Complex16*, MKL_Complex16* );
 
 ////
 // @briefinitializes default layer numbers

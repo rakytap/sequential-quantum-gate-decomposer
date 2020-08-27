@@ -23,9 +23,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 // gates acting on the N-qubit space
 
 #pragma once
-#include "Decomposition_Base.h"
-#include "Sub_Matrix_Decomposition.h"
-#include "Two_Qubit_Decomposition.h"
+#include "qgd/Decomposition_Base.h"
+#include "qgd/Sub_Matrix_Decomposition.h"
 
 
 ////
@@ -50,6 +49,7 @@ public:
 //// 
 // @brief Constructor of the class.
 // @param Umtx The unitary matrix to be decomposed
+// @param qbit_num The number of qubits spanning the unitary Umtx
 // @param max_layer_num_in A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process at the subdecomposing of n-th qubits.
 // @param identical_blocks_in A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
 // @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
@@ -80,5 +80,53 @@ void  extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposi
 ////
 // @brief Start the decompostion process to disentangle the submatrices
 void  decompose_submatrix();
+
+
+////
+// @brief final optimalization procedure improving the accuracy of the decompositin when all the qubits were already disentangled.
+void final_optimalization();
+
+
+////
+// @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
+// @param 'solution_guess' Array of guessed parameters
+// @param 'num_of_parameters' NUmber of free parameters to be optimized
+void solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
+
+
+//
+// @brief The optimalization problem to be solved in order to disentangle the qubits
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+// @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
+// @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
+// @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
+double optimalization_problem( const double* );
+
+
+
+//
+// @brief The optimalization problem to be solved in order to disentangle the qubits
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+// @param operations_post A matrix of the product of operations which are applied after the operations to be optimalized in the sub-layer optimalization problem.
+// @param operations_pre A matrix of the product of operations which are applied in prior the operations to be optimalized in the sub-layer optimalization problem.
+// @return Returns with the value representing the entaglement of the qubits. (gives zero if the two qubits are decoupled.)
+static double optimalization_problem( const gsl_vector*, void*  );
+
+
+////
+// @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+static void optimalization_problem_grad( const gsl_vector* parameters, void*, gsl_vector*  );
+
+
+////
+// @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+static void optimalization_problem_grad( const gsl_vector* parameters, void*, gsl_vector*, double f0  );
+
+////
+// @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+static void optimalization_problem_combined( const gsl_vector* parameters, void* , double* , gsl_vector*  );
 
 };

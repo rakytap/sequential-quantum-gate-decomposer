@@ -27,7 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <vector> 
 
 
-#include <common.h> 
+#include "qgd/common.h"
 
 using namespace std;
 
@@ -73,14 +73,11 @@ public:
     //
     // @brief Call to terive the operation matrix
     // @return Returns with a pointer to the operation matrix
-    MKL_Complex16* matrix();
-
+    virtual MKL_Complex16* matrix();
 
     //
     // @brief Call to terive the operation matrix
-    // @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
-    // @return Returns with a pointer to the operation matrix
-    MKL_Complex16* matrix( bool& free_after_used );
+    virtual int matrix(MKL_Complex16* retrive_matrix );
 
     //
     // @brief Call to set the stored matrix in the operation
@@ -89,12 +86,12 @@ public:
     //
     // @brief Set the number of qubits spanning the matrix of the operation
     // @param qbit_num The number of qubits spanning the matrix
-    void set_qbit_num( int qbit_num_in );
+    virtual void set_qbit_num( int qbit_num_in );
      
     //
     // @brief Call to reorder the qubits in the matrix of the operation
     // @param qbit_list The list of qubits spanning the matrix
-    void reorder_qubits( vector<int> qbit_list );
+    virtual void reorder_qubits( vector<int> qbit_list );
 
 
     //

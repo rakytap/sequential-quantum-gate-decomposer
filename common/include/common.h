@@ -19,8 +19,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #pragma once
-#include <mkl_types.h>
-#include <mkl.h>
+//#include <mkl_types.h>
+//#include <mkl.h>
+#include <gsl/gsl_blas_types.h>
 #include <string>
 #include <stdio.h>
 #include <iostream>
@@ -28,6 +29,16 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <vector>
 #include <cstring>
 
+// @brief Structure type representing complex number
+struct MKL_Complex16 {
+  double real;
+  double imag;
+};
+
+
+void* mkl_malloc( size_t size, size_t alignment );
+void* mkl_calloc( size_t element_num, size_t size, size_t alignment );
+void mkl_free( void* ptr );
 
 int Power_of_2(int n);
 
@@ -56,11 +67,17 @@ void add_unique_elelement( std::vector<int>& involved_qbits, int qbit );
 // @brief Create an identity matrix
 MKL_Complex16* create_identity( int );
 
+// @brief Create an identity matrix
+int create_identity( MKL_Complex16* matrix, int matrix_size );
+
 // @brief Call to calculate the product of two matrices using cblas_zgemm3m
 MKL_Complex16* zgemm3m_wrapper( MKL_Complex16* , MKL_Complex16*, int);
 
+// @brief Call to calculate the product of two matrices using cblas_zgemm3m
+int zgemm3m_wrapper( MKL_Complex16* , MKL_Complex16*, MKL_Complex16*, int);
+
 // @brief Calculate the product of complex matrices stored in a vector of matrices
-MKL_Complex16* reduce_zgemm( std::vector<MKL_Complex16*>, int );
+int reduce_zgemm( std::vector<MKL_Complex16*>, MKL_Complex16* C, int );
 
 
 // @brief subtract a scalar from the diagonal of a matrix
@@ -70,6 +87,9 @@ void subtract_diag( MKL_Complex16* & , int, MKL_Complex16 );
 double get_submatrix_cost_function(MKL_Complex16* matrix_new, int matrix_size);
 
 double get_submatrix_cost_function_2(MKL_Complex16* matrix, int matrix_size);
+
+// calculate the cost funtion for the final optimalization
+double get_cost_function(MKL_Complex16* matrix, int matrix_size);
 
 
 // calculate the product of two scalars

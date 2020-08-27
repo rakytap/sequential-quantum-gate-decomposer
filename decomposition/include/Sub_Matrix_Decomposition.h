@@ -23,7 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 // gates acting on the N-qubit space
 
 #pragma once
-#include "Decomposition_Base.h"
+#include "qgd/Decomposition_Base.h"
 
 
 ////

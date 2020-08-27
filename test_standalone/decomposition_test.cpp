@@ -21,14 +21,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <iostream>
 
 #include <stdio.h>
-#include <mkl.h>
 #include <map>
 
-#include "common.h"
-#include "U3.h"
-#include "CNOT.h"
-#include "N_Qubit_Decomposition.h"
-#include "Random_Unitary.h"
+#include "qgd/common.h"
+#include "qgd/U3.h"
+#include "qgd/CNOT.h"
+#include "qgd/N_Qubit_Decomposition.h"
+#include "qgd/Random_Unitary.h"
 
 using namespace std;
 /*
@@ -138,7 +137,7 @@ MKL_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
 */
 //
 // @brief Decomposition of general two-qubit matrix into U3 and CNOT gates
-void main() {
+int main() {
     
     printf("\n\n****************************************\n");
     printf("Test of N qubit decomposition\n");
@@ -151,6 +150,10 @@ void main() {
 
     // creating random unitary
     int qbit_num = 3;
+
+#ifdef MIC
+      qbit_num = 7;
+#endif
 
     //int cnot_num = 800;
     //MKL_Complex16* Umtx = few_CNOT_unitary( qbit_num, cnot_num);
@@ -176,10 +179,10 @@ print_mtx( Umtx, matrix_size,matrix_size);
     MKL_Complex16* C = (MKL_Complex16*)mkl_malloc(matrix_size*matrix_size*sizeof(MKL_Complex16), 64); 
 
     // calculate the product of A and B
-    cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, Umtx, matrix_size, Umtx, matrix_size, &beta, C, matrix_size);    
+    cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, Umtx, matrix_size, Umtx, matrix_size, &beta, C, matrix_size);    
 print_mtx( C, matrix_size,matrix_size);
-    mkl_free(C);
-*/
+    mkl_free(C);*/
+
     
     // Creating the class to decompose the 2-qubit unitary
 
@@ -196,7 +199,7 @@ print_mtx( C, matrix_size,matrix_size);
     identical_blocks[6] = 1;
     identical_blocks[7] = 1;
 
-    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, true, "close_to_zero" );
+    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, false, "close_to_zero" );
 
 
     printf("Starting the decompsition\n");
@@ -208,7 +211,7 @@ print_mtx( C, matrix_size,matrix_size);
       }
 #endif
 
-    
+  return 0;  
 
 };
 
