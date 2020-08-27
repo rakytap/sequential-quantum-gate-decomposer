@@ -8,6 +8,5 @@ AC_CONFIG_FILES([Makefile
                  operations/Makefile
                  decomposition/Makefile
                  random_unitary/Makefile
-                 python_interface/Makefile
                  test_standalone/Makefile])
 AC_OUTPUT
