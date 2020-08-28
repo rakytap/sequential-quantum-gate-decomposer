@@ -26,7 +26,7 @@ extern "C" {
 
 
 // @brief Creates an instance of class N_Qubit_Decomposition and return with a void pointer pointing to the class instance
-void* iface_newN_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int qbit_num ) {
+void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int qbit_num ) {
 
     int matrix_size = Power_of_2(qbit_num);
 
@@ -56,19 +56,23 @@ void* iface_newN_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int qb
 
 
 // @brief Starts the decomposition of the unitary
-void iface_start_decomposition( void* ptr ) {
+int iface_start_decomposition( void* ptr ) {
 
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
 
     instance->start_decomposition(true);
 
+    return 0;
+
 }
 
 // @brief Deallocate the N_Qubit_Decomposition class
-void iface_delete_N_Qubit_Decomposition( void* ptr ) {
+int iface_delete_N_Qubit_Decomposition( void* ptr ) {
 
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
     delete instance;
+
+    return 0;
 
 }
 

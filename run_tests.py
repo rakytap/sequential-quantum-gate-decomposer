@@ -24,47 +24,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import ctypes
 
-#load test library for operations
-_operation_test_library = ctypes.cdll.LoadLibrary('lib/operation_test.so')  
-
-# *******************************
-# test of general operations
-
-# defining the input argument
-_operation_test_library.test_general_operation.argtypes = (ctypes.c_int,)
-
-# calling the test for general operation
-qbit_num = 4
-_operation_test_library.test_general_operation(ctypes.c_int(qbit_num))
-
-
-
-
-
-# *******************************
-# test of U3 operations
-_operation_test_library.test_U3_operation()
-
-
-# *******************************
-# test of CNOT operations
-_operation_test_library.test_CNOT_operation()
-
-
-
-# *******************************
-# test of operation block
-_operation_test_library.test_operation_block()
-
-
-#**********************************************************************
-#*********************************************************************
-# decomposition test
-
 
 
 #load test library for operations
-_decomposition_test_library = ctypes.cdll.LoadLibrary('lib/decomposition_test.so')  
+_qgd_library = ctypes.cdll.LoadLibrary('.libs/libqgd.so')  
 
 
 
@@ -74,7 +37,10 @@ _decomposition_test_library = ctypes.cdll.LoadLibrary('lib/decomposition_test.so
 # test of general two qubit decomposition
 
 # defining the input argument
-_decomposition_test_library.two_qubit_decomposition.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int,)
+_qgd_library.iface_new_N_Qubit_Decomposition.argtypes = (ctypes.POINTER(ctypes.c_double), ctypes.POINTER(ctypes.c_double), ctypes.c_int,)
+_qgd_library.iface_new_N_Qubit_Decomposition.restype = ctypes.c_void_p
+_qgd_library.iface_start_decomposition.argtypes = (ctypes.c_void_p,)
+_qgd_library.iface_delete_N_Qubit_Decomposition.argtypes = (ctypes.c_void_p,)
 
 
 
@@ -84,7 +50,7 @@ import numpy as np
 
     
 # the number of qubits
-qbit_num = 2
+qbit_num = 4
     
 matrix_size = int(2**qbit_num)
 
@@ -94,11 +60,17 @@ Umtx = unitary_group.rvs(matrix_size)
 Umtx_real = np.real(Umtx).reshape(matrix_size*matrix_size)
 Umtx_imag = np.imag(Umtx).reshape(matrix_size*matrix_size)
 
-# calling the test function
+# definig ctypes array storing the real and imaginary parts of the unitary
 array_type = ctypes.c_double * (matrix_size*matrix_size)
-#_decomposition_test_library.two_qubit_decomposition( array_type(*Umtx_real), array_type(*Umtx_imag), ctypes.c_int(matrix_size) )
 
+# calling the test function
+c_instance = _qgd_library.iface_new_N_Qubit_Decomposition( array_type(*Umtx_real), array_type(*Umtx_imag), ctypes.c_int(qbit_num) )
 
+_qgd_library.iface_start_decomposition( c_instance )
+
+_qgd_library.iface_delete_N_Qubit_Decomposition( c_instance )
+
+fff
 
 # *******************************
 # test of general four qubit decomposition

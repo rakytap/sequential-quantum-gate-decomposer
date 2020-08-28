@@ -28,7 +28,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 using namespace std;
 
 void* mkl_malloc( size_t size, size_t alignment ) {
-    return aligned_alloc(alignment, size);
+    void* ret = aligned_alloc(alignment, size);
+    memset(ret, 0, size );
+    return ret;
 }
 
 void* mkl_calloc( size_t element_num, size_t size, size_t alignment ) {
@@ -257,10 +259,13 @@ int reduce_zgemm( vector<MKL_Complex16*> mtxs, MKL_Complex16* C, int matrix_size
 
         // calculate the product of A and B
         zgemm3m_wrapper(A, B, C, matrix_size);
-/*printf("reduce_zgemm\n");
+/*if (matrix_size == 4) {
+printf("reduce_zgemm\n");
 print_mtx( A, matrix_size, matrix_size);
 print_mtx( B, matrix_size, matrix_size);
-print_mtx( C, matrix_size, matrix_size);*/
+print_mtx( C, matrix_size, matrix_size);
+}*/
+
     }
 
     mkl_free(tmp);

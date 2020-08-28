@@ -770,6 +770,7 @@ printf("Decomposition_Base::get_transformed_matrix 4\n");
 print_mtx( operation_mtx, matrix_size, matrix_size );
 print_mtx( Operation_product, matrix_size, matrix_size );
 }*/
+
             if ( idx == 0 ) {
                 //Operation_product = operation_mtx;
                 memcpy( Operation_product, operation_mtx, matrix_size*matrix_size*sizeof(MKL_Complex16) );
@@ -782,14 +783,14 @@ print_mtx( Operation_product, matrix_size, matrix_size );
 
             operations_it++;
         }
-/*if (verbose) {
+/*if (qbit_num == 2) {
 printf("Decomposition_Base::get_transformed_matrix 5\n");
 print_mtx( Operation_product, matrix_size, matrix_size );
 printf("Decomposition_Base::get_transformed_matrix 5b\n");
 print_mtx( ret_matrix, matrix_size, matrix_size );
 printf("Decomposition_Base::get_transformed_matrix 5c\n");
 print_mtx( initial_matrix, matrix_size, matrix_size );
-throw "jjj";
+//throw "jjj";
 }*/
         apply_operation( Operation_product, initial_matrix, ret_matrix );
         mkl_free( Operation_product );

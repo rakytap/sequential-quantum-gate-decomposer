@@ -391,9 +391,6 @@ double Sub_Matrix_Decomposition::optimalization_problem( const gsl_vector* param
     double cost_function = get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());  //NEW METHOD
     //double cost_function = get_submatrix_cost_function_2(matrix_new, instance->get_Umtx_size());  //OLD METHOD
 
-//printf("%f\n", cost_function-cost_function2);
-//printf("cost function: %f\n", cost_function);
-
     // free the allocated matrix and returning with the cost function
     if ( matrix_new != instance->get_Umtx() ) {
         mkl_free( matrix_new );              

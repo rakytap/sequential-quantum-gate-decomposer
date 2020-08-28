@@ -128,8 +128,8 @@ int Operation_block::matrix( const double* parameters, MKL_Complex16* block_mtx 
 
     operation_mtxs.clear();
 
-/*
 
+/*
     MKL_Complex16* tmp = (MKL_Complex16*)mkl_malloc( matrix_size*matrix_size*sizeof(MKL_Complex16), 64 );
     MKL_Complex16* operation_mtx = (MKL_Complex16*)mkl_malloc( matrix_size*matrix_size*sizeof(MKL_Complex16), 64 );
 
@@ -240,6 +240,7 @@ std::vector<MKL_Complex16*> Operation_block::get_matrices( const double* paramet
         }
 
         matrices.push_back(operation_mtx);
+
 
     }
             

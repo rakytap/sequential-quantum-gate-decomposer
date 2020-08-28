@@ -27,10 +27,10 @@ extern "C" {
 void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int qbit_num );
 
 // @brief Starts the decomposition of the unitary
-void iface_start_decomposition( void* ptr );
+int iface_start_decomposition( void* ptr );
 
 // @brief Deallocate the N_Qubit_Decomposition class
-void iface_delete_N_Qubit_Decomposition( void* ptr );
+int iface_delete_N_Qubit_Decomposition( void* ptr );
 
 }
 
