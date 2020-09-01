@@ -70,7 +70,7 @@ protected:
     std::map<int,int> iteration_loops;
 
     // The unitary to be decomposed
-    MKL_Complex16* Umtx;
+    QGD_Complex16* Umtx;
 
     // The corrent optimized parameters for the operations
     double* optimized_parameters;
@@ -113,7 +113,7 @@ public:
 // @param Umtx The unitary matrix to be decomposed
 // @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 // @return An instance of the class
-Decomposition_Base( MKL_Complex16*, int, string );
+Decomposition_Base( QGD_Complex16*, int, string );
 
 //// 
 // @brief Destructor of the class
@@ -147,7 +147,7 @@ void list_operations( int );
 // @return [1] The operations needed to rotate the qubits into the state |0>
 // @return [2] The parameters of the U3 operations needed to rotate the qubits into the state |0>
 // @return [3] The resulted diagonalized matrix.
-MKL_Complex16* get_finalizing_operations( MKL_Complex16* mtx, Operation_block* & finalizing_operations, double* &finalizing_parameters);
+QGD_Complex16* get_finalizing_operations( QGD_Complex16* mtx, Operation_block* & finalizing_operations, double* &finalizing_parameters);
 
 
 //// 
@@ -192,13 +192,13 @@ bool check_optimalization_solution();
 // @param operations Iterator pointing to the first element in a vector of operations to be considered in the multiplications.
 // @param num_of_operations The number of operations counted from the first element of the operations.
 // @return Returns with a vector of the product matrices.
-std::vector<MKL_Complex16*> get_operation_products(double* , std::vector<Operation*>::iterator, int );
+std::vector<QGD_Complex16*> get_operation_products(double* , std::vector<Operation*>::iterator, int );
 
 
 //
 // @brief Call to get the unitary to be transformed
 // @return Return with a pointer pointing to the unitary
-MKL_Complex16* get_Umtx();
+QGD_Complex16* get_Umtx();
 
 //
 // @brief Call to get the size of the unitary to be transformed
@@ -217,7 +217,7 @@ double* get_optimized_parameters();
 // @param operations The array of the operations to be applied on a unitary
 // @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
 // @return Returns with the transformed matrix.
-MKL_Complex16* get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, int num_of_operations, MKL_Complex16* initial_matrix );
+QGD_Complex16* get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, int num_of_operations, QGD_Complex16* initial_matrix );
 
 
 ////
@@ -226,14 +226,14 @@ MKL_Complex16* get_transformed_matrix( const double* parameters, std::vector<Ope
 // @param operations The array of the operations to be applied on a unitary
 // @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
 // @return Returns with the transformed matrix.
-int get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, int num_of_operations, MKL_Complex16* initial_matrix, MKL_Complex16* ret_matrix );
+int get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, int num_of_operations, QGD_Complex16* initial_matrix, QGD_Complex16* ret_matrix );
 
 
 
 ////
 // @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
 // @return Returns with the decomposed matrix.
-MKL_Complex16* get_decomposed_matrix();
+QGD_Complex16* get_decomposed_matrix();
 
 ////
 // @brief Gives an array of permutation indexes that can be used to permute the basis in the N-qubit unitary according to the flip in the qubit order.
@@ -251,14 +251,14 @@ void reorder_qubits( vector<int> );
 // @param operation_mtx The matrix of the operation.
 // @param input_matrix The input matrix to be transformed.
 // @return Returns with the transformed matrix
-MKL_Complex16* apply_operation( MKL_Complex16*, MKL_Complex16*  );
+QGD_Complex16* apply_operation( QGD_Complex16*, QGD_Complex16*  );
 
 ////
 // @brief Apply an operations on the input matrix
 // @param operation_mtx The matrix of the operation.
 // @param input_matrix The input matrix to be transformed.
 // @return Returns with the transformed matrix
-int apply_operation( MKL_Complex16*, MKL_Complex16*, MKL_Complex16* );
+int apply_operation( QGD_Complex16*, QGD_Complex16*, QGD_Complex16* );
 
 ////
 // @briefinitializes default layer numbers

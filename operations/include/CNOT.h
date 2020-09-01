@@ -53,11 +53,11 @@ CNOT(int, int, int);
 
 //
 // @brief Call to terive the operation matrix
-MKL_Complex16* matrix();
+QGD_Complex16* matrix();
 
 //
 // @brief Call to terive the operation matrix
-int matrix(MKL_Complex16* retrive_matrix );
+int matrix(QGD_Complex16* retrive_matrix );
 
 ////
 // @brief Sets the number of qubits spanning the matrix of the operation
@@ -69,14 +69,14 @@ void set_qbit_num(int qbit_num);
 // @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 // @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 // @return Returns with the matrix of the C-NOT gate.
-MKL_Complex16* composite_cnot();
+QGD_Complex16* composite_cnot();
 
 
 // @brief Calculate the matrix of a C_NOT gate operation acting on the space of qbit_num qubits.
 // @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 // @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 // @return Returns with the matrix of the C-NOT gate.
-int composite_cnot(MKL_Complex16*);
+int composite_cnot(QGD_Complex16*);
 
 
 

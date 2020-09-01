@@ -56,7 +56,7 @@ Random_Unitary( int dim_in );
 //> @brief Constructor of the class.
 //> @param parameters array of (dim+1)*(dim-1) elements
 //> @return The constructed matrix
-MKL_Complex16* Construct_Unitary_Matrix();    
+QGD_Complex16* Construct_Unitary_Matrix();    
     
 //// Construct_Unitary_Matrix
 //> @brief Constructor of the class.
@@ -64,7 +64,7 @@ MKL_Complex16* Construct_Unitary_Matrix();
 //> @param varphi array of dim*(dim-1)/2 elements
 //> @param varkappa array of dim-1 elements
 //> @return The constructed matrix
-MKL_Complex16* Construct_Unitary_Matrix( double* vartheta, double* varphi, double* varkappa );
+QGD_Complex16* Construct_Unitary_Matrix( double* vartheta, double* varphi, double* varkappa );
 
 int  convert_indexes( int varalpha, int varbeta );
     
@@ -72,30 +72,30 @@ int  convert_indexes( int varalpha, int varbeta );
 //> @brief Constructor of the class.
 //> @param parameters array of (dim+1)*(dim-1) elements
 //> @return The constructed matrix
-MKL_Complex16* Construct_Unitary_Matrix( double* parameters );
+QGD_Complex16* Construct_Unitary_Matrix( double* parameters );
     
 //// Omega
 //> @brief Eq (6)
-MKL_Complex16* Omega(int varalpha, int varbeta, MKL_Complex16 x, MKL_Complex16 y );  
+QGD_Complex16* Omega(int varalpha, int varbeta, QGD_Complex16 x, QGD_Complex16 y );  
     
     
 //// M
 //> @brief Eq (8)
-MKL_Complex16* M( int varalpha, int varbeta, MKL_Complex16 s, MKL_Complex16 t );
+QGD_Complex16* M( int varalpha, int varbeta, QGD_Complex16 s, QGD_Complex16 t );
     
 //// Q
 //> @brief Eq (9)
-MKL_Complex16* Q(  MKL_Complex16 u1, MKL_Complex16 u2 );
+QGD_Complex16* Q(  QGD_Complex16 u1, QGD_Complex16 u2 );
     
     
 //// E_n_m
 //> @brief below Eq (7)
-MKL_Complex16* E_alpha_beta( int varalpha, int varbeta );
+QGD_Complex16* E_alpha_beta( int varalpha, int varbeta );
 
 
 //// I_n
 //> @brief below Eq (7)
-MKL_Complex16* I_alpha_beta( int varalpha, int varbeta );
+QGD_Complex16* I_alpha_beta( int varalpha, int varbeta );
     
 //// 
 //> @brief Eq (11)

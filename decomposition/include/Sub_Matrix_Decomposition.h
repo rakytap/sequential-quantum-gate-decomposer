@@ -38,7 +38,7 @@ public:
     bool subdisentaglement_done;
 
     // The subunitarized matrix
-    MKL_Complex16* subdecomposed_mtx;
+    QGD_Complex16* subdecomposed_mtx;
 
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     bool optimize_layer_num;
@@ -57,7 +57,7 @@ public:
 // @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
 // @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 // @return An instance of the class
-Sub_Matrix_Decomposition( MKL_Complex16*, int, std::map<int,int>, std::map<int,int>, bool, string );
+Sub_Matrix_Decomposition( QGD_Complex16*, int, std::map<int,int>, std::map<int,int>, bool, string );
 
 
 ////

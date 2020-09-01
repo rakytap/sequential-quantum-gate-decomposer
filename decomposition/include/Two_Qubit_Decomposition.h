@@ -49,7 +49,7 @@ public:
 // @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
 // @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 // @return An instance of the class
-Two_Qubit_Decomposition( MKL_Complex16*, int, std::map<int,int>, bool, string );
+Two_Qubit_Decomposition( QGD_Complex16*, int, std::map<int,int>, bool, string );
 
 
 

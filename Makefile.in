@@ -130,17 +130,13 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libqgd_la_DEPENDENCIES = $(SUBLIBS) $(GSL_LIB_DIR)/libgsl.la \
-	$(GSL_LIB_DIR)/libgslcblas.la
+libqgd_la_DEPENDENCIES = $(SUBLIBS)
 am_libqgd_la_OBJECTS = python_interface.lo
 libqgd_la_OBJECTS = $(am_libqgd_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-libqgd_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(libqgd_la_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_@AM_V@)
 am__v_P_ = $(am__v_P_@AM_DEFAULT_V@)
 am__v_P_0 = false
@@ -401,9 +397,8 @@ EXTRA_DIST = common/include/common.h \
 lib_LTLIBRARIES = libqgd.la
 pkginclude_HEADERS = python_interface.h
 libqgd_la_SOURCES = python_interface.cpp
-AM_CPPFLAGS = -fopenmp -I$(top_srcdir) -I$(GSL_INC_DIR)
-libqgd_la_LIBADD = $(GSL_LIBADD) $(SUBLIBS) $(GSL_LIB_DIR)/libgsl.la $(GSL_LIB_DIR)/libgslcblas.la
-libqgd_la_LDFLAGS = $(GSL_LDFLAGS) -liomp5  
+AM_CPPFLAGS = $(CXXFLAGS) -I$(top_srcdir) -I$(GSL_INC_DIR)
+libqgd_la_LIBADD = $(GSL_LIBADD) $(SUBLIBS) #$(GSL_LIB_DIR)/libgsl.la $(GSL_LIB_DIR)/libgslcblas.la
 all: all-recursive
 
 .SUFFIXES:
@@ -478,7 +473,7 @@ clean-libLTLIBRARIES:
 	}
 
 libqgd.la: $(libqgd_la_OBJECTS) $(libqgd_la_DEPENDENCIES) $(EXTRA_libqgd_la_DEPENDENCIES) 
-	$(AM_V_CXXLD)$(libqgd_la_LINK) -rpath $(libdir) $(libqgd_la_OBJECTS) $(libqgd_la_LIBADD) $(LIBS)
+	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libqgd_la_OBJECTS) $(libqgd_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -972,6 +967,13 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-pkgincludeHEADERS
 
 .PRECIOUS: Makefile
 
+
+all:
+	@echo
+	@echo "----------------------------------------------------------"
+	@echo 
+	@echo "----------------------------------------------------------"
+	@echo 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

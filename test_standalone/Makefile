@@ -185,13 +185,13 @@ AUTOMAKE = ${SHELL} /home/scc/rakytap/quantum-gate-decomposer_C/missing automake
 AWK = gawk
 CC = icc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2
+CFLAGS = -g -O2 -qopenmp -I/home/scc/rakytap/gsl/include
 CPP = icc -E
 CPPFLAGS = 
 CXX = icpc
 CXXCPP = icpc -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -g -O2
+CXXFLAGS = -g -O2  -qopenmp -I/home/scc/rakytap/gsl/include
 CYGPATH_W = echo
 DEFS = -DPACKAGE_NAME=\"qgd\" -DPACKAGE_TARNAME=\"qgd\" -DPACKAGE_VERSION=\"1.0\" -DPACKAGE_STRING=\"qgd\ 1.0\" -DPACKAGE_BUGREPORT=\"rakytap@caesar.elte.hu\" -DPACKAGE_URL=\"\" -DPACKAGE=\"qgd\" -DVERSION=\"1.0\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\"
 DEPDIR = .deps
@@ -211,7 +211,7 @@ INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LD = /usr/x86_64-suse-linux/bin/ld -m elf_x86_64
-LDFLAGS = 
+LDFLAGS =  -L/home/scc/rakytap/gsl/lib64 -lgsl -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread
 LIBOBJS = 
 LIBS = 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
@@ -284,7 +284,7 @@ mandir = ${datarootdir}/man
 mkdir_p = $(MKDIR_P)
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/scc/rakytap/qgd
+prefix = /usr/local
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
@@ -298,8 +298,10 @@ top_srcdir = ..
 
 #pkginclude_HEADERS = include/Random_Unitary.h
 decomposition_test_SOURCES = decomposition_test.cpp
-AM_CPPFLAGS = -fopenmp -I$(top_srcdir) -I$(GSL_INC_DIR)
-decomposition_test_LDFLAGS = $(top_srcdir)/random_unitary/.libs/librandomunitary.a  $(top_srcdir)/decomposition/.libs/libdecomposition.a $(top_srcdir)/operations/.libs/liboperations.a $(top_srcdir)/common/.libs/libcommon.a $(GSL_LIB_DIR)/libgsl.a $(GSL_LIB_DIR)/libgslcblas.a  -liomp5  
+AM_CPPFLAGS = $(CXXFLAGS) -I$(top_srcdir) -I$(GSL_INC_DIR)
+
+#decomposition_test_LDFLAGS = $(top_srcdir)/random_unitary/.libs/librandomunitary.a  $(top_srcdir)/decomposition/.libs/libdecomposition.a $(top_srcdir)/operations/.libs/liboperations.a $(top_srcdir)/common/.libs/libcommon.a $(GSL_LIB_DIR)/libgsl.a $(GSL_LIB_DIR)/libgslcblas.a  -liomp5  
+decomposition_test_LDFLAGS = $(top_srcdir)/random_unitary/.libs/librandomunitary.a  $(top_srcdir)/decomposition/.libs/libdecomposition.a $(top_srcdir)/operations/.libs/liboperations.a $(top_srcdir)/common/.libs/libcommon.a 
 all: all-am
 
 .SUFFIXES:
@@ -629,6 +631,13 @@ uninstall-am: uninstall-binPROGRAMS
 
 .PRECIOUS: Makefile
 
+
+all:
+	@echo
+	@echo "----------------------------------------------------------"
+	@echo 
+	@echo "----------------------------------------------------------"
+	@echo 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

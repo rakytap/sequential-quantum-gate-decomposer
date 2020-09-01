@@ -35,7 +35,7 @@ using namespace std;
 // @brief Call to create a random unitary containing a given number of CNOT gates between randomly chosen qubits
 // @param qbit_num The number of qubits spanning the unitary
 // @param cnot_num The number of CNOT gates in the unitary
-MKL_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
+QGD_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
 
     // the current number of CNOT gates
     int cnot_num_curr = 0;
@@ -44,8 +44,8 @@ MKL_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
     int matrix_size = Power_of_2(qbit_num);
 
     // The unitary discribing each qubits in their initial state
-    MKL_Complex16* mtx = create_identity( matrix_size );
-    MKL_Complex16* mtx_tmp;
+    QGD_Complex16* mtx = create_identity( matrix_size );
+    QGD_Complex16* mtx_tmp;
 
     // constructing the unitary
     while (true) {
@@ -55,7 +55,7 @@ MKL_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
         CNOT* cnot_op = NULL;
         U3* u3_op = NULL;
 
-        MKL_Complex16* gate_matrix = NULL;
+        QGD_Complex16* gate_matrix = NULL;
 
         if (cnot_or_u3 <= 4) {
             // creating random parameters for the U3 operation
@@ -106,12 +106,12 @@ MKL_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
         // get the current unitary
         mtx_tmp = zgemm3m_wrapper(gate_matrix, mtx, matrix_size);
 
-        mkl_free(mtx);
+        qgd_free(mtx);
         mtx = mtx_tmp;
         mtx_tmp = NULL;
 
         if (free_after_used) {
-            mkl_free(gate_matrix);
+            qgd_free(gate_matrix);
             gate_matrix = NULL;
         }
 
@@ -149,14 +149,14 @@ int main() {
 #endif
 
     // creating random unitary
-    int qbit_num = 4;
+    int qbit_num = 6;
 
 #ifdef MIC
       qbit_num = 7;
 #endif
 
     //int cnot_num = 800;
-    //MKL_Complex16* Umtx = few_CNOT_unitary( qbit_num, cnot_num);
+    //QGD_Complex16* Umtx = few_CNOT_unitary( qbit_num, cnot_num);
 
 
     // the size of the matrix
@@ -167,7 +167,7 @@ int main() {
 
     Random_Unitary ru = Random_Unitary(matrix_size); 
 
-    MKL_Complex16* Umtx = ru.Construct_Unitary_Matrix();
+    QGD_Complex16* Umtx = ru.Construct_Unitary_Matrix();
 /*printf("resulting random matrix:\n");
 print_mtx( Umtx, matrix_size,matrix_size);
 
@@ -176,12 +176,12 @@ print_mtx( Umtx, matrix_size,matrix_size);
     double beta = 0;
 
     // preallocate array for the result
-    MKL_Complex16* C = (MKL_Complex16*)mkl_malloc(matrix_size*matrix_size*sizeof(MKL_Complex16), 64); 
+    QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size*sizeof(QGD_Complex16), 64); 
 
     // calculate the product of A and B
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, Umtx, matrix_size, Umtx, matrix_size, &beta, C, matrix_size);    
 print_mtx( C, matrix_size,matrix_size);
-    mkl_free(C);*/
+    qgd_free(C);*/
 
     
     // Creating the class to decompose the 2-qubit unitary
@@ -205,7 +205,7 @@ print_mtx( C, matrix_size,matrix_size);
     printf("Starting the decompsition\n");
     cDecomposition.start_decomposition(true);
 
-    mkl_free( Umtx );
+    qgd_free( Umtx );
 
 #ifdef MIC
       }

@@ -79,7 +79,7 @@ Operation::Operation(int qbit_num_in) {
 Operation::~Operation() {
 
     if ( matrix_alloc != NULL ) {
-        mkl_free(matrix_alloc);
+        qgd_free(matrix_alloc);
         matrix_alloc = NULL;
     }
 }
@@ -98,14 +98,14 @@ void Operation::set_qbit_num( int qbit_num_in ) {
 
 //
 // @brief Call to terive the operation matrix
-MKL_Complex16* Operation::matrix() {
+QGD_Complex16* Operation::matrix() {
     return matrix_alloc;
 }
 
 //
 // @brief Call to terive the operation matrix
-int Operation::matrix(MKL_Complex16* retrive_matrix ) {
-    memcpy( retrive_matrix, matrix_alloc, matrix_size*matrix_size*sizeof(MKL_Complex16) );
+int Operation::matrix(QGD_Complex16* retrive_matrix ) {
+    memcpy( retrive_matrix, matrix_alloc, matrix_size*matrix_size*sizeof(QGD_Complex16) );
     return 0;
 }
 
@@ -113,11 +113,11 @@ int Operation::matrix(MKL_Complex16* retrive_matrix ) {
 //
 // @brief Call to set the stored matrix in the operation
 // @param The pointer pointing to the matrix to be set
-void Operation::set_matrix( MKL_Complex16* input) {
+void Operation::set_matrix( QGD_Complex16* input) {
     if ( matrix_alloc == NULL ) {
-        matrix_alloc = (MKL_Complex16*)mkl_malloc( matrix_size*matrix_size*sizeof(MKL_Complex16), 64);
+        matrix_alloc = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
     }
-    memcpy( matrix_alloc, input, matrix_size*matrix_size*sizeof(MKL_Complex16) );
+    memcpy( matrix_alloc, input, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 }
 
      

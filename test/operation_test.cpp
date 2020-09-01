@@ -82,7 +82,7 @@ void test_U3_operation() {
     parameters[1] = 2;
     
     // construct the matrix of the U3 operation
-    MKL_Complex16* matrix = op.matrix( parameters );
+    QGD_Complex16* matrix = op.matrix( parameters );
 
     // print the matrix
     print_mtx( matrix, Power_of_2(qbit_num), Power_of_2(qbit_num));
@@ -122,7 +122,7 @@ void test_CNOT_operation() {
     CNOT op = CNOT( qbit_num, target_qbit, control_qbit );  
     
     // check the CNOT matrix
-    MKL_Complex16* matrix = op.matrix();
+    QGD_Complex16* matrix = op.matrix();
     printf("The matrix of %d qubit CNOT operator acting on target qubit %d with control qubit %d\n", qbit_num, op.get_target_qbit(), op.get_control_qbit() );
     print_CNOT( matrix, Power_of_2(qbit_num));
     
@@ -218,14 +218,14 @@ void test_operation_block() {
     parameters[3] = 0.67;
 
     // calculate the matrix product stored in the operation block
-    MKL_Complex16* mtx = op_block->matrix( parameters );
+    QGD_Complex16* mtx = op_block->matrix( parameters );
 
 
     // check the block matrix
     printf("The matrix of %d qubit operators consisting of 2 U3 operations and 1 CNOT operation is:\n", qbit_num);
     print_mtx( mtx, Power_of_2(qbit_num), Power_of_2(qbit_num));
 
-    mkl_free(mtx);
+    qgd_free(mtx);
     delete( op_block );
 
 

@@ -95,10 +95,10 @@ Operation_block::~Operation_block() {
 // @param parameters List of parameters to calculate the matrix of the operation block
 // @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
 // @return Returns with the matrix of the operation
-MKL_Complex16* Operation_block::matrix( const double* parameters  ) {
+QGD_Complex16* Operation_block::matrix( const double* parameters  ) {
 
     // preallocate array for the composite u3 operation
-    MKL_Complex16* block_matrix = (MKL_Complex16*)mkl_calloc(matrix_size*matrix_size, sizeof(MKL_Complex16), 64);
+    QGD_Complex16* block_matrix = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
     matrix( parameters, block_matrix  );
 
@@ -112,26 +112,26 @@ MKL_Complex16* Operation_block::matrix( const double* parameters  ) {
 // @param parameters List of parameters to calculate the matrix of the operation block
 // @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
 // @return Returns with the matrix of the operation
-int Operation_block::matrix( const double* parameters, MKL_Complex16* block_mtx  ) {
+int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx  ) {
 
 
     // get the matrices of the operations grouped in the block
-    vector<MKL_Complex16*> operation_mtxs = get_matrices( parameters );
+    vector<QGD_Complex16*> operation_mtxs = get_matrices( parameters );
 
     // calculate the product of the matrices
     reduce_zgemm( operation_mtxs, block_mtx, matrix_size );
 
     // free the constituent matrices if possible    
-    for ( std::vector<MKL_Complex16*>::iterator it=operation_mtxs.begin(); it!=operation_mtxs.end(); it++) {
-        mkl_free(*it);
+    for ( std::vector<QGD_Complex16*>::iterator it=operation_mtxs.begin(); it!=operation_mtxs.end(); it++) {
+        qgd_free(*it);
     }
 
     operation_mtxs.clear();
 
 
 /*
-    MKL_Complex16* tmp = (MKL_Complex16*)mkl_malloc( matrix_size*matrix_size*sizeof(MKL_Complex16), 64 );
-    MKL_Complex16* operation_mtx = (MKL_Complex16*)mkl_malloc( matrix_size*matrix_size*sizeof(MKL_Complex16), 64 );
+    QGD_Complex16* tmp = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size*sizeof(QGD_Complex16), 64 );
+    QGD_Complex16* operation_mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size*sizeof(QGD_Complex16), 64 );
 
     int idx = 0;
     for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
@@ -172,18 +172,18 @@ int Operation_block::matrix( const double* parameters, MKL_Complex16* block_mtx 
 
       
         if (idx == 0) {
-            memcpy( block_mtx, operation_mtx, matrix_size*matrix_size*sizeof(MKL_Complex16) );
+            memcpy( block_mtx, operation_mtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
         }
         else {
             zgemm3m_wrapper(block_mtx, operation_mtx, tmp, matrix_size);
-            memcpy( block_mtx, tmp, matrix_size*matrix_size*sizeof(MKL_Complex16) ); 
+            memcpy( block_mtx, tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) ); 
         }
 
 
     }
 
-    mkl_free(tmp);
-    mkl_free(operation_mtx);
+    qgd_free(tmp);
+    qgd_free(operation_mtx);
 
 */
 
@@ -198,10 +198,10 @@ int Operation_block::matrix( const double* parameters, MKL_Complex16* block_mtx 
 // @param parameters List of parameters to calculate the matrix of the operation block
 // @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
 // @return Returns with the matrix of the operation
-std::vector<MKL_Complex16*> Operation_block::get_matrices( const double* parameters ) {
+std::vector<QGD_Complex16*> Operation_block::get_matrices( const double* parameters ) {
 
-    std::vector<MKL_Complex16*> matrices;
-    MKL_Complex16* operation_mtx;
+    std::vector<QGD_Complex16*> matrices;
+    QGD_Complex16* operation_mtx;
              
     for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
       

@@ -130,17 +130,13 @@ am__uninstall_files_from_dir = { \
   }
 am__installdirs = "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"
 LTLIBRARIES = $(lib_LTLIBRARIES)
-libqgd_la_DEPENDENCIES = $(SUBLIBS) $(GSL_LIB_DIR)/libgsl.la \
-	$(GSL_LIB_DIR)/libgslcblas.la
+libqgd_la_DEPENDENCIES = $(SUBLIBS)
 am_libqgd_la_OBJECTS = python_interface.lo
 libqgd_la_OBJECTS = $(am_libqgd_la_OBJECTS)
 AM_V_lt = $(am__v_lt_$(V))
 am__v_lt_ = $(am__v_lt_$(AM_DEFAULT_VERBOSITY))
 am__v_lt_0 = --silent
 am__v_lt_1 = 
-libqgd_la_LINK = $(LIBTOOL) $(AM_V_lt) --tag=CXX $(AM_LIBTOOLFLAGS) \
-	$(LIBTOOLFLAGS) --mode=link $(CXXLD) $(AM_CXXFLAGS) \
-	$(CXXFLAGS) $(libqgd_la_LDFLAGS) $(LDFLAGS) -o $@
 AM_V_P = $(am__v_P_$(V))
 am__v_P_ = $(am__v_P_$(AM_DEFAULT_VERBOSITY))
 am__v_P_0 = false
@@ -274,13 +270,13 @@ AUTOMAKE = ${SHELL} /home/scc/rakytap/quantum-gate-decomposer_C/missing automake
 AWK = gawk
 CC = icc
 CCDEPMODE = depmode=gcc3
-CFLAGS = -g -O2
+CFLAGS = -g -O2 -qopenmp -I/home/scc/rakytap/gsl/include
 CPP = icc -E
 CPPFLAGS = 
 CXX = icpc
 CXXCPP = icpc -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS = -g -O2
+CXXFLAGS = -g -O2  -qopenmp -I/home/scc/rakytap/gsl/include
 CYGPATH_W = echo
 DEFS = -DPACKAGE_NAME=\"qgd\" -DPACKAGE_TARNAME=\"qgd\" -DPACKAGE_VERSION=\"1.0\" -DPACKAGE_STRING=\"qgd\ 1.0\" -DPACKAGE_BUGREPORT=\"rakytap@caesar.elte.hu\" -DPACKAGE_URL=\"\" -DPACKAGE=\"qgd\" -DVERSION=\"1.0\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\"
 DEPDIR = .deps
@@ -300,7 +296,7 @@ INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LD = /usr/x86_64-suse-linux/bin/ld -m elf_x86_64
-LDFLAGS = 
+LDFLAGS =  -L/home/scc/rakytap/gsl/lib64 -lgsl -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread
 LIBOBJS = 
 LIBS = 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
@@ -373,7 +369,7 @@ mandir = ${datarootdir}/man
 mkdir_p = $(MKDIR_P)
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/scc/rakytap/qgd
+prefix = /usr/local
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
@@ -401,9 +397,8 @@ EXTRA_DIST = common/include/common.h \
 lib_LTLIBRARIES = libqgd.la
 pkginclude_HEADERS = python_interface.h
 libqgd_la_SOURCES = python_interface.cpp
-AM_CPPFLAGS = -fopenmp -I$(top_srcdir) -I$(GSL_INC_DIR)
-libqgd_la_LIBADD = $(GSL_LIBADD) $(SUBLIBS) $(GSL_LIB_DIR)/libgsl.la $(GSL_LIB_DIR)/libgslcblas.la
-libqgd_la_LDFLAGS = $(GSL_LDFLAGS) -liomp5  
+AM_CPPFLAGS = $(CXXFLAGS) -I$(top_srcdir) -I$(GSL_INC_DIR)
+libqgd_la_LIBADD = $(GSL_LIBADD) $(SUBLIBS) #$(GSL_LIB_DIR)/libgsl.la $(GSL_LIB_DIR)/libgslcblas.la
 all: all-recursive
 
 .SUFFIXES:
@@ -478,7 +473,7 @@ clean-libLTLIBRARIES:
 	}
 
 libqgd.la: $(libqgd_la_OBJECTS) $(libqgd_la_DEPENDENCIES) $(EXTRA_libqgd_la_DEPENDENCIES) 
-	$(AM_V_CXXLD)$(libqgd_la_LINK) -rpath $(libdir) $(libqgd_la_OBJECTS) $(libqgd_la_LIBADD) $(LIBS)
+	$(AM_V_CXXLD)$(CXXLINK) -rpath $(libdir) $(libqgd_la_OBJECTS) $(libqgd_la_LIBADD) $(LIBS)
 
 mostlyclean-compile:
 	-rm -f *.$(OBJEXT)
@@ -972,6 +967,13 @@ uninstall-am: uninstall-libLTLIBRARIES uninstall-pkgincludeHEADERS
 
 .PRECIOUS: Makefile
 
+
+all:
+	@echo
+	@echo "----------------------------------------------------------"
+	@echo 
+	@echo "----------------------------------------------------------"
+	@echo 
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

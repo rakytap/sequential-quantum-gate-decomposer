@@ -43,7 +43,7 @@ void two_qubit_decomposition( double* mtx_real, double* mtx_imag, int matrix_siz
 
     // combining real and imaginary parts of the matrix inti MKL complex matrix
     int element_num = matrix_size*matrix_size;
-    MKL_Complex16* Umtx = (MKL_Complex16*)mkl_malloc(element_num*sizeof(MKL_Complex16), 64);
+    QGD_Complex16* Umtx = (QGD_Complex16*)qgd_calloc(element_num*sizeof(QGD_Complex16), 64);
 
     #pragma omp parallel for    
     for(int idx = 0; idx < element_num; idx++) {
@@ -122,7 +122,7 @@ void four_qubit_decomposition( double* mtx_real, double* mtx_imag, int qbit_num)
 
     // combining real and imaginary parts of the matrix inti MKL complex matrix
     int element_num = matrix_size*matrix_size;
-    MKL_Complex16* Umtx = (MKL_Complex16*)mkl_malloc(element_num*sizeof(MKL_Complex16), 64);
+    QGD_Complex16* Umtx = (QGD_Complex16*)qgd_calloc(element_num*sizeof(QGD_Complex16), 64);
 
     #pragma omp parallel for    
     for(int idx = 0; idx < element_num; idx++) {

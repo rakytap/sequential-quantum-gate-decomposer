@@ -36,7 +36,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 // @param identical_blocks_in A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
 // @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 // @return An instance of the class
-Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( MKL_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in=false, string initial_guess_in="close_to_zero" ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
+Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in=false, string initial_guess_in="close_to_zero" ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
         
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -90,7 +90,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         return;
     }
         
-print_mtx(Umtx, matrix_size, matrix_size );        
+     
     printf("\nDisentagling submatrices.\n");
         
     // setting the global target minimum
@@ -221,7 +221,7 @@ void Sub_Matrix_Decomposition::solve_layer_optimalization_problem( int num_of_pa
 //#ifdef MIC
 /*
 if (optimized_parameters == NULL) {
-     optimized_parameters = (double*)mkl_malloc(num_of_parameters*sizeof(double), 64);
+     optimized_parameters = (double*)qgd_calloc(num_of_parameters*sizeof(double), 64);
 }
 
 
@@ -261,13 +261,13 @@ throw "klll";*/
        
           
         if (solution_guess_gsl == NULL) {
-            //solution_guess = (double*)mkl_calloc(parameter_num, sizeof(double), 64);
+            //solution_guess = (double*)qgd_calloc(parameter_num, sizeof(double), 64);
 printf("solve_layer_optimalization_problem::Allocating solution guess\n");
             solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
         }
         
         if (optimized_parameters == NULL) {
-            optimized_parameters = (double*)mkl_malloc(num_of_parameters*sizeof(double), 64);
+            optimized_parameters = (double*)qgd_calloc(num_of_parameters,sizeof(double), 64);
         }
 
         // maximal number of iteration loops
@@ -361,7 +361,7 @@ printf("solve_layer_optimalization_problem::Allocating solution guess\n");
 double Sub_Matrix_Decomposition::optimalization_problem( const double* parameters ) {
 
         // get the transformed matrix with the operations in the list
-        MKL_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
+        QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
 //printf("Sub_Matrix_Decomposition::optimalization_problem 1\n");
 //print_mtx( matrix_new, matrix_size, matrix_size );
         double cost_function = get_submatrix_cost_function(matrix_new, matrix_size); //NEW METHOD
@@ -369,7 +369,7 @@ double Sub_Matrix_Decomposition::optimalization_problem( const double* parameter
 
         // free the allocated matrix and returning with the cost function
         if ( matrix_new != Umtx ) {
-            mkl_free( matrix_new );              
+            qgd_free( matrix_new );              
         }
 
         return cost_function;
@@ -386,14 +386,14 @@ double Sub_Matrix_Decomposition::optimalization_problem( const gsl_vector* param
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(params);
     std::vector<Operation*> operations_loc = instance->get_operations(); 
 
-    MKL_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
+    QGD_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
 
     double cost_function = get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());  //NEW METHOD
     //double cost_function = get_submatrix_cost_function_2(matrix_new, instance->get_Umtx_size());  //OLD METHOD
 
     // free the allocated matrix and returning with the cost function
     if ( matrix_new != instance->get_Umtx() ) {
-        mkl_free( matrix_new );              
+        qgd_free( matrix_new );              
     }     
 
     return cost_function; 

@@ -13,6 +13,6 @@ pkginclude_HEADERS = include/Decomposition_Base.h include/N_Qubit_Decomposition.
 
 libdecomposition_la_SOURCES	= Decomposition_Base.cpp N_Qubit_Decomposition.cpp Sub_Matrix_Decomposition.cpp
 
-AM_CPPFLAGS = -fopenmp -I$(top_srcdir) -I$(GSL_INC_DIR)
+AM_CPPFLAGS = $(CXXFLAGS) -I$(top_srcdir) -I$(GSL_INC_DIR)
 
 

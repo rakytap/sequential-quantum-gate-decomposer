@@ -60,54 +60,54 @@ U3(int, int, bool, bool, bool);
 // @brief Call to terive the operation matrix
 // @param parameters List of parameters to calculate the matrix of the operation block
 // @return Returns with a pointer to the operation matrix
-MKL_Complex16* matrix( const double* );
+QGD_Complex16* matrix( const double* );
 
 
 //
 // @brief Call to terive the operation matrix
 // @param parameters List of parameters to calculate the matrix of the operation block
 // @return Returns with a pointer to the operation matrix
-int matrix( const double*, MKL_Complex16* );
+int matrix( const double*, QGD_Complex16* );
         
 ////    
 // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
 // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
-int composite_u3_Theta_Phi_Lambda(const double* parameters, MKL_Complex16* U3_matrix);
+int composite_u3_Theta_Phi_Lambda(const double* parameters, QGD_Complex16* U3_matrix);
         
 ////    
 // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
 // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
 // @return Returns with the matrix of the U3 gate.
-int composite_u3_Phi_Lambda(const double* parameters, MKL_Complex16* U3_matrix);
+int composite_u3_Phi_Lambda(const double* parameters, QGD_Complex16* U3_matrix);
         
     ////    
     // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
     // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     // @return Returns with the matrix of the U3 gate.
-int composite_u3_Theta_Lambda(const double* parameters, MKL_Complex16* U3_matrix);
+int composite_u3_Theta_Lambda(const double* parameters, QGD_Complex16* U3_matrix);
     ////    
     // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
     // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     // @return Returns with the matrix of the U3 gate.
-int composite_u3_Theta_Phi(const double* parameters, MKL_Complex16* U3_matrix);
+int composite_u3_Theta_Phi(const double* parameters, QGD_Complex16* U3_matrix);
         
     ////    
     // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
     // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     // @return Returns with the matrix of the U3 gate.
-int composite_u3_Lambda(const double* parameters, MKL_Complex16* U3_matrix);
+int composite_u3_Lambda(const double* parameters, QGD_Complex16* U3_matrix);
         
     ////    
     // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
     // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     // @return Returns with the matrix of the U3 gate.
-int composite_u3_Phi(const double* parameters, MKL_Complex16* U3_matrix);
+int composite_u3_Phi(const double* parameters, QGD_Complex16* U3_matrix);
         
     ////    
     // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
     // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
     // @return Returns with the matrix of the U3 gate.
-int composite_u3_Theta(const double* parameters, MKL_Complex16* U3_matrix );
+int composite_u3_Theta(const double* parameters, QGD_Complex16* U3_matrix );
         
         
     ////    
@@ -116,7 +116,7 @@ int composite_u3_Theta(const double* parameters, MKL_Complex16* U3_matrix );
     // @param Phi Real parameter standing for the parameter phi.
     // @param Lambda Real parameter standing for the parameter lambda.
     // @return Returns with the matrix of the U3 gate.
-MKL_Complex16* composite_u3(double Theta, double Phi, double Lambda );
+QGD_Complex16* composite_u3(double Theta, double Phi, double Lambda );
 
 
     ////    
@@ -125,7 +125,7 @@ MKL_Complex16* composite_u3(double Theta, double Phi, double Lambda );
     // @param Phi Real parameter standing for the parameter phi.
     // @param Lambda Real parameter standing for the parameter lambda.
     // @return Returns with the matrix of the U3 gate.
-int composite_u3(double Theta, double Phi, double Lambda, MKL_Complex16* U3_matrix );
+int composite_u3(double Theta, double Phi, double Lambda, QGD_Complex16* U3_matrix );
 
     ////
     // @brief Determine the base indices corresponding to the target qubit state of |0> and |1>
@@ -166,7 +166,7 @@ bool is_lambda_parameter();
     // @param Phi Real parameter standing for the parameter phi.
     // @param Lambda Real parameter standing for the parameter lambda.
     // @return Returns with the matrix of the U3 gate.
-MKL_Complex16* one_qubit_u3(double Theta, double Phi, double Lambda );
+QGD_Complex16* one_qubit_u3(double Theta, double Phi, double Lambda );
 
 
 //

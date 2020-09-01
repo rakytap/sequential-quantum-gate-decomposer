@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 // @param identical_blocks_in A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
 // @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 // @return An instance of the class
-N_Qubit_Decomposition::N_Qubit_Decomposition( MKL_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in=false, string initial_guess_in="close_to_zero" ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
+N_Qubit_Decomposition::N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in=false, string initial_guess_in="close_to_zero" ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
         
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -142,7 +142,7 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
         }
 
         // calculating the final error of the decomposition
-        MKL_Complex16* matrix_decomposed = get_transformed_matrix(optimized_parameters, operations.begin(), operations.size(), Umtx ); 
+        QGD_Complex16* matrix_decomposed = get_transformed_matrix(optimized_parameters, operations.begin(), operations.size(), Umtx ); 
 
         subtract_diag( matrix_decomposed, matrix_size, matrix_decomposed[0] );
         decomposition_error = cblas_dznrm2( matrix_size*matrix_size, matrix_decomposed, 1 );
@@ -152,7 +152,7 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
 
         printf( "In the decomposition with error = %f were used %d layers with %d U3 operations and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
         printf("--- In total %f seconds elapsed during the decomposition ---\n", float(time(NULL) - start_time));
-        mkl_free( matrix_decomposed );
+        qgd_free( matrix_decomposed );
     }
 
 
@@ -171,11 +171,11 @@ void  N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decomp
         int parameter_num_sub_decomp = cSub_decomposition->get_parameter_num();
 
         // adding the unitarization parameters to the ones stored in the class
-        double* optimized_parameters_tmp = (double*)mkl_malloc( (parameter_num_sub_decomp+parameter_num)*sizeof(double), 64 );
+        double* optimized_parameters_tmp = (double*)qgd_calloc( (parameter_num_sub_decomp+parameter_num),sizeof(double), 64 );
         memcpy(optimized_parameters_tmp, parameters_sub_decomp, parameter_num_sub_decomp*sizeof(double));
         if ( optimized_parameters != NULL ) {
             memcpy(optimized_parameters_tmp+parameter_num_sub_decomp, optimized_parameters, parameter_num*sizeof(double));
-            mkl_free( optimized_parameters );
+            qgd_free( optimized_parameters );
         }
         
         optimized_parameters = optimized_parameters_tmp;
@@ -233,10 +233,8 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
                        
         
         // obtaining the subdecomposed submatrices
-verbose = true;
-        MKL_Complex16* subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
-printf("subdecomposed matrix:\n");
-print_mtx(subdecomposed_mtx, matrix_size, matrix_size );          
+        QGD_Complex16* subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+
         // get the most unitary submatrix
         // get the number of 2qubit submatrices
         int submatrices_num_row = 2;
@@ -246,19 +244,19 @@ print_mtx(subdecomposed_mtx, matrix_size, matrix_size );
         
         // fill up the submatrices and select the most unitary submatrix
         
-        MKL_Complex16* most_unitary_submatrix = (MKL_Complex16*)mkl_malloc( submatrix_size*submatrix_size*sizeof(MKL_Complex16), 64 );
+        QGD_Complex16* most_unitary_submatrix = (QGD_Complex16*)qgd_calloc( submatrix_size*submatrix_size,sizeof(QGD_Complex16), 64 );
         double unitary_error_min = 1e8;
 
         for (int idx=0; idx<submatrices_num_row; idx++) { // in range(0,submatrices_num_row):
             for (int jdx=0; jdx<submatrices_num_row; jdx++) { // in range(0,submatrices_num_row):
 
-                MKL_Complex16* submatrix_prod = (MKL_Complex16*)mkl_malloc( submatrix_size*submatrix_size*sizeof(MKL_Complex16), 64 );
-                MKL_Complex16* submatrix = (MKL_Complex16*)mkl_malloc( submatrix_size*submatrix_size*sizeof(MKL_Complex16), 64 );
+                QGD_Complex16* submatrix_prod = (QGD_Complex16*)qgd_calloc( submatrix_size*submatrix_size,sizeof(QGD_Complex16), 64 );
+                QGD_Complex16* submatrix = (QGD_Complex16*)qgd_calloc( submatrix_size*submatrix_size,sizeof(QGD_Complex16), 64 );
 
                 for ( int row_idx=0; row_idx<submatrix_size; row_idx++ ) {
                     int matrix_offset = idx*(matrix_size*submatrix_size) + jdx*(submatrix_size) + row_idx*matrix_size;
                     int submatrix_offset = row_idx*submatrix_size;
-                    memcpy(submatrix+submatrix_offset, subdecomposed_mtx+matrix_offset, submatrix_size*sizeof(MKL_Complex16));
+                    memcpy(submatrix+submatrix_offset, subdecomposed_mtx+matrix_offset, submatrix_size*sizeof(QGD_Complex16));
                 }
 
                 // parameters alpha and beta for the cblas_zgemm3m function
@@ -269,7 +267,7 @@ print_mtx(subdecomposed_mtx, matrix_size, matrix_size );
                 cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasConjTrans, submatrix_size, submatrix_size, submatrix_size, &alpha, submatrix, submatrix_size, submatrix, submatrix_size, &beta, submatrix_prod, submatrix_size);
 
                 // subtract corner element
-                MKL_Complex16 corner_element = submatrix_prod[0];
+                QGD_Complex16 corner_element = submatrix_prod[0];
                 for (int row_idx=0; row_idx<submatrix_size; row_idx++) {
                     submatrix_prod[row_idx*submatrix_size+row_idx].real = submatrix_prod[row_idx*submatrix_size+row_idx].real - corner_element.real;
                     submatrix_prod[row_idx*submatrix_size+row_idx].imag = submatrix_prod[row_idx*submatrix_size+row_idx].imag - corner_element.imag;
@@ -279,11 +277,11 @@ print_mtx(subdecomposed_mtx, matrix_size, matrix_size );
 
                 if (unitary_error < unitary_error_min) {
                     unitary_error_min = unitary_error;                    
-                    memcpy(most_unitary_submatrix, submatrix, submatrix_size*submatrix_size*sizeof(MKL_Complex16));
+                    memcpy(most_unitary_submatrix, submatrix, submatrix_size*submatrix_size*sizeof(QGD_Complex16));
                 }
 
-                mkl_free(submatrix);
-                mkl_free(submatrix_prod);
+                qgd_free(submatrix);
+                qgd_free(submatrix_prod);
             }
         }
 
@@ -355,7 +353,7 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
         }
         
         if (optimized_parameters == NULL) {
-            optimized_parameters = (double*)mkl_malloc(num_of_parameters*sizeof(double), 64);
+            optimized_parameters = (double*)qgd_calloc(num_of_parameters,sizeof(double), 64);
         }
 
         // maximal number of iteration loops
@@ -446,13 +444,13 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
 double N_Qubit_Decomposition::optimalization_problem( const double* parameters ) {
 
         // get the transformed matrix with the operations in the list
-        MKL_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
+        QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
 
         double cost_function = get_cost_function(matrix_new, matrix_size); 
 
         // free the allocated matrix and returning with the cost function
         if ( matrix_new != Umtx ) {
-            mkl_free( matrix_new );              
+            qgd_free( matrix_new );              
         }
 
         return cost_function;
@@ -467,7 +465,7 @@ double N_Qubit_Decomposition::optimalization_problem( const gsl_vector* paramete
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(params);
     std::vector<Operation*> operations_loc = instance->get_operations(); 
 
-    MKL_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
+    QGD_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
 
     double cost_function = get_cost_function(matrix_new, instance->get_Umtx_size()); 
 
@@ -476,7 +474,7 @@ double N_Qubit_Decomposition::optimalization_problem( const gsl_vector* paramete
 
     // free the allocated matrix and returning with the cost function
     if ( matrix_new != instance->get_Umtx() ) {
-        mkl_free( matrix_new );              
+        qgd_free( matrix_new );              
     }     
 
     return cost_function; 

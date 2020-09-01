@@ -13,4 +13,4 @@ pkginclude_HEADERS = include/common.h
 
 libcommon_la_SOURCES	= common.cpp
 
-AM_CPPFLAGS = -fopenmp -I$(top_srcdir)  -I$(GSL_INC_DIR)
+AM_CPPFLAGS = $(CXXFLAGS) -I$(top_srcdir)  -I$(GSL_INC_DIR)

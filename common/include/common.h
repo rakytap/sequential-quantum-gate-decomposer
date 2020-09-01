@@ -18,9 +18,15 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 
+// include MKL header if MKL package and intel compiler are present
 #pragma once
-//#include <mkl_types.h>
-//#include <mkl.h>
+#if CXX==icpc
+#ifdef ac_cv_header_mkl_service
+#include <mkl_service.h>
+#endif
+#endif
+
+#include <stdlib.h>
 #include <gsl/gsl_blas_types.h>
 #include <string>
 #include <stdio.h>
@@ -28,31 +34,62 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <cmath>
 #include <vector>
 #include <cstring>
+#include <sstream>
 
-// @brief Structure type representing complex number
-struct MKL_Complex16 {
+// @brief Structure type representing complex number in the QGD package (compatible with MKL, cblas and Fortran)
+struct QGD_Complex16 {
   double real;
   double imag;
 };
 
+#if CXX==icpc
+#ifdef ac_cv_header_mkl_service
+#include <mkl_service.h>
+#endif
+#endif
 
-void* mkl_malloc( size_t size, size_t alignment );
-void* mkl_calloc( size_t element_num, size_t size, size_t alignment );
-void mkl_free( void* ptr );
+// define aligned memory allocation function if they are not present (in case of older gcc compilers)
+#ifndef ac_cv_libs_mkl_intel_lp64
+#ifndef ac_cv_func_aligned_alloc
+/* Allocate aligned memory in a portable way.
+ *
+ * Memory allocated with aligned alloc *MUST* be freed using aligned_free.
+ *
+ * @param alignment The number of bytes to which memory must be aligned. This
+ *  value *must* be <= 255.
+ * @param bytes The number of bytes to allocate.
+ * @param zero If true, the returned memory will be zeroed. If false, the
+ *  contents of the returned memory are undefined.
+ * @returns A pointer to `size` bytes of memory, aligned to an `alignment`-byte
+ *  boundary.
+ */
+void *aligned_alloc(size_t alignment, size_t size, bool zero);
 
+/* Free memory allocated with aligned_alloc */
+void aligned_free(void* aligned_ptr);
+#endif
+#endif
+
+// @brief custom defined memory allocation function. (Refers to corresponding MKL function if present, or use another aligned memory allocator otherwise)
+void* qgd_calloc( size_t element_num, size_t size, size_t alignment );
+
+// @brief custom defined memory release function. (Refers to corresponding MKL function if present, or use another aligned memory allocator otherwise)
+void qgd_free( void* ptr );
+
+// @brief Calculates the n-th power of 2.
 int Power_of_2(int n);
 
-// print the matrix
-void print_mtx( MKL_Complex16* , int, int );
+// @brief Print a complex matrix on standard output
+void print_mtx( QGD_Complex16* , int, int );
 
-// print a CNOT
-void print_CNOT( MKL_Complex16* , int );
+// @brief Print a CNOT matrix on standard output
+void print_CNOT( QGD_Complex16* , int );
 
 
-// converts integer to string
+// @brief converts integer to string
 std::string int_to_string( int input );
 
-// converts double to string
+// @brief converts double to string
 std::string double_to_string( double input );
 
 // @brief Structure type conatining gate numbers
@@ -65,39 +102,39 @@ struct gates_num {
 void add_unique_elelement( std::vector<int>& involved_qbits, int qbit );
 
 // @brief Create an identity matrix
-MKL_Complex16* create_identity( int );
+QGD_Complex16* create_identity( int );
 
 // @brief Create an identity matrix
-int create_identity( MKL_Complex16* matrix, int matrix_size );
+int create_identity( QGD_Complex16* matrix, int matrix_size );
 
 // @brief Call to calculate the product of two matrices using cblas_zgemm3m
-MKL_Complex16* zgemm3m_wrapper( MKL_Complex16* , MKL_Complex16*, int);
+QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* , QGD_Complex16*, int);
 
 // @brief Call to calculate the product of two matrices using cblas_zgemm3m
-int zgemm3m_wrapper( MKL_Complex16* , MKL_Complex16*, MKL_Complex16*, int);
+int zgemm3m_wrapper( QGD_Complex16* , QGD_Complex16*, QGD_Complex16*, int);
 
 // @brief Calculate the product of complex matrices stored in a vector of matrices
-int reduce_zgemm( std::vector<MKL_Complex16*>, MKL_Complex16* C, int );
+int reduce_zgemm( std::vector<QGD_Complex16*>, QGD_Complex16* C, int );
 
 
 // @brief subtract a scalar from the diagonal of a matrix
-void subtract_diag( MKL_Complex16* & , int, MKL_Complex16 ); 
+void subtract_diag( QGD_Complex16* & , int, QGD_Complex16 ); 
 
 // calculate the cost funtion from the submatrices of the given matrix 
-double get_submatrix_cost_function(MKL_Complex16* matrix_new, int matrix_size);
+double get_submatrix_cost_function(QGD_Complex16* matrix_new, int matrix_size);
 
-double get_submatrix_cost_function_2(MKL_Complex16* matrix, int matrix_size);
+double get_submatrix_cost_function_2(QGD_Complex16* matrix, int matrix_size);
 
 // calculate the cost funtion for the final optimalization
-double get_cost_function(MKL_Complex16* matrix, int matrix_size);
+double get_cost_function(QGD_Complex16* matrix, int matrix_size);
 
 
 // calculate the product of two scalars
-MKL_Complex16 mult( MKL_Complex16 a, MKL_Complex16 b );
+QGD_Complex16 mult( QGD_Complex16 a, QGD_Complex16 b );
 
 // calculate the product of two scalars
-MKL_Complex16 mult( double a, MKL_Complex16 b );
+QGD_Complex16 mult( double a, QGD_Complex16 b );
 
 // Multiply the elements of matrix "b" by a scalar "a".
-void mult( MKL_Complex16 a, MKL_Complex16* b, int matrix_size );
+void mult( QGD_Complex16 a, QGD_Complex16* b, int matrix_size );
 

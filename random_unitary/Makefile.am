@@ -13,4 +13,4 @@ pkginclude_HEADERS = include/Random_Unitary.h
 
 librandomunitary_la_SOURCES	= Random_Unitary.cpp
 
-AM_CPPFLAGS = -fopenmp -I$(top_srcdir) -I$(GSL_INC_DIR)
+AM_CPPFLAGS = $(CXXFLAGS) -I$(top_srcdir) -I$(GSL_INC_DIR)

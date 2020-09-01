@@ -1901,6 +1901,97 @@ fi
   as_fn_set_status $ac_retval
 
 } # ac_fn_cxx_try_link
+
+# ac_fn_c_check_header_mongrel LINENO HEADER VAR INCLUDES
+# -------------------------------------------------------
+# Tests whether HEADER exists, giving a warning if it cannot be compiled using
+# the include files in INCLUDES and setting the cache variable VAR
+# accordingly.
+ac_fn_c_check_header_mongrel ()
+{
+  as_lineno=${as_lineno-"$1"} as_lineno_stack=as_lineno_stack=$as_lineno_stack
+  if eval \${$3+:} false; then :
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
+$as_echo_n "checking for $2... " >&6; }
+if eval \${$3+:} false; then :
+  $as_echo_n "(cached) " >&6
+fi
+eval ac_res=\$$3
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+else
+  # Is the header compilable?
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking $2 usability" >&5
+$as_echo_n "checking $2 usability... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+$4
+#include <$2>
+_ACEOF
+if ac_fn_c_try_compile "$LINENO"; then :
+  ac_header_compiler=yes
+else
+  ac_header_compiler=no
+fi
+rm -f core conftest.err conftest.$ac_objext conftest.$ac_ext
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_header_compiler" >&5
+$as_echo "$ac_header_compiler" >&6; }
+
+# Is the header present?
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking $2 presence" >&5
+$as_echo_n "checking $2 presence... " >&6; }
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+#include <$2>
+_ACEOF
+if ac_fn_c_try_cpp "$LINENO"; then :
+  ac_header_preproc=yes
+else
+  ac_header_preproc=no
+fi
+rm -f conftest.err conftest.i conftest.$ac_ext
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_header_preproc" >&5
+$as_echo "$ac_header_preproc" >&6; }
+
+# So?  What about this header?
+case $ac_header_compiler:$ac_header_preproc:$ac_c_preproc_warn_flag in #((
+  yes:no: )
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: accepted by the compiler, rejected by the preprocessor!" >&5
+$as_echo "$as_me: WARNING: $2: accepted by the compiler, rejected by the preprocessor!" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: proceeding with the compiler's result" >&5
+$as_echo "$as_me: WARNING: $2: proceeding with the compiler's result" >&2;}
+    ;;
+  no:yes:* )
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: present but cannot be compiled" >&5
+$as_echo "$as_me: WARNING: $2: present but cannot be compiled" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2:     check for missing prerequisite headers?" >&5
+$as_echo "$as_me: WARNING: $2:     check for missing prerequisite headers?" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: see the Autoconf documentation" >&5
+$as_echo "$as_me: WARNING: $2: see the Autoconf documentation" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2:     section \"Present But Cannot Be Compiled\"" >&5
+$as_echo "$as_me: WARNING: $2:     section \"Present But Cannot Be Compiled\"" >&2;}
+    { $as_echo "$as_me:${as_lineno-$LINENO}: WARNING: $2: proceeding with the compiler's result" >&5
+$as_echo "$as_me: WARNING: $2: proceeding with the compiler's result" >&2;}
+( $as_echo "## ------------------------------------- ##
+## Report this to rakytap@caesar.elte.hu ##
+## ------------------------------------- ##"
+     ) | sed "s/^/$as_me: WARNING:     /" >&2
+    ;;
+esac
+  { $as_echo "$as_me:${as_lineno-$LINENO}: checking for $2" >&5
+$as_echo_n "checking for $2... " >&6; }
+if eval \${$3+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  eval "$3=\$ac_header_compiler"
+fi
+eval ac_res=\$$3
+	       { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_res" >&5
+$as_echo "$ac_res" >&6; }
+fi
+  eval $as_lineno_stack; ${as_lineno_stack:+:} unset as_lineno
+
+} # ac_fn_c_check_header_mongrel
 cat >config.log <<_ACEOF
 This file contains any messages produced by compilers while
 running configure, to aid debugging if configure makes a mistake.
@@ -15666,6 +15757,149 @@ ac_compiler_gnu=$ac_cv_c_compiler_gnu
 
 
 ac_config_files="$ac_config_files Makefile qgd/Makefile common/Makefile operations/Makefile decomposition/Makefile random_unitary/Makefile test_standalone/Makefile"
+
+# TODO GCC OR ICC?
+if test $CXX = "icpc"; then
+  CXXFLAGS="$CXXFLAGS  -qopenmp -I$GSL_INCLUDE_DIR"
+  CFLAGS="$CFLAGS -qopenmp -I$GSL_INCLUDE_DIR"
+  LDFLAGS="$LDFLAGS -liomp5"
+else
+  CXXFLAGS=" -fopenmp $CXXFLAGS -I$GSL_INCLUDE_DIR"
+  CFLAGS=" -fopenmp $CFLAGS -I$GSL_INCLUDE_DIR"
+  LDFLAGS="$LDFLAGS -lgomp"
+fi
+
+
+
+
+#checking MKL library
+MKL_LIBS=
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for zgemm3m in -lmkl_intel_lp64" >&5
+$as_echo_n "checking for zgemm3m in -lmkl_intel_lp64... " >&6; }
+if ${ac_cv_lib_mkl_intel_lp64_zgemm3m+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char zgemm3m ();
+int
+main ()
+{
+return zgemm3m ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_mkl_intel_lp64_zgemm3m=yes
+else
+  ac_cv_lib_mkl_intel_lp64_zgemm3m=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_mkl_intel_lp64_zgemm3m" >&5
+$as_echo "$ac_cv_lib_mkl_intel_lp64_zgemm3m" >&6; }
+if test "x$ac_cv_lib_mkl_intel_lp64_zgemm3m" = xyes; then :
+  MKL_LIBS="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
+fi
+
+
+#checking MKL headres
+ac_fn_c_check_header_mongrel "$LINENO" "mkl_service.h" "ac_cv_header_mkl_service_h" "$ac_includes_default"
+if test "x$ac_cv_header_mkl_service_h" = xyes; then :
+
+fi
+
+
+
+
+#checking GNU SCIENTIFIC LIBRARY
+LDFLAGS="${LDFLAGS_save} -L$GSL_LIB_DIR"
+GSL_LIBS=
+{ $as_echo "$as_me:${as_lineno-$LINENO}: checking for gsl_multimin_fdfminimizer_vector_bfgs2 in -lgsl" >&5
+$as_echo_n "checking for gsl_multimin_fdfminimizer_vector_bfgs2 in -lgsl... " >&6; }
+if ${ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2+:} false; then :
+  $as_echo_n "(cached) " >&6
+else
+  ac_check_lib_save_LIBS=$LIBS
+LIBS="-lgsl -lgslcblas $LIBS"
+cat confdefs.h - <<_ACEOF >conftest.$ac_ext
+/* end confdefs.h.  */
+
+/* Override any GCC internal prototype to avoid an error.
+   Use char because int might match the return type of a GCC
+   builtin and then its argument prototype would still apply.  */
+#ifdef __cplusplus
+extern "C"
+#endif
+char gsl_multimin_fdfminimizer_vector_bfgs2 ();
+int
+main ()
+{
+return gsl_multimin_fdfminimizer_vector_bfgs2 ();
+  ;
+  return 0;
+}
+_ACEOF
+if ac_fn_c_try_link "$LINENO"; then :
+  ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2=yes
+else
+  ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2=no
+fi
+rm -f core conftest.err conftest.$ac_objext \
+    conftest$ac_exeext conftest.$ac_ext
+LIBS=$ac_check_lib_save_LIBS
+fi
+{ $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2" >&5
+$as_echo "$ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2" >&6; }
+if test "x$ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2" = xyes; then :
+
+if $ac_cv_libs_mkl_intel_lp64; then
+GSL_LIBS="-lgsl"
+else
+GSL_LIBS="-lgsl -lgslcblas "
+fi
+
+else
+  as_fn_error $? "gsl library not found" "$LINENO" 5
+fi
+
+
+
+LDFLAGS="$LDFLAGS $GSL_LIBS $MKL_LIBS"
+
+#checking GNU SCIENTIFIC HEADERS
+ac_fn_c_check_header_mongrel "$LINENO" "gsl/gsl_multimin.h" "ac_cv_header_gsl_gsl_multimin_h" "$ac_includes_default"
+if test "x$ac_cv_header_gsl_gsl_multimin_h" = xyes; then :
+
+else
+  as_fn_error $? "gsl_multimin.h header not found" "$LINENO" 5
+fi
+
+
+
+if $ac_cv_libs_mkl_intel_lp64; then
+postdeps_CXX="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
+else
+# checking aligned_alloc if mkl is not present
+ac_fn_c_check_func "$LINENO" "aligned_alloc" "ac_cv_func_aligned_alloc"
+if test "x$ac_cv_func_aligned_alloc" = xyes; then :
+
+fi
+
+fi
+
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure

@@ -73,13 +73,13 @@ CNOT::~CNOT() {
 
 //
 // @brief Call to terive the operation matrix
-MKL_Complex16* CNOT::matrix() {
+QGD_Complex16* CNOT::matrix() {
     return composite_cnot();
 }
 
 //
 // @brief Call to terive the operation matrix
-int CNOT::matrix(MKL_Complex16* retrive_matrix ) {
+int CNOT::matrix(QGD_Complex16* retrive_matrix ) {
     return composite_cnot( retrive_matrix );
 }
 
@@ -89,11 +89,11 @@ int CNOT::matrix(MKL_Complex16* retrive_matrix ) {
 ////    
 // @brief Calculate the matrix of a CNOT gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
 // @return Returns with the matrix of the CNOT gate.
-MKL_Complex16* CNOT::composite_cnot() {
+QGD_Complex16* CNOT::composite_cnot() {
 
 
         // preallocate array for the composite u3 operation
-        MKL_Complex16* CNOT_mtx = (MKL_Complex16*)mkl_calloc(matrix_size*matrix_size, sizeof(MKL_Complex16), 64);
+        QGD_Complex16* CNOT_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
         composite_cnot( CNOT_mtx );
 
@@ -104,7 +104,7 @@ MKL_Complex16* CNOT::composite_cnot() {
 ////    
 // @brief Calculate the matrix of a CNOT gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
 // @return Returns with the matrix of the CNOT gate.
-int CNOT::composite_cnot( MKL_Complex16* CNOT_mtx ) {
+int CNOT::composite_cnot( QGD_Complex16* CNOT_mtx ) {
 
         int target_qbit_power = Power_of_2(target_qbit);
         int control_qbit_power = Power_of_2(control_qbit);
@@ -197,7 +197,7 @@ void CNOT::reorder_qubits( vector<int> qbit_list) {
         }
 
         if ( matrix_alloc != NULL ) {
-            mkl_free( matrix_alloc );
+            qgd_free( matrix_alloc );
         }
 
         // Contruct the matrix of the operation
@@ -214,8 +214,8 @@ CNOT* CNOT::clone() {
     CNOT* ret = new CNOT( qbit_num, target_qbit, control_qbit );
  
     if (matrix_alloc != NULL) {
-        MKL_Complex16* mtx = (MKL_Complex16*)mkl_malloc( matrix_size*matrix_size*sizeof(MKL_Complex16), 64);
-        memcpy( mtx, matrix_alloc, matrix_size*matrix_size*sizeof(MKL_Complex16) );
+        QGD_Complex16* mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
+        memcpy( mtx, matrix_alloc, matrix_size*matrix_size*sizeof(QGD_Complex16) );
         ret->set_matrix( mtx);
     }
     

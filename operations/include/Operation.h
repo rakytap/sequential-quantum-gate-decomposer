@@ -47,7 +47,7 @@ protected:
     // The size of teh matrx
     int matrix_size;
     // The allocated array of the operatrion matrix
-    MKL_Complex16* matrix_alloc;
+    QGD_Complex16* matrix_alloc;
     // the number of free parameters
     int parameter_num;
     
@@ -73,15 +73,15 @@ public:
     //
     // @brief Call to terive the operation matrix
     // @return Returns with a pointer to the operation matrix
-    virtual MKL_Complex16* matrix();
+    virtual QGD_Complex16* matrix();
 
     //
     // @brief Call to terive the operation matrix
-    virtual int matrix(MKL_Complex16* retrive_matrix );
+    virtual int matrix(QGD_Complex16* retrive_matrix );
 
     //
     // @brief Call to set the stored matrix in the operation
-    void set_matrix( MKL_Complex16* );
+    void set_matrix( QGD_Complex16* );
    
     //
     // @brief Set the number of qubits spanning the matrix of the operation
