@@ -18,16 +18,17 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 
-// include MKL header if MKL package and intel compiler are present
 #pragma once
-#if CXX==icpc
-#ifdef ac_cv_header_mkl_service
-#include <mkl_service.h>
+#ifdef __cplusplus
+extern "C"
+{
 #endif
+#include <gsl/gsl_blas_types.h>
+#ifdef __cplusplus
+}
 #endif
 
 #include <stdlib.h>
-#include <gsl/gsl_blas_types.h>
 #include <string>
 #include <stdio.h>
 #include <iostream>
@@ -36,20 +37,44 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <cstring>
 #include <sstream>
 
+// include MKL header if MKL package and intel compiler are present
+#if CXX==icpc
+#if HAVE_LIBMKL_INTEL_LP64
+#include <mkl_service.h>
+
+// headers of cblas of MKL and GSL are in conflict and GSL headers need to be inculed due to multimin package,
+// thus function zgemm3m needs to be declared inline
+#ifdef __cplusplus
+extern "C"
+{
+#endif
+typedef CBLAS_ORDER CBLAS_LAYOUT;
+
+
+void cblas_zgemm3m(const  CBLAS_LAYOUT Layout, const  CBLAS_TRANSPOSE TransA,
+                 const  CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
+                 const MKL_INT K, const void *alpha, const void *A,
+                 const MKL_INT lda, const void *B, const MKL_INT ldb,
+                 const void *beta, void *C, const MKL_INT ldc);
+
+#ifdef __cplusplus
+}
+#endif
+
+#endif
+#endif
+
+
+
 // @brief Structure type representing complex number in the QGD package (compatible with MKL, cblas and Fortran)
 struct QGD_Complex16 {
   double real;
   double imag;
 };
 
-#if CXX==icpc
-#ifdef ac_cv_header_mkl_service
-#include <mkl_service.h>
-#endif
-#endif
 
 // define aligned memory allocation function if they are not present (in case of older gcc compilers)
-#ifndef ac_cv_libs_mkl_intel_lp64
+#if HAVE_LIBMKL_INTEL_LP64
 #ifndef ac_cv_func_aligned_alloc
 /* Allocate aligned memory in a portable way.
  *

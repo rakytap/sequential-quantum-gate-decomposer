@@ -15760,13 +15760,11 @@ ac_config_files="$ac_config_files Makefile qgd/Makefile common/Makefile operatio
 
 # TODO GCC OR ICC?
 if test $CXX = "icpc"; then
-  CXXFLAGS="$CXXFLAGS  -qopenmp -I$GSL_INCLUDE_DIR"
-  CFLAGS="$CFLAGS -qopenmp -I$GSL_INCLUDE_DIR"
-  LDFLAGS="$LDFLAGS -liomp5"
+  CXXFLAGS=" -qopenmp $CXXFLAGS"
+  CFLAGS=" -qopenmp $CFLAGS"
 else
-  CXXFLAGS=" -fopenmp $CXXFLAGS -I$GSL_INCLUDE_DIR"
-  CFLAGS=" -fopenmp $CFLAGS -I$GSL_INCLUDE_DIR"
-  LDFLAGS="$LDFLAGS -lgomp"
+  CXXFLAGS=" -fopenmp $CXXFLAGS"
+  CFLAGS=" -fopenmp $CFLAGS"
 fi
 
 
@@ -15774,6 +15772,7 @@ fi
 
 #checking MKL library
 MKL_LIBS=
+LDFLAGS="$LDFLAGS -L$MKLROOT/lib/intel64/"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for zgemm3m in -lmkl_intel_lp64" >&5
 $as_echo_n "checking for zgemm3m in -lmkl_intel_lp64... " >&6; }
 if ${ac_cv_lib_mkl_intel_lp64_zgemm3m+:} false; then :
@@ -15811,21 +15810,31 @@ fi
 { $as_echo "$as_me:${as_lineno-$LINENO}: result: $ac_cv_lib_mkl_intel_lp64_zgemm3m" >&5
 $as_echo "$ac_cv_lib_mkl_intel_lp64_zgemm3m" >&6; }
 if test "x$ac_cv_lib_mkl_intel_lp64_zgemm3m" = xyes; then :
-  MKL_LIBS="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
+
+MKL_LIBS="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
+HAVE_LIBMKL_INTEL_LP64=1
+
 fi
 
 
+
+
 #checking MKL headres
+CFLAGS_SAVE=$CFLAGS
+CFLAGS="$CFLAGS  -I$MKLROOT/include"
+CPPFLAGS_SAVE=$CPPFLAGS
+CPPFLAGS="$CPPFLAGS  -I$MKLROOT/include"
 ac_fn_c_check_header_mongrel "$LINENO" "mkl_service.h" "ac_cv_header_mkl_service_h" "$ac_includes_default"
 if test "x$ac_cv_header_mkl_service_h" = xyes; then :
 
 fi
 
 
-
+CFLAGS=$CFLAGS_SAVE
+CPPFLAGS=$CPPFLAGS_SAVE
 
 #checking GNU SCIENTIFIC LIBRARY
-LDFLAGS="${LDFLAGS_save} -L$GSL_LIB_DIR"
+LDFLAGS="${LDFLAGS} -L$GSL_LIB_DIR"
 GSL_LIBS=
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for gsl_multimin_fdfminimizer_vector_bfgs2 in -lgsl" >&5
 $as_echo_n "checking for gsl_multimin_fdfminimizer_vector_bfgs2 in -lgsl... " >&6; }
@@ -15865,7 +15874,7 @@ fi
 $as_echo "$ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2" >&6; }
 if test "x$ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2" = xyes; then :
 
-if $ac_cv_libs_mkl_intel_lp64; then
+if test $HAVE_LIBMKL_INTEL_LP64; then
 GSL_LIBS="-lgsl"
 else
 GSL_LIBS="-lgsl -lgslcblas "
@@ -15880,6 +15889,10 @@ fi
 LDFLAGS="$LDFLAGS $GSL_LIBS $MKL_LIBS"
 
 #checking GNU SCIENTIFIC HEADERS
+CFLAGS_SAVE=$CFLAGS
+CFLAGS="$CFLAGS -I$GSL_INC_DIR"
+CPPFLAGS_SAVE=$CPPFLAGS
+CPPFLAGS="$CPPFLAGS  -I$GSL_INC_DIR"
 ac_fn_c_check_header_mongrel "$LINENO" "gsl/gsl_multimin.h" "ac_cv_header_gsl_gsl_multimin_h" "$ac_includes_default"
 if test "x$ac_cv_header_gsl_gsl_multimin_h" = xyes; then :
 
@@ -15888,10 +15901,16 @@ else
 fi
 
 
+CFLAGS=$CFLAGS_SAVE
+CPPFLAGS=$CPPFLAGS_SAVE
 
-if $ac_cv_libs_mkl_intel_lp64; then
-postdeps_CXX="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
+
+
+# setting linking flags for libtool
+if test $HAVE_LIBMKL_INTEL_LP64 && test $CCX=icpc; then
+postdeps_CXX="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5"
 else
+postdeps_CXX="$postdeps_CXX -lgomp"
 # checking aligned_alloc if mkl is not present
 ac_fn_c_check_func "$LINENO" "aligned_alloc" "ac_cv_func_aligned_alloc"
 if test "x$ac_cv_func_aligned_alloc" = xyes; then :
@@ -15900,6 +15919,10 @@ fi
 
 fi
 
+CXXFLAGS="$CXXFLAGS -I$GSL_INC_DIR"
+CFLAGS="$CFLAGS -I$GSL_INC_DIR -I$MKLROOT"
+echo $GSL_LIBS
+echo $postdeps_CXX
 
 cat >confcache <<\_ACEOF
 # This file is a shell script that caches the results of configure

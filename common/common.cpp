@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 using namespace std;
 
 // define aligned memory allocation function if they are not present (in case of older gcc compilers)
-#ifndef ac_cv_libs_mkl_intel_lp64
+#ifndef MKL
 #ifndef ac_cv_func_aligned_alloc
 /* Allocate aligned memory in a portable way.
  *
@@ -67,8 +67,8 @@ void aligned_free(void* aligned_ptr) {
 
 
 void* qgd_calloc( size_t element_num, size_t size, size_t alignment ) {
-#ifdef ac_cv_libs_mkl_intel_lp64
-    void ret = mkl_malloc(element_num*size, alignment);
+#if HAVE_LIBMKL_INTEL_LP64
+    void* ret = mkl_malloc(element_num*size, alignment);
     memset(ret, 0, size*element_num );
 #else
 #ifndef ac_cv_func_aligned_alloc
@@ -82,7 +82,7 @@ void* qgd_calloc( size_t element_num, size_t size, size_t alignment ) {
 }
 
 void qgd_free( void* ptr ) {
-#ifdef ac_cv_libs_mkl_intel_lp64
+#if HAVE_LIBMKL_INTEL_LP64
     mkl_free(ptr);
 #else
 #ifndef ac_cv_func_aligned_alloc
@@ -228,14 +228,14 @@ QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_siz
 QGD_Complex16* zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, int matrix_size) {
 
     // parameters alpha and beta for the cblas_zgemm3m function
-    double alpha = 1;
-    double beta = 0;
+    double alpha = 1.0;
+    double beta = 0.0;
 
     // preallocate array for the result
     QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
 
     // calculate the product of A and B
-#ifdef ac_cv_libs_mkl_intel_lp64
+#if HAVE_LIBMKL_INTEL_LP64
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
 #else
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
@@ -251,14 +251,14 @@ QGD_Complex16* zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, int matr
 QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, int matrix_size) {
 
     // parameters alpha and beta for the cblas_zgemm3m function
-    double alpha = 1;
-    double beta = 0;
+    double alpha = 1.0;
+    double beta = 0.0;
 
     // preallocate array for the result
     QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
 
     // calculate the product of A and B
-#ifdef ac_cv_libs_mkl_intel_lp64
+#if HAVE_LIBMKL_INTEL_LP64
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
 #else
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
@@ -272,11 +272,11 @@ QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, int matrix_s
 int zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size) {
 
     // parameters alpha and beta for the cblas_zgemm3m function
-    double alpha = 1;
-    double beta = 0;
+    double alpha = 1.0;
+    double beta = 0.0;
 
     // calculate the product of A and B
-#ifdef ac_cv_libs_mkl_intel_lp64
+#ifdef ac_cv_lib_mklintellp64_zgemm3m
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
 #else
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
