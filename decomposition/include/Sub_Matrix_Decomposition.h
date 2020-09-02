@@ -132,6 +132,10 @@ static void optimalization_problem_grad( const gsl_vector* parameters, void*, gs
 static void optimalization_problem_combined( const gsl_vector* parameters, void* , double* , gsl_vector*  );
 
 
+QGD_Complex16** get_submatrices();
+
+QGD_Complex16* get_submatrix_prod();
+
 /*
 
 // 

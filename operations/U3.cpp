@@ -275,7 +275,7 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, QGD_Complex16* U3_
 
 
         // get the U3 operation of one qubit
-        QGD_Complex16* u3_1qbit = one_qubit_u3(Theta, Phi, Lambda );
+        set_one_qubit_u3(Theta, Phi, Lambda );
 
         // setting the operation elements
         #pragma omp parallel for
@@ -302,9 +302,6 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, QGD_Complex16* U3_
 
         }
 
-
-        // free the allocated single qubit matrix
-        qgd_free( u3_1qbit );
 
         return 0;
 }
@@ -422,29 +419,26 @@ bool U3::is_lambda_parameter() {
 // @param Phi Real parameter standing for the parameter phi.
 // @param Lambda Real parameter standing for the parameter lambda.
 // @return Returns with the matrix of the U3 gate.
-QGD_Complex16* U3::one_qubit_u3(double Theta, double Phi, double Lambda ) {
-
-    // preallocate array for the composite u3 operation
-    QGD_Complex16* matrix_array = (QGD_Complex16*)qgd_calloc(4, sizeof(QGD_Complex16), 64);
+int U3::set_one_qubit_u3(double Theta, double Phi, double Lambda ) {
 
     double cos_theta = cos(Theta/2);
     double sin_theta = sin(Theta/2);
 
     // the 1,1 element
-    matrix_array[0].real = cos_theta;
-    matrix_array[0].imag = 0;
+    u3_1qbit[0].real = cos_theta;
+    u3_1qbit[0].imag = 0;
     // the 1,2 element
-    matrix_array[1].real = -cos(Lambda)*sin_theta;
-    matrix_array[1].imag = -sin(Lambda)*sin_theta;
+    u3_1qbit[1].real = -cos(Lambda)*sin_theta;
+    u3_1qbit[1].imag = -sin(Lambda)*sin_theta;
     // the 2,1 element
-    matrix_array[2].real = cos(Phi)*sin_theta;
-    matrix_array[2].imag = sin(Phi)*sin_theta;
+    u3_1qbit[2].real = cos(Phi)*sin_theta;
+    u3_1qbit[2].imag = sin(Phi)*sin_theta;
     // the 2,2 element
-    matrix_array[3].real = cos(Phi+Lambda)*cos_theta;
-    matrix_array[3].imag = sin(Phi+Lambda)*cos_theta;
+    u3_1qbit[3].real = cos(Phi+Lambda)*cos_theta;
+    u3_1qbit[3].imag = sin(Phi+Lambda)*cos_theta;
 
         
-    return matrix_array;
+    return 0;
 
 }
 

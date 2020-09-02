@@ -418,7 +418,7 @@ double Sub_Matrix_Decomposition::optimalization_problem( const double* parameter
         QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
 //printf("Sub_Matrix_Decomposition::optimalization_problem 1\n");
 //print_mtx( matrix_new, matrix_size, matrix_size );
-        double cost_function = get_submatrix_cost_function(matrix_new, matrix_size); //NEW METHOD
+        double cost_function = get_submatrix_cost_function(matrix_new, matrix_size, submatrices, submatrix_prod); //NEW METHOD
         //double cost_function = get_submatrix_cost_function_2(matrix_new, matrix_size); //OLD METHOD
 
         return cost_function;
@@ -437,7 +437,7 @@ double Sub_Matrix_Decomposition::optimalization_problem( const gsl_vector* param
 
     QGD_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
 
-    double cost_function = get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());  //NEW METHOD
+    double cost_function = get_submatrix_cost_function(matrix_new, instance->get_Umtx_size(), instance->get_submatrices(), instance->get_submatrix_prod());  //NEW METHOD
     //double cost_function = get_submatrix_cost_function_2(matrix_new, instance->get_Umtx_size());  //OLD METHOD
 
     return cost_function; 
@@ -549,6 +549,17 @@ void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* pa
 void Sub_Matrix_Decomposition::optimalization_problem_combined( const gsl_vector* parameters, void* params, double* cost_function, gsl_vector* grad ) {
     *cost_function = optimalization_problem(parameters, params);
     optimalization_problem_grad(parameters, params, grad, *cost_function);
-}                                        
+}        
+
+
+
+QGD_Complex16** Sub_Matrix_Decomposition::get_submatrices() {
+    return submatrices;
+}      
+
+
+QGD_Complex16* Sub_Matrix_Decomposition::get_submatrix_prod() {
+    return submatrix_prod;
+}                                
    
 

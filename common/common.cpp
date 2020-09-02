@@ -225,14 +225,14 @@ QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_siz
 
 
 // @brief Call to calculate the product of two matrices using cblas_zgemm3m
-QGD_Complex16* zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, int matrix_size) {
+QGD_Complex16* zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size) {
 
     // parameters alpha and beta for the cblas_zgemm3m function
     double alpha = 1.0;
     double beta = 0.0;
 
     // preallocate array for the result
-    QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
+    //QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
 
     // calculate the product of A and B
 #if HAVE_LIBMKL_INTEL_LP64
@@ -351,7 +351,7 @@ void subtract_diag( QGD_Complex16* & mtx,  int matrix_size, QGD_Complex16 scalar
 }
 
 // calculate the cost funtion from the submatrices of the given matrix 
-double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
+double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_Complex16** submatrices, QGD_Complex16* submatrix_prod) {
 
     // ********************************
     // Calculate the submatrix products
@@ -365,18 +365,12 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
     int submatrices_num_row = 2;
     int submatrices_num = 4;
 
-    // extract sumbatrices
-    QGD_Complex16* submatrices[submatrices_num];
-
 
     // fill up the submatrices
     for (int idx=0; idx<submatrices_num_row; idx++) { //in range(0,submatrices_num_row):
         for ( int jdx=0; jdx<submatrices_num_row; jdx++) { //in range(0,submatrices_num_row):
 
             int submatirx_index = idx*submatrices_num_row + jdx;
-
-            // preallocate memory for the submatrix
-            submatrices[ submatirx_index ] = (QGD_Complex16*)qgd_calloc(element_num,sizeof(QGD_Complex16), 64);
 
             // copy memory to submatrices
             #pragma omp parallel for
@@ -398,7 +392,7 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
         for ( int jdx=0; jdx<submatrices_num_row; jdx++) { //jdx in range(0,submatrices_num_row):
 
             // calculate the submatrix product
-            QGD_Complex16* submatrix_prod = zgemm3m_wrapper_adj( submatrices[idx], submatrices[jdx], submatrix_size);
+            zgemm3m_wrapper_adj( submatrices[idx], submatrices[jdx], submatrix_prod, submatrix_size);
 
             // subtract the corner element from the diagonal
             QGD_Complex16 corner_element = submatrix_prod[0];
@@ -409,20 +403,7 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
                 submatrix_prod[element_idx].imag = submatrix_prod[element_idx].imag  - corner_element.imag;
             }
 
-            #pragma omp barrier
-
-            // Calculate the |x|^2 value of the elements of the submatrixproducts
-            double* submatrix_product_square = (double*)qgd_calloc(submatrix_size*submatrix_size,sizeof(double), 64); 
-            #pragma omp parallel for
-            for ( int idx=0; idx<element_num; idx++ ) {
-                submatrix_product_square[idx] = submatrix_prod[idx].real*submatrix_prod[idx].real + submatrix_prod[idx].imag*submatrix_prod[idx].imag;
-                //submatrix_prod[idx].real = submatrix_prod[idx].real*submatrix_prod[idx].real + submatrix_prod[idx].imag*submatrix_prod[idx].imag;
-                // for performance reason we leave the imaginary part intact (we dont neet it anymore)
-                //submatrix_prods[idx].imag = 0;
-            }
-
-            #pragma omp barrier
-            
+            #pragma omp barrier          
 
             // summing up elements and calculate the final cost function
 
@@ -433,25 +414,17 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
                 // calculate the sum for each row
                 for (int col_idx=0; col_idx<submatrix_size; col_idx++) {
                     int element_idx = row_idx*submatrix_size + col_idx;
-                    //cost_function_tmp = cost_function_tmp + submatrix_prod[element_idx].real;//*submatrix_prod[element_idx].real + submatrix_prod[element_idx].imag*submatrix_prod[element_idx].imag;
-                    cost_function_tmp = cost_function_tmp + submatrix_product_square[element_idx];
+                    cost_function_tmp = cost_function_tmp + submatrix_prod[element_idx].real*submatrix_prod[element_idx].real + submatrix_prod[element_idx].imag*submatrix_prod[element_idx].imag;
                 } 
             }
 
-            qgd_free(submatrix_product_square);
-
             cost_function = cost_function + cost_function_tmp;
-            qgd_free(submatrix_prod);
 
         }
     }
 
 //printf("%f\n",   cost_function );      
 
-    
-    for (int idx=0; idx<submatrices_num; idx++) {
-        qgd_free( submatrices[idx] );
-    }
 
     
 

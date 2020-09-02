@@ -133,6 +133,12 @@ QGD_Complex16* create_identity( int );
 int create_identity( QGD_Complex16* matrix, int matrix_size );
 
 // @brief Call to calculate the product of two matrices using cblas_zgemm3m
+QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_size);
+
+// @brief Call to calculate the product of two matrices using cblas_zgemm3m
+QGD_Complex16* zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size);
+
+// @brief Call to calculate the product of two matrices using cblas_zgemm3m
 QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* , QGD_Complex16*, int);
 
 // @brief Call to calculate the product of two matrices using cblas_zgemm3m
@@ -146,7 +152,7 @@ int reduce_zgemm( std::vector<QGD_Complex16*>, QGD_Complex16* C, int );
 void subtract_diag( QGD_Complex16* & , int, QGD_Complex16 ); 
 
 // calculate the cost funtion from the submatrices of the given matrix 
-double get_submatrix_cost_function(QGD_Complex16* matrix_new, int matrix_size);
+double get_submatrix_cost_function(QGD_Complex16* matrix_new, int matrix_size, QGD_Complex16** submatrices, QGD_Complex16* submatrix_prod);
 
 double get_submatrix_cost_function_2(QGD_Complex16* matrix, int matrix_size);
 

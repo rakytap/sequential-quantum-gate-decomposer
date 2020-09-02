@@ -41,7 +41,9 @@ bool theta;
 // logical value indicating whether the matrix creation takes an argument phi
 bool phi;
 // logical value indicating whether the matrix creation takes an argument lambda
-bool lambda;        
+bool lambda;  
+// auxiliary matrix to store the four different elements of the U3 operation
+QGD_Complex16 u3_1qbit[4];
         
 
 public: 
@@ -166,7 +168,7 @@ bool is_lambda_parameter();
     // @param Phi Real parameter standing for the parameter phi.
     // @param Lambda Real parameter standing for the parameter lambda.
     // @return Returns with the matrix of the U3 gate.
-QGD_Complex16* one_qubit_u3(double Theta, double Phi, double Lambda );
+int set_one_qubit_u3(double Theta, double Phi, double Lambda );
 
 
 //

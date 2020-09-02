@@ -1,4 +1,4 @@
-AC_INIT([qgd], [1.0], [rakytap@caesar.elte.hu])
+AC_INIT([qgd], [1.1], [rakytap@caesar.elte.hu])
 AM_INIT_AUTOMAKE
 LT_INIT
 AC_PROG_CXX

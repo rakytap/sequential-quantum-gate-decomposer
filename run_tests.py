@@ -50,7 +50,7 @@ import numpy as np
 
     
 # the number of qubits
-qbit_num = 6
+qbit_num = 5
     
 matrix_size = int(2**qbit_num)
 
