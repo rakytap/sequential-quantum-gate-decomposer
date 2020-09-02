@@ -7,17 +7,19 @@ The present package is supplied with automake tools to ease its deployment.
 Although QGD can be built with gnu, the best performance of the package can be obtained using Intel compiler integrating its Math Kernel Library ([MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html)). 
 Since Intel compiler is present on almost each HPC's, we briefly summarize the steps to build and install the QGD package using Intel compiler.
 
+The project was supported ... HUNQT ...
+
 ### Dependencies
 
 The optimization algorithm of QGD relies on the [multimin](https://www.gnu.org/software/gsl/doc/html/multimin.html) optimization component of the [GNU Scientific Library](https://www.gnu.org/software/gsl/doc/html/index.html). 
 We developed and tested the QGD package with GNU Scientific Library of version 2.5 and 2.6.
 
-* automake (only for development)
-* autoconf (only for development)
+* automake (for further development purposes)
+* autoconf (for further development purposes)
 * libtool
 * GNU Scientific Library (>=2.5)
 * Intel (recommended) or GNU compiler
-* Intel MKL (optional, but recommended)
+* Intel MKL (optional, but strongly recommended)
 
 The Python interface of QGD was developed and tested with Python 3.6 and 3.7
 QGD Python interface needs the following packages to be installed on the system:
@@ -49,7 +51,8 @@ $ make install
 
 ### Download the Quantum Gate Decomposer package
 
-The downloaded package should be extracted into the directory **path/to/qgdsource**.
+The developer version Quantum Gate Decomposer package can be downloaded from github repository [https://github.com/rakytap/quantum-gate-decomposer/tree/C++](https://github.com/rakytap/quantum-gate-decomposer/tree/C++).
+After the downloaded package is extracted into the directory **path/to/qgdsource** (which would be the path to the source code of the QGD package), one can proceed to the compilation steps described in the next section.
 
 ### How to deploy the Quantum Gate Decomposer package
 
@@ -81,16 +84,46 @@ After a successful compilation of the QGD package, it can be installed into the 
 
 $ make install
 
-The installation directory will contain all the C header files, the static and shared libraries needed for further developments and the python interface files including a simple python example file **example.py**.
-
+The installation procedure will copy all the C header files, the static and shared libraries needed for further developments and the python interface files including a simple python example file **example.py** into the installation destination defined by the **path/to*qgd** path.
 
 
 ### How to use
 
-The usage of the decomposer is demonstrated in test files in the file **test/decomposition.py**. The file contains several examples to calculate the decomposition of two, three and four qubit unitaries. The test examples can be run by the file ** run_tests.py** in the main directory with command:
+The algorithm implemented in the QGD package intends to transform the given unitary into an identity matrix via a sequence of CNOT and U3 operations applied on the unitary. 
+Thus, in order to get the decomposition of the unitary, one should rather provide the complex transpose of the unitary as the input for the decomposition process.
 
-*$ python3 run_tests.py*
+## Standalone executable
 
-The algorithm implemented in the code decomposes a given unitary into an identity matrix. 
-In order to get the decomposition of a unitary into U3 and CNOT gates instead of operations transforming it to unity, one should give the complex transpose of the unitary as the input for the decomposition.
+During the compilation and the instalaltion processes of the QGD package a standalone executable was also built and copied into the directory **path/to/gsl/bin**. 
+This executable can be executed by a command
 
+$ ./decomposition_test
+
+and it starts a decomposition of a random general unitary matrix. 
+The source of this example is located in **path/to/qgdsource/test_standalone/** and shows a simple testcase of the usage of the QGD package on source code level. 
+The Doxygen documentation of the QGD API can be also generated in order fully exploit the functionalities of the QGD package (for further details see section **Doxygen manual** at the end of this manual).
+
+## Python Interface
+
+The QGD package contains a simple python interface allowing the access of the functionalities of the QGD package from Python. 
+The usage of the QGD Python interface is demonstrated in the example file **example.py** located in the directory **path/to/qgd** and can be run similarly to any python scripts.
+The example file imports the **qgd_python** module containing the wrapper class for the decomposition of a given unitary matrix.
+The wrapper class loads the shared library libqgd.so and performs the data conversion between the python and C sides.
+
+It should be noted, however, that the python interface functions are implemented only for few functionalities of the whole QGD API. 
+Another desired interface functions can be implemented following the source of already implemented interface function in source file **python_interface.cpp** in the main directory of the QGD source code.
+
+
+### Development
+
+The QGD API enables the extension of the capabilities of the QGD packages into further projects. 
+The QGD header files needed for the compilation of the project are provided in the directory **path/to/qgd/include**. 
+The compiled object files should than be linked against the static or shared QGD library libqgd.a or libqgd.so, respectively,
+located in the directory **path/to/qgd/lib64**.
+To resolve all the references during the linkage, one should also link against the corresponding libraries of the 
+GNU Scientific Library located in the GSL_LIB_DIR environment variable set above, and against the Intel MKL libraries if they were used in the compilation of the QGD package.
+The full documentation of the QGD API can be accessed by a Doxygen manual which can be accessed and recreated by steps described in the following section
+
+## Doxygen manual
+
+----- how to create doxygen API documentation --------
