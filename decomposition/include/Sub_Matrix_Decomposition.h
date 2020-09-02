@@ -46,6 +46,17 @@ public:
     // The number of successive identical blocks in one leyer
     std::map<int,int> identical_blocks;
 
+protected:
+
+    // auxiliary variable storing the submatrices of the transformed matrix
+    QGD_Complex16** submatrices;
+
+    // auxiliary variable storing the product of two submatrices when calculating the cost function of the subdecomposition
+    QGD_Complex16* submatrix_prod;
+
+    // The number of submatrices
+    int submatrices_num;
+
 
 public:
 
@@ -58,6 +69,10 @@ public:
 // @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 // @return An instance of the class
 Sub_Matrix_Decomposition( QGD_Complex16*, int, std::map<int,int>, std::map<int,int>, bool, string );
+
+//// 
+// @brief Destructor of the class
+~Sub_Matrix_Decomposition();
 
 
 ////

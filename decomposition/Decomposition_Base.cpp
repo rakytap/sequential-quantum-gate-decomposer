@@ -84,9 +84,9 @@ Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in,
     // optimized parameters
     optimized_parameters = NULL;
 
-/*    // current minimum evaluated by the LBFGS library
-    m_x = NULL;
-*/
+    // auxiliary variable storing the transformed matrix
+    transformed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+
 verbose = false;
 }
 
@@ -99,6 +99,9 @@ Decomposition_Base::~Decomposition_Base() {
         optimized_parameters = NULL;
     }
 
+    if (transformed_mtx != NULL ) {
+        qgd_free( transformed_mtx );
+    }
 
 /*    if (m_x != NULL) {
         lbfgs_free(m_x);
@@ -132,9 +135,6 @@ void Decomposition_Base::finalize_decomposition() {
         Operation_block* finalizing_operations;
         double* finalizing_parameters;
         QGD_Complex16* finalized_matrix_new = get_finalizing_operations( transformed_matrix, finalizing_operations, finalizing_parameters );
-        if (operations.size() > 0) {
-            qgd_free( transformed_matrix );
-        }
             
         // adding the finalizing operations to the list of operations
         // adding the opeartion block to the operations
@@ -200,7 +200,8 @@ QGD_Complex16* Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx
         int parameter_idx = finalizing_parameter_num-1;   
 
                
-        QGD_Complex16* mtx_new = mtx;
+        QGD_Complex16* mtx_new = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+        memcpy( mtx_new, mtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
         QGD_Complex16* mtx_new_tmp = NULL;
 
         double Theta, Lambda, Phi;  
@@ -352,7 +353,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         operations.clear();
         int block_parameter_num;
         QGD_Complex16* operations_mtx_pre = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-        QGD_Complex16* tmp = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+        QGD_Complex16* tmp;
         Operation* fixed_operation_post = new Operation( qbit_num );
         std::vector<QGD_Complex16*> operations_mtxs_post;
 
@@ -385,7 +386,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             // ***** get the fixed operations applied before the optimized operations *****
             if (block_idx_start < operations_loc.size() ) { //if block_idx_start < len(operations):
                 std::vector<Operation*>::iterator fixed_operations_pre_it = operations.begin() + 1;
-                get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre, tmp);  
+                tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre);  
                 memcpy( operations_mtx_pre, tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
                 //QGD_Complex16* operations_mtx_pre_tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre );  
                 //qgd_free( operations_mtx_pre );
@@ -563,7 +564,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         qgd_free( operations_mtx_pre );
         operations_mtx_pre = NULL;
  
-        qgd_free(tmp);
+        //qgd_free(tmp);
         tmp = NULL;
 
         delete(fixed_operation_post);
@@ -705,35 +706,16 @@ double* Decomposition_Base::get_optimized_parameters() {
 // @return Returns with the transformed matrix.
 QGD_Complex16* Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations, QGD_Complex16* initial_matrix=NULL  ) {
 
-    QGD_Complex16* ret_matrix = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
-
-    get_transformed_matrix( parameters, operations_it, num_of_operations, initial_matrix, ret_matrix );
-/*if (verbose) {
-printf("Decomposition_Base::get_transformed_matrix 1\n");
-print_mtx( ret_matrix, matrix_size, matrix_size );
-}*/
-    return ret_matrix;
-}
+    QGD_Complex16* ret_matrix = transformed_mtx;
 
 
-      
-////
-// @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
-// @param parameters An array containing the parameters of the U3 operations.
-// @param operations_it An iterator pointing to the first operation.
-// @param num_of_operations The number of operations
-// @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
-// @return Returns with the transformed matrix.
-int Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations, QGD_Complex16* initial_matrix, QGD_Complex16* ret_matrix ) {
-                
-                
         if (initial_matrix == NULL) {
             initial_matrix = Umtx;
         }
 
         if (num_of_operations==0) {
             memcpy(ret_matrix, initial_matrix, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-            return 0;
+            return ret_matrix;
         }
      
         // The matrix of the current operation
@@ -745,7 +727,9 @@ int Decomposition_Base::get_transformed_matrix( const double* parameters, std::v
         Operation_product = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
 
         for (int idx=0; idx<num_of_operations; idx++) {
-            Operation* operation = *operations_it;      
+
+            Operation* operation = *operations_it;     
+
             if (operation->get_type().compare("cnot") == 0 ) {
                 CNOT* cnot_operation = static_cast<CNOT*>( operation );
                 cnot_operation->matrix(operation_mtx);
@@ -799,7 +783,7 @@ print_mtx( initial_matrix, matrix_size, matrix_size );
 //printf("Decomposition_Base::get_transformed_matrix 6\n");
 //print_mtx( ret_matrix, matrix_size, matrix_size );
 
-        return 0;
+        return ret_matrix;
 }    
     
     

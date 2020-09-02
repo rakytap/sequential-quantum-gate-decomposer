@@ -277,7 +277,6 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, QGD_Complex16* U3_
         // get the U3 operation of one qubit
         QGD_Complex16* u3_1qbit = one_qubit_u3(Theta, Phi, Lambda );
 
-
         // setting the operation elements
         #pragma omp parallel for
         for(int idx = 0; idx < matrix_size/2; ++idx)

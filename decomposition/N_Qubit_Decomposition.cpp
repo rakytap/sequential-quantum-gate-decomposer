@@ -111,15 +111,11 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
     //cSub_decomposition->max_iterations = self.max_iterations
             
     //start to disentangle the qubit pair
-    cSub_decomposition->disentangle_submatrices();
-                                
+    cSub_decomposition->disentangle_submatrices();                           
     if ( !cSub_decomposition->subdisentaglement_done) {
         return;
     }
-
-
-        
-        
+   
     // saving the subunitarization operations
     extract_subdecomposition_results( cSub_decomposition );
 
@@ -132,7 +128,7 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
     if (finalize_decomp) {
         // finalizing the decompostition
         finalize_decomposition();
-            
+         
         // simplify layers
         //self.simplify_layers();
             
@@ -145,6 +141,7 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
         QGD_Complex16* matrix_decomposed = get_transformed_matrix(optimized_parameters, operations.begin(), operations.size(), Umtx ); 
 
         subtract_diag( matrix_decomposed, matrix_size, matrix_decomposed[0] );
+
         decomposition_error = cblas_dznrm2( matrix_size*matrix_size, matrix_decomposed, 1 );
             
         // get the number of gates used in the decomposition
@@ -152,7 +149,6 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
 
         printf( "In the decomposition with error = %f were used %d layers with %d U3 operations and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
         printf("--- In total %f seconds elapsed during the decomposition ---\n", float(time(NULL) - start_time));
-        qgd_free( matrix_decomposed );
     }
 
 
@@ -231,7 +227,6 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
             return;
         }
                        
-        
         // obtaining the subdecomposed submatrices
         QGD_Complex16* subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
 
@@ -284,9 +279,6 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
                 qgd_free(submatrix_prod);
             }
         }
-
-
-//print_mtx( most_unitary_submatrix, submatrix_size, submatrix_size);
                 
                     
         // if the qubit number in the submatirx is greater than 2 new N-qubit decomposition is started
@@ -448,11 +440,6 @@ double N_Qubit_Decomposition::optimalization_problem( const double* parameters )
 
         double cost_function = get_cost_function(matrix_new, matrix_size); 
 
-        // free the allocated matrix and returning with the cost function
-        if ( matrix_new != Umtx ) {
-            qgd_free( matrix_new );              
-        }
-
         return cost_function;
 }               
 
@@ -470,12 +457,7 @@ double N_Qubit_Decomposition::optimalization_problem( const gsl_vector* paramete
     double cost_function = get_cost_function(matrix_new, instance->get_Umtx_size()); 
 
 //printf("%f, \n", cblas_dznrm2( instance->get_Umtx_size()*instance->get_Umtx_size(), matrix_new, 1) );
-//printf("%f\n", cost_function);
-
-    // free the allocated matrix and returning with the cost function
-    if ( matrix_new != instance->get_Umtx() ) {
-        qgd_free( matrix_new );              
-    }     
+//printf("%f\n", cost_function);    
 
     return cost_function; 
 }  

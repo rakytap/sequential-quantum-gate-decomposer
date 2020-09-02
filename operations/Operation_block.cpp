@@ -211,6 +211,7 @@ std::vector<QGD_Complex16*> Operation_block::get_matrices( const double* paramet
         if (operation->get_type().compare("cnot")==0) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
             operation_mtx = cnot_operation->matrix();
+
         }                
         else if (operation->get_type().compare("u3")==0) {
 
@@ -232,7 +233,6 @@ std::vector<QGD_Complex16*> Operation_block::get_matrices( const double* paramet
                 printf("The U3 operation has wrong number of parameters");
                 throw "The U3 operation has wrong number of parameters";
             }
-
 
         }                                 
         else if (operation->get_type().compare("general")==0) {

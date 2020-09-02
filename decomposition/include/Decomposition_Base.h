@@ -101,10 +101,10 @@ protected:
         
     // method to guess initial values for the optimalization. POssible values: 'zeros', 'random', 'close_to_zero'
     string initial_guess;
-/*
-    // current minimum evaluated by the LBFGS library
-    double* m_x;
-*/
+
+    // auxiliary variable storing the transformed matrix
+    QGD_Complex16* transformed_mtx;
+
 
 public:
 
@@ -218,16 +218,6 @@ double* get_optimized_parameters();
 // @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
 // @return Returns with the transformed matrix.
 QGD_Complex16* get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, int num_of_operations, QGD_Complex16* initial_matrix );
-
-
-////
-// @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
-// @param parameters An array containing the parameters of the U3 operations.
-// @param operations The array of the operations to be applied on a unitary
-// @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
-// @return Returns with the transformed matrix.
-int get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, int num_of_operations, QGD_Complex16* initial_matrix, QGD_Complex16* ret_matrix );
-
 
 
 ////
