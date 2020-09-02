@@ -149,7 +149,7 @@ int main() {
 #endif
 
     // creating random unitary
-    int qbit_num = 3;
+    int qbit_num = 4;
 
 #ifdef MIC
       qbit_num = 7;

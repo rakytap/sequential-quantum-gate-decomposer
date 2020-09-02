@@ -154,11 +154,8 @@ void subtract_diag( QGD_Complex16* & , int, QGD_Complex16 );
 // calculate the cost funtion from the submatrices of the given matrix 
 double get_submatrix_cost_function(QGD_Complex16* matrix_new, int matrix_size, QGD_Complex16** submatrices, QGD_Complex16* submatrix_prod);
 
-double get_submatrix_cost_function_2(QGD_Complex16* matrix, int matrix_size);
-
 // calculate the cost funtion for the final optimalization
 double get_cost_function(QGD_Complex16* matrix, int matrix_size);
-
 
 // calculate the product of two scalars
 QGD_Complex16 mult( QGD_Complex16 a, QGD_Complex16 b );

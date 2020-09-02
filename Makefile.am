@@ -19,7 +19,7 @@ lib_LTLIBRARIES = libqgd.la
 pkginclude_HEADERS = python_interface.h
 libqgd_la_SOURCES = python_interface.cpp
 AM_CPPFLAGS = $(CXXFLAGS) -I$(top_srcdir) -I$(GSL_INC_DIR)
-libqgd_la_LIBADD = $(GSL_LIBADD) $(SUBLIBS) #$(GSL_LIB_DIR)/libgsl.la $(GSL_LIB_DIR)/libgslcblas.la
+libqgd_la_LIBADD = $(GSL_LIBADD) $(SUBLIBS)
 
 all:
 	@echo
@@ -27,3 +27,9 @@ all:
 	@echo 
 	@echo "----------------------------------------------------------"
 	@echo 
+
+
+install: 
+	cp -r qgd_python $(prefix)/
+	cp example.py $(prefix)/
+	

@@ -403,7 +403,18 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
                 submatrix_prod[element_idx].imag = submatrix_prod[element_idx].imag  - corner_element.imag;
             }
 
-            #pragma omp barrier          
+            #pragma omp barrier
+
+            // Calculate the |x|^2 value of the elements of the submatrixproducts
+            #pragma omp parallel for
+            for ( int idx=0; idx<element_num; idx++ ) {
+                submatrix_prod[idx].real = submatrix_prod[idx].real*submatrix_prod[idx].real + submatrix_prod[idx].imag*submatrix_prod[idx].imag;
+                // for performance reason we leave the imaginary part intact (we dont neet it anymore)
+                //submatrix_prods[idx].imag = 0;
+            }
+
+            #pragma omp barrier
+            
 
             // summing up elements and calculate the final cost function
 
@@ -414,9 +425,11 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
                 // calculate the sum for each row
                 for (int col_idx=0; col_idx<submatrix_size; col_idx++) {
                     int element_idx = row_idx*submatrix_size + col_idx;
-                    cost_function_tmp = cost_function_tmp + submatrix_prod[element_idx].real*submatrix_prod[element_idx].real + submatrix_prod[element_idx].imag*submatrix_prod[element_idx].imag;
+                    cost_function_tmp = cost_function_tmp + submatrix_prod[element_idx].real;//*submatrix_prod[element_idx].real + submatrix_prod[element_idx].imag*submatrix_prod[element_idx].imag;
+                    //cost_function_tmp = cost_function_tmp + submatrix_product_square[element_idx];
                 } 
             }
+
 
             cost_function = cost_function + cost_function_tmp;
 
@@ -425,6 +438,7 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
 
 //printf("%f\n",   cost_function );      
 
+    
 
     
 
@@ -436,191 +450,13 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
 
 
 
-// calculate the cost funtion from the submatrices of the given matrix 
-double get_submatrix_cost_function_2(QGD_Complex16* matrix, int matrix_size) {
-
-    // ********************************
-    // Calculate the submatrix products
-    // ********************************
-
-    // number ofcolumns in the submatrices
-    int submatrix_size = matrix_size/2;
-    // the number of rows in the matrix containing the products of submatrices
-    int rows_submatrix_prods = 8*submatrix_size;
-    // number of elements in the matrix of submatrix products
-    int element_num = submatrix_size*rows_submatrix_prods;
-
-    // preallocate memory for the submatrix products  
-    QGD_Complex16* submatrix_prods = (QGD_Complex16*)qgd_calloc(element_num,sizeof(QGD_Complex16), 64);
-
-    // calculate the elements of the submatirx products by row
-    #pragma omp parallel for
-    for ( int row_idx=0; row_idx<rows_submatrix_prods; row_idx++ ) {
-
-        // offset idices to get the correct submatrix in the matrix 
-        int row_offset_1;
-        int col_offset_1;
-        int row_offset_2;
-        int col_offset_2;
-
-        // element indices in the submatrix
-        int row_idx_submtx;
-        int col_idx_submtx;
-
-        //determine the id of the submatrix product in the list
-        int prod_idx = int(row_idx/submatrix_size);
-
-        // get the ID-s of submatrices to be used in the product
-        int first_submatrix = int(prod_idx/2);
-        int second_submatrix = int(prod_idx % 2);
-
-        // get the row and col offsets in the initial matrix
-        if (first_submatrix == 0) {
-            row_offset_1 = 0;
-            col_offset_1 = 0;
-        }
-        else if (first_submatrix == 1) {
-            row_offset_1 = 0;
-            col_offset_1 = submatrix_size;
-        }
-        else if (first_submatrix == 2) {
-            row_offset_1 = submatrix_size;
-            col_offset_1 = 0;
-        }
-        else if (first_submatrix == 3) {
-            row_offset_1 = submatrix_size;
-            col_offset_1 = submatrix_size;
-        }
-
-
-        if (second_submatrix == 0) {
-            row_offset_2 = 0;
-            col_offset_2 = 0;
-        }
-        else if (second_submatrix == 1) {
-            row_offset_2 = 0;
-            col_offset_2 = submatrix_size;
-        }
-
-        // determine the row index in the submatrix
-        row_idx_submtx = int(row_idx % submatrix_size);
-        //col_idx = int(y % submatrix_size)
-  
-
-        // row index in the original matrix
-        int row_idx_1 = row_idx_submtx+row_offset_1;
-
-        // calculate the col-wise products of the elements
-        for (int col_idx=0; col_idx<submatrix_size; col_idx++) {
-
-            // col index in the original matrix --- col is converted to row due to the transpose
-            int row_idx_2 = col_idx+row_offset_2;
-
-/*            QGD_Complex16* SubMatrix_row1 = matrix + row_idx_1*matrix_size + col_offset_1;
-            QGD_Complex16* SubMatrix_row2 = matrix + row_idx_2*matrix_size + col_offset_2;
-            QGD_Complex16 tmp = scalar_product(SubMatrix_row1, SubMatrix_row2, submatrix_size );
-*/
-            // variable storing the element products
-            QGD_Complex16 tmp;
-            tmp.real = 0;
-            tmp.imag = 0;
-
-            // calculate the product
-            for (int idx=0; idx<submatrix_size; idx++) {            
-                QGD_Complex16 a = matrix[row_idx_1*matrix_size + idx+col_offset_1];
-                QGD_Complex16 b = matrix[row_idx_2*matrix_size + idx+col_offset_2];
-                tmp.real = tmp.real + a.real*b.real + a.imag*b.imag;
-                tmp.imag = tmp.imag + a.imag*b.real - a.real*b.imag;
-            }
-//printf("%f + i*%f\n", tmp.real, tmp.imag);
-            // setting the element in the matrix conating the submatrix products
-            submatrix_prods[row_idx*submatrix_size + col_idx] = tmp;
-        }
-
-    }
-
-//printf("The matrix of the submatrix products:\n");
-//print_mtx( submatrix_prods, rows_submatrix_prods, submatrix_size );
-//printf("\n");
-
-    // ********************************
-    // Subtract the corner elements
-    // ********************************
-
-    // get corner elements
-    QGD_Complex16* corner_elements = (QGD_Complex16*)qgd_calloc(8,sizeof(QGD_Complex16), 64);
-    #pragma omp parallel for
-    for ( int corner_idx=0; corner_idx<8; corner_idx++ ) {
-        corner_elements[corner_idx] = submatrix_prods[corner_idx*submatrix_size*submatrix_size];
-    }
-
-    #pragma omp parallel for
-    for ( int row_idx=0; row_idx<rows_submatrix_prods; row_idx++ ) {
-
-        // identify the submatrix product corresponding to the given row index
-        int submatrix_prod_id = int(row_idx/submatrix_size);
-
-        // get the corner element
-        QGD_Complex16 corner_element = corner_elements[submatrix_prod_id];
-       
-        // subtract the corner element from the diagonal elemnts
-        int element_idx = row_idx*submatrix_size + (row_idx % submatrix_size);
-        submatrix_prods[element_idx].real = submatrix_prods[element_idx].real - corner_element.real;
-        submatrix_prods[element_idx].imag = submatrix_prods[element_idx].imag - corner_element.imag;
-
-    }
-
-    qgd_free( corner_elements );
-
-//printf("The matrix of the submatrix products after subtracking corner elements:\n");
-//print_mtx( submatrix_prods, rows_submatrix_prods, submatrix_size );
-//printf("\n");
-
-
-    // ********************************
-    // Calculate the |x|^2 value of the elements of the submatrixproducts
-    // ********************************
-    #pragma omp parallel for
-    for ( int idx=0; idx<element_num; idx++ ) {
-        submatrix_prods[idx].real = submatrix_prods[idx].real*submatrix_prods[idx].real + submatrix_prods[idx].imag*submatrix_prods[idx].imag;
-        // for performance reason we leave the imaginary part intact (we dont neet it anymore)
-        //submatrix_prods[idx].imag = 0; 
-    }
-
-    //#pragma omp barrier
-
-
-    // ********************************
-    // Calculate the final cost function
-    // ********************************
-    double cost_function = 0;
-    #pragma omp parallel for reduction(+:cost_function)
-    for ( int row_idx=0; row_idx<rows_submatrix_prods; row_idx++ ) {
-
-        // calculate thesum for each row
-        for (int col_idx=0; col_idx<submatrix_size; col_idx++) {
-
-            cost_function = cost_function + submatrix_prods[row_idx*submatrix_size + col_idx].real;
-        } 
-    }
-
-//printf("The cost function is: %f\n", cost_function);
-
-    qgd_free( submatrix_prods );
-printf("%f\n",   cost_function );   
-    return cost_function;
-
-}
-
-
-
-
-
 // calculate the cost funtion for the final optimalization
 double get_cost_function(QGD_Complex16* matrix, int matrix_size) {
    
-    QGD_Complex16* mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
-    memcpy( mtx, matrix,  matrix_size*matrix_size*sizeof(QGD_Complex16) );
+    //QGD_Complex16* mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
+    //memcpy( mtx, matrix,  matrix_size*matrix_size*sizeof(QGD_Complex16) );
+
+    QGD_Complex16* mtx = matrix;
 
     // subtract the corner element from the diagonal
     QGD_Complex16 corner_element = matrix[0];
@@ -631,7 +467,7 @@ double get_cost_function(QGD_Complex16* matrix, int matrix_size) {
         mtx[element_idx].imag = mtx[element_idx].imag  - corner_element.imag;
     }
 
-//    #pragma omp barrier
+    #pragma omp barrier
 
     // Calculate the |x|^2 value of the elements of the submatrixproducts
     //double* matrix_product_square = (double*)qgd_calloc(matrix_size*matrix_size*sizeof(double), 64); 
@@ -640,7 +476,8 @@ double get_cost_function(QGD_Complex16* matrix, int matrix_size) {
     for ( int idx=0; idx<element_num; idx++ ) {
          //matrix_product_square[idx] = matrix[idx].real*matrix[idx].real + matrix[idx].imag*matrix[idx].imag;
          mtx[idx].real = mtx[idx].real*mtx[idx].real + mtx[idx].imag*mtx[idx].imag;
-         mtx[idx].imag = 0;
+         // for performance reason we leave the imaginary part intact (we dont neet it anymore)
+         //mtx[idx].imag = 0;
     }
 
     #pragma omp barrier
@@ -660,7 +497,7 @@ double get_cost_function(QGD_Complex16* matrix, int matrix_size) {
     }
 
     //qgd_free(matrix_product_square);
-    qgd_free(mtx);
+    //qgd_free(mtx);
 
 //printf("%f\n", cost_function);
     return cost_function;

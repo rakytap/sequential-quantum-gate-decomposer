@@ -369,7 +369,7 @@ mandir = ${datarootdir}/man
 mkdir_p = $(MKDIR_P)
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /usr/local
+prefix = /home/scc/rakytap/qgd
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
@@ -398,7 +398,7 @@ lib_LTLIBRARIES = libqgd.la
 pkginclude_HEADERS = python_interface.h
 libqgd_la_SOURCES = python_interface.cpp
 AM_CPPFLAGS = $(CXXFLAGS) -I$(top_srcdir) -I$(GSL_INC_DIR)
-libqgd_la_LIBADD = $(GSL_LIBADD) $(SUBLIBS) #$(GSL_LIB_DIR)/libgsl.la $(GSL_LIB_DIR)/libgslcblas.la
+libqgd_la_LIBADD = $(GSL_LIBADD) $(SUBLIBS)
 all: all-recursive
 
 .SUFFIXES:
@@ -839,7 +839,6 @@ installdirs-am:
 	for dir in "$(DESTDIR)$(libdir)" "$(DESTDIR)$(pkgincludedir)"; do \
 	  test -z "$$dir" || $(MKDIR_P) "$$dir"; \
 	done
-install: install-recursive
 install-exec: install-exec-recursive
 install-data: install-data-recursive
 uninstall: uninstall-recursive
@@ -974,6 +973,10 @@ all:
 	@echo 
 	@echo "----------------------------------------------------------"
 	@echo 
+
+install: 
+	cp -r qgd_python $(prefix)/
+	cp example.py $(prefix)/
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.
