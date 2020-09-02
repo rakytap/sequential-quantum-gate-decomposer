@@ -64,6 +64,7 @@ Similarly to GNU Scientific Library, the QGD package is also equipped with autom
 To ensure that QGD package would find the necessary libraries and header files during compilation time it is advised to define the following environment variables:
 
 $ export GSL_LIB_DIR=path/to/gsl/lib64
+
 $ export GSL_INC_DIR=path/to/gsl/include
 
 Usually, when the Intel compiler module is loaded on the HPC, the compiler can find his way to the MKL libraries automatically through the environment variable MKLROOT which points to the root irectory of the MKL package. 
