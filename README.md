@@ -94,7 +94,7 @@ The installation procedure will copy all the C header files, the static and shar
 ### How to use
 
 The algorithm implemented in the QGD package intends to transform the given unitary into an identity matrix via a sequence of CNOT and U3 operations applied on the unitary. 
-Thus, in order to get the decomposition of the unitary, one should rather provide the complex transpose of the unitary as the input for the decomposition process.
+Thus, in order to really get the decomposition of a unitary, one should rather provide the complex transpose of this unitary as the input for the QGD decomposing process.
 
 ## Standalone executable
 
