@@ -67,13 +67,13 @@ $ export GSL_LIB_DIR=path/to/gsl/lib64
 
 $ export GSL_INC_DIR=path/to/gsl/include
 
-Usually, when the Intel compiler module is loaded on the HPC, the compiler can find his way to the MKL libraries automatically through the environment variable MKLROOT which points to the root irectory of the MKL package. 
+Usually, when the Intel compiler module is loaded on the HPC, the compiler can find his way to the MKL libraries automatically through the environment variable MKLROOT which points to the root directory of the MKL package. 
 If the Intel environment variables are not set, they can be initialized by the shell command:
 
 $ source /opt/intel/composerxe/bin/compilervars.sh intel64
 
 where **/opt/intel/composerxe** is the path to the Intel compiler package location which might be different from the given one.
-After the environment variables are set, the compilation environment can be configured by the command executed in the source directory **path/to/qgdsource** of the QGD package:
+After the basic environment variables are set, the compilation can be configured by the command executed in the source directory **path/to/qgdsource** of the QGD package:
 
 $ ./configure --prefix=path/to/qgd CC=icc CXX=icpc
 
