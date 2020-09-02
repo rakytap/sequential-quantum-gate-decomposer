@@ -13,7 +13,11 @@ EXTRA_DIST = common/include/common.h \
              decomposition/include/Decomposition_Base.h \
              decomposition/include/N_Qubit_Decomposition.h \
              decomposition/include/Sub_Matrix_Decomposition.h \
-             random_unitary/include/Random_Unitary.h
+             random_unitary/include/Random_Unitary.h \
+             README.md \
+             example.py \
+             qgd_python/N_Qubit_Decomposition.py \
+             qgd_python/__init__.py             
 
 lib_LTLIBRARIES = libqgd.la
 pkginclude_HEADERS = python_interface.h
