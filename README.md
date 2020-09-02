@@ -1,7 +1,7 @@
 # Quantum Gate Decomposer
 
 Quantum Gate Decomposer (QGD) is an optimization method to decompose an arbitrary NxN Unitary matrix into a sequence of U3 and CNOT gates. 
-It is written in C/C++ providing a simple Python interface via ctypes-A foreign function library for Python and a possibility to run QGD as a standalone C executable.
+It is written in C/C++ providing a simple Python interface via [ctypes](https://docs.python.org/3/library/ctypes.html) and a possibility to run QGD as a standalone C executable.
 (Although the Python interface and the standalone executable are linked with the same libraries, our tests showed a substantial decrement in performance of the python interface compared to the native C executable.)
 The present package is supplied with automake tools to ease its deployment.
 Although QGD can be built with gnu, the best performance of the package can be obtained using Intel compiler integrating its Math Kernel Library ([MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html)). 
@@ -11,22 +11,25 @@ The project was supported ... HUNQT ...
 
 ### Dependencies
 
-The optimization algorithm of QGD relies on the [multimin](https://www.gnu.org/software/gsl/doc/html/multimin.html) optimization component of the [GNU Scientific Library](https://www.gnu.org/software/gsl/doc/html/index.html). 
+The optimization algorithm of QGD relies on the [multimin](https://www.gnu.org/software/gsl/doc/html/multimin.html) component of the [GNU Scientific Library](https://www.gnu.org/software/gsl/doc/html/index.html). 
 We developed and tested the QGD package with GNU Scientific Library of version 2.5 and 2.6.
+The dependencies necessary to compile and build the QGD package are the followings:
 
-* automake (for further development purposes)
-* autoconf (for further development purposes)
-* libtool
-* GNU Scientific Library (>=2.5)
-* Intel (recommended) or GNU compiler
-* Intel MKL (optional, but strongly recommended)
+* [automake](https://www.gnu.org/software/automake/) (for further development purposes)
+* [autoconf](https://www.gnu.org/software/autoconf/) (for further development purposes)
+* [libtool](https://www.gnu.org/software/libtool/)
+* [make](https://www.gnu.org/software/make/)
+* [GNU Scientific Library](https://www.gnu.org/software/gsl/doc/html/index.html) (>=2.5)
+* C++/C [Intel](https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html) (recommended) or [GNU](https://gcc.gnu.org/) compiler
+* [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html) (optional, but strongly advised)
 
-The Python interface of QGD was developed and tested with Python 3.6 and 3.7
-QGD Python interface needs the following packages to be installed on the system:
+The Python interface of QGD was developed and tested with Python 3.6 and 3.7.
+The QGD Python interface needs the following packages to be installed on the system:
 
 * [Qiskit](https://qiskit.org/documentation/install.html)
 * [Numpy](https://numpy.org/install/)
 * [scipy](https://www.scipy.org/install.html)
+* [ctypes](https://docs.python.org/3/library/ctypes.html)
 
 
 
@@ -34,12 +37,13 @@ QGD Python interface needs the following packages to be installed on the system:
 
 If the GNU Scientific Library is not installed on the system, it can be easily compiled and deployed by the end user without administrative privileges.
 The GNU Scientific Library can be downloaded from the site [https://www.gnu.org/software/gsl/](https://www.gnu.org/software/gsl/).
-After the downloaded package is extracted somewhere in the home directory of the user (path/to/gslsource), one should configure the compiling environment using the **configure** tool.
-To ensure the usage of Intel compilers, the following shell command should be executed inside the directory path/to/gslsource:
+After the downloaded package is extracted somewhere in the home directory of the user (**path/to/gslsource**), one should configure the compiling environment using the **configure** tool.
+To ensure the usage of Intel compilers, the following shell command should be executed inside the directory **path/to/gslsource**:
 
 $ ./configure --prefix=path/to/gsl CC=icc CXX=icpc
 
-The installation directory of the compiled GNU Scientific Library is given by **--prefix=path/to/gsl** (which is different from the directory path of the source files given by path/to/gslsource).
+The installation directory of the compiled GNU Scientific Library is given by **--prefix=path/to/gsl** (which is different from the directory path of 
+the source files given by **path/to/gslsource**).
 The end user should have read and write permissions on the path **path/to/gsl** (for example /home/username/gsl).
 After the successful configuration the GNU Scientific Library can be compiled by the shell command
 
