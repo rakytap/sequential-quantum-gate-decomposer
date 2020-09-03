@@ -2,10 +2,10 @@
 
 Quantum Gate Decomposer (QGD) is an optimization method to decompose an arbitrary NxN Unitary matrix into a sequence of U3 and CNOT gates. 
 It is written in C/C++ providing a simple Python interface via [ctypes](https://docs.python.org/3/library/ctypes.html) and a possibility to run QGD as a standalone C executable.
-(Although the Python interface and the standalone executable are linked with the same libraries, our tests showed a substantial decrement in performance of the python interface compared to the native C executable.)
 The present package is supplied with automake tools to ease its deployment.
-Although QGD can be built with gnu, the best performance of the package can be obtained using Intel compiler integrating its Math Kernel Library ([MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html)). 
-Since Intel compiler is present on almost each HPC's, we briefly summarize the steps to build and install the QGD package using Intel compiler.
+While QGD package can be built with both Intel and GNU compilers, it's best performance is hit by linking against a CBLAS library containing the function 
+ZGEMM3M for the multiplication of complex matrices. Such CBLAS libraries are provided by Intels's Math Kernel Library ([MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html)), or by the OpenBlas package. 
+Since Intel compiler is present on almost each HPC's, we briefly summarize the steps to build and install the QGD package using Intel compiler. 
 
 The project was supported ... HUNQT ...
 
@@ -75,12 +75,15 @@ $ source /opt/intel/composerxe/bin/compilervars.sh intel64
 where **/opt/intel/composerxe** is the path to the Intel compiler package location which might be different from the given one.
 After the basic environment variables are set, the compilation can be configured by the command executed in the source directory **path/to/qgdsource** of the QGD package:
 
-$ ./configure --prefix=path/to/qgd CC=icc CXX=icpc
+$ ./configure --prefix=path/to/qgd --enable-fp-optimization CC=icc CXX=icpc
 
 where **path/to/qgd** is the installation path of the Quantum Gate Decomposer package.
 
 The installation directory of the compiled QGD package is given by **--prefix=path/to/qgd** (which is different from the directory path of the source files given by **path/to/qgdsource**).
 The end user should have read and write permissions on the path **path/to/qgd** (for example /home/username/qgd).
+The flag **--enable-fp-optimization** enables the compiler's floating-point optimization. 
+While in general this optimization is considered to be dangerous, in case of QGD it works well, the runtime performance is increased by 5-6 times due to this optimization.
+Unfortunately, the QGD Python interface does not support this optimization, it can be exploited only by the standalone C applications.
 After the successful configuration the QGD package can be compiled by the shell command executed in the directory **path/to/qgdsource**:
 
 $ make
@@ -123,10 +126,10 @@ Another desired interface functions can be implemented following the source of a
 
 The QGD API enables the extension of the capabilities of the QGD packages into further projects. 
 The QGD header files needed for the compilation of the project are provided in the directory **path/to/qgd/include**. 
-The compiled object files should than be linked against the static or shared QGD library libqgd.a or libqgd.so, respectively,
+The compiled object files should than be linked against the static or shared QGD libraries libqgd.a or libqgd.so, respectively,
 located in the directory **path/to/qgd/lib64**.
-To resolve all the references during the linkage, one should also link against the corresponding libraries of the 
-GNU Scientific Library located in the GSL_LIB_DIR environment variable set above, and against the Intel MKL libraries if they were used in the compilation of the QGD package.
+In order to exploit the speedup comming from the floating point optimization, we notice that Intel's compiler (usually) use this optimization by default,
+but when linking with GNU compiler, the -ffast-math option must be append when linking against the QGD API library is done.
 The full documentation of the QGD API can be accessed by a Doxygen manual which can be accessed and recreated by steps described in the following section
 
 ## Doxygen manual
