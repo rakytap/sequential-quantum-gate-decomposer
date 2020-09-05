@@ -768,7 +768,8 @@ enable_dependency_tracking
 with_gnu_ld
 with_sysroot
 enable_libtool_lock
-enable_fp_optimization
+with_mkl
+enable_ffast_math
 '
       ac_precious_vars='build_alias
 host_alias
@@ -1413,7 +1414,7 @@ Optional Features:
   --disable-dependency-tracking
                           speeds up one-time build
   --disable-libtool-lock  avoid locking (might break parallel builds)
-  --enable-fp-optimization Enables compiler optimization on floating point precision. Supported only for standalone applications, the python interface does not support this speedup.
+  --enable-ffast-math Enables g++ compiler optimization on floating point precision. Supported only for standalone applications, the python interface does not support this speedup.
 
 Optional Packages:
   --with-PACKAGE[=ARG]    use PACKAGE [ARG=yes]
@@ -1426,6 +1427,7 @@ Optional Packages:
   --with-gnu-ld           assume the C compiler uses GNU ld [default=no]
   --with-sysroot[=DIR]    Search for dependent libraries within DIR (or the
                           compiler's sysroot if not specified).
+  --with-mkl Links against Intel MKL cblas library.
 
 Some influential environment variables:
   CC          C compiler command
@@ -15762,21 +15764,24 @@ ac_config_files="$ac_config_files Makefile qgd/Makefile common/Makefile operatio
 
 
 #checking floating point precision configuration setup
-# Check whether --enable-fp-optimization was given.
-if test "${enable_fp_optimization+set}" = set; then :
-  enableval=$enable_fp_optimization; FP_OPT=yes
+
+# Check whether --with-mkl was given.
+if test "${with_mkl+set}" = set; then :
+  withval=$with_mkl; MKL_OPT=yes
+fi
+
+
+#checking floating point precision configuration setup
+# Check whether --enable-ffast-math was given.
+if test "${enable_ffast_math+set}" = set; then :
+  enableval=$enable_ffast_math; FP_OPT=yes
 fi
 
 
 # TODO GCC OR ICC?
 if test $CXX = "icpc"; then
-if test $FP_OPT; then
   CXXFLAGS=" -qopenmp -O3 -falign-loops=64"
   CFLAGS=" -qopenmp -O3 -falign-loops=64"
-else
-  CXXFLAGS="-mieee-fp -qopenmp -O3 -falign-loops=64"
-  CFLAGS="-mieee-fp -qopenmp -O3 -falign-loops=64"
-fi
 else
 if test $FP_OPT; then
   CXXFLAGS=" -fopenmp -O3 -ffast-math"
@@ -15788,10 +15793,10 @@ fi
 fi
 
 
-
+CBLAS_LIBS=
 
 #checking MKL library
-MKL_LIBS=
+if test $MKL_OPT; then
 LDFLAGS="$LDFLAGS -L$MKLROOT/lib/intel64/"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for zgemm3m in -lmkl_intel_lp64" >&5
 $as_echo_n "checking for zgemm3m in -lmkl_intel_lp64... " >&6; }
@@ -15831,15 +15836,18 @@ fi
 $as_echo "$ac_cv_lib_mkl_intel_lp64_zgemm3m" >&6; }
 if test "x$ac_cv_lib_mkl_intel_lp64_zgemm3m" = xyes; then :
 
-MKL_LIBS="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5"
-HAVE_LIBMKL_INTEL_LP64=1
+CBLAS_LIBS="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5"
+HAVE_ZGEMM3M=1
+
+else
+  as_fn_error $? "mkl libraries not found" "$LINENO" 5
+fi
 
 fi
 
 
-
-
-#checking MKL headres
+#checking MKL headers
+if test $MKL_OPT; then
 CFLAGS_SAVE=$CFLAGS
 CFLAGS="$CFLAGS  -I$MKLROOT/include"
 CPPFLAGS_SAVE=$CPPFLAGS
@@ -15852,6 +15860,7 @@ fi
 
 CFLAGS=$CFLAGS_SAVE
 CPPFLAGS=$CPPFLAGS_SAVE
+fi
 
 #checking GNU SCIENTIFIC LIBRARY
 LDFLAGS="${LDFLAGS} -L$GSL_LIB_DIR"
@@ -15894,9 +15903,11 @@ fi
 $as_echo "$ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2" >&6; }
 if test "x$ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2" = xyes; then :
 
-if test $HAVE_LIBMKL_INTEL_LP64; then
+if test $HAVE_ZGEMM3M; then
 GSL_LIBS="-lgsl"
+if test $MKL_OPT; then
 CXXFLAGS="$CXXFLAGS -DMKL"
+fi
 else
 GSL_LIBS="-lgsl -lgslcblas "
 fi
@@ -15907,7 +15918,7 @@ fi
 
 
 
-LDFLAGS="$LDFLAGS $GSL_LIBS $MKL_LIBS"
+LDFLAGS="$LDFLAGS $GSL_LIBS $CBLAS_LIBS"
 
 #checking GNU SCIENTIFIC HEADERS
 CFLAGS_SAVE=$CFLAGS
@@ -15928,25 +15939,19 @@ CPPFLAGS=$CPPFLAGS_SAVE
 
 
 # setting linking flags for libtool
-if test $HAVE_LIBMKL_INTEL_LP64; then
+if test $MKL_OPT; then
 postdeps_CXX="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
-if test CXX=g++; then
-postdeps_CXX="$postdeps_CXX -lstdc++"
-fi
 fi
 
-if test CXX=icpc; then
+if test $CXX = g++; then
+postdeps_CXX="$postdeps_CXX -lstdc++"
+fi
+
+if test $CXX = icpc; then
 postdeps_CXX="$postdeps_CXX -liomp5"
 else
 postdeps_CXX="$postdeps_CXX -lgomp"
 fi
-
-# checking aligned_alloc if mkl is not present
-ac_fn_c_check_func "$LINENO" "aligned_alloc" "ac_cv_func_aligned_alloc"
-if test "x$ac_cv_func_aligned_alloc" = xyes; then :
-  CXXFLAGS="$CXXFLAGS -DACALLOC"
-fi
-
 
 
 CXXFLAGS="$CXXFLAGS -I$GSL_INC_DIR"

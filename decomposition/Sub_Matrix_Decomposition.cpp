@@ -314,13 +314,12 @@ throw "klll";*/
        
           
         if (solution_guess_gsl == NULL) {
-            //solution_guess = (double*)qgd_calloc(parameter_num, sizeof(double), 64);
-printf("solve_layer_optimalization_problem::Allocating solution guess\n");
             solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
         }
         
         if (optimized_parameters == NULL) {
             optimized_parameters = (double*)qgd_calloc(num_of_parameters,sizeof(double), 64);
+            memcpy(optimized_parameters, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
         }
 
         // maximal number of iteration loops

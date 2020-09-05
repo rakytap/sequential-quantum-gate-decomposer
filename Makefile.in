@@ -396,7 +396,7 @@ EXTRA_DIST = common/include/common.h \
              README.md \
              example.py \
              qgd_python/N_Qubit_Decomposition.py \
-             qgd_python/__init__.py             
+             qgd_python/Umtx.mat
 
 lib_LTLIBRARIES = libqgd.la
 pkginclude_HEADERS = python_interface.h

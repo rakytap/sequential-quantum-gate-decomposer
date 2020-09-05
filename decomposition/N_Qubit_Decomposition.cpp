@@ -134,7 +134,7 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
          
         // simplify layers
         if (qbit_num>2) {
-            //simplify_layers();
+            simplify_layers();
         }
             
         // final tuning of the decomposition parameters
@@ -328,14 +328,16 @@ void  N_Qubit_Decomposition::final_optimalization() {
         printf("Final fine tuning of the parameters\n");
         printf("***************************************************************\n");
 
+//printf("%f\n", optimalization_problem(optimized_parameters ) );
+//QGD_Complex16* matrix_new = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+//print_mtx( matrix_new, matrix_size, matrix_size );
 
         //# setting the global minimum
         global_target_minimum = 0;
-        verbose = true;
         solve_optimalization_problem( optimized_parameters, parameter_num) ;
-QGD_Complex16* matrix_new = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
-print_mtx( matrix_new, matrix_size, matrix_size );
-printf("%f\n", optimalization_problem(optimized_parameters ) );
+//matrix_new = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+//print_mtx( matrix_new, matrix_size, matrix_size );
+//printf("%f\n", optimalization_problem(optimized_parameters ) );
 }   
 
 
@@ -350,13 +352,14 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
             return;
         }
        
-          
+              
         if (solution_guess_gsl == NULL) {
             solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
         }
         
         if (optimized_parameters == NULL) {
             optimized_parameters = (double*)qgd_calloc(num_of_parameters,sizeof(double), 64);
+            memcpy(optimized_parameters, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
         }
 
         // maximal number of iteration loops
@@ -414,14 +417,14 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
 
             } while (status == GSL_CONTINUE && iter < 100);
        
-//printf("s->f: %f\n", s->f);               
+//printf("s->f: %f\n", s->f);             
             if (current_minimum > s->f) {
                 current_minimum = s->f;
                 //#pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_gsl->data[jdx] = s->x->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
-                    optimized_parameters[jdx] = s->x->data[jdx];
                 }
+                memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
             }
             else {
                 //#pragma omp parallel for
@@ -434,8 +437,7 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
      
         }         
 
-        
-             
+                
 }      
 
 
@@ -689,8 +691,8 @@ printf("\n");
             int simplified_parameter_num=0;
 
             // Try to simplify the sequence of 2-qubit operations
-            //int simplification_status = simplify_layer( block_to_simplify, optimized_parameters+parameter_idx, parameter_num_block, max_layer_num_loc, simplified_layer, simplified_parameters, simplified_parameter_num );
-int simplification_status = -1;
+            int simplification_status = simplify_layer( block_to_simplify, optimized_parameters+parameter_idx, parameter_num_block, max_layer_num_loc, simplified_layer, simplified_parameters, simplified_parameter_num );
+//int simplification_status = -1;
 
             
             // adding the simplified operations (or the non-simplified if the simplification was not successfull)

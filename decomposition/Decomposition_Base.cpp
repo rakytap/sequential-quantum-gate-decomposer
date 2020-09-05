@@ -250,18 +250,30 @@ void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operatio
             parameter_idx--;
 
             finalizing_operations->add_operation_to_front( u3_loc );             
-            // get the new matrix            
+            // get the new matrix    
+
+//printf("Decomposition_Base::get_finalizing_operations 1\n");
+//print_mtx(mtx, matrix_size, matrix_size );                  
             
+
+            memset(u3_mtx, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
             u3_loc->matrix(parameters_loc, u3_mtx);
+            //QGD_Complex16* u3_mtx = u3_loc->matrix(parameters_loc);
+//printf("Decomposition_Base::get_finalizing_operations umtx\n");
+//print_mtx(u3_mtx, matrix_size, matrix_size );       
             apply_operation( u3_mtx, mtx, mtx_tmp);
+            //qgd_free( u3_mtx );
  
 
             memcpy( mtx, mtx_tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-            
+//printf("Decomposition_Base::get_finalizing_operations 2\n");
+//print_mtx(mtx, matrix_size, matrix_size );            
         }         
 
         qgd_free( mtx_tmp );
         qgd_free( u3_mtx );
+//printf("Decomposition_Base::get_finalizing_operations 3\n");
+//print_mtx(mtx, matrix_size, matrix_size );   
         return;
             
         
@@ -452,12 +464,8 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
                 gsl_vector_free(solution_guess_gsl);
                 solution_guess_gsl = gsl_vector_alloc (parameter_num);
             }
-            #pragma omp parallel for
-            for (int idx=0; idx < parameter_num; idx++) {
-                solution_guess_gsl->data[idx] = optimized_parameters_gsl->data[parameter_num_loc - pre_operation_parameter_num - block_parameter_num + idx];
-            }
-            //solution_guess_gsl->data = optimized_parameters_gsl->data + parameter_num_loc - pre_operation_parameter_num - block_parameter_num;
-
+            memcpy( solution_guess_gsl->data, optimized_parameters_gsl->data+parameter_num_loc - pre_operation_parameter_num - block_parameter_num, parameter_num*sizeof(double) );
+            
             // solve the optimalization problem of the block 
             solve_layer_optimalization_problem( parameter_num, solution_guess_gsl  );
 
@@ -472,11 +480,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             minvec_mean = minvec_mean/min_vec_num;
     
             // store the obtained optimalized parameters for the block
-            #pragma omp parallel for
-            for (int idx=0; idx<parameter_num; idx++) {
-                optimized_parameters_gsl->data[ parameter_num_loc - pre_operation_parameter_num-block_parameter_num + idx ] = optimized_parameters[idx];
-            }
-     
+            memcpy( optimized_parameters_gsl->data+parameter_num_loc - pre_operation_parameter_num-block_parameter_num, optimized_parameters, parameter_num*sizeof(double) );
             
             if (block_idx_end == 0) {
                 block_idx_start = operations_loc.size();
@@ -503,8 +507,12 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             if (abs(minvec_std/minimum_vec[min_vec_num-1]) < optimalization_tolerance ) {
                 printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
                 fflush(stdout);
-QGD_Complex16* matrix_new = get_transformed_matrix( optimized_parameters_gsl->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
-print_mtx(matrix_new, matrix_size, matrix_size);
+//verbose = true;
+//print_mtx(transformed_mtx, matrix_size, matrix_size);
+//printf("%f\n", get_cost_function(transformed_mtx, matrix_size));
+//QGD_Complex16* matrix_new = get_transformed_matrix( optimized_parameters_gsl->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
+//print_mtx(matrix_new, matrix_size, matrix_size);
+//printf("%f\n", optimalization_problem( optimized_parameters_gsl->data ) );
                 break; 
             }
             else if (check_optimalization_solution()) {
@@ -539,9 +547,8 @@ print_mtx(matrix_new, matrix_size, matrix_size);
             qgd_free( optimized_parameters );
             optimized_parameters = (double*)qgd_calloc(parameter_num,sizeof(double), 64);
         }
-        for ( int idx=0; idx<parameter_num; idx++) {
-            optimized_parameters[idx] = optimized_parameters_gsl->data[idx];
-        }
+
+        memcpy( optimized_parameters, optimized_parameters_gsl->data, parameter_num*sizeof(double) );
      
   
         // free unnecessary resources

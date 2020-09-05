@@ -57,7 +57,7 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
         initial_guess = "close_to_zero";        
     }
 
-printf("%s\n", initial_guess);
+
     // creating an instance of class N_Qubit_decomposition
     N_Qubit_Decomposition* instance = new N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, optimize_layer_num, initial_guess );
 

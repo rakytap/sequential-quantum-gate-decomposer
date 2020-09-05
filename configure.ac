@@ -11,18 +11,17 @@ AC_CONFIG_FILES([Makefile
                  test_standalone/Makefile])
 
 #checking floating point precision configuration setup
-AC_ARG_ENABLE(fp-optimization, [  --enable-fp-optimization Enables compiler optimization on floating point precision. Supported only for standalone applications, the python interface does not support this speedup.],
+AC_ARG_WITH(mkl, [  --with-mkl Links against Intel MKL cblas library.],
+ [MKL_OPT=yes], [] )
+
+#checking floating point precision configuration setup
+AC_ARG_ENABLE(ffast-math, [  --enable-ffast-math Enables g++ compiler optimization on floating point precision. Supported only for standalone applications, the python interface does not support this speedup.],
  [FP_OPT=yes], [] )
 
 # TODO GCC OR ICC?
 if test $CXX = "icpc"; then
-if test $FP_OPT; then
   CXXFLAGS=" -qopenmp -O3 -falign-loops=64"
   CFLAGS=" -qopenmp -O3 -falign-loops=64"
-else
-  CXXFLAGS="-mieee-fp -qopenmp -O3 -falign-loops=64"
-  CFLAGS="-mieee-fp -qopenmp -O3 -falign-loops=64"  
-fi
 else
 if test $FP_OPT; then
   CXXFLAGS=" -fopenmp -O3 -ffast-math"
@@ -34,20 +33,21 @@ fi
 fi
 
 
- 
+CBLAS_LIBS= 
 
 #checking MKL library
-MKL_LIBS=
+if test $MKL_OPT; then
 LDFLAGS="$LDFLAGS -L$MKLROOT/lib/intel64/"
 AC_CHECK_LIB([mkl_intel_lp64], [zgemm3m], [
-MKL_LIBS="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5"
-HAVE_LIBMKL_INTEL_LP64=1
+CBLAS_LIBS="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5"
+HAVE_ZGEMM3M=1
 ], 
-[], [-lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5])
+[AC_MSG_ERROR([mkl libraries not found])], [-lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5])
+fi
 
 
-
-#checking MKL headres
+#checking MKL headers
+if test $MKL_OPT; then
 CFLAGS_SAVE=$CFLAGS
 CFLAGS="$CFLAGS  -I$MKLROOT/include"
 CPPFLAGS_SAVE=$CPPFLAGS
@@ -55,14 +55,17 @@ CPPFLAGS="$CPPFLAGS  -I$MKLROOT/include"
 AC_CHECK_HEADER([mkl_service.h])
 CFLAGS=$CFLAGS_SAVE
 CPPFLAGS=$CPPFLAGS_SAVE
+fi
 
 #checking GNU SCIENTIFIC LIBRARY
 LDFLAGS="${LDFLAGS} -L$GSL_LIB_DIR"
 GSL_LIBS=
 AC_CHECK_LIB([gsl], [gsl_multimin_fdfminimizer_vector_bfgs2], [
-if test $HAVE_LIBMKL_INTEL_LP64; then
+if test $HAVE_ZGEMM3M; then
 GSL_LIBS="-lgsl"
-CXXFLAGS="$CXXFLAGS -DMKL"
+if test $MKL_OPT; then
+CXXFLAGS="$CXXFLAGS -DMKL" 
+fi
 else
 GSL_LIBS="-lgsl -lgslcblas "
 fi 
@@ -70,7 +73,7 @@ fi
 AC_MSG_ERROR([gsl library not found]), [-lgslcblas])
 
 
-LDFLAGS="$LDFLAGS $GSL_LIBS $MKL_LIBS"
+LDFLAGS="$LDFLAGS $GSL_LIBS $CBLAS_LIBS"
 
 #checking GNU SCIENTIFIC HEADERS
 CFLAGS_SAVE=$CFLAGS
@@ -84,21 +87,19 @@ CPPFLAGS=$CPPFLAGS_SAVE
 
 
 # setting linking flags for libtool
-if test $HAVE_LIBMKL_INTEL_LP64; then
+if test $MKL_OPT; then
 postdeps_CXX="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
-if test CXX=g++; then
-postdeps_CXX="$postdeps_CXX -lstdc++"
-fi
 fi
 
-if test CXX=icpc; then
+if test $CXX = g++; then
+postdeps_CXX="$postdeps_CXX -lstdc++"
+fi
+
+if test $CXX = icpc; then
 postdeps_CXX="$postdeps_CXX -liomp5"
 else
 postdeps_CXX="$postdeps_CXX -lgomp"
 fi
-
-# checking aligned_alloc if mkl is not present
-AC_CHECK_FUNC([aligned_alloc], [CXXFLAGS="$CXXFLAGS -DACALLOC"])
 
 
 CXXFLAGS="$CXXFLAGS -I$GSL_INC_DIR"

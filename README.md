@@ -3,9 +3,9 @@
 Quantum Gate Decomposer (QGD) is an optimization method to decompose an arbitrary NxN Unitary matrix into a sequence of U3 and CNOT gates. 
 It is written in C/C++ providing a simple Python interface via [ctypes](https://docs.python.org/3/library/ctypes.html) and a possibility to run QGD as a standalone C executable.
 The present package is supplied with automake tools to ease its deployment.
-While QGD package can be built with both Intel and GNU compilers, it's best performance is hit by linking against a CBLAS library containing the function 
-ZGEMM3M for the multiplication of complex matrices. Such CBLAS libraries are provided by Intels's Math Kernel Library ([MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html)), or by the OpenBlas package. 
-Since Intel compiler is present on almost each HPC's, we briefly summarize the steps to build and install the QGD package using Intel compiler. 
+The QGD package can be built with both Intel and GNU compilers, and link against various CBLAS libraries installed on the system.
+(So far the CLBAS libraries of the GNU Scientific Library and the Intel MKL packages were tested.)
+In the following we briefly summarize the steps to build, install and use the QGD package. 
 
 The project was supported ... HUNQT ...
 
@@ -20,8 +20,8 @@ The dependencies necessary to compile and build the QGD package are the followin
 * [libtool](https://www.gnu.org/software/libtool/)
 * [make](https://www.gnu.org/software/make/)
 * [GNU Scientific Library](https://www.gnu.org/software/gsl/doc/html/index.html) (>=2.5)
-* C++/C [Intel](https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html) (recommended) or [GNU](https://gcc.gnu.org/) compiler
-* [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html) (optional, but strongly advised)
+* C++/C [Intel](https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html) or [GNU](https://gcc.gnu.org/) compiler
+* [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html) (optional)
 
 The Python interface of QGD was developed and tested with Python 3.6 and 3.7.
 The QGD Python interface needs the following packages to be installed on the system:
@@ -38,13 +38,15 @@ The QGD Python interface needs the following packages to be installed on the sys
 If the GNU Scientific Library is not installed on the system, it can be easily compiled and deployed by the end user without administrative privileges.
 The GNU Scientific Library can be downloaded from the site [https://www.gnu.org/software/gsl/](https://www.gnu.org/software/gsl/).
 After the downloaded package is extracted somewhere in the home directory of the user (**path/to/gslsource**), one should configure the compiling environment using the **configure** tool.
-To ensure the usage of Intel compilers, the following shell command should be executed inside the directory **path/to/gslsource**:
+Depending on the individual settings the default compiler to be invoked might be different from HPC to HPC. 
+To ensure the usage of the GNU compiler, the following shell command should be executed inside the directory **path/to/gslsource**:
 
-$ ./configure --prefix=path/to/gsl CC=icc CXX=icpc
+$ ./configure --prefix=path/to/gsl CC=gcc CXX=g++
 
+(Similarly, Intel compiler can be forced by setting CC=icc and CXX=icpc.)
 The installation directory of the compiled GNU Scientific Library is given by **--prefix=path/to/gsl** (which is different from the directory path of 
 the source files given by **path/to/gslsource**).
-The end user should have read and write permissions on the path **path/to/gsl** (for example /home/username/gsl).
+To install GNU Scientific Library the user should have read and write permissions on the path **path/to/gsl** (which might be for example /home/username/gsl).
 After the successful configuration the GNU Scientific Library can be compiled by the shell command
 
 $ make
@@ -67,23 +69,30 @@ $ export GSL_LIB_DIR=path/to/gsl/lib64
 
 $ export GSL_INC_DIR=path/to/gsl/include
 
-Usually, when the Intel compiler module is loaded on the HPC, the compiler can find his way to the MKL libraries automatically through the environment variable MKLROOT which points to the root directory of the MKL package. 
+When using Intel compiler equipped with Intel MKL on a HPC, the compiler can find his way to the MKL libraries automatically through the environment variable MKLROOT which points to the root directory of the MKL package. 
 If the Intel environment variables are not set, they can be initialized by the shell command:
 
 $ source /opt/intel/composerxe/bin/compilervars.sh intel64
 
 where **/opt/intel/composerxe** is the path to the Intel compiler package location which might be different from the given one.
+(This step can be omitted when using GNU compiler, or when we do not have intention to use Intel MKL)
 After the basic environment variables are set, the compilation can be configured by the command executed in the source directory **path/to/qgdsource** of the QGD package:
 
-$ ./configure --prefix=path/to/qgd --enable-fp-optimization CC=icc CXX=icpc
+$ ./configure --prefix=path/to/qgd --enable-ffast-math CC=gcc CXX=g++
 
 where **path/to/qgd** is the installation path of the Quantum Gate Decomposer package.
 
 The installation directory of the compiled QGD package is given by **--prefix=path/to/qgd** (which is different from the directory path of the source files given by **path/to/qgdsource**).
-The end user should have read and write permissions on the path **path/to/qgd** (for example /home/username/qgd).
-The flag **--enable-fp-optimization** enables the compiler's floating-point optimization. 
+The user should have read and write permissions on the path **path/to/qgd** (which can be for example /home/username/qgd).
+The flag **--enable-ffast-math** enables the compiler's floating-point optimization (which is usually enabled by default in Intel compilers settings). 
 While in general this optimization is considered to be dangerous, in case of QGD it works well, the runtime performance is increased by 5-6 times due to this optimization.
-Unfortunately, the QGD Python interface does not support this optimization, it can be exploited only by the standalone C applications.
+We notice, that the QGD Python interface does not support this optimization, it can be exploited only by the standalone C applications.
+On the other hand, if one choses Intel compiler to built the QGD package, the following configuration settings should be invoked:
+
+$ ./configure --prefix=path/to/qgd --with-mkl CC=icc CXX=icpc
+
+The **--with-mkl** flag sets the appropriate linking of the QGD package with the Intel MKL package.
+If the flag is missing from the configuration than the CBLAS library of the GNU Scientific Library is used for linear algebra operations.
 After the successful configuration the QGD package can be compiled by the shell command executed in the directory **path/to/qgdsource**:
 
 $ make
@@ -102,13 +111,13 @@ Thus, in order to really get the decomposition of a unitary, one should rather p
 
 ## Standalone executable
 
-During the compilation and the instalaltion processes of the QGD package a standalone executable was also built and copied into the directory **path/to/gsl/bin**. 
+During the compilation and the installation processes of the QGD package a standalone executable was also built and copied into the directory **path/to/gsl/bin**. 
 This executable can be executed by a command
 
 $ ./decomposition_test
 
 and it starts a decomposition of a random general unitary matrix. 
-The source of this example is located in **path/to/qgdsource/test_standalone/** and shows a simple testcase of the usage of the QGD package on source code level. 
+The source of this example is located in **path/to/qgdsource/test_standalone/** and shows a simple test case of the usage of the QGD package. 
 The Doxygen documentation of the QGD API can be also generated in order fully exploit the functionalities of the QGD package (for further details see section **Doxygen manual** at the end of this manual).
 
 ## Python Interface

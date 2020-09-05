@@ -30,7 +30,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "qgd/Random_Unitary.h"
 
 using namespace std;
-/*
+
 ////
 // @brief Call to create a random unitary containing a given number of CNOT gates between randomly chosen qubits
 // @param qbit_num The number of qubits spanning the unitary
@@ -73,7 +73,7 @@ QGD_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
             u3_op = new U3(qbit_num, target_qbit, true, true, true);
 
             // get the matrix of the operation
-            gate_matrix = u3_op->matrix(parameters, free_after_used);
+            gate_matrix = u3_op->matrix(parameters);
         }
         else if ( cnot_or_u3 == 5 ) {
             // randomly choose the target qbit
@@ -84,7 +84,6 @@ QGD_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
 
             if (target_qbit == control_qbit) {
                 gate_matrix = create_identity( matrix_size );
-                free_after_used = true;
             }
             else {
 
@@ -92,14 +91,13 @@ QGD_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
                 cnot_op = new CNOT(qbit_num, control_qbit, target_qbit);
 
                 // get the matrix of the operation
-                gate_matrix = cnot_op->matrix(free_after_used);
+                gate_matrix = cnot_op->matrix();
 
                 cnot_num_curr = cnot_num_curr + 1;
             }
         }
         else {
             gate_matrix = create_identity( matrix_size );
-            free_after_used = true;
         }
 
 
@@ -110,10 +108,7 @@ QGD_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
         mtx = mtx_tmp;
         mtx_tmp = NULL;
 
-        if (free_after_used) {
-            qgd_free(gate_matrix);
-            gate_matrix = NULL;
-        }
+        qgd_free(gate_matrix);
 
         if ( u3_op != NULL ) {
             delete u3_op;
@@ -134,7 +129,7 @@ QGD_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
     }
 
 }
-*/
+
 //
 // @brief Decomposition of general two-qubit matrix into U3 and CNOT gates
 int main() {
@@ -149,13 +144,13 @@ int main() {
 #endif
 
     // creating random unitary
-    int qbit_num = 3;
+    int qbit_num = 4;
 
 #ifdef MIC
       qbit_num = 7;
 #endif
 
-    //int cnot_num = 800;
+    int cnot_num = 4;
     //QGD_Complex16* Umtx = few_CNOT_unitary( qbit_num, cnot_num);
 
 
@@ -193,7 +188,7 @@ print_mtx( C, matrix_size,matrix_size);
 
     std::map<int,int> identical_blocks;
     identical_blocks[2] = 1;
-    identical_blocks[3] = 2;
+    identical_blocks[3] = 1;
     identical_blocks[4] = 1;
     identical_blocks[5] = 1;
     identical_blocks[6] = 1;
@@ -201,6 +196,8 @@ print_mtx( C, matrix_size,matrix_size);
 
     N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, false, "close_to_zero" );
 
+//cDecomposition.set_iteration_loops( 4, 3 );
+//cDecomposition.set_iteration_loops( 3, 3 );
 
     printf("Starting the decompsition\n");
     cDecomposition.start_decomposition(true);

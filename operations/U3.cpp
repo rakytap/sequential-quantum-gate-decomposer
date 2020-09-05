@@ -273,6 +273,9 @@ QGD_Complex16* U3::composite_u3(double Theta, double Phi, double Lambda ) {
     // @return Returns with the matrix of the U3 gate.
 int U3::composite_u3(double Theta, double Phi, double Lambda, QGD_Complex16* U3_matrix ) {
 
+        // set to zero all the elements of the matrix
+        //memset(U3_matrix, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+
 
         // get the U3 operation of one qubit
         set_one_qubit_u3(Theta, Phi, Lambda );

@@ -23,8 +23,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 from qgd_python.N_Qubit_Decomposition import N_Qubit_Decomposition 
-import ctypes
 
+print('******************** Decomposing general 3-qubit matrix *******************************')
 
 # cerate unitary q-bit matrix
 from scipy.stats import unitary_group
@@ -51,10 +51,12 @@ cDecompose.start_decomposition()
 print(' ')
 print(' ')
 print(' ')
-print('**************************')
-print('**************************')
+print('*******************************************************')
+print('*******************************************************')
 
 #exit()
+
+print('******************** Solving the 4th IBM chellenge *******************************')
 
 #******************************
 from scipy.io import loadmat
