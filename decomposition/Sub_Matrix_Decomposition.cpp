@@ -147,11 +147,12 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         
     // setting the global target minimum
     global_target_minimum = 0;   
+    current_minimum = optimalization_problem(NULL);
           
     // check if it needed to do the subunitarization
-    if (optimalization_problem(NULL) < optimalization_tolerance) {
+    if (check_optimalization_solution()) {
         printf("Disentanglig not needed\n");
-        subdecomposed_mtx = Umtx;
+        memcpy( subdecomposed_mtx, Umtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
         subdisentaglement_done = true;
         return;
     }
@@ -219,8 +220,6 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
                                 
             // Do the optimalization
             if (optimize_layer_num || layer_num >= max_layer_num_loc ) {
-
-                //solve_optimalization_problem( NULL, 0); 
 
                 // solve the optzimalization problem to find the correct mninimum
                 if ( optimized_parameters == NULL ) {
@@ -384,7 +383,7 @@ printf("solve_layer_optimalization_problem::Allocating solution guess\n");
                 current_minimum = s->f;
                 //#pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = s->x->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                    solution_guess_gsl->data[jdx] = s->x->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/10;
                     optimized_parameters[jdx] = s->x->data[jdx];
                 }
             }
@@ -551,6 +550,23 @@ void Sub_Matrix_Decomposition::optimalization_problem_combined( const gsl_vector
     optimalization_problem_grad(parameters, params, grad, *cost_function);
 }        
 
+
+
+////
+// @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
+// @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+// @param identical_blocks_in The number of successive identical layers used in the subdecomposition.
+int Sub_Matrix_Decomposition::set_identical_blocks( int qbit, int identical_blocks_in )  {
+
+    std::map<int,int>::iterator key_it = identical_blocks.find( qbit );
+
+    if ( key_it != identical_blocks.end() ) {
+        identical_blocks.erase( key_it );
+    }
+
+    identical_blocks.insert( std::pair<int, int>(qbit,  identical_blocks_in) );    
+
+}
 
 
 QGD_Complex16** Sub_Matrix_Decomposition::get_submatrices() {

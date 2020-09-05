@@ -191,17 +191,11 @@ void CNOT::reorder_qubits( vector<int> qbit_list) {
 
         Operation::reorder_qubits(qbit_list);
 
-        // setting the control qubit
+/*        // setting the control qubit
         if ( control_qbit != -1 ) {
             control_qbit = qbit_list[qbit_list.size()-control_qbit-1];
-        }
+        }*/
 
-        if ( matrix_alloc != NULL ) {
-            qgd_free( matrix_alloc );
-        }
-
-        // Contruct the matrix of the operation
-        matrix_alloc = composite_cnot();
 }
 
 

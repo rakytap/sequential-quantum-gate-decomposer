@@ -39,7 +39,7 @@ extern "C"
 
 // include MKL header if MKL package and intel compiler are present
 #if CXX==icpc
-#if HAVE_LIBMKL_INTEL_LP64
+#ifdef MKL
 #include <mkl_service.h>
 
 // headers of cblas of MKL and GSL are in conflict and GSL headers need to be inculed due to multimin package,
@@ -72,10 +72,15 @@ struct QGD_Complex16 {
   double imag;
 };
 
+// @brief Structure type conatining gate numbers
+struct gates_num {
+  int u3;
+  int cnot;
+};
+
 
 // define aligned memory allocation function if they are not present (in case of older gcc compilers)
-#if HAVE_LIBMKL_INTEL_LP64
-#ifndef ac_cv_func_aligned_alloc
+//#ifndef ACALLOC
 /* Allocate aligned memory in a portable way.
  *
  * Memory allocated with aligned alloc *MUST* be freed using aligned_free.
@@ -92,8 +97,7 @@ void *aligned_alloc(size_t alignment, size_t size, bool zero);
 
 /* Free memory allocated with aligned_alloc */
 void aligned_free(void* aligned_ptr);
-#endif
-#endif
+//#endif
 
 // @brief custom defined memory allocation function. (Refers to corresponding MKL function if present, or use another aligned memory allocator otherwise)
 void* qgd_calloc( size_t element_num, size_t size, size_t alignment );
@@ -117,11 +121,7 @@ std::string int_to_string( int input );
 // @brief converts double to string
 std::string double_to_string( double input );
 
-// @brief Structure type conatining gate numbers
-struct gates_num {
-  int u3;
-  int cnot;
-};
+
 
 // @brief Add an integer to an integer vector if the integer is not already an element of the vector. The sorted order is kept during the process
 void add_unique_elelement( std::vector<int>& involved_qbits, int qbit );

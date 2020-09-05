@@ -129,14 +129,26 @@ void Operation::reorder_qubits( vector<int> qbit_list ) {
       
     // check the number of qubits
     if (qbit_list.size() != qbit_num ) {
-        printf("Wrong number of qubits");
-        throw "Wrong number of qubits";
+        printf("Wrong number of qubits\n");
+        exit(-1);
     }
-        
+
+
+    int control_qbit_new = control_qbit;
+    int target_qbit_new = target_qbit;
+       
     // setting the new value for the target qubit
-    if (target_qbit != -1) {
-       target_qbit = qbit_list[qbit_list.size()-target_qbit-1];
+    for (int idx=0; idx<qbit_num; idx++) {
+        if (target_qbit == qbit_list[idx]) {
+            target_qbit_new = qbit_num-1-idx;
+        }
+        if (control_qbit == qbit_list[idx]) {
+            control_qbit_new = qbit_num-1-idx;
+        }
     }
+
+    control_qbit = control_qbit_new;
+    target_qbit = target_qbit_new;
 }
 
 

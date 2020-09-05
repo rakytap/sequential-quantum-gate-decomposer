@@ -24,13 +24,25 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 extern "C" {
 
 // @brief Creates an instance of class N_Qubit_Decomposition and return with a void pointer pointing to the class instance
-void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int qbit_num );
+void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int qbit_num, bool optimize_layer_num, int initial_guess_num );
 
 // @brief Starts the decomposition of the unitary
 int iface_start_decomposition( void* ptr );
 
 // @brief Deallocate the N_Qubit_Decomposition class
 int iface_delete_N_Qubit_Decomposition( void* ptr );
+
+// @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
+int iface_set_identical_blocks( void* ptr, int qbit, int identical_blocks_in );
+
+// @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
+int iface_set_iteration_loops( void* ptr, int qbit, int iteration_loops_in );
+
+// @brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
+int iface_set_max_layer_num( void* ptr, int qbit, int max_layer_num_in );
+
+// @brief Set the type of initial guess
+//int iface_set_max_layer_num( void* ptr, int qbit, int max_layer_num_in );
 
 }
 

@@ -55,7 +55,7 @@ public:
 // @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
 // @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 // @return An instance of the class
-N_Qubit_Decomposition( QGD_Complex16*, int, std::map<int,int>, std::map<int,int>, bool, string );
+N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in, string initial_guess_in );
 
 
 
@@ -128,5 +128,24 @@ static void optimalization_problem_grad( const gsl_vector* parameters, void*, gs
 // @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
 // @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 static void optimalization_problem_combined( const gsl_vector* parameters, void* , double* , gsl_vector*  );
+
+////  
+// @brief Call to simplify the gate structure in each layers if possible (i.e. tries to reduce the number of CNOT gates)
+void simplify_layers();
+
+////  
+// @brief Call to simplify the gate structure (i.e. tries to reduce the number of CNOT gates) in one layer if possible
+// @param layer An instance of class #Operation_block containing the 2-qubit gate structure to be simplified
+// @parameters An array of parameters to calculate the matrix of the layer.
+// @max_layer_num The maximal allowed number of layers containing CNOT gates
+// @return An instance of class operation_block containing the simplified gate operations.       
+int simplify_layer( Operation_block* layer, double* parameters, int parameter_num_block, std::map<int,int> max_layer_num, Operation_block* simplified_layer, double* simplified_parameters, int &simplified_parameter_num);
+
+////
+// @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
+// @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+// @param identical_blocks The number of successive identical layers used in the subdecomposition.
+int set_identical_blocks( int qbit, int identical_blocks_in );
+
 
 };

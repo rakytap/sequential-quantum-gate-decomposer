@@ -276,7 +276,7 @@ CPPFLAGS =
 CXX = icpc
 CXXCPP = icpc -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS =  -qopenmp -O3 -falign-loops=64 -I/home/scc/rakytap/gsl/include
+CXXFLAGS =  -qopenmp -O3 -falign-loops=64 -DMKL -DACALLOC -I/home/scc/rakytap/gsl/include
 CYGPATH_W = echo
 DEFS = -DPACKAGE_NAME=\"qgd\" -DPACKAGE_TARNAME=\"qgd\" -DPACKAGE_VERSION=\"1.1\" -DPACKAGE_STRING=\"qgd\ 1.1\" -DPACKAGE_BUGREPORT=\"rakytap@caesar.elte.hu\" -DPACKAGE_URL=\"\" -DPACKAGE=\"qgd\" -DVERSION=\"1.1\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\"
 DEPDIR = .deps

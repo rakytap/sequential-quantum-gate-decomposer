@@ -28,8 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 using namespace std;
 
 // define aligned memory allocation function if they are not present (in case of older gcc compilers)
-#ifndef MKL
-#ifndef ac_cv_func_aligned_alloc
+//#ifndef ac_cv_func_aligned_alloc
 /* Allocate aligned memory in a portable way.
  *
  * Memory allocated with aligned alloc *MUST* be freed using aligned_free.
@@ -62,35 +61,26 @@ void aligned_free(void* aligned_ptr) {
     int offset = *(((char*)aligned_ptr) - 1);
     free(((char*)aligned_ptr) - offset);
 }
-#endif
-#endif
+//#endif
 
 
 void* qgd_calloc( size_t element_num, size_t size, size_t alignment ) {
-#if HAVE_LIBMKL_INTEL_LP64
-    void* ret = mkl_malloc(element_num*size, alignment);
-    memset(ret, 0, size*element_num );
-#else
-#ifndef ac_cv_func_aligned_alloc
+
+//#ifndef ACALLOC
     void* ret = aligned_alloc(alignment, size*element_num, true);
-#else
+/*#else
     void* ret = aligned_alloc(alignment, size*element_num);
     memset(ret, 0, size*element_num );
-#endif
-#endif
+#endif*/
     return ret;
 }
 
 void qgd_free( void* ptr ) {
-#if HAVE_LIBMKL_INTEL_LP64
-    mkl_free(ptr);
-#else
-#ifndef ac_cv_func_aligned_alloc
+//#ifndef ACALLOC
     aligned_free(ptr);
-#else
+/*#else
     free(ptr);
-#endif
-#endif
+#endif*/
     ptr = NULL;
 }
 
@@ -110,7 +100,8 @@ void print_mtx( QGD_Complex16* matrix, int rows, int cols ) {
     for ( int row_idx=0; row_idx < rows; row_idx++ ) {
         for ( int col_idx=0; col_idx < cols; col_idx++ ) {
             int element_idx = row_idx*cols + col_idx;    
-            printf("%1.3f + i*%1.3f,  ", matrix[element_idx].real, matrix[element_idx].imag);
+//            printf("%1.3f + i*%1.3f,  ", matrix[element_idx].real, matrix[element_idx].imag);
+            printf("%1.3f,  ", matrix[element_idx].real);
         }
         printf("\n");
     }
@@ -235,7 +226,7 @@ QGD_Complex16* zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Comp
     //QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
 
     // calculate the product of A and B
-#if HAVE_LIBMKL_INTEL_LP64
+#ifdef MKL
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
 #else
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
@@ -255,10 +246,10 @@ QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, int matrix_s
     double beta = 0.0;
 
     // preallocate array for the result
-    QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
+    QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64); 
 
     // calculate the product of A and B
-#if HAVE_LIBMKL_INTEL_LP64
+#ifdef MKL
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
 #else
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
@@ -276,7 +267,7 @@ int zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int m
     double beta = 0.0;
 
     // calculate the product of A and B
-#ifdef ac_cv_lib_mklintellp64_zgemm3m
+#ifdef MKL
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
 #else
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);

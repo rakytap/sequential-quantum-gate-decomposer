@@ -128,13 +128,17 @@ void Decomposition_Base::set_max_iteration( int max_iterations_in) {
 //// 
 // @brief After the main optimalization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
 void Decomposition_Base::finalize_decomposition() {
+
         // get the transformed matrix resulted by the operations in the list
         QGD_Complex16* transformed_matrix = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
-     
+
+        // preallocate the storage for the finalizing parameters
+        finalizing_parameter_num = 3*qbit_num;
+        double* finalizing_parameters = (double*)qgd_calloc(finalizing_parameter_num,sizeof(double), 64);
+
         // obtaining the final operations of the decomposition
-        Operation_block* finalizing_operations;
-        double* finalizing_parameters;
-        QGD_Complex16* finalized_matrix_new = get_finalizing_operations( transformed_matrix, finalizing_operations, finalizing_parameters );
+        Operation_block* finalizing_operations = new Operation_block( qbit_num );;
+        get_finalizing_operations( transformed_matrix, finalizing_operations, finalizing_parameters );
             
         // adding the finalizing operations to the list of operations
         // adding the opeartion block to the operations
@@ -160,8 +164,9 @@ void Decomposition_Base::finalize_decomposition() {
 
         // calculating the final error of the decomposition
         //decomposition_error = LA.norm(matrix_new*np.exp(np.complex(0,-np.angle(matrix_new[0,0]))) - np.identity(len(matrix_new))*abs(matrix_new[0,0]), 2)
-        subtract_diag( finalized_matrix_new, matrix_size, finalized_matrix_new[0] );
-        decomposition_error = cblas_dznrm2( matrix_size*matrix_size, finalized_matrix_new, 1 );
+        subtract_diag( transformed_matrix, matrix_size, transformed_matrix[0] );
+        decomposition_error = cblas_dznrm2( matrix_size*matrix_size, transformed_matrix, 1 );
+        //qgd_free( finalized_matrix_new );
             
         // get the number of gates used in the decomposition
         gates_num gates_num = get_gate_nums();
@@ -189,20 +194,13 @@ void Decomposition_Base::list_operations( int start_index = 1 ) {
 // @return [1] The operations needed to rotate the qubits into the state |0>
 // @return [2] The parameters of the U3 operations needed to rotate the qubits into the state |0>
 // @return [3] The resulted diagonalized matrix.
-QGD_Complex16* Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operation_block* & finalizing_operations, double* &finalizing_parameters  ) {
+void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operation_block* finalizing_operations, double* finalizing_parameters  ) {
+              
         
-        // creating block of operations to store the finalization operations
-        finalizing_operations = new Operation_block( qbit_num );
-      
-        // preallocate the storage for the finalizing parameters
-        finalizing_parameter_num = 3*qbit_num;
-        finalizing_parameters = (double*)qgd_calloc(finalizing_parameter_num,sizeof(double), 64); 
         int parameter_idx = finalizing_parameter_num-1;   
 
-               
-        QGD_Complex16* mtx_new = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-        memcpy( mtx_new, mtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-        QGD_Complex16* mtx_new_tmp = NULL;
+        QGD_Complex16* mtx_tmp = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+        QGD_Complex16* u3_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
         double Theta, Lambda, Phi;  
         for (int target_qbit=0;  target_qbit<qbit_num; target_qbit++ ) {
@@ -214,10 +212,10 @@ QGD_Complex16* Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx
             int state_1 = Power_of_2(target_qbit);           
             
             // finalize the 2x2 submatrix with z-y-z rotation
-            QGD_Complex16 element00 = mtx_new[state_0*matrix_size+state_0];
-            QGD_Complex16 element01 = mtx_new[state_0*matrix_size+state_1];
-            QGD_Complex16 element10 = mtx_new[state_1*matrix_size+state_0];
-            QGD_Complex16 element11 = mtx_new[state_1*matrix_size+state_1];
+            QGD_Complex16 element00 = mtx[state_0*matrix_size+state_0];
+            QGD_Complex16 element01 = mtx[state_0*matrix_size+state_1];
+            QGD_Complex16 element10 = mtx[state_1*matrix_size+state_0];
+            QGD_Complex16 element11 = mtx[state_1*matrix_size+state_1];
 
             // finalize the 2x2 submatrix with z-y-z rotation
             double cos_theta_2 = sqrt(element00.real*element00.real + element00.imag*element00.imag)/sqrt(element00.real*element00.real + element00.imag*element00.imag + element01.real*element01.real + element01.imag*element01.imag);
@@ -251,23 +249,20 @@ QGD_Complex16* Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx
             finalizing_parameters[parameter_idx] = Theta; //np.concatenate((parameters_loc, finalizing_parameters))
             parameter_idx--;
 
-            finalizing_operations->add_operation_to_front( u3_loc );
-                     
+            finalizing_operations->add_operation_to_front( u3_loc );             
             // get the new matrix            
-            QGD_Complex16* u3_mtx = u3_loc->matrix(parameters_loc);
-            mtx_new_tmp = apply_operation( u3_mtx, mtx_new );
             
-            if ( target_qbit > 0 ) {
-                qgd_free( mtx_new );
-            }  
+            u3_loc->matrix(parameters_loc, u3_mtx);
+            apply_operation( u3_mtx, mtx, mtx_tmp);
+ 
 
-            qgd_free( u3_mtx ); 
-            mtx_new = mtx_new_tmp;
+            memcpy( mtx, mtx_tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
             
         }         
 
-
-        return mtx_new;
+        qgd_free( mtx_tmp );
+        qgd_free( u3_mtx );
+        return;
             
         
 }                
@@ -305,7 +300,8 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         int parameter_num_loc = parameter_num;
 
         // store the initial unitary to be decomposed
-        QGD_Complex16* Umtx_loc = Umtx;
+        QGD_Complex16* Umtx_loc = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+        memcpy(Umtx_loc, Umtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
         
         // storing the initial computational parameters
         int optimalization_block_loc = optimalization_block;
@@ -409,7 +405,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             }
 
             // Transform the initial unitary upon the fixed pre-optimalization operations
-            Umtx = apply_operation(operations_mtx_pre, Umtx_loc);
+            apply_operation(operations_mtx_pre, Umtx_loc, Umtx);
 
             // ***** get the fixed operations applied after the optimized operations *****
             // create a list of post operations matrices
@@ -427,6 +423,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 //print_mtx(operations_mtxs_post[block_idx_end-1], matrix_size, matrix_size); 
             }
             else {
+                // release operation products
                 for (std::vector<QGD_Complex16*>::iterator mtxs_it=operations_mtxs_post.begin(); mtxs_it != operations_mtxs_post.end(); mtxs_it++ ) {
                     qgd_free( *mtxs_it );
                 }
@@ -497,6 +494,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
                 fflush(stdout);
                 start_time = time(NULL);
             }
+
             
             // calculate the variance of the last 10 minimums
             double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, min_vec_num, minvec_mean));
@@ -505,6 +503,8 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             if (abs(minvec_std/minimum_vec[min_vec_num-1]) < optimalization_tolerance ) {
                 printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
                 fflush(stdout);
+QGD_Complex16* matrix_new = get_transformed_matrix( optimized_parameters_gsl->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
+print_mtx(matrix_new, matrix_size, matrix_size);
                 break; 
             }
             else if (check_optimalization_solution()) {
@@ -517,8 +517,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
                 optimalization_block = 1;
             }
             
-            // free the allocated temporary Umtx
-            qgd_free(Umtx);
+
 
           
         }
@@ -561,8 +560,14 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             Identity = NULL;
         }
 
+        // release preoperation matrix
         qgd_free( operations_mtx_pre );
-        operations_mtx_pre = NULL;
+
+        // release post operation products
+        for (std::vector<QGD_Complex16*>::iterator mtxs_it=operations_mtxs_post.begin(); mtxs_it != operations_mtxs_post.end(); mtxs_it++ ) {
+            qgd_free( *mtxs_it );
+        }
+        operations_mtxs_post.clear();
  
         //qgd_free(tmp);
         tmp = NULL;
@@ -570,7 +575,10 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         delete(fixed_operation_post);
 
         // restore the original unitary
-        Umtx = Umtx_loc;
+        memcpy(Umtx, Umtx_loc, matrix_size*matrix_size*sizeof(QGD_Complex16)) ;
+
+        // free the allocated temporary Umtx
+        qgd_free(Umtx_loc);
 
 }      
         
@@ -692,9 +700,18 @@ int Decomposition_Base::get_Umtx_size() {
 // @return Return with the pointer pointing to the array storing the (memory copied) optimized parameters 
 double* Decomposition_Base::get_optimized_parameters() {
     double *ret = (double*)qgd_calloc( parameter_num,sizeof(double), 64);
-    memcpy(ret, optimized_parameters, parameter_num*sizeof(double));
+    get_optimized_parameters( ret );
     return ret;
 }
+
+//
+// @brief Call to get the optimized parameters
+// @return Return with the pointer pointing to the array storing the (memory copied) optimized parameters 
+void Decomposition_Base::get_optimized_parameters( double* ret ) {
+    memcpy(ret, optimized_parameters, parameter_num*sizeof(double));
+    return;
+}
+
 
 
 ////
@@ -865,6 +882,52 @@ int Decomposition_Base::apply_operation( QGD_Complex16* operation_mtx, QGD_Compl
 
     // Getting the transformed state upon the transformation given by operation
     return zgemm3m_wrapper( operation_mtx, input_matrix, result_matrix, matrix_size);
+}
+
+
+////
+// @brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
+// @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+// @param max_layer_num_in The maximal number of the operation layers used in the subdecomposition.
+int Decomposition_Base::set_max_layer_num( int qbit, int max_layer_num_in ) {
+
+    std::map<int,int>::iterator key_it = max_layer_num.find( qbit );
+
+    if ( key_it != max_layer_num.end() ) {
+        max_layer_num.erase( key_it );
+    }
+
+    max_layer_num.insert( std::pair<int, int>(qbit,  max_layer_num_in) );    
+
+}
+
+
+////
+// @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
+// @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.,
+// @param iteration_loops_in The number of iteration loops in each sted of the subdecomposition.
+int Decomposition_Base::set_iteration_loops( int qbit, int iteration_loops_in ) {
+
+    std::map<int,int>::iterator key_it = iteration_loops.find( qbit );
+
+    if ( key_it != iteration_loops.end() ) {
+        iteration_loops.erase( key_it );
+    }
+
+    iteration_loops.insert( std::pair<int, int>(qbit,  iteration_loops_in) );   
+
+}
+
+
+////
+// @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
+// @param iteration_loops_in An <int,int> map contining the iteration loops for the individual subdecomposition processes
+int Decomposition_Base::set_iteration_loops( std::map<int, int> iteration_loops_in ) {
+
+    for ( std::map<int,int>::iterator it=iteration_loops_in.begin(); it!= iteration_loops_in.end(); it++ ) {
+        set_iteration_loops( it->first, it->second );
+    }
+
 }
 
 

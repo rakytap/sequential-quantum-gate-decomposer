@@ -131,6 +131,13 @@ static void optimalization_problem_grad( const gsl_vector* parameters, void*, gs
 // @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 static void optimalization_problem_combined( const gsl_vector* parameters, void* , double* , gsl_vector*  );
 
+////
+// @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
+// @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+// @param identical_blocks The number of successive identical layers used in the subdecomposition.
+int set_identical_blocks( int qbit, int identical_blocks_in );
+
+
 
 QGD_Complex16** get_submatrices();
 

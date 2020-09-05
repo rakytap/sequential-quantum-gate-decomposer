@@ -381,10 +381,11 @@ void U3::set_qbit_num(int qbit_num_in) {
 // @param qbit_list The list of qubits spanning the matrix
 void U3::reorder_qubits( vector<int> qbit_list) {
 
-        Operation::reorder_qubits(qbit_list);
+    Operation::reorder_qubits(qbit_list);
 
-        // get the base indices of the target qubit
-        get_base_indices();
+    // get the base indices of the target qubit
+    get_base_indices();
+
 }
 
 

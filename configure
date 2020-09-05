@@ -15896,6 +15896,7 @@ if test "x$ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2" = xyes; then :
 
 if test $HAVE_LIBMKL_INTEL_LP64; then
 GSL_LIBS="-lgsl"
+CXXFLAGS="$CXXFLAGS -DMKL"
 else
 GSL_LIBS="-lgsl -lgslcblas "
 fi
@@ -15927,20 +15928,26 @@ CPPFLAGS=$CPPFLAGS_SAVE
 
 
 # setting linking flags for libtool
-if test $HAVE_LIBMKL_INTEL_LP64 && test $CCX=icpc; then
-postdeps_CXX="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5"
+if test $HAVE_LIBMKL_INTEL_LP64; then
+postdeps_CXX="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
 if test CXX=g++; then
 postdeps_CXX="$postdeps_CXX -lstdc++"
 fi
+fi
+
+if test CXX=icpc; then
+postdeps_CXX="$postdeps_CXX -liomp5"
 else
 postdeps_CXX="$postdeps_CXX -lgomp"
+fi
+
 # checking aligned_alloc if mkl is not present
 ac_fn_c_check_func "$LINENO" "aligned_alloc" "ac_cv_func_aligned_alloc"
 if test "x$ac_cv_func_aligned_alloc" = xyes; then :
-
+  CXXFLAGS="$CXXFLAGS -DACALLOC"
 fi
 
-fi
+
 
 CXXFLAGS="$CXXFLAGS -I$GSL_INC_DIR"
 CFLAGS="$CFLAGS -I$GSL_INC_DIR -I$MKLROOT"

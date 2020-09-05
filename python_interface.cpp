@@ -26,7 +26,7 @@ extern "C" {
 
 
 // @brief Creates an instance of class N_Qubit_Decomposition and return with a void pointer pointing to the class instance
-void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int qbit_num ) {
+void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int qbit_num, bool optimize_layer_num, int initial_guess_num ) {
 
     int matrix_size = Power_of_2(qbit_num);
 
@@ -45,8 +45,21 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
     std::map<int,int> num_of_layers;
     std::map<int,int> identical_blocks;
 
+    // setting the initial guess type
+    string initial_guess;
+    if ( initial_guess_num==0 ) {
+        initial_guess = "zeros";        
+    }
+    else if ( initial_guess_num==1 ) {
+        initial_guess = "random";        
+    }
+    else if ( initial_guess_num==2 ) {
+        initial_guess = "close_to_zero";        
+    }
+
+printf("%s\n", initial_guess);
     // creating an instance of class N_Qubit_decomposition
-    N_Qubit_Decomposition* instance = new N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, false, "close_to_zero" );
+    N_Qubit_Decomposition* instance = new N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, optimize_layer_num, initial_guess );
 
     return (void*)instance;
 
@@ -73,6 +86,32 @@ int iface_delete_N_Qubit_Decomposition( void* ptr ) {
     delete instance;
 
     return 0;
+
+}
+
+
+
+// @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
+int iface_set_identical_blocks( void* ptr, int qbit, int identical_blocks ) {
+
+    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    return instance->set_identical_blocks( qbit, identical_blocks );
+
+}
+
+// @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
+int iface_set_iteration_loops( void* ptr, int qbit, int iteration_loops ) {
+
+    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    return instance->set_iteration_loops( qbit, iteration_loops );
+
+}
+
+// @brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
+int iface_set_max_layer_num( void* ptr, int qbit, int max_layer_num ) {
+
+    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    return instance->set_max_layer_num( qbit, max_layer_num );
 
 }
 

@@ -149,7 +149,7 @@ int main() {
 #endif
 
     // creating random unitary
-    int qbit_num = 4;
+    int qbit_num = 3;
 
 #ifdef MIC
       qbit_num = 7;
@@ -193,7 +193,7 @@ print_mtx( C, matrix_size,matrix_size);
 
     std::map<int,int> identical_blocks;
     identical_blocks[2] = 1;
-    identical_blocks[3] = 1;
+    identical_blocks[3] = 2;
     identical_blocks[4] = 1;
     identical_blocks[5] = 1;
     identical_blocks[6] = 1;

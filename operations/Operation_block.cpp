@@ -59,6 +59,13 @@ Operation_block::Operation_block(int qbit_num_in) : Operation(qbit_num_in) {
 // @brief Destructor of the class.
 Operation_block::~Operation_block() {
 
+    release_operations();
+}
+
+//
+// @brief Release the stored operations
+void Operation_block::release_operations() {
+
     //free the alloctaed memory of the stored operations
     for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
 
@@ -88,6 +95,7 @@ Operation_block::~Operation_block() {
     operations.clear();
 
 }
+
 
 
 ////
@@ -387,7 +395,6 @@ gates_num Operation_block::get_gate_nums() {
         gate_nums.u3   = 0;
         gate_nums.cnot = 0;
 
-
         for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
             // get the specific operation or block of operations
             Operation* operation = *it;
@@ -599,8 +606,27 @@ void Operation_block::combine(Operation_block* op_block) {
     std::vector<Operation*> operations_in = op_block->get_operations();
 
     for(std::vector<Operation*>::iterator it = (operations_in).begin(); it != (operations_in).end(); ++it) {
-        Operation* operation = *it;
-        add_operation_to_end(operation);
+        Operation* op = *it;
+
+        if (op->get_type().compare("cnot")==0) {
+            CNOT* cnot_op = static_cast<CNOT*>( op );
+            CNOT* cnot_op_cloned = cnot_op->clone();
+            Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
+            add_operation_to_end(op_cloned);    
+        }
+        else if (op->get_type().compare("u3")==0) {
+            U3* u3_op = static_cast<U3*>( op );
+            U3* u3_op_cloned = u3_op->clone();
+            Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
+            add_operation_to_end( op_cloned );    
+        }
+        else if (op->get_type().compare("block")==0) {
+            Operation_block* block_op = static_cast<Operation_block*>( op );
+            Operation_block* block_op_cloned = block_op->clone();
+            Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
+            add_operation_to_end( op_cloned );      
+        }
+
     }
 
 }

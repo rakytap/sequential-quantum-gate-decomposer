@@ -54,6 +54,10 @@ Operation_block(int);
 ~Operation_block();
 
 //
+// @brief Release the stored operations
+void release_operations();
+
+//
 // @brief Call to terive the operation matrix
 // @return Returns with a pointer to the operation matrix
 QGD_Complex16* matrix( const double* parameters );

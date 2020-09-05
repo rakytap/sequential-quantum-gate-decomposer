@@ -147,7 +147,7 @@ void list_operations( int );
 // @return [1] The operations needed to rotate the qubits into the state |0>
 // @return [2] The parameters of the U3 operations needed to rotate the qubits into the state |0>
 // @return [3] The resulted diagonalized matrix.
-QGD_Complex16* get_finalizing_operations( QGD_Complex16* mtx, Operation_block* & finalizing_operations, double* &finalizing_parameters);
+void get_finalizing_operations( QGD_Complex16* mtx, Operation_block* finalizing_operations, double* finalizing_parameters);
 
 
 //// 
@@ -210,6 +210,11 @@ int get_Umtx_size();
 // @return Return with the pointer pointing to the array storing the optimized parameters
 double* get_optimized_parameters();
 
+//
+// @brief Call to get the optimized parameters
+// @return Return with the pointer pointing to the array storing the (memory copied) optimized parameters 
+void get_optimized_parameters( double* ret );
+
 
 ////
 // @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
@@ -249,6 +254,23 @@ QGD_Complex16* apply_operation( QGD_Complex16*, QGD_Complex16*  );
 // @param input_matrix The input matrix to be transformed.
 // @return Returns with the transformed matrix
 int apply_operation( QGD_Complex16*, QGD_Complex16*, QGD_Complex16* );
+
+////
+// @brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
+// @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+// @param max_layer_num The maximal number of the operation layers used in the subdecomposition.
+int set_max_layer_num( int qbit, int max_layer_num_in );
+
+////
+// @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
+// @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.,
+// @param iteration_loops The number of iteration loops in each sted of the subdecomposition.
+int set_iteration_loops( int qbit, int iteration_loops_in );
+
+////
+// @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
+// @param iteration_loops_in An <int,int> map contining the iteration loops for the individual subdecomposition processes
+int set_iteration_loops( std::map<int, int> iteration_loops_in );
 
 ////
 // @briefinitializes default layer numbers
