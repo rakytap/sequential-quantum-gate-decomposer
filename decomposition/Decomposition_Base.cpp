@@ -377,7 +377,8 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 
         int iter_idx;
         for ( iter_idx=0;  iter_idx<max_iterations+1; iter_idx++) {
-        //for ( iter_idx=0;  iter_idx<2000; iter_idx++) {
+                        
+            fflush(stdout);
 
             //determine the range of blocks to be optimalized togedther
             block_idx_end = block_idx_start - optimalization_block;
@@ -507,12 +508,6 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             if (abs(minvec_std/minimum_vec[min_vec_num-1]) < optimalization_tolerance ) {
                 printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
                 fflush(stdout);
-//verbose = true;
-//print_mtx(transformed_mtx, matrix_size, matrix_size);
-//printf("%f\n", get_cost_function(transformed_mtx, matrix_size));
-//QGD_Complex16* matrix_new = get_transformed_matrix( optimized_parameters_gsl->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
-//print_mtx(matrix_new, matrix_size, matrix_size);
-//printf("%f\n", optimalization_problem( optimized_parameters_gsl->data ) );
                 break; 
             }
             else if (check_optimalization_solution()) {
@@ -576,7 +571,6 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         }
         operations_mtxs_post.clear();
  
-        //qgd_free(tmp);
         tmp = NULL;
 
         delete(fixed_operation_post);
