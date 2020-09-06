@@ -43,8 +43,6 @@ Umtx = unitary_group.rvs(matrix_size)
 # creating a class to decompose the 
 cDecompose = N_Qubit_Decomposition( Umtx )
 
-cDecompose.set_identical_blocks( 3, 2 )
-
 # starting the decomposition
 cDecompose.start_decomposition()
 

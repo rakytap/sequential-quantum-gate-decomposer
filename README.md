@@ -41,9 +41,9 @@ After the downloaded package is extracted somewhere in the home directory of the
 Depending on the individual settings the default compiler to be invoked might be different from HPC to HPC. 
 To ensure the usage of the GNU compiler, the following shell command should be executed inside the directory **path/to/gslsource**:
 
-$ ./configure --prefix=path/to/gsl CC=gcc CXX=g++
+$ ./configure --prefix=path/to/gsl FC=gfortran CC=gcc CXX=g++
 
-(Similarly, Intel compiler can be forced by setting CC=icc and CXX=icpc.)
+(Similarly, Intel compiler can be forced by setting FC=ifort CC=icc and CXX=icpc.)
 The installation directory of the compiled GNU Scientific Library is given by **--prefix=path/to/gsl** (which is different from the directory path of 
 the source files given by **path/to/gslsource**).
 To install GNU Scientific Library the user should have read and write permissions on the path **path/to/gsl** (which might be for example /home/username/gsl).
@@ -86,7 +86,7 @@ The installation directory of the compiled QGD package is given by **--prefix=pa
 The user should have read and write permissions on the path **path/to/qgd** (which can be for example /home/username/qgd).
 The flag **--enable-ffast-math** enables the compiler's floating-point optimization (which is usually enabled by default in Intel compilers settings). 
 While in general this optimization is considered to be dangerous, in case of QGD it works well, the runtime performance is increased by 5-6 times due to this optimization.
-We notice, that the QGD Python interface does not support this optimization, it can be exploited only by the standalone C applications.
+We notice, that the QGD Python interface does not fully support this optimization resulting in lower performance than a standalone C applications.
 On the other hand, if one choses Intel compiler to built the QGD package, the following configuration settings should be invoked:
 
 $ ./configure --prefix=path/to/qgd --with-mkl CC=icc CXX=icpc

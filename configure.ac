@@ -20,8 +20,8 @@ AC_ARG_ENABLE(ffast-math, [  --enable-ffast-math Enables g++ compiler optimizati
 
 # TODO GCC OR ICC?
 if test $CXX = "icpc"; then
-  CXXFLAGS=" -qopenmp -O3 -falign-loops=64"
-  CFLAGS=" -qopenmp -O3 -falign-loops=64"
+  CXXFLAGS=" -qopenmp -O2"
+  CFLAGS=" -qopenmp -O2"
 else
 if test $FP_OPT; then
   CXXFLAGS=" -fopenmp -O3 -ffast-math"
@@ -89,6 +89,8 @@ CPPFLAGS=$CPPFLAGS_SAVE
 # setting linking flags for libtool
 if test $MKL_OPT; then
 postdeps_CXX="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
+CXXFLAGS="$CXXFLAGS -I$MKLROOT/include"
+CFLAGS="$CFLAGS -I$MKLROOT/include"
 fi
 
 if test $CXX = g++; then
@@ -103,7 +105,7 @@ fi
 
 
 CXXFLAGS="$CXXFLAGS -I$GSL_INC_DIR"
-CFLAGS="$CFLAGS -I$GSL_INC_DIR -I$MKLROOT"
+CFLAGS="$CFLAGS -I$GSL_INC_DIR"
 echo $GSL_LIBS
 echo $postdeps_CXX
 echo $CXXFLAGS

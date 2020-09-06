@@ -185,13 +185,13 @@ AUTOMAKE = ${SHELL} /home/scc/rakytap/quantum-gate-decomposer_C/missing automake
 AWK = gawk
 CC = icc
 CCDEPMODE = depmode=gcc3
-CFLAGS =  -qopenmp -O3 -falign-loops=64 -I/software/packages-15.1/gsl/2.5-gnu/include -I/software/packages/intel-2019/compilers_and_libraries_2019.5.281/linux/mkl
+CFLAGS =  -qopenmp -O2 -I/software/packages/intel-2019/compilers_and_libraries_2019.5.281/linux/mkl/include -I/software/packages-15.1/gsl/2.5-gnu/include
 CPP = icc -E
 CPPFLAGS = 
 CXX = icpc
 CXXCPP = icpc -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS =  -qopenmp -O3 -falign-loops=64 -DMKL -I/software/packages-15.1/gsl/2.5-gnu/include
+CXXFLAGS =  -qopenmp -O2 -DMKL -I/software/packages/intel-2019/compilers_and_libraries_2019.5.281/linux/mkl/include -I/software/packages-15.1/gsl/2.5-gnu/include
 CYGPATH_W = echo
 DEFS = -DPACKAGE_NAME=\"qgd\" -DPACKAGE_TARNAME=\"qgd\" -DPACKAGE_VERSION=\"1.1\" -DPACKAGE_STRING=\"qgd\ 1.1\" -DPACKAGE_BUGREPORT=\"rakytap@caesar.elte.hu\" -DPACKAGE_URL=\"\" -DPACKAGE=\"qgd\" -DVERSION=\"1.1\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\"
 DEPDIR = .deps
