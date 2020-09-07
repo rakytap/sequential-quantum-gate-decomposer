@@ -18,7 +18,8 @@ EXTRA_DIST = common/include/common.h \
              example.py \
              qgd_python/N_Qubit_Decomposition.py \
              qgd_python/__init__.py \
-             Umtx.mat
+             Umtx.mat \
+             LICENSE
 
 lib_LTLIBRARIES = libqgd.la
 pkginclude_HEADERS = python_interface.h
@@ -38,4 +39,5 @@ install: install-recursive
 	cp -r qgd_python $(prefix)/
 	cp example.py $(prefix)/
 	cp Umtx.mat $(prefix)/
+	cp LICENCE $(prefix)/
 	

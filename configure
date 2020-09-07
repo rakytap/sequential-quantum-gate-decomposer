@@ -15768,6 +15768,8 @@ ac_config_files="$ac_config_files Makefile qgd/Makefile common/Makefile operatio
 # Check whether --with-mkl was given.
 if test "${with_mkl+set}" = set; then :
   withval=$with_mkl; MKL_OPT=yes
+else
+  MKL_OPT=no
 fi
 
 
@@ -15775,6 +15777,8 @@ fi
 # Check whether --enable-ffast-math was given.
 if test "${enable_ffast_math+set}" = set; then :
   enableval=$enable_ffast_math; FP_OPT=yes
+else
+  FP_OPT=n
 fi
 
 
@@ -15783,7 +15787,7 @@ if test $CXX = "icpc"; then
   CXXFLAGS=" -qopenmp -O2"
   CFLAGS=" -qopenmp -O2"
 else
-if test $FP_OPT; then
+if test $FP_OPT = yes; then
   CXXFLAGS=" -fopenmp -O3 -ffast-math"
   CFLAGS=" -fopenmp -O3 -ffast-math"
 else
@@ -15796,7 +15800,7 @@ fi
 CBLAS_LIBS=
 
 #checking MKL library
-if test $MKL_OPT; then
+if test $MKL_OPT = yes ; then
 LDFLAGS="$LDFLAGS -L$MKLROOT/lib/intel64/"
 { $as_echo "$as_me:${as_lineno-$LINENO}: checking for zgemm3m in -lmkl_intel_lp64" >&5
 $as_echo_n "checking for zgemm3m in -lmkl_intel_lp64... " >&6; }
@@ -15847,7 +15851,7 @@ fi
 
 
 #checking MKL headers
-if test $MKL_OPT; then
+if test $MKL_OPT = yes; then
 CFLAGS_SAVE=$CFLAGS
 CFLAGS="$CFLAGS  -I$MKLROOT/include"
 CPPFLAGS_SAVE=$CPPFLAGS
@@ -15905,7 +15909,7 @@ if test "x$ac_cv_lib_gsl_gsl_multimin_fdfminimizer_vector_bfgs2" = xyes; then :
 
 if test $HAVE_ZGEMM3M; then
 GSL_LIBS="-lgsl"
-if test $MKL_OPT; then
+if test $MKL_OPT = yes; then
 CXXFLAGS="$CXXFLAGS -DMKL"
 fi
 else

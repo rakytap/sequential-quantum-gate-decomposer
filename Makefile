@@ -276,7 +276,7 @@ CPPFLAGS =
 CXX = icpc
 CXXCPP = icpc -E
 CXXDEPMODE = depmode=gcc3
-CXXFLAGS =  -qopenmp -O2 -DMKL -I/software/packages/intel-2019/compilers_and_libraries_2019.5.281/linux/mkl/include -I/software/packages-15.1/gsl/2.5-gnu/include
+CXXFLAGS =  -qopenmp -O2 -I/software/packages/intel-2019/compilers_and_libraries_2019.5.281/linux/mkl/include -I/software/packages-15.1/gsl/2.5-gnu/include
 CYGPATH_W = echo
 DEFS = -DPACKAGE_NAME=\"qgd\" -DPACKAGE_TARNAME=\"qgd\" -DPACKAGE_VERSION=\"1.1\" -DPACKAGE_STRING=\"qgd\ 1.1\" -DPACKAGE_BUGREPORT=\"rakytap@caesar.elte.hu\" -DPACKAGE_URL=\"\" -DPACKAGE=\"qgd\" -DVERSION=\"1.1\" -DSTDC_HEADERS=1 -DHAVE_SYS_TYPES_H=1 -DHAVE_SYS_STAT_H=1 -DHAVE_STDLIB_H=1 -DHAVE_STRING_H=1 -DHAVE_MEMORY_H=1 -DHAVE_STRINGS_H=1 -DHAVE_INTTYPES_H=1 -DHAVE_STDINT_H=1 -DHAVE_UNISTD_H=1 -DHAVE_DLFCN_H=1 -DLT_OBJDIR=\".libs/\"
 DEPDIR = .deps
@@ -296,7 +296,7 @@ INSTALL_PROGRAM = ${INSTALL}
 INSTALL_SCRIPT = ${INSTALL}
 INSTALL_STRIP_PROGRAM = $(install_sh) -c -s
 LD = /usr/x86_64-suse-linux/bin/ld -m elf_x86_64
-LDFLAGS =  -L/software/packages/intel-2019/compilers_and_libraries_2019.5.281/linux/mkl/lib/intel64/ -L/software/packages-15.1/gsl/2.5-gnu/lib64 -lgsl -lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5
+LDFLAGS =  -L/software/packages-15.1/gsl/2.5-gnu/lib64 -lgsl -lgslcblas  
 LIBOBJS = 
 LIBS = 
 LIBTOOL = $(SHELL) $(top_builddir)/libtool
@@ -369,7 +369,7 @@ mandir = ${datarootdir}/man
 mkdir_p = $(MKDIR_P)
 oldincludedir = /usr/include
 pdfdir = ${docdir}
-prefix = /home/scc/rakytap/qgd
+prefix = /usr/local
 program_transform_name = s,x,x,
 psdir = ${docdir}
 sbindir = ${exec_prefix}/sbin
@@ -397,7 +397,8 @@ EXTRA_DIST = common/include/common.h \
              example.py \
              qgd_python/N_Qubit_Decomposition.py \
              qgd_python/__init__.py \
-             Umtx.mat
+             Umtx.mat \
+             LICENSE
 
 lib_LTLIBRARIES = libqgd.la
 pkginclude_HEADERS = python_interface.h
@@ -983,6 +984,7 @@ install: install-recursive
 	cp -r qgd_python $(prefix)/
 	cp example.py $(prefix)/
 	cp Umtx.mat $(prefix)/
+	cp LICENCE $(prefix)/
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

@@ -12,18 +12,18 @@ AC_CONFIG_FILES([Makefile
 
 #checking floating point precision configuration setup
 AC_ARG_WITH(mkl, [  --with-mkl Links against Intel MKL cblas library.],
- [MKL_OPT=yes], [] )
+ [MKL_OPT=yes], [MKL_OPT=no] )
 
 #checking floating point precision configuration setup
 AC_ARG_ENABLE(ffast-math, [  --enable-ffast-math Enables g++ compiler optimization on floating point precision. Supported only for standalone applications, the python interface does not support this speedup.],
- [FP_OPT=yes], [] )
+ [FP_OPT=yes], [FP_OPT=n] )
 
 # TODO GCC OR ICC?
 if test $CXX = "icpc"; then
   CXXFLAGS=" -qopenmp -O2"
   CFLAGS=" -qopenmp -O2"
 else
-if test $FP_OPT; then
+if test $FP_OPT = yes; then
   CXXFLAGS=" -fopenmp -O3 -ffast-math"
   CFLAGS=" -fopenmp -O3 -ffast-math"
 else
@@ -36,7 +36,7 @@ fi
 CBLAS_LIBS= 
 
 #checking MKL library
-if test $MKL_OPT; then
+if test $MKL_OPT = yes ; then
 LDFLAGS="$LDFLAGS -L$MKLROOT/lib/intel64/"
 AC_CHECK_LIB([mkl_intel_lp64], [zgemm3m], [
 CBLAS_LIBS="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5"
@@ -47,7 +47,7 @@ fi
 
 
 #checking MKL headers
-if test $MKL_OPT; then
+if test $MKL_OPT = yes; then
 CFLAGS_SAVE=$CFLAGS
 CFLAGS="$CFLAGS  -I$MKLROOT/include"
 CPPFLAGS_SAVE=$CPPFLAGS
@@ -63,7 +63,7 @@ GSL_LIBS=
 AC_CHECK_LIB([gsl], [gsl_multimin_fdfminimizer_vector_bfgs2], [
 if test $HAVE_ZGEMM3M; then
 GSL_LIBS="-lgsl"
-if test $MKL_OPT; then
+if test $MKL_OPT = yes; then
 CXXFLAGS="$CXXFLAGS -DMKL" 
 fi
 else
