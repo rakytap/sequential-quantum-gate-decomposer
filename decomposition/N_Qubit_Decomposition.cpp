@@ -31,15 +31,15 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 // @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
 // @param max_layer_num_in A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process at the subdecomposing of n-th qubits.
 // @param identical_blocks_in A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
-// @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
+// @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
 // @return An instance of the class
-N_Qubit_Decomposition::N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in, string initial_guess_in ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
+N_Qubit_Decomposition::N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
         
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
 
     // A string describing the type of the class
-    type = "N_Qubit_Decomposition";
+    type = N_QUBIT_DECOMPOSITION_CLASS;
         
     // The global minimum of the optimalization problem
     global_target_minimum = 0;
@@ -189,21 +189,21 @@ void  N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decomp
         for ( int idx = operation_num-1; idx >=0; idx--) {
             Operation* op = sub_decomp_ops[idx];
 
-            if (op->get_type().compare("cnot")==0) {
+            if (op->get_type() == CNOT_OPERATION) {
                 CNOT* cnot_op = static_cast<CNOT*>( op );
                 CNOT* cnot_op_cloned = cnot_op->clone();
                 cnot_op_cloned->set_qbit_num( qbit_num );
                 Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
                 add_operation_to_front( op_cloned );  
             }
-            else if (op->get_type().compare("u3")==0) {
+            else if (op->get_type() == U3_OPERATION) {
                 U3* u3_op = static_cast<U3*>( op );
                 U3* u3_op_cloned = u3_op->clone();
                 u3_op_cloned->set_qbit_num( qbit_num );
                 Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
                 add_operation_to_front( op_cloned ); 
             }
-            else if (op->get_type().compare("block")==0) {
+            else if (op->get_type() == BLOCK_OPERATION) {
                 Operation_block* block_op = static_cast<Operation_block*>( op );
                 Operation_block* block_op_cloned = block_op->clone();
                 block_op_cloned->set_qbit_num( qbit_num );
@@ -599,7 +599,7 @@ void N_Qubit_Decomposition::simplify_layers() {
                 layer_idx = layer_idx + 1;
 
                 Operation_block* block_operation;
-                if (operation->get_type().compare("block")==0) {
+                if (operation->get_type() == BLOCK_OPERATION) {
                     block_operation = static_cast<Operation_block*>(operation);
                 }
                 else {
@@ -771,7 +771,7 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         std::vector<Operation*> layer_operations = layer->get_operations();
         for (std::vector<Operation*>::iterator it = layer_operations.begin(); it!=layer_operations.end(); it++) {
             Operation* op = *it;
-            if (op->get_type().compare("cnot")==0) { //operation.type == 'cnot':
+            if (op->get_type() == CNOT_OPERATION) {
                 target_qbit = op->get_target_qbit();
                 control_qbit = op->get_control_qbit();
                 break;

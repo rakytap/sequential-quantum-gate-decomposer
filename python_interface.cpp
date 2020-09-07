@@ -46,15 +46,15 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
     std::map<int,int> identical_blocks;
 
     // setting the initial guess type
-    string initial_guess;
+    guess_type initial_guess;
     if ( initial_guess_num==0 ) {
-        initial_guess = "zeros";        
+        initial_guess = ZEROS;        
     }
     else if ( initial_guess_num==1 ) {
-        initial_guess = "random";        
+        initial_guess = RANDOM;        
     }
     else if ( initial_guess_num==2 ) {
-        initial_guess = "close_to_zero";        
+        initial_guess = CLOSE_TO_ZERO;        
     }
 
 

@@ -34,6 +34,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "gsl/gsl_deriv.h"
 #include <gsl/gsl_statistics.h>
 
+// @brief Type definition of the types of the initial guess
+typedef enum guess_type {ZEROS, RANDOM, CLOSE_TO_ZERO} guess_type;
+
+
 
 struct deriv {
     int idx;
@@ -100,7 +104,7 @@ protected:
     int max_iterations;
         
     // method to guess initial values for the optimalization. POssible values: 'zeros', 'random', 'close_to_zero'
-    string initial_guess;
+    guess_type initial_guess;
 
     // auxiliary variable storing the transformed matrix
     QGD_Complex16* transformed_mtx;
@@ -113,7 +117,7 @@ public:
 // @param Umtx The unitary matrix to be decomposed
 // @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
 // @return An instance of the class
-Decomposition_Base( QGD_Complex16*, int, string );
+Decomposition_Base( QGD_Complex16*, int, guess_type );
 
 //// 
 // @brief Destructor of the class

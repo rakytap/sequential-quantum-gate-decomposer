@@ -78,14 +78,15 @@ where **/opt/intel/composerxe** is the path to the Intel compiler package locati
 (This step can be omitted when using GNU compiler, or when we do not have intention to use Intel MKL)
 After the basic environment variables are set, the compilation can be configured by the command executed in the source directory **path/to/qgdsource** of the QGD package:
 
-$ ./configure --prefix=path/to/qgd --enable-ffast-math CC=gcc CXX=g++
+$ ./configure --prefix=path/to/qgd CC=gcc CXX=g++
 
 where **path/to/qgd** is the installation path of the Quantum Gate Decomposer package.
 
 The installation directory of the compiled QGD package is given by **--prefix=path/to/qgd** (which is different from the directory path of the source files given by **path/to/qgdsource**).
 The user should have read and write permissions on the path **path/to/qgd** (which can be for example /home/username/qgd).
-The flag **--enable-ffast-math** enables the compiler's floating-point optimization (which is usually enabled by default in Intel compilers settings). 
-While in general this optimization is considered to be dangerous, in case of QGD it works well, the runtime performance is increased by 5-6 times due to this optimization.
+Another optional flag **--enable-ffast-math** enables the compiler's floating-point optimization (which is usually enabled by default in Intel compilers settings). 
+While in general this optimization is considered to be dangerous, the runtime performance might be significantly increased due to this optimization. 
+Try to compile without and with this flag and compare the performance and stability of the resulted binaries (for further information see section **How to use**).
 We notice, that the QGD Python interface does not fully support this optimization resulting in lower performance than a standalone C applications.
 On the other hand, if one choses Intel compiler to built the QGD package, the following configuration settings should be invoked:
 

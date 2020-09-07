@@ -31,6 +31,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 using namespace std;
 
+// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)
+typedef enum operation_type {GENERAL_OPERATION, CNOT_OPERATION, U3_OPERATION, BLOCK_OPERATION, DECOMPOSITION_BASE_CLASS, SUB_MATRIX_DECOMPOSITION_CLASS, N_QUBIT_DECOMPOSITION_CLASS} operation_type;
+
+
+
+
 class Operation {
 
 
@@ -39,7 +45,7 @@ protected:
     // number of qubits spanning the matrix of the operation
     int qbit_num;
     // A string describing the type of the operation
-    string type;
+    operation_type type;
     // The index of the qubit on which the operation acts (target_qbit >= 0) 
     int target_qbit;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
@@ -115,7 +121,7 @@ public:
     //
     // @brief Call to get the type of the operation
     // @return Return with the string indicating the type of the operation
-    string get_type();
+    operation_type get_type();
 
     //
     // @brief Create a clone of the present class

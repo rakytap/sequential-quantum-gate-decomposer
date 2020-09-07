@@ -35,7 +35,7 @@ using namespace std;
 Operation_block::Operation_block() : Operation() {
 
     // A string describing the type of the operation
-    type = "block";
+    type = BLOCK_OPERATION;
     // number of operation layers
     layer_num = 0;
 }
@@ -49,7 +49,7 @@ Operation_block::Operation_block() : Operation() {
 Operation_block::Operation_block(int qbit_num_in) : Operation(qbit_num_in) {
 
     // A string describing the type of the operation
-    type = "block";
+    type = BLOCK_OPERATION;
     // number of operation layers
     layer_num = 0;
 }
@@ -71,23 +71,23 @@ void Operation_block::release_operations() {
 
         Operation* operation = *it;
             
-        if (operation->get_type().compare("cnot")==0) {
+        if (operation->get_type() == CNOT_OPERATION) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
             delete cnot_operation;
         }                
-        else if (operation->get_type().compare("u3")==0) {
+        else if (operation->get_type() == U3_OPERATION) {
 
             U3* u3_operation = static_cast<U3*>(operation);
             delete u3_operation;
 
         }         
-        else if (operation->get_type().compare("block")==0) {
+        else if (operation->get_type() == BLOCK_OPERATION) {
 
             Operation_block* block_operation = static_cast<Operation_block*>(operation);
             delete block_operation;
 
         }                                 
-        else if (operation->get_type().compare("general")==0) {
+        else if (operation->get_type() == GENERAL_OPERATION) {
             delete operation;
         }
     }
@@ -137,6 +137,10 @@ int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx 
     operation_mtxs.clear();
 
 
+    return 0;
+
+
+
 /*
     QGD_Complex16* tmp = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size*sizeof(QGD_Complex16), 64 );
     QGD_Complex16* operation_mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size*sizeof(QGD_Complex16), 64 );
@@ -147,11 +151,11 @@ int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx 
         Operation* operation = *it;
 
             
-        if (operation->get_type().compare("cnot")==0) {
+        if (operation->get_type() == CNOT_OPERATION) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
             cnot_operation->matrix(operation_mtx);
         }                
-        else if (operation->get_type().compare("u3")==0) {
+        else if (operation->get_type() == U3_OPERATION) {
 
             U3* u3_operation = static_cast<U3*>(operation);
 
@@ -174,7 +178,7 @@ int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx 
 
 
         }                                 
-        else if (operation->get_type().compare("general")==0) {
+        else if (operation->get_type() == GENERAL_OPERATION) {
             operation->matrix(operation_mtx);
         }
 
@@ -194,8 +198,6 @@ int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx 
     qgd_free(operation_mtx);
 
 */
-
-    return 0;
 }
 
 
@@ -216,12 +218,12 @@ std::vector<QGD_Complex16*> Operation_block::get_matrices( const double* paramet
         Operation* operation = *it;
 
             
-        if (operation->get_type().compare("cnot")==0) {
+        if (operation->get_type() == CNOT_OPERATION) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
             operation_mtx = cnot_operation->matrix();
 
         }                
-        else if (operation->get_type().compare("u3")==0) {
+        else if (operation->get_type() == U3_OPERATION) {
 
             U3* u3_operation = static_cast<U3*>(operation);
 
@@ -243,7 +245,7 @@ std::vector<QGD_Complex16*> Operation_block::get_matrices( const double* paramet
             }
 
         }                                 
-        else if (operation->get_type().compare("general")==0) {
+        else if (operation->get_type() == GENERAL_OPERATION) {
             operation_mtx = operation->matrix();
         }
 
@@ -356,7 +358,7 @@ void Operation_block::add_operation_to_end( Operation* operation ) {
         parameter_num = parameter_num + operation->get_parameter_num();
         
         // increase the number of layers if necessary
-        if (operation->get_type().compare("block")==0) {
+        if (operation->get_type() == BLOCK_OPERATION) {
             layer_num = layer_num + 1;
         }
 
@@ -377,7 +379,7 @@ void Operation_block::add_operation_to_end( Operation* operation ) {
         parameter_num = parameter_num + operation->get_parameter_num();
         
         // increase the number of layers if necessary
-        if (operation->get_type().compare("block")==0) {
+        if (operation->get_type() == BLOCK_OPERATION) {
             layer_num = layer_num + 1;
         }
     
@@ -399,16 +401,16 @@ gates_num Operation_block::get_gate_nums() {
             // get the specific operation or block of operations
             Operation* operation = *it;
 
-            if (operation->get_type().compare("block")==0) {
+            if (operation->get_type() == BLOCK_OPERATION) {
                 Operation_block* block_operation = static_cast<Operation_block*>(operation);
                 gates_num gate_nums_loc = block_operation->get_gate_nums();
                 gate_nums.u3   = gate_nums.u3 + gate_nums_loc.u3;
                 gate_nums.cnot = gate_nums.cnot + gate_nums_loc.cnot;
             }
-            else if (operation->get_type().compare("u3")==0) {
+            else if (operation->get_type() == U3_OPERATION) {
                 gate_nums.u3   = gate_nums.u3 + 1;
             }
-            else if (operation->get_type().compare("cnot")==0) {
+            else if (operation->get_type() == CNOT_OPERATION) {
                 gate_nums.cnot   = gate_nums.cnot + 1;
             }
 
@@ -450,7 +452,7 @@ void Operation_block::list_operations( const double* parameters, int start_index
             
             Operation* operation = *it;
             
-            if (operation->get_type().compare("cnot")==0) {
+            if (operation->get_type() == CNOT_OPERATION) {
                 CNOT* cnot_operation = static_cast<CNOT*>(operation);
 
                 //message = message + " CNOT with control qubit: " + int_to_string(cnot_operation->get_control_qbit()) + " and target qubit: "  + int_to_string(cnot_operation->get_target_qbit());
@@ -458,7 +460,7 @@ void Operation_block::list_operations( const double* parameters, int start_index
                 printf( message.c_str(), operation_idx, cnot_operation->get_control_qbit(), cnot_operation->get_target_qbit() );
                 operation_idx = operation_idx + 1;
             }    
-            else if (operation->get_type().compare("u3")==0) {
+            else if (operation->get_type() == U3_OPERATION) {
 
                 // definig the U3 parameters
                 double vartheta;
@@ -516,7 +518,7 @@ void Operation_block::list_operations( const double* parameters, int start_index
                 printf( message.c_str(), operation_idx, u3_operation->get_target_qbit(), vartheta, varphi, varlambda );
                 operation_idx = operation_idx + 1;
             }    
-            else if (operation->get_type().compare("block")==0) {
+            else if (operation->get_type() == BLOCK_OPERATION) {
                 Operation_block* block_operation = static_cast<Operation_block*>(operation);
                 const double* parameters_layer = parameters + parameter_idx -operation->get_parameter_num();
                 block_operation->list_operations( parameters_layer, operation_idx );   
@@ -538,15 +540,15 @@ void Operation_block::reorder_qubits( vector<int>  qbit_list) {
  
         Operation* operation = *it;
   
-        if (operation->get_type().compare("cnot")==0) {
+        if (operation->get_type() == CNOT_OPERATION) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
             cnot_operation->reorder_qubits( qbit_list );
          }    
-         else if (operation->get_type().compare("u3")==0) {
+         else if (operation->get_type() == U3_OPERATION) {
              U3* u3_operation = static_cast<U3*>(operation);
              u3_operation->reorder_qubits( qbit_list );
          }
-         else if (operation->get_type().compare("block")==0) {
+         else if (operation->get_type() == BLOCK_OPERATION) {
              Operation_block* block_operation = static_cast<Operation_block*>(operation);
              block_operation->reorder_qubits( qbit_list );
          }       
@@ -608,19 +610,19 @@ void Operation_block::combine(Operation_block* op_block) {
     for(std::vector<Operation*>::iterator it = (operations_in).begin(); it != (operations_in).end(); ++it) {
         Operation* op = *it;
 
-        if (op->get_type().compare("cnot")==0) {
+        if (op->get_type() == CNOT_OPERATION) {
             CNOT* cnot_op = static_cast<CNOT*>( op );
             CNOT* cnot_op_cloned = cnot_op->clone();
             Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
             add_operation_to_end(op_cloned);    
         }
-        else if (op->get_type().compare("u3")==0) {
+        else if (op->get_type() == U3_OPERATION) {
             U3* u3_op = static_cast<U3*>( op );
             U3* u3_op_cloned = u3_op->clone();
             Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
             add_operation_to_end( op_cloned );    
         }
-        else if (op->get_type().compare("block")==0) {
+        else if (op->get_type() == BLOCK_OPERATION) {
             Operation_block* block_op = static_cast<Operation_block*>( op );
             Operation_block* block_op_cloned = block_op->clone();
             Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
@@ -644,15 +646,15 @@ void Operation_block::set_qbit_num( int qbit_num_in ) {
     for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
         Operation* op = *it;
 
-        if (op->get_type().compare("cnot")==0) {
+        if (op->get_type() == CNOT_OPERATION) {
             CNOT* cnot_op = static_cast<CNOT*>( op );
             cnot_op->set_qbit_num( qbit_num_in );         
         }
-        else if (op->get_type().compare("u3")==0) {
+        else if (op->get_type() == U3_OPERATION) {
             U3* u3_op = static_cast<U3*>( op ); 
             u3_op->set_qbit_num( qbit_num_in );               
         }
-        else if (op->get_type().compare("block")==0) {
+        else if (op->get_type() == BLOCK_OPERATION) {
             Operation_block* block_op = static_cast<Operation_block*>( op );          
             block_op->set_qbit_num( qbit_num_in );          
         }
@@ -670,19 +672,19 @@ Operation_block* Operation_block::clone() {
     for ( std::vector<Operation*>::iterator it=operations.begin(); it != operations.end(); ++it ) {
         Operation* op = *it;
 
-        if (op->get_type().compare("cnot")==0) {
+        if (op->get_type() == CNOT_OPERATION) {
             CNOT* cnot_op = static_cast<CNOT*>( op );
             CNOT* cnot_op_cloned = cnot_op->clone();
             Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
             ret->add_operation_to_end( op_cloned );            
         }
-        else if (op->get_type().compare("u3")==0) {
+        else if (op->get_type() == U3_OPERATION) {
             U3* u3_op = static_cast<U3*>( op );
             U3* u3_op_cloned = u3_op->clone();
             Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
             ret->add_operation_to_end( op_cloned );            
         }
-        else if (op->get_type().compare("block")==0) {
+        else if (op->get_type() == BLOCK_OPERATION) {
             Operation_block* block_op = static_cast<Operation_block*>( op );
             Operation_block* block_op_cloned = block_op->clone();
             Operation* op_cloned = static_cast<Operation*>( block_op_cloned );

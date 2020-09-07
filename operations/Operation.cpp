@@ -38,7 +38,7 @@ Operation::Operation() {
     // the size of the matrix
     matrix_size = -1;
     // A string describing the type of the operation
-    type = "general";
+    type = GENERAL_OPERATION;
     // The index of the qubit on which the operation acts (target_qbit >= 0) 
     target_qbit = -1;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
@@ -62,7 +62,7 @@ Operation::Operation(int qbit_num_in) {
     // the size of the matrix
     matrix_size = Power_of_2(qbit_num);
     // A string describing the type of the operation
-    type = "general";
+    type = GENERAL_OPERATION;
     // The index of the qubit on which the operation acts (target_qbit >= 0) 
     target_qbit = -1;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
@@ -177,7 +177,7 @@ int Operation::get_parameter_num() {
 //
 // @brief Call to get the type of the operation
 // @return Return with the string indicating the type of the operation
-string Operation::get_type() {
+operation_type Operation::get_type() {
     return type;
 }
 

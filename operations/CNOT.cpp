@@ -41,7 +41,7 @@ CNOT::CNOT(int qbit_num_in, int target_qbit_in,  int control_qbit_in) {
         // the size of the matrix
         matrix_size = Power_of_2(qbit_num);
         // A string describing the type of the operation
-        type = "cnot";
+        type = CNOT_OPERATION;
         // The number of free parameters
         parameter_num = 0;
 

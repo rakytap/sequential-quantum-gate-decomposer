@@ -33,9 +33,9 @@ std::map<int,int> Decomposition_Base::max_layer_num_def;
 // @brief Constructor of the class.
 // @param Umtx The unitary matrix to be decomposed
 // @param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
-// @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" (deafult),"random", "close_to_zero"
+// @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
 // @return An instance of the class
-Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, string initial_guess_in= "close_to_zero" ) : Operation_block(qbit_num_in) {
+Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Operation_block(qbit_num_in) {
         
     Init_max_layer_num();
         
@@ -46,7 +46,7 @@ Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in,
     decomposition_finalized = false;
 
     // A string describing the type of the class
-    type = "Decomposition_Base";
+    type = DECOMPOSITION_BASE_CLASS;
         
     // error of the unitarity of the final decomposition
     decomposition_error = -1;
@@ -78,7 +78,7 @@ Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in,
     // number of operators in one sub-layer of the optimalization process
     optimalization_block = 1;
         
-    // method to guess initial values for the optimalization. POssible values: 'zeros', 'random', 'close_to_zero'
+    // method to guess initial values for the optimalization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
     initial_guess = initial_guess_in;
 
     // optimized parameters
@@ -325,27 +325,27 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         gsl_vector* optimized_parameters_gsl = gsl_vector_alloc (parameter_num_loc);
 
         // preparing solution guess for the iterations
-        if ( initial_guess.compare("zeros")==0 ) {
+        if ( initial_guess == ZEROS ) {
             #pragma omp parallel for
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = 0;
             }
         }
-        else if ( initial_guess.compare("random")==0 ) {
+        else if ( initial_guess == RANDOM ) {
             #pragma omp parallel for
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
             }
         }
-        else if ( initial_guess.compare("close_to_zero")==0 ) {
+        else if ( initial_guess == CLOSE_TO_ZERO ) {
             #pragma omp parallel for
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
             }
         }
         else {
-            printf("bad value for initial guess");
-            throw "bad value for initial guess";
+            printf("bad value for initial guess\n");
+            exit(-1);
         }
 
         if ( solution_guess_num > 0) {
@@ -640,19 +640,19 @@ std::vector<QGD_Complex16*> Decomposition_Base::get_operation_products(double* p
 
         Operation* operation = *operations_it;
 
-        if (operation->get_type().compare("cnot")==0 ) {
+        if (operation->get_type() == CNOT_OPERATION ) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
             cnot_operation->matrix(operation_mtx);
         }
-        else if (operation->get_type().compare("general")==0 ) {
+        else if (operation->get_type() == GENERAL_OPERATION ) {
             operation->matrix(operation_mtx);
         }
-        else if (operation->get_type().compare("U3")==0 ) {
+        else if (operation->get_type() == U3_OPERATION ) {
             U3* u3_operation = static_cast<U3*>(operation);
             u3_operation->matrix(parameters, operation_mtx);
             parameters = parameters + u3_operation->get_parameter_num();
         }
-        else if (operation->get_type().compare("block")==0 ) {
+        else if (operation->get_type() == BLOCK_OPERATION ) {
             Operation_block* block_operation = static_cast<Operation_block*>(operation);
             block_operation->matrix(parameters, operation_mtx);
             parameters = parameters + block_operation->get_parameter_num();
@@ -748,20 +748,20 @@ QGD_Complex16* Decomposition_Base::get_transformed_matrix( const double* paramet
 
             Operation* operation = *operations_it;     
 
-            if (operation->get_type().compare("cnot") == 0 ) {
+            if (operation->get_type() == CNOT_OPERATION ) {
                 CNOT* cnot_operation = static_cast<CNOT*>( operation );
                 cnot_operation->matrix(operation_mtx);
             }
-            else if (operation->get_type().compare("general") == 0 ) {
+            else if (operation->get_type() == GENERAL_OPERATION ) {
                 operation->matrix(operation_mtx);
             }                                
-            else if (operation->get_type().compare("U3") == 0 ) {
+            else if (operation->get_type() == U3_OPERATION ) {
                 U3* u3_operation = static_cast<U3*>( operation );
                 int parameters_num = u3_operation->get_parameter_num();
                 u3_operation->matrix( parameters, operation_mtx );
                 parameters = parameters + parameters_num;
             }
-            else if (operation->get_type().compare("block") == 0 ) {
+            else if (operation->get_type() == BLOCK_OPERATION ) {
                 Operation_block* block_operation = static_cast<Operation_block*>( operation );
                 int parameters_num = block_operation->get_parameter_num();
                 block_operation->matrix( parameters, operation_mtx );

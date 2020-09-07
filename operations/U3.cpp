@@ -45,7 +45,7 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         // the size of the matrix
         matrix_size = Power_of_2(qbit_num);
         // A string describing the type of the operation
-        type = "u3";
+        type = U3_OPERATION;
         
 
         if (target_qbit_in >= qbit_num) {
