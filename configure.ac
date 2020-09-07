@@ -87,7 +87,7 @@ CPPFLAGS=$CPPFLAGS_SAVE
 
 
 # setting linking flags for libtool
-if test $MKL_OPT; then
+if test $MKL_OPT = yes; then
 postdeps_CXX="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
 CXXFLAGS="$CXXFLAGS -I$MKLROOT/include"
 CFLAGS="$CFLAGS -I$MKLROOT/include"

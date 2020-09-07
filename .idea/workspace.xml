@@ -1,0 +1,235 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project version="4">
+  <component name="BranchesTreeState">
+    <expand>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="LOCAL_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+      <path>
+        <item name="ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="REMOTE_ROOT" type="e8cecc67:BranchNodeDescriptor" />
+        <item name="GROUP_NODE:origin" type="e8cecc67:BranchNodeDescriptor" />
+      </path>
+    </expand>
+    <select />
+  </component>
+  <component name="ChangeListManager">
+    <list default="true" id="3c87f123-32fc-4ec0-904e-680aa1233cb7" name="Default Changelist" comment="" />
+    <option name="SHOW_DIALOG" value="false" />
+    <option name="HIGHLIGHT_CONFLICTS" value="true" />
+    <option name="HIGHLIGHT_NON_ACTIVE_CHANGELIST" value="false" />
+    <option name="LAST_RESOLUTION" value="IGNORE" />
+  </component>
+  <component name="FileTemplateManagerImpl">
+    <option name="RECENT_TEMPLATES">
+      <list>
+        <option value="Python Script" />
+      </list>
+    </option>
+  </component>
+  <component name="Git.Settings">
+    <option name="RECENT_GIT_ROOT_PATH" value="$PROJECT_DIR$" />
+  </component>
+  <component name="ProjectId" id="1eUWBDepJ1sdhv9OHrdOkWzV3By" />
+  <component name="ProjectLevelVcsManager" settingsEditedManually="true" />
+  <component name="ProjectViewState">
+    <option name="hideEmptyMiddlePackages" value="true" />
+    <option name="showLibraryContents" value="true" />
+  </component>
+  <component name="PropertiesComponent">
+    <property name="ASKED_ADD_EXTERNAL_FILES" value="true" />
+    <property name="RunOnceActivity.OpenProjectViewOnStart" value="true" />
+    <property name="RunOnceActivity.ShowReadmeOnStart" value="true" />
+    <property name="com.intellij.ide.scratch.LRUPopupBuilder$1/New Scratch File" value="Python" />
+    <property name="last_opened_file_path" value="$PROJECT_DIR$" />
+  </component>
+  <component name="RecentsManager">
+    <key name="CopyFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/random_unitary" />
+    </key>
+    <key name="MoveFile.RECENT_KEYS">
+      <recent name="$PROJECT_DIR$" />
+      <recent name="$PROJECT_DIR$/operations" />
+    </key>
+  </component>
+  <component name="RunManager" selected="Python.run_tests">
+    <configuration name="decomp_of_larger_unitaries" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="quantum-gate-decomposer" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/decomp_of_larger_unitaries.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <configuration name="run_tests" type="PythonConfigurationType" factoryName="Python" temporary="true" nameIsGenerated="true">
+      <module name="quantum-gate-decomposer" />
+      <option name="INTERPRETER_OPTIONS" value="" />
+      <option name="PARENT_ENVS" value="true" />
+      <envs>
+        <env name="PYTHONUNBUFFERED" value="1" />
+      </envs>
+      <option name="SDK_HOME" value="" />
+      <option name="WORKING_DIRECTORY" value="$PROJECT_DIR$" />
+      <option name="IS_MODULE_SDK" value="true" />
+      <option name="ADD_CONTENT_ROOTS" value="true" />
+      <option name="ADD_SOURCE_ROOTS" value="true" />
+      <option name="SCRIPT_NAME" value="$PROJECT_DIR$/run_tests.py" />
+      <option name="PARAMETERS" value="" />
+      <option name="SHOW_COMMAND_LINE" value="false" />
+      <option name="EMULATE_TERMINAL" value="false" />
+      <option name="MODULE_MODE" value="false" />
+      <option name="REDIRECT_INPUT" value="false" />
+      <option name="INPUT_FILE" value="" />
+      <method v="2" />
+    </configuration>
+    <recent_temporary>
+      <list>
+        <item itemvalue="Python.run_tests" />
+        <item itemvalue="Python.decomp_of_larger_unitaries" />
+      </list>
+    </recent_temporary>
+  </component>
+  <component name="SvnConfiguration">
+    <configuration />
+  </component>
+  <component name="TaskManager">
+    <task active="true" id="Default" summary="Default task">
+      <changelist id="3c87f123-32fc-4ec0-904e-680aa1233cb7" name="Default Changelist" comment="" />
+      <created>1594376515545</created>
+      <option name="number" value="Default" />
+      <option name="presentableId" value="Default" />
+      <updated>1594376515545</updated>
+    </task>
+    <servers />
+  </component>
+  <component name="Vcs.Log.Tabs.Properties">
+    <option name="TAB_STATES">
+      <map>
+        <entry key="MAIN">
+          <value>
+            <State />
+          </value>
+        </entry>
+      </map>
+    </option>
+    <option name="oldMeFiltersMigrated" value="true" />
+  </component>
+  <component name="WindowStateProjectService">
+    <state x="1624" y="108" key="#com.intellij.execution.impl.EditConfigurationsDialog" timestamp="1594376868624">
+      <screen x="1366" y="0" width="1600" height="900" />
+    </state>
+    <state x="1624" y="108" key="#com.intellij.execution.impl.EditConfigurationsDialog/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1594376868624" />
+    <state x="630" y="354" width="716" height="396" key="#com.intellij.fileTypes.FileTypeChooser" timestamp="1595434613203">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state x="630" y="354" width="716" height="396" key="#com.intellij.fileTypes.FileTypeChooser/67.27.1853.1053/1920.0.1920.1080@67.27.1853.1053" timestamp="1595434613203" />
+    <state x="469" y="276" width="420" height="216" key="#com.jetbrains.python.refactoring.move.PyMoveModuleMembersDialog" timestamp="1594905795648">
+      <screen x="0" y="24" width="1366" height="720" />
+    </state>
+    <state x="469" y="276" width="420" height="216" key="#com.jetbrains.python.refactoring.move.PyMoveModuleMembersDialog/0.24.1366.720@0.24.1366.720" timestamp="1594905795648" />
+    <state x="1945" y="194" width="426" height="512" key="FileChooserDialogImpl" timestamp="1594381549742">
+      <screen x="1366" y="0" width="1600" height="900" />
+    </state>
+    <state x="1945" y="194" width="426" height="512" key="FileChooserDialogImpl/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1594381549742" />
+    <state width="1830" height="739" key="GridCell.Tab.0.bottom" timestamp="1597394679468">
+      <screen x="1920" y="0" width="1920" height="1080" />
+    </state>
+    <state width="1351" height="602" key="GridCell.Tab.0.bottom/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1596575957783" />
+    <state width="1294" height="402" key="GridCell.Tab.0.bottom/0.24.1366.720@0.24.1366.720" timestamp="1594929407097" />
+    <state width="1830" height="739" key="GridCell.Tab.0.bottom/67.27.1853.1053/1920.0.1920.1080@1920.0.1920.1080" timestamp="1597394679468" />
+    <state width="1830" height="898" key="GridCell.Tab.0.bottom/67.27.1853.1053/1920.0.1920.1080@67.27.1853.1053" timestamp="1595930789420" />
+    <state width="1830" height="739" key="GridCell.Tab.0.center" timestamp="1597394679468">
+      <screen x="1920" y="0" width="1920" height="1080" />
+    </state>
+    <state width="1351" height="602" key="GridCell.Tab.0.center/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1596575957782" />
+    <state width="1294" height="402" key="GridCell.Tab.0.center/0.24.1366.720@0.24.1366.720" timestamp="1594929407097" />
+    <state width="1830" height="739" key="GridCell.Tab.0.center/67.27.1853.1053/1920.0.1920.1080@1920.0.1920.1080" timestamp="1597394679468" />
+    <state width="1830" height="898" key="GridCell.Tab.0.center/67.27.1853.1053/1920.0.1920.1080@67.27.1853.1053" timestamp="1595930789420" />
+    <state width="1830" height="739" key="GridCell.Tab.0.left" timestamp="1597394679468">
+      <screen x="1920" y="0" width="1920" height="1080" />
+    </state>
+    <state width="1351" height="602" key="GridCell.Tab.0.left/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1596575957782" />
+    <state width="1294" height="402" key="GridCell.Tab.0.left/0.24.1366.720@0.24.1366.720" timestamp="1594929407096" />
+    <state width="1830" height="739" key="GridCell.Tab.0.left/67.27.1853.1053/1920.0.1920.1080@1920.0.1920.1080" timestamp="1597394679468" />
+    <state width="1830" height="898" key="GridCell.Tab.0.left/67.27.1853.1053/1920.0.1920.1080@67.27.1853.1053" timestamp="1595930789420" />
+    <state width="1830" height="739" key="GridCell.Tab.0.right" timestamp="1597394679468">
+      <screen x="1920" y="0" width="1920" height="1080" />
+    </state>
+    <state width="1351" height="602" key="GridCell.Tab.0.right/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1596575957782" />
+    <state width="1294" height="402" key="GridCell.Tab.0.right/0.24.1366.720@0.24.1366.720" timestamp="1594929407097" />
+    <state width="1830" height="739" key="GridCell.Tab.0.right/67.27.1853.1053/1920.0.1920.1080@1920.0.1920.1080" timestamp="1597394679468" />
+    <state width="1830" height="898" key="GridCell.Tab.0.right/67.27.1853.1053/1920.0.1920.1080@67.27.1853.1053" timestamp="1595930789420" />
+    <state width="1830" height="898" key="GridCell.Tab.1.bottom" timestamp="1595930789420">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1334" height="633" key="GridCell.Tab.1.bottom/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1595450339822" />
+    <state width="1294" height="402" key="GridCell.Tab.1.bottom/0.24.1366.720@0.24.1366.720" timestamp="1594929407098" />
+    <state width="1830" height="898" key="GridCell.Tab.1.bottom/67.27.1853.1053/1920.0.1920.1080@67.27.1853.1053" timestamp="1595930789420" />
+    <state width="1830" height="898" key="GridCell.Tab.1.center" timestamp="1595930789420">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1334" height="633" key="GridCell.Tab.1.center/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1595450339821" />
+    <state width="1294" height="402" key="GridCell.Tab.1.center/0.24.1366.720@0.24.1366.720" timestamp="1594929407098" />
+    <state width="1830" height="898" key="GridCell.Tab.1.center/67.27.1853.1053/1920.0.1920.1080@67.27.1853.1053" timestamp="1595930789420" />
+    <state width="1830" height="898" key="GridCell.Tab.1.left" timestamp="1595930789420">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1334" height="633" key="GridCell.Tab.1.left/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1595450339821" />
+    <state width="1294" height="402" key="GridCell.Tab.1.left/0.24.1366.720@0.24.1366.720" timestamp="1594929407098" />
+    <state width="1830" height="898" key="GridCell.Tab.1.left/67.27.1853.1053/1920.0.1920.1080@67.27.1853.1053" timestamp="1595930789420" />
+    <state width="1830" height="898" key="GridCell.Tab.1.right" timestamp="1595930789420">
+      <screen x="67" y="27" width="1853" height="1053" />
+    </state>
+    <state width="1334" height="633" key="GridCell.Tab.1.right/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1595450339821" />
+    <state width="1294" height="402" key="GridCell.Tab.1.right/0.24.1366.720@0.24.1366.720" timestamp="1594929407098" />
+    <state width="1830" height="898" key="GridCell.Tab.1.right/67.27.1853.1053/1920.0.1920.1080@67.27.1853.1053" timestamp="1595930789420" />
+    <state x="1894" y="185" width="639" height="524" key="StructurePopup" timestamp="1595449776560">
+      <screen x="1366" y="0" width="1600" height="900" />
+    </state>
+    <state x="1894" y="185" width="639" height="524" key="StructurePopup/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1595449776560" />
+    <state x="258" y="141" width="942" height="575" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2" timestamp="1594492269735">
+      <screen x="0" y="24" width="1366" height="720" />
+    </state>
+    <state x="258" y="141" width="942" height="575" key="com.intellij.xdebugger.impl.breakpoints.ui.BreakpointsDialogFactory$2/0.24.1366.720/1366.0.1600.900@1366.0.1600.900" timestamp="1594492269735" />
+  </component>
+  <component name="XDebuggerManager">
+    <breakpoint-manager>
+      <breakpoints>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/decomposition/Decomposition_Base.py</url>
+          <line>414</line>
+          <option name="timeStamp" value="10" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/operations/Operations.py</url>
+          <line>21</line>
+          <option name="timeStamp" value="11" />
+        </line-breakpoint>
+        <line-breakpoint enabled="true" suspend="THREAD" type="python-line">
+          <url>file://$PROJECT_DIR$/decomposition/Decomposition_Base.py</url>
+          <line>323</line>
+          <option name="timeStamp" value="12" />
+        </line-breakpoint>
+      </breakpoints>
+    </breakpoint-manager>
+  </component>
+</project>
