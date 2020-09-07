@@ -222,8 +222,8 @@ QGD_Complex16* zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Comp
     double alpha = 1.0;
     double beta = 0.0;
 
-    // preallocate array for the result
-    //QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
+    // remove memory trash from the allocated memory of the results
+    memset( C, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
     // calculate the product of A and B
 #ifdef MKL
@@ -248,6 +248,9 @@ QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, int matrix_s
     // preallocate array for the result
     QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64); 
 
+    // remove memory trash from the allocated memory of the results
+    memset( C, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+
     // calculate the product of A and B
 #ifdef MKL
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
@@ -265,6 +268,9 @@ int zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int m
     // parameters alpha and beta for the cblas_zgemm3m function
     double alpha = 1.0;
     double beta = 0.0;
+
+    // remove memory trash from the allocated memory of the results
+    memset( C, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
     // calculate the product of A and B
 #ifdef MKL
@@ -356,7 +362,6 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
     int submatrices_num_row = 2;
     int submatrices_num = 4;
 
-
     // fill up the submatrices
     for (int idx=0; idx<submatrices_num_row; idx++) { //in range(0,submatrices_num_row):
         for ( int jdx=0; jdx<submatrices_num_row; jdx++) { //in range(0,submatrices_num_row):
@@ -372,7 +377,6 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
                 memcpy(submatrices[submatirx_index]+submatrix_offset, matrix+matrix_offset, submatrix_size*sizeof(QGD_Complex16));
 
             }
-
         }
     }
 
@@ -380,8 +384,8 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
     // calculate the cost function
     double cost_function = 0;
     for (int idx=0; idx<submatrices_num; idx++) { //idx in range(0,submatrices_num):
-        for ( int jdx=0; jdx<submatrices_num_row; jdx++) { //jdx in range(0,submatrices_num_row):
-
+        for ( int jdx=0; jdx<submatrices_num_row; jdx++) { //jdx in range(0,submatrices_num_row): 
+            
             // calculate the submatrix product
             zgemm3m_wrapper_adj( submatrices[idx], submatrices[jdx], submatrix_prod, submatrix_size);
 
@@ -395,7 +399,7 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
             }
 
             #pragma omp barrier
-
+        
             // Calculate the |x|^2 value of the elements of the submatrixproducts
             #pragma omp parallel for
             for ( int idx=0; idx<element_num; idx++ ) {
@@ -405,7 +409,7 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
             }
 
             #pragma omp barrier
-            
+         
 
             // summing up elements and calculate the final cost function
 
@@ -422,12 +426,18 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
             }
 
 
+            // checking NaN
+            if (isnan(cost_function)) {
+                printf("cost function NaN: exiting\n");
+                exit(-1);
+            }   
             cost_function = cost_function + cost_function_tmp;
 
         }
     }
 
-//printf("%f\n",   cost_function );      
+//printf("%f\n",   cost_function );   
+
 
     
 
@@ -443,9 +453,6 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
 
 // calculate the cost funtion for the final optimalization
 double get_cost_function(QGD_Complex16* matrix, int matrix_size) {
-   
-    //QGD_Complex16* mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
-    //memcpy( mtx, matrix,  matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
     QGD_Complex16* mtx = matrix;
 
@@ -487,10 +494,6 @@ double get_cost_function(QGD_Complex16* matrix, int matrix_size) {
         } 
     }
 
-    //qgd_free(matrix_product_square);
-    //qgd_free(mtx);
-
-//printf("%f\n", cost_function);
     return cost_function;
 
 }

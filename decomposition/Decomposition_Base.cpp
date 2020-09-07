@@ -376,9 +376,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         clock_t start_time = time(NULL);
 
         int iter_idx;
-        for ( iter_idx=0;  iter_idx<max_iterations+1; iter_idx++) {
-                        
-            fflush(stdout);
+        for ( iter_idx=0;  iter_idx<max_iterations+1; iter_idx++) {                        
 
             //determine the range of blocks to be optimalized togedther
             block_idx_end = block_idx_start - optimalization_block;

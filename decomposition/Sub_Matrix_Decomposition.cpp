@@ -414,10 +414,8 @@ double Sub_Matrix_Decomposition::optimalization_problem( const double* parameter
 
         // get the transformed matrix with the operations in the list
         QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
-//printf("Sub_Matrix_Decomposition::optimalization_problem 1\n");
-//print_mtx( matrix_new, matrix_size, matrix_size );
+
         double cost_function = get_submatrix_cost_function(matrix_new, matrix_size, submatrices, submatrix_prod); //NEW METHOD
-        //double cost_function = get_submatrix_cost_function_2(matrix_new, matrix_size); //OLD METHOD
 
         return cost_function;
 }               
