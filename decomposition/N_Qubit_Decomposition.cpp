@@ -327,7 +327,7 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
 void  N_Qubit_Decomposition::final_optimalization() {
 
         printf("***************************************************************\n");
-        printf("Final fine tuning of the parameters\n");
+        printf("Final fine tuning of the parameters in the %d-qubit decomposition\n", qbit_num);
         printf("***************************************************************\n");
 
 //printf("%f\n", optimalization_problem(optimized_parameters ) );
@@ -647,37 +647,39 @@ void N_Qubit_Decomposition::simplify_layers() {
                 continue;
             }
 
-
-            
+         
             // simplify the given layer
             std::map<int,int> max_layer_num_loc;
             max_layer_num_loc.insert( std::pair<int, int>(2,  gate_nums.cnot-1 ) );
-            Operation_block* simplified_layer = new Operation_block(qbit_num);
-            double* simplified_parameters = (double*)qgd_calloc(parameter_num_block, sizeof(double), 64); ///optimized_parameters + parameter_idx;
+            Operation_block* simplified_layer = NULL;
+            double* simplified_parameters = NULL;
             int simplified_parameter_num=0;
 
             // Try to simplify the sequence of 2-qubit operations
             int simplification_status = simplify_layer( block_to_simplify, optimized_parameters+parameter_idx, parameter_num_block, max_layer_num_loc, simplified_layer, simplified_parameters, simplified_parameter_num );
-//int simplification_status = -1;
+//simplification_status = -1;
 
             
             // adding the simplified operations (or the non-simplified if the simplification was not successfull)
-            if (simplification_status==0) {
+            if (simplification_status == 0) {
                 operations_loc.push_back( simplified_layer );
                 memcpy(optimized_parameters_loc+parameter_num_loc, simplified_parameters, simplified_parameter_num*sizeof(double) );
                 parameter_num_loc = parameter_num_loc + simplified_parameter_num; 
+                qgd_free( simplified_parameters );
             }
             else {
+                // addign the stacked operation to the list, sice the simplification was unsuccessful
                 operations_loc.insert( operations_loc.end(), blocks_to_save.begin(), blocks_to_save.end() );
                 memcpy(optimized_parameters_loc+parameter_num_loc, optimized_parameters+parameter_idx, parameter_num_block*sizeof(double) );
                 parameter_num_loc = parameter_num_loc + parameter_num_block; 
-                delete simplified_layer;
+                if ( simplified_layer != NULL ) {
+                    delete simplified_layer;
+                    simplified_layer = NULL;
+                }
             }
 
             parameter_idx = parameter_idx + parameter_num_block;
 
-            //optimized_parameters_loc = np.concatenate(( optimized_parameters_loc, simplified_parameters ))
-            qgd_free( simplified_parameters );
 
             delete block_to_simplify;
         }
@@ -716,7 +718,7 @@ void N_Qubit_Decomposition::simplify_layers() {
 // @parameters An array of parameters to calculate the matrix of the layer.
 // @max_layer_num The maximal allowed number of layers containing CNOT gates
 // @return An instance of class operation_block containing the simplified gate operations.       
-int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameters, int parameter_num_block, std::map<int,int> max_layer_num, Operation_block* simplified_layer, double* simplified_parameters, int &simplified_parameter_num) {
+int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameters, int parameter_num_block, std::map<int,int> max_layer_num, Operation_block* &simplified_layer, double* &simplified_parameters, int &simplified_parameter_num) {
 
         printf("Try to simplify sub-structure \n");
 
@@ -760,7 +762,12 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         QGD_Complex16* full_matrix_reordered = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64 );
         reordered_layer->matrix( parameters, full_matrix_reordered ); 
         delete reordered_layer;
- 
+
+
+
+
+
+
         // construct the Two-qubit submatrix from the reordered matrix
         QGD_Complex16* submatrix = (QGD_Complex16*)qgd_calloc( 16, sizeof(QGD_Complex16), 64 );
         #pragma omp parallel for
@@ -777,6 +784,8 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         
         // starting the decomposition of the random unitary
         cdecomposition->start_decomposition(true);
+
+
       
         // check whether simplification was succesfull
         if (!cdecomposition->check_optimalization_solution()) {
@@ -787,6 +796,8 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
             qgd_free( full_matrix_reordered );
             return 1;
         }
+
+
             
         // contruct the layer containing the simplified operations in the N-qubit space
         // but first get the inverse reordered qubit list 
@@ -799,17 +810,30 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
             qbits_inverse_reordered[qbit_num-1-qbits_reordered[qbit_num-1-qbit_idx]] =  qbit_idx;
         }
 
+        simplified_layer = new Operation_block(qbit_num);
+
         std::vector<Operation*> simplifying_operations = cdecomposition->get_operations();
         for ( std::vector<Operation*>::iterator it=simplifying_operations.begin(); it!=simplifying_operations.end(); it++) { //int operation_block_idx=0 in range(0,len(cdecomposition.operations)):
             Operation* op = *it;
             Operation_block* block_op = static_cast<Operation_block*>( op );
              block_op->set_qbit_num( qbit_num );
              block_op->reorder_qubits( qbits_inverse_reordered );
-            simplified_layer->combine( block_op );
+             simplified_layer->combine( block_op );
         }
 
+
+
         simplified_parameter_num = cdecomposition->get_parameter_num();
+        simplified_parameters = (double*)qgd_calloc(simplified_parameter_num, sizeof(double), 64);
         cdecomposition->get_optimized_parameters( simplified_parameters );
+
+/*delete cdecomposition;
+qgd_free( submatrix );
+qgd_free( full_matrix_reordered );
+return -1; */
+
+
+
 
 //QGD_Complex16* tmp = simplified_layer->matrix(simplified_parameters);
 //QGD_Complex16* tmp2 = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);

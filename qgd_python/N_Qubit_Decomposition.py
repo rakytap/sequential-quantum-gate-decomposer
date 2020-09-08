@@ -96,7 +96,7 @@ class N_Qubit_Decomposition:
 ## 
 # @brief Destructor of the class
     def __del__(self):
-        print("DELETE****************************")
+
         # call to release the instance of  the class
         _qgd_library.iface_delete_N_Qubit_Decomposition( self.c_instance )
         

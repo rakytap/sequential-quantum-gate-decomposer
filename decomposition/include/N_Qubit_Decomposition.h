@@ -139,7 +139,7 @@ void simplify_layers();
 // @parameters An array of parameters to calculate the matrix of the layer.
 // @max_layer_num The maximal allowed number of layers containing CNOT gates
 // @return An instance of class operation_block containing the simplified gate operations.       
-int simplify_layer( Operation_block* layer, double* parameters, int parameter_num_block, std::map<int,int> max_layer_num, Operation_block* simplified_layer, double* simplified_parameters, int &simplified_parameter_num);
+int simplify_layer( Operation_block* layer, double* parameters, int parameter_num_block, std::map<int,int> max_layer_num, Operation_block* &simplified_layer, double* &simplified_parameters, int &simplified_parameter_num);
 
 ////
 // @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.

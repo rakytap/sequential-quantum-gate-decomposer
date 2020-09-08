@@ -83,6 +83,10 @@ int iface_start_decomposition( void* ptr ) {
 int iface_delete_N_Qubit_Decomposition( void* ptr ) {
 
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+
+    QGD_Complex16* Umtx = instance->get_Umtx();
+    qgd_free( Umtx );
+    
     delete instance;
 
     return 0;
