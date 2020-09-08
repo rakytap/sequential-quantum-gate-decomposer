@@ -143,7 +143,7 @@ void finalize_decomposition();
 ////
 // @brief Lists the operations decomposing the initial unitary. (These operations are the inverse operations of the operations bringing the intial matrix into unity.)
 // @param start_index The index of the first inverse operation
-void list_operations( int );
+void list_operations( int start_index );
 
 ////
 // @brief This method determine the operations needed to rotate the indepent qubits into the state |0>
@@ -277,24 +277,36 @@ int set_iteration_loops( int qbit, int iteration_loops_in );
 int set_iteration_loops( std::map<int, int> iteration_loops_in );
 
 ////
-// @briefinitializes default layer numbers
+// @brief Initializes default layer numbers
 static void Init_max_layer_num();
 
-//double evaluate(const double *, double *, const int, const double);
+
+////
+// @brief Call to prepare the optimized operations to export
+void prepare_operations_to_export();
+
+////
+// @brief Call to prepare the optimized operations to export
+// @param ops A C++ vector of operations
+// @param parameters The parameters of the operations
+// @return Returns with a C++ vector of CNOT and U3 operations.
+std::vector<Operation*> prepare_operations_to_export( std::vector<Operation*> ops, const double* parameters );
 
 
-//int progress(const double *x, const double *g, const double fx, const double xnorm, const double gnorm, const double step, int n, int k, int ls);
+////
+// @brief Call to prepare the optimized operations to export
+// @param block_op A pointer to a block of operations
+// @param parameters The parameters of the operations
+// @return Returns with a C++ vector of CNOT and U3 operations.
+std::vector<Operation*> prepare_operations_to_export( Operation_block* block_op, const double* parameters );
 
-
-
-
-//static double _evaluate( void *instance, const double *x, double *g, const int n, const double step );
-
-
-    
-
-//static int _progress(void *instance, const double *x, const double *g, const double fx, const double xnorm, const double gnorm, const double step, int n, int k, int ls);
-
+////
+// @brief Call to prepare the optimized operations to export
+// @param n Integer labeling the n-th oepration  (n>=0).
+// @param block_op A pointer to a block of operations
+// @param parameters The parameters of the operations
+// @return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
+int get_operation( int n, operation_type &type, int &target_qbit, int &control_qbit, double* &parameters );
 
 
 };

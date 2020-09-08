@@ -46,6 +46,9 @@ cDecompose = N_Qubit_Decomposition( Umtx )
 # starting the decomposition
 cDecompose.start_decomposition()
 
+# list the decomposing operations
+cDecompose.list_operations()
+
 print(' ')
 print(' ')
 print(' ')

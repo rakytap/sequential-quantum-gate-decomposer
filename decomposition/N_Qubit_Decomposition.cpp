@@ -140,6 +140,8 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
         // final tuning of the decomposition parameters
         final_optimalization();
 
+
+
         // calculating the final error of the decomposition
         QGD_Complex16* matrix_decomposed = get_transformed_matrix(optimized_parameters, operations.begin(), operations.size(), Umtx ); 
 //print_mtx(matrix_decomposed, matrix_size, matrix_size);
@@ -153,6 +155,9 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
 
         printf( "In the decomposition with error = %f were used %d layers with %d U3 operations and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
         printf("--- In total %f seconds elapsed during the decomposition ---\n", float(time(NULL) - start_time));
+
+        // prepare operations to export
+        //prepare_operations_to_export();
     }
 
 
@@ -258,15 +263,12 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
                     memcpy(submatrix+submatrix_offset, subdecomposed_mtx+matrix_offset, submatrix_size*sizeof(QGD_Complex16));
                 }
 
-                // parameters alpha and beta for the cblas_zgemm3m function
-                double alpha = 1;
-                double beta = 0;
-
                 // calculate the product of submatrix*submatrix'
-                cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasConjTrans, submatrix_size, submatrix_size, submatrix_size, &alpha, submatrix, submatrix_size, submatrix, submatrix_size, &beta, submatrix_prod, submatrix_size);
+                zgemm3m_wrapper_adj( submatrix, submatrix, submatrix_prod, submatrix_size);
 
                 // subtract corner element
                 QGD_Complex16 corner_element = submatrix_prod[0];
+                #pragma omp parallel for
                 for (int row_idx=0; row_idx<submatrix_size; row_idx++) {
                     submatrix_prod[row_idx*submatrix_size+row_idx].real = submatrix_prod[row_idx*submatrix_size+row_idx].real - corner_element.real;
                     submatrix_prod[row_idx*submatrix_size+row_idx].imag = submatrix_prod[row_idx*submatrix_size+row_idx].imag - corner_element.imag;
@@ -610,26 +612,11 @@ void N_Qubit_Decomposition::simplify_layers() {
                 
                 //get the involved qubits
                 std::vector<int> involved_qbits_op = block_operation->get_involved_qubits();
-/*printf("N_Qubit_Decomposition::simplify_layers -1, involved qubits in operation in layer %d:", layer_idx-1);
-for (int idx=0; idx<involved_qbits_op.size(); idx++) {
-    printf("%d, ", involved_qbits_op[idx] );
-}
-printf("\n");
-*/
                 
                 // add involved qubits of the operation to the list of involved qubits in the layer
                 for (std::vector<int>::iterator it=involved_qbits_op.begin(); it!=involved_qbits_op.end(); it++) {
                     add_unique_elelement( involved_qbits, *it );
                 }
-
-/*printf("N_Qubit_Decomposition::simplify_layers -1, involved qubits in operations in block to simplify in layer %d:", layer_idx-1);
-for (int idx=0; idx<involved_qbits.size(); idx++) {
-    printf("%d, ", involved_qbits[idx] );
-}
-printf("\n");
-
-printf("N_Qubit_Decomposition::simplify_layers 0, num of involved qubits: %d\n", involved_qbits.size());                     
-*/
 
                 if ( (involved_qbits.size())> 2 && blocks_to_save.size() > 0 ) { 
                     layer_idx = layer_idx -1;
@@ -646,38 +633,17 @@ printf("N_Qubit_Decomposition::simplify_layers 0, num of involved qubits: %d\n",
             }                            
              
             //number of perations in the block
-            int parameter_num_block = block_to_simplify->get_parameter_num(); //len(block_to_simplify.parameters)
-//printf("N_Qubit_Decomposition::simplify_layers 0, parameter_num_block: %d\n", parameter_num_block);
+            int parameter_num_block = block_to_simplify->get_parameter_num();
             
             // get the number of CNOT gates and store the block operations if the number of CNOT gates cannot be reduced
             gates_num gate_nums = block_to_simplify->get_gate_nums();
-/*
-printf("N_Qubit_Decomposition::simplify_layers 1\n");
-for (int idx=0; idx<parameter_num; idx++) {
-    printf("%f, ", optimized_parameters[idx] );
-}
-printf("\n");
 
-printf("N_Qubit_Decomposition::simplify_layers 2\n");
-for (int idx=0; idx<parameter_num_loc; idx++) {
-    printf("%f, ", optimized_parameters_loc[idx] );
-}
-printf("\n");
-*/
             if (gate_nums.cnot < 2) {
                 operations_loc.insert( operations_loc.end(), blocks_to_save.begin(), blocks_to_save.end() );
                 memcpy(optimized_parameters_loc+parameter_num_loc, optimized_parameters+parameter_idx, parameter_num_block*sizeof(double) );
                 parameter_idx = parameter_idx + parameter_num_block;                    
                 parameter_num_loc = parameter_num_loc + parameter_num_block; 
-/*
-printf("N_Qubit_Decomposition::simplify_layers 3\n");
-for (int idx=0; idx<parameter_num_loc; idx++) {
-    printf("%f, ", optimized_parameters_loc[idx] );
-}
-printf("\n");
-printf("\n");
-printf("\n");
-  */
+                delete block_to_simplify;
                 continue;
             }
 
@@ -712,16 +678,6 @@ printf("\n");
 
             //optimized_parameters_loc = np.concatenate(( optimized_parameters_loc, simplified_parameters ))
             qgd_free( simplified_parameters );
-
-/*
-printf("N_Qubit_Decomposition::simplify_layers 4\n");
-for (int idx=0; idx<parameter_num_loc; idx++) {
-    printf("%f, ", optimized_parameters_loc[idx] );
-}
-printf("\n");
-printf("\n");
-printf("\n");
-*/
 
             delete block_to_simplify;
         }
@@ -777,17 +733,11 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
                 break;
             }
         }
-//printf("target qbit: %d, control qubit: %d\n", target_qbit, control_qbit);
             
         // if there are no target or control qubits, return the initial values
         if ( (target_qbit == -1) || ( control_qbit == -1 ) ) {
             return 1;            
         }
-            
-        // get the N-qubit matrix of the layer
-//        QGD_Complex16* full_matrix = layer->matrix( parameters );
-//print_mtx( full_matrix, matrix_size, matrix_size );
-
             
         // get the matrix of the two qubit space
             
@@ -801,12 +751,6 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
             
         qbits_reordered.push_back(control_qbit);
         qbits_reordered.push_back(target_qbit); 
-
-/*printf("The reordered qubits:\n");
-for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++ ) {
-printf("%d, ", qbits_reordered[qbit_idx]);
-}           
-printf("\n");*/
             
         // construct abstarct operations correspond to the reordeerd qubits
         Operation_block* reordered_layer = layer->clone();
@@ -815,7 +759,7 @@ printf("\n");*/
         //  get the reordered N-qubit matrix of the layer
         QGD_Complex16* full_matrix_reordered = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64 );
         reordered_layer->matrix( parameters, full_matrix_reordered ); 
-//print_mtx( full_matrix_reordered, matrix_size, matrix_size );
+        delete reordered_layer;
  
         // construct the Two-qubit submatrix from the reordered matrix
         QGD_Complex16* submatrix = (QGD_Complex16*)qgd_calloc( 16, sizeof(QGD_Complex16), 64 );
@@ -827,18 +771,20 @@ printf("\n");*/
             submatrix[element_idx].imag = -full_matrix_reordered[col_idx*matrix_size+row_idx].imag;
         }
 
-//print_mtx( submatrix, 4, 4 );
         // decompose the chosen 2-qubit unitary
         std::map<int,int> identical_blocks_loc;
         N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(submatrix, 2, max_layer_num, identical_blocks_loc, true, initial_guess); 
         
         // starting the decomposition of the random unitary
         cdecomposition->start_decomposition(true);
-//print_mtx( cdecomposition->get_decomposed_matrix(), 4, 4 );         
+      
         // check whether simplification was succesfull
         if (!cdecomposition->check_optimalization_solution()) {
             // return with the original layer, if the simplification wa snot successfull
             printf("The simplification of the sub-structure was not possible\n");
+            delete cdecomposition;
+            qgd_free( submatrix );
+            qgd_free( full_matrix_reordered );
             return 1;
         }
             
@@ -852,12 +798,7 @@ printf("\n");*/
         for (int qbit_idx=qbit_num-1; qbit_idx>-1; qbit_idx-- ) { // in range(self.qbit_num-1,-1,-1):
             qbits_inverse_reordered[qbit_num-1-qbits_reordered[qbit_num-1-qbit_idx]] =  qbit_idx;
         }
-/*printf("The inverse reordered qubits:\n");
-for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++ ) {
-printf("%d, ", qbits_inverse_reordered[qbit_idx]);
-}           
-printf("\n");
-*/
+
         std::vector<Operation*> simplifying_operations = cdecomposition->get_operations();
         for ( std::vector<Operation*>::iterator it=simplifying_operations.begin(); it!=simplifying_operations.end(); it++) { //int operation_block_idx=0 in range(0,len(cdecomposition.operations)):
             Operation* op = *it;
@@ -883,7 +824,7 @@ printf("\n");
         delete cdecomposition;
         qgd_free( submatrix );
         qgd_free( full_matrix_reordered );
-        delete reordered_layer;
+
 
 
         return 0;

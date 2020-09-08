@@ -96,7 +96,6 @@ Decomposition_Base::~Decomposition_Base() {
 
     if (optimized_parameters != NULL ) {
         qgd_free( optimized_parameters );
-        optimized_parameters = NULL;
     }
 
     if (transformed_mtx != NULL ) {
@@ -180,8 +179,8 @@ void Decomposition_Base::finalize_decomposition() {
 ////
 // @brief Lists the operations decomposing the initial unitary. (These operations are the inverse operations of the operations bringing the intial matrix into unity.)
 // @param start_index The index of the first inverse operation
-void Decomposition_Base::list_operations( int start_index = 1 ) {
-       
+void Decomposition_Base::list_operations( int start_index ) {
+
         Operation_block::list_operations( optimized_parameters, start_index );
 
 }
@@ -947,83 +946,169 @@ void Decomposition_Base::Init_max_layer_num() {
 
 
 
-/*
-double Decomposition_Base::_evaluate( void *instance, const double *x, double *g, const int n, const double step ) {
-    return reinterpret_cast<Decomposition_Base*>(instance)->evaluate(x, g, n, step);
-}
-*/
+////
+// @brief Call to prepare the optimized operations to export
+void Decomposition_Base::prepare_operations_to_export() {
 
+    std::vector<Operation*> operations_tmp = prepare_operations_to_export( operations, optimized_parameters );
 
-
-/*
-double Decomposition_Base::evaluate(const double *parameters, double *g, const int parameter_num, const double step) {
-    
-
-    double cost_function = optimalization_problem( parameters );
-    double step_loc = 0.000001;
-    printf("step %f, step_loc %f, cost function: %f, param num %d\n", step, step_loc, cost_function, parameter_num);
-    printf("parameters:\n");
-    for (int idx=0; idx<parameter_num; idx++) {
-        printf("%f, ", parameters[idx]);
-    }
-    printf("\n");
-
-    // calculate the gradients
-
-    // preallocate the storage for the gardients
-    if (g==NULL) {
-        g = lbfgs_malloc( parameter_num );
-    }
-
-    // modified parameters to calculate the gradients
-    double *parameters_loc = lbfgs_malloc( parameter_num );
-
-
-    for (int idx=0; idx<parameter_num; idx++) {
-        parameters_loc[idx] = parameters[idx];
-    }
-
-    // determine the gradients
-    printf("gradients:\n");
-    for (int idx=0; idx<parameter_num; idx++) {
-        if (step_loc > 0.0) {
-            parameters_loc[idx] = parameters_loc[idx] + step_loc;
-            double cost_function_tmp = optimalization_problem( parameters_loc );
-
-            g[idx] = (cost_function_tmp-cost_function)/step_loc;
-            printf("%f ", g[idx]);
-            parameters_loc[idx] = parameters_loc[idx] - step_loc;
-        }
-        else {
-            g[idx] = 0;
-        }
-    }
-    printf("\n");
-    //throw "hhh";
-
-    return cost_function;
-
+    // release the operations and replace them with the ones prepared to export
+    release_operations();
+    operations = operations_tmp;
 
 }
 
-*/
 
 
+////
+// @brief Call to prepare the optimized operations to export
+// @param ops A C++ vector of operations
+// @param parameters The parameters of the operations
+// @return Returns with a C++ vector of CNOT and U3 operations.
+std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::vector<Operation*> ops, const double* parameters ) {
+
+    std::vector<Operation*> ops_ret;
+    int parameter_idx = 0;
 
 
+    for(std::vector<Operation*>::iterator it = ops.begin(); it != ops.end(); it++) {
+            
+        Operation* operation = *it;
+
+        if (operation->get_type() == CNOT_OPERATION) {
+            CNOT* cnot_operation = static_cast<CNOT*>(operation);
+            CNOT* cnot_operation_cloned = cnot_operation->clone();
+            ops_ret.push_back( static_cast<Operation*>(cnot_operation_cloned) );
+        }    
+        else if (operation->get_type() == U3_OPERATION) {
+
+            // definig the U3 parameters
+            double vartheta;
+            double varphi;
+            double varlambda;
+                
+            // get the inverse parameters of the U3 rotation
+
+            U3* u3_operation = static_cast<U3*>(operation);
+
+            if ((u3_operation->get_parameter_num() == 1) && u3_operation->is_theta_parameter()) {
+                vartheta = std::fmod( parameters[parameter_idx], 4*M_PI);
+                varphi = 0;
+                varlambda =0;                    
+                parameter_idx = parameter_idx + 1;                    
+                    
+            }   
+            else if ((u3_operation->get_parameter_num() == 1) && u3_operation->is_phi_parameter()) {
+                vartheta = 0;
+                varphi = std::fmod( parameters[ parameter_idx ], 2*M_PI);
+                varlambda =0;                    
+                parameter_idx = parameter_idx + 1;                   
+            }    
+            else if ((u3_operation->get_parameter_num() == 1) && u3_operation->is_lambda_parameter()) {
+                vartheta = 0;
+                varphi =  0;
+                varlambda = std::fmod( parameters[ parameter_idx ], 2*M_PI);                
+                parameter_idx = parameter_idx + 1;   
+            }    
+            else if ((u3_operation->get_parameter_num() == 2) && u3_operation->is_theta_parameter() && u3_operation->is_phi_parameter() ) {                  
+                vartheta = std::fmod( parameters[ parameter_idx ], 4*M_PI); 
+                varphi = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI); 
+                varlambda = 0;       
+                parameter_idx = parameter_idx + 2;
+            }                
+            else if ((u3_operation->get_parameter_num() == 2) && u3_operation->is_theta_parameter() && u3_operation->is_lambda_parameter() ) {                  
+                vartheta = std::fmod( parameters[ parameter_idx ], 4*M_PI);
+                varphi = 0;
+                varlambda = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);                 
+                parameter_idx = parameter_idx + 2;
+            }
+            else if ((u3_operation->get_parameter_num() == 2) && u3_operation->is_phi_parameter() && u3_operation->is_lambda_parameter() ) {                  
+                vartheta = 0;
+                varphi = std::fmod( parameters[ parameter_idx], 2*M_PI); 
+                varlambda = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);                 
+                parameter_idx = parameter_idx + 2;
+            }    
+            else if ((u3_operation->get_parameter_num() == 3)) {                  
+                vartheta = std::fmod( parameters[ parameter_idx ], 4*M_PI); 
+                varphi = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI); 
+                varlambda = std::fmod( parameters[ parameter_idx+2 ], 2*M_PI);                    
+                parameter_idx = parameter_idx + 3;
+            }   
+
+            U3* u3_operation_cloned = u3_operation->clone();
+            u3_operation_cloned->set_optimized_parameters( vartheta, varphi, varlambda );
+            ops_ret.push_back( static_cast<Operation*>(u3_operation_cloned) );
+            
+
+        }    
+        else if (operation->get_type() == BLOCK_OPERATION) {
+            Operation_block* block_operation = static_cast<Operation_block*>(operation);
+            const double* parameters_layer = parameters + parameter_idx;
+
+            std::vector<Operation*> ops_loc = prepare_operations_to_export(block_operation, parameters_layer);
+            parameter_idx = parameter_idx + block_operation->get_parameter_num();
+
+            ops_ret.insert( ops_ret.end(), ops_loc.begin(), ops_loc.end() );
+        }     
+            
+    }
 
 
+    return ops_ret;
 
-/*
-int Decomposition_Base::_progress(void *instance, const double *x, const double *g, const double fx, const double xnorm, const double gnorm, const double step, int n, int k, int ls) {
-    return reinterpret_cast<Decomposition_Base*>(instance)->progress(x, g, fx, xnorm, gnorm, step, n, k, ls);
-}*/
-/*
-int Decomposition_Base::progress(const double *x, const double *g, const double fx, const double xnorm, const double gnorm, const double step, int n, int k, int ls) {
- 
-        printf("Iteration %d:\n", k);
-        printf("  fx = %f, x[0] = %f, x[1] = %f\n", fx, x[0], x[1]);
-        printf("  xnorm = %f, gnorm = %f, step = %f\n", xnorm, gnorm, step);
-        printf("\n");
-        return 0;
-}*/
+
+}
+
+
+////
+// @brief Call to prepare the optimized operations to export
+// @param block_op A pointer to a block of operations
+// @param parameters The parameters of the operations
+// @return Returns with a C++ vector of CNOT and U3 operations.
+std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( Operation_block* block_op, const double* parameters ) {
+
+    std::vector<Operation*> ops_tmp = block_op->get_operations();
+    std::vector<Operation*> ops_ret = prepare_operations_to_export( ops_tmp, parameters );
+
+    return ops_ret;
+
+}
+
+
+////
+// @brief Call to prepare the optimized operations to export
+// @param n Integer labeling the n-th oepration (n>=0).
+// @param block_op A pointer to a block of operations isreturned.
+// @param parameters The parameters of the operations (not preallocated)
+// @return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
+int Decomposition_Base::get_operation( int n, operation_type &type, int &target_qbit, int &control_qbit, double* &parameters ) {
+
+
+    // get the n-th operation if exists
+    if ( n >= operations.size() ) {
+        return -1;
+    }
+
+    Operation* operation = operations[n];
+
+
+    if (operation->get_type() == CNOT_OPERATION) {
+        type = operation->get_type();
+        target_qbit = operation->get_target_qbit();
+        control_qbit = operation->get_control_qbit();
+        parameters = NULL;
+    }    
+    else if (operation->get_type() == U3_OPERATION) {
+        U3* u3_operation = static_cast<U3*>(operation);
+        type = u3_operation->get_type();
+        target_qbit = u3_operation->get_target_qbit();
+        control_qbit = operation->get_control_qbit();
+        parameters = (double*)qgd_calloc( 3, sizeof(double), 64 );
+        u3_operation->get_optimized_parameters(parameters);
+    }
+    else {
+        return -2;
+    }    
+
+}
+

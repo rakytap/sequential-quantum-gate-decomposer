@@ -49,6 +49,7 @@ _qgd_library.iface_delete_N_Qubit_Decomposition.argtypes = (ctypes.c_void_p,)
 _qgd_library.iface_set_identical_blocks.argtypes = (ctypes.c_void_p, ctypes.c_int, ctypes.c_int,)
 _qgd_library.iface_set_iteration_loops.argtypes = (ctypes.c_void_p, ctypes.c_int, ctypes.c_int,)
 _qgd_library.iface_set_max_layer_num.argtypes = (ctypes.c_void_p, ctypes.c_int, ctypes.c_int,)
+_qgd_library.iface_list_operations.argtypes = (ctypes.c_void_p, ctypes.c_int,)
 
 
 ##
@@ -95,7 +96,7 @@ class N_Qubit_Decomposition:
 ## 
 # @brief Destructor of the class
     def __del__(self):
-        
+        print("DELETE****************************")
         # call to release the instance of  the class
         _qgd_library.iface_delete_N_Qubit_Decomposition( self.c_instance )
         
@@ -139,6 +140,21 @@ class N_Qubit_Decomposition:
         # Set the number of identical successive blocks  throug the C-interface
         _qgd_library.iface_set_identical_blocks( self.c_instance, ctypes.c_int(qbit), ctypes.c_int(identical_blocks) )
 
+
+##
+# @brief Lists the operations decomposing the initial unitary. (These operations are the inverse operations of the operations bringing the intial matrix into unity.)
+# @param start_index The index of the first inverse operation
+    def list_operations(self, start_index=1 ):
+
+        _qgd_library.iface_list_operations( self.c_instance, ctypes.c_int(start_index) );
+
+
+##
+# @brief Export the unitary decomposition into Qiskit format.
+# @param start_index The index of the first inverse operation
+    def Qiskit_export(self, start_index=1 ):
+
+        _qgd_library.iface_list_operations( self.c_instance, ctypes.c_int(start_index) );
 
 
 

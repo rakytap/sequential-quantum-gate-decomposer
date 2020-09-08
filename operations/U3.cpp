@@ -102,7 +102,8 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
             parameter_num = 0;
         }
 
-        
+        // Parameters theta, phi, lambda of the U3 operation after the decomposition of the unitary is done
+        parameters = NULL;
 
         // determione the basis indices of the |0> and |1> states of the target qubit
         get_base_indices();
@@ -120,6 +121,10 @@ U3::~U3() {
 
     if ( indexes_target_qubit_1 != NULL ) {
         qgd_free(indexes_target_qubit_1);
+    }
+
+    if ( parameters != NULL ) {
+        qgd_free(parameters);
     }
 }
 
@@ -453,8 +458,41 @@ int U3::set_one_qubit_u3(double Theta, double Phi, double Lambda ) {
 U3* U3::clone() {
   
     U3* ret = new U3(qbit_num, target_qbit, theta, phi, lambda);
+
+    if ( parameters != NULL ) {
+        ret->set_optimized_parameters(parameters[0], parameters[1], parameters[2]);
+    }
  
     
     return ret;       
 
 }          
+
+
+
+////   
+// @brief Call to set the final optimize dparameters of the operation.
+// @param Theta Real parameter standing for the parameter theta.
+// @param Phi Real parameter standing for the parameter phi.
+// @param Lambda Real parameter standing for the parameter lambda.
+void U3::set_optimized_parameters(double Theta, double Phi, double Lambda ) {
+
+    if ( parameters == NULL ) {
+        parameters = (double*)qgd_calloc( 3, sizeof(double), 16 );
+    }
+
+    parameters[0] = Theta;
+    parameters[1] = Theta;
+    parameters[2] = Theta;
+
+}
+
+
+////   
+// @brief Call to get the final optimize dparameters of the operation.
+// @param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 operation.
+void U3::get_optimized_parameters(double *parameters_in ) {
+
+    memcpy( parameters_in, parameters, 3*sizeof(double) );
+
+}

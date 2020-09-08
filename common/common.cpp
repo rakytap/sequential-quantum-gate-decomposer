@@ -216,7 +216,7 @@ QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_siz
 
 
 // @brief Call to calculate the product of two matrices using cblas_zgemm3m
-QGD_Complex16* zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size) {
+int zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size) {
 
     // parameters alpha and beta for the cblas_zgemm3m function
     double alpha = 1.0;
@@ -232,7 +232,7 @@ QGD_Complex16* zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Comp
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
 #endif
 
-    return C;
+    return 0;
 }
 
 

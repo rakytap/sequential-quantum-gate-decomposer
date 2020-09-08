@@ -42,8 +42,11 @@ bool theta;
 bool phi;
 // logical value indicating whether the matrix creation takes an argument lambda
 bool lambda;  
+// Parameters theta, phi, lambda of the U3 operation after the decomposition of the unitary is done
+double* parameters;
 // auxiliary matrix to store the four different elements of the U3 operation
 QGD_Complex16 u3_1qbit[4];
+
         
 
 public: 
@@ -176,6 +179,20 @@ int set_one_qubit_u3(double Theta, double Phi, double Lambda );
 // @return Return with a pointer pointing to the cloned object
 U3* clone();
 
+
+////   
+// @brief Call to set the final optimize dparameters of the operation.
+// @param Theta Real parameter standing for the parameter theta.
+// @param Phi Real parameter standing for the parameter phi.
+// @param Lambda Real parameter standing for the parameter lambda.
+void set_optimized_parameters(double Theta, double Phi, double Lambda );
+
+////   
+// @brief Call to get the final optimize dparameters of the operation.
+// @param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 operation.  (not preallocated)
+void get_optimized_parameters(double *parameters_in );
+
 };
 
                    
+

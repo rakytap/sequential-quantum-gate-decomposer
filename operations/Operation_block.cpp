@@ -446,18 +446,15 @@ void Operation_block::list_operations( const double* parameters, int start_index
                
         int operation_idx = start_index;        
         int parameter_idx = parameter_num;
-        
-        for(std::vector<Operation*>::iterator it = operations.end(); it != operations.begin(); --it) {
-            string message = "%dth operation:";
+    
+        for(int op_idx = operations.size()-1; op_idx>=0; op_idx--) {
             
-            Operation* operation = *it;
-            
+            Operation* operation = operations[op_idx];
+
             if (operation->get_type() == CNOT_OPERATION) {
                 CNOT* cnot_operation = static_cast<CNOT*>(operation);
 
-                //message = message + " CNOT with control qubit: " + int_to_string(cnot_operation->get_control_qbit()) + " and target qubit: "  + int_to_string(cnot_operation->get_target_qbit());
-                message = message + " CNOT with control qubit: %d and target qubit: %d";
-                printf( message.c_str(), operation_idx, cnot_operation->get_control_qbit(), cnot_operation->get_target_qbit() );
+                printf( "%dth operation: CNOT with control qubit: %d and target qubit: %d\n", operation_idx, cnot_operation->get_control_qbit(), cnot_operation->get_target_qbit() );
                 operation_idx = operation_idx + 1;
             }    
             else if (operation->get_type() == U3_OPERATION) {
@@ -470,7 +467,7 @@ void Operation_block::list_operations( const double* parameters, int start_index
                 // get the inverse parameters of the U3 rotation
 
                 U3* u3_operation = static_cast<U3*>(operation);
-                
+
                 if ((u3_operation->get_parameter_num() == 1) && u3_operation->is_theta_parameter()) {
                     vartheta = std::fmod( parameters[parameter_idx-1], 4*M_PI);
                     varphi = 0;
@@ -513,18 +510,20 @@ void Operation_block::list_operations( const double* parameters, int start_index
                     varphi = std::fmod( parameters[ parameter_idx-2 ], 2*M_PI); 
                     varlambda = std::fmod( parameters[ parameter_idx-1 ], 2*M_PI);                    
                     parameter_idx = parameter_idx - 3;
-                }    
-                message = message + "U3 on target qubit %d with parameters theta = %f, phi = %f and lambda = %f";
-                printf( message.c_str(), operation_idx, u3_operation->get_target_qbit(), vartheta, varphi, varlambda );
+                }   
+
+//                message = message + "U3 on target qubit %d with parameters theta = %f, phi = %f and lambda = %f";
+                printf("%dth operation: U3 on target qubit: %d and with parameters theta = %f, phi = %f and lambda = %f\n", operation_idx, u3_operation->get_target_qbit(), vartheta, varphi, varlambda );
                 operation_idx = operation_idx + 1;
+
             }    
             else if (operation->get_type() == BLOCK_OPERATION) {
                 Operation_block* block_operation = static_cast<Operation_block*>(operation);
-                const double* parameters_layer = parameters + parameter_idx -operation->get_parameter_num();
+                const double* parameters_layer = parameters + parameter_idx - operation->get_parameter_num();
                 block_operation->list_operations( parameters_layer, operation_idx );   
                 parameter_idx = parameter_idx - block_operation->get_parameter_num();
                 operation_idx = operation_idx + block_operation->get_operation_num();
-            }      
+            }     
             
         }
             

@@ -115,4 +115,26 @@ int iface_set_max_layer_num( void* ptr, int qbit, int max_layer_num ) {
 
 }
 
+// @brief Call to list the operations giving the decomposition of the unitary
+void iface_list_operations( void* ptr, int start_index ) {
+
+    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    return instance->list_operations( start_index );
+
+}
+
+
+// @brief Call to get the n-th optimized operation. The values are returned via the input parameter references, and (non preallocated) pointers
+// @param n Integer labeling the n-th oepration  (n>=0). 
+// @param type The type of operation. (Possible values: CNOT_OPERATION=2, U3_OPERATION=3)
+// @param target_qbit The id of the target qubit.
+// @param control_qbit The id of the control qubit.
+// @return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
+int iface_get_operation( void* ptr, int n, operation_type &type, int &target_qbit, int &control_qbit, double* &parameters ) {
+
+    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    instance->get_operation( n, type, target_qbit, control_qbit, parameters );
+
+}
+
 }
