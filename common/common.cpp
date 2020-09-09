@@ -100,8 +100,8 @@ void print_mtx( QGD_Complex16* matrix, int rows, int cols ) {
     for ( int row_idx=0; row_idx < rows; row_idx++ ) {
         for ( int col_idx=0; col_idx < cols; col_idx++ ) {
             int element_idx = row_idx*cols + col_idx;    
-//            printf("%1.3f + i*%1.3f,  ", matrix[element_idx].real, matrix[element_idx].imag);
-            printf("%1.3f,  ", matrix[element_idx].real);
+            printf("%1.3f + i*%1.3f,  ", matrix[element_idx].real, matrix[element_idx].imag);
+//            printf("%1.3f,  ", matrix[element_idx].real);
         }
         printf("\n");
     }

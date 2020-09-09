@@ -73,7 +73,7 @@ int iface_start_decomposition( void* ptr ) {
 
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
 
-    instance->start_decomposition(true);
+    instance->start_decomposition(true, true);
 
     return 0;
 
@@ -127,17 +127,33 @@ void iface_list_operations( void* ptr, int start_index ) {
 
 }
 
+// @brief Call to get the number of decomposing operations
+int iface_get_operation_num( void* ptr ) {
 
-// @brief Call to get the n-th optimized operation. The values are returned via the input parameter references, and (non preallocated) pointers
+    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    return instance->get_operation_num();
+
+}
+
+
+
+// @brief Call to get the n-th optimized operation. The values are returned via the input parameter references, and pointers
 // @param n Integer labeling the n-th oepration  (n>=0). 
 // @param type The type of operation. (Possible values: CNOT_OPERATION=2, U3_OPERATION=3)
 // @param target_qbit The id of the target qubit.
 // @param control_qbit The id of the control qubit.
 // @return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
-int iface_get_operation( void* ptr, int n, operation_type &type, int &target_qbit, int &control_qbit, double* &parameters ) {
+int iface_get_operation( void* ptr, int n, int &op_type, int &target_qbit, int &control_qbit, double* parameters ) {
 
+    operation_type type;
+//printf("a %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
-    instance->get_operation( n, type, target_qbit, control_qbit, parameters );
+    int ret =  instance->get_operation( n, type, target_qbit, control_qbit, parameters );
+//printf("b %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
+    op_type = type;
+
+    return ret;
+ 
 
 }
 

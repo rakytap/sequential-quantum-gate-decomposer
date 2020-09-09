@@ -443,6 +443,8 @@ int Operation_block::get_operation_num() {
 // @param parameters The parameters of the operations that should be inverted
 // @param start_index The index of the first inverse operation
 void Operation_block::list_operations( const double* parameters, int start_index ) {
+
+        printf( "\nThe operations in the list of operations:\n" );
                
         int operation_idx = start_index;        
         int parameter_idx = parameter_num;

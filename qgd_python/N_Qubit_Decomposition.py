@@ -50,6 +50,10 @@ _qgd_library.iface_set_identical_blocks.argtypes = (ctypes.c_void_p, ctypes.c_in
 _qgd_library.iface_set_iteration_loops.argtypes = (ctypes.c_void_p, ctypes.c_int, ctypes.c_int,)
 _qgd_library.iface_set_max_layer_num.argtypes = (ctypes.c_void_p, ctypes.c_int, ctypes.c_int,)
 _qgd_library.iface_list_operations.argtypes = (ctypes.c_void_p, ctypes.c_int,)
+_qgd_library.iface_get_operation_num.argtypes = ( ctypes.c_void_p, )
+_qgd_library.iface_get_operation_num.restype = ctypes.c_int
+_qgd_library.iface_get_operation.argtypes = ( ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_double), )
+_qgd_library.iface_get_operation.restype = ctypes.c_int
 
 
 ##
@@ -152,9 +156,60 @@ class N_Qubit_Decomposition:
 ##
 # @brief Export the unitary decomposition into Qiskit format.
 # @param start_index The index of the first inverse operation
-    def Qiskit_export(self, start_index=1 ):
+    def get_quantum_circuit( self ):
 
-        _qgd_library.iface_list_operations( self.c_instance, ctypes.c_int(start_index) );
+        from qiskit import QuantumCircuit
+
+        # creating Qiskit quantum circuit
+        circuit = QuantumCircuit(self.qbit_num)
+
+        # fill up the quantum circuit witj operations
+
+        # create Ctypes compatible wrapper variables for the operation parameters
+        operation_type = ctypes.c_int()
+        target_qbit = ctypes.c_int()
+        control_qbit = ctypes.c_int()
+
+        array_type = ctypes.c_double * 3
+        parameters = array_type(*np.array([0,0,0]))
+      
+        number_of_decomposing_operations = _qgd_library.iface_get_operation_num( self.c_instance )
+        op_idx = ctypes.c_int(number_of_decomposing_operations-1)
+
+        while True:
+
+            # retrive the parameters of the op_idx-th operation
+            status = _qgd_library.iface_get_operation( self.c_instance, op_idx, ctypes.byref(operation_type), ctypes.byref(target_qbit), ctypes.byref(control_qbit), parameters )
+
+            if not ( status == 0 ) :
+                break
+       
+            #print( "op_type python: " + str(operation_type.value))
+            #print("status: " + str(status))
+            #if ( operation_type.value == 2 ) :
+            #    for i in parameters: print(i, end=" ")
+            #    print(' ')
+            #    print( parameters[0] )
+
+            if operation_type.value == 1:
+                # adding CNOT operation to the quantum circuit
+                circuit.cx(control_qbit.value, target_qbit.value)
+
+            elif operation_type.value == 2:
+                # adding U3 operation to the quantum circuit
+                circuit.u3(parameters[0], parameters[1], parameters[2], target_qbit.value)
+                pass
+
+            op_idx.value = op_idx.value - 1
+
+
+        return circuit
+
+
+            
+
+
+ 
 
 
 

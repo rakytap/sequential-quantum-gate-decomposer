@@ -109,6 +109,9 @@ int CNOT::composite_cnot( QGD_Complex16* CNOT_mtx ) {
         int target_qbit_power = Power_of_2(target_qbit);
         int control_qbit_power = Power_of_2(control_qbit);
 
+        // set to zero all the elements of the matrix
+        memset(CNOT_mtx, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+
 
         // setting the operation elements
         #pragma omp parallel for
@@ -147,24 +150,24 @@ int CNOT::composite_cnot( QGD_Complex16* CNOT_mtx ) {
             // setting the col_idx-th element in the row
             if (control_qubit_state_row == 0 && control_qubit_state_col == 0 && target_qubit_state_row == target_qubit_state_col && state_row_remaining == state_col_remaining) {
                 CNOT_mtx[idx].real = 1;
-                CNOT_mtx[idx].imag = 0;
+                //CNOT_mtx[idx].imag = 0;
             }
-            else if (control_qubit_state_row == 0 && control_qubit_state_col == 0 && target_qubit_state_row != target_qubit_state_col && state_row_remaining == state_col_remaining) {
+            /*else if (control_qubit_state_row == 0 && control_qubit_state_col == 0 && target_qubit_state_row != target_qubit_state_col && state_row_remaining == state_col_remaining) {
                 CNOT_mtx[idx].real = 0;
                 CNOT_mtx[idx].imag = 0;
             }
             else if (control_qubit_state_row == 1 && control_qubit_state_col == 1 && target_qubit_state_row == target_qubit_state_col && state_row_remaining == state_col_remaining) {
                 CNOT_mtx[idx].real = 0;
                 CNOT_mtx[idx].imag = 0;
-            }
+            }*/
             else if (control_qubit_state_row == 1 && control_qubit_state_col == 1 && target_qubit_state_row != target_qubit_state_col && state_row_remaining == state_col_remaining) {
                 CNOT_mtx[idx].real = 1;
-                CNOT_mtx[idx].imag = 0;
+                //CNOT_mtx[idx].imag = 0;
             }
-            else {
+            /*else {
                  CNOT_mtx[idx].real = 0;
                  CNOT_mtx[idx].imag = 0;
-            }
+            }*/
 
 
         }

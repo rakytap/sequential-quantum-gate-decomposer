@@ -41,7 +41,7 @@ matrix_size = int(2**qbit_num)
 Umtx = unitary_group.rvs(matrix_size)
 
 # creating a class to decompose the 
-cDecompose = N_Qubit_Decomposition( Umtx )
+cDecompose = N_Qubit_Decomposition( Umtx.conj().T )
 
 # starting the decomposition
 cDecompose.start_decomposition()
@@ -52,12 +52,13 @@ cDecompose.list_operations()
 print(' ')
 print(' ')
 print(' ')
-print('*******************************************************')
-print('*******************************************************')
-
-#exit()
-
+print('**********************************************************************************')
+print('**********************************************************************************')
 print('******************** Solving the 4th IBM chellenge *******************************')
+print(' ')
+print(' ')
+print(' ')
+
 
 #******************************
 from scipy.io import loadmat
@@ -73,7 +74,7 @@ qbit_num = 4
 matrix_size = int(2**qbit_num)
 
 # creating a class to decompose the 
-cDecompose = N_Qubit_Decomposition( Umtx, optimize_layer_num=True, initial_guess="zeros" )
+cDecompose = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, initial_guess="zeros" )
 
 # set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
 cDecompose.set_identical_blocks( 4, 2 )
@@ -90,4 +91,36 @@ cDecompose.set_iteration_loops(2, 3)
 
 # starting the decomposition
 cDecompose.start_decomposition()
+
+# list the decomposing operations
+#cDecompose.list_operations()
+
+print(' ')
+print('Constructing quantum circuit:')
+print(' ')
+quantum_circuit = cDecompose.get_quantum_circuit()
+
+print(quantum_circuit)
+
+from qiskit import execute
+from qiskit import Aer
+import numpy.linalg as LA
+    
+# test the decomposition of the matrix
+#Changing the simulator 
+backend = Aer.get_backend('unitary_simulator')
+    
+#job execution and getting the result as an object
+job = execute(quantum_circuit, backend)
+result = job.result()
+    
+#get the unitary matrix from the result object
+decomposed_matrix = result.get_unitary(quantum_circuit)
+
+    
+# get the error of the decomposition
+product_matrix = np.dot(Umtx, decomposed_matrix.conj().T)
+decomposition_error =  LA.norm(product_matrix - np.identity(16)*product_matrix[0,0], 2)
+
+print('The error of the decomposition is ' + str(decomposition_error))
 

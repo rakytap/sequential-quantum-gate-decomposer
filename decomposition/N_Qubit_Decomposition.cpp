@@ -84,7 +84,7 @@ N_Qubit_Decomposition::~N_Qubit_Decomposition() {
 // @brief Start the disentanglig process of the least significant two qubit unitary
 // @param finalize_decomposition Optional logical parameter. If true (default), the decoupled qubits are rotated into
 // state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
-void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
+void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool prepare_export=true) {
         
         
             
@@ -140,7 +140,10 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
         // final tuning of the decomposition parameters
         final_optimalization();
 
-
+        // prepare operations to export
+        if (prepare_export) {
+            prepare_operations_to_export();
+        }
 
         // calculating the final error of the decomposition
         QGD_Complex16* matrix_decomposed = get_transformed_matrix(optimized_parameters, operations.begin(), operations.size(), Umtx ); 
@@ -156,8 +159,6 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true) {
         printf( "In the decomposition with error = %f were used %d layers with %d U3 operations and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
         printf("--- In total %f seconds elapsed during the decomposition ---\n", float(time(NULL) - start_time));
 
-        // prepare operations to export
-        //prepare_operations_to_export();
     }
 
 
@@ -311,7 +312,7 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
         cdecomposition->set_optimalization_blocks( optimalization_block );
 
         // starting the decomposition of the random unitary
-        cdecomposition->start_decomposition(false);
+        cdecomposition->start_decomposition(false, false);
               
                 
         // saving the decomposition operations
@@ -782,8 +783,8 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         std::map<int,int> identical_blocks_loc;
         N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(submatrix, 2, max_layer_num, identical_blocks_loc, true, initial_guess); 
         
-        // starting the decomposition of the random unitary
-        cdecomposition->start_decomposition(true);
+        // starting the decomposition
+        cdecomposition->start_decomposition(true, false);
 
 
       
@@ -815,10 +816,11 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         std::vector<Operation*> simplifying_operations = cdecomposition->get_operations();
         for ( std::vector<Operation*>::iterator it=simplifying_operations.begin(); it!=simplifying_operations.end(); it++) { //int operation_block_idx=0 in range(0,len(cdecomposition.operations)):
             Operation* op = *it;
+
             Operation_block* block_op = static_cast<Operation_block*>( op );
-             block_op->set_qbit_num( qbit_num );
-             block_op->reorder_qubits( qbits_inverse_reordered );
-             simplified_layer->combine( block_op );
+            block_op->set_qbit_num( qbit_num );
+            block_op->reorder_qubits( qbits_inverse_reordered );
+            simplified_layer->combine( block_op );
         }
 
 

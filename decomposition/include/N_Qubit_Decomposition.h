@@ -67,8 +67,9 @@ N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, std::map<int,int
 ////
 // @brief Start the disentanglig process of the least significant two qubit unitary
 // @param finalize_decomposition Optional logical parameter. If true (default), the decoupled qubits are rotated into
+// @param 
 // state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
-void start_decomposition(bool finalize_decomposition);
+void start_decomposition(bool finalize_decomposition, bool prepare_export);
 
 ////
 // @brief stores the calculated parameters and operations of the sub-decomposition processes

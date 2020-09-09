@@ -200,7 +200,7 @@ print_mtx( C, matrix_size,matrix_size);
 //cDecomposition.set_iteration_loops( 3, 3 );
 
     printf("Starting the decompsition\n");
-    cDecomposition.start_decomposition(true);
+    cDecomposition.start_decomposition(true, true);
 
     cDecomposition.list_operations(1);
 

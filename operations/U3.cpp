@@ -279,7 +279,7 @@ QGD_Complex16* U3::composite_u3(double Theta, double Phi, double Lambda ) {
 int U3::composite_u3(double Theta, double Phi, double Lambda, QGD_Complex16* U3_matrix ) {
 
         // set to zero all the elements of the matrix
-        //memset(U3_matrix, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+        memset(U3_matrix, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
 
         // get the U3 operation of one qubit
@@ -481,9 +481,11 @@ void U3::set_optimized_parameters(double Theta, double Phi, double Lambda ) {
         parameters = (double*)qgd_calloc( 3, sizeof(double), 16 );
     }
 
+    memset( parameters, 0, 3*sizeof(double) );
+
     parameters[0] = Theta;
-    parameters[1] = Theta;
-    parameters[2] = Theta;
+    parameters[1] = Phi;
+    parameters[2] = Lambda;
 
 }
 

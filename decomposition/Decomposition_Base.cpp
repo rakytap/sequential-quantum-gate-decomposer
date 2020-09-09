@@ -776,13 +776,17 @@ print_mtx( Operation_product, matrix_size, matrix_size );
             }
             else {
                 zgemm3m_wrapper( Operation_product, operation_mtx, ret_matrix, matrix_size );
+/*if (verbose) {
+printf("Decomposition_Base::get_transformed_matrix 4b\n");
+print_mtx( ret_matrix, matrix_size, matrix_size );
+}*/
                 memcpy( Operation_product, ret_matrix, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
             }
 
             operations_it++;
         }
-/*if (qbit_num == 2) {
+/*if (verbose) {
 printf("Decomposition_Base::get_transformed_matrix 5\n");
 print_mtx( Operation_product, matrix_size, matrix_size );
 printf("Decomposition_Base::get_transformed_matrix 5b\n");
@@ -953,7 +957,7 @@ void Decomposition_Base::prepare_operations_to_export() {
     std::vector<Operation*> operations_tmp = prepare_operations_to_export( operations, optimized_parameters );
 
     // release the operations and replace them with the ones prepared to export
-    release_operations();
+    operations.clear();
     operations = operations_tmp;
 
 }
@@ -976,9 +980,7 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::v
         Operation* operation = *it;
 
         if (operation->get_type() == CNOT_OPERATION) {
-            CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            CNOT* cnot_operation_cloned = cnot_operation->clone();
-            ops_ret.push_back( static_cast<Operation*>(cnot_operation_cloned) );
+            ops_ret.push_back( operation );
         }    
         else if (operation->get_type() == U3_OPERATION) {
 
@@ -1035,9 +1037,8 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::v
                 parameter_idx = parameter_idx + 3;
             }   
 
-            U3* u3_operation_cloned = u3_operation->clone();
-            u3_operation_cloned->set_optimized_parameters( vartheta, varphi, varlambda );
-            ops_ret.push_back( static_cast<Operation*>(u3_operation_cloned) );
+            u3_operation->set_optimized_parameters( vartheta, varphi, varlambda );
+            ops_ret.push_back( static_cast<Operation*>(u3_operation) );
             
 
         }    
@@ -1081,30 +1082,33 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( Operat
 // @param block_op A pointer to a block of operations isreturned.
 // @param parameters The parameters of the operations (not preallocated)
 // @return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
-int Decomposition_Base::get_operation( int n, operation_type &type, int &target_qbit, int &control_qbit, double* &parameters ) {
+int Decomposition_Base::get_operation( int n, operation_type &type, int &target_qbit, int &control_qbit, double* parameters ) {
 
-
+//printf("n: %d\n", n);
     // get the n-th operation if exists
     if ( n >= operations.size() ) {
         return -1;
     }
 
     Operation* operation = operations[n];
+//printf("operation type: %d\n", operation->get_type());
 
 
     if (operation->get_type() == CNOT_OPERATION) {
         type = operation->get_type();
         target_qbit = operation->get_target_qbit();
         control_qbit = operation->get_control_qbit();
-        parameters = NULL;
+        memset( parameters, 0, 3*sizeof(double) );
+        return 0;
     }    
     else if (operation->get_type() == U3_OPERATION) {
         U3* u3_operation = static_cast<U3*>(operation);
         type = u3_operation->get_type();
         target_qbit = u3_operation->get_target_qbit();
         control_qbit = operation->get_control_qbit();
-        parameters = (double*)qgd_calloc( 3, sizeof(double), 64 );
         u3_operation->get_optimized_parameters(parameters);
+//printf("c %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
+        return 0;
     }
     else {
         return -2;
