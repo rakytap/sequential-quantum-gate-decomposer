@@ -1,0 +1,76 @@
+\hypertarget{qgd_2_decomposition___base_8h}{}\section{Decomposition\+\_\+\+Base.\+h File Reference}
+\label{qgd_2_decomposition___base_8h}\index{Decomposition\+\_\+\+Base.\+h@{Decomposition\+\_\+\+Base.\+h}}
+{\ttfamily \#include \char`\"{}qgd/\+Operation\+\_\+block.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}qgd/\+C\+N\+O\+T.\+h\char`\"{}}\\*
+{\ttfamily \#include \char`\"{}qgd/\+U3.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$map$>$}\\*
+{\ttfamily \#include $<$cstdlib$>$}\\*
+{\ttfamily \#include $<$time.\+h$>$}\\*
+{\ttfamily \#include $<$ctime$>$}\\*
+{\ttfamily \#include \char`\"{}gsl/gsl\+\_\+multimin.\+h\char`\"{}}\\*
+{\ttfamily \#include $<$gsl/gsl\+\_\+statistics.\+h$>$}\\*
+Include dependency graph for qgd/\+Decomposition\+\_\+\+Base.h\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{qgd_2_decomposition___base_8h__incl}
+\end{center}
+\end{figure}
+This graph shows which files directly or indirectly include this file\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{qgd_2_decomposition___base_8h__dep__incl}
+\end{center}
+\end{figure}
+\subsection*{Classes}
+\begin{DoxyCompactItemize}
+\item 
+class \hyperlink{class_decomposition___base}{Decomposition\+\_\+\+Base}
+\begin{DoxyCompactList}\small\item\em A class containing basic methods for the decomposition process. \end{DoxyCompactList}\end{DoxyCompactItemize}
+\subsection*{Enumerations}
+\begin{DoxyCompactItemize}
+\item 
+enum \hyperlink{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134}{guess\+\_\+type} \{ \\*
+\hyperlink{decomposition_2include_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a5d7341ec5879a7f47c5cb82c0fdf6b5f}{Z\+E\+R\+OS}, 
+\hyperlink{decomposition_2include_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134aa2b65445a3a16f164c5e811064d75726}{R\+A\+N\+D\+OM}, 
+\hyperlink{decomposition_2include_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a696885abe79b1431801bacbba1fb75fd}{C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO}, 
+\hyperlink{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a5d7341ec5879a7f47c5cb82c0fdf6b5f}{Z\+E\+R\+OS}, 
+\\*
+\hyperlink{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134aa2b65445a3a16f164c5e811064d75726}{R\+A\+N\+D\+OM}, 
+\hyperlink{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a696885abe79b1431801bacbba1fb75fd}{C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO}
+ \}\begin{DoxyCompactList}\small\item\em Type definition of the types of the initial guess. \end{DoxyCompactList}
+\end{DoxyCompactItemize}
+
+
+\subsection{Enumeration Type Documentation}
+\index{qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}!guess\+\_\+type@{guess\+\_\+type}}
+\index{guess\+\_\+type@{guess\+\_\+type}!qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}}
+\subsubsection[{\texorpdfstring{guess\+\_\+type}{guess_type}}]{\setlength{\rightskip}{0pt plus 5cm}enum {\bf guess\+\_\+type}}\hypertarget{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134}{}\label{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134}
+
+
+Type definition of the types of the initial guess. 
+
+\begin{Desc}
+\item[Enumerator]\par
+\begin{description}
+\index{Z\+E\+R\+OS@{Z\+E\+R\+OS}!qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}}\index{qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}!Z\+E\+R\+OS@{Z\+E\+R\+OS}}\item[{\em 
+Z\+E\+R\+OS\hypertarget{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a5d7341ec5879a7f47c5cb82c0fdf6b5f}{}\label{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a5d7341ec5879a7f47c5cb82c0fdf6b5f}
+}]\index{R\+A\+N\+D\+OM@{R\+A\+N\+D\+OM}!qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}}\index{qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}!R\+A\+N\+D\+OM@{R\+A\+N\+D\+OM}}\item[{\em 
+R\+A\+N\+D\+OM\hypertarget{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134aa2b65445a3a16f164c5e811064d75726}{}\label{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134aa2b65445a3a16f164c5e811064d75726}
+}]\index{C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO@{C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO}!qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}}\index{qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}!C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO@{C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO}}\item[{\em 
+C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO\hypertarget{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a696885abe79b1431801bacbba1fb75fd}{}\label{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a696885abe79b1431801bacbba1fb75fd}
+}]\index{Z\+E\+R\+OS@{Z\+E\+R\+OS}!qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}}\index{qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}!Z\+E\+R\+OS@{Z\+E\+R\+OS}}\item[{\em 
+Z\+E\+R\+OS\hypertarget{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a5d7341ec5879a7f47c5cb82c0fdf6b5f}{}\label{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a5d7341ec5879a7f47c5cb82c0fdf6b5f}
+}]\index{R\+A\+N\+D\+OM@{R\+A\+N\+D\+OM}!qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}}\index{qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}!R\+A\+N\+D\+OM@{R\+A\+N\+D\+OM}}\item[{\em 
+R\+A\+N\+D\+OM\hypertarget{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134aa2b65445a3a16f164c5e811064d75726}{}\label{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134aa2b65445a3a16f164c5e811064d75726}
+}]\index{C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO@{C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO}!qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}}\index{qgd/\+Decomposition\+\_\+\+Base.\+h@{qgd/\+Decomposition\+\_\+\+Base.\+h}!C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO@{C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO}}\item[{\em 
+C\+L\+O\+S\+E\+\_\+\+T\+O\+\_\+\+Z\+E\+RO\hypertarget{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a696885abe79b1431801bacbba1fb75fd}{}\label{qgd_2_decomposition___base_8h_a0e76cf2e4eb5edbf067ba5014ffa2134a696885abe79b1431801bacbba1fb75fd}
+}]\end{description}
+\end{Desc}
+
+
+Definition at line 34 of file qgd/\+Decomposition\+\_\+\+Base.\+h.
+

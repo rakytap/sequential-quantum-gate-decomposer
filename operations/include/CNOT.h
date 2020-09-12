@@ -29,65 +29,72 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 using namespace std;
 
 
+/**
+@brief A class representing a CNOT operation.
+*/
 class CNOT: public Operation {
 
-protected:
-
-// the base indices of the target qubit for state |0>
-int* indexes_target_qubit_0;
-// the base indices of the target qubit for state |1>
-int* indexes_target_qubit_1;    
+protected:   
         
 
 public: 
-////
-// @brief Constructor of the class.
-// @param qbit_num The number of qubits in the unitaries
-// @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
-// @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
-CNOT(int, int, int);
+/**
+@brief Constructor of the class.
+@param qbit_num_in The number of qubits in the unitaries
+@param target_qbit_in The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit_in The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+CNOT(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 
-//
-// @brief Destructor of the class
+/**
+@brief Destructor of the class
+*/
 ~CNOT();
 
-//
-// @brief Call to terive the operation matrix
+/**
+@brief Call to retrieve the operation matrix
+@return Returns with a pointer to the operation matrix
+*/
 QGD_Complex16* matrix();
 
-//
-// @brief Call to terive the operation matrix
-int matrix(QGD_Complex16* retrive_matrix );
+/**
+@brief Call to retrieve the operation matrix
+@param retrieve_matrix A pointer to the preallocated array of the operation matrix.
+@return Returns with 0 on success.
+*/
+int matrix(QGD_Complex16* retrieve_matrix );
 
-////
-// @brief Sets the number of qubits spanning the matrix of the operation
-// @param qbit_num The number of qubits
+/**
+@brief Call to set the number of qubits spanning the matrix of the operation
+@param qbit_num The number of qubits
+*/
 void set_qbit_num(int qbit_num);
 
-
-// @brief Calculate the matrix of a C_NOT gate operation acting on the space of qbit_num qubits.
-// @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
-// @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
-// @return Returns with the matrix of the C-NOT gate.
+/**
+@brief Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits.
+@return Returns with a pointer to the operation matrix
+*/
 QGD_Complex16* composite_cnot();
 
+/**
+@brief Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits.
+@param CNOT_mtx A pointer to the preallocated array of the operation matrix.
+@return Returns with 0 on success.
+*/
+int composite_cnot(QGD_Complex16* CNOT_mtx);
 
-// @brief Calculate the matrix of a C_NOT gate operation acting on the space of qbit_num qubits.
-// @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
-// @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
-// @return Returns with the matrix of the C-NOT gate.
-int composite_cnot(QGD_Complex16*);
 
 
-
-////
-// @brief Call to reorder the qubits in the matrix of the operation
-// @param qbit_list The list of qubits spanning the matrix
+/**
+@brief Call to reorder the qubits in the matrix of the operation
+@param qbit_list The reordered list of qubits spanning the matrix
+*/
 void reorder_qubits( vector<int> qbit_list);
 
-//
-// @brief Create a clone of the present class
-// @return Return with a pointer pointing to the cloned object
+/**
+@brief Call to create a clone of the present class
+@return Return with a pointer pointing to the cloned object
+*/
 CNOT* clone();
 
 };

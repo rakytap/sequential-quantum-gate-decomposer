@@ -31,102 +31,123 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 using namespace std;
 
-// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)
+/// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)
 typedef enum operation_type {GENERAL_OPERATION, CNOT_OPERATION, U3_OPERATION, BLOCK_OPERATION, DECOMPOSITION_BASE_CLASS, SUB_MATRIX_DECOMPOSITION_CLASS, N_QUBIT_DECOMPOSITION_CLASS} operation_type;
 
 
 
-
+/**
+@brief Base class for the representation of one- and two-qubit operations.
+*/
 class Operation {
 
 
 protected:
 
-    // number of qubits spanning the matrix of the operation
+    /// number of qubits spanning the matrix of the operation
     int qbit_num;
-    // A string describing the type of the operation
+    /// The type of the operation (see enumeration operation_type)
     operation_type type;
-    // The index of the qubit on which the operation acts (target_qbit >= 0) 
+    /// The index of the qubit on which the operation acts (target_qbit >= 0) 
     int target_qbit;
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
+    /// The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     int control_qbit;
-    // The size of teh matrx
+    /// The size N of the NxN matrix associated with the operations.
     int matrix_size;
-    // The allocated array of the operatrion matrix
+    /// Pointer to the operatrion matrix (if it is a constant general matrix)
     QGD_Complex16* matrix_alloc;
-    // the number of free parameters
+    /// the number of free parameters of the operation
     int parameter_num;
     
 
 
 public:
-    //
-    // @brief Deafult constructor of the class.
-    // @return An instance of the class
-    Operation();
 
-    //
-    // @brief Destructor of the class
-    ~Operation();
+/**
+@brief Default constructor of the class.
+@return An instance of the class
+*/
+Operation();
+
+/**
+@brief Destructor of the class
+*/
+~Operation();
 
 
-    //
-    // @brief Constructor of the class.
-    // @param qbit_num The number of qubits in the unitaries
-    // @return An instance of the class
-    Operation(int);
+/**
+@brief Constructor of the class.
+@param qbit_num The number of qubits spanning the unitaries
+@return An instance of the class
+*/
+Operation(int qbit_num_in);
 
-    //
-    // @brief Call to terive the operation matrix
-    // @return Returns with a pointer to the operation matrix
-    virtual QGD_Complex16* matrix();
+/**
+@brief Call to terive the operation matrix
+@return Returns with a pointer to the operation matrix
+*/
+virtual QGD_Complex16* matrix();
 
-    //
-    // @brief Call to terive the operation matrix
-    virtual int matrix(QGD_Complex16* retrive_matrix );
 
-    //
-    // @brief Call to set the stored matrix in the operation
-    void set_matrix( QGD_Complex16* );
+/**
+@brief Call to retrieve the operation matrix
+@param retrieve_matrix Preallocated array where the operation matrix is copied
+@return Returns with 0 on success.
+*/
+virtual int matrix(QGD_Complex16* retrieve_matrix );
+
+/**
+@brief Call to set the stored matrix in the operation.
+@param input a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by @matrix_alloc.
+@return Returns with 0 on success.
+*/
+void set_matrix( QGD_Complex16* input );
    
-    //
-    // @brief Set the number of qubits spanning the matrix of the operation
-    // @param qbit_num The number of qubits spanning the matrix
-    virtual void set_qbit_num( int qbit_num_in );
+/**
+@brief Set the number of qubits spanning the matrix of the operation
+@param qbit_num The number of qubits spanning the matrix
+*/
+virtual void set_qbit_num( int qbit_num_in );
      
-    //
-    // @brief Call to reorder the qubits in the matrix of the operation
-    // @param qbit_list The list of qubits spanning the matrix
-    virtual void reorder_qubits( vector<int> qbit_list );
+/**
+@brief Call to reorder the qubits in the matrix of the operation
+@param qbit_list The reordered list of qubits spanning the matrix
+*/
+virtual void reorder_qubits( vector<int> qbit_list );
 
 
-    //
-    // @brief Call to get the index of the target qubit
-    // @return Return with the index of the target qubit (return with -1 if target qubit was not set)
-    int get_target_qbit();
+/**
+@brief Call to get the index of the target qubit
+@return Return with the index of the target qubit (return with -1 if target qubit was not set)
+*/
+int get_target_qbit();
 
 
-    //
-    // @brief Call to get the index of the control qubit
-    // @return Return with the index of the control qubit (return with -1 if control qubit was not set)
-    int get_control_qbit();
+/**
+@brief Call to get the index of the control qubit
+@return Return with the index of the control qubit (return with -1 if control qubit was not set)
+*/
+int get_control_qbit();
 
 
-    //
-    // @brief Call to get the number of free parameters
-    // @return Return with the index of the target qubit (return with -1 if target qubit was not set)
-    int get_parameter_num();
+/**
+@brief Call to get the number of free parameters
+@return Return with the number of the free parameters
+*/
+int get_parameter_num();
 
 
-    //
-    // @brief Call to get the type of the operation
-    // @return Return with the string indicating the type of the operation
-    operation_type get_type();
+/**
+@brief Call to get the type of the operation
+@return Return with the type of the operation (see operation_type for details) 
+*/
+operation_type get_type();
 
-    //
-    // @brief Create a clone of the present class
-    // @return Return with a pointer pointing to the cloned object
-    Operation* clone();
+/**
+@brief Call to create a clone of the present class
+@return Return with a pointer pointing to the cloned object
+*/
+Operation* clone();
 
 };
 

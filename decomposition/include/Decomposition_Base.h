@@ -18,9 +18,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 
-//
-// @brief A base class responsible for constructing matrices of C-NOT gates
-// gates acting on the N-qubit space
 
 #pragma once
 #include "qgd/Operation_block.h"
@@ -31,281 +28,286 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <time.h> 
 #include <ctime>
 #include "gsl/gsl_multimin.h"
-#include "gsl/gsl_deriv.h"
 #include <gsl/gsl_statistics.h>
 
-// @brief Type definition of the types of the initial guess
+/// @brief Type definition of the types of the initial guess
 typedef enum guess_type {ZEROS, RANDOM, CLOSE_TO_ZERO} guess_type;
 
 
 
-struct deriv {
-    int idx;
-    const gsl_vector* parameters;
-    void* instance;
-};
-
-
-////
-// @brief A class containing basic methods for the decomposition process.
+/**
+@brief A class containing basic methods for the decomposition process.
+*/
 class Decomposition_Base : public Operation_block {
 
 
 public:
 bool verbose;
 
-    // number of operator blocks in one sub-layer of the optimalization process
+    /// number of operation blocks used in one shot of the optimalization process
     int optimalization_block;
 
-    // default number of layers in the decomposition as a function of number of qubits
+    /// A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process by default for the subdecomposing of the nth qubits.
     static std::map<int,int> max_layer_num_def;
 
-    // The maximal allowed error of the optimalization problem
+    /// The maximal allowed error of the optimalization problem
     double optimalization_tolerance;
 
 protected:
 
 
 
-    //  number of layers in the decomposition as a function of number of qubits
+    ///  A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process for the subdecomposing of the nth qubits.
     std::map<int,int> max_layer_num;
 
-    // number of iteratrion loops in the optimalization
+    /// A map of <int n: int num> indicating the number of iteration in each step of the decomposition.
     std::map<int,int> iteration_loops;
 
-    // The unitary to be decomposed
+    /// The unitary to be decomposed
     QGD_Complex16* Umtx;
 
-    // The corrent optimized parameters for the operations
+    /// The optimized parameters for the operations
     double* optimized_parameters;
         
-    // logical value describing whether the decomposition was finalized or not
+    /// logical value describing whether the decomposition was finalized or not (i.e. whether the decomposed qubits were rotated into the state |0> or not)
     bool decomposition_finalized; 
         
-    // error of the unitarity of the final decomposition
+    /// error of the unitarity of the final decomposition
     double decomposition_error;
         
-    // number of finalizing (deterministic) opertaions counted from the top of the array of operations
+    /// number of finalizing (deterministic) opertaions rotating the disentangled qubits into state |0>.
     int finalizing_operations_num;
         
-    // the number of the finalizing (deterministic) parameters counted from the top of the optimized_parameters list
+    /// the number of the finalizing (deterministic) parameters of operations rotating the disentangled qubits into state |0>.
     int finalizing_parameter_num;
         
-    // The current minimum of the optimalization problem
+    /// The current minimum of the optimalization problem
     double current_minimum;
         
-    // The global minimum of the optimalization problem
+    /// The global target minimum of the optimalization problem
     double global_target_minimum;
         
-    // logical value describing whether the optimalization problem was solved or not
+    /// logical value describing whether the optimalization problem was solved or not
     bool optimalization_problem_solved;
         
-    // Maximal number of iteartions in the optimalization process
+    /// Maximal number of iterations allowed in the optimalization process
     int max_iterations;
         
-    // method to guess initial values for the optimalization. POssible values: 'zeros', 'random', 'close_to_zero'
+    /// type to guess the initial values for the optimalization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
     guess_type initial_guess;
 
-    // auxiliary variable storing the transformed matrix
+    /// auxiliary variable storing the transformed matrix
     QGD_Complex16* transformed_mtx;
 
 
 public:
 
-//// Contructor of the class
-// @brief Constructor of the class.
-// @param Umtx The unitary matrix to be decomposed
-// @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: 'zeros' (deafult),'random', 'close_to_zero'
-// @return An instance of the class
-Decomposition_Base( QGD_Complex16*, int, guess_type );
+/** Contructor of the class
+@brief Constructor of the class.
+@param Umtx_in The unitary matrix to be decomposed
+@param qbit_num_in The number of qubits spanning the unitary to be decomposed.
+@param initial_guess Type to guess the initial values for the optimalization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
+@return An instance of the class
+*/
+Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, guess_type initial_guess_in);
 
-//// 
-// @brief Destructor of the class
+/** 
+@brief Destructor of the class
+*/
 ~Decomposition_Base();
 
 
-////   
-// @brief Call to set the number of operation layers to optimize in one shot
-// @param optimalization_block The number of operation blocks to optimize in one shot 
+/**   
+@brief Call to set the number of operation blocks to be optimized in one shot
+@param optimalization_block The number of operation blocks to be optimized in one shot 
+*/
 void set_optimalization_blocks( int);
         
-////   
-// @brief Call to set the maximal number of the iterations in the optimalization process
-// @param max_iterations aximal number of iteartions in the optimalization process
-void set_max_iteration( int);
+/**   
+@brief Call to set the maximal number of the iterations in the optimalization process
+@param max_iterations aximal number of iteartions in the optimalization process
+*/
+void set_max_iteration( int max_iterations);
 
 
-//// 
-// @brief After the main optimalization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
+/** 
+@brief After the main optimalization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
+*/
 void finalize_decomposition();
 
 
-////
-// @brief Lists the operations decomposing the initial unitary. (These operations are the inverse operations of the operations bringing the intial matrix into unity.)
-// @param start_index The index of the first inverse operation
+/**
+@brief Call to print the operations decomposing the initial unitary. These operations brings the intial matrix into unity.
+@param start_index The index of the first operation
+*/
 void list_operations( int start_index );
 
-////
-// @brief This method determine the operations needed to rotate the indepent qubits into the state |0>
-// @param mtx The unitary describing indepent qubits.
-// @return [1] The operations needed to rotate the qubits into the state |0>
-// @return [2] The parameters of the U3 operations needed to rotate the qubits into the state |0>
-// @return [3] The resulted diagonalized matrix.
+/**
+@brief This method determine the operations needed to rotate the indepent qubits into the state |0>
+@param mtx The unitary describing indepent qubits. The resulting matrix is returned by this pointer
+@param finalizing_operations Pointer pointig to a block of operations containing the final operations.
+@param finalizing_parameters Parameters corresponding to the finalizing operations. 
+*/
 void get_finalizing_operations( QGD_Complex16* mtx, Operation_block* finalizing_operations, double* finalizing_parameters);
 
 
-//// 
-// @brief This method can be used to solve the main optimalization problem which is devidid into sub-layer optimalization processes. (The aim of the optimalization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute @optimized_parameters.
-// @param varargin Cell array of optional parameters:
-// @param 'solution_guess' Array of guessed parameters
+/** 
+@brief This method can be used to solve the main optimalization problem which is devidid into sub-layer optimalization processes. (The aim of the optimalization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute @optimized_parameters.
+@param solution_guess An array of the guessed parameters
+@param solution_guess_num The number of guessed parameters. (not necessarily equal to the number of free parameters)
+*/
 void solve_optimalization_problem( double* solution_guess, int solution_guess_num );
 
-////
-// @brief This method can be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
-// @param 'solution_guess' Array of guessed parameters
-// @param 'num_of_parameters' NUmber of free parameters to be optimized
+/**
+@brief Abstarct function to be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
+@param 'num_of_parameters' The number of free parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Libarary vector containing the free parameters to be optimized.
+*/
 virtual void solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 
 
-////
-// @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
-// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+/**
+@brief This is an abstact definition of function giving the cost functions measuring the entaglement of the qubits. When the qubits are indepent, teh cost function should be zero.
+@param parameters An array of the free parameters to be optimized. (The number of the free paramaters should be equal to the number of parameters in one sub-layer)
+*/
 virtual double optimalization_problem( const double* parameters );
 
-////
-// @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
-// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-//double optimalization_problem_grad( const double* parameters, void*, gsl_vector* );
-
-////
-// @brief This is an abstact def giving the cost def measuring the entaglement of the qubits. When the qubits are indepent, teh cost def should be zero.
-// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-//double optimalization_problem_combined( const double* parameters, void*, gsl_vector* );
-
-
-//// check_optimalization_solution
-// @brief Checks the convergence of the optimalization problem.
-// @return Returns with true if the target global minimum was reached during the optimalization process, or false otherwise.
+/** check_optimalization_solution
+@brief Checks the convergence of the optimalization problem.
+@return Returns with true if the target global minimum was reached during the optimalization process, or false otherwise.
+*/
 bool check_optimalization_solution();
 
 
-////
-// @brief Calculate the list of cumulated gate operation matrices such that the i>0-th element in the result list is the product of the operations of all 0<=n<i operations from the input list and the 0th element in the result list is the identity.
-// @param parameters An array containing the parameters of the U3 operations.
-// @param operations Iterator pointing to the first element in a vector of operations to be considered in the multiplications.
-// @param num_of_operations The number of operations counted from the first element of the operations.
-// @return Returns with a vector of the product matrices.
-std::vector<QGD_Complex16*> get_operation_products(double* , std::vector<Operation*>::iterator, int );
+/**
+@brief Calculate the list of gate operation matrices such that the i>0-th element in the result list is the product of the operations of all 0<=n<i operations from the input list and the 0th element in the result list is the identity.
+@param parameters An array containing the parameters of the U3 operations.
+@param operations_it An iterator pointing to the forst operation.
+@param num_of_operations The number of operations involved in the calculations
+@return Returns with a vector of the product matrices.
+*/
+std::vector<QGD_Complex16*> get_operation_products(double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations);
 
 
-//
-// @brief Call to get the unitary to be transformed
-// @return Return with a pointer pointing to the unitary
+/**
+@brief Call to retrive a pointer to the unitary to be transformed
+@return Return with a pointer pointing to the unitary @Umtx
+*/
 QGD_Complex16* get_Umtx();
 
-//
-// @brief Call to get the size of the unitary to be transformed
-// @return Return with the size of the unitary
+/**
+@brief Call to get the size of the unitary to be transformed
+@return Return with the size N of the unitary NxN
+*/
 int get_Umtx_size();
 
-//
-// @brief Call to get the optimized parameters
-// @return Return with the pointer pointing to the array storing the optimized parameters
+/**
+@brief Call to get the optimized parameters.
+@return Return with the pointer pointing to the array storing the optimized parameters
+*/
 double* get_optimized_parameters();
 
-//
-// @brief Call to get the optimized parameters
-// @return Return with the pointer pointing to the array storing the (memory copied) optimized parameters 
+/**
+@brief Call to get the optimized parameters.
+@param ret Preallocated array to store the optimized parameters. 
+*/
 void get_optimized_parameters( double* ret );
 
 
-////
-// @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
-// @param parameters An array containing the parameters of the U3 operations.
-// @param operations The array of the operations to be applied on a unitary
-// @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
-// @return Returns with the transformed matrix.
+/**
+@brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
+@param parameters An array containing the parameters of the U3 operations.
+@param operations An iterator pointing to the first operation to be applied on the initial matrix.
+@param num_of_operations The number of operations to be applied on the initial matrix
+@param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
+@return Returns with the transformed matrix (ehich is also stored in the attribute @transformed_mtx).
+*/
 QGD_Complex16* get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, int num_of_operations, QGD_Complex16* initial_matrix );
 
 
-////
-// @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
-// @return Returns with the decomposed matrix.
+/**
+@brief Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary @Umtx
+@return Returns with the decomposed matrix.
+*/
 QGD_Complex16* get_decomposed_matrix();
 
-////
-// @brief Gives an array of permutation indexes that can be used to permute the basis in the N-qubit unitary according to the flip in the qubit order.
-// @param qbit_list A list of the permutation of the qubits (for example [1 3 0 2])
-// @retrun Returns with the reordering indexes of the basis     
-std::vector<int> get_basis_of_reordered_qubits( vector<int> );
+/**
+@brief Apply an operations on the input matrix
+@param operation_mtx The matrix of the operation.
+@param input_matrix The input matrix to be transformed.
+@return Returns with the transformed matrix
+*/
+QGD_Complex16* apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* input_matrix );
 
-////
-// @brief Call to reorder the qubits in the unitary to be decomposed (the qubits become reordeerd in the operations a well)        
-// @param qbit_list A list of the permutation of the qubits (for example [1 3 0 2])
-void reorder_qubits( vector<int> );
+/**
+@brief Apply an operations on the input matrix
+@param operation_mtx The matrix of the operation.
+@param input_matrix The input matrix to be transformed.
+@param The result is returned via this matrix
+*/
+int apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* input_matrix, QGD_Complex16* result_matrix);
 
-////
-// @brief Apply an operations on the input matrix
-// @param operation_mtx The matrix of the operation.
-// @param input_matrix The input matrix to be transformed.
-// @return Returns with the transformed matrix
-QGD_Complex16* apply_operation( QGD_Complex16*, QGD_Complex16*  );
-
-////
-// @brief Apply an operations on the input matrix
-// @param operation_mtx The matrix of the operation.
-// @param input_matrix The input matrix to be transformed.
-// @return Returns with the transformed matrix
-int apply_operation( QGD_Complex16*, QGD_Complex16*, QGD_Complex16* );
-
-////
-// @brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
-// @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
-// @param max_layer_num The maximal number of the operation layers used in the subdecomposition.
+/**
+@brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
+@param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+@param max_layer_num The maximal number of the operation layers used in the subdecomposition.
+@return Returns with 0 if succeded.
+*/
 int set_max_layer_num( int qbit, int max_layer_num_in );
 
-////
-// @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
-// @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.,
-// @param iteration_loops The number of iteration loops in each sted of the subdecomposition.
+/**
+@brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
+@param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.,
+@param iteration_loops The number of iteration loops in each sted of the subdecomposition.
+@return Returns with 0 if succeded.
+*/
 int set_iteration_loops( int qbit, int iteration_loops_in );
 
-////
-// @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
-// @param iteration_loops_in An <int,int> map contining the iteration loops for the individual subdecomposition processes
+/**
+@brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
+@param iteration_loops_in An <int,int> map contining the iteration loops for the individual subdecomposition processes
+@return Returns with 0 if succeded.
+*/
 int set_iteration_loops( std::map<int, int> iteration_loops_in );
 
-////
-// @brief Initializes default layer numbers
+
+/**
+@brief Initializes default layer numbers
+*/
 static void Init_max_layer_num();
 
 
-////
-// @brief Call to prepare the optimized operations to export
+/**
+@brief Call to prepare the optimized operations to export. The operations are stored in the attribute @operations
+*/
 void prepare_operations_to_export();
 
-////
-// @brief Call to prepare the optimized operations to export
-// @param ops A C++ vector of operations
-// @param parameters The parameters of the operations
-// @return Returns with a C++ vector of CNOT and U3 operations.
+/**
+@brief Call to prepare the optimized operations to export
+@param ops A list of operations
+@param parameters The parameters of the operations
+@return Returns with a list of CNOT and U3 operations.
+*/
 std::vector<Operation*> prepare_operations_to_export( std::vector<Operation*> ops, const double* parameters );
 
 
-////
-// @brief Call to prepare the optimized operations to export
-// @param block_op A pointer to a block of operations
-// @param parameters The parameters of the operations
-// @return Returns with a C++ vector of CNOT and U3 operations.
+
+/**
+@brief Call to prepare the operations of an operation block to export
+@param block_op A pointer to a block of operations
+@param parameters The parameters of the operations
+@return Returns with a list of CNOT and U3 operations.
+*/
 std::vector<Operation*> prepare_operations_to_export( Operation_block* block_op, const double* parameters );
 
-////
-// @brief Call to prepare the optimized operations to export
-// @param n Integer labeling the n-th oepration  (n>=0).
-// @param block_op A pointer to a block of operations
-// @param parameters The parameters of the operations
-// @return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
+/**
+@brief Call to prepare the optimized operations to export
+@param n Integer labeling the n-th oepration  (n>=0).
+@param block_op A pointer to a block of operations
+@param parameters The parameters of the operations
+@return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
+*/
 int get_operation( int n, operation_type &type, int &target_qbit, int &control_qbit, double* parameters );
 
 

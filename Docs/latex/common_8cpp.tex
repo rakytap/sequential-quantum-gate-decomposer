@@ -1,0 +1,597 @@
+\hypertarget{common_8cpp}{}\section{common.\+cpp File Reference}
+\label{common_8cpp}\index{common.\+cpp@{common.\+cpp}}
+{\ttfamily \#include \char`\"{}qgd/common.\+h\char`\"{}}\\*
+Include dependency graph for common.\+cpp\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp__incl}
+\end{center}
+\end{figure}
+\subsection*{Functions}
+\begin{DoxyCompactItemize}
+\item 
+void \hyperlink{common_8cpp_ab1d4bfb6768315c1e2b5a83b47eec53b}{add\+\_\+unique\+\_\+elelement} (vector$<$ int $>$ \&involved\+\_\+qbits, int qbit)
+\item 
+void $\ast$ \hyperlink{common_8cpp_a5f6f94e041e47585a575240c0692aa2c}{aligned\+\_\+alloc} (size\+\_\+t alignment, size\+\_\+t size, bool zero)
+\item 
+void \hyperlink{common_8cpp_a603d31308dbc48a67eb6570ea63927a1}{aligned\+\_\+free} (void $\ast$aligned\+\_\+ptr)
+\item 
+\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$ \hyperlink{common_8cpp_ad2809f4012fcf8a7375a959c5b816413}{create\+\_\+identity} (int matrix\+\_\+size)
+\item 
+int \hyperlink{common_8cpp_ac153d1e5b3f8065ddc46254f779dc8d7}{create\+\_\+identity} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$matrix, int matrix\+\_\+size)
+\item 
+double \hyperlink{common_8cpp_a7917831f6df360f23578190263a7cfee}{get\+\_\+cost\+\_\+function} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$matrix, int matrix\+\_\+size)
+\item 
+double \hyperlink{common_8cpp_a414f9567e3ca1ae7619d71d2ece6e460}{get\+\_\+submatrix\+\_\+cost\+\_\+function} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$matrix, int matrix\+\_\+size, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$$\ast$submatrices, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$submatrix\+\_\+prod)
+\item 
+\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} \hyperlink{common_8cpp_ac876ec30dbcade845af445eb50315653}{mult} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} a, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} b)
+\item 
+\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} \hyperlink{common_8cpp_aa9775b20de198cee5c002277d68d3526}{mult} (double a, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} b)
+\item 
+void \hyperlink{common_8cpp_ae8a666e2aa600c579dddeb74ca0c69ac}{mult} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} a, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$b, int matrix\+\_\+size)
+\item 
+int \hyperlink{common_8cpp_a2085ad6d70ccf80dd353a70fe8262ff9}{Power\+\_\+of\+\_\+2} (int n)
+\item 
+void \hyperlink{common_8cpp_a9edfe300cce2d458905077bda1bdf374}{print\+\_\+\+C\+N\+OT} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$matrix, int size)
+\item 
+void \hyperlink{common_8cpp_a18fbe0bcc2d85799707cdd255a6eee4f}{print\+\_\+mtx} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$matrix, int rows, int cols)
+\item 
+void $\ast$ \hyperlink{common_8cpp_aa0242605afa8a983a22aa1165cea5979}{qgd\+\_\+calloc} (size\+\_\+t element\+\_\+num, size\+\_\+t size, size\+\_\+t alignment)
+\item 
+void \hyperlink{common_8cpp_afbe838f9ac6bc59a609014c7e1f757c3}{qgd\+\_\+free} (void $\ast$ptr)
+\item 
+int \hyperlink{common_8cpp_a9b85008e8385d9846a29409c95b14a97}{reduce\+\_\+zgemm} (vector$<$ \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$ $>$ mtxs, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$C, int matrix\+\_\+size)
+\item 
+\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} \hyperlink{common_8cpp_a29568a6904c401fb8c85486c9b9ff50c}{scalar\+\_\+product} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$A, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$B, int vector\+\_\+size)
+\item 
+void \hyperlink{common_8cpp_af87908d4a237a0350060f2aa85e92c2a}{subtract\+\_\+diag} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$\&mtx, int matrix\+\_\+size, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} scalar)
+\item 
+\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$ \hyperlink{common_8cpp_a7e4fbff01bddac17c7499d1da136f004}{zgemm3m\+\_\+wrapper} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$A, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$B, int matrix\+\_\+size)
+\item 
+int \hyperlink{common_8cpp_adf9965852efaf1296940f43a722fdd69}{zgemm3m\+\_\+wrapper} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$A, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$B, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$C, int matrix\+\_\+size)
+\item 
+int \hyperlink{common_8cpp_ac508def41bc9941f7ae5d4caf067c565}{zgemm3m\+\_\+wrapper\+\_\+adj} (\hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$A, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$B, \hyperlink{struct_q_g_d___complex16}{Q\+G\+D\+\_\+\+Complex16} $\ast$C, int matrix\+\_\+size)
+\end{DoxyCompactItemize}
+
+
+\subsection{Function Documentation}
+\index{common.\+cpp@{common.\+cpp}!add\+\_\+unique\+\_\+elelement@{add\+\_\+unique\+\_\+elelement}}
+\index{add\+\_\+unique\+\_\+elelement@{add\+\_\+unique\+\_\+elelement}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{add\+\_\+unique\+\_\+elelement(vector$<$ int $>$ \&involved\+\_\+qbits, int qbit)}{add_unique_elelement(vector< int > &involved_qbits, int qbit)}}]{\setlength{\rightskip}{0pt plus 5cm}void add\+\_\+unique\+\_\+elelement (
+\begin{DoxyParamCaption}
+\item[{vector$<$ int $>$ \&}]{involved\+\_\+qbits, }
+\item[{int}]{qbit}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_ab1d4bfb6768315c1e2b5a83b47eec53b}{}\label{common_8cpp_ab1d4bfb6768315c1e2b5a83b47eec53b}
+
+
+Definition at line 128 of file common.\+cpp.
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_ab1d4bfb6768315c1e2b5a83b47eec53b_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!aligned\+\_\+alloc@{aligned\+\_\+alloc}}
+\index{aligned\+\_\+alloc@{aligned\+\_\+alloc}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{aligned\+\_\+alloc(size\+\_\+t alignment, size\+\_\+t size, bool zero)}{aligned_alloc(size_t alignment, size_t size, bool zero)}}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ aligned\+\_\+alloc (
+\begin{DoxyParamCaption}
+\item[{size\+\_\+t}]{alignment, }
+\item[{size\+\_\+t}]{size, }
+\item[{bool}]{zero}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_a5f6f94e041e47585a575240c0692aa2c}{}\label{common_8cpp_a5f6f94e041e47585a575240c0692aa2c}
+
+
+Definition at line 44 of file common.\+cpp.
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_a5f6f94e041e47585a575240c0692aa2c_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!aligned\+\_\+free@{aligned\+\_\+free}}
+\index{aligned\+\_\+free@{aligned\+\_\+free}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{aligned\+\_\+free(void $\ast$aligned\+\_\+ptr)}{aligned_free(void *aligned_ptr)}}]{\setlength{\rightskip}{0pt plus 5cm}void aligned\+\_\+free (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{aligned\+\_\+ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_a603d31308dbc48a67eb6570ea63927a1}{}\label{common_8cpp_a603d31308dbc48a67eb6570ea63927a1}
+
+
+Definition at line 60 of file common.\+cpp.
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_a603d31308dbc48a67eb6570ea63927a1_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!create\+\_\+identity@{create\+\_\+identity}}
+\index{create\+\_\+identity@{create\+\_\+identity}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{create\+\_\+identity(int matrix\+\_\+size)}{create_identity(int matrix_size)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Q\+G\+D\+\_\+\+Complex16}$\ast$ create\+\_\+identity (
+\begin{DoxyParamCaption}
+\item[{int}]{matrix\+\_\+size}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_ad2809f4012fcf8a7375a959c5b816413}{}\label{common_8cpp_ad2809f4012fcf8a7375a959c5b816413}
+
+
+Definition at line 157 of file common.\+cpp.
+
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_ad2809f4012fcf8a7375a959c5b816413_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_ad2809f4012fcf8a7375a959c5b816413_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!create\+\_\+identity@{create\+\_\+identity}}
+\index{create\+\_\+identity@{create\+\_\+identity}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{create\+\_\+identity(\+Q\+G\+D\+\_\+\+Complex16 $\ast$matrix, int matrix\+\_\+size)}{create_identity(QGD_Complex16 *matrix, int matrix_size)}}]{\setlength{\rightskip}{0pt plus 5cm}int create\+\_\+identity (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{matrix, }
+\item[{int}]{matrix\+\_\+size}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_ac153d1e5b3f8065ddc46254f779dc8d7}{}\label{common_8cpp_ac153d1e5b3f8065ddc46254f779dc8d7}
+
+
+Definition at line 176 of file common.\+cpp.
+
+\index{common.\+cpp@{common.\+cpp}!get\+\_\+cost\+\_\+function@{get\+\_\+cost\+\_\+function}}
+\index{get\+\_\+cost\+\_\+function@{get\+\_\+cost\+\_\+function}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{get\+\_\+cost\+\_\+function(\+Q\+G\+D\+\_\+\+Complex16 $\ast$matrix, int matrix\+\_\+size)}{get_cost_function(QGD_Complex16 *matrix, int matrix_size)}}]{\setlength{\rightskip}{0pt plus 5cm}double get\+\_\+cost\+\_\+function (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{matrix, }
+\item[{int}]{matrix\+\_\+size}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_a7917831f6df360f23578190263a7cfee}{}\label{common_8cpp_a7917831f6df360f23578190263a7cfee}
+
+
+Definition at line 455 of file common.\+cpp.
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_a7917831f6df360f23578190263a7cfee_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!get\+\_\+submatrix\+\_\+cost\+\_\+function@{get\+\_\+submatrix\+\_\+cost\+\_\+function}}
+\index{get\+\_\+submatrix\+\_\+cost\+\_\+function@{get\+\_\+submatrix\+\_\+cost\+\_\+function}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{get\+\_\+submatrix\+\_\+cost\+\_\+function(\+Q\+G\+D\+\_\+\+Complex16 $\ast$matrix, int matrix\+\_\+size, Q\+G\+D\+\_\+\+Complex16 $\ast$$\ast$submatrices, Q\+G\+D\+\_\+\+Complex16 $\ast$submatrix\+\_\+prod)}{get_submatrix_cost_function(QGD_Complex16 *matrix, int matrix_size, QGD_Complex16 **submatrices, QGD_Complex16 *submatrix_prod)}}]{\setlength{\rightskip}{0pt plus 5cm}double get\+\_\+submatrix\+\_\+cost\+\_\+function (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{matrix, }
+\item[{int}]{matrix\+\_\+size, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$$\ast$}]{submatrices, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{submatrix\+\_\+prod}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_a414f9567e3ca1ae7619d71d2ece6e460}{}\label{common_8cpp_a414f9567e3ca1ae7619d71d2ece6e460}
+
+
+Definition at line 351 of file common.\+cpp.
+
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=336pt]{common_8cpp_a414f9567e3ca1ae7619d71d2ece6e460_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_a414f9567e3ca1ae7619d71d2ece6e460_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!mult@{mult}}
+\index{mult@{mult}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{mult(\+Q\+G\+D\+\_\+\+Complex16 a, Q\+G\+D\+\_\+\+Complex16 b)}{mult(QGD_Complex16 a, QGD_Complex16 b)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Q\+G\+D\+\_\+\+Complex16} mult (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16}}]{a, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16}}]{b}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_ac876ec30dbcade845af445eb50315653}{}\label{common_8cpp_ac876ec30dbcade845af445eb50315653}
+
+
+Definition at line 505 of file common.\+cpp.
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_ac876ec30dbcade845af445eb50315653_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!mult@{mult}}
+\index{mult@{mult}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{mult(double a, Q\+G\+D\+\_\+\+Complex16 b)}{mult(double a, QGD_Complex16 b)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Q\+G\+D\+\_\+\+Complex16} mult (
+\begin{DoxyParamCaption}
+\item[{double}]{a, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16}}]{b}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_aa9775b20de198cee5c002277d68d3526}{}\label{common_8cpp_aa9775b20de198cee5c002277d68d3526}
+
+
+Definition at line 516 of file common.\+cpp.
+
+\index{common.\+cpp@{common.\+cpp}!mult@{mult}}
+\index{mult@{mult}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{mult(\+Q\+G\+D\+\_\+\+Complex16 a, Q\+G\+D\+\_\+\+Complex16 $\ast$b, int matrix\+\_\+size)}{mult(QGD_Complex16 a, QGD_Complex16 *b, int matrix_size)}}]{\setlength{\rightskip}{0pt plus 5cm}void mult (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16}}]{a, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{b, }
+\item[{int}]{matrix\+\_\+size}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_ae8a666e2aa600c579dddeb74ca0c69ac}{}\label{common_8cpp_ae8a666e2aa600c579dddeb74ca0c69ac}
+
+
+Definition at line 529 of file common.\+cpp.
+
+\index{common.\+cpp@{common.\+cpp}!Power\+\_\+of\+\_\+2@{Power\+\_\+of\+\_\+2}}
+\index{Power\+\_\+of\+\_\+2@{Power\+\_\+of\+\_\+2}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{Power\+\_\+of\+\_\+2(int n)}{Power_of_2(int n)}}]{\setlength{\rightskip}{0pt plus 5cm}int Power\+\_\+of\+\_\+2 (
+\begin{DoxyParamCaption}
+\item[{int}]{n}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_a2085ad6d70ccf80dd353a70fe8262ff9}{}\label{common_8cpp_a2085ad6d70ccf80dd353a70fe8262ff9}
+
+
+Definition at line 89 of file common.\+cpp.
+
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=148pt]{common_8cpp_a2085ad6d70ccf80dd353a70fe8262ff9_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_a2085ad6d70ccf80dd353a70fe8262ff9_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!print\+\_\+\+C\+N\+OT@{print\+\_\+\+C\+N\+OT}}
+\index{print\+\_\+\+C\+N\+OT@{print\+\_\+\+C\+N\+OT}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{print\+\_\+\+C\+N\+O\+T(\+Q\+G\+D\+\_\+\+Complex16 $\ast$matrix, int size)}{print_CNOT(QGD_Complex16 *matrix, int size)}}]{\setlength{\rightskip}{0pt plus 5cm}void print\+\_\+\+C\+N\+OT (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{matrix, }
+\item[{int}]{size}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_a9edfe300cce2d458905077bda1bdf374}{}\label{common_8cpp_a9edfe300cce2d458905077bda1bdf374}
+
+
+Definition at line 114 of file common.\+cpp.
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=295pt]{common_8cpp_a9edfe300cce2d458905077bda1bdf374_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!print\+\_\+mtx@{print\+\_\+mtx}}
+\index{print\+\_\+mtx@{print\+\_\+mtx}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{print\+\_\+mtx(\+Q\+G\+D\+\_\+\+Complex16 $\ast$matrix, int rows, int cols)}{print_mtx(QGD_Complex16 *matrix, int rows, int cols)}}]{\setlength{\rightskip}{0pt plus 5cm}void print\+\_\+mtx (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{matrix, }
+\item[{int}]{rows, }
+\item[{int}]{cols}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_a18fbe0bcc2d85799707cdd255a6eee4f}{}\label{common_8cpp_a18fbe0bcc2d85799707cdd255a6eee4f}
+
+
+Definition at line 98 of file common.\+cpp.
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=299pt]{common_8cpp_a18fbe0bcc2d85799707cdd255a6eee4f_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!qgd\+\_\+calloc@{qgd\+\_\+calloc}}
+\index{qgd\+\_\+calloc@{qgd\+\_\+calloc}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{qgd\+\_\+calloc(size\+\_\+t element\+\_\+num, size\+\_\+t size, size\+\_\+t alignment)}{qgd_calloc(size_t element_num, size_t size, size_t alignment)}}]{\setlength{\rightskip}{0pt plus 5cm}void$\ast$ qgd\+\_\+calloc (
+\begin{DoxyParamCaption}
+\item[{size\+\_\+t}]{element\+\_\+num, }
+\item[{size\+\_\+t}]{size, }
+\item[{size\+\_\+t}]{alignment}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_aa0242605afa8a983a22aa1165cea5979}{}\label{common_8cpp_aa0242605afa8a983a22aa1165cea5979}
+
+
+Definition at line 67 of file common.\+cpp.
+
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=252pt]{common_8cpp_aa0242605afa8a983a22aa1165cea5979_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_aa0242605afa8a983a22aa1165cea5979_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!qgd\+\_\+free@{qgd\+\_\+free}}
+\index{qgd\+\_\+free@{qgd\+\_\+free}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{qgd\+\_\+free(void $\ast$ptr)}{qgd_free(void *ptr)}}]{\setlength{\rightskip}{0pt plus 5cm}void qgd\+\_\+free (
+\begin{DoxyParamCaption}
+\item[{void $\ast$}]{ptr}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_afbe838f9ac6bc59a609014c7e1f757c3}{}\label{common_8cpp_afbe838f9ac6bc59a609014c7e1f757c3}
+
+
+Definition at line 78 of file common.\+cpp.
+
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=239pt]{common_8cpp_afbe838f9ac6bc59a609014c7e1f757c3_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_afbe838f9ac6bc59a609014c7e1f757c3_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!reduce\+\_\+zgemm@{reduce\+\_\+zgemm}}
+\index{reduce\+\_\+zgemm@{reduce\+\_\+zgemm}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{reduce\+\_\+zgemm(vector$<$ Q\+G\+D\+\_\+\+Complex16 $\ast$ $>$ mtxs, Q\+G\+D\+\_\+\+Complex16 $\ast$\+C, int matrix\+\_\+size)}{reduce_zgemm(vector< QGD_Complex16 * > mtxs, QGD_Complex16 *C, int matrix_size)}}]{\setlength{\rightskip}{0pt plus 5cm}int reduce\+\_\+zgemm (
+\begin{DoxyParamCaption}
+\item[{vector$<$ {\bf Q\+G\+D\+\_\+\+Complex16} $\ast$ $>$}]{mtxs, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{C, }
+\item[{int}]{matrix\+\_\+size}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_a9b85008e8385d9846a29409c95b14a97}{}\label{common_8cpp_a9b85008e8385d9846a29409c95b14a97}
+
+
+Definition at line 288 of file common.\+cpp.
+
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_a9b85008e8385d9846a29409c95b14a97_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=317pt]{common_8cpp_a9b85008e8385d9846a29409c95b14a97_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!scalar\+\_\+product@{scalar\+\_\+product}}
+\index{scalar\+\_\+product@{scalar\+\_\+product}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{scalar\+\_\+product(\+Q\+G\+D\+\_\+\+Complex16 $\ast$\+A, Q\+G\+D\+\_\+\+Complex16 $\ast$\+B, int vector\+\_\+size)}{scalar_product(QGD_Complex16 *A, QGD_Complex16 *B, int vector_size)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Q\+G\+D\+\_\+\+Complex16} scalar\+\_\+product (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{A, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{B, }
+\item[{int}]{vector\+\_\+size}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_a29568a6904c401fb8c85486c9b9ff50c}{}\label{common_8cpp_a29568a6904c401fb8c85486c9b9ff50c}
+
+
+Definition at line 202 of file common.\+cpp.
+
+\index{common.\+cpp@{common.\+cpp}!subtract\+\_\+diag@{subtract\+\_\+diag}}
+\index{subtract\+\_\+diag@{subtract\+\_\+diag}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{subtract\+\_\+diag(\+Q\+G\+D\+\_\+\+Complex16 $\ast$\&mtx, int matrix\+\_\+size, Q\+G\+D\+\_\+\+Complex16 scalar)}{subtract_diag(QGD_Complex16 *&mtx, int matrix_size, QGD_Complex16 scalar)}}]{\setlength{\rightskip}{0pt plus 5cm}void subtract\+\_\+diag (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$\&}]{mtx, }
+\item[{int}]{matrix\+\_\+size, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16}}]{scalar}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_af87908d4a237a0350060f2aa85e92c2a}{}\label{common_8cpp_af87908d4a237a0350060f2aa85e92c2a}
+
+
+Definition at line 339 of file common.\+cpp.
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_af87908d4a237a0350060f2aa85e92c2a_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!zgemm3m\+\_\+wrapper@{zgemm3m\+\_\+wrapper}}
+\index{zgemm3m\+\_\+wrapper@{zgemm3m\+\_\+wrapper}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{zgemm3m\+\_\+wrapper(\+Q\+G\+D\+\_\+\+Complex16 $\ast$\+A, Q\+G\+D\+\_\+\+Complex16 $\ast$\+B, int matrix\+\_\+size)}{zgemm3m_wrapper(QGD_Complex16 *A, QGD_Complex16 *B, int matrix_size)}}]{\setlength{\rightskip}{0pt plus 5cm}{\bf Q\+G\+D\+\_\+\+Complex16}$\ast$ zgemm3m\+\_\+wrapper (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{A, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{B, }
+\item[{int}]{matrix\+\_\+size}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_a7e4fbff01bddac17c7499d1da136f004}{}\label{common_8cpp_a7e4fbff01bddac17c7499d1da136f004}
+
+
+Definition at line 242 of file common.\+cpp.
+
+
+
+Here is the call graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_a7e4fbff01bddac17c7499d1da136f004_cgraph}
+\end{center}
+\end{figure}
+
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_a7e4fbff01bddac17c7499d1da136f004_icgraph}
+\end{center}
+\end{figure}
+
+
+\index{common.\+cpp@{common.\+cpp}!zgemm3m\+\_\+wrapper@{zgemm3m\+\_\+wrapper}}
+\index{zgemm3m\+\_\+wrapper@{zgemm3m\+\_\+wrapper}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{zgemm3m\+\_\+wrapper(\+Q\+G\+D\+\_\+\+Complex16 $\ast$\+A, Q\+G\+D\+\_\+\+Complex16 $\ast$\+B, Q\+G\+D\+\_\+\+Complex16 $\ast$\+C, int matrix\+\_\+size)}{zgemm3m_wrapper(QGD_Complex16 *A, QGD_Complex16 *B, QGD_Complex16 *C, int matrix_size)}}]{\setlength{\rightskip}{0pt plus 5cm}int zgemm3m\+\_\+wrapper (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{A, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{B, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{C, }
+\item[{int}]{matrix\+\_\+size}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_adf9965852efaf1296940f43a722fdd69}{}\label{common_8cpp_adf9965852efaf1296940f43a722fdd69}
+
+
+Definition at line 266 of file common.\+cpp.
+
+\index{common.\+cpp@{common.\+cpp}!zgemm3m\+\_\+wrapper\+\_\+adj@{zgemm3m\+\_\+wrapper\+\_\+adj}}
+\index{zgemm3m\+\_\+wrapper\+\_\+adj@{zgemm3m\+\_\+wrapper\+\_\+adj}!common.\+cpp@{common.\+cpp}}
+\subsubsection[{\texorpdfstring{zgemm3m\+\_\+wrapper\+\_\+adj(\+Q\+G\+D\+\_\+\+Complex16 $\ast$\+A, Q\+G\+D\+\_\+\+Complex16 $\ast$\+B, Q\+G\+D\+\_\+\+Complex16 $\ast$\+C, int matrix\+\_\+size)}{zgemm3m_wrapper_adj(QGD_Complex16 *A, QGD_Complex16 *B, QGD_Complex16 *C, int matrix_size)}}]{\setlength{\rightskip}{0pt plus 5cm}int zgemm3m\+\_\+wrapper\+\_\+adj (
+\begin{DoxyParamCaption}
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{A, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{B, }
+\item[{{\bf Q\+G\+D\+\_\+\+Complex16} $\ast$}]{C, }
+\item[{int}]{matrix\+\_\+size}
+\end{DoxyParamCaption}
+)}\hypertarget{common_8cpp_ac508def41bc9941f7ae5d4caf067c565}{}\label{common_8cpp_ac508def41bc9941f7ae5d4caf067c565}
+
+
+Definition at line 219 of file common.\+cpp.
+
+
+
+Here is the caller graph for this function\+:
+\nopagebreak
+\begin{figure}[H]
+\begin{center}
+\leavevmode
+\includegraphics[width=350pt]{common_8cpp_ac508def41bc9941f7ae5d4caf067c565_icgraph}
+\end{center}
+\end{figure}
+
+

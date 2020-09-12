@@ -20,9 +20,16 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 """
 
+## \addtogroup python Python Interface
+## @{
+#
+# ***********MOOOOOOOOORRRRRREEEEEEEEEEEEEE DEEEEEEEEEEEEETAAAAAAAAAAAAAAAAILSSSSSSSSSSSSSS HEEEEEEEEEEEEEEREEEEEEEEEEE ****************
+
+
 import ctypes
 import numpy as np
 from os import path
+
 
 
 #load qgd C library for the decomposition
@@ -38,6 +45,7 @@ else:
     exit()
 
 _qgd_library = ctypes.cdll.LoadLibrary(library_path)  
+
 
 
 
@@ -58,7 +66,6 @@ _qgd_library.iface_get_operation.restype = ctypes.c_int
 
 ##
 # @brief A class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
-
 class N_Qubit_Decomposition:
     
     
@@ -207,7 +214,7 @@ class N_Qubit_Decomposition:
 
 
             
-
+## @}
 
  
 

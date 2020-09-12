@@ -66,16 +66,22 @@ void cblas_zgemm3m(const  CBLAS_LAYOUT Layout, const  CBLAS_TRANSPOSE TransA,
 
 
 
-// @brief Structure type representing complex number in the QGD package (compatible with MKL, cblas and Fortran)
+/// @brief Structure type representing complex numbers in the QGD package (compatible with cblas libraries)
 struct QGD_Complex16 {
+  /// the real part of a complex number
   double real;
+  /// the imaginary part of a complex number
   double imag;
 };
 
-// @brief Structure type conatining gate numbers
+/// @brief Structure type conatining numbers of gates.
 struct gates_num {
+  /// The number of U3 gates
   int u3;
+  /// The number of CNOT gates
   int cnot;
+  /// The number of general gates
+  int general;
 };
 
 
@@ -114,16 +120,7 @@ void print_mtx( QGD_Complex16* , int, int );
 // @brief Print a CNOT matrix on standard output
 void print_CNOT( QGD_Complex16* , int );
 
-
-// @brief converts integer to string
-std::string int_to_string( int input );
-
-// @brief converts double to string
-std::string double_to_string( double input );
-
-
-
-// @brief Add an integer to an integer vector if the integer is not already an element of the vector. The sorted order is kept during the process
+// @brief Add an integer to a vector of integers if the integer is not already an element of the vector. The ascending order is kept during the process.
 void add_unique_elelement( std::vector<int>& involved_qbits, int qbit );
 
 // @brief Create an identity matrix
@@ -146,7 +143,6 @@ int zgemm3m_wrapper( QGD_Complex16* , QGD_Complex16*, QGD_Complex16*, int);
 
 // @brief Calculate the product of complex matrices stored in a vector of matrices
 int reduce_zgemm( std::vector<QGD_Complex16*>, QGD_Complex16* C, int );
-
 
 // @brief subtract a scalar from the diagonal of a matrix
 void subtract_diag( QGD_Complex16* & , int, QGD_Complex16 ); 

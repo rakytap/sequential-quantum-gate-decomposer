@@ -1,0 +1,21 @@
+<map id="test_operation_block" name="test_operation_block">
+<area shape="rect" id="node2" href="$class_operation__block.html#a44940209dbc5754b676b5a493bb153f4" title="Append a U3 gate to the list of operations. " alt="" coords="203,26,346,67"/>
+<area shape="rect" id="node5" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Power_of_2" alt="" coords="872,81,963,108"/>
+<area shape="rect" id="node8" href="$class_operation__block.html#a3779e559654f12c5544129c46305b6ce" title="Append a C_NOT gate operation to the list of operations. " alt="" coords="203,91,346,133"/>
+<area shape="rect" id="node9" href="$class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="205,209,345,250"/>
+<area shape="rect" id="node10" href="$class_operation__block.html#a916db3ef5d6fcf25367843a1306cd4e0" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="196,275,353,301"/>
+<area shape="rect" id="node14" href="$common_8cpp.html#a18fbe0bcc2d85799707cdd255a6eee4f" title="print_mtx" alt="" coords="237,325,312,352"/>
+<area shape="rect" id="node15" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="qgd_free" alt="" coords="239,376,311,403"/>
+<area shape="rect" id="node17" href="$class_operation__block.html#a92e4f0566e4b36830652729377a8e936" title="Call to get the qubits involved in the operations stored in the block of operations. " alt="" coords="205,449,345,490"/>
+<area shape="rect" id="node3" href="$class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="418,49,561,90"/>
+<area shape="rect" id="node4" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="643,5,806,32"/>
+<area shape="rect" id="node6" href="$class_operation.html#a670c1149cd1c675cf67bbcd861817223" title="Call to get the number of free parameters. " alt="" coords="625,56,824,83"/>
+<area shape="rect" id="node7" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="658,107,791,133"/>
+<area shape="rect" id="node11" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="qgd_calloc" alt="" coords="447,244,531,271"/>
+<area shape="rect" id="node13" href="$class_operation.html#acf7d1765143285ff73772ae860109988" title="Call to terive the operation matrix. " alt="" coords="430,295,549,321"/>
+<area shape="rect" id="node12" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="aligned_alloc" alt="" coords="676,244,773,271"/>
+<area shape="rect" id="node16" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="aligned_free" alt="" coords="443,365,535,392"/>
+<area shape="rect" id="node18" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="404,416,575,443"/>
+<area shape="rect" id="node19" href="$common_8cpp.html#ab1d4bfb6768315c1e2b5a83b47eec53b" title="add_unique_elelement" alt="" coords="414,467,565,493"/>
+<area shape="rect" id="node20" href="$class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit. " alt="" coords="401,517,577,544"/>
+</map>

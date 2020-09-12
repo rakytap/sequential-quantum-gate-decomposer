@@ -29,9 +29,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 using namespace std;
 
-//
-// @brief Constructor of the class.
-// @return An instance of the class
+/**
+@brief Deafult constructor of the class.
+*/
 Operation_block::Operation_block() : Operation() {
 
     // A string describing the type of the operation
@@ -42,10 +42,10 @@ Operation_block::Operation_block() : Operation() {
 
 
 
-//
-// @brief Constructor of the class.
-// @param qbit_num The number of qubits in the unitaries
-// @return An instance of the class
+/**
+@brief Constructor of the class.
+@param qbit_num The number of qubits in the unitaries
+*/
 Operation_block::Operation_block(int qbit_num_in) : Operation(qbit_num_in) {
 
     // A string describing the type of the operation
@@ -55,15 +55,17 @@ Operation_block::Operation_block(int qbit_num_in) : Operation(qbit_num_in) {
 }
 
 
-//
-// @brief Destructor of the class.
+/**
+@brief Destructor of the class.
+*/
 Operation_block::~Operation_block() {
 
     release_operations();
 }
 
-//
-// @brief Release the stored operations
+/**
+@brief Call to release the stored operations
+*/
 void Operation_block::release_operations() {
 
     //free the alloctaed memory of the stored operations
@@ -98,11 +100,11 @@ void Operation_block::release_operations() {
 
 
 
-////
-// @brief Call to get the product of the matrices of the operations grouped in the block.
-// @param parameters List of parameters to calculate the matrix of the operation block
-// @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
-// @return Returns with the matrix of the operation
+/**
+@brief Call to terive the operation matrix (Which is the product of all the operation matrices stored in the operation block)
+@param parameters An arary pointing to the parameters of the operations
+@return Returns with a pointer to the operation matrix
+*/
 QGD_Complex16* Operation_block::matrix( const double* parameters  ) {
 
     // preallocate array for the composite u3 operation
@@ -115,11 +117,12 @@ QGD_Complex16* Operation_block::matrix( const double* parameters  ) {
 
 
 
-////
-// @brief Call to get the product of the matrices of the operations grouped in the block.
-// @param parameters List of parameters to calculate the matrix of the operation block
-// @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
-// @return Returns with the matrix of the operation
+/**
+@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)
+@param parameters An array pointing to the parameters of the operations
+@param block_mtx A preallocated array to store the matrix of the operation block.
+@return Returns with 0 on seccess
+*/
 int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx  ) {
 
 
@@ -203,11 +206,11 @@ int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx 
 
 
 
-////
-// @brief Call to get the list of matrix representation of the operations grouped in the block.
-// @param parameters List of parameters to calculate the matrix of the operation block
-// @param free_after_used Logical value indicating whether the cteated matrix can be freed after it was used. (For example U3 allocates the matrix on demand, but CNOT is returning with a pointer to the stored matrix in attribute matrix_allocate)
-// @return Returns with the matrix of the operation
+/**
+@brief Call to get the list of matrix representation of the operations grouped in the block.
+@param parameters Array of parameters to calculate the matrix of the operation block
+@return Returns with the list of the operations
+*/
 std::vector<QGD_Complex16*> Operation_block::get_matrices( const double* parameters ) {
 
     std::vector<QGD_Complex16*> matrices;
@@ -260,10 +263,13 @@ std::vector<QGD_Complex16*> Operation_block::get_matrices( const double* paramet
 
 
 
-////
-// @brief Append a U3 gate to the list of operations
-// @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-// @param theta_in ...
+/**
+@brief Append a U3 gate to the list of operations
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param Theta The Theta parameter of the U3 operation
+@param Phi The Phi parameter of the U3 operation
+@param Lambda The Lambda parameter of the U3 operation
+*/
 void Operation_block::add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool Lambda) {    
         
         // create the operation
@@ -273,10 +279,13 @@ void Operation_block::add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool 
         add_operation_to_end( operation );  
 }            
     
-////
-// @brief Add a U3 gate to the front of the list of operations
-// @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-// @param parameter_labels A list of strings 'Theta', 'Phi' or 'Lambda' indicating the free parameters of the U3 operations. (Paremetrs which are not labeled are set to zero)
+/**
+@brief Add a U3 gate to the front of the list of operations
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param Theta The Theta parameter of the U3 operation
+@param Phi The Phi parameter of the U3 operation
+@param Lambda The Lambda parameter of the U3 operation
+*/
 void Operation_block::add_u3_to_front(int target_qbit, bool Theta, bool Phi, bool Lambda) {
         
         // create the operation
@@ -287,10 +296,11 @@ void Operation_block::add_u3_to_front(int target_qbit, bool Theta, bool Phi, boo
 
 }
         
-//// 
-// @brief Append a C_NOT gate operation to the list of operations
-// @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
-// @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+/** 
+@brief Append a C_NOT gate operation to the list of operations
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
 void Operation_block::add_cnot_to_end( int control_qbit, int target_qbit) {
         
         // new cnot operation
@@ -303,10 +313,11 @@ void Operation_block::add_cnot_to_end( int control_qbit, int target_qbit) {
         
         
     
-//// add_cnot_to_front
-// @brief Add a C_NOT gate operation to the front of the list of operations
-// @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
-// @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+/**
+@brief Add a C_NOT gate operation to the front of the list of operations
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
 void Operation_block::add_cnot_to_front( int control_qbit, int target_qbit) {
         
         // new cnot operation
@@ -317,9 +328,10 @@ void Operation_block::add_cnot_to_front( int control_qbit, int target_qbit) {
         
 }
     
-////
-// @brief Append an array of operations to the list of operations
-// @param operations A list of operation class instances.
+/**
+@brief Append a list of operations to the list of operations
+@param operations A list of operation class instances.
+*/
 void Operation_block::add_operations_to_end( vector<Operation*> operations_in) {
 
         for(std::vector<Operation*>::iterator it = operations_in.begin(); it != operations_in.end(); ++it) {
@@ -329,9 +341,10 @@ void Operation_block::add_operations_to_end( vector<Operation*> operations_in) {
 }
             
     
-//// add_operations_to_front
-// @brief Add an array of operations to the front of the list of operations
-// @param operations A list of operation class instances.
+/**
+@brief Add an array of operations to the front of the list of operations
+@param operations A list of operation class instances.
+*/
 void Operation_block::add_operations_to_front( vector<Operation*>  operations_in) {
         
         // adding operations in reversed order!!
@@ -342,9 +355,10 @@ void Operation_block::add_operations_to_front( vector<Operation*>  operations_in
 }
     
     
-//// add_operation_to_end
-// @brief Append an operation to the list of operations
-// @param operation An instance of class describing an operation.
+/**
+@brief Append a general operation to the list of operations
+@param operation An instance of class @Operation describing an operation.
+*/
 void Operation_block::add_operation_to_end( Operation* operation ) {
         
         //set the number of qubit in the operation
@@ -364,9 +378,10 @@ void Operation_block::add_operation_to_end( Operation* operation ) {
 
 }
     
-//// add_operation_to_front
-// @brief Add an operation to the front of the list of operations
-// @param operation A class describing an operation.
+/**
+@brief Add an operation to the front of the list of operations
+@param operation A pointer to a class @Operation describing an operation.
+*/
  void Operation_block::add_operation_to_front( Operation* operation) {
         
         
@@ -387,15 +402,17 @@ void Operation_block::add_operation_to_end( Operation* operation ) {
 
             
             
-////
-// @brief Call to get the number of specific gates in the decomposition
-// @return Returns with a dictionary containing the number of specific gates. 
+/**
+@brief Call to get the number of the individual gate types in the list of operations
+@return Returns with an instance @gates_num describing the number of the individual gate types
+*/ 
 gates_num Operation_block::get_gate_nums() {
         
         gates_num gate_nums;
 
-        gate_nums.u3   = 0;
-        gate_nums.cnot = 0;
+        gate_nums.u3      = 0;
+        gate_nums.cnot    = 0;
+        gate_nums.general = 0;
 
         for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
             // get the specific operation or block of operations
@@ -413,6 +430,9 @@ gates_num Operation_block::get_gate_nums() {
             else if (operation->get_type() == CNOT_OPERATION) {
                 gate_nums.cnot   = gate_nums.cnot + 1;
             }
+            else if (operation->get_type() == GENERAL_OPERATION) {
+                gate_nums.general   = gate_nums.general + 1;
+            }
 
         }
                  
@@ -422,26 +442,29 @@ gates_num Operation_block::get_gate_nums() {
 }    
 
 
-//
-// @brief Call to get the number of free parameters
-// @return Return with the index of the target qubit (return with -1 if target qubit was not set)
+/**
+@brief Call to get the number of free parameters
+@return Return with the number of parameters of the operations grouped in the operation block.
+*/
 int Operation_block::get_parameter_num() {
     return parameter_num;
 }
 
 
-//
-// @brief Call to get the number of operations grouped in the block
-// @return Return with the number of the operations
+/**
+@brief Call to get the number of operations grouped in the block
+@return Return with the number of the operations grouped in the operation block.
+*/
 int Operation_block::get_operation_num() {
     return operations.size();
 }
     
     
-////
-// @brief Lists the operations decomposing the initial unitary. (These operations are the inverse operations of the operations bringing the intial matrix into unity.)
-// @param parameters The parameters of the operations that should be inverted
-// @param start_index The index of the first inverse operation
+/**
+@brief Call to print the list of operations stored in the block of operations for a specific set of parameters
+@param parameters The parameters of the operations that should be printed.
+@param start_index The index of the first operation to be printed.
+*/
 void Operation_block::list_operations( const double* parameters, int start_index ) {
 
         printf( "\nThe operations in the list of operations:\n" );
@@ -532,9 +555,10 @@ void Operation_block::list_operations( const double* parameters, int start_index
 }
     
     
-////
-// @brief Call to reorder the qubits in the in the stored operations
-// @param qbit_list A list of the permutation of the qubits (for example [1 3 0 2])
+/**
+@brief Call to reorder the qubits in the matrix of the operation
+@param qbit_list The reordered list of qubits spanning the matrix
+*/
 void Operation_block::reorder_qubits( vector<int>  qbit_list) {
         
     for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
@@ -561,9 +585,10 @@ void Operation_block::reorder_qubits( vector<int>  qbit_list) {
 
 
 
-////
-// @biref Call to get the involved qubits in the operations stored in the block
-// @return Return with an array of the invovled qubits
+/**
+@biref Call to get the qubits involved in the operations stored in the block of operations.
+@return Return with a list of the invovled qubits
+*/
 std::vector<int> Operation_block::get_involved_qubits() {
         
     std::vector<int> involved_qbits;
@@ -592,17 +617,19 @@ std::vector<int> Operation_block::get_involved_qubits() {
 }
 
 
-////
-// @biref Call to get the operations stored in the block
-// @return Return with a vector of Operations.
+/**
+@brief Call to get the operations stored in the block
+@return Return with a list of the operations.
+*/
 std::vector<Operation*> Operation_block::get_operations() {
     return operations;
 }
     
     
-////
-// @biref Call to append the operations of an operation bolck to the current block
-// @param an instance of class @operation_block
+/**
+@brief Call to append the operations of an operation block to the current block
+@param op_block A pointer to an instance of class @operation_block
+*/
 void Operation_block::combine(Operation_block* op_block) {
 
     // getting the list of operations
@@ -635,9 +662,10 @@ void Operation_block::combine(Operation_block* op_block) {
 }
     
     
-//// 
-// @brief Set the number of qubits spanning the matrix of the operation stored in the block
-// @param qbit_num_in The number of qubits spanning the matrix
+/**
+@brief Set the number of qubits spanning the matrix of the operations stored in the block of operations.
+@param qbit_num_in The number of qubits spanning the matrices.
+*/
 void Operation_block::set_qbit_num( int qbit_num_in ) {
         
     // setting the number of qubits
@@ -663,9 +691,10 @@ void Operation_block::set_qbit_num( int qbit_num_in ) {
 }
          
 
-//
-// @brief Create a clone of the present class
-// @return Return with a pointer pointing to the cloned object
+/**
+@brief Create a clone of the present class.
+@return Return with a pointer pointing to the cloned object.
+*/
 Operation_block* Operation_block::clone() {
 
     Operation_block* ret = new Operation_block( qbit_num );

@@ -1,0 +1,9 @@
+<map id="Operation" name="Operation">
+<area shape="rect" id="node2" href="$class_c_n_o_t.html" title="A class representing a CNOT operation. " alt="" coords="141,80,200,107"/>
+<area shape="rect" id="node3" href="$class_operation__block.html" title="A class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="225,80,341,107"/>
+<area shape="rect" id="node8" href="$class_u3.html" title="A class representing a U3 operation. " alt="" coords="365,80,403,107"/>
+<area shape="rect" id="node4" href="$class_decomposition___base.html" title="A class containing basic methods for the decomposition process. " alt="" coords="210,155,355,181"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations..." alt="" coords="5,229,168,256"/>
+<area shape="rect" id="node6" href="$class_sub___matrix___decomposition.html" title="A class responsible for the disentanglement of one qubit from the others. " alt="" coords="193,229,373,256"/>
+<area shape="rect" id="node7" href="$class_two___qubit___decomposition.html" title="Two_Qubit_Decomposition" alt="" coords="397,229,576,256"/>
+</map>

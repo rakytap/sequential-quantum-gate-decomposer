@@ -1,0 +1,8 @@
+<map id="reduce_zgemm" name="reduce_zgemm">
+<area shape="rect" id="node2" href="$common_8cpp.html#ad2809f4012fcf8a7375a959c5b816413" title="create_identity" alt="" coords="178,5,285,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="qgd_calloc" alt="" coords="351,56,435,83"/>
+<area shape="rect" id="node5" href="$common_8cpp.html#a7e4fbff01bddac17c7499d1da136f004" title="zgemm3m_wrapper" alt="" coords="164,107,299,133"/>
+<area shape="rect" id="node6" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="qgd_free" alt="" coords="195,157,267,184"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="aligned_alloc" alt="" coords="487,56,584,83"/>
+<area shape="rect" id="node7" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="aligned_free" alt="" coords="347,157,439,184"/>
+</map>

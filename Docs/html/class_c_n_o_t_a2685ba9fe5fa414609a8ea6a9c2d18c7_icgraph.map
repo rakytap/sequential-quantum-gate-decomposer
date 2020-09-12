@@ -1,0 +1,11 @@
+<map id="CNOT::reorder_qubits" name="CNOT::reorder_qubits">
+<area shape="rect" id="node2" href="$class_operation__block.html#af2a71d29cdbce498e85f11b9ed81e0c9" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="200,107,363,149"/>
+<area shape="rect" id="node10" href="$operation__test_8cpp.html#a583be6d267255f6ca7dfceac18bbd551" title="test_CNOT_operation" alt="" coords="207,173,355,200"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a13453d7704869cfc8536767c2db4518d" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="411,107,573,149"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="621,78,784,119"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#ae7fd1992d645a7ff41c02e48ba1dc5ad" title="Start the disentanglig process of the unitary. " alt="" coords="832,107,995,149"/>
+<area shape="rect" id="node6" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="1045,5,1215,32"/>
+<area shape="rect" id="node7" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="1105,56,1155,83"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1049,107,1211,149"/>
+<area shape="rect" id="node9" href="$qgd_2python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="1043,173,1217,200"/>
+</map>

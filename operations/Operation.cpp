@@ -28,33 +28,35 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 using namespace std;
 
-//
-// @brief Constructor of the class.
-// @return An instance of the class
+/**
+@brief Deafult constructor of the class.
+@return An instance of the class
+*/
 Operation::Operation() {
 
-    // number of qubits spanning the matrix of the operation
+    /// number of qubits spanning the matrix of the operation
     qbit_num = -1;
-    // the size of the matrix
+    /// The size N of the NxN matrix associated with the operations.
     matrix_size = -1;
-    // A string describing the type of the operation
+    /// The type of the operation (see enumeration @operation_type)
     type = GENERAL_OPERATION;
-    // The index of the qubit on which the operation acts (target_qbit >= 0) 
+    /// The index of the qubit on which the operation acts (target_qbit >= 0) 
     target_qbit = -1;
-    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
+    /// The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     control_qbit = -1;
-    // The matrix (or function handle to generate the matrix) of the operation
+    /// Pointer to the operatrion matrix (if it is a constant general matrix)
     matrix_alloc = NULL;
-    // The number of parameters
+    /// the number of free parameters of the operation
     parameter_num = 0;
 }
 
 
 
-//
-// @brief Constructor of the class.
-// @param qbit_num The number of qubits in the unitaries
-// @return An instance of the class
+/**
+@brief Constructor of the class.
+@param qbit_num The number of qubits spanning the unitaries
+@return An instance of the class
+*/
 Operation::Operation(int qbit_num_in) {
 
     // number of qubits spanning the matrix of the operation
@@ -74,8 +76,9 @@ Operation::Operation(int qbit_num_in) {
 }
 
 
-//
-// @brief Destructor of the class
+/**
+@brief Destructor of the class
+*/
 Operation::~Operation() {
 
     if ( matrix_alloc != NULL ) {
@@ -84,9 +87,10 @@ Operation::~Operation() {
     }
 }
    
-//
-// @brief Set the number of qubits spanning the matrix of the operation
-// @param qbit_num The number of qubits spanning the matrix
+/**
+@brief Set the number of qubits spanning the matrix of the operation
+@param qbit_num The number of qubits spanning the matrix
+*/
 void Operation::set_qbit_num( int qbit_num_in ) {
     // setting the number of qubits
     qbit_num = qbit_num_in;
@@ -96,23 +100,30 @@ void Operation::set_qbit_num( int qbit_num_in ) {
 
 }
 
-//
-// @brief Call to terive the operation matrix
+/**
+@brief Call to terive the operation matrix
+@return Returns with a pointer to the operation matrix
+*/
 QGD_Complex16* Operation::matrix() {
     return matrix_alloc;
 }
 
-//
-// @brief Call to terive the operation matrix
-int Operation::matrix(QGD_Complex16* retrive_matrix ) {
-    memcpy( retrive_matrix, matrix_alloc, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+/**
+@brief Call to retrieve the operation matrix
+@param retrieve_matrix Preallocated array where the operation matrix is copied
+@return Returns with 0 on success.
+*/
+int Operation::matrix(QGD_Complex16* retrieve_matrix ) {
+    memcpy( retrieve_matrix, matrix_alloc, matrix_size*matrix_size*sizeof(QGD_Complex16) );
     return 0;
 }
 
 
-//
-// @brief Call to set the stored matrix in the operation
-// @param The pointer pointing to the matrix to be set
+/**
+@brief Call to set the stored matrix in the operation.
+@param input a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by @matrix_alloc.
+@return Returns with 0 on success.
+*/
 void Operation::set_matrix( QGD_Complex16* input) {
     if ( matrix_alloc == NULL ) {
         matrix_alloc = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
@@ -121,10 +132,10 @@ void Operation::set_matrix( QGD_Complex16* input) {
 }
 
      
-//
-// @brief Call to reorder the qubits in the matrix of the operation
-// @param qbit_list The list of qubits spanning the matrix
-
+/**
+@brief Call to reorder the qubits in the matrix of the operation
+@param qbit_list The reordered list of qubits spanning the matrix
+*/
 void Operation::reorder_qubits( vector<int> qbit_list ) {
       
     // check the number of qubits
@@ -152,39 +163,44 @@ void Operation::reorder_qubits( vector<int> qbit_list ) {
 }
 
 
-//
-// @brief Call to get the index of the target qubit
-// @return Return with the index of the target qubit (return with -1 if target qubit was not set)
+/**
+@brief Call to get the index of the target qubit
+@return Return with the index of the target qubit (return with -1 if target qubit was not set)
+*/
 int Operation::get_target_qbit() {
     return target_qbit;
 }
 
-//
-// @brief Call to get the index of the control qubit
-// @return Return with the index of the control qubit (return with -1 if control qubit was not set)
+/**
+@brief Call to get the index of the control qubit
+@return Return with the index of the control qubit (return with -1 if control qubit was not set)
+*/
 int Operation::get_control_qbit()  {
     return control_qbit;
 }
 
-//
-// @brief Call to get the number of free parameters
-// @return Return with the index of the target qubit (return with -1 if target qubit was not set)
+/**
+@brief Call to get the number of free parameters
+@return Return with the number of the free parameters
+*/
 int Operation::get_parameter_num() {
     return parameter_num;
 }
 
 
-//
-// @brief Call to get the type of the operation
-// @return Return with the string indicating the type of the operation
+/**
+@brief Call to get the type of the operation
+@return Return with the type of the operation (see @operation_type for details) 
+*/
 operation_type Operation::get_type() {
     return type;
 }
 
 
-//
-// @brief Create a clone of the present class
-// @return Return with a pointer pointing to the cloned object
+/**
+@brief Call to create a clone of the present class
+@return Return with a pointer pointing to the cloned object
+*/
 Operation* Operation::clone() {
 
     Operation* ret = new Operation( qbit_num );

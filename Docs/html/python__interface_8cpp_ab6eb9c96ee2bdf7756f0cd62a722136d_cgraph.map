@@ -1,0 +1,5 @@
+<map id="iface_delete_N_Qubit_Decomposition" name="iface_delete_N_Qubit_Decomposition">
+<area shape="rect" id="node2" href="$class_decomposition___base.html#ad1e8fca5e5710d3a59f10ed6c523a502" title="Call to retrive a pointer to the unitary to be transformed. " alt="" coords="200,5,345,47"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="qgd_free" alt="" coords="237,71,309,98"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="aligned_free" alt="" coords="393,71,485,98"/>
+</map>

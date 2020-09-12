@@ -18,26 +18,19 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 
-//
-// @brief A base class responsible for constructing matrices of C-NOT, U3
-// gates acting on the N-qubit space
-
 #include "qgd/U3.h"
 
 
 using namespace std;
 
 
-////
-// @brief A class responsible for constructing matrices of U3
-// gates acting on the N-qubit space
-
-
-
-    ////
-    // @brief Constructor of the class.
-    // @param qbit_num The number of qubits in the unitaries
-    // @param theta_in ...
+/**
+@brief Constructor of the class.
+@param qbit_num The number of qubits spanning the operation.
+@param theta_in logical value indicating whether the matrix creation takes an argument theta.
+@param phi_in logical value indicating whether the matrix creation takes an argument phi
+@param lambda_in logical value indicating whether the matrix creation takes an argument lambda
+*/
 U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lambda_in) {
 
         // number of qubits spanning the matrix of the operation
@@ -106,13 +99,14 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         parameters = NULL;
 
         // determione the basis indices of the |0> and |1> states of the target qubit
-        get_base_indices();
+        determine_base_indices();
 
 }
 
 
-//
-// @brief Destructor of the class
+/**
+@brief Destructor of the class
+*/
 U3::~U3() {
 
     if ( indexes_target_qubit_0 != NULL ) {
@@ -130,10 +124,11 @@ U3::~U3() {
 
 
 
-////    
-// @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-// @param parameters List of parameters to calculate the matrix of the operation block
-// @return Returns with a pointer to the operation matrix
+/**
+@brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the U3 operation.
+@return Returns with a pointer to the operation matrix
+*/
 QGD_Complex16* U3::matrix( const double* parameters ) {
 
         // preallocate array for the composite u3 operation
@@ -146,10 +141,12 @@ QGD_Complex16* U3::matrix( const double* parameters ) {
 }
 
 
-////    
-// @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-// @param parameters List of parameters to calculate the matrix of the operation block
-// @return Returns with a pointer to the operation matrix
+/**
+@brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the U3 operation.
+@param U3_matrix A pointer to the preallocated array of the operation matrix.
+@return Returns with 0 on success
+*/
 int U3::matrix( const double* parameters, QGD_Complex16* U3_matrix ) {
  
         if (theta && !phi && lambda) {
@@ -198,67 +195,83 @@ int U3::matrix( const double* parameters, QGD_Complex16* U3_matrix ) {
         
         
         
-    ////    
-    // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
+/**   
+@brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
+@param parameters An array containing the parameters of the U3 operation.
+@param U3_matrix A pointer to the preallocated array of the operation matrix.
+@return Returns with 0 on success.
+*/
 int U3::composite_u3_Theta_Phi_Lambda( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( parameters[0], parameters[1], parameters[2], U3_matrix );
 }
         
-    ////    
-    // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
-    // @return Returns with the matrix of the U3 gate.
+/**   
+@brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
+@param parameters An array containing the parameters of the U3 operation.
+@param U3_matrix A pointer to the preallocated array of the operation matrix.
+@return Returns with 0 on success.
+*/
 int U3::composite_u3_Phi_Lambda( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( 0, parameters[0], parameters[1], U3_matrix );
 }
         
-    ////    
-    // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
-    // @return Returns with the matrix of the U3 gate.
+/**   
+@brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
+@param parameters An array containing the parameters of the U3 operation.
+@param U3_matrix A pointer to the preallocated array of the operation matrix.
+@return Returns with 0 on success.
+*/
 int U3::composite_u3_Theta_Lambda( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( parameters[0], 0, parameters[1], U3_matrix );
 }
         
-    ////    
-    // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
-    // @return Returns with the matrix of the U3 gate.
+/**   
+@brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
+@param parameters An array containing the parameters of the U3 operation.
+@param U3_matrix A pointer to the preallocated array of the operation matrix.
+@return Returns with 0 on success.
+*/
 int U3::composite_u3_Theta_Phi( const double* parameters, QGD_Complex16* U3_matrix ){
         return composite_u3( parameters[0], parameters[1], 0, U3_matrix );
 }
         
-    ////    
-    // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
-    // @return Returns with the matrix of the U3 gate.
+/**   
+@brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
+@param parameters An array containing the parameters of the U3 operation.
+@param U3_matrix A pointer to the preallocated array of the operation matrix.
+@return Returns with 0 on success.
+*/
 int U3::composite_u3_Lambda( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( 0, 0, parameters[0], U3_matrix );
 }
         
-    ////    
-    // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
-    // @return Returns with the matrix of the U3 gate.
+/**   
+@brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
+@param parameters An array containing the parameters of the U3 operation.
+@param U3_matrix A pointer to the preallocated array of the operation matrix.
+@return Returns with 0 on success.
+*/
 int U3::composite_u3_Phi( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( 0, parameters[0], 0, U3_matrix );
 }
         
-    ////    
-    // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    // @param parameters Three component array containing the parameters in order Theta, Phi, Lambda
-    // @return Returns with the matrix of the U3 gate.
+/**   
+@brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
+@param parameters An array containing the parameters of the U3 operation.
+@param U3_matrix A pointer to the preallocated array of the operation matrix.
+@return Returns with 0 on success.
+*/
 int U3::composite_u3_Theta( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( parameters[0], 0, 0, U3_matrix );
 }
         
-    ////    
-    // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    // @param Theta Real parameter standing for the parameter theta.
-    // @param Phi Real parameter standing for the parameter phi.
-    // @param Lambda Real parameter standing for the parameter lambda.
-    // @return Returns with the matrix of the U3 gate.
+/**    
+@brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the U3 gate.
+*/
 QGD_Complex16* U3::composite_u3(double Theta, double Phi, double Lambda ) {
 
         // preallocate array for the composite u3 operation
@@ -270,12 +283,14 @@ QGD_Complex16* U3::composite_u3(double Theta, double Phi, double Lambda ) {
 
 }
 
-    ////    
-    // @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-    // @param Theta Real parameter standing for the parameter theta.
-    // @param Phi Real parameter standing for the parameter phi.
-    // @param Lambda Real parameter standing for the parameter lambda.
-    // @return Returns with the matrix of the U3 gate.
+/**    
+@brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@param U3_matrix A pointer to the preallocated array of the operation matrix.
+@return Returns with 0 on success.
+*/
 int U3::composite_u3(double Theta, double Phi, double Lambda, QGD_Complex16* U3_matrix ) {
 
         // set to zero all the elements of the matrix
@@ -283,7 +298,7 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, QGD_Complex16* U3_
 
 
         // get the U3 operation of one qubit
-        set_one_qubit_u3(Theta, Phi, Lambda );
+        calc_one_qubit_u3(Theta, Phi, Lambda );
 
         // setting the operation elements
         #pragma omp parallel for
@@ -327,10 +342,10 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, QGD_Complex16* U3_
 
 */
 
-////
-// @brief Determine the base indices corresponding to the target qubit state of |0> and |1>
-// @return Returns with the matrix of the U3 gate.
-void U3::get_base_indices() {
+/**
+@brief Determine the base indices corresponding to the target qubit states |0> and |1>
+*/
+void U3::determine_base_indices() {
         
 
         // fre the previously allocated memories
@@ -370,65 +385,71 @@ void U3::get_base_indices() {
         */
 }
 
-////
-// @brief Sets the number of qubits spanning the matrix of the operation
-// @param qbit_num The number of qubits
+/**
+@brief Call to set the number of qubits spanning the matrix of the operation
+@param qbit_num The number of qubits
+*/
 void U3::set_qbit_num(int qbit_num_in) {
         // setting the number of qubits
         Operation::set_qbit_num(qbit_num_in);
 
         // get the base indices of the target qubit
-        get_base_indices();
+        determine_base_indices();
 
 }
 
 
 
-////
-// @brief Call to reorder the qubits in the matrix of the operation
-// @param qbit_list The list of qubits spanning the matrix
+/**
+@brief Call to reorder the qubits in the matrix of the operation
+@param qbit_list The reordered list of qubits spanning the matrix
+*/
 void U3::reorder_qubits( vector<int> qbit_list) {
 
     Operation::reorder_qubits(qbit_list);
 
     // get the base indices of the target qubit
-    get_base_indices();
+    determine_base_indices();
 
 }
 
 
 
-////
-// @brief Call to check whethet theta is a free parameter of the gate
-// @return Retturns with true if theta is a free parameter of the gate, or false otherwise.
+/**
+@brief Call to check whether theta is a free parameter of the gate
+@return Returns with true if theta is a free parameter of the gate, or false otherwise.
+*/
 bool U3::is_theta_parameter() {
     return theta;
 }
 
 
-////
-// @brief Call to check whethet Phi is a free parameter of the gate
-// @return Retturns with true if Phi is a free parameter of the gate, or false otherwise.
+/**
+@brief Call to check whether Phi is a free parameter of the gate
+@return Returns with true if Phi is a free parameter of the gate, or false otherwise.
+*/
 bool U3::is_phi_parameter() {
     return phi;
 }
 
-////
-// @brief Call to check whethet Lambda is a free parameter of the gate
-// @return Retturns with true if Lambda is a free parameter of the gate, or false otherwise.
+/**
+@brief Call to check whether Lambda is a free parameter of the gate
+@return Returns with true if Lambda is a free parameter of the gate, or false otherwise.
+*/
 bool U3::is_lambda_parameter() {
     return lambda;
 }
 
 
     
-////   
-// @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on a single qbit space.
-// @param Theta Real parameter standing for the parameter theta.
-// @param Phi Real parameter standing for the parameter phi.
-// @param Lambda Real parameter standing for the parameter lambda.
-// @return Returns with the matrix of the U3 gate.
-int U3::set_one_qubit_u3(double Theta, double Phi, double Lambda ) {
+/**   
+@brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single qbit space. The calculated matrix is stored in the attribute u3_1qbit
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with 0 on success.
+*/
+int U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda ) {
 
     double cos_theta = cos(Theta/2);
     double sin_theta = sin(Theta/2);
@@ -452,9 +473,10 @@ int U3::set_one_qubit_u3(double Theta, double Phi, double Lambda ) {
 }
 
 
-//
-// @brief Create a clone of the present class
-// @return Return with a pointer pointing to the cloned object
+/**
+@brief Call to create a clone of the present class
+@return Return with a pointer pointing to the cloned object
+*/
 U3* U3::clone() {
   
     U3* ret = new U3(qbit_num, target_qbit, theta, phi, lambda);
@@ -470,11 +492,12 @@ U3* U3::clone() {
 
 
 
-////   
-// @brief Call to set the final optimize dparameters of the operation.
-// @param Theta Real parameter standing for the parameter theta.
-// @param Phi Real parameter standing for the parameter phi.
-// @param Lambda Real parameter standing for the parameter lambda.
+/**  
+@brief Call to set the final optimized parameters of the operation.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+*/
 void U3::set_optimized_parameters(double Theta, double Phi, double Lambda ) {
 
     if ( parameters == NULL ) {
@@ -490,9 +513,10 @@ void U3::set_optimized_parameters(double Theta, double Phi, double Lambda ) {
 }
 
 
-////   
-// @brief Call to get the final optimize dparameters of the operation.
-// @param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 operation.
+/**
+@brief Call to get the final optimized parameters of the operation.
+@param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 operation.
+*/
 void U3::get_optimized_parameters(double *parameters_in ) {
 
     memcpy( parameters_in, parameters, 3*sizeof(double) );

@@ -1,0 +1,38 @@
+<map id="Power_of_2" name="Power_of_2">
+<area shape="rect" id="node2" href="$class_c_n_o_t.html#a9e46511d49d6dc36e04bbd945d3483e4" title="Constructor of the class. " alt="" coords="346,144,449,171"/>
+<area shape="rect" id="node3" href="$class_c_n_o_t.html#aa74f9591e9746edde94c491a3f425315" title="Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits. " alt="" coords="319,195,476,221"/>
+<area shape="rect" id="node4" href="$qgd_2common_8h.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Power_of_2" alt="" coords="144,448,235,475"/>
+<area shape="rect" id="node5" href="$class_decomposition___base.html#a9832cc5308c00b73d3e6bc331a77c7f7" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="751,1161,920,1202"/>
+<area shape="rect" id="node8" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="1417,43,1587,69"/>
+<area shape="rect" id="node9" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="1477,144,1527,171"/>
+<area shape="rect" id="node14" href="$standalone_2decomposition__test_8cpp.html#ae631d63f9474263f6200808261feb8da" title="few_CNOT_unitary" alt="" coords="331,245,463,272"/>
+<area shape="rect" id="node15" href="$class_operation.html#a22ab12ef9cdb3234e6ad9656d9dfa9ce" title="Constructor of the class. " alt="" coords="327,296,467,323"/>
+<area shape="rect" id="node16" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="316,499,479,525"/>
+<area shape="rect" id="node22" href="$operation__test_8cpp.html#a14cd9dca8567feb783abd295c1e401fa" title="test_operation_block" alt="" coords="987,275,1129,301"/>
+<area shape="rect" id="node33" href="$operation__test_8cpp.html#a3ead76665b209b6eda8368d47146943c" title="test_U3_operation" alt="" coords="333,600,461,627"/>
+<area shape="rect" id="node34" href="$operation__test_8cpp.html#a583be6d267255f6ca7dfceac18bbd551" title="test_CNOT_operation" alt="" coords="323,651,471,677"/>
+<area shape="rect" id="node35" href="$qgd_2python__interface_8h.html#aeaa04ac618f4c354c05b442188a5b30f" title="Creates an instance of class N_Qubit_Decomposition and return with a void pointer pointing to the cla..." alt="" coords="283,701,512,728"/>
+<area shape="rect" id="node36" href="$class_u3.html#a3fbe983c050339a247e05a2eea070542" title="Constructor of the class. " alt="" coords="366,752,429,779"/>
+<area shape="rect" id="node37" href="$class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="329,803,466,845"/>
+<area shape="rect" id="node6" href="$class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimalization problem is solved, the indepent qubits can be rotated into state |0&gt; by..." alt="" coords="979,1102,1137,1143"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#ae7fd1992d645a7ff41c02e48ba1dc5ad" title="Start the disentanglig process of the unitary. " alt="" coords="1200,737,1363,778"/>
+<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1421,799,1583,841"/>
+<area shape="rect" id="node11" href="$class_n___qubit___decomposition.html#a13453d7704869cfc8536767c2db4518d" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="1421,631,1583,673"/>
+<area shape="rect" id="node13" href="$qgd_2python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="1415,748,1589,775"/>
+<area shape="rect" id="node12" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1637,602,1800,643"/>
+<area shape="rect" id="node17" href="$class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="560,676,703,703"/>
+<area shape="rect" id="node19" href="$class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="765,694,905,735"/>
+<area shape="rect" id="node20" href="$class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="560,471,703,513"/>
+<area shape="rect" id="node28" href="$class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="560,894,703,935"/>
+<area shape="rect" id="node32" href="$class_u3.html#acba4c571368bbd628b817b89d96a6ab3" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="570,727,693,753"/>
+<area shape="rect" id="node18" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="969,745,1147,801"/>
+<area shape="rect" id="node21" href="$class_operation__block.html#a44940209dbc5754b676b5a493bb153f4" title="Append a U3 gate to the list of operations. " alt="" coords="764,297,907,338"/>
+<area shape="rect" id="node23" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimalization process to disentangle the most significant qubit from the others..." alt="" coords="968,387,1148,429"/>
+<area shape="rect" id="node24" href="$class_operation__block.html#a3779e559654f12c5544129c46305b6ce" title="Append a C_NOT gate operation to the list of operations. " alt="" coords="764,362,907,403"/>
+<area shape="rect" id="node25" href="$class_operation__block.html#a2253d0a652bdce52a53d45e6d0a41abd" title="Append a list of operations to the list of operations. " alt="" coords="764,605,907,646"/>
+<area shape="rect" id="node26" href="$class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="1196,529,1367,556"/>
+<area shape="rect" id="node27" href="$class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="759,553,912,580"/>
+<area shape="rect" id="node29" href="$class_operation__block.html#ac870a2afab73fa33f706e2e35829b452" title="Add a U3 gate to the front of the list of operations. " alt="" coords="764,993,907,1034"/>
+<area shape="rect" id="node30" href="$class_operation__block.html#a207dfeddc26d79125a58e2c282bb0987" title="Add a C_NOT gate operation to the front of the list of operations. " alt="" coords="764,862,907,903"/>
+<area shape="rect" id="node31" href="$class_operation__block.html#a50210aa57a18243de26631e0f6f823b6" title="Add an array of operations to the front of the list of operations. " alt="" coords="764,927,907,969"/>
+</map>

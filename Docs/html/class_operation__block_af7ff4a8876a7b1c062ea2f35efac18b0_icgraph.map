@@ -1,0 +1,33 @@
+<map id="Operation_block::get_parameter_num" name="Operation_block::get_parameter_num">
+<area shape="rect" id="node2" href="$class_decomposition___base.html#affdbf77bc2070c40b654af4e9ab8abc0" title="Decomposition_Base\l::get_operation_products" alt="" coords="208,332,371,373"/>
+<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#a13453d7704869cfc8536767c2db4518d" title="N_Qubit_Decomposition\l::simplify_layer" alt="" coords="1141,277,1303,319"/>
+<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="N_Qubit_Decomposition\l::simplify_layers" alt="" coords="1360,277,1523,319"/>
+<area shape="rect" id="node13" href="$class_decomposition___base.html#a8e26f5a31475e4d5a2e9c785a2a57dd9" title="Decomposition_Base\l::get_transformed_matrix" alt="" coords="207,463,371,504"/>
+<area shape="rect" id="node25" href="$class_decomposition___base.html#a68dcc2cdfa644cf8043021367cc07d28" title="Decomposition_Base\l::prepare_operations\l_to_export" alt="" coords="217,542,362,598"/>
+<area shape="rect" id="node26" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="N_Qubit_Decomposition\l::extract_subdecomposition\l_results" alt="" coords="669,622,848,678"/>
+<area shape="rect" id="node27" href="$class_n___qubit___decomposition.html#a2b53806a2247dd61e8a4a0bbeefeec97" title="N_Qubit_Decomposition\l::optimalization_problem_grad" alt="" coords="193,673,385,715"/>
+<area shape="rect" id="node28" href="$class_operation__block.html#a84eca8aa0152142e932f99681e56db03" title="Operation_block::list\l_operations" alt="" coords="220,763,359,804"/>
+<area shape="rect" id="node31" href="$operation__test_8cpp.html#a14cd9dca8567feb783abd295c1e401fa" title="test_operation_block" alt="" coords="218,829,361,855"/>
+<area shape="rect" id="node32" href="$class_sub___matrix___decomposition.html#a5705a53412676e8fe2ad6506a88a5c5c" title="Sub_Matrix_Decomposition\l::optimalization_problem_grad" alt="" coords="193,880,385,921"/>
+<area shape="rect" id="node3" href="$class_decomposition___base.html#ae21ecd8c5016a6ec942330247e8cdebc" title="Decomposition_Base\l::solve_optimalization\l_problem" alt="" coords="451,259,596,315"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#a3a94b94920838968d4798096e969cd78" title="N_Qubit_Decomposition\l::final_optimalization" alt="" coords="677,287,840,328"/>
+<area shape="rect" id="node12" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Sub_Matrix_Decomposition\l::disentangle_submatrices" alt="" coords="669,455,849,496"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#ae7fd1992d645a7ff41c02e48ba1dc5ad" title="N_Qubit_Decomposition\l::start_decomposition" alt="" coords="913,480,1075,521"/>
+<area shape="rect" id="node6" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="1137,494,1307,521"/>
+<area shape="rect" id="node7" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="1197,689,1247,715"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="N_Qubit_Decomposition\l::decompose_submatrix" alt="" coords="1141,557,1303,599"/>
+<area shape="rect" id="node11" href="$qgd_2python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="iface_start_decomposition" alt="" coords="1135,393,1309,419"/>
+<area shape="rect" id="node14" href="$class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="Decomposition_Base\l::finalize_decomposition" alt="" coords="444,339,603,380"/>
+<area shape="rect" id="node15" href="$class_decomposition___base.html#a40154345dce69fd5a9cb28c0b677746b" title="Decomposition_Base\l::get_decomposed_matrix" alt="" coords="439,404,608,445"/>
+<area shape="rect" id="node16" href="$class_n___qubit___decomposition.html#a2cd56e949b8b3022af9e8e66bcfd2929" title="N_Qubit_Decomposition\l::optimalization_problem" alt="" coords="442,132,605,173"/>
+<area shape="rect" id="node20" href="$class_sub___matrix___decomposition.html#a0d65093379cb5d3c55cb2825ffe19ff6" title="Sub_Matrix_Decomposition\l::optimalization_problem" alt="" coords="433,701,613,743"/>
+<area shape="rect" id="node17" href="$class_n___qubit___decomposition.html#a868492cd4a56a047f740bb69a132c8dc" title="N_Qubit_Decomposition\l::solve_layer_optimalization\l_problem" alt="" coords="1133,94,1311,150"/>
+<area shape="rect" id="node18" href="$class_n___qubit___decomposition.html#a55e7e4decde7099ebda770d81157eda1" title="N_Qubit_Decomposition\l::optimalization_problem_grad" alt="" coords="663,57,855,99"/>
+<area shape="rect" id="node19" href="$class_n___qubit___decomposition.html#ae39f68bb53d9393f30d68bc4bf03cf90" title="N_Qubit_Decomposition\l::optimalization_problem\l_combined" alt="" coords="913,94,1075,150"/>
+<area shape="rect" id="node21" href="$class_sub___matrix___decomposition.html#ad2f34f8f0dbaced159b29ec882a3c4d2" title="Sub_Matrix_Decomposition\l::solve_layer_optimalization\l_problem" alt="" coords="1132,877,1312,933"/>
+<area shape="rect" id="node22" href="$class_sub___matrix___decomposition.html#a3463dd8e4370ee596f9f900c03712f33" title="Sub_Matrix_Decomposition\l::optimalization_problem_deriv" alt="" coords="661,701,856,743"/>
+<area shape="rect" id="node23" href="$class_sub___matrix___decomposition.html#a922e0f95ab62f1c48e5d5552846d9a6c" title="Sub_Matrix_Decomposition\l::optimalization_problem_grad" alt="" coords="663,869,855,911"/>
+<area shape="rect" id="node24" href="$class_sub___matrix___decomposition.html#a87f5c3eca8a2b68489ca698f05c92004" title="Sub_Matrix_Decomposition\l::optimalization_problem\l_combined" alt="" coords="904,811,1084,867"/>
+<area shape="rect" id="node29" href="$class_decomposition___base.html#a4c6c81d70f49ee249aa455a4f2718ee2" title="Decomposition_Base\l::list_operations" alt="" coords="451,767,596,808"/>
+<area shape="rect" id="node30" href="$qgd_2python__interface_8h.html#a851ccbc4db2a5b49d44419f74bed966e" title="iface_list_operations" alt="" coords="688,993,829,1019"/>
+</map>

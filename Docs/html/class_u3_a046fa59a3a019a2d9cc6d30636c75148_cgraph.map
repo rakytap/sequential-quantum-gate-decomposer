@@ -1,0 +1,7 @@
+<map id="U3::determine_base_indices" name="U3::determine_base_indices">
+<area shape="rect" id="node2" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="qgd_free" alt="" coords="200,5,272,32"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="qgd_calloc" alt="" coords="194,56,278,83"/>
+<area shape="rect" id="node6" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Power_of_2" alt="" coords="191,131,281,157"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="aligned_free" alt="" coords="332,5,424,32"/>
+<area shape="rect" id="node5" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="aligned_alloc" alt="" coords="329,56,427,83"/>
+</map>
