@@ -39,6 +39,9 @@ std::map<int,int> Decomposition_Base::max_layer_num_def;
 Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Operation_block(qbit_num_in) {
         
     Init_max_layer_num();
+
+    // Logical variable. Set true for verbose mode, or to false to suppress output messages.
+    verbose = true;
         
     // the unitary operator to be decomposed
     Umtx = Umtx_in;
@@ -175,8 +178,9 @@ void Decomposition_Base::finalize_decomposition() {
         // get the number of gates used in the decomposition
         gates_num gates_num = get_gate_nums();
 
-        printf( "The error of the decomposition after finalyzing operations is %f with %d layers containing %d U3 operations and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
-
+        if (verbose) {
+            printf( "The error of the decomposition after finalyzing operations is %f with %d layers containing %d U3 operations and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
+        }
 
 }
             
@@ -498,8 +502,10 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             
             // optimalization result is displayed in each 500th iteration
             if (iter_idx % 500 == 0) {
-                printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, float(time(NULL) - start_time));
-                fflush(stdout);
+                if (verbose) {    
+                    printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, float(time(NULL) - start_time));
+                    fflush(stdout);
+                }
                 start_time = time(NULL);
             }
 
@@ -509,12 +515,16 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 
             // conditions to break the iteration cycles
             if (abs(minvec_std/minimum_vec[min_vec_num-1]) < optimalization_tolerance ) {
-                printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
-                fflush(stdout);
+                if (verbose) {              
+                    printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
+                    fflush(stdout);
+                }
                 break; 
             }
             else if (check_optimalization_solution()) {
-                printf("The minimum with %d layers after %d iterations is %e\n", layer_num, iter_idx, current_minimum);
+                if (verbose) {
+                    printf("The minimum with %d layers after %d iterations is %e\n", layer_num, iter_idx, current_minimum);
+                }
                 break;
             }
             
@@ -530,7 +540,9 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 
 
         if (iter_idx == max_iterations ) {
-            printf("Reached maximal number of iterations\n\n");
+            if (verbose) {
+                printf("Reached maximal number of iterations\n\n");
+            }
         }
         
         // restoring the parameters to originals
@@ -690,7 +702,7 @@ std::vector<QGD_Complex16*> Decomposition_Base::get_operation_products(double* p
 
 /**
 @brief Call to retrive a pointer to the unitary to be transformed
-@return Return with a pointer pointing to the unitary @Umtx
+@return Return with a pointer pointing to the unitary Umtx
 */
 QGD_Complex16* Decomposition_Base::get_Umtx() {
     return Umtx;
@@ -731,8 +743,8 @@ void Decomposition_Base::get_optimized_parameters( double* ret ) {
 @param parameters An array containing the parameters of the U3 operations.
 @param operations An iterator pointing to the first operation to be applied on the initial matrix.
 @param num_of_operations The number of operations to be applied on the initial matrix
-@param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
-@return Returns with the transformed matrix (ehich is also stored in the attribute @transformed_mtx).
+@param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute Umtx)
+@return Returns with the transformed matrix (ehich is also stored in the attribute transformed_mtx).
 */
 QGD_Complex16* Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations, QGD_Complex16* initial_matrix=NULL  ) {
 
@@ -822,7 +834,7 @@ print_mtx( initial_matrix, matrix_size, matrix_size );
     
     
 /**
-@brief Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary @Umtx
+@brief Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx
 @return Returns with the decomposed matrix.
 */
 QGD_Complex16* Decomposition_Base::get_decomposed_matrix() {
@@ -1093,6 +1105,17 @@ int Decomposition_Base::get_operation( int n, operation_type &type, int &target_
     else {
         return -2;
     }    
+
+}
+
+
+/**
+@brief Call to set the verbose attribute to true or false.
+@param verbose_in Logical variable. Set true for verbose mode, or to false to suppress output messages.
+*/
+void Decomposition_Base::set_verbose( bool verbose_in ) {
+
+    verbose = verbose_in;
 
 }
 

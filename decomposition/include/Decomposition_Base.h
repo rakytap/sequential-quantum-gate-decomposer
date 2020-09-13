@@ -42,7 +42,8 @@ class Decomposition_Base : public Operation_block {
 
 
 public:
-bool verbose;
+    /// Logical variable. Set true for verbose mode, or to false to suppress output messages.
+    bool verbose;
 
     /// number of operation blocks used in one shot of the optimalization process
     int optimalization_block;
@@ -192,7 +193,7 @@ std::vector<QGD_Complex16*> get_operation_products(double* parameters, std::vect
 
 /**
 @brief Call to retrive a pointer to the unitary to be transformed
-@return Return with a pointer pointing to the unitary @Umtx
+@return Return with a pointer pointing to the unitary Umtx
 */
 QGD_Complex16* get_Umtx();
 
@@ -220,14 +221,14 @@ void get_optimized_parameters( double* ret );
 @param parameters An array containing the parameters of the U3 operations.
 @param operations An iterator pointing to the first operation to be applied on the initial matrix.
 @param num_of_operations The number of operations to be applied on the initial matrix
-@param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute @Umtx)
-@return Returns with the transformed matrix (ehich is also stored in the attribute @transformed_mtx).
+@param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute Umtx)
+@return Returns with the transformed matrix (ehich is also stored in the attribute transformed_mtx).
 */
 QGD_Complex16* get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, int num_of_operations, QGD_Complex16* initial_matrix );
 
 
 /**
-@brief Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary @Umtx
+@brief Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx
 @return Returns with the decomposed matrix.
 */
 QGD_Complex16* get_decomposed_matrix();
@@ -309,6 +310,13 @@ std::vector<Operation*> prepare_operations_to_export( Operation_block* block_op,
 @return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
 */
 int get_operation( int n, operation_type &type, int &target_qbit, int &control_qbit, double* parameters );
+
+
+/**
+@brief Call to set the verbose attribute to true or false.
+@param verbose_in Logical variable. Set true for verbose mode, or to false to suppress output messages.
+*/
+void set_verbose( bool verbose_in );
 
 
 };

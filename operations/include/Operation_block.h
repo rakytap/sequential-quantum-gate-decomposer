@@ -185,7 +185,7 @@ void reorder_qubits( vector<int> );
 
 
 /**
-@biref Call to get the qubits involved in the operations stored in the block of operations.
+@brief Call to get the qubits involved in the operations stored in the block of operations.
 @return Return with a list of the invovled qubits
 */
 std::vector<int> get_involved_qubits();

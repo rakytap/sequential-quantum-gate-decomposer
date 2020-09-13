@@ -142,12 +142,16 @@ Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
 void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         
     if (subdisentaglement_done) {
-        printf("Sub-disentaglement already done.\n");
+        if (verbose) {
+            printf("Sub-disentaglement already done.\n");
+        }
         return;
     }
         
-     
-    printf("\nDisentagling submatrices.\n");
+
+    if (verbose) {     
+        printf("\nDisentagling submatrices.\n");
+    }
         
     // setting the global target minimum
     global_target_minimum = 0;   
@@ -155,7 +159,9 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
           
     // check if it needed to do the subunitarization
     if (check_optimalization_solution()) {
-        printf("Disentanglig not needed\n");
+        if (verbose) {
+            printf("Disentanglig not needed\n");
+        }
         memcpy( subdecomposed_mtx, Umtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
         subdisentaglement_done = true;
         return;
@@ -239,8 +245,10 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
             }
                     
         }
-            
-        printf("--- %f seconds elapsed during the decomposition ---\n\n", float(time(NULL) - start_time));
+         
+        if (verbose) {   
+            printf("--- %f seconds elapsed during the decomposition ---\n\n", float(time(NULL) - start_time));
+        }
                 
            
     }
@@ -248,10 +256,14 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         
         
     if (check_optimalization_solution()) {            
-        printf("Sub-disentaglement was succesfull.\n\n");
+        if (verbose) {
+            printf("Sub-disentaglement was succesfull.\n\n");
+        }
     }
     else {
-        printf("Sub-disentaglement did not reach the tolerance limit.\n\n");
+        if (verbose) {
+            printf("Sub-disentaglement did not reach the tolerance limit.\n\n");
+        }
     }
         
         

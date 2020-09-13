@@ -92,10 +92,11 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
         
         
             
-        
-    printf("***************************************************************\n");
-    printf("Starting to disentangle %d-qubit matrix\n", qbit_num);
-    printf("***************************************************************\n\n\n");
+    if (verbose) {        
+        printf("***************************************************************\n");
+        printf("Starting to disentangle %d-qubit matrix\n", qbit_num);
+        printf("***************************************************************\n\n\n");
+    }
         
     //measure the time for the decompositin       
     clock_t start_time = time(NULL);
@@ -104,6 +105,9 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
     // create an instance of class to disentangle the given qubit pair
     Sub_Matrix_Decomposition* cSub_decomposition = new Sub_Matrix_Decomposition(Umtx, qbit_num, max_layer_num, 
                           identical_blocks, optimize_layer_num, initial_guess);
+
+    // setting the verbosity
+    cSub_decomposition->set_verbose( verbose );
 
     // setting the iteration loops in each step of the optimization process
     cSub_decomposition->set_iteration_loops( iteration_loops );
@@ -160,8 +164,10 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
         // get the number of gates used in the decomposition
         gates_num gates_num = get_gate_nums();
 
-        printf( "In the decomposition with error = %f were used %d layers with %d U3 operations and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
-        printf("--- In total %f seconds elapsed during the decomposition ---\n", float(time(NULL) - start_time));
+        if (verbose) {        
+            printf( "In the decomposition with error = %f were used %d layers with %d U3 operations and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
+            printf("--- In total %f seconds elapsed during the decomposition ---\n", float(time(NULL) - start_time));
+        }
 
     }
 
@@ -233,7 +239,9 @@ void  N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decomp
 void  N_Qubit_Decomposition::decompose_submatrix() {
         
         if (decomposition_finalized) {
-            printf("Decomposition was already finalized\n");
+            if (verbose) {
+                printf("Decomposition was already finalized\n");
+            }
             return;
         }
 
@@ -303,7 +311,11 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
             optimize_layer_num_loc = false;
         }
 
+        // create class tp decompose submatrices
         N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(most_unitary_submatrix, qbit_num-1, max_layer_num, identical_blocks, optimize_layer_num_loc, initial_guess);
+
+        // setting the verbosity
+        cdecomposition->set_verbose( verbose );
 
 
         // Maximal number of iteartions in the optimalization process
@@ -332,9 +344,11 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
 */
 void  N_Qubit_Decomposition::final_optimalization() {
 
-        printf("***************************************************************\n");
-        printf("Final fine tuning of the parameters in the %d-qubit decomposition\n", qbit_num);
-        printf("***************************************************************\n");
+        if (verbose) {
+            printf("***************************************************************\n");
+            printf("Final fine tuning of the parameters in the %d-qubit decomposition\n", qbit_num);
+            printf("***************************************************************\n");
+        }
 
 //printf("%f\n", optimalization_problem(optimized_parameters ) );
 //QGD_Complex16* matrix_new = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
@@ -580,9 +594,11 @@ void N_Qubit_Decomposition::optimalization_problem_combined( const gsl_vector* p
 */
 void N_Qubit_Decomposition::simplify_layers() {
 
-        printf("***************************************************************\n");
-        printf("Try to simplify layers\n");
-        printf("***************************************************************\n");
+        if (verbose) {
+            printf("***************************************************************\n");
+            printf("Try to simplify layers\n");
+            printf("***************************************************************\n");
+        }
         
         // current starting index of the optimized parameters
         int parameter_idx = 0;
@@ -718,9 +734,11 @@ void N_Qubit_Decomposition::simplify_layers() {
         gates_num gate_num_simplified = get_gate_nums();
         int cnot_num_simplified = gate_num_simplified.cnot;
 
-        printf("\n\n************************************\n");
-        printf("After some additional 2-qubit decompositions the initial gate structure with %d CNOT gates simplified to a structure containing %d CNOT gates.\n", cnot_num_initial, cnot_num_simplified);
-        printf("************************************\n\n");
+        if (verbose) {
+            printf("\n\n************************************\n");
+            printf("After some additional 2-qubit decompositions the initial gate structure with %d CNOT gates simplified to a structure containing %d CNOT gates.\n", cnot_num_initial, cnot_num_simplified);
+            printf("************************************\n\n");
+        }
 
     
     
@@ -739,7 +757,9 @@ void N_Qubit_Decomposition::simplify_layers() {
 */
 int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameters, int parameter_num_block, std::map<int,int> max_layer_num, Operation_block* &simplified_layer, double* &simplified_parameters, int &simplified_parameter_num) {
 
-        printf("Try to simplify sub-structure \n");
+        if (verbose) {
+            printf("Try to simplify sub-structure \n");
+        }
 
         // get the target bit
         int target_qbit = -1;
@@ -809,7 +829,9 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         // check whether simplification was succesfull
         if (!cdecomposition->check_optimalization_solution()) {
             // return with the original layer, if the simplification wa snot successfull
-            printf("The simplification of the sub-structure was not possible\n");
+            if (verbose) {
+                printf("The simplification of the sub-structure was not possible\n");
+            }
             delete cdecomposition;
             qgd_free( submatrix );
             qgd_free( full_matrix_reordered );
@@ -861,7 +883,9 @@ return -1; */
 
         gates_num gate_nums_layer = layer->get_gate_nums();
         gates_num gate_nums_simplified = simplified_layer->get_gate_nums();
-        printf("%d CNOT gates successfully simplified to %d CNOT gates\n", gate_nums_layer.cnot, gate_nums_simplified.cnot);
+        if (verbose) {
+            printf("%d CNOT gates successfully simplified to %d CNOT gates\n", gate_nums_layer.cnot, gate_nums_simplified.cnot);
+        }
 
 
         //release allocated memory

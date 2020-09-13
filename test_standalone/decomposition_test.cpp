@@ -196,6 +196,8 @@ print_mtx( C, matrix_size,matrix_size);
 
     N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, false, CLOSE_TO_ZERO );
 
+    cDecomposition.verbose = false;
+
 //cDecomposition.set_iteration_loops( 4, 3 );
 //cDecomposition.set_iteration_loops( 3, 3 );
 
