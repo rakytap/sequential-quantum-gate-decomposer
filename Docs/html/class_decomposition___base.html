@@ -198,10 +198,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memdesc:a2e9b60d334a0e0c99dede014ac989d0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the index of the control qubit.  <a href="#a2e9b60d334a0e0c99dede014ac989d0a">More...</a><br /></td></tr>
 <tr class="separator:a2e9b60d334a0e0c99dede014ac989d0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae71eaec68c77e79716cae632f97d42eb"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_decomposition___base.html#ae71eaec68c77e79716cae632f97d42eb">get_decomposed_matrix</a> ()</td></tr>
-<tr class="memdesc:ae71eaec68c77e79716cae632f97d42eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary .  <a href="#ae71eaec68c77e79716cae632f97d42eb">More...</a><br /></td></tr>
+<tr class="memdesc:ae71eaec68c77e79716cae632f97d42eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx.  <a href="#ae71eaec68c77e79716cae632f97d42eb">More...</a><br /></td></tr>
 <tr class="separator:ae71eaec68c77e79716cae632f97d42eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40154345dce69fd5a9cb28c0b677746b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_decomposition___base.html#a40154345dce69fd5a9cb28c0b677746b">get_decomposed_matrix</a> ()</td></tr>
-<tr class="memdesc:a40154345dce69fd5a9cb28c0b677746b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary .  <a href="#a40154345dce69fd5a9cb28c0b677746b">More...</a><br /></td></tr>
+<tr class="memdesc:a40154345dce69fd5a9cb28c0b677746b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx.  <a href="#a40154345dce69fd5a9cb28c0b677746b">More...</a><br /></td></tr>
 <tr class="separator:a40154345dce69fd5a9cb28c0b677746b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9832cc5308c00b73d3e6bc331a77c7f7"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_decomposition___base.html#a9832cc5308c00b73d3e6bc331a77c7f7">get_finalizing_operations</a> (<a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *mtx, <a class="el" href="class_operation__block.html">Operation_block</a> *finalizing_operations, double *finalizing_parameters)</td></tr>
 <tr class="memdesc:a9832cc5308c00b73d3e6bc331a77c7f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method determine the operations needed to rotate the indepent qubits into the state |0&gt;  <a href="#a9832cc5308c00b73d3e6bc331a77c7f7">More...</a><br /></td></tr>
@@ -2196,7 +2196,7 @@ Here is the caller graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary . </p>
+<p>Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx. </p>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the decomposed matrix. </dd></dl>
 
 <p>Definition at line <a class="el" href="_decomposition___base_8cpp_source.html#l00828">828</a> of file <a class="el" href="_decomposition___base_8cpp_source.html">Decomposition_Base.cpp</a>.</p>
@@ -2239,7 +2239,7 @@ Here is the call graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary . </p>
+<p>Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx. </p>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the decomposed matrix. </dd></dl>
 
 </div>
@@ -3373,11 +3373,11 @@ Here is the caller graph for this function:</div>
     <tr><td class="paramname">parameters</td><td>An array containing the parameters of the <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operations. </td></tr>
     <tr><td class="paramname">operations</td><td>An iterator pointing to the first operation to be applied on the initial matrix. </td></tr>
     <tr><td class="paramname">num_of_operations</td><td>The number of operations to be applied on the initial matrix </td></tr>
-    <tr><td class="paramname">initial_matrix</td><td>The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute ) </td></tr>
+    <tr><td class="paramname">initial_matrix</td><td>The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute Umtx) </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Returns with the transformed matrix (ehich is also stored in the attribute ). </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Returns with the transformed matrix (ehich is also stored in the attribute transformed_mtx). </dd></dl>
 
 </div>
 </div>
@@ -3423,11 +3423,11 @@ Here is the caller graph for this function:</div>
     <tr><td class="paramname">parameters</td><td>An array containing the parameters of the <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operations. </td></tr>
     <tr><td class="paramname">operations</td><td>An iterator pointing to the first operation to be applied on the initial matrix. </td></tr>
     <tr><td class="paramname">num_of_operations</td><td>The number of operations to be applied on the initial matrix </td></tr>
-    <tr><td class="paramname">initial_matrix</td><td>The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute ) </td></tr>
+    <tr><td class="paramname">initial_matrix</td><td>The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute Umtx) </td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Returns with the transformed matrix (ehich is also stored in the attribute ). </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Returns with the transformed matrix (ehich is also stored in the attribute transformed_mtx). </dd></dl>
 
 <p>Definition at line <a class="el" href="_decomposition___base_8cpp_source.html#l00737">737</a> of file <a class="el" href="_decomposition___base_8cpp_source.html">Decomposition_Base.cpp</a>.</p>
 
@@ -3614,7 +3614,7 @@ Here is the caller graph for this function:</div>
 </div><div class="memdoc">
 
 <p>Call to retrive a pointer to the unitary to be transformed. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return with a pointer pointing to the unitary  </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Return with a pointer pointing to the unitary Umtx </dd></dl>
 
 </div>
 </div>
@@ -3632,7 +3632,7 @@ Here is the caller graph for this function:</div>
 </div><div class="memdoc">
 
 <p>Call to retrive a pointer to the unitary to be transformed. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return with a pointer pointing to the unitary  </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Return with a pointer pointing to the unitary Umtx </dd></dl>
 
 <p>Definition at line <a class="el" href="_decomposition___base_8cpp_source.html#l00695">695</a> of file <a class="el" href="_decomposition___base_8cpp_source.html">Decomposition_Base.cpp</a>.</p>
 
@@ -6170,7 +6170,7 @@ Here is the caller graph for this function:</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Sep 12 2020 21:09:26 for Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Sep 13 2020 13:40:10 for Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.11
 </small></address>

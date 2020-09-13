@@ -43,7 +43,7 @@
 <area shape="rect" id="node18" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimalization process to disentangle the most significant qubit from the others..." alt="" coords="1107,902,1287,943"/>
 <area shape="rect" id="node23" href="$class_random___unitary.html#a1dfd08ca71a8609ae71325a9f40e7570" title="Random_Unitary::Omega" alt="" coords="663,1404,829,1431"/>
 <area shape="rect" id="node32" href="$class_decomposition___base.html#a4963d3fe033c225eb19a0e6f271ef37a" title="Apply an operations on the input matrix. " alt="" coords="441,1034,587,1075"/>
-<area shape="rect" id="node27" href="$class_decomposition___base.html#a40154345dce69fd5a9cb28c0b677746b" title="Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary ..." alt="" coords="884,939,1053,981"/>
+<area shape="rect" id="node27" href="$class_decomposition___base.html#a40154345dce69fd5a9cb28c0b677746b" title="Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umt..." alt="" coords="884,939,1053,981"/>
 <area shape="rect" id="node28" href="$class_n___qubit___decomposition.html#a662b885a5930cd1e53975490ed65ed40" title="The optimalization problem of the final optimization. " alt="" coords="887,1174,1050,1215"/>
 <area shape="rect" id="node30" href="$class_sub___matrix___decomposition.html#aea877119fa244d090a1ddc20d2aec431" title="The optimalization problem of the final optimization. " alt="" coords="879,1005,1059,1046"/>
 <area shape="rect" id="node38" href="$class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="689,308,803,335"/>
