@@ -41,8 +41,13 @@ using namespace std;
  *  boundary.
  */
 void *aligned_alloc(size_t alignment, size_t size, bool zero) {
+
     size_t request_size = size + alignment;
-    char* buf = (char*)(zero ? calloc(1, request_size) : malloc(request_size));
+    char* buf = (char*)malloc(request_size);
+
+    if (zero) {
+        memset( buf, 0, request_size );
+    }
 
     size_t remainder = ((size_t)buf) % alignment;
     size_t offset = alignment - remainder;

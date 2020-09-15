@@ -603,7 +603,7 @@ void N_Qubit_Decomposition::simplify_layers() {
         int parameter_idx = 0;
         
         std::vector<Operation*> operations_loc;
-        double* optimized_parameters_loc = (double*)qgd_calloc(parameter_num, sizeof(double), 64); //????? = np.array([])
+        double* optimized_parameters_loc = (double*)qgd_calloc(parameter_num, sizeof(double), 64);
         int parameter_num_loc = 0;
         
         unsigned int layer_idx = 0;
