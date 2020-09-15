@@ -27,8 +27,8 @@ if test $FP_OPT = yes; then
   CXXFLAGS=" -fopenmp -O3 -ffast-math"
   CFLAGS=" -fopenmp -O3 -ffast-math"
 else
-  CFLAGS=" -fopenmp -O3"
-  CFLAGS=" -fopenmp -O3"
+  CXXFLAGS=" -fopenmp -O2"
+  CFLAGS=" -fopenmp -O2"
 fi
 fi
 
@@ -104,7 +104,7 @@ postdeps_CXX="$postdeps_CXX -lgomp"
 fi
 
 
-CXXFLAGS="$CXXFLAGS -I$GSL_INC_DIR"
+CXXFLAGS="$CXXFLAGS -Wall -I$GSL_INC_DIR"
 CFLAGS="$CFLAGS -I$GSL_INC_DIR"
 echo $GSL_LIBS
 echo $postdeps_CXX
