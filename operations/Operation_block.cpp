@@ -214,7 +214,7 @@ int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx 
 std::vector<QGD_Complex16*> Operation_block::get_matrices( const double* parameters ) {
 
     std::vector<QGD_Complex16*> matrices;
-    QGD_Complex16* operation_mtx;
+    QGD_Complex16* operation_mtx=NULL;
              
     for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
       

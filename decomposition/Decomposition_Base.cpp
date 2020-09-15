@@ -91,7 +91,6 @@ Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in,
     // auxiliary variable storing the transformed matrix
     transformed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
-verbose = false;
 }
 
 /** 
@@ -155,7 +154,7 @@ void Decomposition_Base::finalize_decomposition() {
         for (int idx=0; idx < finalizing_parameter_num; idx++) {
             optimized_parameters_tmp[idx] = finalizing_parameters[idx];
         }
-        for (int idx=0; idx < parameter_num-finalizing_parameter_num; idx++) {
+        for (unsigned int idx=0; idx < parameter_num-finalizing_parameter_num; idx++) {
             optimized_parameters_tmp[idx+finalizing_parameter_num] = optimized_parameters[idx];
         }
         qgd_free( optimized_parameters );
@@ -336,19 +335,19 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         // preparing solution guess for the iterations
         if ( initial_guess == ZEROS ) {
             #pragma omp parallel for
-            for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
+            for(unsigned int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = 0;
             }
         }
         else if ( initial_guess == RANDOM ) {
             #pragma omp parallel for
-            for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
+            for(unsigned int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
             }
         }
         else if ( initial_guess == CLOSE_TO_ZERO ) {
             #pragma omp parallel for
-            for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
+            for(unsigned int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
             }
         }
@@ -366,7 +365,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 
         // defining temporary variables for iteration cycles
         int block_idx_end;
-        int block_idx_start = operations.size();
+        unsigned int block_idx_start = operations.size();
         operations.clear();
         int block_parameter_num;
         QGD_Complex16* operations_mtx_pre = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
@@ -458,7 +457,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             
             // create a list of operations for the optimalization process
             operations.push_back( fixed_operation_post );
-            for ( int idx=block_idx_end; idx<block_idx_start; idx++ ) {
+            for ( unsigned int idx=block_idx_end; idx<block_idx_start; idx++ ) {
                 operations.push_back( operations_loc[idx] );
             }        
             
@@ -884,6 +883,8 @@ int Decomposition_Base::set_max_layer_num( int qbit, int max_layer_num_in ) {
 
     max_layer_num.insert( std::pair<int, int>(qbit,  max_layer_num_in) );    
 
+    return 0;
+
 }
 
 
@@ -903,6 +904,8 @@ int Decomposition_Base::set_iteration_loops( int qbit, int iteration_loops_in ) 
 
     iteration_loops.insert( std::pair<int, int>(qbit,  iteration_loops_in) );   
 
+    return 0;
+
 }
 
 
@@ -916,6 +919,8 @@ int Decomposition_Base::set_iteration_loops( std::map<int, int> iteration_loops_
     for ( std::map<int,int>::iterator it=iteration_loops_in.begin(); it!= iteration_loops_in.end(); it++ ) {
         set_iteration_loops( it->first, it->second );
     }
+
+    return 0;
 
 }
 
@@ -1026,6 +1031,10 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::v
                 varlambda = std::fmod( parameters[ parameter_idx+2 ], 2*M_PI);                    
                 parameter_idx = parameter_idx + 3;
             }   
+            else {
+                printf("wrong parameters in U3 class\n"); 
+                exit(-1);
+            }
 
             u3_operation->set_optimized_parameters( vartheta, varphi, varlambda );
             ops_ret.push_back( static_cast<Operation*>(u3_operation) );
@@ -1074,7 +1083,7 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( Operat
 @param parameters The parameters of the operations
 @return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
 */
-int Decomposition_Base::get_operation( int n, operation_type &type, int &target_qbit, int &control_qbit, double* parameters ) {
+int Decomposition_Base::get_operation( unsigned int n, operation_type &type, int &target_qbit, int &control_qbit, double* parameters ) {
 
 //printf("n: %d\n", n);
     // get the n-th operation if exists
@@ -1119,3 +1128,13 @@ void Decomposition_Base::set_verbose( bool verbose_in ) {
 
 }
 
+
+/**
+@brief Call to get the error of the decomposition
+@return Returns with the error of the decomposition
+*/
+double Decomposition_Base::get_decomposition_error( ) {
+
+    return decomposition_error;
+
+}

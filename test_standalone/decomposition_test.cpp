@@ -35,7 +35,7 @@ using namespace std;
 // @brief Call to create a random unitary containing a given number of CNOT gates between randomly chosen qubits
 // @param qbit_num The number of qubits spanning the unitary
 // @param cnot_num The number of CNOT gates in the unitary
-QGD_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
+void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx) {
 
     // the current number of CNOT gates
     int cnot_num_curr = 0;
@@ -44,18 +44,20 @@ QGD_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
     int matrix_size = Power_of_2(qbit_num);
 
     // The unitary discribing each qubits in their initial state
-    QGD_Complex16* mtx = create_identity( matrix_size );
-    QGD_Complex16* mtx_tmp;
+    memset( mtx, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+    create_identity( mtx, matrix_size );
+
+    QGD_Complex16* mtx_tmp = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+
+    QGD_Complex16* gate_matrix = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+    memset( gate_matrix, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
     // constructing the unitary
     while (true) {
         int cnot_or_u3 = rand() % 5 + 1;
-        bool free_after_used;
 
         CNOT* cnot_op = NULL;
         U3* u3_op = NULL;
-
-        QGD_Complex16* gate_matrix = NULL;
 
         if (cnot_or_u3 <= 4) {
             // creating random parameters for the U3 operation
@@ -73,7 +75,7 @@ QGD_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
             u3_op = new U3(qbit_num, target_qbit, true, true, true);
 
             // get the matrix of the operation
-            gate_matrix = u3_op->matrix(parameters);
+            u3_op->matrix(parameters, gate_matrix);
         }
         else if ( cnot_or_u3 == 5 ) {
             // randomly choose the target qbit
@@ -83,7 +85,7 @@ QGD_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
             int control_qbit = rand() % qbit_num;
 
             if (target_qbit == control_qbit) {
-                gate_matrix = create_identity( matrix_size );
+                create_identity( gate_matrix, matrix_size );
             }
             else {
 
@@ -91,39 +93,43 @@ QGD_Complex16* few_CNOT_unitary( int qbit_num, int cnot_num) {
                 cnot_op = new CNOT(qbit_num, control_qbit, target_qbit);
 
                 // get the matrix of the operation
-                gate_matrix = cnot_op->matrix();
+                cnot_op->matrix(gate_matrix);
 
                 cnot_num_curr = cnot_num_curr + 1;
             }
         }
         else {
-            gate_matrix = create_identity( matrix_size );
+            create_identity( gate_matrix, matrix_size );
         }
 
 
         // get the current unitary
-        mtx_tmp = zgemm3m_wrapper(gate_matrix, mtx, matrix_size);
+        zgemm3m_wrapper(gate_matrix, mtx, mtx_tmp, matrix_size);
+        memset( gate_matrix, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+        memcpy( mtx, mtx_tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
-        qgd_free(mtx);
-        mtx = mtx_tmp;
-        mtx_tmp = NULL;
 
-        qgd_free(gate_matrix);
+        delete u3_op;
+        u3_op = NULL;
 
-        if ( u3_op != NULL ) {
-            delete u3_op;
-            u3_op = NULL;
-        }
+        delete cnot_op;
+        cnot_op = NULL;
 
-        if ( cnot_op != NULL ) {
-            delete cnot_op;
-            cnot_op = NULL;
-        }
+
 
 
         // exit the loop if the maximal number of CNOT gates reched
         if (cnot_num_curr >= cnot_num) {
-            return mtx;
+            
+            if (mtx_tmp != NULL) {
+                qgd_free( mtx_tmp );
+            }
+
+            if (gate_matrix != NULL) {
+                qgd_free( gate_matrix );
+            }
+
+            return;
         }
 
     }
@@ -144,20 +150,23 @@ int main() {
 #endif
 
     // creating random unitary
-    int qbit_num = 3;
+    int qbit_num = 4;
 
 #ifdef MIC
       qbit_num = 7;
 #endif
 
-    int cnot_num = 4;
-    //QGD_Complex16* Umtx = few_CNOT_unitary( qbit_num, cnot_num);
-
-
     // the size of the matrix
     int matrix_size = Power_of_2(qbit_num);
     //printf("The test matrix to be decomposed is:\n");
     //print_mtx( Umtx, matrix_size, matrix_size );
+
+    //int cnot_num = 4;
+    //QGD_Complex16* Umtx = qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+    //QGD_Complex16* Umtx = few_CNOT_unitary( qbit_num, cnot_num, Umtx);
+
+
+
 
 
     Random_Unitary ru = Random_Unitary(matrix_size); 
@@ -194,9 +203,9 @@ print_mtx( C, matrix_size,matrix_size);
     identical_blocks[6] = 1;
     identical_blocks[7] = 1;
 
-    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, false, CLOSE_TO_ZERO );
+    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, false, ZEROS );
 
-    cDecomposition.verbose = false;
+    cDecomposition.verbose = true;
 
 //cDecomposition.set_iteration_loops( 4, 3 );
 //cDecomposition.set_iteration_loops( 3, 3 );

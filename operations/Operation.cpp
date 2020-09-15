@@ -139,7 +139,7 @@ void Operation::set_matrix( QGD_Complex16* input) {
 void Operation::reorder_qubits( vector<int> qbit_list ) {
       
     // check the number of qubits
-    if (qbit_list.size() != qbit_num ) {
+    if ((int)qbit_list.size() != qbit_num ) {
         printf("Wrong number of qubits\n");
         exit(-1);
     }
@@ -183,7 +183,7 @@ int Operation::get_control_qbit()  {
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */
-int Operation::get_parameter_num() {
+unsigned int Operation::get_parameter_num() {
     return parameter_num;
 }
 

@@ -64,6 +64,10 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
     else if ( initial_guess_num==2 ) {
         initial_guess = CLOSE_TO_ZERO;        
     }
+    else {
+        printf("Wrong initial guess\n");
+        exit(-1);
+    }
 
 
     // creating an instance of class N_Qubit_decomposition

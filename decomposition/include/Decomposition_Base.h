@@ -115,7 +115,7 @@ Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, guess_type initial_
 /** 
 @brief Destructor of the class
 */
-~Decomposition_Base();
+virtual ~Decomposition_Base();
 
 
 /**   
@@ -309,7 +309,7 @@ std::vector<Operation*> prepare_operations_to_export( Operation_block* block_op,
 @param parameters The parameters of the operations
 @return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
 */
-int get_operation( int n, operation_type &type, int &target_qbit, int &control_qbit, double* parameters );
+int get_operation( unsigned int n, operation_type &type, int &target_qbit, int &control_qbit, double* parameters );
 
 
 /**
@@ -317,6 +317,13 @@ int get_operation( int n, operation_type &type, int &target_qbit, int &control_q
 @param verbose_in Logical variable. Set true for verbose mode, or to false to suppress output messages.
 */
 void set_verbose( bool verbose_in );
+
+
+/**
+@brief Call to get the error of the decomposition
+@return Returns with the error of the decomposition
+*/
+double get_decomposition_error( );
 
 
 };

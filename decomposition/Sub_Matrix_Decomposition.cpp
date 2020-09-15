@@ -349,7 +349,7 @@ throw "klll";*/
         }
 
         // do the optimalization loops
-        double* solution;
+
 
         for (int idx=0; idx<iteration_loops_max; idx++) {
             
@@ -397,20 +397,20 @@ throw "klll";*/
 //printf("s->f: %f\n", s->f);               
             if (current_minimum > s->f) {
                 current_minimum = s->f;
-                //#pragma omp parallel for
-                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = s->x->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/10;
-                    optimized_parameters[jdx] = s->x->data[jdx];
-                }
+                memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
+                gsl_multimin_fdfminimizer_free (s);
+                break;
             }
             else {
                 //#pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
                 }
+
+                gsl_multimin_fdfminimizer_free (s);
             }
 
-            gsl_multimin_fdfminimizer_free (s);
+
      
         }         
 
@@ -560,6 +560,8 @@ int Sub_Matrix_Decomposition::set_identical_blocks( int qbit, int identical_bloc
     }
 
     identical_blocks.insert( std::pair<int, int>(qbit,  identical_blocks_in) );    
+
+    return 0;
 
 }
 

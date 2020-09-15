@@ -39,5 +39,5 @@ install: install-recursive
 	cp -r qgd_python $(prefix)/
 	cp example.py $(prefix)/
 	cp Umtx.mat $(prefix)/
-	cp LICENCE $(prefix)/
+	cp LICENSE $(prefix)/
 	

@@ -395,7 +395,6 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
         }
 
         // do the optimalization loops
-        double* solution;
 
         for (int idx=0; idx<iteration_loops_max; idx++) {
             
@@ -443,20 +442,20 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
 //printf("s->f: %f\n", s->f);             
             if (current_minimum > s->f) {
                 current_minimum = s->f;
-                //#pragma omp parallel for
-                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = s->x->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
-                }
                 memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
+
+                gsl_multimin_fdfminimizer_free (s);
+                break;
             }
             else {
                 //#pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
                 }
+                gsl_multimin_fdfminimizer_free (s);
             }
 
-            gsl_multimin_fdfminimizer_free (s);
+            
      
         }         
 
@@ -607,7 +606,7 @@ void N_Qubit_Decomposition::simplify_layers() {
         double* optimized_parameters_loc = (double*)qgd_calloc(parameter_num, sizeof(double), 64); //????? = np.array([])
         int parameter_num_loc = 0;
         
-        int layer_idx = 0;
+        unsigned int layer_idx = 0;
         
         while (layer_idx < operations.size()) {
             
@@ -820,6 +819,9 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         // decompose the chosen 2-qubit unitary
         std::map<int,int> identical_blocks_loc;
         N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(submatrix, 2, max_layer_num, identical_blocks_loc, true, initial_guess); 
+
+        // suppress output messages
+        cdecomposition->set_verbose( false );
         
         // starting the decomposition
         cdecomposition->start_decomposition(true, false);
@@ -916,5 +918,7 @@ int N_Qubit_Decomposition::set_identical_blocks( int qbit, int identical_blocks_
     }
 
     identical_blocks.insert( std::pair<int, int>(qbit,  identical_blocks_in) );    
+
+    return 0;
 
 }

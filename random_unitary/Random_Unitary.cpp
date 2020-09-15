@@ -162,13 +162,6 @@ QGD_Complex16* Random_Unitary::Omega(int varalpha, int varbeta, QGD_Complex16 x,
         
         QGD_Complex16* ret = I_alpha_beta( varalpha, varbeta );
         
-
-        QGD_Complex16 alpha;
-        QGD_Complex16 beta;
-        alpha.real = 1;
-        alpha.imag = 0;
-        beta.real = 1;
-        beta.imag = 0;
         
         QGD_Complex16* Mloc;
         
@@ -207,13 +200,6 @@ QGD_Complex16* Random_Unitary::M( int varalpha, int varbeta, QGD_Complex16 s, QG
         QGD_Complex16* ret3 = E_alpha_beta( varalpha, varbeta );
         QGD_Complex16* ret4 = E_alpha_beta( varalpha, varalpha );
 
-
-        QGD_Complex16 alpha;
-        QGD_Complex16 beta;
-        alpha.real = 1;
-        alpha.imag = 0;
-        beta.real = 1;
-        beta.imag = 0;
 
         mult(Qloc[0], ret1, dim);
         mult(Qloc[1], ret2, dim);

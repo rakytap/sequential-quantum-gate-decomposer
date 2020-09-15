@@ -57,7 +57,7 @@ protected:
     /// Pointer to the operatrion matrix (if it is a constant general matrix)
     QGD_Complex16* matrix_alloc;
     /// the number of free parameters of the operation
-    int parameter_num;
+    unsigned int parameter_num;
     
 
 
@@ -72,7 +72,7 @@ Operation();
 /**
 @brief Destructor of the class
 */
-~Operation();
+virtual ~Operation();
 
 
 /**
@@ -134,7 +134,7 @@ int get_control_qbit();
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */
-int get_parameter_num();
+unsigned int get_parameter_num();
 
 
 /**

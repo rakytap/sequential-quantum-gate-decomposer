@@ -56,7 +56,7 @@ Operation_block(int qbit_num_in);
 /**
 @brief Destructor of the class.
 */
-~Operation_block();
+virtual ~Operation_block();
 
 /**
 @brief Call to release the stored operations

@@ -28,7 +28,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 using namespace std;
 
 // define aligned memory allocation function if they are not present (in case of older gcc compilers)
-//#ifndef ac_cv_func_aligned_alloc
 /* Allocate aligned memory in a portable way.
  *
  * Memory allocated with aligned alloc *MUST* be freed using aligned_free.
@@ -61,26 +60,20 @@ void aligned_free(void* aligned_ptr) {
     int offset = *(((char*)aligned_ptr) - 1);
     free(((char*)aligned_ptr) - offset);
 }
-//#endif
 
 
 void* qgd_calloc( size_t element_num, size_t size, size_t alignment ) {
 
-//#ifndef ACALLOC
     void* ret = aligned_alloc(alignment, size*element_num, true);
-/*#else
-    void* ret = aligned_alloc(alignment, size*element_num);
-    memset(ret, 0, size*element_num );
-#endif*/
     return ret;
 }
 
 void qgd_free( void* ptr ) {
-//#ifndef ACALLOC
-    aligned_free(ptr);
-/*#else
-    free(ptr);
-#endif*/
+
+    // preventing double free corruption
+    if (ptr != NULL ) {
+        aligned_free(ptr);
+    }
     ptr = NULL;
 }
 
@@ -302,21 +295,20 @@ int reduce_zgemm( vector<QGD_Complex16*> mtxs, QGD_Complex16* C, int matrix_size
     int iteration = 0;
 
 
-    std::vector<QGD_Complex16*>::iterator it = mtxs.begin();
     QGD_Complex16* tmp = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
-    A = *it;
-    it++;   
+    A = *mtxs.begin();
  
     // calculate the product of complex matrices
-    for(it; it != mtxs.end(); ++it) {
+    for(std::vector<QGD_Complex16*>::iterator it=++mtxs.begin(); it != mtxs.end(); ++it) {
 
         iteration++;
+        B = *it;
 
         if ( iteration>1 ) {
             A = tmp;
             memcpy(A, C, matrix_size*matrix_size*sizeof(QGD_Complex16) );
         }
-        B = *it;
+
 
 
         // calculate the product of A and B
@@ -331,6 +323,8 @@ print_mtx( C, matrix_size, matrix_size);
     }
 
     qgd_free(tmp);
+
+    return 0;
 
 }
 
