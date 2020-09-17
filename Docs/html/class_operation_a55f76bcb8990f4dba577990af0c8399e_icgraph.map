@@ -1,12 +1,11 @@
 <map id="Operation::Operation" name="Operation::Operation">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#ae21ecd8c5016a6ec942330247e8cdebc" title="This method can be used to solve the main optimalization problem which is devidid into sub&#45;layer opti..." alt="" coords="193,100,339,156"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a3a94b94920838968d4798096e969cd78" title="final optimalization procedure improving the accuracy of the decompositin when all the qubits were al..." alt="" coords="395,74,558,115"/>
-<area shape="rect" id="node11" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimalization process to disentangle the most significant qubit from the others..." alt="" coords="387,139,567,181"/>
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#ae7fd1992d645a7ff41c02e48ba1dc5ad" title="Start the disentanglig process of the unitary. " alt="" coords="615,107,777,149"/>
-<area shape="rect" id="node5" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="827,5,998,32"/>
-<area shape="rect" id="node6" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="887,56,938,83"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="831,107,994,149"/>
-<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#a13453d7704869cfc8536767c2db4518d" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="831,173,994,214"/>
-<area shape="rect" id="node10" href="$qgd_2python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="825,239,1000,265"/>
-<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1048,227,1211,269"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#ae21ecd8c5016a6ec942330247e8cdebc" title="This method can be used to solve the main optimalization problem which is devidid into sub&#45;layer opti..." alt="" coords="193,83,339,139"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a3a94b94920838968d4798096e969cd78" title="final optimalization procedure improving the accuracy of the decompositin when all the qubits were al..." alt="" coords="395,57,558,98"/>
+<area shape="rect" id="node10" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimalization process to disentangle the most significant qubit from the others..." alt="" coords="387,122,567,163"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="615,90,777,131"/>
+<area shape="rect" id="node5" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="887,5,938,32"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="831,57,994,98"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a13453d7704869cfc8536767c2db4518d" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="831,122,994,163"/>
+<area shape="rect" id="node9" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="825,188,1000,215"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1048,177,1211,218"/>
 </map>

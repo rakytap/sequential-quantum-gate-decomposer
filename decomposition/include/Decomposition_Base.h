@@ -17,6 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
+/*! \file qgd/Decomposition_Base.h
+    \brief Header file for a class containing basic methods for the decomposition process.
+*/
 
 
 #pragma once
@@ -107,7 +110,7 @@ public:
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary to be decomposed.
-@param initial_guess Type to guess the initial values for the optimalization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
+@param initial_guess_in Type to guess the initial values for the optimalization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return An instance of the class
 */
 Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, guess_type initial_guess_in);
@@ -120,15 +123,15 @@ virtual ~Decomposition_Base();
 
 /**   
 @brief Call to set the number of operation blocks to be optimized in one shot
-@param optimalization_block The number of operation blocks to be optimized in one shot 
+@param optimalization_block_in The number of operation blocks to be optimized in one shot 
 */
-void set_optimalization_blocks( int);
+void set_optimalization_blocks( int optimalization_block_in );
         
 /**   
 @brief Call to set the maximal number of the iterations in the optimalization process
-@param max_iterations aximal number of iteartions in the optimalization process
+@param max_iterations_in maximal number of iteartions in the optimalization process
 */
-void set_max_iteration( int max_iterations);
+void set_max_iteration( int max_iterations_in);
 
 
 /** 
@@ -153,14 +156,14 @@ void get_finalizing_operations( QGD_Complex16* mtx, Operation_block* finalizing_
 
 
 /** 
-@brief This method can be used to solve the main optimalization problem which is devidid into sub-layer optimalization processes. (The aim of the optimalization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute @optimized_parameters.
+@brief This method can be used to solve the main optimalization problem which is devidid into sub-layer optimalization processes. (The aim of the optimalization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute optimized_parameters.
 @param solution_guess An array of the guessed parameters
 @param solution_guess_num The number of guessed parameters. (not necessarily equal to the number of free parameters)
 */
 void solve_optimalization_problem( double* solution_guess, int solution_guess_num );
 
 /**
-@brief Abstarct function to be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
+@brief Abstarct function to be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute optimized_parameters.
 @param 'num_of_parameters' The number of free parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Libarary vector containing the free parameters to be optimized.
 */
@@ -219,12 +222,12 @@ void get_optimized_parameters( double* ret );
 /**
 @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
 @param parameters An array containing the parameters of the U3 operations.
-@param operations An iterator pointing to the first operation to be applied on the initial matrix.
+@param operations_it An iterator pointing to the first operation to be applied on the initial matrix.
 @param num_of_operations The number of operations to be applied on the initial matrix
 @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute Umtx)
 @return Returns with the transformed matrix (ehich is also stored in the attribute transformed_mtx).
 */
-QGD_Complex16* get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations, int num_of_operations, QGD_Complex16* initial_matrix );
+QGD_Complex16* get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations, QGD_Complex16* initial_matrix );
 
 
 /**
@@ -245,14 +248,14 @@ QGD_Complex16* apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* inp
 @brief Apply an operations on the input matrix
 @param operation_mtx The matrix of the operation.
 @param input_matrix The input matrix to be transformed.
-@param The result is returned via this matrix
+@param result_matrix The result is returned via this matrix
 */
 int apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* input_matrix, QGD_Complex16* result_matrix);
 
 /**
 @brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
 @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
-@param max_layer_num The maximal number of the operation layers used in the subdecomposition.
+@param max_layer_num_in The maximal number of the operation layers used in the subdecomposition.
 @return Returns with 0 if succeded.
 */
 int set_max_layer_num( int qbit, int max_layer_num_in );
@@ -260,7 +263,7 @@ int set_max_layer_num( int qbit, int max_layer_num_in );
 /**
 @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
 @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.,
-@param iteration_loops The number of iteration loops in each sted of the subdecomposition.
+@param iteration_loops_in The number of iteration loops in each sted of the subdecomposition.
 @return Returns with 0 if succeded.
 */
 int set_iteration_loops( int qbit, int iteration_loops_in );
@@ -280,7 +283,7 @@ static void Init_max_layer_num();
 
 
 /**
-@brief Call to prepare the optimized operations to export. The operations are stored in the attribute @operations
+@brief Call to prepare the optimized operations to export. The operations are stored in the attribute operations
 */
 void prepare_operations_to_export();
 
@@ -305,7 +308,9 @@ std::vector<Operation*> prepare_operations_to_export( Operation_block* block_op,
 /**
 @brief Call to prepare the optimized operations to export
 @param n Integer labeling the n-th oepration  (n>=0).
-@param block_op A pointer to a block of operations
+@param type The type of the operation from enumeration operation_type is returned via this parameter.
+@param target_qbit The ID of the target qubit is returned via this input parameter.
+@param control_qbit The ID of the control qubit is returned via this input parameter.
 @param parameters The parameters of the operations
 @return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
 */

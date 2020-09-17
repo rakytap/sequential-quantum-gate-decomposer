@@ -17,10 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-
-//
-// @brief A base class responsible for constructing matrices of C-NOT gates
-// gates acting on the N-qubit space
+/*! \file qgd/CNOT.h
+    \brief Header file for a class representing a CNOT operation.
+*/
 
 #pragma once
 #include "qgd/Operation.h"

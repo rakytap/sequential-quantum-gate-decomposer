@@ -1,7 +1,7 @@
 <map id="Random_Unitary::Construct_Unitary_Matrix" name="Random_Unitary::Construct_Unitary_Matrix">
-<area shape="rect" id="node2" href="$class_random___unitary.html#ab02771b7201251866750d79c98a9ff22" title="Random_Unitary::Construct\l_Unitary_Matrix" alt="" coords="233,23,413,65"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="qgd_calloc" alt="" coords="461,5,545,32"/>
-<area shape="rect" id="node5" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="qgd_free" alt="" coords="467,56,539,83"/>
-<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="aligned_alloc" alt="" coords="593,5,691,32"/>
-<area shape="rect" id="node6" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="aligned_free" alt="" coords="596,56,688,83"/>
+<area shape="rect" id="node2" href="$class_random___unitary.html#ab02771b7201251866750d79c98a9ff22" title="Call to create a random unitary. " alt="" coords="233,23,413,65"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="461,5,545,32"/>
+<area shape="rect" id="node5" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="467,56,539,83"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="593,5,691,32"/>
+<area shape="rect" id="node6" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="Free memory allocated with aligned_alloc. " alt="" coords="596,56,688,83"/>
 </map>

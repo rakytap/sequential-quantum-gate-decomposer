@@ -1,4 +1,4 @@
-#!/usr/bin/env python3
+## #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jun 30 15:44:26 2020
@@ -20,10 +20,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 """
 
-## \addtogroup python Python Interface
-## @{
-#
-# ***********MOOOOOOOOORRRRRREEEEEEEEEEEEEE DEEEEEEEEEEEEETAAAAAAAAAAAAAAAAILSSSSSSSSSSSSSS HEEEEEEEEEEEEEEREEEEEEEEEEE ****************
+## \file N_Qubit_Decomposition.py
+##    \brief A QGD Python interface class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
 
 
 import ctypes
@@ -33,7 +31,7 @@ from os import path
 
 
 #load qgd C library for the decomposition
-
+## path to the QGD library
 if ( path.exists('.libs/libqgd.so') ):
     library_path = '.libs/libqgd.so'
 elif ( path.exists('lib64/libqgd.so') ):
@@ -44,6 +42,7 @@ else:
     print("Quantum Gate Decomposer library not found.")
     exit()
 
+## The loaded QGD library
 _qgd_library = ctypes.cdll.LoadLibrary(library_path)  
 
 
@@ -62,21 +61,23 @@ _qgd_library.iface_get_operation_num.argtypes = ( ctypes.c_void_p, )
 _qgd_library.iface_get_operation_num.restype = ctypes.c_int
 _qgd_library.iface_get_operation.argtypes = ( ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_double), )
 _qgd_library.iface_get_operation.restype = ctypes.c_int
+_qgd_library.iface_set_verbose.argtypes = ( ctypes.c_void_p, ctypes.c_bool, )
 
 
 ##
-# @brief A class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
+# @brief A QGD Python interface class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
 class N_Qubit_Decomposition:
     
     
 ## 
 # @brief Constructor of the class.
-# @param Umtx The unitary matrix
-# @param initial_guess
+# @param Umtx The unitary matrix to be decomposed.
+# @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
+# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
 # @return An instance of the class
     def __init__( self, Umtx, optimize_layer_num=False, initial_guess="zeros" ):
 
-        # determine the number of qubits
+        ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
 
         matrix_size = int(2**self.qbit_num)
@@ -100,7 +101,7 @@ class N_Qubit_Decomposition:
         else:
              initial_guess_num = 0
              
-        # create and store the instance of the N-Qubit decomposition class
+        ## the instance of the N_Qubit_Decomposition C class
         self.c_instance = _qgd_library.iface_new_N_Qubit_Decomposition( array_type(*Umtx_real), array_type(*Umtx_imag), ctypes.c_int(self.qbit_num), ctypes.c_bool(optimize_layer_num), ctypes.c_int(initial_guess_num) )
 
 
@@ -125,31 +126,31 @@ class N_Qubit_Decomposition:
 
 ##
 # @brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
-# @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
-# @param max_layer_num The maximal number of the operation layers used in the subdecomposition.
-    def set_max_layer_num(self, qbit, max_layer_num ):
+# @param max_layer_num A dictionary {'n': max_layer_num} labeling the maximal number of the operation layers used in the subdecomposition.
+    def set_max_layer_num(self, max_layer_num ):
 
-        # Set the maximal number of layers throug the C-interface
-        _qgd_library.iface_set_max_layer_num( self.c_instance, ctypes.c_int(qbit), ctypes.c_int(max_layer_num) )
+        for qbit in max_layer_num.keys() :
+            # Set the maximal number of layers throug the C-interface
+            _qgd_library.iface_set_max_layer_num( self.c_instance, ctypes.c_int(qbit), ctypes.c_int(max_layer_num.get(qbit,0)) )
 
 ##
 # @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
-# @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.,
-# @param iteration_loops The number of iteration loops in each sted of the subdecomposition.
-    def set_iteration_loops(self, qbit, iteration_loops ):
+# @param iteration_loops A dictionary {'n': iteration_loops} labeling the number of iteration loops in each step of the subdecomposition.
+    def set_iteration_loops(self, iteration_loops ):
 
-        # Set the number of iteration loops throug the C-interface
-        _qgd_library.iface_set_iteration_loops( self.c_instance, ctypes.c_int(qbit), ctypes.c_int(iteration_loops) )
+        for qbit in iteration_loops.keys() :
+            # Set the number of iteration loops throug the C-interface
+            _qgd_library.iface_set_iteration_loops( self.c_instance, ctypes.c_int(qbit), ctypes.c_int(iteration_loops.get(qbit,3)) )
 
 
 ##
 # @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
-# @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
-# @param identical_blocks The number of successive identical layers used in the subdecomposition.
-    def set_identical_blocks(self, qbit, identical_blocks ):
+# @param identical_blocks A dictionary {'n': identical_blocks} labeling the number of successive identical layers used in the subdecomposition at the disentangling of the n-th qubit.
+    def set_identical_blocks(self, identical_blocks ):
 
-        # Set the number of identical successive blocks  throug the C-interface
-        _qgd_library.iface_set_identical_blocks( self.c_instance, ctypes.c_int(qbit), ctypes.c_int(identical_blocks) )
+        for qbit in identical_blocks.keys() :
+            # Set the number of identical successive blocks  throug the C-interface
+            _qgd_library.iface_set_identical_blocks( self.c_instance, ctypes.c_int(qbit), ctypes.c_int(identical_blocks.get(qbit,1)) )
 
 
 ##
@@ -162,7 +163,7 @@ class N_Qubit_Decomposition:
 
 ##
 # @brief Export the unitary decomposition into Qiskit format.
-# @param start_index The index of the first inverse operation
+# @return Return with a Qiskit compatible quantum circuit.
     def get_quantum_circuit( self ):
 
         from qiskit import QuantumCircuit
@@ -213,8 +214,12 @@ class N_Qubit_Decomposition:
         return circuit
 
 
+##
+# @brief Set the verbosity of the N_Qubit_Decomposition class
+# @param verbose Set False to suppress the output messages of the decompostion, or True (deafult) otherwise.
+    def set_verbose( self, verbose ):
             
-## @}
+        _qgd_library.iface_set_verbose( self.c_instance, ctypes.c_bool(verbose) );
 
  
 

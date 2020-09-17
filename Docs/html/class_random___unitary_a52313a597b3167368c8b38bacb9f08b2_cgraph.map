@@ -1,4 +1,4 @@
 <map id="Random_Unitary::E_alpha_beta" name="Random_Unitary::E_alpha_beta">
-<area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="qgd_calloc" alt="" coords="256,5,340,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="aligned_alloc" alt="" coords="388,5,485,32"/>
+<area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="256,5,340,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="388,5,485,32"/>
 </map>

@@ -1,4 +1,4 @@
 <map id="Random_Unitary::gamma" name="Random_Unitary::gamma">
-<area shape="rect" id="node2" href="$class_random___unitary.html#ace2ab5baafad04139f4ffc52c1174881" title="Random_Unitary::Construct\l_Unitary_Matrix" alt="" coords="435,5,615,47"/>
-<area shape="rect" id="node3" href="$class_random___unitary.html#a1dfd08ca71a8609ae71325a9f40e7570" title="Random_Unitary::Omega" alt="" coords="220,38,387,65"/>
+<area shape="rect" id="node2" href="$class_random___unitary.html#ace2ab5baafad04139f4ffc52c1174881" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="435,5,615,47"/>
+<area shape="rect" id="node3" href="$class_random___unitary.html#a1dfd08ca71a8609ae71325a9f40e7570" title="Eq (6) of arXiv:1303:5904v1. " alt="" coords="220,38,387,65"/>
 </map>

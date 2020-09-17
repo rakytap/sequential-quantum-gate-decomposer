@@ -17,22 +17,21 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-
-//
-// @brief A base class responsible for constructing matrices of C-NOT gates
-// gates acting on the N-qubit space
+/*! \file N_Qubit_Decomposition.cpp
+    \brief Class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations.
+*/
 
 #include "qgd/N_Qubit_Decomposition.h"
 
  
 /**
 @brief Constructor of the class.
-@param Umtx The unitary matrix to be decomposed
-@param qbit_num The number of qubits spanning the unitary Umtx
+@param Umtx_in The unitary matrix to be decomposed
+@param qbit_num_in The number of qubits spanning the unitary Umtx
 @param max_layer_num_in A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process at the subdecomposing of n-th qubits.
 @param identical_blocks_in A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
-@param optimize_layer_num Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
-@param initial_guess Enumeration element indicating the method to guess initial values for the optimalization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@param optimize_layer_num_in Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
+@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimalization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
 N_Qubit_Decomposition::N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
@@ -85,7 +84,7 @@ N_Qubit_Decomposition::~N_Qubit_Decomposition() {
 
 /**
 @brief Start the disentanglig process of the unitary
-@param finalize_decomposition Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
+@param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
 @param prepare_export Logical parameter. Set true to prepare the list of operations to be exported, or false otherwise.
 */
 void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool prepare_export=true) {
@@ -177,7 +176,7 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
 
 /**
 @brief Call to extract and store the calculated parameters and operations of the sub-decomposition processes
-@param cSub_decomposition An instance of class @Sub_Matrix_Decomposition used to disentangle the n-th qubit from the others.
+@param cSub_decomposition An instance of class Sub_Matrix_Decomposition used to disentangle the n-th qubit from the others.
 */
 void  N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposition ) {
                         
@@ -365,7 +364,7 @@ void  N_Qubit_Decomposition::final_optimalization() {
 
 
 /**
-// @brief Call to solve layer by layer the optimization problem. The optimalized parameters are stored in attribute @optimized_parameters.
+// @brief Call to solve layer by layer the optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
 // @param num_of_parameters Number of parameters to be optimized
 // @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
@@ -745,11 +744,11 @@ void N_Qubit_Decomposition::simplify_layers() {
     
 /**  
 @brief Call to simplify the gate structure in a block of operations (i.e. tries to reduce the number of CNOT gates)
-@param layer An instance of class @Operation_block containing the 2-qubit gate structure to be simplified
+@param layer An instance of class Operation_block containing the 2-qubit gate structure to be simplified
 @param parameters An array of parameters to calculate the matrix representation of the operations in the block of operations.
 @param parameter_num_block NUmber of parameters in the block of operations to be simplified.
 @param max_layer_num A map of <int n: int num> indicating the maximal number of CNOT operations allowed in the simplification.
-@param simplified_layer An instance of @Operation_block containing the simplified structure of operations.
+@param simplified_layer An instance of Operation_block containing the simplified structure of operations.
 @param simplified_parameters An array of parameters containing the parameters of the simplified block structure.
 @param simplified_parameter_num The number of parameters in the simplified block structure.
 @return Returns with 0 if the simplification wa ssuccessful.
@@ -906,7 +905,7 @@ return -1; */
 /**
 @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
 @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
-@param identical_blocks The number of successive identical layers used in the subdecomposition.
+@param identical_blocks_in The number of successive identical layers used in the subdecomposition.
 @return Returns with zero in case of success.
 */
 int N_Qubit_Decomposition::set_identical_blocks( int qbit, int identical_blocks_in )  {

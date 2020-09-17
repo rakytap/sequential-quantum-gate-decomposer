@@ -17,10 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-
-//
-// @brief A base class responsible for constructing matrices of C-NOT, U3
-// gates acting on the N-qubit space
+/*! \file Operation_block.cpp
+    \brief Class responsible for grouping CNOT and U3 operations into layers
+*/
 
 
 #include "qgd/CNOT.h"
@@ -44,7 +43,7 @@ Operation_block::Operation_block() : Operation() {
 
 /**
 @brief Constructor of the class.
-@param qbit_num The number of qubits in the unitaries
+@param qbit_num_in The number of qubits in the unitaries
 */
 Operation_block::Operation_block(int qbit_num_in) : Operation(qbit_num_in) {
 
@@ -330,7 +329,7 @@ void Operation_block::add_cnot_to_front( int control_qbit, int target_qbit) {
     
 /**
 @brief Append a list of operations to the list of operations
-@param operations A list of operation class instances.
+@param operations_in A list of operation class instances.
 */
 void Operation_block::add_operations_to_end( vector<Operation*> operations_in) {
 
@@ -343,7 +342,7 @@ void Operation_block::add_operations_to_end( vector<Operation*> operations_in) {
     
 /**
 @brief Add an array of operations to the front of the list of operations
-@param operations A list of operation class instances.
+@param operations_in A list of operation class instances.
 */
 void Operation_block::add_operations_to_front( vector<Operation*>  operations_in) {
         
@@ -357,7 +356,7 @@ void Operation_block::add_operations_to_front( vector<Operation*>  operations_in
     
 /**
 @brief Append a general operation to the list of operations
-@param operation An instance of class @Operation describing an operation.
+@param operation An instance of class Operation describing an operation.
 */
 void Operation_block::add_operation_to_end( Operation* operation ) {
         
@@ -380,7 +379,7 @@ void Operation_block::add_operation_to_end( Operation* operation ) {
     
 /**
 @brief Add an operation to the front of the list of operations
-@param operation A pointer to a class @Operation describing an operation.
+@param operation A pointer to a class Operation describing an operation.
 */
  void Operation_block::add_operation_to_front( Operation* operation) {
         
@@ -404,7 +403,7 @@ void Operation_block::add_operation_to_end( Operation* operation ) {
             
 /**
 @brief Call to get the number of the individual gate types in the list of operations
-@return Returns with an instance @gates_num describing the number of the individual gate types
+@return Returns with an instance gates_num describing the number of the individual gate types
 */ 
 gates_num Operation_block::get_gate_nums() {
         
@@ -628,7 +627,7 @@ std::vector<Operation*> Operation_block::get_operations() {
     
 /**
 @brief Call to append the operations of an operation block to the current block
-@param op_block A pointer to an instance of class @operation_block
+@param op_block A pointer to an instance of class Operation_block
 */
 void Operation_block::combine(Operation_block* op_block) {
 

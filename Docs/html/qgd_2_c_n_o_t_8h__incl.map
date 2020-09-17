@@ -1,4 +1,4 @@
 <map id="CNOT.h" name="CNOT.h">
 <area shape="rect" id="node2" href="$qgd_2_operation_8h.html" title="qgd/Operation.h" alt="" coords="226,80,339,107"/>
-<area shape="rect" id="node4" href="$qgd_2common_8h.html" title="qgd/common.h" alt="" coords="352,155,459,181"/>
+<area shape="rect" id="node4" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="352,155,459,181"/>
 </map>

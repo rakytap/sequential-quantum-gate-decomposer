@@ -1,4 +1,4 @@
 <map id="Operation::~Operation" name="Operation::~Operation">
-<area shape="rect" id="node2" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="qgd_free" alt="" coords="200,5,272,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="aligned_free" alt="" coords="320,5,412,32"/>
+<area shape="rect" id="node2" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="200,5,272,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="Free memory allocated with aligned_alloc. " alt="" coords="320,5,412,32"/>
 </map>

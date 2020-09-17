@@ -17,6 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
+/*! \file CNOT.cpp
+    \brief Class representing a CNOT operation.
+*/
 
 #include "qgd/CNOT.h"
 
@@ -79,12 +82,12 @@ QGD_Complex16* CNOT::matrix() {
 }
 
 /**
-@brief Call to terive the operation matrix
-@param retrive_matrix A pointer to the preallocated array of the operation matrix.
+@brief Call to retrieve the operation matrix
+@param retrieve_matrix A pointer to the preallocated array of the operation matrix.
 @return Returns with 0 on success.
 */
-int CNOT::matrix(QGD_Complex16* retrive_matrix ) {
-    return composite_cnot( retrive_matrix );
+int CNOT::matrix(QGD_Complex16* retrieve_matrix ) {
+    return composite_cnot( retrieve_matrix );
 }
 
 
@@ -187,9 +190,9 @@ int CNOT::composite_cnot( QGD_Complex16* CNOT_mtx ) {
 @brief Call to set the number of qubits spanning the matrix of the operation
 @param qbit_num The number of qubits
 */
-void CNOT::set_qbit_num(int qbit_num_in) {
+void CNOT::set_qbit_num(int qbit_num) {
         // setting the number of qubits
-        Operation::set_qbit_num(qbit_num_in);
+        Operation::set_qbit_num(qbit_num);
 
 }
 

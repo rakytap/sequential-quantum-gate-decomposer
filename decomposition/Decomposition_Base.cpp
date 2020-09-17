@@ -17,11 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-
-//
-// @brief A base class responsible for constructing matrices of C-NOT gates
-// gates acting on the N-qubit space
-
+/*! \file Decomposition_Base.cpp
+    \brief Class containing basic methods for the decomposition process.
+*/
 #include "qgd/Decomposition_Base.h"
 
  
@@ -33,7 +31,7 @@ std::map<int,int> Decomposition_Base::max_layer_num_def;
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary to be decomposed.
-@param initial_guess Type to guess the initial values for the optimalization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
+@param initial_guess_in Type to guess the initial values for the optimalization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return An instance of the class
 */
 Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Operation_block(qbit_num_in) {
@@ -115,7 +113,7 @@ Decomposition_Base::~Decomposition_Base() {
      
 /**   
 @brief Call to set the number of operation blocks to be optimized in one shot
-@param optimalization_block The number of operation blocks to be optimized in one shot 
+@param optimalization_block_in The number of operation blocks to be optimized in one shot 
 */
 void Decomposition_Base::set_optimalization_blocks( int optimalization_block_in) {
     optimalization_block = optimalization_block_in;
@@ -123,7 +121,7 @@ void Decomposition_Base::set_optimalization_blocks( int optimalization_block_in)
         
 /**   
 @brief Call to set the maximal number of the iterations in the optimalization process
-@param max_iterations aximal number of iteartions in the optimalization process
+@param max_iterations_in aximal number of iteartions in the optimalization process
 */
 void Decomposition_Base::set_max_iteration( int max_iterations_in) {
     max_iterations = max_iterations_in;  
@@ -291,7 +289,7 @@ void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operatio
 
     
 /** 
-@brief This method can be used to solve the main optimalization problem which is devidid into sub-layer optimalization processes. (The aim of the optimalization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute @optimized_parameters.
+@brief This method can be used to solve the main optimalization problem which is devidid into sub-layer optimalization processes. (The aim of the optimalization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute optimized_parameters.
 @param solution_guess An array of the guessed parameters
 @param solution_guess_num The number of guessed parameters. (not necessarily equal to the number of free parameters)
 */
@@ -600,7 +598,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 
    
 /**
-@brief Abstarct function to be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute @optimized_parameters.
+@brief Abstarct function to be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute optimized_parameters.
 @param 'num_of_parameters' The number of free parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Libarary vector containing the free parameters to be optimized.
 */
@@ -740,7 +738,7 @@ void Decomposition_Base::get_optimized_parameters( double* ret ) {
 /**
 @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
 @param parameters An array containing the parameters of the U3 operations.
-@param operations An iterator pointing to the first operation to be applied on the initial matrix.
+@param operations_it An iterator pointing to the first operation to be applied on the initial matrix.
 @param num_of_operations The number of operations to be applied on the initial matrix
 @param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute Umtx)
 @return Returns with the transformed matrix (ehich is also stored in the attribute transformed_mtx).
@@ -846,7 +844,7 @@ QGD_Complex16* Decomposition_Base::get_decomposed_matrix() {
 @brief Apply an operations on the input matrix
 @param operation_mtx The matrix of the operation.
 @param input_matrix The input matrix to be transformed.
-@param The result is returned via this matrix
+@return Returns by a pointer pointing to the result.
 */
 QGD_Complex16* Decomposition_Base::apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* input_matrix ) {
 
@@ -858,7 +856,7 @@ QGD_Complex16* Decomposition_Base::apply_operation( QGD_Complex16* operation_mtx
 @brief Apply an operations on the input matrix
 @param operation_mtx The matrix of the operation.
 @param input_matrix The input matrix to be transformed.
-@param The result is returned via this matrix
+@param result_matrix The result is returned via this matrix
 */
 int Decomposition_Base::apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* input_matrix,  QGD_Complex16* result_matrix) {
 
@@ -870,7 +868,7 @@ int Decomposition_Base::apply_operation( QGD_Complex16* operation_mtx, QGD_Compl
 /**
 @brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
 @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
-@param max_layer_num The maximal number of the operation layers used in the subdecomposition.
+@param max_layer_num_in The maximal number of the operation layers used in the subdecomposition.
 @return Returns with 0 if succeded.
 */
 int Decomposition_Base::set_max_layer_num( int qbit, int max_layer_num_in ) {
@@ -890,8 +888,8 @@ int Decomposition_Base::set_max_layer_num( int qbit, int max_layer_num_in ) {
 
 /**
 @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
-@param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.,
-@param iteration_loops The number of iteration loops in each sted of the subdecomposition.
+@param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+@param iteration_loops_in The number of iteration loops in each sted of the subdecomposition.
 @return Returns with 0 if succeded.
 */
 int Decomposition_Base::set_iteration_loops( int qbit, int iteration_loops_in ) {
@@ -944,7 +942,7 @@ void Decomposition_Base::Init_max_layer_num() {
 
 
 /**
-@brief Call to prepare the optimized operations to export. The operations are stored in the attribute @operations
+@brief Call to prepare the optimized operations to export. The operations are stored in the attribute operations
 */
 void Decomposition_Base::prepare_operations_to_export() {
 
@@ -1079,7 +1077,9 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( Operat
 /**
 @brief Call to prepare the optimized operations to export
 @param n Integer labeling the n-th oepration  (n>=0).
-@param block_op A pointer to a block of operations
+@param type The type of the operation from enumeration operation_type is returned via this parameter.
+@param target_qbit The ID of the target qubit is returned via this input parameter.
+@param control_qbit The ID of the control qubit is returned via this input parameter.
 @param parameters The parameters of the operations
 @return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
 */

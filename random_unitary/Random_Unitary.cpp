@@ -17,18 +17,19 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
+/*! \file Random_Unitary.cpp
+    \brief A class and methods to cerate random unitary matrices
+*/
 
-//
-// @brief A base class responsible for constructing matrices of C-NOT gates
-// gates acting on the N-qubit space
 
 #include "qgd/Random_Unitary.h"
 
 
-//// Contructor of the class
-//> @brief Constructor of the class.
-//> @param ??????????????????
-//> @return An instance of the class
+/** 
+@brief Constructor of the class.
+@param dim_in The number of rows in the random unitary to be ceated.
+@return An instance of the class
+*/
 Random_Unitary::Random_Unitary( int dim_in ) {   
         
         if (dim_in < 2) {
@@ -41,10 +42,10 @@ Random_Unitary::Random_Unitary( int dim_in ) {
 }
         
  
-//// 
-//> @brief Create random unitary
-//> @param parameters array of (dim+1)*(dim-1) elements
-//> @return The constructed matrix
+/**
+@brief Call to create a random unitary
+@return Returns with a pointer to the created random unitary
+*/
 QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix() {
 
     // create array of random parameters to construct random unitary
@@ -81,12 +82,13 @@ QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix() {
 }    
     
     
-//// 
-//> @brief Create random unitary
-//> @param vartheta array of dim*(dim-1)/2 elements
-//> @param varphi array of dim*(dim-1)/2 elements
-//> @param varkappa array of dim-1 elements
-//> @return The constructed matrix
+/**
+@brief Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1
+@param vartheta array of dim*(dim-1)/2 elements
+@param varphi array of dim*(dim-1)/2 elements
+@param varkappa array of dim-1 elements
+@return Returns with a pointer to the generated unitary
+*/
 QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix( double* vartheta, double* varphi, double* varkappa ) {
         
         
@@ -145,10 +147,11 @@ int  Random_Unitary::convert_indexes( int varalpha, int varbeta ) {
 }
     
     
-////
-//> @brief Create random unitary
-//> @param parameters array of (dim+1)*(dim-1) elements
-//> @return The constructed matrix
+/**
+@brief Generates a unitary matrix from parameters parameters according to arXiv:1303:5904v1
+@param parameters array of (dim+1)*(dim-1) elements
+@return The constructed unitary
+*/
 QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix(double* parameters ) {
    QGD_Complex16* ret = Construct_Unitary_Matrix( parameters, parameters+int(dim*(dim-1)/2), parameters+int(dim*(dim-1)));
         
@@ -156,8 +159,14 @@ QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix(double* parameters ) {
 }
     
     
-//// Omega
-//> @brief Eq (6)
+/**
+@brief Eq (6) of arXiv:1303:5904v1
+@param varalpha An integer
+@param varbeta An integer
+@param x A complex number
+@param y A complex number
+@return Return with a pointer to the calculated Omega matrix of Eq. (6) of arXiv:1303:5904v1
+*/
 QGD_Complex16* Random_Unitary::Omega(int varalpha, int varbeta, QGD_Complex16 x, QGD_Complex16 y )   {
         
         QGD_Complex16* ret = I_alpha_beta( varalpha, varbeta );
@@ -189,8 +198,14 @@ QGD_Complex16* Random_Unitary::Omega(int varalpha, int varbeta, QGD_Complex16 x,
 }   
     
     
-//// M
-//> @brief Eq (8)
+/**
+@brief Implements Eq (8) of arXiv:1303:5904v1
+@param varalpha An integer
+@param varbeta An integer
+@param s A complex number
+@param t A complex number
+@return Return with a pointer to the calculated M matrix of Eq. (8) of arXiv:1303:5904v1
+*/
 QGD_Complex16* Random_Unitary::M( int varalpha, int varbeta, QGD_Complex16 s, QGD_Complex16 t )   {
 
         QGD_Complex16* Qloc = Q( s, t);
@@ -226,8 +241,12 @@ QGD_Complex16* Random_Unitary::M( int varalpha, int varbeta, QGD_Complex16 s, QG
 }
     
     
-//// Q
-//> @brief Eq (9)
+/**
+@brief Implements Eq (9) of arXiv:1303:5904v1 
+@param u1 A complex number
+@param u2 A complex number
+@return Return with a pointer to the calculated Q matrix of Eq. (9) of arXiv:1303:5904v1
+*/
 QGD_Complex16* Random_Unitary::Q(  QGD_Complex16 u1, QGD_Complex16 u2 )   {
 
     QGD_Complex16* ret = (QGD_Complex16*)qgd_calloc(2*2, sizeof(QGD_Complex16), 64);    
@@ -243,8 +262,12 @@ QGD_Complex16* Random_Unitary::Q(  QGD_Complex16 u1, QGD_Complex16 u2 )   {
 }
     
     
-//// E_n_m
-//> @brief below Eq (7)
+/**
+@brief Implements matrix I below Eq (7) of arXiv:1303:5904v1 
+@param varalpha An integer
+@param varbeta An integer
+@return Return with a pointer to the calculated I matrix of Eq. (7) of arXiv:1303:5904v1
+*/
 QGD_Complex16* Random_Unitary::E_alpha_beta( int varalpha, int varbeta )   {
         
     QGD_Complex16* ret = (QGD_Complex16*)qgd_calloc(dim*dim, sizeof(QGD_Complex16), 64);
@@ -254,8 +277,12 @@ QGD_Complex16* Random_Unitary::E_alpha_beta( int varalpha, int varbeta )   {
         
 }
     
-//// I_n
-//> @brief below Eq (7)
+/**
+@brief Implements matrix I below Eq (7) of arXiv:1303:5904v1 
+@param varalpha An integer
+@param varbeta An integer
+@return Return with a pointer to the calculated I matrix of Eq. (7) of arXiv:1303:5904v1
+*/
 QGD_Complex16* Random_Unitary::I_alpha_beta( int varalpha, int varbeta ) {
 
  
@@ -269,8 +296,10 @@ QGD_Complex16* Random_Unitary::I_alpha_beta( int varalpha, int varbeta ) {
 }       
     
     
-//// 
-//> @brief Eq (11)
+/**
+@brief Implements Eq (11) of arXiv:1303:5904v1 
+@return Returns eith the value of gamma
+*/
 double Random_Unitary::gamma() {
         
     double ret = pow(-1, 0.25*(2*dim-1+pow(-1,dim)));//(-1)^(0.25*(2*dim-1+(-1)^dim));
@@ -278,8 +307,12 @@ double Random_Unitary::gamma() {
         
 }
     
-////
-//> @brief Eq (11)
+/**
+@brief Kronecker delta
+@param a An integer
+@param b An integer
+@return Returns with the Kronecker delta value of a and b.
+*/
 double Random_Unitary::kronecker( int a, int b ) {
         
         if (a == b) {

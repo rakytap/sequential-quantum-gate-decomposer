@@ -17,10 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-
-//
-// @brief A base class responsible for constructing matrices of C-NOT, U3
-// gates acting on the N-qubit space
+/*! \file qgd/Operation.h
+    \brief Header file for a class for the representation of one- and two-qubit operations.
+*/
 
 
 #pragma once
@@ -77,7 +76,7 @@ virtual ~Operation();
 
 /**
 @brief Constructor of the class.
-@param qbit_num The number of qubits spanning the unitaries
+@param qbit_num_in The number of qubits spanning the unitaries
 @return An instance of the class
 */
 Operation(int qbit_num_in);
@@ -98,14 +97,14 @@ virtual int matrix(QGD_Complex16* retrieve_matrix );
 
 /**
 @brief Call to set the stored matrix in the operation.
-@param input a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by @matrix_alloc.
+@param input a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by matrix_alloc.
 @return Returns with 0 on success.
 */
 void set_matrix( QGD_Complex16* input );
    
 /**
 @brief Set the number of qubits spanning the matrix of the operation
-@param qbit_num The number of qubits spanning the matrix
+@param qbit_num_in The number of qubits spanning the matrix
 */
 virtual void set_qbit_num( int qbit_num_in );
      

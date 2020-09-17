@@ -14,9 +14,6 @@
     You should have received a copy of the GNU General Public License
     along with this program.  If not, see http://www.gnu.org/licenses/.
 */
-/*! \LATEX_HEADER
-*/
-
 /*! \mainpage Introduction to @QGD @version
   
 
@@ -31,7 +28,7 @@ The QGD package can be built with both Intel and GNU compilers, and link against
 In the following we briefly summarize the steps to build, install and use the QGD package. 
 
   @image html layers_resized.png
-  @image latex intro_wavefunc.jpg
+  @image latex layers_resized.png
 
 The project was supported ... HUNQT ...
 
@@ -137,7 +134,7 @@ Thus, in order to really get the decomposition of a unitary, one should rather p
 
 ## Standalone executable
 
-During the compilation and the installation processes of the QGD package a standalone executable was also built and copied into the directory **path/to/gsl/bin**. 
+During the compilation and the installation processes of the QGD package a standalone executable was also built and copied into the directory **path/to/qgd/bin**. 
 This executable can be executed by a command
 
 $ ./decomposition_test
@@ -149,7 +146,7 @@ The Doxygen documentation of the QGD API can be also generated in order fully ex
 ## Python Interface
 
 The QGD package contains a simple python interface allowing the access of the functionalities of the QGD package from Python. 
-The usage of the QGD Python interface is demonstrated in the example file **example.py** located in the directory **path/to/qgd** and can be run similarly to any python scripts.
+The usage of the QGD Python interface is demonstrated in the tutorial @python_iface and in the example file **example.py** located in the directory **path/to/qgd** and can be run similarly to any python scripts.
 The example file imports the **qgd_python** module containing the wrapper class for the decomposition of a given unitary matrix.
 The wrapper class loads the shared library libqgd.so and performs the data conversion between the python and C sides.
 
@@ -166,6 +163,12 @@ located in the directory **path/to/qgd/lib(64)**.
 In order to exploit the speedup comming from the floating point optimization, we notice that Intel's compiler (usually) use this optimization by default,
 but when linking with GNU compiler, the -ffast-math option must be append when linking against the QGD API library is done.
 The full documentation of the QGD API can be accessed by a Doxygen manual which can be accessed and recreated by steps described in the following section
+
+# Doxygen manual
+
+Also, the QGD API is supprted by a Doxygen documentation, which can be accessed trough the file **path/to/qgd/Docs/html/index.html**
+
+----- how to create doxygen API documentation --------
 
 
 */

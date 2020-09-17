@@ -238,19 +238,10 @@ TAB_SIZE               = 5
 # "Side Effects:". You can put \n's in the value part of an alias to insert
 # newlines.
 
-ALIASES                = "sites=<a href=\"structsites.html\">sites</a>" \
-                         "coordinates=<a href=\"structcoordinates.html\">coordinates</a>" \
-                         "scatter_param=<a href=\"structscatter__param.html\">scatter_param</a>" \
-                         "lead_param=<a href=\"structslead__param.html\">lead_param</a>" \
-                         "shape=<a href=\"structshape.html\">shape</a>" \
-                         "Atom=<a href=\"structAtom.html\">Atom</a>" \
-                         "hole=<a href=\"structhole.html\">hole</a>" \
-                         "Available=<tr class=\"heading\"><td colspan=\"2\"><h2 class=\"groupheader\"><a name=\"avail\"></a> Available</h2></td></tr>" \
-                         "expectedresult=<tr class=\"heading\"><td colspan=\"2\"><h2 class=\"groupheader\"><a name=\"avail\"></a> Expected result</h2></td></tr>" \
-                         "reference=<tr class=\"heading\"><td colspan=\"2\"><h2 class=\"groupheader\"><a name=\"avail\"></a> Reference</h2></td></tr>" \
-                         EQuUs=EQuUs \
-                         "MKL=EQuUs MKL" \
-                         "version=v5.0.144"
+ALIASES                = "QGD=Quantum Gate Decomposer" \
+                         version=v1.1 \
+                         "index=<a href=\"index.html\">Main Page</a>" \
+                         "python_iface=<a href=\"group__python.html\">QGD Python Interface</a>"
 
 # This tag can be used to specify a number of word-keyword mappings (TCL only).
 # A mapping has the form "name=value". For example adding "class=itcl::class"
@@ -864,7 +855,11 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = 
+EXCLUDE                = ../common/include \
+                         ../decomposition/include \
+                         ../operations/include \
+                         ../random_unitary/include \
+                         ../python_interface.h
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -897,7 +892,7 @@ EXCLUDE_SYMBOLS        =
 # that contain example code fragments that are included (see the \include
 # command).
 
-EXAMPLE_PATH           = 
+EXAMPLE_PATH           = ../example.py
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp and

@@ -1,9 +1,9 @@
 <map id="Random_Unitary::M" name="Random_Unitary::M">
-<area shape="rect" id="node2" href="$class_random___unitary.html#a8ac4986bebf98c3ef790937834388c01" title="Random_Unitary::Q" alt="" coords="222,5,357,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="qgd_calloc" alt="" coords="443,56,527,83"/>
-<area shape="rect" id="node5" href="$class_random___unitary.html#a52313a597b3167368c8b38bacb9f08b2" title="Random_Unitary::E_alpha_beta" alt="" coords="188,107,391,133"/>
-<area shape="rect" id="node6" href="$common_8cpp.html#ac876ec30dbcade845af445eb50315653" title="mult" alt="" coords="266,157,313,184"/>
-<area shape="rect" id="node7" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="qgd_free" alt="" coords="253,208,325,235"/>
-<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="aligned_alloc" alt="" coords="579,56,676,83"/>
-<area shape="rect" id="node8" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="aligned_free" alt="" coords="439,208,531,235"/>
+<area shape="rect" id="node2" href="$class_random___unitary.html#a8ac4986bebf98c3ef790937834388c01" title="Implements Eq (9) of arXiv:1303:5904v1. " alt="" coords="222,5,357,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="443,56,527,83"/>
+<area shape="rect" id="node5" href="$class_random___unitary.html#a52313a597b3167368c8b38bacb9f08b2" title="Implements matrix I below Eq (7) of arXiv:1303:5904v1. " alt="" coords="188,107,391,133"/>
+<area shape="rect" id="node6" href="$common_8cpp.html#ac876ec30dbcade845af445eb50315653" title="Call to calculate the product of two complex scalars. " alt="" coords="266,157,313,184"/>
+<area shape="rect" id="node7" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="253,208,325,235"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="579,56,676,83"/>
+<area shape="rect" id="node8" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="Free memory allocated with aligned_alloc. " alt="" coords="439,208,531,235"/>
 </map>

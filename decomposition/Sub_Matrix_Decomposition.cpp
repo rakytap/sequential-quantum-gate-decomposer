@@ -17,10 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-
-//
-// @brief A base class responsible for constructing matrices of C-NOT gates
-// gates acting on the N-qubit space
+/*! \file Sub_Matrix_Decomposition.cpp
+    \brief Class responsible for the disentanglement of one qubit from the others.
+*/
 
 #include "qgd/Sub_Matrix_Decomposition.h"
 
@@ -137,7 +136,7 @@ Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
 
 
 /**
-@brief Start the optimalization process to disentangle the most significant qubit from the others. The optimized parameters and operations are stored in the attributes @optimized_parameters and @operations.
+@brief Start the optimalization process to disentangle the most significant qubit from the others. The optimized parameters and operations are stored in the attributes optimized_parameters and operations.
 */
 void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         
@@ -281,7 +280,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
    
         
 /**
-@brief Call to solve layer by layer the optimization problem. The optimalized parameters are stored in attribute @optimized_parameters.
+@brief Call to solve layer by layer the optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
@@ -538,9 +537,9 @@ void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* pa
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-void Sub_Matrix_Decomposition::optimalization_problem_combined( const gsl_vector* parameters, void* void_instance, double* cost_function, gsl_vector* grad ) {
-    *cost_function = optimalization_problem(parameters, void_instance);
-    optimalization_problem_grad(parameters, void_instance, grad, *cost_function);
+void Sub_Matrix_Decomposition::optimalization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+    *f0 = optimalization_problem(parameters, void_instance);
+    optimalization_problem_grad(parameters, void_instance, grad, *f0);
 }        
 
 
@@ -548,7 +547,7 @@ void Sub_Matrix_Decomposition::optimalization_problem_combined( const gsl_vector
 /**
 @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
 @param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
-@param identical_blocks The number of successive identical layers used in the subdecomposition.
+@param identical_blocks_in The number of successive identical layers used in the subdecomposition.
 @return Returns with zero in case of success.
 */
 int Sub_Matrix_Decomposition::set_identical_blocks( int qbit, int identical_blocks_in )  {

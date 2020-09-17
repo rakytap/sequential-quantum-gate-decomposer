@@ -82,17 +82,16 @@ var searchBox = new SearchBox("searchBox", "search",false,'Search');
 <p>A class responsible for grouping <a class="el" href="class_c_n_o_t.html" title="A class representing a CNOT operation. ">CNOT</a> and <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operations into layers.  
  <a href="class_operation__block.html#details">More...</a></p>
 
-<p><code>#include &lt;<a class="el" href="operations_2include_2_operation__block_8h_source.html">Operation_block.h</a>&gt;</code></p>
+<p><code>#include &lt;<a class="el" href="_operation__block_8h_source.html">Operation_block.h</a>&gt;</code></p>
 <div class="dynheader">
 Inheritance diagram for Operation_block:</div>
 <div class="dyncontent">
 <div class="center"><img src="class_operation__block__inherit__graph.png" border="0" usemap="#_operation__block_inherit__map" alt="Inheritance graph"/></div>
 <map name="_operation__block_inherit__map" id="_operation__block_inherit__map">
-<area shape="rect" id="node3" href="class_decomposition___base.html" title="A class containing basic methods for the decomposition process. " alt="" coords="210,155,355,181"/>
-<area shape="rect" id="node2" href="class_operation.html" title="Base class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="243,5,322,32"/>
+<area shape="rect" id="node3" href="class_decomposition___base.html" title="A class containing basic methods for the decomposition process. " alt="" coords="111,155,257,181"/>
+<area shape="rect" id="node2" href="class_operation.html" title="Base class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="145,5,223,32"/>
 <area shape="rect" id="node4" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations..." alt="" coords="5,229,168,256"/>
 <area shape="rect" id="node5" href="class_sub___matrix___decomposition.html" title="A class responsible for the disentanglement of one qubit from the others. " alt="" coords="193,229,373,256"/>
-<area shape="rect" id="node6" href="class_two___qubit___decomposition.html" title="Two_Qubit_Decomposition" alt="" coords="397,229,576,256"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
@@ -101,132 +100,66 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a3779e559654f12c5544129c46305b6ce"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a3779e559654f12c5544129c46305b6ce">add_cnot_to_end</a> (int <a class="el" href="class_operation.html#a9a798ea8adec5a45fd2ca07996da88e1">control_qbit</a>, int <a class="el" href="class_operation.html#a3e489b72c124b494777c71b1646bb1e9">target_qbit</a>)</td></tr>
 <tr class="memdesc:a3779e559654f12c5544129c46305b6ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a C_NOT gate operation to the list of operations.  <a href="#a3779e559654f12c5544129c46305b6ce">More...</a><br /></td></tr>
 <tr class="separator:a3779e559654f12c5544129c46305b6ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3779e559654f12c5544129c46305b6ce"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a3779e559654f12c5544129c46305b6ce">add_cnot_to_end</a> (int <a class="el" href="class_operation.html#a9a798ea8adec5a45fd2ca07996da88e1">control_qbit</a>, int <a class="el" href="class_operation.html#a3e489b72c124b494777c71b1646bb1e9">target_qbit</a>)</td></tr>
-<tr class="memdesc:a3779e559654f12c5544129c46305b6ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a C_NOT gate operation to the list of operations.  <a href="#a3779e559654f12c5544129c46305b6ce">More...</a><br /></td></tr>
-<tr class="separator:a3779e559654f12c5544129c46305b6ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a207dfeddc26d79125a58e2c282bb0987"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a207dfeddc26d79125a58e2c282bb0987">add_cnot_to_front</a> (int <a class="el" href="class_operation.html#a9a798ea8adec5a45fd2ca07996da88e1">control_qbit</a>, int <a class="el" href="class_operation.html#a3e489b72c124b494777c71b1646bb1e9">target_qbit</a>)</td></tr>
-<tr class="memdesc:a207dfeddc26d79125a58e2c282bb0987"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a C_NOT gate operation to the front of the list of operations.  <a href="#a207dfeddc26d79125a58e2c282bb0987">More...</a><br /></td></tr>
-<tr class="separator:a207dfeddc26d79125a58e2c282bb0987"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a207dfeddc26d79125a58e2c282bb0987"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a207dfeddc26d79125a58e2c282bb0987">add_cnot_to_front</a> (int <a class="el" href="class_operation.html#a9a798ea8adec5a45fd2ca07996da88e1">control_qbit</a>, int <a class="el" href="class_operation.html#a3e489b72c124b494777c71b1646bb1e9">target_qbit</a>)</td></tr>
 <tr class="memdesc:a207dfeddc26d79125a58e2c282bb0987"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a C_NOT gate operation to the front of the list of operations.  <a href="#a207dfeddc26d79125a58e2c282bb0987">More...</a><br /></td></tr>
 <tr class="separator:a207dfeddc26d79125a58e2c282bb0987"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0048efcfca374a6b960a1092ab564f03"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a0048efcfca374a6b960a1092ab564f03">add_operation_to_end</a> (<a class="el" href="class_operation.html">Operation</a> *operation)</td></tr>
 <tr class="memdesc:a0048efcfca374a6b960a1092ab564f03"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a general operation to the list of operations.  <a href="#a0048efcfca374a6b960a1092ab564f03">More...</a><br /></td></tr>
 <tr class="separator:a0048efcfca374a6b960a1092ab564f03"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0048efcfca374a6b960a1092ab564f03"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a0048efcfca374a6b960a1092ab564f03">add_operation_to_end</a> (<a class="el" href="class_operation.html">Operation</a> *operation)</td></tr>
-<tr class="memdesc:a0048efcfca374a6b960a1092ab564f03"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a general operation to the list of operations.  <a href="#a0048efcfca374a6b960a1092ab564f03">More...</a><br /></td></tr>
-<tr class="separator:a0048efcfca374a6b960a1092ab564f03"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1db22aed1f33a97bcaa2fad8c321a243"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243">add_operation_to_front</a> (<a class="el" href="class_operation.html">Operation</a> *operation)</td></tr>
-<tr class="memdesc:a1db22aed1f33a97bcaa2fad8c321a243"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an operation to the front of the list of operations.  <a href="#a1db22aed1f33a97bcaa2fad8c321a243">More...</a><br /></td></tr>
-<tr class="separator:a1db22aed1f33a97bcaa2fad8c321a243"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1db22aed1f33a97bcaa2fad8c321a243"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243">add_operation_to_front</a> (<a class="el" href="class_operation.html">Operation</a> *operation)</td></tr>
 <tr class="memdesc:a1db22aed1f33a97bcaa2fad8c321a243"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an operation to the front of the list of operations.  <a href="#a1db22aed1f33a97bcaa2fad8c321a243">More...</a><br /></td></tr>
 <tr class="separator:a1db22aed1f33a97bcaa2fad8c321a243"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2253d0a652bdce52a53d45e6d0a41abd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a2253d0a652bdce52a53d45e6d0a41abd">add_operations_to_end</a> (vector&lt; <a class="el" href="class_operation.html">Operation</a> * &gt; operations_in)</td></tr>
 <tr class="memdesc:a2253d0a652bdce52a53d45e6d0a41abd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a list of operations to the list of operations.  <a href="#a2253d0a652bdce52a53d45e6d0a41abd">More...</a><br /></td></tr>
 <tr class="separator:a2253d0a652bdce52a53d45e6d0a41abd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2253d0a652bdce52a53d45e6d0a41abd"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a2253d0a652bdce52a53d45e6d0a41abd">add_operations_to_end</a> (vector&lt; <a class="el" href="class_operation.html">Operation</a> * &gt; operations_in)</td></tr>
-<tr class="memdesc:a2253d0a652bdce52a53d45e6d0a41abd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a list of operations to the list of operations.  <a href="#a2253d0a652bdce52a53d45e6d0a41abd">More...</a><br /></td></tr>
-<tr class="separator:a2253d0a652bdce52a53d45e6d0a41abd"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a50210aa57a18243de26631e0f6f823b6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a50210aa57a18243de26631e0f6f823b6">add_operations_to_front</a> (vector&lt; <a class="el" href="class_operation.html">Operation</a> * &gt; operations_in)</td></tr>
-<tr class="memdesc:a50210aa57a18243de26631e0f6f823b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an array of operations to the front of the list of operations.  <a href="#a50210aa57a18243de26631e0f6f823b6">More...</a><br /></td></tr>
-<tr class="separator:a50210aa57a18243de26631e0f6f823b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a50210aa57a18243de26631e0f6f823b6"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a50210aa57a18243de26631e0f6f823b6">add_operations_to_front</a> (vector&lt; <a class="el" href="class_operation.html">Operation</a> * &gt; operations_in)</td></tr>
 <tr class="memdesc:a50210aa57a18243de26631e0f6f823b6"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an array of operations to the front of the list of operations.  <a href="#a50210aa57a18243de26631e0f6f823b6">More...</a><br /></td></tr>
 <tr class="separator:a50210aa57a18243de26631e0f6f823b6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a44940209dbc5754b676b5a493bb153f4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a44940209dbc5754b676b5a493bb153f4">add_u3_to_end</a> (int <a class="el" href="class_operation.html#a3e489b72c124b494777c71b1646bb1e9">target_qbit</a>, bool Theta, bool Phi, bool Lambda)</td></tr>
 <tr class="memdesc:a44940209dbc5754b676b5a493bb153f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> gate to the list of operations.  <a href="#a44940209dbc5754b676b5a493bb153f4">More...</a><br /></td></tr>
 <tr class="separator:a44940209dbc5754b676b5a493bb153f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a44940209dbc5754b676b5a493bb153f4"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a44940209dbc5754b676b5a493bb153f4">add_u3_to_end</a> (int <a class="el" href="class_operation.html#a3e489b72c124b494777c71b1646bb1e9">target_qbit</a>, bool Theta, bool Phi, bool Lambda)</td></tr>
-<tr class="memdesc:a44940209dbc5754b676b5a493bb153f4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Append a <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> gate to the list of operations.  <a href="#a44940209dbc5754b676b5a493bb153f4">More...</a><br /></td></tr>
-<tr class="separator:a44940209dbc5754b676b5a493bb153f4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac870a2afab73fa33f706e2e35829b452"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#ac870a2afab73fa33f706e2e35829b452">add_u3_to_front</a> (int <a class="el" href="class_operation.html#a3e489b72c124b494777c71b1646bb1e9">target_qbit</a>, bool Theta, bool Phi, bool Lambda)</td></tr>
-<tr class="memdesc:ac870a2afab73fa33f706e2e35829b452"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> gate to the front of the list of operations.  <a href="#ac870a2afab73fa33f706e2e35829b452">More...</a><br /></td></tr>
-<tr class="separator:ac870a2afab73fa33f706e2e35829b452"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac870a2afab73fa33f706e2e35829b452"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#ac870a2afab73fa33f706e2e35829b452">add_u3_to_front</a> (int <a class="el" href="class_operation.html#a3e489b72c124b494777c71b1646bb1e9">target_qbit</a>, bool Theta, bool Phi, bool Lambda)</td></tr>
 <tr class="memdesc:ac870a2afab73fa33f706e2e35829b452"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add a <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> gate to the front of the list of operations.  <a href="#ac870a2afab73fa33f706e2e35829b452">More...</a><br /></td></tr>
 <tr class="separator:ac870a2afab73fa33f706e2e35829b452"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2aa75d20b21c3b5802730c0abe54db5e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_operation__block.html">Operation_block</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e">clone</a> ()</td></tr>
 <tr class="memdesc:a2aa75d20b21c3b5802730c0abe54db5e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a clone of the present class.  <a href="#a2aa75d20b21c3b5802730c0abe54db5e">More...</a><br /></td></tr>
 <tr class="separator:a2aa75d20b21c3b5802730c0abe54db5e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af5d1f81be3a54eada1de293d1e9877c5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_operation__block.html">Operation_block</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#af5d1f81be3a54eada1de293d1e9877c5">clone</a> ()</td></tr>
-<tr class="memdesc:af5d1f81be3a54eada1de293d1e9877c5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Create a clone of the present class.  <a href="#af5d1f81be3a54eada1de293d1e9877c5">More...</a><br /></td></tr>
-<tr class="separator:af5d1f81be3a54eada1de293d1e9877c5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a60062cf6f48ebfdcaae9db3367a66147"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147">combine</a> (<a class="el" href="class_operation__block.html">Operation_block</a> *op_block)</td></tr>
-<tr class="memdesc:a60062cf6f48ebfdcaae9db3367a66147"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to append the operations of an operation block to the current block.  <a href="#a60062cf6f48ebfdcaae9db3367a66147">More...</a><br /></td></tr>
-<tr class="separator:a60062cf6f48ebfdcaae9db3367a66147"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a60062cf6f48ebfdcaae9db3367a66147"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147">combine</a> (<a class="el" href="class_operation__block.html">Operation_block</a> *op_block)</td></tr>
 <tr class="memdesc:a60062cf6f48ebfdcaae9db3367a66147"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to append the operations of an operation block to the current block.  <a href="#a60062cf6f48ebfdcaae9db3367a66147">More...</a><br /></td></tr>
 <tr class="separator:a60062cf6f48ebfdcaae9db3367a66147"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a2e9b60d334a0e0c99dede014ac989d0a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a">get_control_qbit</a> ()</td></tr>
 <tr class="memdesc:a2e9b60d334a0e0c99dede014ac989d0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the index of the control qubit.  <a href="#a2e9b60d334a0e0c99dede014ac989d0a">More...</a><br /></td></tr>
 <tr class="separator:a2e9b60d334a0e0c99dede014ac989d0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2e9b60d334a0e0c99dede014ac989d0a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a">get_control_qbit</a> ()</td></tr>
-<tr class="memdesc:a2e9b60d334a0e0c99dede014ac989d0a"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the index of the control qubit.  <a href="#a2e9b60d334a0e0c99dede014ac989d0a">More...</a><br /></td></tr>
-<tr class="separator:a2e9b60d334a0e0c99dede014ac989d0a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac39ab782da3e34c8ec4acf6181fbc5f7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structgates__num.html">gates_num</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7">get_gate_nums</a> ()</td></tr>
-<tr class="memdesc:ac39ab782da3e34c8ec4acf6181fbc5f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the number of the individual gate types in the list of operations.  <a href="#ac39ab782da3e34c8ec4acf6181fbc5f7">More...</a><br /></td></tr>
-<tr class="separator:ac39ab782da3e34c8ec4acf6181fbc5f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac39ab782da3e34c8ec4acf6181fbc5f7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structgates__num.html">gates_num</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7">get_gate_nums</a> ()</td></tr>
 <tr class="memdesc:ac39ab782da3e34c8ec4acf6181fbc5f7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the number of the individual gate types in the list of operations.  <a href="#ac39ab782da3e34c8ec4acf6181fbc5f7">More...</a><br /></td></tr>
 <tr class="separator:ac39ab782da3e34c8ec4acf6181fbc5f7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a92e4f0566e4b36830652729377a8e936"><td class="memItemLeft" align="right" valign="top">std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a92e4f0566e4b36830652729377a8e936">get_involved_qubits</a> ()</td></tr>
 <tr class="memdesc:a92e4f0566e4b36830652729377a8e936"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the qubits involved in the operations stored in the block of operations.  <a href="#a92e4f0566e4b36830652729377a8e936">More...</a><br /></td></tr>
 <tr class="separator:a92e4f0566e4b36830652729377a8e936"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aebdbb71e02ff6826d967d55f4cd4db28"><td class="memItemLeft" align="right" valign="top">std::vector&lt; int &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#aebdbb71e02ff6826d967d55f4cd4db28">get_involved_qubits</a> ()</td></tr>
-<tr class="memdesc:aebdbb71e02ff6826d967d55f4cd4db28"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the qubits involved in the operations stored in the block of operations.  <a href="#aebdbb71e02ff6826d967d55f4cd4db28">More...</a><br /></td></tr>
-<tr class="separator:aebdbb71e02ff6826d967d55f4cd4db28"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aedddbc5242eab7c00125359a835ac53d"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#aedddbc5242eab7c00125359a835ac53d">get_matrices</a> (const double *parameters)</td></tr>
 <tr class="memdesc:aedddbc5242eab7c00125359a835ac53d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the list of matrix representation of the operations grouped in the block.  <a href="#aedddbc5242eab7c00125359a835ac53d">More...</a><br /></td></tr>
 <tr class="separator:aedddbc5242eab7c00125359a835ac53d"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af3e794fd9a409978a414af539ad23320"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#af3e794fd9a409978a414af539ad23320">get_matrices</a> (const double *parameters)</td></tr>
-<tr class="memdesc:af3e794fd9a409978a414af539ad23320"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the list of matrix representation of the operations grouped in the block.  <a href="#af3e794fd9a409978a414af539ad23320">More...</a><br /></td></tr>
-<tr class="separator:af3e794fd9a409978a414af539ad23320"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a27592a2d25c7e74416de2b9d7997efca"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca">get_operation_num</a> ()</td></tr>
-<tr class="memdesc:a27592a2d25c7e74416de2b9d7997efca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the number of operations grouped in the block.  <a href="#a27592a2d25c7e74416de2b9d7997efca">More...</a><br /></td></tr>
-<tr class="separator:a27592a2d25c7e74416de2b9d7997efca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a27592a2d25c7e74416de2b9d7997efca"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca">get_operation_num</a> ()</td></tr>
 <tr class="memdesc:a27592a2d25c7e74416de2b9d7997efca"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the number of operations grouped in the block.  <a href="#a27592a2d25c7e74416de2b9d7997efca">More...</a><br /></td></tr>
 <tr class="separator:a27592a2d25c7e74416de2b9d7997efca"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aecb9b674dfd43456605a6c13dfba3afb"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_operation.html">Operation</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb">get_operations</a> ()</td></tr>
 <tr class="memdesc:aecb9b674dfd43456605a6c13dfba3afb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the operations stored in the block.  <a href="#aecb9b674dfd43456605a6c13dfba3afb">More...</a><br /></td></tr>
 <tr class="separator:aecb9b674dfd43456605a6c13dfba3afb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a489d0c5758732ca49d5f5aca225e9318"><td class="memItemLeft" align="right" valign="top">std::vector&lt; <a class="el" href="class_operation.html">Operation</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a489d0c5758732ca49d5f5aca225e9318">get_operations</a> ()</td></tr>
-<tr class="memdesc:a489d0c5758732ca49d5f5aca225e9318"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the operations stored in the block.  <a href="#a489d0c5758732ca49d5f5aca225e9318">More...</a><br /></td></tr>
-<tr class="separator:a489d0c5758732ca49d5f5aca225e9318"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af7ff4a8876a7b1c062ea2f35efac18b0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0">get_parameter_num</a> ()</td></tr>
-<tr class="memdesc:af7ff4a8876a7b1c062ea2f35efac18b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the number of free parameters.  <a href="#af7ff4a8876a7b1c062ea2f35efac18b0">More...</a><br /></td></tr>
-<tr class="separator:af7ff4a8876a7b1c062ea2f35efac18b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:af7ff4a8876a7b1c062ea2f35efac18b0"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0">get_parameter_num</a> ()</td></tr>
 <tr class="memdesc:af7ff4a8876a7b1c062ea2f35efac18b0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the number of free parameters.  <a href="#af7ff4a8876a7b1c062ea2f35efac18b0">More...</a><br /></td></tr>
 <tr class="separator:af7ff4a8876a7b1c062ea2f35efac18b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a55eee2ad4b90be085b1ec2ce018502f8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8">get_target_qbit</a> ()</td></tr>
 <tr class="memdesc:a55eee2ad4b90be085b1ec2ce018502f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the index of the target qubit.  <a href="#a55eee2ad4b90be085b1ec2ce018502f8">More...</a><br /></td></tr>
 <tr class="separator:a55eee2ad4b90be085b1ec2ce018502f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a55eee2ad4b90be085b1ec2ce018502f8"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8">get_target_qbit</a> ()</td></tr>
-<tr class="memdesc:a55eee2ad4b90be085b1ec2ce018502f8"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the index of the target qubit.  <a href="#a55eee2ad4b90be085b1ec2ce018502f8">More...</a><br /></td></tr>
-<tr class="separator:a55eee2ad4b90be085b1ec2ce018502f8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acc601a7a00616fd6e2a61f61e084afac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="operations_2include_2_operation_8h.html#ad99e62941c8e4b13e5fc45ecaaf65eff">operation_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac">get_type</a> ()</td></tr>
-<tr class="memdesc:acc601a7a00616fd6e2a61f61e084afac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the type of the operation.  <a href="#acc601a7a00616fd6e2a61f61e084afac">More...</a><br /></td></tr>
-<tr class="separator:acc601a7a00616fd6e2a61f61e084afac"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acc601a7a00616fd6e2a61f61e084afac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="operations_2include_2_operation_8h.html#ad99e62941c8e4b13e5fc45ecaaf65eff">operation_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac">get_type</a> ()</td></tr>
+<tr class="memitem:acc601a7a00616fd6e2a61f61e084afac"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_operation_8h.html#ad99e62941c8e4b13e5fc45ecaaf65eff">operation_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac">get_type</a> ()</td></tr>
 <tr class="memdesc:acc601a7a00616fd6e2a61f61e084afac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the type of the operation.  <a href="#acc601a7a00616fd6e2a61f61e084afac">More...</a><br /></td></tr>
 <tr class="separator:acc601a7a00616fd6e2a61f61e084afac"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a29e2c74d7fa7344193a17e39248eb803"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a29e2c74d7fa7344193a17e39248eb803">list_operations</a> (const double *parameters, int start_index)</td></tr>
 <tr class="memdesc:a29e2c74d7fa7344193a17e39248eb803"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to print the list of operations stored in the block of operations for a specific set of parameters.  <a href="#a29e2c74d7fa7344193a17e39248eb803">More...</a><br /></td></tr>
 <tr class="separator:a29e2c74d7fa7344193a17e39248eb803"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29e2c74d7fa7344193a17e39248eb803"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a29e2c74d7fa7344193a17e39248eb803">list_operations</a> (const double *parameters, int start_index)</td></tr>
-<tr class="memdesc:a29e2c74d7fa7344193a17e39248eb803"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to print the list of operations stored in the block of operations for a specific set of parameters.  <a href="#a29e2c74d7fa7344193a17e39248eb803">More...</a><br /></td></tr>
-<tr class="separator:a29e2c74d7fa7344193a17e39248eb803"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a43cdb87a4ee2a339de30c94cc94fa40e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a43cdb87a4ee2a339de30c94cc94fa40e">matrix</a> (const double *parameters)</td></tr>
-<tr class="memdesc:a43cdb87a4ee2a339de30c94cc94fa40e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)  <a href="#a43cdb87a4ee2a339de30c94cc94fa40e">More...</a><br /></td></tr>
-<tr class="separator:a43cdb87a4ee2a339de30c94cc94fa40e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a916db3ef5d6fcf25367843a1306cd4e0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a916db3ef5d6fcf25367843a1306cd4e0">matrix</a> (const double *parameters)</td></tr>
 <tr class="memdesc:a916db3ef5d6fcf25367843a1306cd4e0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)  <a href="#a916db3ef5d6fcf25367843a1306cd4e0">More...</a><br /></td></tr>
 <tr class="separator:a916db3ef5d6fcf25367843a1306cd4e0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:abf4287a38eeca35a81163f86a361d95c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#abf4287a38eeca35a81163f86a361d95c">matrix</a> (const double *parameters, <a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *block_mtx)</td></tr>
-<tr class="memdesc:abf4287a38eeca35a81163f86a361d95c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)  <a href="#abf4287a38eeca35a81163f86a361d95c">More...</a><br /></td></tr>
-<tr class="separator:abf4287a38eeca35a81163f86a361d95c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abf4287a38eeca35a81163f86a361d95c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#abf4287a38eeca35a81163f86a361d95c">matrix</a> (const double *parameters, <a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *block_mtx)</td></tr>
 <tr class="memdesc:abf4287a38eeca35a81163f86a361d95c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)  <a href="#abf4287a38eeca35a81163f86a361d95c">More...</a><br /></td></tr>
 <tr class="separator:abf4287a38eeca35a81163f86a361d95c"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -239,43 +172,22 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a3ee535e12ee1edb3923fc0c6340d7567"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567">Operation_block</a> ()</td></tr>
 <tr class="memdesc:a3ee535e12ee1edb3923fc0c6340d7567"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deafult constructor of the class.  <a href="#a3ee535e12ee1edb3923fc0c6340d7567">More...</a><br /></td></tr>
 <tr class="separator:a3ee535e12ee1edb3923fc0c6340d7567"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3ee535e12ee1edb3923fc0c6340d7567"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567">Operation_block</a> ()</td></tr>
-<tr class="memdesc:a3ee535e12ee1edb3923fc0c6340d7567"><td class="mdescLeft">&#160;</td><td class="mdescRight">Deafult constructor of the class.  <a href="#a3ee535e12ee1edb3923fc0c6340d7567">More...</a><br /></td></tr>
-<tr class="separator:a3ee535e12ee1edb3923fc0c6340d7567"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a8acfc70f86a9777ea272ec4ccdfbc7b7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a8acfc70f86a9777ea272ec4ccdfbc7b7">Operation_block</a> (int qbit_num_in)</td></tr>
-<tr class="memdesc:a8acfc70f86a9777ea272ec4ccdfbc7b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor of the class.  <a href="#a8acfc70f86a9777ea272ec4ccdfbc7b7">More...</a><br /></td></tr>
-<tr class="separator:a8acfc70f86a9777ea272ec4ccdfbc7b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8acfc70f86a9777ea272ec4ccdfbc7b7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a8acfc70f86a9777ea272ec4ccdfbc7b7">Operation_block</a> (int qbit_num_in)</td></tr>
 <tr class="memdesc:a8acfc70f86a9777ea272ec4ccdfbc7b7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Constructor of the class.  <a href="#a8acfc70f86a9777ea272ec4ccdfbc7b7">More...</a><br /></td></tr>
 <tr class="separator:a8acfc70f86a9777ea272ec4ccdfbc7b7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c3d4eadaef2f21f1c5dd9227faec7ce"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce">release_operations</a> ()</td></tr>
 <tr class="memdesc:a7c3d4eadaef2f21f1c5dd9227faec7ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to release the stored operations.  <a href="#a7c3d4eadaef2f21f1c5dd9227faec7ce">More...</a><br /></td></tr>
 <tr class="separator:a7c3d4eadaef2f21f1c5dd9227faec7ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7c3d4eadaef2f21f1c5dd9227faec7ce"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce">release_operations</a> ()</td></tr>
-<tr class="memdesc:a7c3d4eadaef2f21f1c5dd9227faec7ce"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to release the stored operations.  <a href="#a7c3d4eadaef2f21f1c5dd9227faec7ce">More...</a><br /></td></tr>
-<tr class="separator:a7c3d4eadaef2f21f1c5dd9227faec7ce"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af2a71d29cdbce498e85f11b9ed81e0c9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#af2a71d29cdbce498e85f11b9ed81e0c9">reorder_qubits</a> (vector&lt; int &gt;)</td></tr>
-<tr class="memdesc:af2a71d29cdbce498e85f11b9ed81e0c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to reorder the qubits in the matrix of the operation.  <a href="#af2a71d29cdbce498e85f11b9ed81e0c9">More...</a><br /></td></tr>
-<tr class="separator:af2a71d29cdbce498e85f11b9ed81e0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af2a71d29cdbce498e85f11b9ed81e0c9"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#af2a71d29cdbce498e85f11b9ed81e0c9">reorder_qubits</a> (vector&lt; int &gt;)</td></tr>
-<tr class="memdesc:af2a71d29cdbce498e85f11b9ed81e0c9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to reorder the qubits in the matrix of the operation.  <a href="#af2a71d29cdbce498e85f11b9ed81e0c9">More...</a><br /></td></tr>
-<tr class="separator:af2a71d29cdbce498e85f11b9ed81e0c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a026d3dcf0ad00af99c7a9097d3cf1c74"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#a026d3dcf0ad00af99c7a9097d3cf1c74">set_matrix</a> (<a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *input)</td></tr>
-<tr class="memdesc:a026d3dcf0ad00af99c7a9097d3cf1c74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to set the stored matrix in the operation.  <a href="#a026d3dcf0ad00af99c7a9097d3cf1c74">More...</a><br /></td></tr>
-<tr class="separator:a026d3dcf0ad00af99c7a9097d3cf1c74"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ad0dbc9c697d53e2b6edf3bc42b61809e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#ad0dbc9c697d53e2b6edf3bc42b61809e">reorder_qubits</a> (vector&lt; int &gt; qbit_list)</td></tr>
+<tr class="memdesc:ad0dbc9c697d53e2b6edf3bc42b61809e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to reorder the qubits in the matrix of the operation.  <a href="#ad0dbc9c697d53e2b6edf3bc42b61809e">More...</a><br /></td></tr>
+<tr class="separator:ad0dbc9c697d53e2b6edf3bc42b61809e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a026d3dcf0ad00af99c7a9097d3cf1c74"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#a026d3dcf0ad00af99c7a9097d3cf1c74">set_matrix</a> (<a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *input)</td></tr>
 <tr class="memdesc:a026d3dcf0ad00af99c7a9097d3cf1c74"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to set the stored matrix in the operation.  <a href="#a026d3dcf0ad00af99c7a9097d3cf1c74">More...</a><br /></td></tr>
 <tr class="separator:a026d3dcf0ad00af99c7a9097d3cf1c74"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc41ac933723558df3f4e65ae1158091"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#acc41ac933723558df3f4e65ae1158091">set_qbit_num</a> (int qbit_num_in)</td></tr>
 <tr class="memdesc:acc41ac933723558df3f4e65ae1158091"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the number of qubits spanning the matrix of the operations stored in the block of operations.  <a href="#acc41ac933723558df3f4e65ae1158091">More...</a><br /></td></tr>
 <tr class="separator:acc41ac933723558df3f4e65ae1158091"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acc41ac933723558df3f4e65ae1158091"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#acc41ac933723558df3f4e65ae1158091">set_qbit_num</a> (int qbit_num_in)</td></tr>
-<tr class="memdesc:acc41ac933723558df3f4e65ae1158091"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the number of qubits spanning the matrix of the operations stored in the block of operations.  <a href="#acc41ac933723558df3f4e65ae1158091">More...</a><br /></td></tr>
-<tr class="separator:acc41ac933723558df3f4e65ae1158091"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45267880235adbe428861c9838ae0459"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a45267880235adbe428861c9838ae0459">~Operation_block</a> ()</td></tr>
-<tr class="memdesc:a45267880235adbe428861c9838ae0459"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor of the class.  <a href="#a45267880235adbe428861c9838ae0459">More...</a><br /></td></tr>
-<tr class="separator:a45267880235adbe428861c9838ae0459"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a45267880235adbe428861c9838ae0459"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a45267880235adbe428861c9838ae0459">~Operation_block</a> ()</td></tr>
+<tr class="memitem:a45267880235adbe428861c9838ae0459"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a45267880235adbe428861c9838ae0459">~Operation_block</a> ()</td></tr>
 <tr class="memdesc:a45267880235adbe428861c9838ae0459"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor of the class.  <a href="#a45267880235adbe428861c9838ae0459">More...</a><br /></td></tr>
 <tr class="separator:a45267880235adbe428861c9838ae0459"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -287,32 +199,32 @@ Protected Attributes</h2></td></tr>
 <tr class="memitem:a907101b9a80e6ebeaa96cc7b973cf413"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a907101b9a80e6ebeaa96cc7b973cf413">layer_num</a></td></tr>
 <tr class="memdesc:a907101b9a80e6ebeaa96cc7b973cf413"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of operation layers  <a href="#a907101b9a80e6ebeaa96cc7b973cf413">More...</a><br /></td></tr>
 <tr class="separator:a907101b9a80e6ebeaa96cc7b973cf413"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade4d28d271ca13950d04363aac1c382e"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#ade4d28d271ca13950d04363aac1c382e">matrix_alloc</a></td></tr>
-<tr class="memdesc:ade4d28d271ca13950d04363aac1c382e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to the operatrion matrix (if it is a constant general matrix)  <a href="#ade4d28d271ca13950d04363aac1c382e">More...</a><br /></td></tr>
-<tr class="separator:ade4d28d271ca13950d04363aac1c382e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a24adaa4ec518c726e0e1228ab86de51f"><td class="memItemLeft" align="right" valign="top"><a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#a24adaa4ec518c726e0e1228ab86de51f">matrix_alloc</a></td></tr>
+<tr class="memdesc:a24adaa4ec518c726e0e1228ab86de51f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Pointer to the operatrion matrix (if it is a constant general matrix)  <a href="#a24adaa4ec518c726e0e1228ab86de51f">More...</a><br /></td></tr>
+<tr class="separator:a24adaa4ec518c726e0e1228ab86de51f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8236c07112cb165a00d3869363808624"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#a8236c07112cb165a00d3869363808624">matrix_size</a></td></tr>
 <tr class="memdesc:a8236c07112cb165a00d3869363808624"><td class="mdescLeft">&#160;</td><td class="mdescRight">The size N of the NxN matrix associated with the operations.  <a href="#a8236c07112cb165a00d3869363808624">More...</a><br /></td></tr>
 <tr class="separator:a8236c07112cb165a00d3869363808624"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1efec4139888e591b59acd7b84497af1"><td class="memItemLeft" align="right" valign="top">vector&lt; <a class="el" href="class_operation.html">Operation</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#a1efec4139888e591b59acd7b84497af1">operations</a></td></tr>
-<tr class="memdesc:a1efec4139888e591b59acd7b84497af1"><td class="mdescLeft">&#160;</td><td class="mdescRight">The list of stored operations.  <a href="#a1efec4139888e591b59acd7b84497af1">More...</a><br /></td></tr>
-<tr class="separator:a1efec4139888e591b59acd7b84497af1"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa57505afe5b5ec27f6d053044b86e043"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#aa57505afe5b5ec27f6d053044b86e043">parameter_num</a></td></tr>
-<tr class="memdesc:aa57505afe5b5ec27f6d053044b86e043"><td class="mdescLeft">&#160;</td><td class="mdescRight">the number of free parameters of the operation  <a href="#aa57505afe5b5ec27f6d053044b86e043">More...</a><br /></td></tr>
-<tr class="separator:aa57505afe5b5ec27f6d053044b86e043"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af7d5248706f24b8f3d8b72041cf79ccb"><td class="memItemLeft" align="right" valign="top">vector&lt; <a class="el" href="class_operation.html">Operation</a> * &gt;&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation__block.html#af7d5248706f24b8f3d8b72041cf79ccb">operations</a></td></tr>
+<tr class="memdesc:af7d5248706f24b8f3d8b72041cf79ccb"><td class="mdescLeft">&#160;</td><td class="mdescRight">The list of stored operations.  <a href="#af7d5248706f24b8f3d8b72041cf79ccb">More...</a><br /></td></tr>
+<tr class="separator:af7d5248706f24b8f3d8b72041cf79ccb"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1f8ad6dd93cf511090ea5c1da85e8d1a"><td class="memItemLeft" align="right" valign="top">unsigned int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#a1f8ad6dd93cf511090ea5c1da85e8d1a">parameter_num</a></td></tr>
+<tr class="memdesc:a1f8ad6dd93cf511090ea5c1da85e8d1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">the number of free parameters of the operation  <a href="#a1f8ad6dd93cf511090ea5c1da85e8d1a">More...</a><br /></td></tr>
+<tr class="separator:a1f8ad6dd93cf511090ea5c1da85e8d1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aecd5fbf1dd4ea532b2e58471ff8bad69"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#aecd5fbf1dd4ea532b2e58471ff8bad69">qbit_num</a></td></tr>
 <tr class="memdesc:aecd5fbf1dd4ea532b2e58471ff8bad69"><td class="mdescLeft">&#160;</td><td class="mdescRight">number of qubits spanning the matrix of the operation  <a href="#aecd5fbf1dd4ea532b2e58471ff8bad69">More...</a><br /></td></tr>
 <tr class="separator:aecd5fbf1dd4ea532b2e58471ff8bad69"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3e489b72c124b494777c71b1646bb1e9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#a3e489b72c124b494777c71b1646bb1e9">target_qbit</a></td></tr>
 <tr class="memdesc:a3e489b72c124b494777c71b1646bb1e9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The index of the qubit on which the operation acts (target_qbit &gt;= 0)  <a href="#a3e489b72c124b494777c71b1646bb1e9">More...</a><br /></td></tr>
 <tr class="separator:a3e489b72c124b494777c71b1646bb1e9"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ad47c56c86d62a4c775571e1600416479"><td class="memItemLeft" align="right" valign="top"><a class="el" href="operations_2include_2_operation_8h.html#ad99e62941c8e4b13e5fc45ecaaf65eff">operation_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#ad47c56c86d62a4c775571e1600416479">type</a></td></tr>
+<tr class="memitem:ad47c56c86d62a4c775571e1600416479"><td class="memItemLeft" align="right" valign="top"><a class="el" href="_operation_8h.html#ad99e62941c8e4b13e5fc45ecaaf65eff">operation_type</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_operation.html#ad47c56c86d62a4c775571e1600416479">type</a></td></tr>
 <tr class="memdesc:ad47c56c86d62a4c775571e1600416479"><td class="mdescLeft">&#160;</td><td class="mdescRight">The type of the operation (see enumeration operation_type)  <a href="#ad47c56c86d62a4c775571e1600416479">More...</a><br /></td></tr>
 <tr class="separator:ad47c56c86d62a4c775571e1600416479"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>A class responsible for grouping <a class="el" href="class_c_n_o_t.html" title="A class representing a CNOT operation. ">CNOT</a> and <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operations into layers. </p>
 
-<p>Definition at line <a class="el" href="operations_2include_2_operation__block_8h_source.html#l00033">33</a> of file <a class="el" href="operations_2include_2_operation__block_8h_source.html">operations/include/Operation_block.h</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8h_source.html#l00036">36</a> of file <a class="el" href="_operation__block_8h_source.html">Operation_block.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a class="anchor" id="a3ee535e12ee1edb3923fc0c6340d7567"></a>
 <div class="memitem">
@@ -329,25 +241,24 @@ Protected Attributes</h2></td></tr>
 
 <p>Deafult constructor of the class. </p>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00035">35</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00034">34</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="class_operation__block_a3ee535e12ee1edb3923fc0c6340d7567_icgraph.png" border="0" usemap="#class_operation__block_a3ee535e12ee1edb3923fc0c6340d7567_icgraph" alt=""/></div>
 <map name="class_operation__block_a3ee535e12ee1edb3923fc0c6340d7567_icgraph" id="class_operation__block_a3ee535e12ee1edb3923fc0c6340d7567_icgraph">
-<area shape="rect" id="node2" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimalization problem is solved, the indepent qubits can be rotated into state |0&gt; by..." alt="" coords="470,320,629,361"/>
-<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#a13453d7704869cfc8536767c2db4518d" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="911,21,1074,62"/>
-<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1128,130,1291,172"/>
-<area shape="rect" id="node10" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="245,138,399,164"/>
-<area shape="rect" id="node13" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimalization process to disentangle the most significant qubit from the others..." alt="" coords="232,261,412,302"/>
-<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#ae7fd1992d645a7ff41c02e48ba1dc5ad" title="Start the disentanglig process of the unitary. " alt="" coords="691,257,853,298"/>
-<area shape="rect" id="node4" href="decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="907,407,1078,434"/>
-<area shape="rect" id="node5" href="standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="967,255,1018,282"/>
-<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="911,189,1074,230"/>
-<area shape="rect" id="node9" href="qgd_2python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="905,356,1080,383"/>
-<area shape="rect" id="node11" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="460,188,639,244"/>
-<area shape="rect" id="node12" href="class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="687,87,857,114"/>
+<area shape="rect" id="node2" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimalization problem is solved, the indepent qubits can be rotated into state |0&gt; by..." alt="" coords="470,26,629,67"/>
+<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#a13453d7704869cfc8536767c2db4518d" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="911,258,1074,299"/>
+<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1128,317,1291,358"/>
+<area shape="rect" id="node9" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="245,297,399,324"/>
+<area shape="rect" id="node12" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimalization process to disentangle the most significant qubit from the others..." alt="" coords="232,139,412,181"/>
+<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="691,99,853,141"/>
+<area shape="rect" id="node4" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="967,56,1018,83"/>
+<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="911,158,1074,199"/>
+<area shape="rect" id="node8" href="python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="905,5,1080,32"/>
+<area shape="rect" id="node10" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="460,143,639,199"/>
+<area shape="rect" id="node11" href="class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="687,324,857,351"/>
 </map>
 </div>
 </p>
@@ -371,18 +282,21 @@ Here is the caller graph for this function:</div>
 <p>Constructor of the class. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">qbit_num</td><td>The number of qubits in the unitaries </td></tr>
+    <tr><td class="paramname">qbit_num_in</td><td>The number of qubits in the unitaries </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00049">49</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00048">48</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 </div>
 </div>
 <a class="anchor" id="a45267880235adbe428861c9838ae0459"></a>
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">Operation_block::~Operation_block </td>
@@ -391,11 +305,16 @@ Here is the caller graph for this function:</div>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Destructor of the class. </p>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00061">61</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00060">60</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -407,64 +326,6 @@ Here is the call graph for this function:</div>
 </map>
 </div>
 </p>
-
-</div>
-</div>
-<a class="anchor" id="a3ee535e12ee1edb3923fc0c6340d7567"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">Operation_block::Operation_block </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Deafult constructor of the class. </p>
-
-</div>
-</div>
-<a class="anchor" id="a8acfc70f86a9777ea272ec4ccdfbc7b7"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">Operation_block::Operation_block </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>qbit_num_in</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Constructor of the class. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">qbit_num</td><td>The number of qubits in the unitaries </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="a45267880235adbe428861c9838ae0459"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">Operation_block::~Operation_block </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Destructor of the class. </p>
 
 </div>
 </div>
@@ -502,7 +363,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00304">304</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00303">303</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -538,41 +399,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="a3779e559654f12c5544129c46305b6ce"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::add_cnot_to_end </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>control_qbit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>target_qbit</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Append a C_NOT gate operation to the list of operations. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">control_qbit</td><td>The identification number of the control qubit. (0 &lt;= target_qbit &lt;= qbit_num-1) </td></tr>
-    <tr><td class="paramname">target_qbit</td><td>The identification number of the target qubit. (0 &lt;= target_qbit &lt;= qbit_num-1) </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a class="anchor" id="a207dfeddc26d79125a58e2c282bb0987"></a>
 <div class="memitem">
 <div class="memproto">
@@ -606,7 +432,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00321">321</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00320">320</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -621,65 +447,6 @@ Here is the call graph for this function:</div>
 </map>
 </div>
 </p>
-
-</div>
-</div>
-<a class="anchor" id="a207dfeddc26d79125a58e2c282bb0987"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::add_cnot_to_front </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>control_qbit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>target_qbit</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Add a C_NOT gate operation to the front of the list of operations. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">control_qbit</td><td>The identification number of the control qubit. (0 &lt;= target_qbit &lt;= qbit_num-1) </td></tr>
-    <tr><td class="paramname">target_qbit</td><td>The identification number of the target qubit. (0 &lt;= target_qbit &lt;= qbit_num-1) </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="a0048efcfca374a6b960a1092ab564f03"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::add_operation_to_end </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="class_operation.html">Operation</a> *&#160;</td>
-          <td class="paramname"><em>operation</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Append a general operation to the list of operations. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">operation</td><td>A pointer to a class <a class="el" href="class_operation.html" title="Base class for the representation of one- and two-qubit operations. ">Operation</a> describing an operation. </td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>
@@ -701,12 +468,12 @@ Here is the call graph for this function:</div>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">operation</td><td>A pointer to a class <a class="el" href="class_operation.html" title="Base class for the representation of one- and two-qubit operations. ">Operation</a> describing an operation.</td></tr>
-    <tr><td class="paramname">operation</td><td>An instance of class  describing an operation. </td></tr>
+    <tr><td class="paramname">operation</td><td>An instance of class <a class="el" href="class_operation.html" title="Base class for the representation of one- and two-qubit operations. ">Operation</a> describing an operation. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00362">362</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00361">361</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -769,32 +536,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-</div>
-</div>
-<a class="anchor" id="a1db22aed1f33a97bcaa2fad8c321a243"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::add_operation_to_front </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="class_operation.html">Operation</a> *&#160;</td>
-          <td class="paramname"><em>operation</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Add an operation to the front of the list of operations. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">operation</td><td>A pointer to a class <a class="el" href="class_operation.html" title="Base class for the representation of one- and two-qubit operations. ">Operation</a> describing an operation.</td></tr>
-    <tr><td class="paramname">operation</td><td>A pointer to a class  describing an operation. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00385">385</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00384">384</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -850,12 +592,12 @@ Here is the caller graph for this function:</div>
 <p>Append a list of operations to the list of operations. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">operations</td><td>A list of operation class instances. </td></tr>
+    <tr><td class="paramname">operations_in</td><td>A list of operation class instances. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00335">335</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00334">334</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -873,30 +615,6 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="a2253d0a652bdce52a53d45e6d0a41abd"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::add_operations_to_end </td>
-          <td>(</td>
-          <td class="paramtype">vector&lt; <a class="el" href="class_operation.html">Operation</a> * &gt;&#160;</td>
-          <td class="paramname"><em>operations_in</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Append a list of operations to the list of operations. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">operations</td><td>A list of operation class instances. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a class="anchor" id="a50210aa57a18243de26631e0f6f823b6"></a>
 <div class="memitem">
 <div class="memproto">
@@ -914,36 +632,12 @@ Here is the call graph for this function:</div>
 <p>Add an array of operations to the front of the list of operations. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">operations</td><td>A list of operation class instances. </td></tr>
+    <tr><td class="paramname">operations_in</td><td>A list of operation class instances. </td></tr>
   </table>
   </dd>
 </dl>
 
-</div>
-</div>
-<a class="anchor" id="a50210aa57a18243de26631e0f6f823b6"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::add_operations_to_front </td>
-          <td>(</td>
-          <td class="paramtype">vector&lt; <a class="el" href="class_operation.html">Operation</a> * &gt;&#160;</td>
-          <td class="paramname"><em>operations_in</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Add an array of operations to the front of the list of operations. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">operations</td><td>A list of operation class instances. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00348">348</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00347">347</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1008,7 +702,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00273">273</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00272">272</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1044,55 +738,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="a44940209dbc5754b676b5a493bb153f4"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::add_u3_to_end </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>target_qbit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>Theta</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>Phi</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>Lambda</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Append a <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> gate to the list of operations. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">target_qbit</td><td>The identification number of the targt qubit. (0 &lt;= target_qbit &lt;= qbit_num-1) </td></tr>
-    <tr><td class="paramname">Theta</td><td>The Theta parameter of the <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operation </td></tr>
-    <tr><td class="paramname">Phi</td><td>The Phi parameter of the <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operation </td></tr>
-    <tr><td class="paramname">Lambda</td><td>The Lambda parameter of the <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operation </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a class="anchor" id="ac870a2afab73fa33f706e2e35829b452"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1140,7 +785,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00289">289</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00288">288</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1155,55 +800,6 @@ Here is the call graph for this function:</div>
 </map>
 </div>
 </p>
-
-</div>
-</div>
-<a class="anchor" id="ac870a2afab73fa33f706e2e35829b452"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::add_u3_to_front </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>target_qbit</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>Theta</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>Phi</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">bool&#160;</td>
-          <td class="paramname"><em>Lambda</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Add a <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> gate to the front of the list of operations. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">target_qbit</td><td>The identification number of the targt qubit. (0 &lt;= target_qbit &lt;= qbit_num-1) </td></tr>
-    <tr><td class="paramname">Theta</td><td>The Theta parameter of the <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operation </td></tr>
-    <tr><td class="paramname">Phi</td><td>The Phi parameter of the <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operation </td></tr>
-    <tr><td class="paramname">Lambda</td><td>The Lambda parameter of the <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operation </td></tr>
-  </table>
-  </dd>
-</dl>
 
 </div>
 </div>
@@ -1223,7 +819,7 @@ Here is the call graph for this function:</div>
 <p>Create a clone of the present class. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with a pointer pointing to the cloned object. </dd></dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00698">698</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00697">697</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1266,24 +862,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="af5d1f81be3a54eada1de293d1e9877c5"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="class_operation__block.html">Operation_block</a>* Operation_block::clone </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Create a clone of the present class. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return with a pointer pointing to the cloned object. </dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="a60062cf6f48ebfdcaae9db3367a66147"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1301,13 +879,12 @@ Here is the caller graph for this function:</div>
 <p>Call to append the operations of an operation block to the current block. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">op_block</td><td>A pointer to an instance of class <a class="el" href="class_operation__block.html" title="A class responsible for grouping CNOT and U3 operations into layers. ">Operation_block</a></td></tr>
-    <tr><td class="paramname">op_block</td><td>A pointer to an instance of class  </td></tr>
+    <tr><td class="paramname">op_block</td><td>A pointer to an instance of class <a class="el" href="class_operation__block.html" title="A class responsible for grouping CNOT and U3 operations into layers. ">Operation_block</a> </td></tr>
   </table>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00633">633</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00632">632</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1350,30 +927,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="a60062cf6f48ebfdcaae9db3367a66147"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::combine </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="class_operation__block.html">Operation_block</a> *&#160;</td>
-          <td class="paramname"><em>op_block</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Call to append the operations of an operation block to the current block. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">op_block</td><td>A pointer to an instance of class <a class="el" href="class_operation__block.html" title="A class responsible for grouping CNOT and U3 operations into layers. ">Operation_block</a> </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
 <a class="anchor" id="a2e9b60d334a0e0c99dede014ac989d0a"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1398,7 +951,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the index of the control qubit. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with the index of the control qubit (return with -1 if control qubit was not set) </dd></dl>
 
-<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00178">178</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00177">177</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1426,32 +979,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="a2e9b60d334a0e0c99dede014ac989d0a"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">int Operation::get_control_qbit </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Call to get the index of the control qubit. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return with the index of the control qubit (return with -1 if control qubit was not set) </dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="ac39ab782da3e34c8ec4acf6181fbc5f7"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1466,27 +993,9 @@ Here is the caller graph for this function:</div>
 </div><div class="memdoc">
 
 <p>Call to get the number of the individual gate types in the list of operations. </p>
-<dl class="section return"><dt>Returns</dt><dd>Returns with an instance  describing the number of the individual gate types </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Returns with an instance <a class="el" href="structgates__num.html" title="Structure type conatining numbers of gates. ">gates_num</a> describing the number of the individual gate types </dd></dl>
 
-</div>
-</div>
-<a class="anchor" id="ac39ab782da3e34c8ec4acf6181fbc5f7"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="structgates__num.html">gates_num</a> Operation_block::get_gate_nums </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Call to get the number of the individual gate types in the list of operations. </p>
-<dl class="section return"><dt>Returns</dt><dd>Returns with an instance  describing the number of the individual gate types </dd></dl>
-
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00409">409</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00408">408</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1533,7 +1042,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the qubits involved in the operations stored in the block of operations. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with a list of the invovled qubits </dd></dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00592">592</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00591">591</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1566,24 +1075,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="aebdbb71e02ff6826d967d55f4cd4db28"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;int&gt; Operation_block::get_involved_qubits </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Call to get the qubits involved in the operations stored in the block of operations. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return with a list of the invovled qubits </dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="aedddbc5242eab7c00125359a835ac53d"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1607,7 +1098,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the list of the operations </dd></dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00214">214</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00213">213</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -1637,31 +1128,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="af3e794fd9a409978a414af539ad23320"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;<a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a>*&gt; Operation_block::get_matrices </td>
-          <td>(</td>
-          <td class="paramtype">const double *&#160;</td>
-          <td class="paramname"><em>parameters</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Call to get the list of matrix representation of the operations grouped in the block. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">parameters</td><td>Array of parameters to calculate the matrix of the operation block </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Returns with the list of the operations </dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="a27592a2d25c7e74416de2b9d7997efca"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1678,25 +1144,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the number of operations grouped in the block. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with the number of the operations grouped in the operation block. </dd></dl>
 
-</div>
-</div>
-<a class="anchor" id="a27592a2d25c7e74416de2b9d7997efca"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int Operation_block::get_operation_num </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Call to get the number of operations grouped in the block. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return with the number of the operations grouped in the operation block. </dd></dl>
-
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00458">458</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00457">457</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1738,7 +1186,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the operations stored in the block. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with a list of the operations. </dd></dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00624">624</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00623">623</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1763,24 +1211,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="a489d0c5758732ca49d5f5aca225e9318"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">std::vector&lt;<a class="el" href="class_operation.html">Operation</a>*&gt; Operation_block::get_operations </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Call to get the operations stored in the block. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return with a list of the operations. </dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="af7ff4a8876a7b1c062ea2f35efac18b0"></a>
 <div class="memitem">
 <div class="memproto">
@@ -1797,25 +1227,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the number of free parameters. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with the number of parameters of the operations grouped in the operation block. </dd></dl>
 
-</div>
-</div>
-<a class="anchor" id="af7ff4a8876a7b1c062ea2f35efac18b0"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int Operation_block::get_parameter_num </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Call to get the number of free parameters. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return with the number of parameters of the operations grouped in the operation block. </dd></dl>
-
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00449">449</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00448">448</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1883,33 +1295,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the index of the target qubit. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with the index of the target qubit (return with -1 if target qubit was not set) </dd></dl>
 
-</div>
-</div>
-<a class="anchor" id="a55eee2ad4b90be085b1ec2ce018502f8"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">int Operation::get_target_qbit </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Call to get the index of the target qubit. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return with the index of the target qubit (return with -1 if target qubit was not set) </dd></dl>
-
-<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00170">170</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00169">169</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -1946,7 +1332,7 @@ Here is the caller graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="operations_2include_2_operation_8h.html#ad99e62941c8e4b13e5fc45ecaaf65eff">operation_type</a> Operation::get_type </td>
+          <td class="memname"><a class="el" href="_operation_8h.html#ad99e62941c8e4b13e5fc45ecaaf65eff">operation_type</a> Operation::get_type </td>
           <td>(</td>
           <td class="paramname"></td><td>)</td>
           <td></td>
@@ -1960,11 +1346,9 @@ Here is the caller graph for this function:</div>
 </div><div class="memdoc">
 
 <p>Call to get the type of the operation. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return with the type of the operation (see operation_type for details)</dd>
-<dd>
-Return with the type of the operation (see  for details) </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Return with the type of the operation (see operation_type for details) </dd></dl>
 
-<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00195">195</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00194">194</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -2027,32 +1411,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="acc601a7a00616fd6e2a61f61e084afac"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="operations_2include_2_operation_8h.html#ad99e62941c8e4b13e5fc45ecaaf65eff">operation_type</a> Operation::get_type </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Call to get the type of the operation. </p>
-<dl class="section return"><dt>Returns</dt><dd>Return with the type of the operation (see operation_type for details) </dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="a29e2c74d7fa7344193a17e39248eb803"></a>
 <div class="memitem">
 <div class="memproto">
@@ -2088,7 +1446,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00468">468</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00467">467</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -2119,66 +1477,6 @@ Here is the caller graph for this function:</div>
 </map>
 </div>
 </p>
-
-</div>
-</div>
-<a class="anchor" id="a29e2c74d7fa7344193a17e39248eb803"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::list_operations </td>
-          <td>(</td>
-          <td class="paramtype">const double *&#160;</td>
-          <td class="paramname"><em>parameters</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>start_index</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Call to print the list of operations stored in the block of operations for a specific set of parameters. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">parameters</td><td>The parameters of the operations that should be printed. </td></tr>
-    <tr><td class="paramname">start_index</td><td>The ordinal number of the first operation. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-</div>
-</div>
-<a class="anchor" id="a43cdb87a4ee2a339de30c94cc94fa40e"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname"><a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a>* Operation_block::matrix </td>
-          <td>(</td>
-          <td class="paramtype">const double *&#160;</td>
-          <td class="paramname"><em>parameters</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block) </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">parameters</td><td>An array pointing to the parameters of the operations </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Returns with a pointer to the operation matrix </dd></dl>
 
 </div>
 </div>
@@ -2213,7 +1511,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with a pointer to the operation matrix </dd></dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00108">108</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00107">107</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -2296,7 +1594,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with 0 on seccess </dd></dl>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00126">126</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00125">125</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -2319,42 +1617,6 @@ Here is the call graph for this function:</div>
 </map>
 </div>
 </p>
-
-</div>
-</div>
-<a class="anchor" id="abf4287a38eeca35a81163f86a361d95c"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">int Operation_block::matrix </td>
-          <td>(</td>
-          <td class="paramtype">const double *&#160;</td>
-          <td class="paramname"><em>parameters</em>, </td>
-        </tr>
-        <tr>
-          <td class="paramkey"></td>
-          <td></td>
-          <td class="paramtype"><a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *&#160;</td>
-          <td class="paramname"><em>block_mtx</em>&#160;</td>
-        </tr>
-        <tr>
-          <td></td>
-          <td>)</td>
-          <td></td><td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block) </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">parameters</td><td>An array pointing to the parameters of the operations </td></tr>
-    <tr><td class="paramname">block_mtx</td><td>A preallocated array to store the matrix of the operation block. </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Returns with 0 on seccess </dd></dl>
 
 </div>
 </div>
@@ -2382,9 +1644,9 @@ Here is the call graph for this function:</div>
 <p>Call to terive the operation matrix. </p>
 <dl class="section return"><dt>Returns</dt><dd>Returns with a pointer to the operation matrix </dd></dl>
 
-<p>Reimplemented in <a class="el" href="class_c_n_o_t.html#a50fefe3d884b9d5fcc20d6855e75e602">CNOT</a>, and <a class="el" href="class_c_n_o_t.html#ae84e8aa35cc1354c896ce8c93918e7e4">CNOT</a>.</p>
+<p>Reimplemented in <a class="el" href="class_c_n_o_t.html#a50fefe3d884b9d5fcc20d6855e75e602">CNOT</a>.</p>
 
-<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00107">107</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00106">106</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
@@ -2455,9 +1717,9 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with 0 on success. </dd></dl>
 
-<p>Reimplemented in <a class="el" href="class_c_n_o_t.html#a8c9e4d814e5e883e0e10eb0a1e1dafe3">CNOT</a>, and <a class="el" href="class_c_n_o_t.html#a8c9e4d814e5e883e0e10eb0a1e1dafe3">CNOT</a>.</p>
+<p>Reimplemented in <a class="el" href="class_c_n_o_t.html#a8c9e4d814e5e883e0e10eb0a1e1dafe3">CNOT</a>.</p>
 
-<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00116">116</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00115">115</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
 
 </div>
 </div>
@@ -2476,7 +1738,7 @@ Here is the caller graph for this function:</div>
 
 <p>Call to release the stored operations. </p>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00069">69</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00068">68</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -2507,58 +1769,7 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="a7c3d4eadaef2f21f1c5dd9227faec7ce"></a>
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::release_operations </td>
-          <td>(</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p>Call to release the stored operations. </p>
-
-</div>
-</div>
-<a class="anchor" id="af2a71d29cdbce498e85f11b9ed81e0c9"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::reorder_qubits </td>
-          <td>(</td>
-          <td class="paramtype">vector&lt; int &gt;&#160;</td>
-          <td class="paramname"></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Call to reorder the qubits in the matrix of the operation. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">qbit_list</td><td>The reordered list of qubits spanning the matrix </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Reimplemented from <a class="el" href="class_operation.html#a73a8408873507d5630f57c200915a0c0">Operation</a>.</p>
-
-</div>
-</div>
-<a class="anchor" id="af2a71d29cdbce498e85f11b9ed81e0c9"></a>
+<a class="anchor" id="ad0dbc9c697d53e2b6edf3bc42b61809e"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -2590,17 +1801,17 @@ Here is the caller graph for this function:</div>
 
 <p>Reimplemented from <a class="el" href="class_operation.html#a73a8408873507d5630f57c200915a0c0">Operation</a>.</p>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00562">562</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00561">561</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="class_operation__block_af2a71d29cdbce498e85f11b9ed81e0c9_cgraph.png" border="0" usemap="#class_operation__block_af2a71d29cdbce498e85f11b9ed81e0c9_cgraph" alt=""/></div>
-<map name="class_operation__block_af2a71d29cdbce498e85f11b9ed81e0c9_cgraph" id="class_operation__block_af2a71d29cdbce498e85f11b9ed81e0c9_cgraph">
-<area shape="rect" id="node2" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Operation::get_type" alt="" coords="223,5,356,32"/>
-<area shape="rect" id="node3" href="class_c_n_o_t.html#a2685ba9fe5fa414609a8ea6a9c2d18c7" title="CNOT::reorder_qubits" alt="" coords="216,56,363,83"/>
-<area shape="rect" id="node5" href="class_u3.html#a700efa043c863f32465861d338efdd2b" title="U3::reorder_qubits" alt="" coords="226,107,353,133"/>
-<area shape="rect" id="node4" href="class_operation.html#a73a8408873507d5630f57c200915a0c0" title="Operation::reorder\l_qubits" alt="" coords="411,74,535,115"/>
+<div class="center"><img src="class_operation__block_ad0dbc9c697d53e2b6edf3bc42b61809e_cgraph.png" border="0" usemap="#class_operation__block_ad0dbc9c697d53e2b6edf3bc42b61809e_cgraph" alt=""/></div>
+<map name="class_operation__block_ad0dbc9c697d53e2b6edf3bc42b61809e_cgraph" id="class_operation__block_ad0dbc9c697d53e2b6edf3bc42b61809e_cgraph">
+<area shape="rect" id="node2" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="223,5,356,32"/>
+<area shape="rect" id="node3" href="class_c_n_o_t.html#a2685ba9fe5fa414609a8ea6a9c2d18c7" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="216,56,363,83"/>
+<area shape="rect" id="node5" href="class_u3.html#a700efa043c863f32465861d338efdd2b" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="226,107,353,133"/>
+<area shape="rect" id="node4" href="class_operation.html#a73a8408873507d5630f57c200915a0c0" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="411,74,535,115"/>
 </map>
 </div>
 </p>
@@ -2608,16 +1819,15 @@ Here is the call graph for this function:</div>
 <p><div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="class_operation__block_af2a71d29cdbce498e85f11b9ed81e0c9_icgraph.png" border="0" usemap="#class_operation__block_af2a71d29cdbce498e85f11b9ed81e0c9_icgraph" alt=""/></div>
-<map name="class_operation__block_af2a71d29cdbce498e85f11b9ed81e0c9_icgraph" id="class_operation__block_af2a71d29cdbce498e85f11b9ed81e0c9_icgraph">
-<area shape="rect" id="node2" href="class_decomposition___base.html#a1005923916828dd84cec11afb19f6bf6" title="Decomposition_Base\l::reorder_qubits" alt="" coords="225,42,370,83"/>
-<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#a13453d7704869cfc8536767c2db4518d" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="216,107,379,149"/>
-<area shape="rect" id="node4" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="427,78,589,119"/>
-<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#ae7fd1992d645a7ff41c02e48ba1dc5ad" title="Start the disentanglig process of the unitary. " alt="" coords="637,107,800,149"/>
-<area shape="rect" id="node6" href="decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="850,5,1021,32"/>
-<area shape="rect" id="node7" href="standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="910,56,961,83"/>
-<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="854,107,1017,149"/>
-<area shape="rect" id="node9" href="qgd_2python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="848,173,1023,200"/>
+<div class="center"><img src="class_operation__block_ad0dbc9c697d53e2b6edf3bc42b61809e_icgraph.png" border="0" usemap="#class_operation__block_ad0dbc9c697d53e2b6edf3bc42b61809e_icgraph" alt=""/></div>
+<map name="class_operation__block_ad0dbc9c697d53e2b6edf3bc42b61809e_icgraph" id="class_operation__block_ad0dbc9c697d53e2b6edf3bc42b61809e_icgraph">
+<area shape="rect" id="node2" href="class_n___qubit___decomposition.html#a13453d7704869cfc8536767c2db4518d" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="216,107,379,149"/>
+<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="427,78,589,119"/>
+<area shape="rect" id="node4" href="class_n___qubit___decomposition.html#ae7fd1992d645a7ff41c02e48ba1dc5ad" title="Start the disentanglig process of the unitary. " alt="" coords="637,107,800,149"/>
+<area shape="rect" id="node5" href="decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="850,5,1021,32"/>
+<area shape="rect" id="node6" href="standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="910,56,961,83"/>
+<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="854,107,1017,149"/>
+<area shape="rect" id="node8" href="qgd_2python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="848,173,1023,200"/>
 </map>
 </div>
 </p>
@@ -2649,13 +1859,13 @@ Here is the caller graph for this function:</div>
 <p>Call to set the stored matrix in the operation. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">input</td><td>a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by . </td></tr>
+    <tr><td class="paramname">input</td><td>a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by matrix_alloc. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with 0 on success. </dd></dl>
 
-<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00127">127</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8cpp_source.html#l00126">126</a> of file <a class="el" href="_operation_8cpp_source.html">Operation.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -2694,39 +1904,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="a026d3dcf0ad00af99c7a9097d3cf1c74"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation::set_matrix </td>
-          <td>(</td>
-          <td class="paramtype"><a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> *&#160;</td>
-          <td class="paramname"><em>input</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Call to set the stored matrix in the operation. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">input</td><td>a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by . </td></tr>
-  </table>
-  </dd>
-</dl>
-<dl class="section return"><dt>Returns</dt><dd>Returns with 0 on success. </dd></dl>
-
-</div>
-</div>
 <a class="anchor" id="acc41ac933723558df3f4e65ae1158091"></a>
 <div class="memitem">
 <div class="memproto">
@@ -2759,7 +1936,7 @@ Here is the caller graph for this function:</div>
 
 <p>Reimplemented from <a class="el" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b">Operation</a>.</p>
 
-<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00669">669</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00668">668</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 
 <p><div class="dynheader">
 Here is the call graph for this function:</div>
@@ -2794,40 +1971,6 @@ Here is the caller graph for this function:</div>
 
 </div>
 </div>
-<a class="anchor" id="acc41ac933723558df3f4e65ae1158091"></a>
-<div class="memitem">
-<div class="memproto">
-<table class="mlabels">
-  <tr>
-  <td class="mlabels-left">
-      <table class="memname">
-        <tr>
-          <td class="memname">void Operation_block::set_qbit_num </td>
-          <td>(</td>
-          <td class="paramtype">int&#160;</td>
-          <td class="paramname"><em>qbit_num_in</em></td><td>)</td>
-          <td></td>
-        </tr>
-      </table>
-  </td>
-  <td class="mlabels-right">
-<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
-  </tr>
-</table>
-</div><div class="memdoc">
-
-<p>Set the number of qubits spanning the matrix of the operations stored in the block of operations. </p>
-<dl class="params"><dt>Parameters</dt><dd>
-  <table class="params">
-    <tr><td class="paramname">qbit_num_in</td><td>The number of qubits spanning the matrices. </td></tr>
-  </table>
-  </dd>
-</dl>
-
-<p>Reimplemented from <a class="el" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b">Operation</a>.</p>
-
-</div>
-</div>
 <h2 class="groupheader">Member Data Documentation</h2>
 <a class="anchor" id="a9a798ea8adec5a45fd2ca07996da88e1"></a>
 <div class="memitem">
@@ -2849,7 +1992,7 @@ Here is the caller graph for this function:</div>
 
 <p>The index of the qubit which acts as a control qubit (control_qbit &gt;= 0) in controlled operations. </p>
 
-<p>Definition at line <a class="el" href="operations_2include_2_operation_8h_source.html#l00054">54</a> of file <a class="el" href="operations_2include_2_operation_8h_source.html">operations/include/Operation.h</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8h_source.html#l00053">53</a> of file <a class="el" href="_operation_8h_source.html">Operation.h</a>.</p>
 
 </div>
 </div>
@@ -2873,11 +2016,11 @@ Here is the caller graph for this function:</div>
 
 <p>number of operation layers </p>
 
-<p>Definition at line <a class="el" href="operations_2include_2_operation__block_8h_source.html#l00040">40</a> of file <a class="el" href="operations_2include_2_operation__block_8h_source.html">operations/include/Operation_block.h</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8h_source.html#l00043">43</a> of file <a class="el" href="_operation__block_8h_source.html">Operation_block.h</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="ade4d28d271ca13950d04363aac1c382e"></a>
+<a class="anchor" id="a24adaa4ec518c726e0e1228ab86de51f"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -2885,7 +2028,7 @@ Here is the caller graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a> * Operation::matrix_alloc</td>
+          <td class="memname"><a class="el" href="struct_q_g_d___complex16.html">QGD_Complex16</a>* Operation::matrix_alloc</td>
         </tr>
       </table>
   </td>
@@ -2897,7 +2040,7 @@ Here is the caller graph for this function:</div>
 
 <p>Pointer to the operatrion matrix (if it is a constant general matrix) </p>
 
-<p>Definition at line <a class="el" href="operations_2include_2_operation_8h_source.html#l00058">58</a> of file <a class="el" href="operations_2include_2_operation_8h_source.html">operations/include/Operation.h</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8h_source.html#l00057">57</a> of file <a class="el" href="_operation_8h_source.html">Operation.h</a>.</p>
 
 </div>
 </div>
@@ -2921,11 +2064,11 @@ Here is the caller graph for this function:</div>
 
 <p>The size N of the NxN matrix associated with the operations. </p>
 
-<p>Definition at line <a class="el" href="operations_2include_2_operation_8h_source.html#l00056">56</a> of file <a class="el" href="operations_2include_2_operation_8h_source.html">operations/include/Operation.h</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8h_source.html#l00055">55</a> of file <a class="el" href="_operation_8h_source.html">Operation.h</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="a1efec4139888e591b59acd7b84497af1"></a>
+<a class="anchor" id="af7d5248706f24b8f3d8b72041cf79ccb"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -2933,7 +2076,7 @@ Here is the caller graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">vector&lt; <a class="el" href="class_operation.html">Operation</a> * &gt; Operation_block::operations</td>
+          <td class="memname">vector&lt;<a class="el" href="class_operation.html">Operation</a>*&gt; Operation_block::operations</td>
         </tr>
       </table>
   </td>
@@ -2945,11 +2088,11 @@ Here is the caller graph for this function:</div>
 
 <p>The list of stored operations. </p>
 
-<p>Definition at line <a class="el" href="operations_2include_2_operation__block_8h_source.html#l00038">38</a> of file <a class="el" href="operations_2include_2_operation__block_8h_source.html">operations/include/Operation_block.h</a>.</p>
+<p>Definition at line <a class="el" href="_operation__block_8h_source.html#l00041">41</a> of file <a class="el" href="_operation__block_8h_source.html">Operation_block.h</a>.</p>
 
 </div>
 </div>
-<a class="anchor" id="aa57505afe5b5ec27f6d053044b86e043"></a>
+<a class="anchor" id="a1f8ad6dd93cf511090ea5c1da85e8d1a"></a>
 <div class="memitem">
 <div class="memproto">
 <table class="mlabels">
@@ -2957,7 +2100,7 @@ Here is the caller graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname">int Operation::parameter_num</td>
+          <td class="memname">unsigned int Operation::parameter_num</td>
         </tr>
       </table>
   </td>
@@ -2969,7 +2112,7 @@ Here is the caller graph for this function:</div>
 
 <p>the number of free parameters of the operation </p>
 
-<p>Definition at line <a class="el" href="operations_2include_2_operation_8h_source.html#l00060">60</a> of file <a class="el" href="operations_2include_2_operation_8h_source.html">operations/include/Operation.h</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8h_source.html#l00059">59</a> of file <a class="el" href="_operation_8h_source.html">Operation.h</a>.</p>
 
 </div>
 </div>
@@ -2993,7 +2136,7 @@ Here is the caller graph for this function:</div>
 
 <p>number of qubits spanning the matrix of the operation </p>
 
-<p>Definition at line <a class="el" href="operations_2include_2_operation_8h_source.html#l00048">48</a> of file <a class="el" href="operations_2include_2_operation_8h_source.html">operations/include/Operation.h</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8h_source.html#l00047">47</a> of file <a class="el" href="_operation_8h_source.html">Operation.h</a>.</p>
 
 </div>
 </div>
@@ -3017,7 +2160,7 @@ Here is the caller graph for this function:</div>
 
 <p>The index of the qubit on which the operation acts (target_qbit &gt;= 0) </p>
 
-<p>Definition at line <a class="el" href="operations_2include_2_operation_8h_source.html#l00052">52</a> of file <a class="el" href="operations_2include_2_operation_8h_source.html">operations/include/Operation.h</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8h_source.html#l00051">51</a> of file <a class="el" href="_operation_8h_source.html">Operation.h</a>.</p>
 
 </div>
 </div>
@@ -3029,7 +2172,7 @@ Here is the caller graph for this function:</div>
   <td class="mlabels-left">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="operations_2include_2_operation_8h.html#ad99e62941c8e4b13e5fc45ecaaf65eff">operation_type</a> Operation::type</td>
+          <td class="memname"><a class="el" href="_operation_8h.html#ad99e62941c8e4b13e5fc45ecaaf65eff">operation_type</a> Operation::type</td>
         </tr>
       </table>
   </td>
@@ -3041,18 +2184,18 @@ Here is the caller graph for this function:</div>
 
 <p>The type of the operation (see enumeration operation_type) </p>
 
-<p>Definition at line <a class="el" href="operations_2include_2_operation_8h_source.html#l00050">50</a> of file <a class="el" href="operations_2include_2_operation_8h_source.html">operations/include/Operation.h</a>.</p>
+<p>Definition at line <a class="el" href="_operation_8h_source.html#l00049">49</a> of file <a class="el" href="_operation_8h_source.html">Operation.h</a>.</p>
 
 </div>
 </div>
 <hr/>The documentation for this class was generated from the following files:<ul>
-<li><a class="el" href="operations_2include_2_operation__block_8h_source.html">operations/include/Operation_block.h</a></li>
+<li><a class="el" href="_operation__block_8h_source.html">Operation_block.h</a></li>
 <li><a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sun Sep 13 2020 13:40:14 for Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Sep 17 2020 17:48:24 for Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.11
 </small></address>

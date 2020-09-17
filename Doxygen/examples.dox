@@ -17,5 +17,16 @@
 
 /*! \addtogroup examples Examples
 
-ghtrhjtr
+The @QGD (QGD) package provides static and shared libraries (located in the directory **path/to/qgd/lib(64)**) that can be linked againts our own C++ code. 
+(Alternatively, the C functions defined in python_interface.h can be used to link against C code as well.)
+The header files of the package are located in the directory **path/to/qgd/include**
+In the forthcoming sections we provide some tricks and best practices to use the QGD API.
+Also, the QGD API is supprted by a Doxygen documentation, which can be accessed trough the file **path/to/qgd/Docs/html/index.html**.
+(To build the Doxygen documentation follow the manual at @index.)
+
+
+The QGD Python interface can be tested by running the **example.py** script right in the installation directory of the QGD package.
+(To install the QGD package follow the manual at @index).
+
+
 */

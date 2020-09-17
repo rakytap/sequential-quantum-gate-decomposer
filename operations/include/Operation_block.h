@@ -17,6 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
+/*! \file qgd/Operation_block.h
+    \brief Header file for a class responsible for grouping CNOT and U3 operations into layers
+*/
 
 
 #pragma once
@@ -48,7 +51,7 @@ Operation_block();
 
 /**
 @brief Constructor of the class.
-@param qbit_num The number of qubits in the unitaries
+@param qbit_num_in The number of qubits in the unitaries
 */
 Operation_block(int qbit_num_in);
 
@@ -122,14 +125,14 @@ void add_cnot_to_front( int control_qbit, int target_qbit );
     
 /**
 @brief Append a list of operations to the list of operations
-@param operations A list of operation class instances.
+@param operations_in A list of operation class instances.
 */
 void add_operations_to_end( vector<Operation*> operations_in );
             
     
 /**
 @brief Add an array of operations to the front of the list of operations
-@param operations A list of operation class instances.
+@param operations_in A list of operation class instances.
 */
 void add_operations_to_front( vector<Operation*> operations_in );
     
@@ -150,7 +153,7 @@ void add_operation_to_front( Operation* operation );
             
 /**
 @brief Call to get the number of the individual gate types in the list of operations
-@return Returns with an instance @gates_num describing the number of the individual gate types
+@return Returns with an instance gates_num describing the number of the individual gate types
 */ 
 gates_num get_gate_nums();
 
@@ -181,7 +184,7 @@ void list_operations( const double* parameters, int start_index );
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void reorder_qubits( vector<int> );
+void reorder_qubits( vector<int> qbit_list );
 
 
 /**

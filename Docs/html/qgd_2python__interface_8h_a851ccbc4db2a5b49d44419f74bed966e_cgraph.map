@@ -4,7 +4,7 @@
 <area shape="rect" id="node4" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="607,5,741,32"/>
 <area shape="rect" id="node5" href="$class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit. " alt="" coords="586,56,762,83"/>
 <area shape="rect" id="node6" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="589,107,759,133"/>
-<area shape="rect" id="node7" href="$class_operation.html#a670c1149cd1c675cf67bbcd861817223" title="Call to get the number of free parameters. " alt="" coords="575,157,773,184"/>
+<area shape="rect" id="node7" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="575,157,773,184"/>
 <area shape="rect" id="node8" href="$class_u3.html#a413ad816b0084c30d916576df56f4b40" title="Call to check whether theta is a free parameter of the gate. " alt="" coords="596,208,752,235"/>
 <area shape="rect" id="node9" href="$class_u3.html#acc83ff7e4a15c2445344e051410ddcc4" title="Call to check whether Phi is a free parameter of the gate. " alt="" coords="602,259,746,285"/>
 <area shape="rect" id="node10" href="$class_u3.html#ae2969dab2a542416fba0f26b9a330014" title="Call to check whether Lambda is a free parameter of the gate. " alt="" coords="589,309,759,336"/>

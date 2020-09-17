@@ -17,6 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
+/*! \file qgd/U3.h
+    \brief Header file for a class representing a U3 operation.
+*/
 
 
 #pragma once
@@ -52,7 +55,8 @@ protected:
 public: 
 /**
 @brief Constructor of the class.
-@param qbit_num The number of qubits spanning the operation.
+@param qbit_num_in The number of qubits spanning the operation.
+@param target_qbit_in The 0<=ID<qbit_num of the target qubit.
 @param theta_in logical value indicating whether the matrix creation takes an argument theta.
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
@@ -165,9 +169,9 @@ void determine_base_indices();
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the operation
-@param qbit_num The number of qubits
+@param qbit_num_in The number of qubits
 */
-void set_qbit_num(int qbit_num);
+void set_qbit_num(int qbit_num_in);
 
 
 

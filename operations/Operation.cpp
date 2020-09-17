@@ -17,10 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-
-//
-// @brief A base class responsible for constructing matrices of C-NOT, U3
-// gates acting on the N-qubit space
+/*! \file Operation.cpp
+    \brief Class for the representation of one- and two-qubit operations.
+*/
 
 
 #include "qgd/Operation.h"
@@ -38,7 +37,7 @@ Operation::Operation() {
     qbit_num = -1;
     /// The size N of the NxN matrix associated with the operations.
     matrix_size = -1;
-    /// The type of the operation (see enumeration @operation_type)
+    /// The type of the operation (see enumeration operation_type)
     type = GENERAL_OPERATION;
     /// The index of the qubit on which the operation acts (target_qbit >= 0) 
     target_qbit = -1;
@@ -54,7 +53,7 @@ Operation::Operation() {
 
 /**
 @brief Constructor of the class.
-@param qbit_num The number of qubits spanning the unitaries
+@param qbit_num_in The number of qubits spanning the unitaries
 @return An instance of the class
 */
 Operation::Operation(int qbit_num_in) {
@@ -89,7 +88,7 @@ Operation::~Operation() {
    
 /**
 @brief Set the number of qubits spanning the matrix of the operation
-@param qbit_num The number of qubits spanning the matrix
+@param qbit_num_in The number of qubits spanning the matrix
 */
 void Operation::set_qbit_num( int qbit_num_in ) {
     // setting the number of qubits
@@ -121,7 +120,7 @@ int Operation::matrix(QGD_Complex16* retrieve_matrix ) {
 
 /**
 @brief Call to set the stored matrix in the operation.
-@param input a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by @matrix_alloc.
+@param input a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by matrix_alloc.
 @return Returns with 0 on success.
 */
 void Operation::set_matrix( QGD_Complex16* input) {
@@ -190,7 +189,7 @@ unsigned int Operation::get_parameter_num() {
 
 /**
 @brief Call to get the type of the operation
-@return Return with the type of the operation (see @operation_type for details) 
+@return Return with the type of the operation (see operation_type for details) 
 */
 operation_type Operation::get_type() {
     return type;

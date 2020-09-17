@@ -144,4 +144,6 @@ The full documentation of the QGD API can be accessed by a Doxygen manual which 
 
 ## Doxygen manual
 
+Also, the QGD API is supprted by a Doxygen documentation, which can be accessed trough the file **path/to/qgd/Docs/html/index.html**
+
 ----- how to create doxygen API documentation --------

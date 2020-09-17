@@ -11,8 +11,8 @@
 <area shape="rect" id="node14" href="$class_decomposition___base.html#a9832cc5308c00b73d3e6bc331a77c7f7" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="277,448,447,489"/>
 <area shape="rect" id="node15" href="$class_decomposition___base.html#ae21ecd8c5016a6ec942330247e8cdebc" title="This method can be used to solve the main optimalization problem which is devidid into sub&#45;layer opti..." alt="" coords="524,511,669,567"/>
 <area shape="rect" id="node18" href="$class_decomposition___base.html#a7f3fd202c32e65cbc312ec61d426442a" title="Calculate the list of gate operation matrices such that the i&gt;0&#45;th element in the result list is the ..." alt="" coords="281,513,443,554"/>
-<area shape="rect" id="node19" href="$class_decomposition___base.html#a8e26f5a31475e4d5a2e9c785a2a57dd9" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="280,630,444,672"/>
-<area shape="rect" id="node29" href="$standalone_2decomposition__test_8cpp.html#ae631d63f9474263f6200808261feb8da" title="few_CNOT_unitary" alt="" coords="296,696,428,723"/>
+<area shape="rect" id="node19" href="$class_decomposition___base.html#a9ff86ec9582c9e65bea603b22ff3ca31" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="280,630,444,672"/>
+<area shape="rect" id="node29" href="$standalone_2decomposition__test_8cpp.html#a1d3f73cc03866090c6e94eca716fd175" title="few_CNOT_unitary" alt="" coords="296,696,428,723"/>
 <area shape="rect" id="node30" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="741,795,920,851"/>
 <area shape="rect" id="node31" href="$class_operation.html#a14089623bd8a73e73375353c3d8a4b6e" title="Destructor of the class. " alt="" coords="289,798,435,824"/>
 <area shape="rect" id="node32" href="$operation__test_8cpp.html#a14cd9dca8567feb783abd295c1e401fa" title="test_operation_block" alt="" coords="291,848,433,875"/>
@@ -23,7 +23,7 @@
 <area shape="rect" id="node39" href="$class_sub___matrix___decomposition.html#aab0a780ee7b2a42d4031a03624be9ea8" title="Destructor of the class. " alt="" coords="265,1118,459,1160"/>
 <area shape="rect" id="node40" href="$class_u3.html#a0ce404f4cd63bc845a9379e7fc532c90" title="Destructor of the class. " alt="" coords="327,1184,397,1211"/>
 <area shape="rect" id="node41" href="$class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="293,1236,431,1277"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#ae7fd1992d645a7ff41c02e48ba1dc5ad" title="Start the disentanglig process of the unitary. " alt="" coords="983,552,1146,593"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="983,552,1146,593"/>
 <area shape="rect" id="node8" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="1207,584,1378,611"/>
 <area shape="rect" id="node13" href="$qgd_2python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="1205,483,1380,510"/>
 <area shape="rect" id="node16" href="$class_n___qubit___decomposition.html#a3a94b94920838968d4798096e969cd78" title="final optimalization procedure improving the accuracy of the decompositin when all the qubits were al..." alt="" coords="749,521,912,562"/>
@@ -36,7 +36,7 @@
 <area shape="rect" id="node24" href="$class_n___qubit___decomposition.html#ac7f9831d2b69be26e34a9862ed85d44b" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="983,1027,1146,1083"/>
 <area shape="rect" id="node26" href="$class_sub___matrix___decomposition.html#ad2f34f8f0dbaced159b29ec882a3c4d2" title="Call to solve layer by layer the optimization problem. " alt="" coords="1203,1143,1383,1199"/>
 <area shape="rect" id="node27" href="$class_sub___matrix___decomposition.html#a8ba9ff25e30fc416363806401bb2362a" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="735,1157,927,1198"/>
-<area shape="rect" id="node28" href="$class_sub___matrix___decomposition.html#a5509def527f89c880a5d043f65f78c05" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="975,1208,1155,1264"/>
+<area shape="rect" id="node28" href="$class_sub___matrix___decomposition.html#a14464f9019cd3f02e6ed4110535e6ff0" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="975,1208,1155,1264"/>
 <area shape="rect" id="node35" href="$class_random___unitary.html#ae46d7cdae00dcbe0a872014e2a331e90" title="Random_Unitary::Construct\l_Unitary_Matrix" alt="" coords="507,381,687,422"/>
 <area shape="rect" id="node37" href="$class_random___unitary.html#ace2ab5baafad04139f4ffc52c1174881" title="Random_Unitary::Construct\l_Unitary_Matrix" alt="" coords="741,1274,921,1316"/>
 </map>

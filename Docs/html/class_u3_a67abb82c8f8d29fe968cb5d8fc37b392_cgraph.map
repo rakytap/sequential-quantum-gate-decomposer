@@ -1,5 +1,5 @@
 <map id="U3::clone" name="U3::clone">
 <area shape="rect" id="node2" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation. " alt="" coords="129,5,327,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="qgd_calloc" alt="" coords="375,5,459,32"/>
-<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="aligned_alloc" alt="" coords="507,5,604,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="375,5,459,32"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="507,5,604,32"/>
 </map>
