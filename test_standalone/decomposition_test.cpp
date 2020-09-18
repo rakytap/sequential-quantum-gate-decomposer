@@ -17,6 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
+/*! \file decomposition_test.cpp
+    \brief A simple example file for a decomposition of general random unitaries.
+*/
 
 #include <iostream>
 

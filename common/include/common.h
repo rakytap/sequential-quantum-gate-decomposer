@@ -17,6 +17,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
+/*! \file qgd/common.h
+    \brief Header file for commonly used functions and wrappers to CBLAS functions.
+*/
 
 #pragma once
 #ifdef __cplusplus
@@ -85,80 +88,172 @@ struct gates_num {
 };
 
 
-// define aligned memory allocation function if they are not present (in case of older gcc compilers)
-//#ifndef ACALLOC
-/* Allocate aligned memory in a portable way.
- *
- * Memory allocated with aligned alloc *MUST* be freed using aligned_free.
- *
- * @param alignment The number of bytes to which memory must be aligned. This
- *  value *must* be <= 255.
- * @param bytes The number of bytes to allocate.
- * @param zero If true, the returned memory will be zeroed. If false, the
- *  contents of the returned memory are undefined.
- * @returns A pointer to `size` bytes of memory, aligned to an `alignment`-byte
- *  boundary.
- */
+/** 
+@brief Allocate aligned memory in a portable way. Memory allocated with aligned alloc *MUST* be freed using aligned_free. The allocated memory is initialized to zero.
+@param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
+@param size The number of bytes to allocate.
+@param zero If true, the returned memory will be zeroed. If false, the contents of the returned memory are undefined.
+@returns A pointer to `size` bytes of memory, aligned to an `alignment`-byte boundary.
+*/
 void *aligned_alloc(size_t alignment, size_t size, bool zero);
 
-/* Free memory allocated with aligned_alloc */
+/**
+@brief Free memory allocated with aligned_alloc
+@param aligned_ptr The aligned pointer created by aigned_alloc
+*/
 void aligned_free(void* aligned_ptr);
-//#endif
 
-// @brief custom defined memory allocation function. (Refers to corresponding MKL function if present, or use another aligned memory allocator otherwise)
+
+/**
+@brief custom defined memory allocation function.
+@param element_num The number of elements in the array to be allocated.
+@param size A size of one element (such as sizeof(double) )
+@param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
+*/
 void* qgd_calloc( size_t element_num, size_t size, size_t alignment );
 
-// @brief custom defined memory release function. (Refers to corresponding MKL function if present, or use another aligned memory allocator otherwise)
+/**
+@brief custom defined memory release function.
+*/
 void qgd_free( void* ptr );
 
-// @brief Calculates the n-th power of 2.
+/**
+@brief Calculates the n-th power of 2.
+@param n An natural number
+@return Returns with the n-th power of 2.
+*/
 int Power_of_2(int n);
 
-// @brief Print a complex matrix on standard output
-void print_mtx( QGD_Complex16* , int, int );
+/**
+@brief Print a complex matrix on standard output
+@param matrix A pointer pointing to the matrix to be printed
+@param rows The number of rows in the matrix.
+@param cols The number of columns in the matrix.
+*/
+void print_mtx( QGD_Complex16* matrix, int rows, int cols );
 
-// @brief Print a CNOT matrix on standard output
-void print_CNOT( QGD_Complex16* , int );
+/**
+@brief Print a CNOT matrix on standard output
+@param matrix A pointer pointing to the matrix to be printed
+@param size The number of rows in the matrix.
+*/
+void print_CNOT( QGD_Complex16* matrix, int size );
 
-// @brief Add an integer to a vector of integers if the integer is not already an element of the vector. The ascending order is kept during the process.
+/**
+@brief Add an integer to a vector of integers if the integer is not already an element of the vector. The ascending order is kept during the process.
+@param involved_qbits The vector of integer to be updated by the new integer. The result is returned via this vector.
+@param qbit The integer to be added to the vector
+*/
 void add_unique_elelement( std::vector<int>& involved_qbits, int qbit );
 
-// @brief Create an identity matrix
-QGD_Complex16* create_identity( int );
+/**
+@brief Call to create an identity matrix
+@param matrix_size The number of rows in the resulted identity matrix
+@return Returns with a pointer to the created identity matrix.
+*/
+QGD_Complex16* create_identity( int matrix_size );
 
-// @brief Create an identity matrix
+/**
+@brief Call to create an identity matrix
+@param matrix The pointer to the memory array allocated for the identity matrix. The result is returned via this pointer.
+@param matrix_size The number of rows in the resulted identity matrix
+@return Returns with zero on success.
+*/
 int create_identity( QGD_Complex16* matrix, int matrix_size );
 
-// @brief Call to calculate the product of two matrices using cblas_zgemm3m
+/**
+@brief Call to calculate the scalar product of two complex vectors using function cblas_zgemm3m or cblas_zgemm
+@param A The first vector of the product
+@param B The second vector of the product
+@param vector_size The size of the vectors.
+@return Returns the scalar product of the two vectors.
+*/
 QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_size);
 
-// @brief Call to calculate the product of two matrices using cblas_zgemm3m
+/**
+@brief Call to calculate the product of a square shaped complex matrix and a complex transpose of a second square shaped complex matrix using function cblas_zgemm3m or cblas_zgemm.
+@param A The first matrix.
+@param B The second matrix
+@param C Pointer to the resulted matrix. The calculated matrix is returned via this pointer.
+@param matrix_size The number rows in the matrices
+*/
 int zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size);
 
-// @brief Call to calculate the product of two matrices using cblas_zgemm3m
-QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* , QGD_Complex16*, int);
+/**
+@brief Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or cblas_zgemm
+@param A The first matrix.
+@param B The second matrix
+@param matrix_size The number rows in the matrices
+@return Returns with a pointer to the resulted matrix.
+*/
+QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* A , QGD_Complex16* B, int matrix_size);
 
-// @brief Call to calculate the product of two matrices using cblas_zgemm3m
-int zgemm3m_wrapper( QGD_Complex16* , QGD_Complex16*, QGD_Complex16*, int);
+/**
+@brief Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or cblas_zgemm
+@param A The first matrix.
+@param B The second matrix
+@param C Pointer to the resulted matrix. The calculated matrix is returned via this pointer.
+@param matrix_size The number rows in the matrices
+@return Returns with zero on success.
+*/
+int zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size);
 
-// @brief Calculate the product of complex matrices stored in a vector of matrices
-int reduce_zgemm( std::vector<QGD_Complex16*>, QGD_Complex16* C, int );
+/**
+@brief Calculate the product of several square shaped complex matrices stored in a vector.
+@param mtxs The vector of matrices.
+@param C Pointer to the resulted matrix. The calculated matrix is returned via this pointer.
+@param matrix_size The number rows in the matrices
+@return Returns with zero on success.
+*/
+int reduce_zgemm( std::vector<QGD_Complex16*> mtxs, QGD_Complex16* C, int matrix_size );
 
-// @brief subtract a scalar from the diagonal of a matrix
-void subtract_diag( QGD_Complex16* & , int, QGD_Complex16 ); 
+/**
+@brief Call to subtract a scalar from the diagonal of a complex matrix.
+@param mtx A pointer to the matrix. The resulted matrix is returned via this pointer.
+@param matrix_size The number rows in the matrix
+@param scalar The complex scalar to be subtracked from the diagonal elements of the matrix
+*/
+void subtract_diag( QGD_Complex16* & mtx,  int matrix_size, QGD_Complex16 scalar ); 
 
-// calculate the cost funtion from the submatrices of the given matrix 
-double get_submatrix_cost_function(QGD_Complex16* matrix_new, int matrix_size, QGD_Complex16** submatrices, QGD_Complex16* submatrix_prod);
+/**
+@brief Call to calculate the cost function of a given matrix during the submatrix decomposition process.
+@param matrix The square shaped complex matrix from which the cost function is calculated during the submatrix decomposition process.
+@param matrix_size The number rows in the matrix matrix_new
+@param submatrices Pointer to the preallocated array of the submatrices of the matrix matrix_new.
+@param submatrix_prod Preallocated array for the product of two submatrices.
+@return Returns with the calculated cost function.
+*/
+double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_Complex16** submatrices, QGD_Complex16* submatrix_prod);
 
-// calculate the cost funtion for the final optimalization
+/**
+@brief Call co calculate the cost funtion during the final optimization process.
+@param matrix The square shaped complex matrix from which the cost function is calculated.
+@param matrix_size The number rows in the matrix
+@return Returns with the calculated cost function.
+*/
 double get_cost_function(QGD_Complex16* matrix, int matrix_size);
 
-// calculate the product of two scalars
+/**
+@brief Call to calculate the product of two complex scalars
+@param a The firs scalar
+@param b The second scalar
+@return Returns with the calculated product.
+*/
 QGD_Complex16 mult( QGD_Complex16 a, QGD_Complex16 b );
 
-// calculate the product of two scalars
+/**
+@brief calculate the product of a real scalar and a complex scalar
+@param a The real scalar.
+@param b The complex scalar.
+@return Returns with the calculated product.
+*/
 QGD_Complex16 mult( double a, QGD_Complex16 b );
 
-// Multiply the elements of matrix "b" by a scalar "a".
+/**
+@brief Multiply the elements of matrix b by a scalar a.
+@param a A complex scalar.
+@param b Pointer to the square shaped matrix.
+@param matrix_size The number rows in the matrix b
+*/
 void mult( QGD_Complex16 a, QGD_Complex16* b, int matrix_size );
 
