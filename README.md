@@ -55,6 +55,21 @@ The compilation of the GNU Scientific Library takes some time. When the compilat
 
 $ make install
 
+### OpenCL
+
+$mkdir /path/to/OpenCL
+$cd /path/to/OpenCL
+$git clone https://github.com/KhronosGroup/OpenCL-Headers.git include
+export OCL_LIB_DIR=/path/to/OpenCL/lib
+export OCL_INC_DIR=/path/to/OpenCL/include
+$git clone https://github.com/KhronosGroup/OpenCL-ICD-Loader.git
+$cd OpenCL-ICD-Loader
+$mkdir build
+$cd build
+$cmake .. -DOPENCL_ICD_LOADER_HEADERS_DIR:PATH=$OCL_INC_DIR -DCMAKE_INSTALL_LIBDIR=$OCL_LIB_DIR
+$make
+$make install
+
 ### Download the Quantum Gate Decomposer package
 
 The developer version Quantum Gate Decomposer package can be downloaded from github repository [https://github.com/rakytap/quantum-gate-decomposer/tree/C++](https://github.com/rakytap/quantum-gate-decomposer/tree/C++).

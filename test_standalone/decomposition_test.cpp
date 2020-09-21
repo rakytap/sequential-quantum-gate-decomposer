@@ -26,6 +26,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <stdio.h>
 #include <map>
 
+#define CL_TARGET_OPENCL_VERSION 120
+#include <CL/cl.h>
+
 #include "qgd/common.h"
 #include "qgd/U3.h"
 #include "qgd/CNOT.h"
@@ -142,6 +145,19 @@ void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx) {
 //
 // @brief Decomposition of general two-qubit matrix into U3 and CNOT gates
 int main() {
+    printf("\n\n****************************************\n");
+    printf("Test of OpenCL\n");
+    printf("****************************************\n\n\n");
+    
+    cl_int err;
+    cl_uint platformNum;
+    err = clGetPlatformIDs(0, NULL, &platformNum);
+    if (err != CL_SUCCESS)
+    {
+        printf("clPlatformIDs failed with error code %d\n", err);
+        exit(-1);
+    }
+    printf("%d OpenCL platforms found.", platformNum);
     
     printf("\n\n****************************************\n");
     printf("Test of N qubit decomposition\n");
@@ -153,7 +169,7 @@ int main() {
 #endif
 
     // creating random unitary
-    int qbit_num = 4;
+    int qbit_num = 3;
 
 #ifdef MIC
       qbit_num = 7;

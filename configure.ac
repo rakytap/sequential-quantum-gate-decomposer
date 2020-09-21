@@ -72,9 +72,6 @@ fi
 ], 
 AC_MSG_ERROR([gsl library not found]), [-lgslcblas])
 
-
-LDFLAGS="$LDFLAGS $GSL_LIBS $CBLAS_LIBS"
-
 #checking GNU SCIENTIFIC HEADERS
 CFLAGS_SAVE=$CFLAGS
 CFLAGS="$CFLAGS -I$GSL_INC_DIR"
@@ -84,7 +81,21 @@ AC_CHECK_HEADER([gsl/gsl_multimin.h], [], AC_MSG_ERROR([gsl_multimin.h header no
 CFLAGS=$CFLAGS_SAVE
 CPPFLAGS=$CPPFLAGS_SAVE
 
+#checking OpenCL loader
+LDFLAGS="$LDFLAGS -L$OCL_LIB_DIR"
+AC_CHECK_LIB([OpenCL], [clGetPlatformIDs], [],
+AC_MSG_ERROR([OpenCL loader library not found]))
 
+#checking OpenCL headers
+CFLAGS_SAVE=$CFLAGS
+CFLAGS="$CFLAGS -I$OCL_INC_DIR"
+CPPFLAGS_SAVE=$CPPFLAGS
+CPPFLAGS="$CPPFLAGS  -I$OCL_INC_DIR"
+AC_CHECK_HEADER([CL/cl.h], [], AC_MSG_ERROR([CL/cl.h header not found]))
+CFLAGS=$CFLAGS_SAVE
+CPPFLAGS=$CPPFLAGS_SAVE
+
+LDFLAGS="$LDFLAGS $GSL_LIBS $CBLAS_LIBS -lOpenCL"
 
 # setting linking flags for libtool
 if test $MKL_OPT = yes; then
@@ -104,8 +115,8 @@ postdeps_CXX="$postdeps_CXX -lgomp"
 fi
 
 
-CXXFLAGS="$CXXFLAGS -Wall -I$GSL_INC_DIR"
-CFLAGS="$CFLAGS -I$GSL_INC_DIR"
+CXXFLAGS="$CXXFLAGS -Wall -I$GSL_INC_DIR -I$OCL_INC_DIR"
+CFLAGS="$CFLAGS -I$GSL_INC_DIR -I$OCL_INC_DIR"
 echo $GSL_LIBS
 echo $postdeps_CXX
 echo $CXXFLAGS

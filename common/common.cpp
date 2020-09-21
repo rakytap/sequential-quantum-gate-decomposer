@@ -505,7 +505,7 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
 
 
             // checking NaN
-            if (isnan(cost_function)) {
+            if (std::isnan(cost_function)) {
                 printf("cost function NaN: exiting\n");
                 exit(-1);
             }   
