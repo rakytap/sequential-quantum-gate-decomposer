@@ -114,17 +114,21 @@ Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
     for (int idx=0; idx<submatrices_num; idx++) {
         if (submatrices[idx] != NULL ) {
             qgd_free( submatrices[idx] );
+            submatrices[idx] = NULL;
         }
     }
-
     qgd_free( submatrices );
+    submatrices = NULL;
+
     if (submatrix_prod != NULL ) {
         qgd_free( submatrix_prod );
+        submatrix_prod = NULL;
     }
 
 
     if (subdecomposed_mtx != NULL ) {
         qgd_free( subdecomposed_mtx );
+        subdecomposed_mtx = NULL;
     }
 
 

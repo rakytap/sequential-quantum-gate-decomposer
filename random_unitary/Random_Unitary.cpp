@@ -75,6 +75,9 @@ QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix() {
     qgd_free(vartheta);
     qgd_free(varphi);
     qgd_free(varkappa);
+    vartheta = NULL;
+    varphi = NULL;
+    varkappa = NULL;
 
 
     return Umtx;
@@ -119,6 +122,8 @@ QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix( double* vartheta, doubl
                QGD_Complex16* ret_tmp = zgemm3m_wrapper( ret, Omega_loc, dim); //   ret * Omega_loc
                qgd_free(ret);
                qgd_free( Omega_loc);
+               ret = NULL;
+               Omega_loc = NULL;
 
                ret = ret_tmp;
            }            
@@ -191,6 +196,7 @@ QGD_Complex16* Random_Unitary::Omega(int varalpha, int varbeta, QGD_Complex16 x,
         }
 
         qgd_free( Mloc );
+        Mloc = NULL;
 
         return ret;
  
@@ -221,6 +227,7 @@ QGD_Complex16* Random_Unitary::M( int varalpha, int varbeta, QGD_Complex16 s, QG
         mult(Qloc[2], ret3, dim);
         mult(Qloc[3], ret4, dim);
         qgd_free(Qloc);
+        Qloc = NULL;
 
 
         QGD_Complex16* ret = (QGD_Complex16*)qgd_calloc(dim*dim,sizeof(QGD_Complex16), 64);
@@ -234,6 +241,10 @@ QGD_Complex16* Random_Unitary::M( int varalpha, int varbeta, QGD_Complex16 s, QG
         qgd_free(ret2);
         qgd_free(ret3);
         qgd_free(ret4);
+        ret1 = NULL;
+        ret2 = NULL;
+        ret3 = NULL;
+        ret4 = NULL;
       
 
         return ret;

@@ -115,14 +115,17 @@ U3::~U3() {
 
     if ( indexes_target_qubit_0 != NULL ) {
         qgd_free(indexes_target_qubit_0);
+        indexes_target_qubit_0 = NULL;
     }
 
     if ( indexes_target_qubit_1 != NULL ) {
         qgd_free(indexes_target_qubit_1);
+        indexes_target_qubit_1 = NULL;
     }
 
     if ( parameters != NULL ) {
         qgd_free(parameters);
+        parameters = NULL;
     }
 }
 
@@ -355,9 +358,11 @@ void U3::determine_base_indices() {
         // fre the previously allocated memories
         if ( indexes_target_qubit_1 != NULL ) {
             qgd_free( indexes_target_qubit_1 );
+            indexes_target_qubit_1 = NULL;
         }
         if ( indexes_target_qubit_0 != NULL ) {
             qgd_free( indexes_target_qubit_0 );
+            indexes_target_qubit_0 = NULL;
         }
 
         indexes_target_qubit_1 = (int*)qgd_calloc(matrix_size/2,sizeof(int), 64);

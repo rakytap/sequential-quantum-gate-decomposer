@@ -126,10 +126,12 @@ void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx) {
             
             if (mtx_tmp != NULL) {
                 qgd_free( mtx_tmp );
+                mtx_tmp = NULL;
             }
 
             if (gate_matrix != NULL) {
                 qgd_free( gate_matrix );
+                gate_matrix = NULL;
             }
 
             return;
@@ -219,6 +221,7 @@ print_mtx( C, matrix_size,matrix_size);
     cDecomposition.list_operations(1);
 
     qgd_free( Umtx );
+    Umtx = NULL;
 
 #ifdef MIC
       }

@@ -55,6 +55,36 @@ void *aligned_alloc(size_t alignment, size_t size, bool zero) {
     return (void*)ret;
 }
 
+
+/** 
+@brief Reallocate aligned memory in a portable way. Memory allocated with aligned realloc *MUST* be freed using aligned_free. The reallocation is done by either:
+a) expanding or contracting the existing area pointed to by aligned_ptr, if possible. The contents of the area remain unchanged up to the lesser of the new and old sizes. If the area is expanded, the contents of the new part of the array is set to zero.
+b) allocating a new memory block of size new_size bytes, copying memory area with size equal the lesser of the new and the old sizes, and freeing the old block.
+@param aligned_ptr The aligned pointer created by aigned_alloc
+@param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
+@param old_size The number of bytes to allocated in pointer aligned_ptr.
+@param size The number of bytes to allocate.
+@param zero If true, the returned memory will be zeroed. If false, the contents of the returned memory are undefined.
+@returns A pointer to `size` bytes of memory, aligned to an `alignment`-byte boundary.
+*/
+void *aligned_realloc(void* aligned_ptr, size_t alignment, size_t old_size, size_t size, bool zero) {
+
+    void* new_aligned_ptr = aligned_alloc(alignment, size, true);
+
+    if (old_size >= size) {
+        memcpy( new_aligned_ptr, aligned_ptr, size );
+    }
+    else {
+        memcpy( new_aligned_ptr, aligned_ptr, old_size );
+    }
+
+    qgd_free(aligned_ptr);
+    aligned_ptr = NULL;
+
+    return new_aligned_ptr;
+}
+
+
 /**
 @brief Free memory allocated with aligned_alloc
 @param aligned_ptr The aligned pointer created by aigned_alloc
@@ -66,7 +96,7 @@ void aligned_free(void* aligned_ptr) {
 
 
 /**
-@brief custom defined memory allocation function. (Refers to corresponding MKL function if present, or use another aligned memory allocator otherwise)
+@brief custom defined memory allocation function.  Memory allocated with aligned realloc *MUST* be freed using qgd_free.
 @param element_num The number of elements in the array to be allocated.
 @param size A size of one element (such as sizeof(double) )
 @param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
@@ -78,6 +108,25 @@ void* qgd_calloc( size_t element_num, size_t size, size_t alignment ) {
 }
 
 /**
+@brief custom defined memory reallocation function. Memory allocated with aligned realloc *MUST* be freed using qgd_free. The reallocation is done by either:
+a) expanding or contracting the existing area pointed to by aligned_ptr, if possible. The contents of the area remain unchanged up to the lesser of the new and old sizes. If the area is expanded, the contents of the new part of the array is set to zero.
+b) allocating a new memory block of size new_size bytes, copying memory area with size equal the lesser of the new and the old sizes, and freeing the old block.
+@param aligned_ptr The aligned pointer created by qgd_calloc
+@param element_num_old The number of elements in the old array to be reallocated.
+@param element_num The number of elements in the array to be allocated.
+@param size A size of one element (such as sizeof(double) )
+@param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
+*/
+void* qgd_realloc(void* aligned_ptr, size_t element_num_old, size_t element_num, size_t size, size_t alignment ) {
+
+    void* ret = aligned_realloc(aligned_ptr, alignment, size*element_num_old, size*element_num, true);
+    return ret;
+
+}
+
+
+
+/**
 @brief custom defined memory release function.
 */
 void qgd_free( void* ptr ) {
@@ -86,6 +135,7 @@ void qgd_free( void* ptr ) {
     if (ptr != NULL ) {
         aligned_free(ptr);
     }
+    ptr = NULL;
 }
 
 
@@ -395,6 +445,7 @@ print_mtx( C, matrix_size, matrix_size);
     }
 
     qgd_free(tmp);
+    tmp = NULL;
 
     return 0;
 
@@ -505,7 +556,7 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
 
 
             // checking NaN
-            if (isnan(cost_function)) {
+            if (std::isnan(cost_function)) {
                 printf("cost function NaN: exiting\n");
                 exit(-1);
             }   

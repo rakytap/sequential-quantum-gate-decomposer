@@ -107,6 +107,7 @@ int iface_delete_N_Qubit_Decomposition( void* ptr ) {
 
     QGD_Complex16* Umtx = instance->get_Umtx();
     qgd_free( Umtx );
+    Umtx = NULL;
     
     delete instance;
 

@@ -98,10 +98,12 @@ Decomposition_Base::~Decomposition_Base() {
 
     if (optimized_parameters != NULL ) {
         qgd_free( optimized_parameters );
+        optimized_parameters = NULL;
     }
 
     if (transformed_mtx != NULL ) {
         qgd_free( transformed_mtx );
+        transformed_mtx = NULL;
     }
 
 /*    if (m_x != NULL) {
@@ -157,6 +159,8 @@ void Decomposition_Base::finalize_decomposition() {
         }
         qgd_free( optimized_parameters );
         qgd_free( finalizing_parameters);
+        optimized_parameters = NULL;
+        finalizing_parameters = NULL;
         optimized_parameters = optimized_parameters_tmp;
         optimized_parameters_tmp = NULL;
 
@@ -278,6 +282,8 @@ void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operatio
 
         qgd_free( mtx_tmp );
         qgd_free( u3_mtx );
+        mtx_tmp = NULL;
+        u3_mtx = NULL;
 //printf("Decomposition_Base::get_finalizing_operations 3\n");
 //print_mtx(mtx, matrix_size, matrix_size );   
         return;
@@ -443,6 +449,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
                 // release operation products
                 for (std::vector<QGD_Complex16*>::iterator mtxs_it=operations_mtxs_post.begin(); mtxs_it != operations_mtxs_post.end(); mtxs_it++ ) {
                     qgd_free( *mtxs_it );
+                    *mtxs_it = NULL;
                 }
                 operations_mtxs_post.clear();
                 fixed_operation_post->set_matrix( Identity );
@@ -570,16 +577,17 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         if ( operations_mtx_post!=Identity ) {
             qgd_free(Identity);
         }
-        else {
-            Identity = NULL;
-        }
+        Identity = NULL;
+        
 
         // release preoperation matrix
         qgd_free( operations_mtx_pre );
+        operations_mtx_pre = NULL;
 
         // release post operation products
         for (std::vector<QGD_Complex16*>::iterator mtxs_it=operations_mtxs_post.begin(); mtxs_it != operations_mtxs_post.end(); mtxs_it++ ) {
             qgd_free( *mtxs_it );
+            *mtxs_it = NULL;
         }
         operations_mtxs_post.clear();
  
@@ -592,6 +600,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 
         // free the allocated temporary Umtx
         qgd_free(Umtx_loc);
+        Umtx_loc = NULL;
 
 }      
         
@@ -691,6 +700,7 @@ std::vector<QGD_Complex16*> Decomposition_Base::get_operation_products(double* p
     }
     else {
         qgd_free(operation_mtx); 
+        operation_mtx = NULL;
     }
 
     return operation_mtxs;
@@ -822,6 +832,8 @@ print_mtx( initial_matrix, matrix_size, matrix_size );
         apply_operation( Operation_product, initial_matrix, ret_matrix );
         qgd_free( Operation_product );
         qgd_free( operation_mtx );
+        Operation_product = NULL;
+        operation_mtx = NULL;
 
 //printf("Decomposition_Base::get_transformed_matrix 6\n");
 //print_mtx( ret_matrix, matrix_size, matrix_size );

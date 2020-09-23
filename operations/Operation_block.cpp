@@ -134,6 +134,7 @@ int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx 
     // free the constituent matrices if possible    
     for ( std::vector<QGD_Complex16*>::iterator it=operation_mtxs.begin(); it!=operation_mtxs.end(); it++) {
         qgd_free(*it);
+        *it = NULL;
     }
 
     operation_mtxs.clear();
