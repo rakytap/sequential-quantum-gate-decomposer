@@ -19,7 +19,8 @@ EXTRA_DIST = common/include/common.h \
              qgd_python/N_Qubit_Decomposition.py \
              qgd_python/__init__.py \
              Umtx.mat \
-             LICENSE
+             LICENSE \
+             Doxygen
 
 lib_LTLIBRARIES = libqgd.la
 pkginclude_HEADERS = python_interface.h
