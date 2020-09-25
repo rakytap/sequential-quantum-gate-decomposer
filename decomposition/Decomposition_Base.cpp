@@ -962,7 +962,7 @@ void Decomposition_Base::Init_max_layer_num() {
 
     // default layer numbers
     max_layer_num_def[2] = 3;
-    max_layer_num_def[3] = 20;
+    max_layer_num_def[3] = 16;
     max_layer_num_def[4] = 60;
     max_layer_num_def[5] = 240;
     max_layer_num_def[6] = 1350;

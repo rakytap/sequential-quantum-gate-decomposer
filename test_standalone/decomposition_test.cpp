@@ -105,7 +105,7 @@ int main() {
     // setting the maximal number of layers used in the decomposition
     std::map<int,int> num_of_layers;
     num_of_layers[2] = 3;
-    num_of_layers[3] = 20;
+    num_of_layers[3] = 16;
     num_of_layers[4] = 60;
     num_of_layers[5] = 240;
     num_of_layers[6] = 960;
