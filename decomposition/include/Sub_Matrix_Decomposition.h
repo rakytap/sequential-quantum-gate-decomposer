@@ -64,13 +64,11 @@ public:
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param max_layer_num_in A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process at the subdecomposing of n-th qubits.
-@param identical_blocks_in A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
 @param optimize_layer_num_in Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimalization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in, guess_type initial_guess_in );
+Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
 
 /**
 @brief Destructor of the class
@@ -146,6 +144,14 @@ static void optimalization_problem_combined( const gsl_vector* parameters, void*
 @return Returns with zero in case of success.
 */
 int set_identical_blocks( int qbit, int identical_blocks_in );
+
+
+/**
+@brief Set the number of identical successive blocks during the subdecomposition of the n-th qubit.
+@param identical_blocks_in An <int,int> map containing the number of successive identical layers used in the subdecompositions.
+@return Returns with zero in case of success.
+*/
+int set_identical_blocks( std::map<int, int> identical_blocks_in );
 
 
 /**

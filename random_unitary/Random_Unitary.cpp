@@ -25,6 +25,116 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "qgd/Random_Unitary.h"
 
 
+/**
+@brief Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by random U3 operations.
+@param qbit_num The number of qubits spanning the unitary.
+@param cnot_num The number of CNOT gates composing the random unitary.
+@param mtx The preallocated array for the constructed unitary.
+*/
+void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx) {
+
+    // the current number of CNOT gates
+    int cnot_num_curr = 0;
+
+    // the size of the matrix
+    int matrix_size = Power_of_2(qbit_num);
+
+    // The unitary discribing each qubits in their initial state
+    memset( mtx, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+    create_identity( mtx, matrix_size );
+
+    QGD_Complex16* mtx_tmp = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+
+    QGD_Complex16* gate_matrix = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+    memset( gate_matrix, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+
+    // constructing the unitary
+    while (true) {
+        int cnot_or_u3 = rand() % 5 + 1;
+
+        CNOT* cnot_op = NULL;
+        U3* u3_op = NULL;
+
+        if (cnot_or_u3 <= 4) {
+            // creating random parameters for the U3 operation
+            double parameters[3];
+
+            parameters[0] = double(rand())/RAND_MAX*4*M_PI;
+            parameters[1] = double(rand())/RAND_MAX*2*M_PI;
+            parameters[2] = double(rand())/RAND_MAX*2*M_PI;
+           
+
+            // randomly choose the target qbit
+            int target_qbit = rand() % qbit_num;
+
+            // creating the U3 gate
+            u3_op = new U3(qbit_num, target_qbit, true, true, true);
+
+            // get the matrix of the operation
+            u3_op->matrix(parameters, gate_matrix);
+        }
+        else if ( cnot_or_u3 == 5 ) {
+            // randomly choose the target qbit
+            int target_qbit = rand() % qbit_num;
+
+            // randomly choose the control qbit
+            int control_qbit = rand() % qbit_num;
+
+            if (target_qbit == control_qbit) {
+                create_identity( gate_matrix, matrix_size );
+            }
+            else {
+
+                // creating the CNOT gate
+                cnot_op = new CNOT(qbit_num, control_qbit, target_qbit);
+
+                // get the matrix of the operation
+                cnot_op->matrix(gate_matrix);
+
+                cnot_num_curr = cnot_num_curr + 1;
+            }
+        }
+        else {
+            create_identity( gate_matrix, matrix_size );
+        }
+
+
+        // get the current unitary
+        zgemm3m_wrapper(gate_matrix, mtx, mtx_tmp, matrix_size);
+        memset( gate_matrix, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+        memcpy( mtx, mtx_tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+
+
+        delete u3_op;
+        u3_op = NULL;
+
+        delete cnot_op;
+        cnot_op = NULL;
+
+
+
+
+        // exit the loop if the maximal number of CNOT gates reched
+        if (cnot_num_curr >= cnot_num) {
+            
+            if (mtx_tmp != NULL) {
+                qgd_free( mtx_tmp );
+                mtx_tmp = NULL;
+            }
+
+            if (gate_matrix != NULL) {
+                qgd_free( gate_matrix );
+                gate_matrix = NULL;
+            }
+
+            return;
+        }
+
+    }
+
+}
+
+
 /** 
 @brief Constructor of the class.
 @param dim_in The number of rows in the random unitary to be ceated.
@@ -277,7 +387,7 @@ QGD_Complex16* Random_Unitary::Q(  QGD_Complex16 u1, QGD_Complex16 u2 )   {
 @brief Implements matrix I below Eq (7) of arXiv:1303:5904v1 
 @param varalpha An integer
 @param varbeta An integer
-@return Return with a pointer to the calculated I matrix of Eq. (7) of arXiv:1303:5904v1
+@return Return with a pointer to the calculated E matrix of Eq. (7) of arXiv:1303:5904v1
 */
 QGD_Complex16* Random_Unitary::E_alpha_beta( int varalpha, int varbeta )   {
         

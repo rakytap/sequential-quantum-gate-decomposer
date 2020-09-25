@@ -28,13 +28,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param max_layer_num_in A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process at the subdecomposing of n-th qubits.
-@param identical_blocks_in A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
 @param optimize_layer_num_in Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimalization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition::N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
+N_Qubit_Decomposition::N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
         
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -47,18 +45,6 @@ N_Qubit_Decomposition::N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_n
         
     // number of iteratrion loops in the optimalization
     iteration_loops[2] = 3;
-    iteration_loops[3] = 1;
-    iteration_loops[4] = 1;
-    iteration_loops[5] = 1;
-    iteration_loops[6] = 1;
-    iteration_loops[7] = 1;
-    iteration_loops[8] = 1;
-                
-    // The number of successive identical blocks in one leyer
-    identical_blocks = identical_blocks_in;
-
-    // layer number used in the decomposition
-    max_layer_num = max_layer_num_in;
    
     // filling in numbers that were not given in the input
     for ( std::map<int,int>::iterator it = max_layer_num_def.begin(); it!=max_layer_num_def.end(); it++) {      
@@ -102,11 +88,16 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
             
 
     // create an instance of class to disentangle the given qubit pair
-    Sub_Matrix_Decomposition* cSub_decomposition = new Sub_Matrix_Decomposition(Umtx, qbit_num, max_layer_num, 
-                          identical_blocks, optimize_layer_num, initial_guess);
+    Sub_Matrix_Decomposition* cSub_decomposition = new Sub_Matrix_Decomposition(Umtx, qbit_num, optimize_layer_num, initial_guess);
 
     // setting the verbosity
     cSub_decomposition->set_verbose( verbose );
+
+    // setting the maximal number of layers used in the subdecomposition
+    cSub_decomposition->set_max_layer_num( max_layer_num );
+
+    // setting the number of successive identical blocks used in the subdecomposition
+    cSub_decomposition->set_identical_blocks( identical_blocks );
 
     // setting the iteration loops in each step of the optimization process
     cSub_decomposition->set_iteration_loops( iteration_loops );
@@ -314,7 +305,7 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
         }
 
         // create class tp decompose submatrices
-        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(most_unitary_submatrix, qbit_num-1, max_layer_num, identical_blocks, optimize_layer_num_loc, initial_guess);
+        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(most_unitary_submatrix, qbit_num-1, optimize_layer_num_loc, initial_guess);
 
         // setting the verbosity
         cdecomposition->set_verbose( verbose );
@@ -322,6 +313,12 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
 
         // Maximal number of iteartions in the optimalization process
         cdecomposition->set_max_iteration(max_iterations);
+
+        // Set the number of identical successive blocks in the sub-decomposition
+        cdecomposition->set_identical_blocks(identical_blocks);
+
+        // Set the maximal number of layers for the sub-decompositions
+        cdecomposition->set_max_layer_num(max_layer_num);
 
         // setting the iteration loops in each step of the optimization process
         cdecomposition->set_iteration_loops( iteration_loops );
@@ -391,14 +388,13 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
         // maximal number of iteration loops
         int iteration_loops_max;
         try {
-            iteration_loops_max = iteration_loops[qbit_num];
+            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
         }
         catch (...) {
             iteration_loops_max = 1;
         }
 
         // do the optimalization loops
-
         for (int idx=0; idx<iteration_loops_max; idx++) {
             
             size_t iter = 0;
@@ -446,12 +442,15 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
             if (current_minimum > s->f) {
                 current_minimum = s->f;
                 memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
-
                 gsl_multimin_fdfminimizer_free (s);
-                break;
+
+                #pragma omp parallel for
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                }
             }
             else {
-                //#pragma omp parallel for
+                #pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
                 }
@@ -786,13 +785,13 @@ void N_Qubit_Decomposition::simplify_layers() {
 @param layer An instance of class Operation_block containing the 2-qubit gate structure to be simplified
 @param parameters An array of parameters to calculate the matrix representation of the operations in the block of operations.
 @param parameter_num_block NUmber of parameters in the block of operations to be simplified.
-@param max_layer_num A map of <int n: int num> indicating the maximal number of CNOT operations allowed in the simplification.
+@param max_layer_num_loc A map of <int n: int num> indicating the maximal number of CNOT operations allowed in the simplification.
 @param simplified_layer An instance of Operation_block containing the simplified structure of operations.
 @param simplified_parameters An array of parameters containing the parameters of the simplified block structure.
 @param simplified_parameter_num The number of parameters in the simplified block structure.
 @return Returns with 0 if the simplification wa ssuccessful.
 */
-int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num, Operation_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num) {
+int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Operation_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num) {
 
         if (verbose) {
             printf("Try to simplify sub-structure \n");
@@ -855,8 +854,10 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         }
 
         // decompose the chosen 2-qubit unitary
-        std::map<int,int> identical_blocks_loc;
-        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(submatrix, 2, max_layer_num, identical_blocks_loc, true, initial_guess); 
+        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(submatrix, 2, true, initial_guess); 
+
+        // set the maximal number of layers
+        cdecomposition->set_max_layer_num( max_layer_num_loc );
 
         // suppress output messages
         cdecomposition->set_verbose( false );
@@ -946,20 +947,37 @@ return -1; */
 
 
 /**
-@brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
-@param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+@brief Set the number of identical successive blocks during the subdecomposition of the n-th qubit.
+@param n The number of qubits for which the maximal number of layers should be used in the subdecomposition.
 @param identical_blocks_in The number of successive identical layers used in the subdecomposition.
 @return Returns with zero in case of success.
 */
-int N_Qubit_Decomposition::set_identical_blocks( int qbit, int identical_blocks_in )  {
+int N_Qubit_Decomposition::set_identical_blocks( int n, int identical_blocks_in )  {
 
-    std::map<int,int>::iterator key_it = identical_blocks.find( qbit );
+    std::map<int,int>::iterator key_it = identical_blocks.find( n );
 
     if ( key_it != identical_blocks.end() ) {
         identical_blocks.erase( key_it );
     }
 
-    identical_blocks.insert( std::pair<int, int>(qbit,  identical_blocks_in) );    
+    identical_blocks.insert( std::pair<int, int>(n,  identical_blocks_in) );    
+
+    return 0;
+
+}
+
+
+
+/**
+@brief Set the number of identical successive blocks during the subdecomposition of the n-th qubit.
+@param identical_blocks_in An <int,int> map containing the number of successive identical layers used in the subdecompositions.
+@return Returns with zero in case of success.
+*/
+int N_Qubit_Decomposition::set_identical_blocks( std::map<int, int> identical_blocks_in )  {
+
+    for ( std::map<int,int>::iterator it=identical_blocks_in.begin(); it!= identical_blocks_in.end(); it++ ) {
+        set_identical_blocks( it->first, it->second );
+    }
 
     return 0;
 

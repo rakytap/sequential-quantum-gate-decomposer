@@ -1,15 +1,15 @@
 <map id="Operation_block::add_operation_to_front" name="Operation_block::add_operation_to_front">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimalization problem is solved, the indepent qubits can be rotated into state |0&gt; by..." alt="" coords="423,171,582,213"/>
-<area shape="rect" id="node10" href="$class_decomposition___base.html#a9832cc5308c00b73d3e6bc331a77c7f7" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="196,203,365,245"/>
-<area shape="rect" id="node11" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="413,255,592,311"/>
-<area shape="rect" id="node12" href="$class_operation__block.html#ac870a2afab73fa33f706e2e35829b452" title="Add a U3 gate to the front of the list of operations. " alt="" coords="209,321,352,362"/>
-<area shape="rect" id="node13" href="$class_operation__block.html#a207dfeddc26d79125a58e2c282bb0987" title="Add a C_NOT gate operation to the front of the list of operations. " alt="" coords="209,386,352,427"/>
-<area shape="rect" id="node14" href="$class_operation__block.html#a50210aa57a18243de26631e0f6f823b6" title="Add an array of operations to the front of the list of operations. " alt="" coords="209,451,352,493"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#ae7fd1992d645a7ff41c02e48ba1dc5ad" title="Start the disentanglig process of the unitary. " alt="" coords="640,171,803,213"/>
-<area shape="rect" id="node4" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="853,5,1023,32"/>
-<area shape="rect" id="node5" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="913,56,963,83"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="857,275,1019,317"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a13453d7704869cfc8536767c2db4518d" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="857,107,1019,149"/>
-<area shape="rect" id="node9" href="$qgd_2python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="851,173,1025,200"/>
-<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1073,162,1236,203"/>
+<area shape="rect" id="node1" title="Add an operation to the front of the list of operations." alt="" coords="1093,234,1236,275"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimalization problem is solved, the indepent qubits can be rotated into state |0&gt; by..." alt="" coords="659,131,818,173"/>
+<area shape="rect" id="node9" href="$class_decomposition___base.html#a9832cc5308c00b73d3e6bc331a77c7f7" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt;" alt="" coords="876,146,1045,187"/>
+<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="649,197,828,253"/>
+<area shape="rect" id="node11" href="$class_operation__block.html#ac870a2afab73fa33f706e2e35829b452" title="Add a U3 gate to the front of the list of operations." alt="" coords="889,263,1032,305"/>
+<area shape="rect" id="node12" href="$class_operation__block.html#a207dfeddc26d79125a58e2c282bb0987" title="Add a C_NOT gate operation to the front of the list of operations." alt="" coords="889,329,1032,370"/>
+<area shape="rect" id="node13" href="$class_operation__block.html#a50210aa57a18243de26631e0f6f823b6" title="Add an array of operations to the front of the list of operations." alt="" coords="889,394,1032,435"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary." alt="" coords="439,139,601,181"/>
+<area shape="rect" id="node4" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates." alt="" coords="278,36,329,63"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices." alt="" coords="222,205,385,246"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e." alt="" coords="222,87,385,129"/>
+<area shape="rect" id="node8" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary." alt="" coords="216,153,391,180"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e." alt="" coords="5,33,168,74"/>
 </map>

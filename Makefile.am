@@ -40,4 +40,12 @@ install: install-recursive
 	cp example.py $(prefix)/
 	cp Umtx.mat $(prefix)/
 	cp LICENSE $(prefix)/
+
+
+doxygen: 
+	cd Doxygen && doxygen Doxyfile && cd ..
+
+doxygen-install:
+	mkdir -p $(prefix)/Docs && cp -r Docs/html $(prefix)/Docs
+      
 	

@@ -1,3 +1,4 @@
 <map id="CNOT::reorder_qubits" name="CNOT::reorder_qubits">
-<area shape="rect" id="node2" href="$class_operation.html#a73a8408873507d5630f57c200915a0c0" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="200,5,324,47"/>
+<area shape="rect" id="node1" title="Call to reorder the qubits in the matrix of the operation." alt="" coords="5,13,152,39"/>
+<area shape="rect" id="node2" href="$class_operation.html#a73a8408873507d5630f57c200915a0c0" title="Call to reorder the qubits in the matrix of the operation." alt="" coords="200,5,324,47"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="CNOT" name="CNOT">
-<area shape="rect" id="node2" href="$class_operation.html" title="Base class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="5,5,84,32"/>
+<area shape="rect" id="node1" title="A class representing a CNOT operation." alt="" coords="15,80,74,107"/>
+<area shape="rect" id="node2" href="$class_operation.html" title="Base class for the representation of one&#45; and two&#45;qubit operations." alt="" coords="5,5,84,32"/>
 </map>

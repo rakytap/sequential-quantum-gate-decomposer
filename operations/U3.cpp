@@ -152,7 +152,7 @@ QGD_Complex16* U3::matrix( const double* parameters ) {
 @brief Call to retrieve the operation matrix
 @param parameters An array of parameters to calculate the matrix of the U3 operation.
 @param U3_matrix A pointer to the preallocated array of the operation matrix.
-@return Returns with 0 on success
+@return Returns with 0 on success.
 */
 int U3::matrix( const double* parameters, QGD_Complex16* U3_matrix ) {
  

@@ -1,15 +1,16 @@
 <map id="Operation_block::matrix" name="Operation_block::matrix">
-<area shape="rect" id="node2" href="$class_operation__block.html#aedddbc5242eab7c00125359a835ac53d" title="Operation_block::get\l_matrices" alt="" coords="211,125,351,166"/>
-<area shape="rect" id="node10" href="$common_8cpp.html#a9b85008e8385d9846a29409c95b14a97" title="reduce_zgemm" alt="" coords="225,335,336,361"/>
-<area shape="rect" id="node13" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="qgd_free" alt="" coords="462,411,534,437"/>
-<area shape="rect" id="node3" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Operation::get_type" alt="" coords="431,5,565,32"/>
-<area shape="rect" id="node4" href="$class_c_n_o_t.html#a50fefe3d884b9d5fcc20d6855e75e602" title="CNOT::matrix" alt="" coords="448,56,548,83"/>
-<area shape="rect" id="node5" href="$class_operation.html#a670c1149cd1c675cf67bbcd861817223" title="Operation::get_parameter_num" alt="" coords="399,107,597,133"/>
-<area shape="rect" id="node6" href="$class_u3.html#a139ba817db471527c7326ead23074249" title="U3::matrix" alt="" coords="458,157,538,184"/>
-<area shape="rect" id="node9" href="$class_operation.html#acf7d1765143285ff73772ae860109988" title="Operation::matrix" alt="" coords="439,208,557,235"/>
-<area shape="rect" id="node7" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="qgd_calloc" alt="" coords="649,284,733,311"/>
-<area shape="rect" id="node8" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="aligned_alloc" alt="" coords="785,284,883,311"/>
-<area shape="rect" id="node11" href="$common_8cpp.html#ad2809f4012fcf8a7375a959c5b816413" title="create_identity" alt="" coords="445,309,551,336"/>
-<area shape="rect" id="node12" href="$common_8cpp.html#a7e4fbff01bddac17c7499d1da136f004" title="zgemm3m_wrapper" alt="" coords="431,360,565,387"/>
-<area shape="rect" id="node14" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="aligned_free" alt="" coords="645,411,737,437"/>
+<area shape="rect" id="node1" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="5,335,163,361"/>
+<area shape="rect" id="node2" href="$class_operation__block.html#aedddbc5242eab7c00125359a835ac53d" title="Call to get the list of matrix representation of the operations grouped in the block." alt="" coords="211,125,351,166"/>
+<area shape="rect" id="node10" href="$common_8cpp.html#ab51a2d76dd00cfa0fbf7ceca19f05e8b" title="Calculate the product of several square shaped complex matrices stored in a vector." alt="" coords="225,335,336,361"/>
+<area shape="rect" id="node13" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function." alt="" coords="462,411,534,437"/>
+<area shape="rect" id="node3" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation." alt="" coords="431,5,565,32"/>
+<area shape="rect" id="node4" href="$class_c_n_o_t.html#a50fefe3d884b9d5fcc20d6855e75e602" title="Call to retrieve the operation matrix." alt="" coords="448,56,548,83"/>
+<area shape="rect" id="node5" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters." alt="" coords="399,107,597,133"/>
+<area shape="rect" id="node6" href="$class_u3.html#a92b07b2d856a85bd6a706d4bfc071ac8" title="Call to retrieve the operation matrix." alt="" coords="458,157,538,184"/>
+<area shape="rect" id="node9" href="$class_operation.html#acf7d1765143285ff73772ae860109988" title="Call to terive the operation matrix." alt="" coords="439,208,557,235"/>
+<area shape="rect" id="node7" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function." alt="" coords="649,284,733,311"/>
+<area shape="rect" id="node8" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way." alt="" coords="785,284,883,311"/>
+<area shape="rect" id="node11" href="$common_8cpp.html#ad2809f4012fcf8a7375a959c5b816413" title="Call to create an identity matrix." alt="" coords="445,309,551,336"/>
+<area shape="rect" id="node12" href="$common_8cpp.html#a7e4fbff01bddac17c7499d1da136f004" title="Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or c..." alt="" coords="431,360,565,387"/>
+<area shape="rect" id="node14" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="Free memory allocated with aligned_alloc." alt="" coords="645,411,737,437"/>
 </map>

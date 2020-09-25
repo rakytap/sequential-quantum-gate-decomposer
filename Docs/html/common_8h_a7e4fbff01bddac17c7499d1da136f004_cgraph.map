@@ -1,4 +1,5 @@
 <map id="zgemm3m_wrapper" name="zgemm3m_wrapper">
-<area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="188,5,272,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="320,5,417,32"/>
+<area shape="rect" id="node1" title="Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or c..." alt="" coords="5,5,140,32"/>
+<area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function." alt="" coords="188,5,272,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way." alt="" coords="320,5,417,32"/>
 </map>

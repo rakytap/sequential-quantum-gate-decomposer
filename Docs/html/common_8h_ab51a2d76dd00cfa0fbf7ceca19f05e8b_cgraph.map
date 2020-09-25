@@ -1,8 +1,9 @@
 <map id="reduce_zgemm" name="reduce_zgemm">
-<area shape="rect" id="node2" href="$common_8cpp.html#ad2809f4012fcf8a7375a959c5b816413" title="Call to create an identity matrix. " alt="" coords="178,5,285,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="351,56,435,83"/>
+<area shape="rect" id="node1" title="Calculate the product of several square shaped complex matrices stored in a vector." alt="" coords="5,81,116,108"/>
+<area shape="rect" id="node2" href="$common_8cpp.html#ad2809f4012fcf8a7375a959c5b816413" title="Call to create an identity matrix." alt="" coords="178,5,285,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function." alt="" coords="351,56,435,83"/>
 <area shape="rect" id="node5" href="$common_8cpp.html#a7e4fbff01bddac17c7499d1da136f004" title="Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or c..." alt="" coords="164,107,299,133"/>
-<area shape="rect" id="node6" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="195,157,267,184"/>
-<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="487,56,584,83"/>
-<area shape="rect" id="node7" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="Free memory allocated with aligned_alloc. " alt="" coords="347,157,439,184"/>
+<area shape="rect" id="node6" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function." alt="" coords="195,157,267,184"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way." alt="" coords="487,56,584,83"/>
+<area shape="rect" id="node7" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="Free memory allocated with aligned_alloc." alt="" coords="347,157,439,184"/>
 </map>

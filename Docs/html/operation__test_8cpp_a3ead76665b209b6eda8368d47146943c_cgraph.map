@@ -1,10 +1,11 @@
 <map id="test_U3_operation" name="test_U3_operation">
-<area shape="rect" id="node2" href="$class_u3.html#a92b07b2d856a85bd6a706d4bfc071ac8" title="Call to retrieve the operation matrix. " alt="" coords="227,5,307,32"/>
-<area shape="rect" id="node5" href="$common_8cpp.html#a18fbe0bcc2d85799707cdd255a6eee4f" title="Print a complex matrix on standard output. " alt="" coords="229,56,304,83"/>
-<area shape="rect" id="node6" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="221,131,312,157"/>
-<area shape="rect" id="node7" href="$class_u3.html#a700efa043c863f32465861d338efdd2b" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="203,181,330,208"/>
-<area shape="rect" id="node9" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="181,232,352,259"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="420,5,504,32"/>
-<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="572,5,669,32"/>
-<area shape="rect" id="node8" href="$class_operation.html#a73a8408873507d5630f57c200915a0c0" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="400,174,524,215"/>
+<area shape="rect" id="node1" title=" " alt="" coords="5,131,133,157"/>
+<area shape="rect" id="node2" href="$class_u3.html#a92b07b2d856a85bd6a706d4bfc071ac8" title="Call to retrieve the operation matrix." alt="" coords="227,5,307,32"/>
+<area shape="rect" id="node5" href="$common_8cpp.html#a18fbe0bcc2d85799707cdd255a6eee4f" title="Print a complex matrix on standard output." alt="" coords="229,56,304,83"/>
+<area shape="rect" id="node6" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2." alt="" coords="221,131,312,157"/>
+<area shape="rect" id="node7" href="$class_u3.html#a700efa043c863f32465861d338efdd2b" title="Call to reorder the qubits in the matrix of the operation." alt="" coords="203,181,330,208"/>
+<area shape="rect" id="node9" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit." alt="" coords="181,232,352,259"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function." alt="" coords="420,5,504,32"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way." alt="" coords="572,5,669,32"/>
+<area shape="rect" id="node8" href="$class_operation.html#a73a8408873507d5630f57c200915a0c0" title="Call to reorder the qubits in the matrix of the operation." alt="" coords="400,174,524,215"/>
 </map>

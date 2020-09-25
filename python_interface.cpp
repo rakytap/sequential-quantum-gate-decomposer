@@ -51,11 +51,6 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
         Umtx[idx].imag = mtx_imag[idx];
     }
     
-    
-    // skeleton input variables to initialize the class
-    std::map<int,int> num_of_layers;
-    std::map<int,int> identical_blocks;
-
     // setting the initial guess type
     guess_type initial_guess;
     if ( initial_guess_num==0 ) {
@@ -74,7 +69,7 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
 
 
     // creating an instance of class N_Qubit_decomposition
-    N_Qubit_Decomposition* instance = new N_Qubit_Decomposition( Umtx, qbit_num, num_of_layers, identical_blocks, optimize_layer_num, initial_guess );
+    N_Qubit_Decomposition* instance = new N_Qubit_Decomposition( Umtx, qbit_num, optimize_layer_num, initial_guess );
 
     return (void*)instance;
 

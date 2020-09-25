@@ -1,4 +1,5 @@
 <map id="Decomposition_Base::list_operations" name="Decomposition_Base::list_operations">
-<area shape="rect" id="node2" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="244,5,295,32"/>
-<area shape="rect" id="node3" href="$qgd_2python__interface_8h.html#a851ccbc4db2a5b49d44419f74bed966e" title="iface_list_operations" alt="" coords="199,56,340,83"/>
+<area shape="rect" id="node1" title="Call to print the operations decomposing the initial unitary." alt="" coords="195,23,340,65"/>
+<area shape="rect" id="node2" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates." alt="" coords="51,5,101,32"/>
+<area shape="rect" id="node3" href="$python__interface_8h.html#a851ccbc4db2a5b49d44419f74bed966e" title="Call to list the operations giving the decomposition of the unitary." alt="" coords="5,56,147,83"/>
 </map>

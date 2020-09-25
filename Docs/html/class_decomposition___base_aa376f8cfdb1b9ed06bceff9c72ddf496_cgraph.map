@@ -1,3 +1,4 @@
 <map id="Decomposition_Base::set_iteration_loops" name="Decomposition_Base::set_iteration_loops">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#aaf2862ee2211dac36242551340190b4b" title="Decomposition_Base\l::set_iteration_loops" alt="" coords="199,5,344,47"/>
+<area shape="rect" id="node1" title="Set the number of iteration loops during the subdecomposition of the qbit&#45;th qubit." alt="" coords="5,5,151,47"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a461f735688248c8f04756e4abadb0516" title="Set the number of iteration loops during the subdecomposition of the n&#45;th qubit." alt="" coords="199,5,344,47"/>
 </map>

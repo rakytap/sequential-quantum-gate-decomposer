@@ -372,6 +372,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -984,7 +985,13 @@ install: install-recursive
 	cp -r qgd_python $(prefix)/
 	cp example.py $(prefix)/
 	cp Umtx.mat $(prefix)/
-	cp LICENCE $(prefix)/
+	cp LICENSE $(prefix)/
+
+doxygen: 
+	cd Doxygen && doxygen Doxyfile && cd ..
+
+doxygen-install:
+	mkdir -p $(prefix)/Docs && cp -r Docs/html $(prefix)/Docs
 
 # Tell versions [3.59,3.63) of GNU make to not export all variables.
 # Otherwise a system limit (for SysV at least) may be exceeded.

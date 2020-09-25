@@ -1,5 +1,6 @@
 <map id="Operation::clone" name="Operation::clone">
-<area shape="rect" id="node2" href="$class_operation.html#a026d3dcf0ad00af99c7a9097d3cf1c74" title="Call to set the stored matrix in the operation. " alt="" coords="168,5,312,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="360,5,444,32"/>
-<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="492,5,589,32"/>
+<area shape="rect" id="node1" title="Call to create a clone of the present class." alt="" coords="5,5,120,32"/>
+<area shape="rect" id="node2" href="$class_operation.html#a026d3dcf0ad00af99c7a9097d3cf1c74" title="Call to set the stored matrix in the operation." alt="" coords="168,5,312,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function." alt="" coords="360,5,444,32"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way." alt="" coords="492,5,589,32"/>
 </map>

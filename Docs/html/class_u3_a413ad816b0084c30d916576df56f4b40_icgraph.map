@@ -1,7 +1,8 @@
 <map id="U3::is_theta_parameter" name="U3::is_theta_parameter">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a68dcc2cdfa644cf8043021367cc07d28" title="Call to prepare the optimized operations to export. " alt="" coords="209,5,355,61"/>
-<area shape="rect" id="node3" href="$class_operation__block.html#a29e2c74d7fa7344193a17e39248eb803" title="Call to print the list of operations stored in the block of operations for a specific set of paramete..." alt="" coords="213,110,351,151"/>
-<area shape="rect" id="node4" href="$class_decomposition___base.html#a4c6c81d70f49ee249aa455a4f2718ee2" title="Call to print the operations decomposing the initial unitary. " alt="" coords="403,110,548,151"/>
-<area shape="rect" id="node5" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="641,92,692,119"/>
-<area shape="rect" id="node6" href="$python__interface_8h.html#a851ccbc4db2a5b49d44419f74bed966e" title="Call to list the operations giving the decomposition of the unitary. " alt="" coords="596,143,737,169"/>
+<area shape="rect" id="node1" title="Call to check whether theta is a free parameter of the gate." alt="" coords="581,69,737,96"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a68dcc2cdfa644cf8043021367cc07d28" title="Call to prepare the optimized operations to export." alt="" coords="388,5,533,61"/>
+<area shape="rect" id="node3" href="$class_operation__block.html#a29e2c74d7fa7344193a17e39248eb803" title="Call to print the list of operations stored in the block of operations for a specific set of paramete..." alt="" coords="391,110,530,151"/>
+<area shape="rect" id="node4" href="$class_decomposition___base.html#a4c6c81d70f49ee249aa455a4f2718ee2" title="Call to print the operations decomposing the initial unitary." alt="" coords="195,110,340,151"/>
+<area shape="rect" id="node5" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates." alt="" coords="51,92,101,119"/>
+<area shape="rect" id="node6" href="$python__interface_8h.html#a851ccbc4db2a5b49d44419f74bed966e" title="Call to list the operations giving the decomposition of the unitary." alt="" coords="5,143,147,169"/>
 </map>

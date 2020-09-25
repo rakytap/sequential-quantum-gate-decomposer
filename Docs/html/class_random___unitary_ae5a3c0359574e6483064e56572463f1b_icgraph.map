@@ -1,4 +1,5 @@
 <map id="Random_Unitary::kronecker" name="Random_Unitary::kronecker">
-<area shape="rect" id="node2" href="$class_random___unitary.html#ace2ab5baafad04139f4ffc52c1174881" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="449,5,629,47"/>
-<area shape="rect" id="node3" href="$class_random___unitary.html#a1dfd08ca71a8609ae71325a9f40e7570" title="Eq (6) of arXiv:1303:5904v1. " alt="" coords="235,38,401,65"/>
+<area shape="rect" id="node1" title="Kronecker delta." alt="" coords="448,13,629,39"/>
+<area shape="rect" id="node2" href="$class_random___unitary.html#ace2ab5baafad04139f4ffc52c1174881" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1." alt="" coords="5,5,185,47"/>
+<area shape="rect" id="node3" href="$class_random___unitary.html#a1dfd08ca71a8609ae71325a9f40e7570" title="Eq (6) of arXiv:1303:5904v1." alt="" coords="233,38,400,65"/>
 </map>

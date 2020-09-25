@@ -100,8 +100,8 @@ void Operation_block::release_operations() {
 
 
 /**
-@brief Call to terive the operation matrix (Which is the product of all the operation matrices stored in the operation block)
-@param parameters An arary pointing to the parameters of the operations
+@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)
+@param parameters An array pointing to the parameters of the operations
 @return Returns with a pointer to the operation matrix
 */
 QGD_Complex16* Operation_block::matrix( const double* parameters  ) {
@@ -357,7 +357,7 @@ void Operation_block::add_operations_to_front( vector<Operation*>  operations_in
     
 /**
 @brief Append a general operation to the list of operations
-@param operation An instance of class Operation describing an operation.
+@param operation A pointer to a class Operation describing an operation.
 */
 void Operation_block::add_operation_to_end( Operation* operation ) {
         
@@ -452,7 +452,7 @@ int Operation_block::get_parameter_num() {
 
 
 /**
-@brief Call to get the number of operations grouped in the block
+@brief Call to get the number of operations grouped in the class
 @return Return with the number of the operations grouped in the operation block.
 */
 int Operation_block::get_operation_num() {
@@ -463,7 +463,7 @@ int Operation_block::get_operation_num() {
 /**
 @brief Call to print the list of operations stored in the block of operations for a specific set of parameters
 @param parameters The parameters of the operations that should be printed.
-@param start_index The index of the first operation to be printed.
+@param start_index The ordinal number of the first operation.
 */
 void Operation_block::list_operations( const double* parameters, int start_index ) {
 
@@ -618,7 +618,7 @@ std::vector<int> Operation_block::get_involved_qubits() {
 
 
 /**
-@brief Call to get the operations stored in the block
+@brief Call to get the operations stored in the class.
 @return Return with a list of the operations.
 */
 std::vector<Operation*> Operation_block::get_operations() {

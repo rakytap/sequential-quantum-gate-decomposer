@@ -1,4 +1,5 @@
 <map id="Random_Unitary::I_alpha_beta" name="Random_Unitary::I_alpha_beta">
-<area shape="rect" id="node2" href="$class_random___unitary.html#a1dfd08ca71a8609ae71325a9f40e7570" title="Eq (6) of arXiv:1303:5904v1. " alt="" coords="252,13,419,39"/>
-<area shape="rect" id="node3" href="$class_random___unitary.html#ace2ab5baafad04139f4ffc52c1174881" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="467,5,647,47"/>
+<area shape="rect" id="node1" title="Implements matrix I below Eq (7) of arXiv:1303:5904v1." alt="" coords="448,13,647,39"/>
+<area shape="rect" id="node2" href="$class_random___unitary.html#a1dfd08ca71a8609ae71325a9f40e7570" title="Eq (6) of arXiv:1303:5904v1." alt="" coords="233,13,400,39"/>
+<area shape="rect" id="node3" href="$class_random___unitary.html#ace2ab5baafad04139f4ffc52c1174881" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1." alt="" coords="5,5,185,47"/>
 </map>

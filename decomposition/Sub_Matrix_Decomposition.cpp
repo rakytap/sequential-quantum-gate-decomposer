@@ -31,13 +31,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param max_layer_num_in A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process at the subdecomposing of n-th qubits.
-@param identical_blocks_in A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
 @param optimize_layer_num_in Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimalization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in=false, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
+Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize_layer_num_in=false, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
         
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -50,24 +48,12 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int 
         
     // number of iteratrion loops in the optimalization
     iteration_loops[2] = 3;
-    iteration_loops[3] = 1;
-    iteration_loops[4] = 1;
-    iteration_loops[5] = 1;
-    iteration_loops[6] = 1;
-    iteration_loops[7] = 1;
-    iteration_loops[8] = 1;
 
     // logical value indicating whether the quasi-unitarization of the submatrices was done or not 
     subdisentaglement_done = false;
         
     // The subunitarized matrix
     subdecomposed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-                
-    // The number of successive identical blocks in one leyer
-    identical_blocks = identical_blocks_in;
-
-    // layer number used in the decomposition
-    max_layer_num = max_layer_num_in;
    
     // filling in numbers that were not given in the input
     for ( std::map<int,int>::iterator it = max_layer_num_def.begin(); it!=max_layer_num_def.end(); it++) {      
@@ -345,15 +331,14 @@ throw "klll";*/
         // maximal number of iteration loops
         int iteration_loops_max;
         try {
-            iteration_loops_max = iteration_loops[qbit_num];
+            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
         }
         catch (...) {
             iteration_loops_max = 1;
         }
 
+
         // do the optimalization loops
-
-
         for (int idx=0; idx<iteration_loops_max; idx++) {
             
             size_t iter = 0;
@@ -402,10 +387,14 @@ throw "klll";*/
                 current_minimum = s->f;
                 memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
                 gsl_multimin_fdfminimizer_free (s);
-                break;
+
+                #pragma omp parallel for
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                }
             }
             else {
-                //#pragma omp parallel for
+                #pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
                 }
@@ -563,6 +552,22 @@ int Sub_Matrix_Decomposition::set_identical_blocks( int qbit, int identical_bloc
     }
 
     identical_blocks.insert( std::pair<int, int>(qbit,  identical_blocks_in) );    
+
+    return 0;
+
+}
+
+
+/**
+@brief Set the number of identical successive blocks during the subdecomposition of the n-th qubit.
+@param identical_blocks_in An <int,int> map containing the number of successive identical layers used in the subdecompositions.
+@return Returns with zero in case of success.
+*/
+int Sub_Matrix_Decomposition::set_identical_blocks( std::map<int, int> identical_blocks_in )  {
+
+    for ( std::map<int,int>::iterator it=identical_blocks_in.begin(); it!= identical_blocks_in.end(); it++ ) {
+        set_identical_blocks( it->first, it->second );
+    }
 
     return 0;
 

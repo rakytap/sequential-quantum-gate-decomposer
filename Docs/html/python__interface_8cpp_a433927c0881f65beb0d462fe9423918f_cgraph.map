@@ -1,3 +1,4 @@
 <map id="iface_set_identical_blocks" name="iface_set_identical_blocks">
-<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#a425313eac156f97abc2581c7350c16b4" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit..." alt="" coords="184,5,347,47"/>
+<area shape="rect" id="node1" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit." alt="" coords="5,5,136,47"/>
+<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#a180ca3406189b079fb2defc5054c8700" title="Set the number of identical successive blocks during the subdecomposition of the n&#45;th qubit." alt="" coords="184,5,347,47"/>
 </map>

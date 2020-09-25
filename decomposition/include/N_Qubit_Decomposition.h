@@ -50,13 +50,11 @@ public:
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param max_layer_num_in A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process at the subdecomposing of n-th qubits.
-@param identical_blocks_in A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
 @param optimize_layer_num_in Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimalization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, std::map<int,int> max_layer_num_in, std::map<int,int> identical_blocks_in, bool optimize_layer_num_in, guess_type initial_guess_in );
+N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
 
 
 
@@ -154,21 +152,28 @@ void simplify_layers();
 @param layer An instance of class Operation_block containing the 2-qubit gate structure to be simplified
 @param parameters An array of parameters to calculate the matrix representation of the operations in the block of operations.
 @param parameter_num_block NUmber of parameters in the block of operations to be simplified.
-@param max_layer_num A map of <int n: int num> indicating the maximal number of CNOT operations allowed in the simplification.
+@param max_layer_num_loc A map of <int n: int num> indicating the maximal number of CNOT operations allowed in the simplification.
 @param simplified_layer An instance of Operation_block containing the simplified structure of operations.
 @param simplified_parameters An array of parameters containing the parameters of the simplified block structure.
 @param simplified_parameter_num The number of parameters in the simplified block structure.
 @return Returns with 0 if the simplification wa ssuccessful.
 */
-int simplify_layer( Operation_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num, Operation_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num);
+int simplify_layer( Operation_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Operation_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num);
 
 /**
-@brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
-@param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+@brief Set the number of identical successive blocks during the subdecomposition of the n-th qubit.
+@param n The number of qubits for which the maximal number of layers should be used in the subdecomposition.
 @param identical_blocks_in The number of successive identical layers used in the subdecomposition.
 @return Returns with zero in case of success.
 */
-int set_identical_blocks( int qbit, int identical_blocks_in );
+int set_identical_blocks( int n, int identical_blocks_in );
+
+/**
+@brief Set the number of identical successive blocks during the subdecomposition of the n-th qubit.
+@param identical_blocks_in An <int,int> map containing the number of successive identical layers used in the subdecompositions.
+@return Returns with zero in case of success.
+*/
+int set_identical_blocks( std::map<int, int> identical_blocks_in );
 
 
 };

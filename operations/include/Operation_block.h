@@ -166,7 +166,7 @@ int get_parameter_num();
 
 
 /**
-@brief Call to get the number of operations grouped in the block
+@brief Call to get the number of operations grouped in the class
 @return Return with the number of the operations grouped in the operation block.
 */
 int get_operation_num();
@@ -194,7 +194,7 @@ void reorder_qubits( vector<int> qbit_list );
 std::vector<int> get_involved_qubits();
 
 /**
-@brief Call to get the operations stored in the block
+@brief Call to get the operations stored in the class.
 @return Return with a list of the operations.
 */
 std::vector<Operation*> get_operations();

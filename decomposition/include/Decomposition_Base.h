@@ -253,24 +253,32 @@ QGD_Complex16* apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* inp
 int apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* input_matrix, QGD_Complex16* result_matrix);
 
 /**
-@brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
-@param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+@brief Set the maximal number of layers used in the subdecomposition of the n-th qubit.
+@param n The number of qubits for which the maximal number of layers should be used in the subdecomposition.
 @param max_layer_num_in The maximal number of the operation layers used in the subdecomposition.
 @return Returns with 0 if succeded.
 */
-int set_max_layer_num( int qbit, int max_layer_num_in );
+int set_max_layer_num( int n, int max_layer_num_in );
 
 /**
-@brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
-@param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.,
+@brief Set the maximal number of layers used in the subdecomposition of the n-th qubit.
+@param max_layer_num_in An <int,int> map containing the maximal number of the operation layers used in the subdecomposition.
+@return Returns with 0 if succeded.
+*/
+int set_max_layer_num( std::map<int, int> max_layer_num_in );
+
+
+/**
+@brief Set the number of iteration loops during the subdecomposition of the n-th qubit.
+@param n The number of qubits for which number of iteration loops should be used in the subdecomposition.,
 @param iteration_loops_in The number of iteration loops in each sted of the subdecomposition.
 @return Returns with 0 if succeded.
 */
-int set_iteration_loops( int qbit, int iteration_loops_in );
+int set_iteration_loops( int n, int iteration_loops_in );
 
 /**
 @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
-@param iteration_loops_in An <int,int> map contining the iteration loops for the individual subdecomposition processes
+@param iteration_loops_in An <int,int> map containing the number of iteration loops for the individual subdecomposition processes
 @return Returns with 0 if succeded.
 */
 int set_iteration_loops( std::map<int, int> iteration_loops_in );

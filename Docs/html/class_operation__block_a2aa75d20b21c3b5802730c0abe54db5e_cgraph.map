@@ -1,14 +1,15 @@
 <map id="Operation_block::clone" name="Operation_block::clone">
-<area shape="rect" id="node2" href="$class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Operation_block::Operation\l_block" alt="" coords="207,5,385,47"/>
-<area shape="rect" id="node3" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Operation::get_type" alt="" coords="466,174,599,201"/>
-<area shape="rect" id="node4" href="$class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="CNOT::clone" alt="" coords="248,71,344,98"/>
-<area shape="rect" id="node8" href="$class_operation__block.html#afcd8a0e217a87485519fd5f74b3eed3a" title="Operation_block::add\l_operation_to_end" alt="" coords="225,224,367,265"/>
-<area shape="rect" id="node12" href="$class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="U3::clone" alt="" coords="258,122,334,149"/>
-<area shape="rect" id="node5" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="qgd_calloc" alt="" coords="683,71,767,98"/>
-<area shape="rect" id="node7" href="$class_operation.html#ab6d910fb0a8205eb9274dbe9f3884cce" title="Operation::set_matrix" alt="" coords="461,71,605,98"/>
-<area shape="rect" id="node6" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="aligned_alloc" alt="" coords="819,71,916,98"/>
-<area shape="rect" id="node9" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Operation::set_qbit_num" alt="" coords="451,279,614,306"/>
-<area shape="rect" id="node11" href="$class_operation.html#a670c1149cd1c675cf67bbcd861817223" title="Operation::get_parameter_num" alt="" coords="433,229,632,255"/>
-<area shape="rect" id="node10" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Power_of_2" alt="" coords="680,279,771,306"/>
-<area shape="rect" id="node13" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="U3::set_optimized_parameters" alt="" coords="434,122,631,149"/>
+<area shape="rect" id="node1" title="Create a clone of the present class." alt="" coords="5,122,159,149"/>
+<area shape="rect" id="node2" href="$class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Deafult constructor of the class." alt="" coords="207,5,385,47"/>
+<area shape="rect" id="node3" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation." alt="" coords="466,174,599,201"/>
+<area shape="rect" id="node4" href="$class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class." alt="" coords="248,71,344,98"/>
+<area shape="rect" id="node8" href="$class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations." alt="" coords="225,224,367,265"/>
+<area shape="rect" id="node12" href="$class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class." alt="" coords="258,122,334,149"/>
+<area shape="rect" id="node5" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function." alt="" coords="683,71,767,98"/>
+<area shape="rect" id="node7" href="$class_operation.html#a026d3dcf0ad00af99c7a9097d3cf1c74" title="Call to set the stored matrix in the operation." alt="" coords="461,71,605,98"/>
+<area shape="rect" id="node6" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way." alt="" coords="819,71,916,98"/>
+<area shape="rect" id="node9" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation." alt="" coords="451,279,614,306"/>
+<area shape="rect" id="node11" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters." alt="" coords="433,229,632,255"/>
+<area shape="rect" id="node10" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2." alt="" coords="680,279,771,306"/>
+<area shape="rect" id="node13" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation." alt="" coords="434,122,631,149"/>
 </map>

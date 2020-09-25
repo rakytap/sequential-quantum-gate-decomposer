@@ -1,4 +1,5 @@
 <map id="U3::composite_u3" name="U3::composite_u3">
-<area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="180,5,264,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="312,5,409,32"/>
+<area shape="rect" id="node1" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="5,5,132,32"/>
+<area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function." alt="" coords="180,5,264,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way." alt="" coords="312,5,409,32"/>
 </map>
