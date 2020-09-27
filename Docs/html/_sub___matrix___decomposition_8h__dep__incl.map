@@ -1,7 +1,8 @@
 <map id="Sub_Matrix_Decomposition.h" name="Sub_Matrix_Decomposition.h">
-<area shape="rect" id="node2" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="5,80,209,107"/>
+<area shape="rect" id="node1" title="Header file for a class responsible for the disentanglement of one qubit from the others." alt="" coords="119,5,309,32"/>
+<area shape="rect" id="node2" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others." alt="" coords="5,80,209,107"/>
 <area shape="rect" id="node3" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of a unitary into a sequence of CNOT and U3 op..." alt="" coords="234,80,407,107"/>
-<area shape="rect" id="node4" href="$_n___qubit___decomposition_8cpp.html" title="Class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations. " alt="" coords="39,155,226,181"/>
-<area shape="rect" id="node5" href="$python__interface_8cpp.html" title="Methods of the QGD Python Interface. " alt="" coords="250,155,391,181"/>
-<area shape="rect" id="node6" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="416,155,575,181"/>
+<area shape="rect" id="node4" href="$_n___qubit___decomposition_8cpp.html" title="Class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations." alt="" coords="39,155,226,181"/>
+<area shape="rect" id="node5" href="$python__interface_8cpp.html" title="Methods of the QGD Python Interface." alt="" coords="250,155,391,181"/>
+<area shape="rect" id="node6" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries." alt="" coords="416,155,575,181"/>
 </map>

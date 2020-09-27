@@ -1,4 +1,5 @@
 <map id="Random_Unitary.h" name="Random_Unitary.h">
-<area shape="rect" id="node2" href="$_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="5,80,148,107"/>
-<area shape="rect" id="node3" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="172,80,331,107"/>
+<area shape="rect" id="node1" title="Header file for a class and methods to cerate random unitary matrices." alt="" coords="99,5,227,32"/>
+<area shape="rect" id="node2" href="$_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices." alt="" coords="5,80,148,107"/>
+<area shape="rect" id="node3" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries." alt="" coords="172,80,331,107"/>
 </map>

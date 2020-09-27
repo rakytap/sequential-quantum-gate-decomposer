@@ -1,5 +1,6 @@
 <map id="Operation_block::get_involved_qubits" name="Operation_block::get_involved_qubits">
-<area shape="rect" id="node2" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Operation::get_target_qbit" alt="" coords="196,5,367,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#ab1d4bfb6768315c1e2b5a83b47eec53b" title="add_unique_elelement" alt="" coords="206,56,357,83"/>
-<area shape="rect" id="node4" href="$class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Operation::get_control_qbit" alt="" coords="193,107,369,133"/>
+<area shape="rect" id="node1" title="Call to get the qubits involved in the operations stored in the block of operations." alt="" coords="5,49,145,90"/>
+<area shape="rect" id="node2" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit." alt="" coords="196,5,367,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aba6badd873191e752e949e21670e67be" title="Add an integer to a vector of integers if the integer is not already an element of the vector." alt="" coords="206,56,357,83"/>
+<area shape="rect" id="node4" href="$class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit." alt="" coords="193,107,369,133"/>
 </map>

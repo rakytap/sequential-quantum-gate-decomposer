@@ -1,5 +1,6 @@
 <map id="Decomposition_Base::Decomposition_Base" name="Decomposition_Base::Decomposition_Base">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a24c7d112a4f3b2346c3d885316f3bfa1" title="Initializes default layer numbers. " alt="" coords="204,5,349,47"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="235,71,319,98"/>
-<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="397,71,495,98"/>
+<area shape="rect" id="node1" title="Contructor of the class." alt="" coords="5,35,156,76"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a24c7d112a4f3b2346c3d885316f3bfa1" title="Initializes default layer numbers." alt="" coords="204,5,349,47"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function." alt="" coords="235,71,319,98"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way." alt="" coords="397,71,495,98"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="Decomposition_Base::set_max_layer_num" name="Decomposition_Base::set_max_layer_num">
-<area shape="rect" id="node2" href="$qgd_2python__interface_8h.html#aac568c07be9cc6c195a20f3770918bb8" title="iface_set_max_layer_num" alt="" coords="199,13,371,39"/>
+<area shape="rect" id="node1" title="Set the maximal number of layers used in the subdecomposition of the qbit&#45;th qubit." alt="" coords="225,5,371,47"/>
+<area shape="rect" id="node2" href="$python__interface_8h.html#a13709bfbcc030047503eb14648d62d1b" title="Set the maximal number of layers used in the subdecomposition of the qbit&#45;th qubit." alt="" coords="5,13,177,39"/>
 </map>

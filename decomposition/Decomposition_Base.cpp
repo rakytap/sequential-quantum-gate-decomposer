@@ -98,10 +98,12 @@ Decomposition_Base::~Decomposition_Base() {
 
     if (optimized_parameters != NULL ) {
         qgd_free( optimized_parameters );
+        optimized_parameters = NULL;
     }
 
     if (transformed_mtx != NULL ) {
         qgd_free( transformed_mtx );
+        transformed_mtx = NULL;
     }
 
 /*    if (m_x != NULL) {
@@ -121,7 +123,7 @@ void Decomposition_Base::set_optimalization_blocks( int optimalization_block_in)
         
 /**   
 @brief Call to set the maximal number of the iterations in the optimalization process
-@param max_iterations_in aximal number of iteartions in the optimalization process
+@param max_iterations_in maximal number of iteartions in the optimalization process
 */
 void Decomposition_Base::set_max_iteration( int max_iterations_in) {
     max_iterations = max_iterations_in;  
@@ -157,6 +159,8 @@ void Decomposition_Base::finalize_decomposition() {
         }
         qgd_free( optimized_parameters );
         qgd_free( finalizing_parameters);
+        optimized_parameters = NULL;
+        finalizing_parameters = NULL;
         optimized_parameters = optimized_parameters_tmp;
         optimized_parameters_tmp = NULL;
 
@@ -278,6 +282,8 @@ void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operatio
 
         qgd_free( mtx_tmp );
         qgd_free( u3_mtx );
+        mtx_tmp = NULL;
+        u3_mtx = NULL;
 //printf("Decomposition_Base::get_finalizing_operations 3\n");
 //print_mtx(mtx, matrix_size, matrix_size );   
         return;
@@ -443,6 +449,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
                 // release operation products
                 for (std::vector<QGD_Complex16*>::iterator mtxs_it=operations_mtxs_post.begin(); mtxs_it != operations_mtxs_post.end(); mtxs_it++ ) {
                     qgd_free( *mtxs_it );
+                    *mtxs_it = NULL;
                 }
                 operations_mtxs_post.clear();
                 fixed_operation_post->set_matrix( Identity );
@@ -570,16 +577,17 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         if ( operations_mtx_post!=Identity ) {
             qgd_free(Identity);
         }
-        else {
-            Identity = NULL;
-        }
+        Identity = NULL;
+        
 
         // release preoperation matrix
         qgd_free( operations_mtx_pre );
+        operations_mtx_pre = NULL;
 
         // release post operation products
         for (std::vector<QGD_Complex16*>::iterator mtxs_it=operations_mtxs_post.begin(); mtxs_it != operations_mtxs_post.end(); mtxs_it++ ) {
             qgd_free( *mtxs_it );
+            *mtxs_it = NULL;
         }
         operations_mtxs_post.clear();
  
@@ -592,6 +600,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 
         // free the allocated temporary Umtx
         qgd_free(Umtx_loc);
+        Umtx_loc = NULL;
 
 }      
         
@@ -691,6 +700,7 @@ std::vector<QGD_Complex16*> Decomposition_Base::get_operation_products(double* p
     }
     else {
         qgd_free(operation_mtx); 
+        operation_mtx = NULL;
     }
 
     return operation_mtxs;
@@ -822,6 +832,8 @@ print_mtx( initial_matrix, matrix_size, matrix_size );
         apply_operation( Operation_product, initial_matrix, ret_matrix );
         qgd_free( Operation_product );
         qgd_free( operation_mtx );
+        Operation_product = NULL;
+        operation_mtx = NULL;
 
 //printf("Decomposition_Base::get_transformed_matrix 6\n");
 //print_mtx( ret_matrix, matrix_size, matrix_size );
@@ -844,7 +856,7 @@ QGD_Complex16* Decomposition_Base::get_decomposed_matrix() {
 @brief Apply an operations on the input matrix
 @param operation_mtx The matrix of the operation.
 @param input_matrix The input matrix to be transformed.
-@return Returns by a pointer pointing to the result.
+@return Returns with the transformed matrix
 */
 QGD_Complex16* Decomposition_Base::apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* input_matrix ) {
 
@@ -866,20 +878,20 @@ int Decomposition_Base::apply_operation( QGD_Complex16* operation_mtx, QGD_Compl
 
 
 /**
-@brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
-@param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+@brief Set the maximal number of layers used in the subdecomposition of the n-th qubit.
+@param n The number of qubits for which the maximal number of layers should be used in the subdecomposition.
 @param max_layer_num_in The maximal number of the operation layers used in the subdecomposition.
 @return Returns with 0 if succeded.
 */
-int Decomposition_Base::set_max_layer_num( int qbit, int max_layer_num_in ) {
+int Decomposition_Base::set_max_layer_num( int n, int max_layer_num_in ) {
 
-    std::map<int,int>::iterator key_it = max_layer_num.find( qbit );
+    std::map<int,int>::iterator key_it = max_layer_num.find( n );
 
     if ( key_it != max_layer_num.end() ) {
         max_layer_num.erase( key_it );
     }
 
-    max_layer_num.insert( std::pair<int, int>(qbit,  max_layer_num_in) );    
+    max_layer_num.insert( std::pair<int, int>(n,  max_layer_num_in) );    
 
     return 0;
 
@@ -887,20 +899,39 @@ int Decomposition_Base::set_max_layer_num( int qbit, int max_layer_num_in ) {
 
 
 /**
-@brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
-@param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+@brief Set the maximal number of layers used in the subdecomposition of the n-th qubit.
+@param max_layer_num_in An <int,int> map containing the maximal number of the operation layers used in the subdecomposition.
+@return Returns with 0 if succeded.
+*/
+int Decomposition_Base::set_max_layer_num( std::map<int, int> max_layer_num_in ) {
+
+
+    for ( std::map<int,int>::iterator it = max_layer_num_in.begin(); it!=max_layer_num_in.end(); it++) {   
+        set_max_layer_num( it->first, it->second );
+    }
+
+    return 0;
+
+}
+
+
+
+
+/**
+@brief Set the number of iteration loops during the subdecomposition of the n-th qubit.
+@param n The number of qubits for which number of iteration loops should be used in the subdecomposition.,
 @param iteration_loops_in The number of iteration loops in each sted of the subdecomposition.
 @return Returns with 0 if succeded.
 */
-int Decomposition_Base::set_iteration_loops( int qbit, int iteration_loops_in ) {
+int Decomposition_Base::set_iteration_loops( int n, int iteration_loops_in ) {
 
-    std::map<int,int>::iterator key_it = iteration_loops.find( qbit );
+    std::map<int,int>::iterator key_it = iteration_loops.find( n );
 
     if ( key_it != iteration_loops.end() ) {
         iteration_loops.erase( key_it );
     }
 
-    iteration_loops.insert( std::pair<int, int>(qbit,  iteration_loops_in) );   
+    iteration_loops.insert( std::pair<int, int>(n,  iteration_loops_in) );   
 
     return 0;
 
@@ -909,7 +940,7 @@ int Decomposition_Base::set_iteration_loops( int qbit, int iteration_loops_in ) 
 
 /**
 @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
-@param iteration_loops_in An <int,int> map contining the iteration loops for the individual subdecomposition processes
+@param iteration_loops_in An <int,int> map containing the number of iteration loops for the individual subdecomposition processes
 @return Returns with 0 if succeded.
 */
 int Decomposition_Base::set_iteration_loops( std::map<int, int> iteration_loops_in ) {
@@ -931,7 +962,7 @@ void Decomposition_Base::Init_max_layer_num() {
 
     // default layer numbers
     max_layer_num_def[2] = 3;
-    max_layer_num_def[3] = 20;
+    max_layer_num_def[3] = 16;
     max_layer_num_def[4] = 60;
     max_layer_num_def[5] = 240;
     max_layer_num_def[6] = 1350;

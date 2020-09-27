@@ -27,7 +27,18 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <time.h> 
 #include <ctime>
 #include "qgd/common.h"
+#include "qgd/U3.h"
+#include "qgd/CNOT.h"
 
+
+
+/**
+@brief Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by random U3 operations.
+@param qbit_num The number of qubits spanning the unitary.
+@param cnot_num The number of CNOT gates composing the random unitary.
+@param mtx The preallocated array for the constructed unitary.
+*/
+void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx);
 
 
 

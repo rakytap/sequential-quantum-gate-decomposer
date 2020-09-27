@@ -1,4 +1,4 @@
-<script language="php">
+<?php
 
 $config = array(
   'PROJECT_NAME' => "Quantum Gate Decomposer",
@@ -16,7 +16,7 @@ $translator = array(
   'search_matches' => "Matches:",
   'search' => "Search",
   'split_bar' => "",
-  'logo' => "Generated on Thu Sep 17 2020 17:48:25 for Quantum Gate Decomposer by&#160;\n<a href=\"http://www.doxygen.org/index.html\">\n<img class=\"footer\" src=\"doxygen.png\" alt=\"doxygen\"/></a> 1.8.11 ",
+  'logo' => "Generated on Fri Sep 25 2020 15:19:43 for Quantum Gate Decomposer by&#160;\n<a href=\"http://www.doxygen.org/index.html\">\n<img class=\"footer\" src=\"doxygen.png\" alt=\"doxygen\"/></a> 1.8.16 ",
 );
 
-</script>
+?>

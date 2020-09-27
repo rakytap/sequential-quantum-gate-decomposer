@@ -1,3 +1,4 @@
 <map id="iface_set_max_layer_num" name="iface_set_max_layer_num">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a6cbee8cd37f42b2fe6bdd6f5c0fd3fdb" title="Set the maximal number of layers used in the subdecomposition of the qbit&#45;th qubit. " alt="" coords="225,5,371,47"/>
+<area shape="rect" id="node1" title="Set the maximal number of layers used in the subdecomposition of the qbit&#45;th qubit." alt="" coords="5,13,177,39"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a70fd9a8663499f135fe93cdf2ce389c0" title="Set the maximal number of layers used in the subdecomposition of the n&#45;th qubit." alt="" coords="225,5,371,47"/>
 </map>

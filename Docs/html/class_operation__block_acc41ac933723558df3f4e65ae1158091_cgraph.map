@@ -1,7 +1,8 @@
 <map id="Operation_block::set_qbit_num" name="Operation_block::set_qbit_num">
-<area shape="rect" id="node2" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Operation::set_qbit_num" alt="" coords="384,79,547,106"/>
-<area shape="rect" id="node4" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Operation::get_type" alt="" coords="198,29,331,55"/>
-<area shape="rect" id="node5" href="$class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="CNOT::set_qbit_num" alt="" coords="193,79,336,106"/>
-<area shape="rect" id="node6" href="$class_u3.html#acba4c571368bbd628b817b89d96a6ab3" title="U3::set_qbit_num" alt="" coords="203,130,326,157"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Power_of_2" alt="" coords="595,79,685,106"/>
+<area shape="rect" id="node1" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations." alt="" coords="5,47,145,88"/>
+<area shape="rect" id="node2" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation." alt="" coords="384,79,547,106"/>
+<area shape="rect" id="node4" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation." alt="" coords="198,29,331,55"/>
+<area shape="rect" id="node5" href="$class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation." alt="" coords="193,79,336,106"/>
+<area shape="rect" id="node6" href="$class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation." alt="" coords="203,130,326,157"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2." alt="" coords="595,79,685,106"/>
 </map>

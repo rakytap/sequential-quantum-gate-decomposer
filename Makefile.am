@@ -19,7 +19,8 @@ EXTRA_DIST = common/include/common.h \
              qgd_python/N_Qubit_Decomposition.py \
              qgd_python/__init__.py \
              Umtx.mat \
-             LICENSE
+             LICENSE \
+             Doxygen
 
 lib_LTLIBRARIES = libqgd.la
 pkginclude_HEADERS = python_interface.h
@@ -40,4 +41,12 @@ install: install-recursive
 	cp example.py $(prefix)/
 	cp Umtx.mat $(prefix)/
 	cp LICENSE $(prefix)/
+
+
+doxygen: 
+	cd Doxygen && doxygen Doxyfile && cd ..
+
+doxygen-install:
+	mkdir -p $(prefix)/Docs && cp -r Docs/html $(prefix)/Docs
+      
 	

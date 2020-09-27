@@ -1,11 +1,11 @@
 <map id="Decomposition_Base::set_iteration_loops" name="Decomposition_Base::set_iteration_loops">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#aa376f8cfdb1b9ed06bceff9c72ddf496" title="Decomposition_Base\l::set_iteration_loops" alt="" coords="207,5,353,47"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#ae7fd1992d645a7ff41c02e48ba1dc5ad" title="N_Qubit_Decomposition\l::start_decomposition" alt="" coords="199,123,361,164"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="N_Qubit_Decomposition\l::decompose_submatrix" alt="" coords="415,39,578,80"/>
-<area shape="rect" id="node10" href="$qgd_2python__interface_8h.html#a9b0caf5bd5e06af4b46cbc7218dd7854" title="iface_set_iteration\l_loops" alt="" coords="216,188,344,229"/>
-<area shape="rect" id="node4" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="411,105,582,131"/>
-<area shape="rect" id="node5" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="main" alt="" coords="471,155,522,182"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a13453d7704869cfc8536767c2db4518d" title="N_Qubit_Decomposition\l::simplify_layer" alt="" coords="415,207,578,248"/>
-<area shape="rect" id="node9" href="$qgd_2python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="iface_start_decomposition" alt="" coords="409,273,584,299"/>
-<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="N_Qubit_Decomposition\l::simplify_layers" alt="" coords="632,261,795,303"/>
+<area shape="rect" id="node1" title="Set the number of iteration loops during the subdecomposition of the qbit&#45;th qubit." alt="" coords="649,93,795,135"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#aa376f8cfdb1b9ed06bceff9c72ddf496" title="Set the number of iteration loops during the subdecomposition of the qbit&#45;th qubit." alt="" coords="447,5,593,47"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary." alt="" coords="439,123,601,164"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices." alt="" coords="222,64,385,105"/>
+<area shape="rect" id="node9" href="$python__interface_8h.html#aa67493822615c546c7daf269ad6e7650" title="Set the number of iteration loops during the subdecomposition of the qbit&#45;th qubit." alt="" coords="456,188,584,229"/>
+<area shape="rect" id="node4" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title=" " alt="" coords="278,130,329,157"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#add0b71459baa45379af4ee2d464fa0fa" title="Call to simplify the gate structure in a block of operations (i.e." alt="" coords="222,181,385,223"/>
+<area shape="rect" id="node8" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary." alt="" coords="216,247,391,274"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e." alt="" coords="5,236,168,277"/>
 </map>

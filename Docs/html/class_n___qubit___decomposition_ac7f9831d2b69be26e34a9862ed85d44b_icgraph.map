@@ -1,3 +1,4 @@
 <map id="N_Qubit_Decomposition::optimalization_problem_combined" name="N_Qubit_Decomposition::optimalization_problem_combined">
-<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#a868492cd4a56a047f740bb69a132c8dc" title="Call to solve layer by layer the optimization problem. " alt="" coords="216,5,395,61"/>
+<area shape="rect" id="node1" title="Call to calculate both the cost function and the its gradient components." alt="" coords="232,5,395,61"/>
+<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#a868492cd4a56a047f740bb69a132c8dc" title="Call to solve layer by layer the optimization problem." alt="" coords="5,5,184,61"/>
 </map>

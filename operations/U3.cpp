@@ -115,14 +115,17 @@ U3::~U3() {
 
     if ( indexes_target_qubit_0 != NULL ) {
         qgd_free(indexes_target_qubit_0);
+        indexes_target_qubit_0 = NULL;
     }
 
     if ( indexes_target_qubit_1 != NULL ) {
         qgd_free(indexes_target_qubit_1);
+        indexes_target_qubit_1 = NULL;
     }
 
     if ( parameters != NULL ) {
         qgd_free(parameters);
+        parameters = NULL;
     }
 }
 
@@ -149,7 +152,7 @@ QGD_Complex16* U3::matrix( const double* parameters ) {
 @brief Call to retrieve the operation matrix
 @param parameters An array of parameters to calculate the matrix of the U3 operation.
 @param U3_matrix A pointer to the preallocated array of the operation matrix.
-@return Returns with 0 on success
+@return Returns with 0 on success.
 */
 int U3::matrix( const double* parameters, QGD_Complex16* U3_matrix ) {
  
@@ -355,9 +358,11 @@ void U3::determine_base_indices() {
         // fre the previously allocated memories
         if ( indexes_target_qubit_1 != NULL ) {
             qgd_free( indexes_target_qubit_1 );
+            indexes_target_qubit_1 = NULL;
         }
         if ( indexes_target_qubit_0 != NULL ) {
             qgd_free( indexes_target_qubit_0 );
+            indexes_target_qubit_0 = NULL;
         }
 
         indexes_target_qubit_1 = (int*)qgd_calloc(matrix_size/2,sizeof(int), 64);

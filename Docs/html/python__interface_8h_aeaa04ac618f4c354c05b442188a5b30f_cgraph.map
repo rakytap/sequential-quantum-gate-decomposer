@@ -1,5 +1,6 @@
 <map id="iface_new_N_Qubit_Decomposition" name="iface_new_N_Qubit_Decomposition">
-<area shape="rect" id="node2" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="283,29,373,56"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="286,80,370,107"/>
-<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="421,80,519,107"/>
+<area shape="rect" id="node1" title="Creates an instance of class N_Qubit_Decomposition and return with a void pointer pointing to the cla..." alt="" coords="5,55,235,81"/>
+<area shape="rect" id="node2" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2." alt="" coords="283,29,373,56"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function." alt="" coords="286,80,370,107"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way." alt="" coords="421,80,519,107"/>
 </map>

@@ -1,3 +1,4 @@
 <map id="CNOT::composite_cnot" name="CNOT::composite_cnot">
-<area shape="rect" id="node2" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="211,29,301,56"/>
+<area shape="rect" id="node1" title="Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits." alt="" coords="5,29,163,56"/>
+<area shape="rect" id="node2" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2." alt="" coords="211,29,301,56"/>
 </map>

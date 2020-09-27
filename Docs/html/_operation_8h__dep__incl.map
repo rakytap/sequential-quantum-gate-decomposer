@@ -1,18 +1,21 @@
 <map id="Operation.h" name="Operation.h">
-<area shape="rect" id="node2" href="$_operation_8cpp.html" title="Class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="5,80,108,107"/>
-<area shape="rect" id="node3" href="$python__interface_8h.html" title="Header file for a methods of the QGD Python Interface. " alt="" coords="32,229,159,256"/>
-<area shape="rect" id="node5" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="247,80,317,107"/>
-<area shape="rect" id="node15" href="$_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="348,80,475,107"/>
-<area shape="rect" id="node16" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="559,80,608,107"/>
-<area shape="rect" id="node4" href="$python__interface_8cpp.html" title="Methods of the QGD Python Interface. " alt="" coords="59,379,201,405"/>
-<area shape="rect" id="node6" href="$_c_n_o_t_8cpp.html" title="Class representing a CNOT operation. " alt="" coords="234,155,317,181"/>
-<area shape="rect" id="node7" href="$_operation__block_8cpp.html" title="Class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="341,155,481,181"/>
-<area shape="rect" id="node8" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="506,155,661,181"/>
-<area shape="rect" id="node12" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="229,379,388,405"/>
-<area shape="rect" id="node9" href="$_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process. " alt="" coords="577,229,747,256"/>
-<area shape="rect" id="node10" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of a unitary into a sequence of CNOT and U3 op..." alt="" coords="235,304,409,331"/>
-<area shape="rect" id="node13" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="363,229,553,256"/>
-<area shape="rect" id="node11" href="$_n___qubit___decomposition_8cpp.html" title="Class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations. " alt="" coords="413,379,599,405"/>
-<area shape="rect" id="node14" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="433,304,637,331"/>
-<area shape="rect" id="node17" href="$_u3_8cpp.html" title="Class representing a U3 operation. " alt="" coords="685,155,748,181"/>
+<area shape="rect" id="node1" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations." alt="" coords="217,5,305,32"/>
+<area shape="rect" id="node2" href="$_operation_8cpp.html" title="Class for the representation of one&#45; and two&#45;qubit operations." alt="" coords="5,80,108,107"/>
+<area shape="rect" id="node3" href="$python__interface_8h.html" title="Header file for a methods of the QGD Python Interface." alt="" coords="83,304,209,331"/>
+<area shape="rect" id="node5" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation." alt="" coords="355,80,425,107"/>
+<area shape="rect" id="node17" href="$_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers." alt="" coords="197,80,324,107"/>
+<area shape="rect" id="node18" href="$_u3_8h.html" title="Header file for a class representing a U3 operation." alt="" coords="508,80,557,107"/>
+<area shape="rect" id="node4" href="$python__interface_8cpp.html" title="Methods of the QGD Python Interface." alt="" coords="75,379,217,405"/>
+<area shape="rect" id="node6" href="$_c_n_o_t_8cpp.html" title="Class representing a CNOT operation." alt="" coords="349,155,431,181"/>
+<area shape="rect" id="node7" href="$_operation__block_8cpp.html" title="Class responsible for grouping CNOT and U3 operations into layers." alt="" coords="184,155,324,181"/>
+<area shape="rect" id="node8" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process." alt="" coords="455,155,610,181"/>
+<area shape="rect" id="node15" href="$_random___unitary_8h.html" title="Header file for a class and methods to cerate random unitary matrices." alt="" coords="634,155,762,181"/>
+<area shape="rect" id="node9" href="$_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process." alt="" coords="491,229,660,256"/>
+<area shape="rect" id="node10" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of a unitary into a sequence of CNOT and U3 op..." alt="" coords="241,304,414,331"/>
+<area shape="rect" id="node13" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others." alt="" coords="276,229,467,256"/>
+<area shape="rect" id="node11" href="$_n___qubit___decomposition_8cpp.html" title="Class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations." alt="" coords="241,379,427,405"/>
+<area shape="rect" id="node12" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries." alt="" coords="535,379,693,405"/>
+<area shape="rect" id="node14" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others." alt="" coords="439,304,643,331"/>
+<area shape="rect" id="node16" href="$_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices." alt="" coords="736,229,879,256"/>
+<area shape="rect" id="node19" href="$_u3_8cpp.html" title="Class representing a U3 operation." alt="" coords="787,155,849,181"/>
 </map>

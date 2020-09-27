@@ -1,4 +1,22 @@
 <map id="Random_Unitary.cpp" name="Random_Unitary.cpp">
-<area shape="rect" id="node2" href="$_random___unitary_8h.html" title="Header file for a class and methods to cerate random unitary matrices. " alt="" coords="193,80,346,107"/>
-<area shape="rect" id="node7" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="401,155,508,181"/>
+<area shape="rect" id="node1" title="A class and methods to cerate random unitary matrices." alt="" coords="316,5,459,32"/>
+<area shape="rect" id="node2" href="$_random___unitary_8h.html" title="Header file for a class and methods to cerate random unitary matrices." alt="" coords="311,80,464,107"/>
+<area shape="rect" id="node3" title=" " alt="" coords="124,155,171,181"/>
+<area shape="rect" id="node4" title=" " alt="" coords="195,155,255,181"/>
+<area shape="rect" id="node5" title=" " alt="" coords="279,155,336,181"/>
+<area shape="rect" id="node6" title=" " alt="" coords="360,155,415,181"/>
+<area shape="rect" id="node7" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions." alt="" coords="399,304,506,331"/>
+<area shape="rect" id="node17" href="$_u3_8h.html" title="Header file for a class representing a U3 operation." alt="" coords="610,155,685,181"/>
+<area shape="rect" id="node20" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation." alt="" coords="491,155,585,181"/>
+<area shape="rect" id="node8" title=" " alt="" coords="447,379,586,405"/>
+<area shape="rect" id="node9" title=" " alt="" coords="611,379,673,405"/>
+<area shape="rect" id="node10" title=" " alt="" coords="697,379,752,405"/>
+<area shape="rect" id="node11" title=" " alt="" coords="5,379,65,405"/>
+<area shape="rect" id="node12" title=" " alt="" coords="90,379,162,405"/>
+<area shape="rect" id="node13" title=" " alt="" coords="186,379,245,405"/>
+<area shape="rect" id="node14" title=" " alt="" coords="777,379,835,405"/>
+<area shape="rect" id="node15" title=" " alt="" coords="269,379,330,405"/>
+<area shape="rect" id="node16" title=" " alt="" coords="354,379,423,405"/>
+<area shape="rect" id="node18" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations." alt="" coords="592,229,705,256"/>
+<area shape="rect" id="node19" title=" " alt="" coords="506,229,567,256"/>
 </map>

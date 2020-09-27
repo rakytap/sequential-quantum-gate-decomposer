@@ -1,5 +1,6 @@
 <map id="N_Qubit_Decomposition.h" name="N_Qubit_Decomposition.h">
-<area shape="rect" id="node2" href="$_n___qubit___decomposition_8cpp.html" title="Class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations. " alt="" coords="5,80,192,107"/>
-<area shape="rect" id="node3" href="$python__interface_8cpp.html" title="Methods of the QGD Python Interface. " alt="" coords="216,80,357,107"/>
-<area shape="rect" id="node4" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="382,80,541,107"/>
+<area shape="rect" id="node1" title="Header file for a class to determine the decomposition of a unitary into a sequence of CNOT and U3 op..." alt="" coords="200,5,373,32"/>
+<area shape="rect" id="node2" href="$_n___qubit___decomposition_8cpp.html" title="Class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations." alt="" coords="5,80,192,107"/>
+<area shape="rect" id="node3" href="$python__interface_8cpp.html" title="Methods of the QGD Python Interface." alt="" coords="216,80,357,107"/>
+<area shape="rect" id="node4" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries." alt="" coords="382,80,541,107"/>
 </map>

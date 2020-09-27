@@ -1,3 +1,4 @@
 <map id="iface_set_iteration_loops" name="iface_set_iteration_loops">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#aaf2862ee2211dac36242551340190b4b" title="Set the number of iteration loops during the subdecomposition of the qbit&#45;th qubit. " alt="" coords="181,5,327,47"/>
+<area shape="rect" id="node1" title="Set the number of iteration loops during the subdecomposition of the qbit&#45;th qubit." alt="" coords="5,5,133,47"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a461f735688248c8f04756e4abadb0516" title="Set the number of iteration loops during the subdecomposition of the n&#45;th qubit." alt="" coords="181,5,327,47"/>
 </map>
