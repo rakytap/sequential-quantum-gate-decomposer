@@ -210,6 +210,8 @@ void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operatio
         int parameter_idx = finalizing_parameter_num-1;   
 
         QGD_Complex16* mtx_tmp = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+        memcpy( mtx_tmp, mtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+        QGD_Complex16* mtx_tmp2 = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
         QGD_Complex16* u3_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
         double Theta, Lambda, Phi;  
@@ -271,19 +273,26 @@ void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operatio
             //QGD_Complex16* u3_mtx = u3_loc->matrix(parameters_loc);
 //printf("Decomposition_Base::get_finalizing_operations umtx\n");
 //print_mtx(u3_mtx, matrix_size, matrix_size );       
-            apply_operation( u3_mtx, mtx, mtx_tmp);
+            apply_operation( u3_mtx, mtx_tmp, mtx_tmp2);
             //qgd_free( u3_mtx );
  
 
-            memcpy( mtx, mtx_tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+            memcpy( mtx_tmp, mtx_tmp2, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 //printf("Decomposition_Base::get_finalizing_operations 2\n");
 //print_mtx(mtx, matrix_size, matrix_size );            
         }         
 
+        memcpy( mtx, mtx_tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+
         qgd_free( mtx_tmp );
+        qgd_free( mtx_tmp2 );
         qgd_free( u3_mtx );
         mtx_tmp = NULL;
+        mtx_tmp2 = NULL;
         u3_mtx = NULL;
+
+
+
 //printf("Decomposition_Base::get_finalizing_operations 3\n");
 //print_mtx(mtx, matrix_size, matrix_size );   
         return;
