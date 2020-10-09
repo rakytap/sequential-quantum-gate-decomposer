@@ -46,17 +46,6 @@ public:
     /// A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
     std::map<int,int> identical_blocks;
 
-protected:
-
-    /// auxiliary variable storing the submatrices of the transformed matrix
-    QGD_Complex16** submatrices;
-
-    /// auxiliary variable storing the product of two submatrices when calculating the cost function of the subdecomposition
-    QGD_Complex16* submatrix_prod;
-
-    /// The number of submatrices
-    int submatrices_num;
-
 
 public:
 
@@ -154,16 +143,5 @@ int set_identical_blocks( int qbit, int identical_blocks_in );
 int set_identical_blocks( std::map<int, int> identical_blocks_in );
 
 
-/**
-@brief Call to retrive the pointer pointing to the preallocated memory space of submatrices.
-@return Returns with a pointer to the preallocated memory space.
-*/
-QGD_Complex16** get_submatrices();
-
-/**
-@brief Call to retrive the pointer pointing to the preallocated array of submatrix product
-@return Returns with a pointer to the preallocated memory space.
-*/
-QGD_Complex16* get_submatrix_prod();
 
 };

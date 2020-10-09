@@ -53,7 +53,7 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int 
     subdisentaglement_done = false;
         
     // The subunitarized matrix
-    subdecomposed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+    subdecomposed_mtx = NULL;
    
     // filling in numbers that were not given in the input
     for ( std::map<int,int>::iterator it = max_layer_num_def.begin(); it!=max_layer_num_def.end(); it++) {      
@@ -62,31 +62,9 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int 
         }
     }
 
-    // number of submatrices
-    submatrices_num = 4;
-
-    int submatrices_num_row = 2;
-    // number of elements in the matrix of submatrix products
-    int element_num = matrix_size*matrix_size/4;
-
-    // extract sumbatrices
-    submatrices = (QGD_Complex16**)qgd_calloc( submatrices_num, sizeof(QGD_Complex16*), 64);
-
-    // preallocate memory for the submatrices
-    for (int idx=0; idx<submatrices_num_row; idx++) { 
-        for ( int jdx=0; jdx<submatrices_num_row; jdx++) {
-
-            int submatirx_index = idx*submatrices_num_row + jdx;
-
-            // preallocate memory for the submatrix
-            submatrices[ submatirx_index ] = (QGD_Complex16*)qgd_calloc(element_num,sizeof(QGD_Complex16), 64);
-
-        }
-    }
 
 
-   // preallocate memeory for submatrix products
-   submatrix_prod = (QGD_Complex16*)qgd_calloc(element_num,sizeof(QGD_Complex16), 64);
+
 
 
 }
@@ -97,19 +75,7 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int 
 */
 Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
 
-    for (int idx=0; idx<submatrices_num; idx++) {
-        if (submatrices[idx] != NULL ) {
-            qgd_free( submatrices[idx] );
-            submatrices[idx] = NULL;
-        }
-    }
-    qgd_free( submatrices );
-    submatrices = NULL;
 
-    if (submatrix_prod != NULL ) {
-        qgd_free( submatrix_prod );
-        submatrix_prod = NULL;
-    }
 
 
     if (subdecomposed_mtx != NULL ) {
@@ -136,7 +102,6 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         }
         return;
     }
-        
 
     if (verbose) {     
         printf("\nDisentagling submatrices.\n");
@@ -151,6 +116,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         if (verbose) {
             printf("Disentanglig not needed\n");
         }
+        subdecomposed_mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
         memcpy( subdecomposed_mtx, Umtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
         subdisentaglement_done = true;
         return;
@@ -261,8 +227,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
  
     // The subunitarized matrix
     //subdecomposed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-    QGD_Complex16* tmp = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
-    memcpy( subdecomposed_mtx, tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+    subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
 }
 
 
@@ -423,7 +388,10 @@ double Sub_Matrix_Decomposition::optimalization_problem( const double* parameter
         // get the transformed matrix with the operations in the list
         QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
 
-        double cost_function = get_submatrix_cost_function(matrix_new, matrix_size, submatrices, submatrix_prod); //NEW METHOD
+        double cost_function = get_submatrix_cost_function(matrix_new, matrix_size); //NEW METHOD
+
+    qgd_free( matrix_new );
+    matrix_new = NULL;
 
         return cost_function;
 }               
@@ -442,8 +410,19 @@ double Sub_Matrix_Decomposition::optimalization_problem( const gsl_vector* param
 
     QGD_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
 
-    double cost_function = get_submatrix_cost_function(matrix_new, instance->get_Umtx_size(), instance->get_submatrices(), instance->get_submatrix_prod());  //NEW METHOD
+/*if ( instance->qbit_num == 2 ) {
+print_mtx(instance->get_Umtx(), instance->get_Umtx_size(), instance->get_Umtx_size());
+}*/
+
+    double cost_function = get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());  //NEW METHOD
     //double cost_function = get_submatrix_cost_function_2(matrix_new, instance->get_Umtx_size());  //OLD METHOD
+
+    qgd_free( matrix_new );
+    matrix_new = NULL;
+
+/*if ( instance->qbit_num == 2 ) {
+printf("%f\n", cost_function );
+}*/
 
     return cost_function; 
 }  
@@ -460,8 +439,10 @@ void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* pa
 
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
 
+    // getting the function value at x0
     double f0 = instance->optimalization_problem(parameters, void_instance);
 
+    // getting the approximate gradient components
     optimalization_problem_grad( parameters, void_instance, grad, f0 );
 
 }
@@ -481,44 +462,99 @@ void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* pa
     // the difference in one direction in the parameter for the gradient calculaiton
     double dparam = 1e-8;
 
-    // the displaced parameters by dparam
-    double* parameters_d;
+    
+    // store the initial number of threads
+    int num_threads = instance->get_num_threads_optimization();
+    int num_threads_tot = omp_get_max_threads();
+    omp_set_num_threads(num_threads);
 
+    // determine the number of nested threads
+    int residual = num_threads_tot % num_threads;
+    int nested_num_threads = int( (num_threads_tot-residual)/num_threads );
 
     int parameter_num_loc = instance->get_parameter_num();
 
-    parameters_d = parameters->data;
 
-    // calculate the gradient components
-//    if ( grad == NULL ) {
-//        grad = gsl_vector_alloc(parameter_num_loc);
-//    }
-/*
-//printf("Derivates:");
-    for (int idx = 0; idx<parameter_num_loc; idx++) {
-        gsl_function F;
-        double result, abserr;
-        deriv params_diff;
-        params_diff.idx = idx;
-        params_diff.parameters = parameters;
-        params_diff.instance = params;
+    Sub_Matrix_Decomposition** instances = (Sub_Matrix_Decomposition**)malloc( num_threads*sizeof(Sub_Matrix_Decomposition*) );
+    instances[0] = instance;
+    for (int idx =1; idx<num_threads; idx++) {        
+        Sub_Matrix_Decomposition* instance_loc = new Sub_Matrix_Decomposition(instance->get_Umtx(), instance->get_qbit_num(), false, ZEROS);
 
-        F.function = instance->optimalization_problem_deriv;
-        F.params = &params_diff;
-        gsl_deriv_central (&F, parameters_d[idx], dparam, &result, &abserr);
-//printf("%f, ", result);
-        gsl_vector_set(grad, idx, result);
-   }
-//printf("\n");*/
+        // getting the list of operations
+        std::vector<Operation*> operations_loc = instance->get_operations();
 
-    for (int idx = 0; idx<parameter_num_loc; idx++) {
-        parameters_d[idx] = parameters_d[idx] + dparam;
-        double f = instance->optimalization_problem(parameters, void_instance);
-        gsl_vector_set(grad, idx, (f-f0)/dparam);
-        parameters_d[idx] = parameters_d[idx] - dparam;
+        for(std::vector<Operation*>::iterator it = operations_loc.begin(); it != operations_loc.end(); ++it) {
+        Operation* op = *it;
+
+            if (op->get_type() == CNOT_OPERATION) {
+                CNOT* cnot_op = static_cast<CNOT*>( op );
+                CNOT* cnot_op_cloned = cnot_op->clone();
+                Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
+                instance_loc->add_operation_to_end(op_cloned);    
+            }
+            else if (op->get_type() == U3_OPERATION) {
+                U3* u3_op = static_cast<U3*>( op );
+                U3* u3_op_cloned = u3_op->clone();
+                Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
+                instance_loc->add_operation_to_end( op_cloned );    
+            }
+            else if (op->get_type() == BLOCK_OPERATION) {
+                Operation_block* block_op = static_cast<Operation_block*>( op );
+                Operation_block* block_op_cloned = block_op->clone();
+                Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
+                instance_loc->add_operation_to_end( op_cloned );      
+            }
+            else if (op->get_type() == GENERAL_OPERATION) {
+                Operation* op_cloned = op->clone();
+                instance_loc->add_operation_to_end( op_cloned );      
+            }
+
+            instances[idx] = instance_loc;
+
+        }
+
+        //instances[idx] = instance;
+
     }
+
+
+    #pragma omp parallel for shared(instances, parameters, grad, f0)
+    for (int idx = 0; idx<parameter_num_loc; idx++) {
+
+        // setting number of nested threads
+        if (omp_get_thread_num() == 0)
+            omp_set_num_threads(nested_num_threads+residual);  
+        else
+            omp_set_num_threads(nested_num_threads); 
+
+
+        // the displaced parameters by dparam
+        gsl_vector* parameters_d = gsl_vector_calloc(parameter_num_loc);
+        memcpy( parameters_d->data, parameters->data, parameter_num_loc*sizeof(double) );
+        parameters_d->data[idx] = parameters_d->data[idx] + dparam;
+
+        Sub_Matrix_Decomposition* instance_thread = instances[omp_get_thread_num()];
+
+        double f = instance_thread->optimalization_problem(parameters_d, reinterpret_cast<void*>(instance_thread));
+
+        gsl_vector_set(grad, idx, (f-f0)/dparam);
+
+        gsl_vector_free(parameters_d);
+        parameters_d = NULL;
+    }
+
+
+    instances[0] = NULL;
+    #pragma omp parallel for
+    for (int idx = 1; idx<num_threads; idx++) {
+        delete instances[idx];
+        instances[idx] = NULL;
+    }
+    free(instances);
         
 
+    // restore the initial number of threads
+    omp_set_num_threads(num_threads_tot);
 }     
 
 
@@ -573,21 +609,5 @@ int Sub_Matrix_Decomposition::set_identical_blocks( std::map<int, int> identical
 
 }
 
-
-/**
-@brief Call to retrive the pointer pointing to the preallocated memory space of submatrices.
-@return Returns with a pointer to the preallocated memory space.
-*/
-QGD_Complex16** Sub_Matrix_Decomposition::get_submatrices() {
-    return submatrices;
-}      
-
-/**
-@brief Call to retrive the pointer pointing to the preallocated array of submatrix product
-@return Returns with a pointer to the preallocated memory space.
-*/
-QGD_Complex16* Sub_Matrix_Decomposition::get_submatrix_prod() {
-    return submatrix_prod;
-}                                
-   
+ 
 

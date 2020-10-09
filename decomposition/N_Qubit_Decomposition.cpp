@@ -82,6 +82,7 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
         printf("Starting to disentangle %d-qubit matrix\n", qbit_num);
         printf("***************************************************************\n\n\n");
     }
+
         
     //measure the time for the decompositin       
     clock_t start_time = time(NULL);
@@ -101,6 +102,9 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
 
     // setting the iteration loops in each step of the optimization process
     cSub_decomposition->set_iteration_loops( iteration_loops );
+
+    // setting the number of threads for optimization
+    cSub_decomposition->set_num_threads_optimization( num_threads );
         
     // The maximal error of the optimalization problem 
     //cSub_decomposition->optimalization_tolerance = self.optimalization_tolerance
@@ -112,20 +116,20 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
     //cSub_decomposition->max_iterations = self.max_iterations
             
     //start to disentangle the qubit pair
-    cSub_decomposition->disentangle_submatrices();                           
+    cSub_decomposition->disentangle_submatrices();          
     if ( !cSub_decomposition->subdisentaglement_done) {
         return;
     }
-   
+
     // saving the subunitarization operations
     extract_subdecomposition_results( cSub_decomposition );
 
     delete cSub_decomposition;       
     cSub_decomposition = NULL;
-        
+     
     // decompose the qubits in the disentangled submatrices
     decompose_submatrix();
-            
+          
     if (finalize_decomp) {
         // finalizing the decompostition
         finalize_decomposition();
@@ -150,6 +154,9 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
         subtract_diag( matrix_decomposed, matrix_size, matrix_decomposed[0] );
 
         decomposition_error = cblas_dznrm2( matrix_size*matrix_size, matrix_decomposed, 1 );
+
+        qgd_free( matrix_decomposed );
+        matrix_decomposed = NULL;
             
         // get the number of gates used in the decomposition
         gates_num gates_num = get_gate_nums();
@@ -291,21 +298,15 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
                 submatrix_prod = NULL;
             }
         }
+
+        qgd_free( subdecomposed_mtx );
+        subdecomposed_mtx = NULL;
                 
                     
         // if the qubit number in the submatirx is greater than 2 new N-qubit decomposition is started
 
-        // use optimization of the layer numbers only for 3qubits
-        bool optimize_layer_num_loc;
-        if (submatrix_size==8) {
-            optimize_layer_num_loc = true;
-        }
-        else {
-            optimize_layer_num_loc = false;
-        }
-
         // create class tp decompose submatrices
-        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(most_unitary_submatrix, qbit_num-1, optimize_layer_num_loc, initial_guess);
+        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(most_unitary_submatrix, qbit_num-1, optimize_layer_num, initial_guess);
 
         // setting the verbosity
         cdecomposition->set_verbose( verbose );
@@ -478,6 +479,9 @@ double N_Qubit_Decomposition::optimalization_problem( const double* parameters )
 
         double cost_function = get_cost_function(matrix_new, matrix_size); 
 
+    qgd_free( matrix_new );
+    matrix_new = NULL;
+
         return cost_function;
 }    
            
@@ -496,6 +500,9 @@ double N_Qubit_Decomposition::optimalization_problem( const gsl_vector* paramete
     QGD_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
 
     double cost_function = get_cost_function(matrix_new, instance->get_Umtx_size()); 
+
+    qgd_free( matrix_new );
+    matrix_new = NULL;
 
 //printf("%f, \n", cblas_dznrm2( instance->get_Umtx_size()*instance->get_Umtx_size(), matrix_new, 1) );
 //printf("%f\n", cost_function);    
@@ -713,7 +720,7 @@ void N_Qubit_Decomposition::simplify_layers() {
             }
             else {
                 // addign the stacked operation to the list, sice the simplification was unsuccessful
-                operations_loc->combine( blocks_to_save );
+                operations_loc->combine( blocks_to_save );                
 
                 if (parameter_num < parameter_num_loc + parameter_num_block ) {
                     optimized_parameters_loc = (double*)qgd_realloc( optimized_parameters_loc, parameter_num, parameter_num_loc + parameter_num_block, sizeof(double), 64 ); 

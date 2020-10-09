@@ -238,7 +238,7 @@ QGD_Complex16* create_identity( int matrix_size ) {
     for(int idx = 0; idx < matrix_size; ++idx)
     {
         int element_index = idx*matrix_size + idx;
-            matrix[element_index].real = 1;
+            matrix[element_index].real = 1.0;
     }
 
     return matrix;
@@ -263,12 +263,12 @@ int create_identity( QGD_Complex16* matrix, int matrix_size ) {
         int row_idx = int((idx-col_idx)/matrix_size);
 
         if ( row_idx == col_idx ) {
-            matrix[idx].real = 1;
-            matrix[idx].imag = 0;
+            matrix[idx].real = 1.0;
+            matrix[idx].imag = 0.0;
         }
         else {
-            matrix[idx].real = 0;
-            matrix[idx].imag = 0;
+            matrix[idx].real = 0.0;
+            matrix[idx].imag = 0.0;
         }
             
     }
@@ -288,8 +288,8 @@ int create_identity( QGD_Complex16* matrix, int matrix_size ) {
 QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_size) {
 
     // parameters alpha and beta for the cblas_zgemm3m function
-    double alpha = 1;
-    double beta = 0;
+    double alpha = 1.0;
+    double beta = 0.0;
 
     // preallocate array for the result
     QGD_Complex16 C; 
@@ -477,19 +477,44 @@ void subtract_diag( QGD_Complex16* & mtx,  int matrix_size, QGD_Complex16 scalar
 @param submatrix_prod Preallocated array for the product of two submatrices.
 @return Returns with the calculated cost function.
 */
-double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_Complex16** submatrices, QGD_Complex16* submatrix_prod) {
+double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
 
     // ********************************
     // Calculate the submatrix products
     // ********************************
+
+
+    // number of submatrices
+    int submatrices_num = 4;
+
+    int submatrices_num_row = 2;
 
     // number ofcolumns in the submatrices
     int submatrix_size = matrix_size/2;
     // number of elements in the matrix of submatrix products
     int element_num = submatrix_size*submatrix_size;
 
-    int submatrices_num_row = 2;
-    int submatrices_num = 4;
+
+    // extract sumbatrices
+    QGD_Complex16** submatrices = (QGD_Complex16**)qgd_calloc( submatrices_num, sizeof(QGD_Complex16*), 64);
+
+    // preallocate memory for the submatrices
+    for (int idx=0; idx<submatrices_num_row; idx++) { 
+        for ( int jdx=0; jdx<submatrices_num_row; jdx++) {
+
+            int submatirx_index = idx*submatrices_num_row + jdx;
+
+            // preallocate memory for the submatrix
+            submatrices[ submatirx_index ] = (QGD_Complex16*)qgd_calloc(element_num,sizeof(QGD_Complex16), 64);
+
+        }
+    }
+
+
+    // preallocate memeory for submatrix products
+    QGD_Complex16* submatrix_prod = (QGD_Complex16*)qgd_calloc(element_num,sizeof(QGD_Complex16), 64);
+
+
 
     // fill up the submatrices
     for (int idx=0; idx<submatrices_num_row; idx++) { //in range(0,submatrices_num_row):
@@ -568,7 +593,19 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_C
 //printf("%f\n",   cost_function );   
 
 
-    
+    for (int idx=0; idx<submatrices_num; idx++) {
+        if (submatrices[idx] != NULL ) {
+            qgd_free( submatrices[idx] );
+            submatrices[idx] = NULL;
+        }
+    }
+    qgd_free( submatrices );
+    submatrices = NULL;
+
+    if (submatrix_prod != NULL ) {
+        qgd_free( submatrix_prod );
+        submatrix_prod = NULL;
+    }    
 
     
 

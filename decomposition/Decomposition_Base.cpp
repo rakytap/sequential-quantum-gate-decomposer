@@ -89,6 +89,9 @@ Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in,
     // auxiliary variable storing the transformed matrix
     transformed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
+    // The number of threads for the parallel optimization (The remaining threads are used for nested parallelism at matrix multiplications)
+    num_threads = 1;
+
 }
 
 /** 
@@ -178,6 +181,9 @@ void Decomposition_Base::finalize_decomposition() {
             
         // get the number of gates used in the decomposition
         gates_num gates_num = get_gate_nums();
+
+        qgd_free( transformed_matrix );
+        transformed_matrix = NULL;
 
         if (verbose) {
             printf( "The error of the decomposition after finalyzing operations is %f with %d layers containing %d U3 operations and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
@@ -328,6 +334,8 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
               
         // store the operations
         std::vector<Operation*> operations_loc = operations;
+
+
         
         // store the number of parameters
         int parameter_num_loc = parameter_num;
@@ -382,7 +390,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         operations.clear();
         int block_parameter_num;
         QGD_Complex16* operations_mtx_pre = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-        QGD_Complex16* tmp;
+        QGD_Complex16* tmp = NULL;
         Operation* fixed_operation_post = new Operation( qbit_num );
         std::vector<QGD_Complex16*> operations_mtxs_post;
 
@@ -416,18 +424,25 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
                 std::vector<Operation*>::iterator fixed_operations_pre_it = operations.begin() + 1;
                 tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre);  
                 memcpy( operations_mtx_pre, tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+                qgd_free(tmp); 
+                tmp = NULL;
                 //QGD_Complex16* operations_mtx_pre_tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre );  
                 //qgd_free( operations_mtx_pre );
                 //operations_mtx_pre = operations_mtx_pre_tmp;
             }
             else {
-                create_identity( operations_mtx_pre, matrix_size );
+                memcpy( operations_mtx_pre, Identity, matrix_size*matrix_size*sizeof(QGD_Complex16) );
             }
 
 //print_mtx(operations_mtx_pre, matrix_size, matrix_size );
 //////////////////////////
 //operations_mtx_pre = Identity;
 /////////////////////
+
+            // Transform the initial unitary upon the fixed pre-optimalization operations
+            apply_operation(operations_mtx_pre, Umtx_loc, Umtx);
+
+
             // clear the operation list used in the previous iterations
             operations.clear();
 
@@ -436,8 +451,6 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
                 optimized_parameters = NULL;
             }
 
-            // Transform the initial unitary upon the fixed pre-optimalization operations
-            apply_operation(operations_mtx_pre, Umtx_loc, Umtx);
 
             // ***** get the fixed operations applied after the optimized operations *****
             // create a list of post operations matrices
@@ -515,7 +528,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             
             // optimalization result is displayed in each 500th iteration
             if (iter_idx % 500 == 0) {
-                if (verbose) {    
+                if (verbose) {     
                     printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, float(time(NULL) - start_time));
                     fflush(stdout);
                 }
@@ -600,7 +613,6 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         }
         operations_mtxs_post.clear();
  
-        tmp = NULL;
 
         delete(fixed_operation_post);
 
@@ -764,7 +776,9 @@ void Decomposition_Base::get_optimized_parameters( double* ret ) {
 */
 QGD_Complex16* Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations, QGD_Complex16* initial_matrix=NULL  ) {
 
-    QGD_Complex16* ret_matrix = transformed_mtx;
+    //QGD_Complex16* ret_matrix = transformed_mtx;
+    // auxiliary variable storing the transformed matrix
+    QGD_Complex16* ret_matrix = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
 
         if (initial_matrix == NULL) {
@@ -1177,4 +1191,24 @@ double Decomposition_Base::get_decomposition_error( ) {
 
     return decomposition_error;
 
+}
+
+
+/**
+@brief Call to set the number of threads for the parallel optimization (The remaining threads are used for nested parallelism at matrix multiplications)
+@param num_threads_in the number of threads for the parallel optimization
+*/
+void Decomposition_Base::set_num_threads_optimization( int num_threads_in ) {
+
+    num_threads = num_threads_in;
+}
+
+
+/**
+@brief Call to get the number of threads for the parallel optimization (The remaining threads are used for nested parallelism at matrix multiplications)
+@return Returns with the number of threads for the parallel optimization
+*/
+int Decomposition_Base::get_num_threads_optimization() {
+
+    return num_threads;
 }

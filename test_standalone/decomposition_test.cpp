@@ -46,27 +46,31 @@ int main() {
     printf("Test of N qubit decomposition\n");
     printf("****************************************\n\n\n");
 
+    
+
     // setting the number of threads to one
     omp_set_num_threads(1);
+
+    // enbabling nested parallelism
+    omp_set_nested(true);
 
 
 //! [few CNOT]
     // The number of qubits spanning the random unitary
-    int qbit_num = 4;   
+    int qbit_num = 3;   
 
     // the number of rows of the random unitary
     int matrix_size = Power_of_2(qbit_num);
 
     // creating random unitary constructing from 6 CNOT gates.
-    int cnot_num = 6;
+    int cnot_num = 1;
     QGD_Complex16* Umtx_few_CNOT = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
     few_CNOT_unitary( qbit_num, cnot_num, Umtx_few_CNOT);
 //! [few CNOT]
-    
+
     // release the constructed random unitary
     qgd_free( Umtx_few_CNOT );
     Umtx_few_CNOT = NULL;
-
 
 
 //! [general random]
@@ -98,7 +102,7 @@ int main() {
 //! [set parameters]    
     // setting the number of successive identical layers used in the decomposition
     std::map<int,int> identical_blocks;
-    identical_blocks[3] = 1;
+    identical_blocks[3] = 2;
     identical_blocks[4] = 2;
     cDecomposition.set_identical_blocks( identical_blocks );
 
@@ -109,14 +113,21 @@ int main() {
     num_of_layers[4] = 60;
     num_of_layers[5] = 240;
     num_of_layers[6] = 960;
+    num_of_layers[7] = 3775;
     cDecomposition.set_max_layer_num( num_of_layers );
 
     // setting the number of optimization iteration loops in each step of the decomposition
     std::map<int,int> num_of_iterations;
-    num_of_iterations[2] = 1;
+    num_of_iterations[2] = 3;
     num_of_iterations[3] = 1;
     num_of_iterations[4] = 1;
     cDecomposition.set_iteration_loops( num_of_iterations );
+
+    // setting operation layer
+    cDecomposition.set_optimalization_blocks( 1 );
+
+    // settign the number of threads for the optimization
+    cDecomposition.set_num_threads_optimization( 1 );
 
     // setting the verbosity of the decomposition
     cDecomposition.set_verbose( true );

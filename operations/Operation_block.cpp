@@ -656,6 +656,10 @@ void Operation_block::combine(Operation_block* op_block) {
             Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
             add_operation_to_end( op_cloned );      
         }
+        else if (op->get_type() == GENERAL_OPERATION) {
+            Operation* op_cloned = op->clone();
+            add_operation_to_end( op_cloned );      
+        }
 
     }
 

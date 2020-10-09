@@ -143,6 +143,12 @@ unsigned int get_parameter_num();
 operation_type get_type();
 
 /**
+@brief Call to get the number of qubits composing the unitary
+@return Return with the number of qubits composing the unitary
+*/
+int get_qbit_num();
+
+/**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
