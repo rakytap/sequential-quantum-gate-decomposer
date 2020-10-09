@@ -62,6 +62,7 @@ _qgd_library.iface_get_operation_num.restype = ctypes.c_int
 _qgd_library.iface_get_operation.argtypes = ( ctypes.c_void_p, ctypes.c_int, ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_int), ctypes.POINTER(ctypes.c_double), )
 _qgd_library.iface_get_operation.restype = ctypes.c_int
 _qgd_library.iface_set_verbose.argtypes = ( ctypes.c_void_p, ctypes.c_bool, )
+_qgd_library.iface_set_optimalization_block.argtypes = ( ctypes.c_void_p, ctypes.c_int, )
 
 
 ##
@@ -219,9 +220,16 @@ class N_Qubit_Decomposition:
 # @param verbose Set False to suppress the output messages of the decompostion, or True (deafult) otherwise.
     def set_verbose( self, verbose ):
             
-        _qgd_library.iface_set_verbose( self.c_instance, ctypes.c_bool(verbose) );
+        _qgd_library.iface_set_verbose( self.c_instance, ctypes.c_bool(verbose) )
 
  
+
+##
+# @brief Call to set the number of blocks to be optimized in one shot
+# @param optimalization_block The number of blocks to be optimized in one shot
+    def set_optimalization_block( self, optimalization_block ):
+
+        _qgd_library.iface_set_optimalization_block( self.c_instance, ctypes.c_int(optimalization_block) )
 
 
 

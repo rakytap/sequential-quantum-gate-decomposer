@@ -542,10 +542,10 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             }
             
             // the convergence at low minimums is much faster if only one layer is considered in the optimalization at once
-            if ( current_minimum < 1 ) {
+/*            if ( current_minimum < 1 ) {
                 optimalization_block = 1;
             }
-            
+*/            
 
 
           

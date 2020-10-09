@@ -216,4 +216,20 @@ int iface_set_verbose( void* ptr, bool verbose ) {
 
 }
 
+
+/**
+@brief Call to set the number of blocks to be optimized in one shot
+@param ptr A void pointer pointing to an instance of N_Qubit_Decomposition class.
+@param optimalization_block The number of blocks to be optimized in one shot
+@return Returns with 0 on success
+*/
+int iface_set_optimalization_block( void* ptr, int optimalization_block ) {
+
+    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    instance->set_optimalization_blocks( optimalization_block );
+
+    return 0;
+
+}
+
 } // end extern C
