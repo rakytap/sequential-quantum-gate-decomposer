@@ -50,8 +50,8 @@ public:
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param optimize_layer_num_in Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
-@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimalization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
+@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
 N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
@@ -84,9 +84,9 @@ void  decompose_submatrix();
 
 
 /**
-@brief final optimalization procedure improving the accuracy of the decompositin when all the qubits were already disentangled.
+@brief final optimization procedure improving the accuracy of the decompositin when all the qubits were already disentangled.
 */
-void final_optimalization();
+void final_optimization();
 
 
 /**
@@ -94,25 +94,25 @@ void final_optimalization();
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
+void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 
 /**
-@brief The optimalization problem of the final optimization
+@brief The optimization problem of the final optimization
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double optimalization_problem( const double* parameters);
+double optimization_problem( const double* parameters);
 
 
 
 /**
-@brief The optimalization problem of the final optimization
+@brief The optimization problem of the final optimization
 @param parameters A GNU Scientific Library containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-static double optimalization_problem( const gsl_vector* parameters, void* void_instance );
+static double optimization_problem( const gsl_vector* parameters, void* void_instance );
 
 
 /**
@@ -121,7 +121,7 @@ static double optimalization_problem( const gsl_vector* parameters, void* void_i
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-static void optimalization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad );
+static void optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad );
 
 
 /**
@@ -131,7 +131,7 @@ static void optimalization_problem_grad( const gsl_vector* parameters, void* voi
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 @param f0 The value of the cost function at x0.
 */
-static void optimalization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad, double f0  );
+static void optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad, double f0  );
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
@@ -140,7 +140,7 @@ static void optimalization_problem_grad( const gsl_vector* parameters, void* voi
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-static void optimalization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
+static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
 
 /**  
 @brief Call to simplify the gate structure in the layers if possible (i.e. tries to reduce the number of CNOT gates)

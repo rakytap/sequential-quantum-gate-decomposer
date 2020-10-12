@@ -28,8 +28,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param optimize_layer_num_in Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
-@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimalization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
+@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
 N_Qubit_Decomposition::N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
@@ -40,10 +40,10 @@ N_Qubit_Decomposition::N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_n
     // A string describing the type of the class
     type = N_QUBIT_DECOMPOSITION_CLASS;
         
-    // The global minimum of the optimalization problem
+    // The global minimum of the optimization problem
     global_target_minimum = 0;
         
-    // number of iteratrion loops in the optimalization
+    // number of iteratrion loops in the optimization
     iteration_loops[2] = 3;
    
     // filling in numbers that were not given in the input
@@ -106,11 +106,11 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
     // setting the number of threads for optimization
     cSub_decomposition->set_num_threads_optimization( num_threads );
         
-    // The maximal error of the optimalization problem 
-    //cSub_decomposition->optimalization_tolerance = self.optimalization_tolerance
+    // The maximal error of the optimization problem 
+    //cSub_decomposition->optimization_tolerance = self.optimization_tolerance
         
     // setting the maximal number of iterations in the disentangling process
-    cSub_decomposition->optimalization_block = optimalization_block;
+    cSub_decomposition->optimization_block = optimization_block;
         
     // setting the number of operators in one sub-layer of the disentangling process
     //cSub_decomposition->max_iterations = self.max_iterations
@@ -140,7 +140,7 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
         }
             
         // final tuning of the decomposition parameters
-        final_optimalization();
+        final_optimization();
 
         // prepare operations to export
         if (prepare_export) {
@@ -312,7 +312,7 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
         cdecomposition->set_verbose( verbose );
 
 
-        // Maximal number of iteartions in the optimalization process
+        // Maximal number of iteartions in the optimization process
         cdecomposition->set_max_iteration(max_iterations);
 
         // Set the number of identical successive blocks in the sub-decomposition
@@ -325,7 +325,7 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
         cdecomposition->set_iteration_loops( iteration_loops );
             
         // setting operation layer
-        cdecomposition->set_optimalization_blocks( optimalization_block );
+        cdecomposition->set_optimization_blocks( optimization_block );
 
         // starting the decomposition of the random unitary
         cdecomposition->start_decomposition(false, false);
@@ -341,9 +341,9 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
 }
 
 /**
-@brief final optimalization procedure improving the accuracy of the decompositin when all the qubits were already disentangled.
+@brief final optimization procedure improving the accuracy of the decompositin when all the qubits were already disentangled.
 */
-void  N_Qubit_Decomposition::final_optimalization() {
+void  N_Qubit_Decomposition::final_optimization() {
 
         if (verbose) {
             printf("***************************************************************\n");
@@ -351,16 +351,16 @@ void  N_Qubit_Decomposition::final_optimalization() {
             printf("***************************************************************\n");
         }
 
-//printf("%f\n", optimalization_problem(optimized_parameters ) );
+//printf("%f\n", optimization_problem(optimized_parameters ) );
 //QGD_Complex16* matrix_new = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
 //print_mtx( matrix_new, matrix_size, matrix_size );
 
         //# setting the global minimum
         global_target_minimum = 0;
-        solve_optimalization_problem( optimized_parameters, parameter_num) ;
+        solve_optimization_problem( optimized_parameters, parameter_num) ;
 //matrix_new = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
 //print_mtx( matrix_new, matrix_size, matrix_size );
-//printf("%f\n", optimalization_problem(optimized_parameters ) );
+//printf("%f\n", optimization_problem(optimized_parameters ) );
 }   
 
 
@@ -370,7 +370,7 @@ void  N_Qubit_Decomposition::final_optimalization() {
 // @param num_of_parameters Number of parameters to be optimized
 // @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) { 
+void N_Qubit_Decomposition::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) { 
 
         if (operations.size() == 0 ) {
             return;
@@ -395,7 +395,7 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
             iteration_loops_max = 1;
         }
 
-        // do the optimalization loops
+        // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
             
             size_t iter = 0;
@@ -411,9 +411,9 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
 
 
             my_func.n = num_of_parameters;
-            my_func.f = optimalization_problem;
-            my_func.df = optimalization_problem_grad;
-            my_func.fdf = optimalization_problem_combined;
+            my_func.f = optimization_problem;
+            my_func.df = optimization_problem_grad;
+            my_func.fdf = optimization_problem_combined;
             my_func.params = par;
 
             
@@ -468,11 +468,11 @@ void N_Qubit_Decomposition::solve_layer_optimalization_problem( int num_of_param
 
 
 /**
-// @brief The optimalization problem of the final optimization
+// @brief The optimization problem of the final optimization
 // @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 // @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double N_Qubit_Decomposition::optimalization_problem( const double* parameters ) {
+double N_Qubit_Decomposition::optimization_problem( const double* parameters ) {
 
         // get the transformed matrix with the operations in the list
         QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
@@ -487,12 +487,12 @@ double N_Qubit_Decomposition::optimalization_problem( const double* parameters )
            
 
 /**
-// @brief The optimalization problem of the final optimization
+// @brief The optimization problem of the final optimization
 @param parameters A GNU Scientific Library containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double N_Qubit_Decomposition::optimalization_problem( const gsl_vector* parameters, void* void_instance ) {
+double N_Qubit_Decomposition::optimization_problem( const gsl_vector* parameters, void* void_instance ) {
 
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(void_instance);
     std::vector<Operation*> operations_loc = instance->get_operations(); 
@@ -518,13 +518,13 @@ double N_Qubit_Decomposition::optimalization_problem( const gsl_vector* paramete
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-void N_Qubit_Decomposition::optimalization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad ) {
+void N_Qubit_Decomposition::optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad ) {
 
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(void_instance);
 
-    double f0 = instance->optimalization_problem(parameters, instance);
+    double f0 = instance->optimization_problem(parameters, instance);
 
-    optimalization_problem_grad( parameters, instance, grad, f0 );
+    optimization_problem_grad( parameters, instance, grad, f0 );
 
 }
 
@@ -536,7 +536,7 @@ void N_Qubit_Decomposition::optimalization_problem_grad( const gsl_vector* param
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 @param f0 The value of the cost function at x0.
 */
-void N_Qubit_Decomposition::optimalization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad, double f0 ) {
+void N_Qubit_Decomposition::optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad, double f0 ) {
 
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(void_instance);
 
@@ -565,7 +565,7 @@ void N_Qubit_Decomposition::optimalization_problem_grad( const gsl_vector* param
         params_diff.parameters = parameters;
         params_diff.instance = params;
 
-        F.function = instance->optimalization_problem_deriv;
+        F.function = instance->optimization_problem_deriv;
         F.params = &params_diff;
         gsl_deriv_central (&F, parameters_d[idx], dparam, &result, &abserr);
 //printf("%f, ", result);
@@ -575,7 +575,7 @@ void N_Qubit_Decomposition::optimalization_problem_grad( const gsl_vector* param
 
     for (int idx = 0; idx<parameter_num_loc; idx++) {
         parameters_d[idx] = parameters_d[idx] + dparam;
-        double f = instance->optimalization_problem(parameters, void_instance);
+        double f = instance->optimization_problem(parameters, void_instance);
         gsl_vector_set(grad, idx, (f-f0)/dparam);
         parameters_d[idx] = parameters_d[idx] - dparam;
     }
@@ -591,9 +591,9 @@ void N_Qubit_Decomposition::optimalization_problem_grad( const gsl_vector* param
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-void N_Qubit_Decomposition::optimalization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
-    *f0 = optimalization_problem(parameters, void_instance);
-    optimalization_problem_grad(parameters, void_instance, grad, *f0);
+void N_Qubit_Decomposition::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+    *f0 = optimization_problem(parameters, void_instance);
+    optimization_problem_grad(parameters, void_instance, grad, *f0);
 }    
 
 
@@ -875,7 +875,7 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
 
       
         // check whether simplification was succesfull
-        if (!cdecomposition->check_optimalization_solution()) {
+        if (!cdecomposition->check_optimization_solution()) {
             // return with the original layer, if the simplification wa snot successfull
             if (verbose) {
                 printf("The simplification of the sub-structure was not possible\n");

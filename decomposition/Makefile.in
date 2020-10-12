@@ -104,7 +104,8 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libdecomposition_la_LIBADD =
 am_libdecomposition_la_OBJECTS = Decomposition_Base.lo \
-	N_Qubit_Decomposition.lo Sub_Matrix_Decomposition.lo
+	N_Qubit_Decomposition.lo Sub_Matrix_Decomposition.lo \
+	Sub_Matrix_Decomposition_Cost_Function.lo
 libdecomposition_la_OBJECTS = $(am_libdecomposition_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -313,6 +314,7 @@ pdfdir = @pdfdir@
 prefix = @prefix@
 program_transform_name = @program_transform_name@
 psdir = @psdir@
+runstatedir = @runstatedir@
 sbindir = @sbindir@
 sharedstatedir = @sharedstatedir@
 srcdir = @srcdir@
@@ -322,8 +324,8 @@ top_build_prefix = @top_build_prefix@
 top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LTLIBRARIES = libdecomposition.la
-pkginclude_HEADERS = include/Decomposition_Base.h include/N_Qubit_Decomposition.h include/Sub_Matrix_Decomposition.h
-libdecomposition_la_SOURCES = Decomposition_Base.cpp N_Qubit_Decomposition.cpp Sub_Matrix_Decomposition.cpp
+pkginclude_HEADERS = include/Decomposition_Base.h include/N_Qubit_Decomposition.h include/Sub_Matrix_Decomposition.h 
+libdecomposition_la_SOURCES = Decomposition_Base.cpp N_Qubit_Decomposition.cpp Sub_Matrix_Decomposition.cpp Sub_Matrix_Decomposition_Cost_Function.cpp
 AM_CPPFLAGS = $(CXXFLAGS) -I$(top_srcdir) -I$(GSL_INC_DIR)
 all: all-am
 
@@ -338,9 +340,9 @@ $(srcdir)/Makefile.in:  $(srcdir)/Makefile.am  $(am__configure_deps)
 	      exit 1;; \
 	  esac; \
 	done; \
-	echo ' cd $(top_srcdir) && $(AUTOMAKE) --gnu decomposition/Makefile'; \
+	echo ' cd $(top_srcdir) && $(AUTOMAKE) --foreign decomposition/Makefile'; \
 	$(am__cd) $(top_srcdir) && \
-	  $(AUTOMAKE) --gnu decomposition/Makefile
+	  $(AUTOMAKE) --foreign decomposition/Makefile
 Makefile: $(srcdir)/Makefile.in $(top_builddir)/config.status
 	@case '$?' in \
 	  *config.status*) \
@@ -382,6 +384,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Decomposition_Base.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/N_Qubit_Decomposition.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Sub_Matrix_Decomposition.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Sub_Matrix_Decomposition_Cost_Function.Plo@am__quote@
 
 .cpp.o:
 @am__fastdepCXX_TRUE@	$(AM_V_CXX)$(CXXCOMPILE) -MT $@ -MD -MP -MF $(DEPDIR)/$*.Tpo -c -o $@ $<

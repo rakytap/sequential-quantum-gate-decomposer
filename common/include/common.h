@@ -32,6 +32,7 @@ extern "C"
 #endif
 
 #include <omp.h>
+#include <tbb/tbb.h>
 #include <stdlib.h>
 #include <string>
 #include <stdio.h>
@@ -40,6 +41,7 @@ extern "C"
 #include <vector>
 #include <cstring>
 #include <sstream>
+
 
 // include MKL header if MKL package and intel compiler are present
 #if CXX==icpc
@@ -241,13 +243,6 @@ int reduce_zgemm( std::vector<QGD_Complex16*> mtxs, QGD_Complex16* C, int matrix
 */
 void subtract_diag( QGD_Complex16* & mtx,  int matrix_size, QGD_Complex16 scalar ); 
 
-/**
-@brief Call to calculate the cost function of a given matrix during the submatrix decomposition process.
-@param matrix The square shaped complex matrix from which the cost function is calculated during the submatrix decomposition process.
-@param matrix_size The number rows in the matrix matrix_new
-@return Returns with the calculated cost function.
-*/
-double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size);
 
 /**
 @brief Call co calculate the cost funtion during the final optimization process.

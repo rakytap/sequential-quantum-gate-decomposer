@@ -49,15 +49,15 @@ int main() {
     
 
     // setting the number of threads to one
-    omp_set_num_threads(1);
+    //omp_set_num_threads(6);
 
     // enbabling nested parallelism
-    omp_set_nested(true);
+    //omp_set_nested(true);
 
 
 //! [few CNOT]
     // The number of qubits spanning the random unitary
-    int qbit_num = 3;   
+    int qbit_num = 5;   
 
     // the number of rows of the random unitary
     int matrix_size = Power_of_2(qbit_num);
@@ -124,10 +124,10 @@ int main() {
     cDecomposition.set_iteration_loops( num_of_iterations );
 
     // setting operation layer
-    cDecomposition.set_optimalization_blocks( 1 );
+    cDecomposition.set_optimization_blocks( 1 );
 
     // settign the number of threads for the optimization
-    cDecomposition.set_num_threads_optimization( 1 );
+    cDecomposition.set_num_threads_optimization( 4 );
 
     // setting the verbosity of the decomposition
     cDecomposition.set_verbose( true );

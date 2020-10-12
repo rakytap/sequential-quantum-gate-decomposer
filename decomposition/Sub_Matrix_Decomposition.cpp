@@ -31,8 +31,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param optimize_layer_num_in Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
-@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimalization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
+@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
 Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize_layer_num_in=false, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
@@ -43,10 +43,10 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int 
     // A string describing the type of the class
     type = SUB_MATRIX_DECOMPOSITION_CLASS;
         
-    // The global minimum of the optimalization problem
+    // The global minimum of the optimization problem
     global_target_minimum = 0;
         
-    // number of iteratrion loops in the optimalization
+    // number of iteratrion loops in the optimization
     iteration_loops[2] = 3;
 
     // logical value indicating whether the quasi-unitarization of the submatrices was done or not 
@@ -92,7 +92,7 @@ Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
 
 
 /**
-@brief Start the optimalization process to disentangle the most significant qubit from the others. The optimized parameters and operations are stored in the attributes optimized_parameters and operations.
+@brief Start the optimization process to disentangle the most significant qubit from the others. The optimized parameters and operations are stored in the attributes optimized_parameters and operations.
 */
 void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         
@@ -109,10 +109,10 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         
     // setting the global target minimum
     global_target_minimum = 0;   
-    current_minimum = optimalization_problem(NULL);
+    current_minimum = optimization_problem(NULL);
           
     // check if it needed to do the subunitarization
-    if (check_optimalization_solution()) {
+    if (check_optimization_solution()) {
         if (verbose) {
             printf("Disentanglig not needed\n");
         }
@@ -124,7 +124,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         
                        
         
-    if ( !check_optimalization_solution() ) {
+    if ( !check_optimization_solution() ) {
         // Adding the operations of the successive layers
             
         //measure the time for the decompositin       
@@ -183,18 +183,18 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
             // get the number of blocks
             layer_num = operations.size();
                                 
-            // Do the optimalization
+            // Do the optimization
             if (optimize_layer_num || layer_num >= max_layer_num_loc ) {
 
                 // solve the optzimalization problem to find the correct mninimum
                 if ( optimized_parameters == NULL ) {
-                    solve_optimalization_problem( optimized_parameters, 0);   
+                    solve_optimization_problem( optimized_parameters, 0);   
                 }
                 else {
-                    solve_optimalization_problem( optimized_parameters, solution_guess_num);   
+                    solve_optimization_problem( optimized_parameters, solution_guess_num);   
                 }
 
-                if (check_optimalization_solution()) {
+                if (check_optimization_solution()) {
                     break;
                 }
             }
@@ -210,7 +210,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
                        
         
         
-    if (check_optimalization_solution()) {            
+    if (check_optimization_solution()) {            
         if (verbose) {
             printf("Sub-disentaglement was succesfull.\n\n");
         }
@@ -239,45 +239,8 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void Sub_Matrix_Decomposition::solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) { 
+void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) { 
 
-////////////////////////////////////
-//#ifdef MIC
-/*
-if (optimized_parameters == NULL) {
-     optimized_parameters = (double*)qgd_calloc(num_of_parameters*sizeof(double), 64);
-}
-
-
-for (int idx =0; idx<num_of_parameters; idx++) {
-    optimized_parameters[idx] = solution_guess_gsl->data[idx];
-}
-
-printf("hhhhhhhhhhhhhhhh\n");
-clock_t start_time = clock();
-for (int idx =0; idx<10; idx++) {
-//optimalization_problem( solution_guess_gsl, this );
-printf("cost function:%f\n", optimalization_problem( solution_guess_gsl->data )); 
-fflush(stdout);
-}
-//printf("%f\n", float((clock()-start_time)));
-printf("%e\n", float((clock()-start_time)/CLOCKS_PER_SEC));
-
-
-start_time = clock();
-for (int idx =0; idx<1; idx++) {
-optimalization_problem( solution_guess_gsl, this ); 
-//optimalization_problem( optimized_parameters);
-}
-//printf("%f\n", float((clock()-start_time)));
-printf("%e\n", float((clock()-start_time)/CLOCKS_PER_SEC));
-
-//printf("%f, diff: %e\n", optimalization_problem( solution_guess_gsl, this ), optimalization_problem( solution_guess_gsl, this )-optimalization_problem( solution_guess_gsl->data) );
-printf("%f\n", optimalization_problem( solution_guess_gsl, this ) );
-throw "klll";*/
-//#endif
-//return; 
-///////////////////////////////////
 
         if (operations.size() == 0 ) {
             return;
@@ -303,7 +266,7 @@ throw "klll";*/
         }
 
 
-        // do the optimalization loops
+        // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
             
             size_t iter = 0;
@@ -319,9 +282,9 @@ throw "klll";*/
 
 
             my_func.n = num_of_parameters;
-            my_func.f = optimalization_problem;
-            my_func.df = optimalization_problem_grad;
-            my_func.fdf = optimalization_problem_combined;
+            my_func.f = optimization_problem;
+            my_func.df = optimization_problem_grad;
+            my_func.fdf = optimization_problem_combined;
             my_func.params = par;
 
             
@@ -353,13 +316,11 @@ throw "klll";*/
                 memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
                 gsl_multimin_fdfminimizer_free (s);
 
-                #pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
                 }
             }
             else {
-                #pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
                 }
@@ -379,11 +340,11 @@ throw "klll";*/
     
         
 /**
-@brief The optimalization problem of the final optimization
+@brief The optimization problem of the final optimization
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double Sub_Matrix_Decomposition::optimalization_problem( const double* parameters ) {
+double Sub_Matrix_Decomposition::optimization_problem( const double* parameters ) {
 
         // get the transformed matrix with the operations in the list
         QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
@@ -396,14 +357,14 @@ double Sub_Matrix_Decomposition::optimalization_problem( const double* parameter
         return cost_function;
 }               
 
-//
+
 /**
-@brief The optimalization problem of the final optimization
+@brief The optimization problem of the final optimization
 @param parameters A GNU Scientific Library containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double Sub_Matrix_Decomposition::optimalization_problem( const gsl_vector* parameters, void* void_instance ) {
+double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* parameters, void* void_instance ) {
 
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
     std::vector<Operation*> operations_loc = instance->get_operations(); 
@@ -435,15 +396,15 @@ printf("%f\n", cost_function );
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad ) {
+void Sub_Matrix_Decomposition::optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad ) {
 
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
 
     // getting the function value at x0
-    double f0 = instance->optimalization_problem(parameters, void_instance);
+    double f0 = instance->optimization_problem(parameters, void_instance);
 
     // getting the approximate gradient components
-    optimalization_problem_grad( parameters, void_instance, grad, f0 );
+    optimization_problem_grad( parameters, void_instance, grad, f0 );
 
 }
 
@@ -455,106 +416,21 @@ void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* pa
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 @param f0 The value of the cost function at x0.
 */
-void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad, double f0 ) {
+void Sub_Matrix_Decomposition::optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad, double f0 ) {
 
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
 
-    // the difference in one direction in the parameter for the gradient calculaiton
-    double dparam = 1e-8;
-
-    
-    // store the initial number of threads
-    int num_threads = instance->get_num_threads_optimization();
-    int num_threads_tot = omp_get_max_threads();
-    omp_set_num_threads(num_threads);
-
-    // determine the number of nested threads
-    int residual = num_threads_tot % num_threads;
-    int nested_num_threads = int( (num_threads_tot-residual)/num_threads );
-
     int parameter_num_loc = instance->get_parameter_num();
 
+    // calculate the gradient components through TBB parallel for
+    tbb::parallel_for(0, parameter_num_loc, 1, functor_sub_optimization_grad( parameters, instance, grad, f0 ));
 
-    Sub_Matrix_Decomposition** instances = (Sub_Matrix_Decomposition**)malloc( num_threads*sizeof(Sub_Matrix_Decomposition*) );
-    instances[0] = instance;
-    for (int idx =1; idx<num_threads; idx++) {        
-        Sub_Matrix_Decomposition* instance_loc = new Sub_Matrix_Decomposition(instance->get_Umtx(), instance->get_qbit_num(), false, ZEROS);
-
-        // getting the list of operations
-        std::vector<Operation*> operations_loc = instance->get_operations();
-
-        for(std::vector<Operation*>::iterator it = operations_loc.begin(); it != operations_loc.end(); ++it) {
-        Operation* op = *it;
-
-            if (op->get_type() == CNOT_OPERATION) {
-                CNOT* cnot_op = static_cast<CNOT*>( op );
-                CNOT* cnot_op_cloned = cnot_op->clone();
-                Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
-                instance_loc->add_operation_to_end(op_cloned);    
-            }
-            else if (op->get_type() == U3_OPERATION) {
-                U3* u3_op = static_cast<U3*>( op );
-                U3* u3_op_cloned = u3_op->clone();
-                Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
-                instance_loc->add_operation_to_end( op_cloned );    
-            }
-            else if (op->get_type() == BLOCK_OPERATION) {
-                Operation_block* block_op = static_cast<Operation_block*>( op );
-                Operation_block* block_op_cloned = block_op->clone();
-                Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
-                instance_loc->add_operation_to_end( op_cloned );      
-            }
-            else if (op->get_type() == GENERAL_OPERATION) {
-                Operation* op_cloned = op->clone();
-                instance_loc->add_operation_to_end( op_cloned );      
-            }
-
-            instances[idx] = instance_loc;
-
-        }
-
-        //instances[idx] = instance;
-
+/*    functor_sub_optimization_grad tmp = functor_sub_optimization_grad( parameters, instance, grad, f0 );
+    for (int idx=0; idx<parameter_num_loc; idx++) {
+        tmp(idx);
     }
+*/
 
-
-    #pragma omp parallel for shared(instances, parameters, grad, f0)
-    for (int idx = 0; idx<parameter_num_loc; idx++) {
-
-        // setting number of nested threads
-        if (omp_get_thread_num() == 0)
-            omp_set_num_threads(nested_num_threads+residual);  
-        else
-            omp_set_num_threads(nested_num_threads); 
-
-
-        // the displaced parameters by dparam
-        gsl_vector* parameters_d = gsl_vector_calloc(parameter_num_loc);
-        memcpy( parameters_d->data, parameters->data, parameter_num_loc*sizeof(double) );
-        parameters_d->data[idx] = parameters_d->data[idx] + dparam;
-
-        Sub_Matrix_Decomposition* instance_thread = instances[omp_get_thread_num()];
-
-        double f = instance_thread->optimalization_problem(parameters_d, reinterpret_cast<void*>(instance_thread));
-
-        gsl_vector_set(grad, idx, (f-f0)/dparam);
-
-        gsl_vector_free(parameters_d);
-        parameters_d = NULL;
-    }
-
-
-    instances[0] = NULL;
-    #pragma omp parallel for
-    for (int idx = 1; idx<num_threads; idx++) {
-        delete instances[idx];
-        instances[idx] = NULL;
-    }
-    free(instances);
-        
-
-    // restore the initial number of threads
-    omp_set_num_threads(num_threads_tot);
 }     
 
 
@@ -566,9 +442,9 @@ void Sub_Matrix_Decomposition::optimalization_problem_grad( const gsl_vector* pa
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-void Sub_Matrix_Decomposition::optimalization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
-    *f0 = optimalization_problem(parameters, void_instance);
-    optimalization_problem_grad(parameters, void_instance, grad, *f0);
+void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+    *f0 = optimization_problem(parameters, void_instance);
+    optimization_problem_grad(parameters, void_instance, grad, *f0);
 }        
 
 
@@ -608,6 +484,92 @@ int Sub_Matrix_Decomposition::set_identical_blocks( std::map<int, int> identical
     return 0;
 
 }
+
+
+
+
+
+
+functor_sub_optimization_grad::functor_sub_optimization_grad( const gsl_vector* parameters_in, Sub_Matrix_Decomposition* instance_in, gsl_vector* grad_in, double f0_in ) {
+
+    parameters = parameters_in;
+    instance = instance_in;
+    grad = grad_in;
+    f0 = f0_in;
+
+    // the difference in one direction in the parameter for the gradient calculaiton
+    dparam = 1e-8;
+
+}
+
+
+void functor_sub_optimization_grad::operator()( int i ) const {
+
+    Sub_Matrix_Decomposition* instance_loc = NULL;
+    if (i == 0) {
+        instance_loc = instance;
+    }
+    else {
+        instance_loc = new Sub_Matrix_Decomposition(instance->get_Umtx(), instance->get_qbit_num(), false, ZEROS);
+
+        // getting the list of operations
+        std::vector<Operation*> operations_loc = instance->get_operations();
+
+        for(std::vector<Operation*>::iterator it = operations_loc.begin(); it != operations_loc.end(); ++it) {
+        Operation* op = *it;
+
+            if (op->get_type() == CNOT_OPERATION) {
+                CNOT* cnot_op = static_cast<CNOT*>( op );
+                CNOT* cnot_op_cloned = cnot_op->clone();
+                Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
+                instance_loc->add_operation_to_end(op_cloned);    
+            }
+            else if (op->get_type() == U3_OPERATION) {
+                U3* u3_op = static_cast<U3*>( op );
+                U3* u3_op_cloned = u3_op->clone();
+                Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
+                instance_loc->add_operation_to_end( op_cloned );    
+            }
+            else if (op->get_type() == BLOCK_OPERATION) {
+                Operation_block* block_op = static_cast<Operation_block*>( op );
+                Operation_block* block_op_cloned = block_op->clone();
+                Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
+                instance_loc->add_operation_to_end( op_cloned );      
+            }
+            else if (op->get_type() == GENERAL_OPERATION) {
+                Operation* op_cloned = op->clone();
+                instance_loc->add_operation_to_end( op_cloned );      
+            }
+
+
+        }
+
+    }
+
+
+
+    gsl_vector* parameters_d = gsl_vector_calloc(parameters->size);
+    memcpy( parameters_d->data, parameters->data, parameters->size*sizeof(double) );
+    parameters_d->data[i] = parameters_d->data[i] + dparam;
+
+    // calculate the cost function at the displaced point
+    double f = instance_loc->optimization_problem(parameters_d, reinterpret_cast<void*>(instance_loc));
+
+    // calculate and set the gradient
+    gsl_vector_set(grad, i, (f-f0)/dparam);
+
+    // release vectors
+    gsl_vector_free(parameters_d);
+    parameters_d = NULL;
+
+
+
+    if ( i >0 ) {
+        delete instance_loc;
+    }
+
+}
+
 
  
 

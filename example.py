@@ -35,7 +35,7 @@ import numpy as np
 
     
 # the number of qubits spanning the unitary
-qbit_num = 3
+qbit_num = 4
 
 # determine the soze of the unitary to be decomposed
 matrix_size = int(2**qbit_num)
@@ -50,7 +50,7 @@ cDecompose = N_Qubit_Decomposition( Umtx.conj().T )
 cDecompose.start_decomposition()
 
 # list the decomposing operations
-cDecompose.list_operations()
+#cDecompose.list_operations()
 
 print(' ')
 print(' ')

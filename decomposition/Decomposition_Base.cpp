@@ -31,7 +31,7 @@ std::map<int,int> Decomposition_Base::max_layer_num_def;
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary to be decomposed.
-@param initial_guess_in Type to guess the initial values for the optimalization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
+@param initial_guess_in Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return An instance of the class
 */
 Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Operation_block(qbit_num_in) {
@@ -59,28 +59,28 @@ Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in,
     // the number of the finalizing (deterministic) parameters counted from the top of the optimized_parameters list
     finalizing_parameter_num = 0;
         
-    // The current minimum of the optimalization problem
+    // The current minimum of the optimization problem
     current_minimum = 1e10;                       
         
-    // The global minimum of the optimalization problem
+    // The global minimum of the optimization problem
     global_target_minimum = 0;
         
-    // logical value describing whether the optimalization problem was solved or not
-    optimalization_problem_solved = false;
+    // logical value describing whether the optimization problem was solved or not
+    optimization_problem_solved = false;
         
-    // number of iteratrion loops in the finale optimalization
+    // number of iteratrion loops in the finale optimization
     //iteration_loops = dict()
         
-    // The maximal allowed error of the optimalization problem
-    optimalization_tolerance = 1e-7;
+    // The maximal allowed error of the optimization problem
+    optimization_tolerance = 1e-7;
         
-    // Maximal number of iteartions in the optimalization process
+    // Maximal number of iteartions in the optimization process
     max_iterations = 1e8;
   
-    // number of operators in one sub-layer of the optimalization process
-    optimalization_block = 1;
+    // number of operators in one sub-layer of the optimization process
+    optimization_block = 1;
         
-    // method to guess initial values for the optimalization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
+    // method to guess initial values for the optimization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
     initial_guess = initial_guess_in;
 
     // optimized parameters
@@ -118,15 +118,15 @@ Decomposition_Base::~Decomposition_Base() {
      
 /**   
 @brief Call to set the number of operation blocks to be optimized in one shot
-@param optimalization_block_in The number of operation blocks to be optimized in one shot 
+@param optimization_block_in The number of operation blocks to be optimized in one shot 
 */
-void Decomposition_Base::set_optimalization_blocks( int optimalization_block_in) {
-    optimalization_block = optimalization_block_in;
+void Decomposition_Base::set_optimization_blocks( int optimization_block_in) {
+    optimization_block = optimization_block_in;
 }
         
 /**   
-@brief Call to set the maximal number of the iterations in the optimalization process
-@param max_iterations_in maximal number of iteartions in the optimalization process
+@brief Call to set the maximal number of the iterations in the optimization process
+@param max_iterations_in maximal number of iteartions in the optimization process
 */
 void Decomposition_Base::set_max_iteration( int max_iterations_in) {
     max_iterations = max_iterations_in;  
@@ -134,7 +134,7 @@ void Decomposition_Base::set_max_iteration( int max_iterations_in) {
     
     
 /** 
-@brief After the main optimalization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
+@brief After the main optimization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
 */
 void Decomposition_Base::finalize_decomposition() {
 
@@ -310,12 +310,11 @@ void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operatio
 
     
 /** 
-@brief This method can be used to solve the main optimalization problem which is devidid into sub-layer optimalization processes. (The aim of the optimalization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute optimized_parameters.
+@brief This method can be used to solve the main optimization problem which is devidid into sub-layer optimization processes. (The aim of the optimization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute optimized_parameters.
 @param solution_guess An array of the guessed parameters
 @param solution_guess_num The number of guessed parameters. (not necessarily equal to the number of free parameters)
 */
-void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, int solution_guess_num ) {
-
+void  Decomposition_Base::solve_optimization_problem( double* solution_guess, int solution_guess_num ) {
        
         if ( operations.size() == 0 ) {
             return;
@@ -345,7 +344,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         memcpy(Umtx_loc, Umtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
         
         // storing the initial computational parameters
-        int optimalization_block_loc = optimalization_block;
+        int optimization_block_loc = optimization_block;
 
         // initialize random seed:
         srand (time(NULL));
@@ -355,19 +354,16 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 
         // preparing solution guess for the iterations
         if ( initial_guess == ZEROS ) {
-            #pragma omp parallel for
             for(unsigned int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = 0;
             }
         }
         else if ( initial_guess == RANDOM ) {
-            #pragma omp parallel for
             for(unsigned int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
             }
         }
         else if ( initial_guess == CLOSE_TO_ZERO ) {
-            #pragma omp parallel for
             for(unsigned int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
             }
@@ -408,7 +404,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         for ( iter_idx=0;  iter_idx<max_iterations+1; iter_idx++) {                        
 
             //determine the range of blocks to be optimalized togedther
-            block_idx_end = block_idx_start - optimalization_block;
+            block_idx_end = block_idx_start - optimization_block;
             if (block_idx_end < 0) {
                 block_idx_end = 0;
             }
@@ -439,7 +435,7 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 //operations_mtx_pre = Identity;
 /////////////////////
 
-            // Transform the initial unitary upon the fixed pre-optimalization operations
+            // Transform the initial unitary upon the fixed pre-optimization operations
             apply_operation(operations_mtx_pre, Umtx_loc, Umtx);
 
 
@@ -482,14 +478,14 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 //fixed_operation_post->set_matrix( Identity );
 ////////////////////
             
-            // create a list of operations for the optimalization process
+            // create a list of operations for the optimization process
             operations.push_back( fixed_operation_post );
             for ( unsigned int idx=block_idx_end; idx<block_idx_start; idx++ ) {
                 operations.push_back( operations_loc[idx] );
             }        
             
 
-            // constructing solution guess for the optimalization           
+            // constructing solution guess for the optimization           
             parameter_num = block_parameter_num;
             if ( solution_guess_gsl == NULL ) {
                 solution_guess_gsl = gsl_vector_alloc (parameter_num);
@@ -500,8 +496,8 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             }
             memcpy( solution_guess_gsl->data, optimized_parameters_gsl->data+parameter_num_loc - pre_operation_parameter_num - block_parameter_num, parameter_num*sizeof(double) );
             
-            // solve the optimalization problem of the block 
-            solve_layer_optimalization_problem( parameter_num, solution_guess_gsl  );
+            // solve the optimization problem of the block 
+            solve_layer_optimization_problem( parameter_num, solution_guess_gsl  );
 
             // add the current minimum to the array of minimums and calculate the mean
             double minvec_mean = 0;
@@ -521,12 +517,12 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
                 pre_operation_parameter_num = 0;
             }
             else {
-                block_idx_start = block_idx_start - optimalization_block;
+                block_idx_start = block_idx_start - optimization_block;
                 pre_operation_parameter_num = pre_operation_parameter_num + block_parameter_num;
             }
                 
             
-            // optimalization result is displayed in each 500th iteration
+            // optimization result is displayed in each 500th iteration
             if (iter_idx % 500 == 0) {
                 if (verbose) {     
                     printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, float(time(NULL) - start_time));
@@ -540,23 +536,23 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
             double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, min_vec_num, minvec_mean));
 
             // conditions to break the iteration cycles
-            if (abs(minvec_std/minimum_vec[min_vec_num-1]) < optimalization_tolerance ) {
+            if (abs(minvec_std/minimum_vec[min_vec_num-1]) < optimization_tolerance ) {
                 if (verbose) {              
                     printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
                     fflush(stdout);
                 }
                 break; 
             }
-            else if (check_optimalization_solution()) {
+            else if (check_optimization_solution()) {
                 if (verbose) {
                     printf("The minimum with %d layers after %d iterations is %e\n", layer_num, iter_idx, current_minimum);
                 }
                 break;
             }
             
-            // the convergence at low minimums is much faster if only one layer is considered in the optimalization at once
+            // the convergence at low minimums is much faster if only one layer is considered in the optimization at once
             if ( current_minimum < 1 ) {
-                optimalization_block = 1;
+                optimization_block = 1;
             }
             
 
@@ -572,9 +568,9 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
         }
         
         // restoring the parameters to originals
-        optimalization_block = optimalization_block_loc;
+        optimization_block = optimization_block_loc;
         
-        // store the result of the optimalization
+        // store the result of the optimization
         operations.clear();
         operations = operations_loc;
    
@@ -628,11 +624,11 @@ void  Decomposition_Base::solve_optimalization_problem( double* solution_guess, 
 
    
 /**
-@brief Abstarct function to be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute optimized_parameters.
+@brief Abstarct function to be used to solve a single sub-layer optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
 @param 'num_of_parameters' The number of free parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Libarary vector containing the free parameters to be optimized.
 */
-void Decomposition_Base::solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) { 
+void Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) { 
     return;
 }
        
@@ -643,7 +639,7 @@ void Decomposition_Base::solve_layer_optimalization_problem( int num_of_paramete
 @brief This is an abstact definition of function giving the cost functions measuring the entaglement of the qubits. When the qubits are indepent, teh cost function should be zero.
 @param parameters An array of the free parameters to be optimized. (The number of the free paramaters should be equal to the number of parameters in one sub-layer)
 */
-double Decomposition_Base::optimalization_problem( const double* parameters ) {
+double Decomposition_Base::optimization_problem( const double* parameters ) {
         return current_minimum;
 }
         
@@ -651,13 +647,13 @@ double Decomposition_Base::optimalization_problem( const double* parameters ) {
        
      
     
-/** check_optimalization_solution
-@brief Checks the convergence of the optimalization problem.
-@return Returns with true if the target global minimum was reached during the optimalization process, or false otherwise.
+/** check_optimization_solution
+@brief Checks the convergence of the optimization problem.
+@return Returns with true if the target global minimum was reached during the optimization process, or false otherwise.
 */
-bool Decomposition_Base::check_optimalization_solution() {
+bool Decomposition_Base::check_optimization_solution() {
         
-        return (abs(current_minimum - global_target_minimum) < optimalization_tolerance);
+        return (abs(current_minimum - global_target_minimum) < optimization_tolerance);
         
 }
 

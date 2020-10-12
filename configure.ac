@@ -20,15 +20,15 @@ AC_ARG_ENABLE(ffast-math, [  --enable-ffast-math Enables g++ compiler optimizati
 
 # TODO GCC OR ICC?
 if test $CXX = "icpc"; then
-  CXXFLAGS=" -qopenmp -O2"
-  CFLAGS=" -qopenmp -O2"
+  CXXFLAGS="-O2"
+  CFLAGS="-O2"
 else
 if test $FP_OPT = yes; then
-  CXXFLAGS=" -fopenmp -O3 -ffast-math"
-  CFLAGS=" -fopenmp -O3 -ffast-math"
+  CXXFLAGS="-O3 -ffast-math -ftree-vectorize"
+  CFLAGS="-O3 -ffast-math -ftree-vectorize"
 else
-  CXXFLAGS=" -fopenmp -O2"
-  CFLAGS=" -fopenmp -O2"
+  CXXFLAGS="-O2 -ftree-vectorize"
+  CFLAGS="-O2 -ftree-vectorize"
 fi
 fi
 
@@ -39,7 +39,7 @@ CBLAS_LIBS=
 if test $MKL_OPT = yes ; then
 LDFLAGS="$LDFLAGS -L$MKLROOT/lib/intel64/"
 AC_CHECK_LIB([mkl_intel_lp64], [zgemm3m], [
-CBLAS_LIBS="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5"
+CBLAS_LIBS="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
 HAVE_ZGEMM3M=1
 ], 
 [AC_MSG_ERROR([mkl libraries not found])], [-lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread -liomp5])
@@ -73,7 +73,7 @@ fi
 AC_MSG_ERROR([gsl library not found]), [-lgslcblas])
 
 
-LDFLAGS="$LDFLAGS $GSL_LIBS $CBLAS_LIBS"
+
 
 #checking GNU SCIENTIFIC HEADERS
 CFLAGS_SAVE=$CFLAGS
@@ -87,6 +87,9 @@ CPPFLAGS=$CPPFLAGS_SAVE
 
 
 # setting linking flags for libtool
+LDFLAGS="$LDFLAGS $GSL_LIBS $CBLAS_LIBS -ltbb"
+
+
 if test $MKL_OPT = yes; then
 postdeps_CXX="-lmkl_intel_lp64 -lmkl_core -lpthread -lm -ldl -lmkl_def -lmkl_intel_thread"
 CXXFLAGS="$CXXFLAGS -I$MKLROOT/include"
@@ -98,14 +101,14 @@ postdeps_CXX="$postdeps_CXX -lstdc++"
 fi
 
 if test $CXX = icpc; then
-postdeps_CXX="$postdeps_CXX -liomp5"
+postdeps_CXX="$postdeps_CXX -ltbb"
 else
-postdeps_CXX="$postdeps_CXX -lgomp"
+postdeps_CXX="$postdeps_CXX -ltbb"
 fi
 
 
-CXXFLAGS="$CXXFLAGS -Wall -I$GSL_INC_DIR"
-CFLAGS="$CFLAGS -I$GSL_INC_DIR"
+CXXFLAGS="$CXXFLAGS -g -Wall -I$GSL_INC_DIR -I$TBBROOT/include"
+CFLAGS="$CFLAGS -g -ftree-vectorize -I$GSL_INC_DIR -I$TBBROOT/include"
 echo $GSL_LIBS
 echo $postdeps_CXX
 echo $CXXFLAGS
