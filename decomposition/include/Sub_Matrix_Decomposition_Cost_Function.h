@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size);
 
 
-/////////////////////////////////
+
 
 /**
 @brief Function operator class to extract the submatrices from a unitary.
@@ -42,8 +42,11 @@ class functor_extract_submatrices {
 
 protected:
 
+    /// Array stroing the matrix
     QGD_Complex16* matrix;
+    /// NUmber of rows in the matrix
     int matrix_size;
+    /// array storing the submatrices
     QGD_Complex16** submatrices;
 
 public:
@@ -75,9 +78,13 @@ class functor_submtx_cost_fnc {
 
 protected:
 
+    /// The number of rows in the submatrices
     int submatrix_size;
+    /// number of distinct submatix products
     int prod_num;
+    /// array storing the submatrices
     QGD_Complex16** submatrices;
+    //// array storing the partial cost functions
     double* prod_cost_functions;
 
 public:
@@ -99,6 +106,7 @@ functor_submtx_cost_fnc( QGD_Complex16** submatrices_in, int submatrix_size, dou
 void operator()( int product_idx ) const;
 
 };
+
 
 
 

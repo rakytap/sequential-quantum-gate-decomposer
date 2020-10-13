@@ -490,6 +490,14 @@ int Sub_Matrix_Decomposition::set_identical_blocks( std::map<int, int> identical
 
 
 
+/**
+@brief Constructor of the class.
+@param parameters_in A GNU Scientific Library vector containing the free parameters to be optimized.
+@param instance_in A pointer pointing to the instance of a class Sub_Matrix_Decomposition.
+@param grad_in A GNU Scientific Library vector containing the calculated gradient components.
+@param f0_in The value of the cost function at parameters_in.
+@return Returns with the instance of the class.
+*/
 functor_sub_optimization_grad::functor_sub_optimization_grad( const gsl_vector* parameters_in, Sub_Matrix_Decomposition* instance_in, gsl_vector* grad_in, double f0_in ) {
 
     parameters = parameters_in;
@@ -503,6 +511,10 @@ functor_sub_optimization_grad::functor_sub_optimization_grad( const gsl_vector* 
 }
 
 
+/**
+@brief Operator to calculate a gradient component of a cost function labeled by index i.
+@param i The index labeling the component of the gradien to be calculated.
+*/
 void functor_sub_optimization_grad::operator()( int i ) const {
 
     Sub_Matrix_Decomposition* instance_loc = NULL;
@@ -572,4 +584,5 @@ void functor_sub_optimization_grad::operator()( int i ) const {
 
 
  
+
 
