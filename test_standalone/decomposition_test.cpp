@@ -57,7 +57,7 @@ int main() {
 
 //! [few CNOT]
     // The number of qubits spanning the random unitary
-    int qbit_num = 5;   
+    int qbit_num = 7;   
 
     // the number of rows of the random unitary
     int matrix_size = Power_of_2(qbit_num);
