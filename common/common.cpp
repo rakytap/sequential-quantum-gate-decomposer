@@ -233,7 +233,7 @@ QGD_Complex16* create_identity( int matrix_size ) {
 
     QGD_Complex16* matrix = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
-    // setting the giagonal elelments to identity
+    // setting the diagonal elelments to identity
     for(int idx = 0; idx < matrix_size; ++idx)
     {
         int element_index = idx*matrix_size + idx;
@@ -254,21 +254,13 @@ QGD_Complex16* create_identity( int matrix_size ) {
 */
 int create_identity( QGD_Complex16* matrix, int matrix_size ) {
 
-    // setting the giagonal elelments to identity
-    for(int idx = 0; idx < matrix_size*matrix_size; ++idx)
-    {
-        int col_idx = idx % matrix_size;
-        int row_idx = int((idx-col_idx)/matrix_size);
+    memset( matrix, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
-        if ( row_idx == col_idx ) {
-            matrix[idx].real = 1.0;
-            matrix[idx].imag = 0.0;
-        }
-        else {
-            matrix[idx].real = 0.0;
-            matrix[idx].imag = 0.0;
-        }
-            
+    // setting the diagonal elelments to identity
+    for(int idx = 0; idx < matrix_size; ++idx)
+    {
+        int element_index = idx*matrix_size + idx;
+            matrix[element_index].real = 1.0;
     }
 
     return 0;
@@ -458,68 +450,11 @@ print_mtx( C, matrix_size, matrix_size);
 */
 void subtract_diag( QGD_Complex16* & mtx,  int matrix_size, QGD_Complex16 scalar ) {
 
-    #pragma omp parallel for
     for(int idx = 0; idx < matrix_size; idx++)   {
         int element_idx = idx*matrix_size+idx;
         mtx[element_idx].real = mtx[element_idx].real - scalar.real;
         mtx[element_idx].imag = mtx[element_idx].imag - scalar.imag;
     }
-
-}
-
-
-
-
-
-/**
-@brief Call co calculate the cost funtion during the final optimization process.
-@param matrix The square shaped complex matrix from which the cost function is calculated.
-@param matrix_size The number rows in the matrix
-@return Returns with the calculated cost function.
-*/
-double get_cost_function(QGD_Complex16* matrix, int matrix_size) {
-
-    QGD_Complex16* mtx = matrix;
-
-    // subtract the corner element from the diagonal
-    QGD_Complex16 corner_element = matrix[0];
-    #pragma omp parallel for
-    for ( int row_idx=0; row_idx<matrix_size; row_idx++) {
-        int element_idx = row_idx*matrix_size+row_idx;
-        mtx[element_idx].real = mtx[element_idx].real  - corner_element.real;
-        mtx[element_idx].imag = mtx[element_idx].imag  - corner_element.imag;
-    }
-
-    #pragma omp barrier
-
-    // Calculate the |x|^2 value of the elements of the submatrixproducts
-    //double* matrix_product_square = (double*)qgd_calloc(matrix_size*matrix_size*sizeof(double), 64); 
-    int element_num = matrix_size*matrix_size;
-    #pragma omp parallel for
-    for ( int idx=0; idx<element_num; idx++ ) {
-         //matrix_product_square[idx] = matrix[idx].real*matrix[idx].real + matrix[idx].imag*matrix[idx].imag;
-         mtx[idx].real = mtx[idx].real*mtx[idx].real + mtx[idx].imag*mtx[idx].imag;
-         // for performance reason we leave the imaginary part intact (we dont neet it anymore)
-         //mtx[idx].imag = 0;
-    }
-
-    #pragma omp barrier
-
-    // summing up elements and calculate the final cost function
-
-    double cost_function = 0;
-    //#pragma omp parallel for reduction(+:cost_function)
-    for ( int row_idx=0; row_idx<matrix_size; row_idx++ ) {
-
-        // calculate the sum for each row
-        for (int col_idx=0; col_idx<matrix_size; col_idx++) {
-            int element_idx = row_idx*matrix_size + col_idx;
-            //cost_function = cost_function + matrix_product_square[element_idx];
-            cost_function = cost_function + mtx[element_idx].real;
-        } 
-    }
-
-    return cost_function;
 
 }
 

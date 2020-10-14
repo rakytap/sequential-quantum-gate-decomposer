@@ -24,6 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #pragma once
 #include "qgd/Decomposition_Base.h"
 #include "qgd/Sub_Matrix_Decomposition.h"
+#include "qgd/N_Qubit_Decomposition_Cost_Function.h"
 
 
 /**
