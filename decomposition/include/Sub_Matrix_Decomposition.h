@@ -21,10 +21,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class responsible for the disentanglement of one qubit from the others.
 */
 
-
 #pragma once
 #include "qgd/Decomposition_Base.h"
 #include "qgd/Sub_Matrix_Decomposition_Cost_Function.h"
+#include "qgd/Functor_Cost_Function_Gradient.h"
 
 
 /**
@@ -35,7 +35,7 @@ class Sub_Matrix_Decomposition : public Decomposition_Base {
 
 public:
 
-    /// logical value indicating whether the disentamglement of a qubit from the othetrs was done or not 
+    /// logical value indicating whether the disentamglement of a qubit from the othetrs was done or not
     bool subdisentaglement_done;
 
     /// The subdecomposed matrix
@@ -144,47 +144,11 @@ int set_identical_blocks( int qbit, int identical_blocks_in );
 int set_identical_blocks( std::map<int, int> identical_blocks_in );
 
 
-
-};
-
-
-
-
-
 /**
-@brief Function operator class to calculate the gradient components of the cost function in parallel
+@brief Call to create a clone of the present class
+@return Return with a pointer pointing to the cloned object
 */
-class functor_sub_optimization_grad {
+Sub_Matrix_Decomposition* clone();
 
-protected:
-
-    /// A GNU Scientific Library vector containing the free parameters to be optimized.
-    const gsl_vector* parameters;
-    /// A pointer pointing to the instance of a class Sub_Matrix_Decomposition.
-    Sub_Matrix_Decomposition* instance;
-    /// A GNU Scientific Library vector containing the calculated gradient components.
-    gsl_vector* grad;
-    /// The value of the cost function at parameters_in.
-    double f0;
-    /// the difference in one direction in the parameter for the gradient calculaiton
-    double dparam;
-
-public:
-
-/**
-@brief Constructor of the class.
-@param parameters_in A GNU Scientific Library vector containing the free parameters to be optimized.
-@param instance_in A pointer pointing to the instance of a class Sub_Matrix_Decomposition.
-@param grad_in A GNU Scientific Library vector containing the calculated gradient components.
-@param f0_in The value of the cost function at parameters_in.
-@return Returns with the instance of the class.
-*/
-functor_sub_optimization_grad( const gsl_vector* parameters_in, Sub_Matrix_Decomposition* instance_in, gsl_vector* grad_in, double f0_in );
-
-/**
-@brief Operator to calculate a gradient component of a cost function labeled by index i.
-@param i The index labeling the component of the gradien to be calculated.
-*/
-void operator()( int i ) const;
 
 };

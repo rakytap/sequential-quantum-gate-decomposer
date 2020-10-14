@@ -37,7 +37,7 @@ public:
 
 protected:
 
-    
+
     /// logical value. Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
     bool optimize_layer_num;
 
@@ -143,12 +143,12 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 */
 static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
 
-/**  
+/**
 @brief Call to simplify the gate structure in the layers if possible (i.e. tries to reduce the number of CNOT gates)
 */
 void simplify_layers();
 
-/**  
+/**
 @brief Call to simplify the gate structure in a block of operations (i.e. tries to reduce the number of CNOT gates)
 @param layer An instance of class Operation_block containing the 2-qubit gate structure to be simplified
 @param parameters An array of parameters to calculate the matrix representation of the operations in the block of operations.
@@ -176,5 +176,11 @@ int set_identical_blocks( int n, int identical_blocks_in );
 */
 int set_identical_blocks( std::map<int, int> identical_blocks_in );
 
+
+/**
+@brief Create a clone of the present class.
+@return Return with a pointer pointing to the cloned object.
+*/
+N_Qubit_Decomposition* clone();
 
 };
