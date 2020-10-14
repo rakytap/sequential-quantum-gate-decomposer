@@ -479,33 +479,10 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
     ret->set_max_layer_num( max_layer_num );
     ret->set_iteration_loops( iteration_loops );
 
-    for ( std::vector<Operation*>::iterator it=operations.begin(); it != operations.end(); ++it ) {
-        Operation* op = *it;
-
-        if (op->get_type() == CNOT_OPERATION) {
-            CNOT* cnot_op = static_cast<CNOT*>( op );
-            CNOT* cnot_op_cloned = cnot_op->clone();
-            Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
-            ret->add_operation_to_end( op_cloned );
-        }
-        else if (op->get_type() == U3_OPERATION) {
-            U3* u3_op = static_cast<U3*>( op );
-            U3* u3_op_cloned = u3_op->clone();
-            Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
-            ret->add_operation_to_end( op_cloned );
-        }
-        else if (op->get_type() == BLOCK_OPERATION) {
-            Operation_block* block_op = static_cast<Operation_block*>( op );
-            Operation_block* block_op_cloned = block_op->clone();
-            Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
-            ret->add_operation_to_end( op_cloned );
-        }
-        else if (op->get_type() == GENERAL_OPERATION) {
-            Operation* op_cloned = op->clone();
-            ret->add_operation_to_end( op_cloned );
-        }
+    if ( extract_operations(static_cast<Operation_block*>(ret)) != 0 ) {
+        printf("Sub_Matrix_Decomposition::clone(): extracting operations was not succesfull\n");
+        exit(-1);
     }
-
 
     return ret;
 

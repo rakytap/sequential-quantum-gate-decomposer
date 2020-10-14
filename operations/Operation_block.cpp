@@ -691,6 +691,9 @@ void Operation_block::set_qbit_num( int qbit_num_in ) {
             Operation_block* block_op = static_cast<Operation_block*>( op );
             block_op->set_qbit_num( qbit_num_in );
         }
+        else if (op->get_type() == GENERAL_OPERATION) {
+            op->set_qbit_num( qbit_num_in );
+        }
     }
 }
 
@@ -701,7 +704,28 @@ void Operation_block::set_qbit_num( int qbit_num_in ) {
 */
 Operation_block* Operation_block::clone() {
 
+    // creatign new instance of class Operation_block
     Operation_block* ret = new Operation_block( qbit_num );
+
+    // extracting the operations from the current class
+    if (extract_operations( ret ) != 0 ) {
+        printf("Operation_block::clone(): extracting operations was not succesfull\n");
+        exit(-1);
+    };
+
+    return ret;
+
+}
+
+
+/**
+@brief Call to extract the operations stored in the class.
+@param op_block An instance of Operation_block class in which the operations will be stored. (The current operations will be erased)
+@return Return with 0 on success.
+*/
+int Operation_block::extract_operations( Operation_block* op_block ) {
+
+    op_block->release_operations();
 
     for ( std::vector<Operation*>::iterator it=operations.begin(); it != operations.end(); ++it ) {
         Operation* op = *it;
@@ -710,29 +734,28 @@ Operation_block* Operation_block::clone() {
             CNOT* cnot_op = static_cast<CNOT*>( op );
             CNOT* cnot_op_cloned = cnot_op->clone();
             Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
-            ret->add_operation_to_end( op_cloned );
+            op_block->add_operation_to_end( op_cloned );
         }
         else if (op->get_type() == U3_OPERATION) {
             U3* u3_op = static_cast<U3*>( op );
             U3* u3_op_cloned = u3_op->clone();
             Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
-            ret->add_operation_to_end( op_cloned );
+            op_block->add_operation_to_end( op_cloned );
         }
         else if (op->get_type() == BLOCK_OPERATION) {
             Operation_block* block_op = static_cast<Operation_block*>( op );
             Operation_block* block_op_cloned = block_op->clone();
             Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
-            ret->add_operation_to_end( op_cloned );
+            op_block->add_operation_to_end( op_cloned );
         }
         else if (op->get_type() == GENERAL_OPERATION) {
             Operation* op_cloned = op->clone();
-            ret->add_operation_to_end( op_cloned );
+            op_block->add_operation_to_end( op_cloned );
         }
 
     }
 
-
-    return ret;
+    return 0;
 
 }
 

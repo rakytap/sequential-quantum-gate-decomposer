@@ -43,13 +43,13 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         matrix_size = Power_of_2(qbit_num);
         // A string describing the type of the operation
         type = U3_OPERATION;
-        
+
 
         if (target_qbit_in >= qbit_num) {
             printf("The index of the target qubit is larger than the number of qubits");
             throw "The index of the target qubit is larger than the number of qubits";
         }
-        // The index of the qubit on which the operation acts (target_qbit >= 0) 
+        // The index of the qubit on which the operation acts (target_qbit >= 0)
         target_qbit = target_qbit_in;
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
         control_qbit = -1;
@@ -63,9 +63,9 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         // logical value indicating whether the matrix creation takes an argument phi
         phi = phi_in;
         // logical value indicating whether the matrix creation takes an argument lambda
-        lambda = lambda_in;    
+        lambda = lambda_in;
 
-       
+
         // The number of free parameters
         if (theta && !phi && lambda) {
             parameter_num = 2;
@@ -74,27 +74,27 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         else if (theta && phi && lambda) {
             parameter_num = 3;
         }
-            
+
         else if (!theta && phi && lambda) {
             parameter_num = 2;
         }
-           
+
         else if (theta && phi && !lambda) {
             parameter_num = 2;
         }
-            
-        else if (!theta && !phi && lambda) { 
+
+        else if (!theta && !phi && lambda) {
             parameter_num = 1;
         }
-             
+
         else if (!theta && phi && !lambda) {
             parameter_num = 1;
         }
-        
+
         else if (theta && !phi && !lambda) {
             parameter_num = 1;
         }
-            
+
         else {
             parameter_num = 0;
         }
@@ -155,7 +155,7 @@ QGD_Complex16* U3::matrix( const double* parameters ) {
 @return Returns with 0 on success.
 */
 int U3::matrix( const double* parameters, QGD_Complex16* U3_matrix ) {
- 
+
         if (theta && !phi && lambda) {
             // function handle to calculate the operation on the target qubit
             return composite_u3_Theta_Lambda( parameters, U3_matrix );
@@ -165,32 +165,32 @@ int U3::matrix( const double* parameters, QGD_Complex16* U3_matrix ) {
             // function handle to calculate the operation on the target qubit
             return composite_u3_Theta_Phi_Lambda( parameters, U3_matrix );
         }
-            
+
         else if (!theta && phi && lambda) {
             // function handle to calculate the operation on the target qubit
             return composite_u3_Phi_Lambda( parameters, U3_matrix );
         }
-           
+
         else if (theta && phi && !lambda) {
             // function handle to calculate the operation on the target qubit
             return composite_u3_Theta_Phi( parameters, U3_matrix );
         }
-            
-        else if (!theta && !phi && lambda) { 
+
+        else if (!theta && !phi && lambda) {
             // function handle to calculate the operation on the target qubit
             return composite_u3_Lambda( parameters, U3_matrix );
         }
-             
+
         else if (!theta && phi && !lambda) {
             // function handle to calculate the operation on the target qubit
             return composite_u3_Phi( parameters, U3_matrix );
         }
-        
+
         else if (theta && !phi && !lambda) {
             // function handle to calculate the operation on the target qubit
             return composite_u3_Theta( parameters, U3_matrix );
         }
-            
+
         else {
             return composite_u3(0, 0, 0, U3_matrix );
         }
@@ -199,10 +199,10 @@ int U3::matrix( const double* parameters, QGD_Complex16* U3_matrix ) {
 
 }
 
-        
-        
-        
-/**   
+
+
+
+/**
 @brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
 @param parameters An array containing the parameters of the U3 operation.
 @param U3_matrix A pointer to the preallocated array of the operation matrix.
@@ -211,8 +211,8 @@ int U3::matrix( const double* parameters, QGD_Complex16* U3_matrix ) {
 int U3::composite_u3_Theta_Phi_Lambda( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( parameters[0], parameters[1], parameters[2], U3_matrix );
 }
-        
-/**   
+
+/**
 @brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
 @param parameters An array containing the parameters of the U3 operation.
 @param U3_matrix A pointer to the preallocated array of the operation matrix.
@@ -221,8 +221,8 @@ int U3::composite_u3_Theta_Phi_Lambda( const double* parameters, QGD_Complex16* 
 int U3::composite_u3_Phi_Lambda( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( 0, parameters[0], parameters[1], U3_matrix );
 }
-        
-/**   
+
+/**
 @brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
 @param parameters An array containing the parameters of the U3 operation.
 @param U3_matrix A pointer to the preallocated array of the operation matrix.
@@ -231,8 +231,8 @@ int U3::composite_u3_Phi_Lambda( const double* parameters, QGD_Complex16* U3_mat
 int U3::composite_u3_Theta_Lambda( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( parameters[0], 0, parameters[1], U3_matrix );
 }
-        
-/**   
+
+/**
 @brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
 @param parameters An array containing the parameters of the U3 operation.
 @param U3_matrix A pointer to the preallocated array of the operation matrix.
@@ -241,8 +241,8 @@ int U3::composite_u3_Theta_Lambda( const double* parameters, QGD_Complex16* U3_m
 int U3::composite_u3_Theta_Phi( const double* parameters, QGD_Complex16* U3_matrix ){
         return composite_u3( parameters[0], parameters[1], 0, U3_matrix );
 }
-        
-/**   
+
+/**
 @brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
 @param parameters An array containing the parameters of the U3 operation.
 @param U3_matrix A pointer to the preallocated array of the operation matrix.
@@ -251,8 +251,8 @@ int U3::composite_u3_Theta_Phi( const double* parameters, QGD_Complex16* U3_matr
 int U3::composite_u3_Lambda( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( 0, 0, parameters[0], U3_matrix );
 }
-        
-/**   
+
+/**
 @brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
 @param parameters An array containing the parameters of the U3 operation.
 @param U3_matrix A pointer to the preallocated array of the operation matrix.
@@ -261,8 +261,8 @@ int U3::composite_u3_Lambda( const double* parameters, QGD_Complex16* U3_matrix 
 int U3::composite_u3_Phi( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( 0, parameters[0], 0, U3_matrix );
 }
-        
-/**   
+
+/**
 @brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
 @param parameters An array containing the parameters of the U3 operation.
 @param U3_matrix A pointer to the preallocated array of the operation matrix.
@@ -271,8 +271,8 @@ int U3::composite_u3_Phi( const double* parameters, QGD_Complex16* U3_matrix ) {
 int U3::composite_u3_Theta( const double* parameters, QGD_Complex16* U3_matrix ) {
         return composite_u3( parameters[0], 0, 0, U3_matrix );
 }
-        
-/**    
+
+/**
 @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
 @param Theta Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.
@@ -290,7 +290,7 @@ QGD_Complex16* U3::composite_u3(double Theta, double Phi, double Lambda ) {
 
 }
 
-/**    
+/**
 @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
 @param Theta Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.
@@ -308,7 +308,6 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, QGD_Complex16* U3_
         calc_one_qubit_u3(Theta, Phi, Lambda );
 
         // setting the operation elements
-        #pragma omp parallel for
         for(int idx = 0; idx < matrix_size/2; ++idx)
         {
             int element_index;
@@ -353,7 +352,7 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, QGD_Complex16* U3_
 @brief Determine the base indices corresponding to the target qubit states |0> and |1>
 */
 void U3::determine_base_indices() {
-        
+
 
         // fre the previously allocated memories
         if ( indexes_target_qubit_1 != NULL ) {
@@ -370,7 +369,7 @@ void U3::determine_base_indices() {
 
         int target_qbit_power = Power_of_2(target_qbit);
         int indexes_target_qubit_1_idx = 0;
-        int indexes_target_qubit_0_idx = 0;      
+        int indexes_target_qubit_0_idx = 0;
 
         // generate the reordered  basis set
         for(int idx = 0; idx<matrix_size; ++idx)
@@ -383,7 +382,7 @@ void U3::determine_base_indices() {
             else {
                 indexes_target_qubit_1[indexes_target_qubit_1_idx] = idx;
                 indexes_target_qubit_1_idx++;
-            }            
+            }
         }
 
         /*
@@ -450,8 +449,8 @@ bool U3::is_lambda_parameter() {
 }
 
 
-    
-/**   
+
+/**
 @brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single qbit space. The calculated matrix is stored in the attribute u3_1qbit
 @param Theta Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.
@@ -476,7 +475,7 @@ int U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda ) {
     u3_1qbit[3].real = cos(Phi+Lambda)*cos_theta;
     u3_1qbit[3].imag = sin(Phi+Lambda)*cos_theta;
 
-        
+
     return 0;
 
 }
@@ -487,21 +486,21 @@ int U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda ) {
 @return Return with a pointer pointing to the cloned object
 */
 U3* U3::clone() {
-  
+
     U3* ret = new U3(qbit_num, target_qbit, theta, phi, lambda);
 
     if ( parameters != NULL ) {
         ret->set_optimized_parameters(parameters[0], parameters[1], parameters[2]);
     }
- 
-    
-    return ret;       
-
-}          
 
 
+    return ret;
 
-/**  
+}
+
+
+
+/**
 @brief Call to set the final optimized parameters of the operation.
 @param Theta Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.

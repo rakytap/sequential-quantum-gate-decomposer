@@ -223,8 +223,11 @@ void  N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decomp
                 Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
                 add_operation_to_front( op_cloned );
             }
-
-
+            else if (op->get_type() == GENERAL_OPERATION) {
+                Operation* op_cloned = op->clone();
+                op_cloned->set_qbit_num( qbit_num );
+                add_operation_to_front( op_cloned );
+            }
         }
 
 }
@@ -279,7 +282,6 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
 
                 // subtract corner element
                 QGD_Complex16 corner_element = submatrix_prod[0];
-                #pragma omp parallel for
                 for (int row_idx=0; row_idx<submatrix_size; row_idx++) {
                     submatrix_prod[row_idx*submatrix_size+row_idx].real = submatrix_prod[row_idx*submatrix_size+row_idx].real - corner_element.real;
                     submatrix_prod[row_idx*submatrix_size+row_idx].imag = submatrix_prod[row_idx*submatrix_size+row_idx].imag - corner_element.imag;
@@ -445,13 +447,11 @@ void N_Qubit_Decomposition::solve_layer_optimization_problem( int num_of_paramet
                 memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
                 gsl_multimin_fdfminimizer_free (s);
 
-                #pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
                 }
             }
             else {
-                #pragma omp parallel for
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
                 }
@@ -800,7 +800,6 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
 
         // construct the Two-qubit submatrix from the reordered matrix
         QGD_Complex16* submatrix = (QGD_Complex16*)qgd_calloc( 16, sizeof(QGD_Complex16), 64 );
-        #pragma omp parallel for
         for ( int element_idx=0; element_idx<16; element_idx++) {
             int col_idx = element_idx % 4;
             int row_idx = int((element_idx-col_idx)/4);
@@ -954,33 +953,10 @@ N_Qubit_Decomposition* N_Qubit_Decomposition::clone() {
     ret->set_max_layer_num( max_layer_num );
     ret->set_iteration_loops( iteration_loops );
 
-    for ( std::vector<Operation*>::iterator it=operations.begin(); it != operations.end(); ++it ) {
-        Operation* op = *it;
-
-        if (op->get_type() == CNOT_OPERATION) {
-            CNOT* cnot_op = static_cast<CNOT*>( op );
-            CNOT* cnot_op_cloned = cnot_op->clone();
-            Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
-            ret->add_operation_to_end( op_cloned );
-        }
-        else if (op->get_type() == U3_OPERATION) {
-            U3* u3_op = static_cast<U3*>( op );
-            U3* u3_op_cloned = u3_op->clone();
-            Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
-            ret->add_operation_to_end( op_cloned );
-        }
-        else if (op->get_type() == BLOCK_OPERATION) {
-            Operation_block* block_op = static_cast<Operation_block*>( op );
-            Operation_block* block_op_cloned = block_op->clone();
-            Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
-            ret->add_operation_to_end( op_cloned );
-        }
-        else if (op->get_type() == GENERAL_OPERATION) {
-            Operation* op_cloned = op->clone();
-            ret->add_operation_to_end( op_cloned );
-        }
+    if ( extract_operations(static_cast<Operation_block*>(ret)) != 0 ) {
+        printf("N_Qubit_Decomposition::clone(): extracting operations was not succesfull\n");
+        exit(-1);
     }
-
 
     return ret;
 
