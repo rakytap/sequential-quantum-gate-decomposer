@@ -13,6 +13,10 @@ EXTRA_DIST = common/include/common.h \
              decomposition/include/Decomposition_Base.h \
              decomposition/include/N_Qubit_Decomposition.h \
              decomposition/include/Sub_Matrix_Decomposition.h \
+             decomposition/include/Functor_Cost_Function_Gradient.h \
+             decomposition/include/Functor_Get_Operation_Products.h \
+             decomposition/include/N_Qubit_Decomposition_Cost_Function.h \
+             decomposition/include/Sub_Matrix_Decomposition_Cost_Function.h \
              random_unitary/include/Random_Unitary.h \
              README.md \
              example.py \
