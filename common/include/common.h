@@ -31,8 +31,12 @@ extern "C"
 }
 #endif
 
-#include <omp.h>
+#ifdef TBB
 #include <tbb/tbb.h>
+#else
+#include <omp.h>
+#endif // TBB
+
 #include <stdlib.h>
 #include <string>
 #include <stdio.h>
@@ -91,7 +95,7 @@ struct gates_num {
 };
 
 
-/** 
+/**
 @brief Allocate aligned memory in a portable way. Memory allocated with aligned alloc *MUST* be freed using aligned_free. The allocated memory is initialized to zero.
 @param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
 @param size The number of bytes to allocate.
@@ -100,7 +104,7 @@ struct gates_num {
 */
 void *aligned_alloc(size_t alignment, size_t size, bool zero);
 
-/** 
+/**
 @brief Reallocate aligned memory in a portable way. Memory allocated with aligned realloc *MUST* be freed using aligned_free. The reallocation is done by either:
 a) expanding or contracting the existing area pointed to by aligned_ptr, if possible. The contents of the area remain unchanged up to the lesser of the new and old sizes. If the area is expanded, the contents of the new part of the array is set to zero.
 b) allocating a new memory block of size new_size bytes, copying memory area with size equal the lesser of the new and the old sizes, and freeing the old block.
@@ -241,7 +245,7 @@ int reduce_zgemm( std::vector<QGD_Complex16*> mtxs, QGD_Complex16* C, int matrix
 @param matrix_size The number rows in the matrix
 @param scalar The complex scalar to be subtracked from the diagonal elements of the matrix
 */
-void subtract_diag( QGD_Complex16* & mtx,  int matrix_size, QGD_Complex16 scalar ); 
+void subtract_diag( QGD_Complex16* & mtx,  int matrix_size, QGD_Complex16 scalar );
 
 
 /**

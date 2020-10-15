@@ -83,8 +83,10 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
         printf("***************************************************************\n\n\n");
     }
 
+#ifdef TBB
     //initialize TBB threads
     tbb::task_scheduler_init init;
+#endif
 
     //measure the time for the decompositin
     clock_t start_time = time(NULL);

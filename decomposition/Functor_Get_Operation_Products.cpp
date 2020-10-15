@@ -48,14 +48,16 @@ std::vector<QGD_Complex16*> Decomposition_Base::get_operation_products(double* p
         }
     }
 
+#ifdef TBB
     // calculate the matrices of the individual block operations
     tbb::parallel_for(0, num_of_operations, 1, functor_get_operation_matrices( parameters, operations_it, operation_mtxs, num_of_operations ));
-/*
+#else
     functor_get_operation_matrices tmp = functor_get_operation_matrices( parameters, operations_it, operation_mtxs, num_of_operations );
+    #pragma omp parallel for
     for (int idx=0; idx<num_of_operations; idx++) {
         tmp(idx);
     }
-*/
+#endif // TBB
     // calculate the operations products
     QGD_Complex16* operation_product_mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
     for (int idx=1; idx<num_of_operations; idx++) {

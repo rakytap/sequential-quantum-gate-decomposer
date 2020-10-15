@@ -45,22 +45,22 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
     int element_num = matrix_size*matrix_size;
     QGD_Complex16* Umtx = (QGD_Complex16*)qgd_calloc(element_num,sizeof(QGD_Complex16), 64);
 
-    #pragma omp parallel for    
+    #pragma omp parallel for
     for(int idx = 0; idx < element_num; idx++) {
         Umtx[idx].real = mtx_real[idx];
         Umtx[idx].imag = mtx_imag[idx];
     }
-    
+
     // setting the initial guess type
     guess_type initial_guess;
     if ( initial_guess_num==0 ) {
-        initial_guess = ZEROS;        
+        initial_guess = ZEROS;
     }
     else if ( initial_guess_num==1 ) {
-        initial_guess = RANDOM;        
+        initial_guess = RANDOM;
     }
     else if ( initial_guess_num==2 ) {
-        initial_guess = CLOSE_TO_ZERO;        
+        initial_guess = CLOSE_TO_ZERO;
     }
     else {
         printf("Wrong initial guess\n");
@@ -103,7 +103,7 @@ int iface_delete_N_Qubit_Decomposition( void* ptr ) {
     QGD_Complex16* Umtx = instance->get_Umtx();
     qgd_free( Umtx );
     Umtx = NULL;
-    
+
     delete instance;
 
     return 0;
@@ -196,7 +196,7 @@ int iface_get_operation( void* ptr, int n, int &op_type, int &target_qbit, int &
     op_type = type;
 
     return ret;
- 
+
 
 }
 

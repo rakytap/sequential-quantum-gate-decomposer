@@ -16,14 +16,16 @@ void N_Qubit_Decomposition::optimization_problem_grad( const gsl_vector* paramet
 
     int parameter_num_loc = instance->get_parameter_num();
 
+#ifdef TBB
     // calculate the gradient components through TBB parallel for
     tbb::parallel_for(0, parameter_num_loc, 1, functor_sub_optimization_grad<N_Qubit_Decomposition>( parameters, instance, grad, f0 ));
-/*
+#else
     functor_sub_optimization_grad<N_Qubit_Decomposition> tmp = functor_sub_optimization_grad<N_Qubit_Decomposition>( parameters, instance, grad, f0 );
+    #pragma omp parallel for
     for (int idx=0; idx<parameter_num_loc; idx++) {
         tmp(idx);
     }
-*/
+#endif // TBB
 
 }
 
@@ -41,14 +43,16 @@ void Sub_Matrix_Decomposition::optimization_problem_grad( const gsl_vector* para
 
     int parameter_num_loc = instance->get_parameter_num();
 
+#ifdef TBB
     // calculate the gradient components through TBB parallel for
     tbb::parallel_for(0, parameter_num_loc, 1, functor_sub_optimization_grad<Sub_Matrix_Decomposition>( parameters, instance, grad, f0 ));
-/*
+#else
     functor_sub_optimization_grad<Sub_Matrix_Decomposition> tmp = functor_sub_optimization_grad<Sub_Matrix_Decomposition>( parameters, instance, grad, f0 );
+    #pragma omp parallel for
     for (int idx=0; idx<parameter_num_loc; idx++) {
         tmp(idx);
     }
-*/
+#endif
 
 }
 
