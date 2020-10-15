@@ -50,8 +50,6 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
 
     // number ofcolumns in the submatrices
     int submatrix_size = matrix_size/2;
-    // number of elements in the matrix of submatrix products
-    int element_num = submatrix_size*submatrix_size;
 
 
     // array to store the sumbatrices
@@ -131,7 +129,6 @@ functor_extract_submatrices::functor_extract_submatrices( QGD_Complex16* matrix_
 void functor_extract_submatrices::operator()( int submtx_idx ) const {
 
     // number of submatrices
-    int submatrices_num = 4;
     int submatrices_num_row = 2;
 
     // number ofcolumns in the submatrices
