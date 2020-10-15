@@ -109,6 +109,7 @@ QGD_Complex16* Operation_block::matrix( const double* parameters  ) {
     // preallocate array for the composite u3 operation
     QGD_Complex16* block_matrix = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
+    // determine the matrix representation of the operations
     matrix( parameters, block_matrix  );
 
     return block_matrix;

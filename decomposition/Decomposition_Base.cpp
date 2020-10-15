@@ -20,6 +20,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /*! \file Decomposition_Base.cpp
     \brief Class containing basic methods for the decomposition process.
 */
+
 #include "qgd/Decomposition_Base.h"
 
 
@@ -657,72 +658,6 @@ bool Decomposition_Base::check_optimization_solution() {
 
 }
 
-/**
-@brief Calculate the list of gate operation matrices such that the i>0-th element in the result list is the product of the operations of all 0<=n<i operations from the input list and the 0th element in the result list is the identity.
-@param parameters An array containing the parameters of the U3 operations.
-@param operations_it An iterator pointing to the forst operation.
-@param num_of_operations The number of operations involved in the calculations
-@return Returns with a vector of the product matrices.
-*/
-std::vector<QGD_Complex16*> Decomposition_Base::get_operation_products(double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations) {
-
-
-    // construct the list of matrix representation of the gates
-    std::vector<QGD_Complex16*> operation_mtxs;
-    // preallocate memory for the operation products
-    operation_mtxs.reserve(num_of_operations);
-
-    for ( int idx=0; idx<num_of_operations; idx++) {
-        operation_mtxs.push_back( (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64) );
-    }
-
-    QGD_Complex16* operation_mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
-
-    for (int idx=0; idx<num_of_operations; idx++) {
-
-        Operation* operation = *operations_it;
-
-        if (operation->get_type() == CNOT_OPERATION ) {
-            CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            cnot_operation->matrix(operation_mtx);
-        }
-        else if (operation->get_type() == GENERAL_OPERATION ) {
-            operation->matrix(operation_mtx);
-        }
-        else if (operation->get_type() == U3_OPERATION ) {
-            U3* u3_operation = static_cast<U3*>(operation);
-            u3_operation->matrix(parameters, operation_mtx);
-            parameters = parameters + u3_operation->get_parameter_num();
-        }
-        else if (operation->get_type() == BLOCK_OPERATION ) {
-            Operation_block* block_operation = static_cast<Operation_block*>(operation);
-            block_operation->matrix(parameters, operation_mtx);
-            parameters = parameters + block_operation->get_parameter_num();
-        }
-
-        if (idx == 0) {
-            memcpy( operation_mtxs[idx], operation_mtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-        }
-        else {
-            apply_operation(operation_mtxs[idx-1], operation_mtx, operation_mtxs[idx]);
-        }
-
-
-        operations_it++;
-    }
-
-    if (operation_mtxs.size()==0) {
-        create_identity(operation_mtx, matrix_size);
-        operation_mtxs.push_back( operation_mtx );
-    }
-    else {
-        qgd_free(operation_mtx);
-        operation_mtx = NULL;
-    }
-
-    return operation_mtxs;
-
-}
 
 /**
 @brief Call to retrive a pointer to the unitary to be transformed

@@ -71,7 +71,7 @@ functor_cost_fnc::functor_cost_fnc( QGD_Complex16* matrix_in, int matrix_size_in
 
     matrix = matrix_in;
     matrix_size = matrix_size_in;
-    partial_cost_functions = partial_cost_functions_in; 
+    partial_cost_functions = partial_cost_functions_in;
     partial_cost_fnc_num = partial_cost_fnc_num_in;
 }
 
@@ -110,7 +110,7 @@ void functor_cost_fnc::operator()( int row_idx ) const {
          partial_cost_function = partial_cost_function + matrix[idx].real*matrix[idx].real + matrix[idx].imag*matrix[idx].imag;
     }
 
-    // storing the calculated partial cost funciton
+    // storing the calculated partial cost function
     partial_cost_functions[row_idx] = partial_cost_function;
 }
 
