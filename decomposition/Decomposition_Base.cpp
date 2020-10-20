@@ -90,9 +90,6 @@ Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in,
     // auxiliary variable storing the transformed matrix
     transformed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
-    // The number of threads for the parallel optimization (The remaining threads are used for nested parallelism at matrix multiplications)
-    num_threads = 1;
-
 }
 
 /**
@@ -1124,22 +1121,3 @@ double Decomposition_Base::get_decomposition_error( ) {
 
 }
 
-
-/**
-@brief Call to set the number of threads for the parallel optimization (The remaining threads are used for nested parallelism at matrix multiplications)
-@param num_threads_in the number of threads for the parallel optimization
-*/
-void Decomposition_Base::set_num_threads_optimization( int num_threads_in ) {
-
-    num_threads = num_threads_in;
-}
-
-
-/**
-@brief Call to get the number of threads for the parallel optimization (The remaining threads are used for nested parallelism at matrix multiplications)
-@return Returns with the number of threads for the parallel optimization
-*/
-int Decomposition_Base::get_num_threads_optimization() {
-
-    return num_threads;
-}

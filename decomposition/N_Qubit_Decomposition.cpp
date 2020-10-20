@@ -107,9 +107,6 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
     // setting the iteration loops in each step of the optimization process
     cSub_decomposition->set_iteration_loops( iteration_loops );
 
-    // setting the number of threads for optimization
-    cSub_decomposition->set_num_threads_optimization( num_threads );
-
     // The maximal error of the optimization problem
     //cSub_decomposition->optimization_tolerance = self.optimization_tolerance
 

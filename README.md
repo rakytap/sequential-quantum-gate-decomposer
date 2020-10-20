@@ -7,7 +7,6 @@ The QGD package can be built with both Intel and GNU compilers, and link against
 (So far the CLBAS libraries of the GNU Scientific Library and the Intel MKL packages were tested.)
 In the following we briefly summarize the steps to build, install and use the QGD package. 
 
-The project was supported ... HUNQT ...
 
 ### Dependencies
 
@@ -20,8 +19,10 @@ The dependencies necessary to compile and build the QGD package are the followin
 * [libtool](https://www.gnu.org/software/libtool/)
 * [make](https://www.gnu.org/software/make/)
 * [GNU Scientific Library](https://www.gnu.org/software/gsl/doc/html/index.html) (>=2.5)
-* C++/C [Intel](https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html) or [GNU](https://gcc.gnu.org/) compiler
+* C++/C [Intel](https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html) (>=14.0.1) or [GNU](https://gcc.gnu.org/) (>=v4.4.7) compiler
+* [OpenMP](https://www.openmp.org/) or [TBB](https://github.com/oneapi-src/oneTBB) library
 * [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html) (optional)
+* [Doxygen](https://www.doxygen.nl/index.html) (optional)
 
 The Python interface of QGD was developed and tested with Python 3.6 and 3.7.
 The QGD Python interface needs the following packages to be installed on the system:
@@ -57,7 +58,7 @@ $ make install
 
 ### Download the Quantum Gate Decomposer package
 
-The developer version Quantum Gate Decomposer package can be downloaded from github repository [https://github.com/rakytap/quantum-gate-decomposer/tree/C++](https://github.com/rakytap/quantum-gate-decomposer/tree/C++).
+The developer version Quantum Gate Decomposer package can be downloaded from github repository [https://github.com/rakytap/quantum-gate-decomposer/tree/master](https://github.com/rakytap/quantum-gate-decomposer/tree/master).
 After the downloaded package is extracted into the directory **path/to/qgdsource** (which would be the path to the source code of the QGD package), one can proceed to the compilation steps described in the next section.
 
 ### How to deploy the Quantum Gate Decomposer package
@@ -65,34 +66,51 @@ After the downloaded package is extracted into the directory **path/to/qgdsource
 Similarly to GNU Scientific Library, the QGD package is also equipped with automake tools to ease the compilation and the deployment of the package.
 To ensure that QGD package would find the necessary libraries and header files during compilation time it is advised to define the following environment variables:
 
-$ export GSL_LIB_DIR=path/to/gsl/lib64
+$ export GSL_LIB_DIR=path/to/gsl/lib(64)
 
 $ export GSL_INC_DIR=path/to/gsl/include
 
-When using Intel compiler equipped with Intel MKL on a HPC, the compiler can find his way to the MKL libraries automatically through the environment variable MKLROOT which points to the root directory of the MKL package. 
+When using Intel compiler equipped with Intel MKL, the compiler may find his way to the MKL libraries automatically through the environment variable MKLROOT which points to the root directory of the MKL package. 
 If the Intel environment variables are not set, they can be initialized by the shell command:
 
 $ source /opt/intel/composerxe/bin/compilervars.sh intel64
 
 where **/opt/intel/composerxe** is the path to the Intel compiler package location which might be different from the given one.
-(This step can be omitted when using GNU compiler, or when we do not have intention to use Intel MKL)
+(This step can be omitted when using GNU compiler, or when we do not have intention to use Intel MKL or the Intel TBB library)
+
+The QGD package is parallelized via both OpenMP and TBB libraries. At compilation time it is possible to chose between them: to use TBB parallelization the 
+--with-tbb flag should be passed to the configuration script. If this flag is missing OpenMP is chosen instead of TBB. 
+The following tips might help to choose between the two parallelization environments:
+* OpenMP is usually part of the base C++ compiler
+* Intel TBB combined with Intel MKL gives the most powerful combination.
+* If Intel TBB is not present in the system, it can be easily installed via the apt utility (sudo apt install libtbb-dev) or it can be downloaded and built from 
+[https://github.com/oneapi-src/oneTBB](https://github.com/oneapi-src/oneTBB)
+* TBB automatically determines the best distribution of recourses. (This feature comes very handy in codes containing nested parallelism like the QGD package.)
+* The nested OpenMP threads can be set by hand in the QGD package
+If TBB parallelization is chosen, one should supply also the necessary environment variables pointing to the header and lib files of the TBB package. For newer
+Intel compilers the TBB package is part of the Intel compiler package, similarly to the MKL package. If the TBB library is located at non-standrad path, then setting the
+
+$ export TBB_LIB_DIR=path/to/TBB/lib(64)
+
+$ export TBB_INC_DIR=path/to/TBB/include
+
+environment variables are sufficient for succesfull compilation. 
 After the basic environment variables are set, the compilation can be configured by the command executed in the source directory **path/to/qgdsource** of the QGD package:
 
-$ ./configure --prefix=path/to/qgd CC=gcc CXX=g++
+$ ./configure --prefix=path/to/qgd --with-tbb CXX=g++
 
-where **path/to/qgd** is the installation path of the Quantum Gate Decomposer package.
+where **path/to/qgd** is the installation path of the Quantum Gate Decomposer package. (The **--with-tbb** flag is optional)
 
 The installation directory of the compiled QGD package is given by **--prefix=path/to/qgd** (which is different from the directory path of the source files given by **path/to/qgdsource**).
 The user should have read and write permissions on the path **path/to/qgd** (which can be for example /home/username/qgd).
-Another optional flag **--enable-ffast-math** enables the compiler's floating-point optimization (which is usually enabled by default in Intel compilers settings). 
+Another optional flag **--enable-ffast-math** enables the compiler's agile floating-point optimization. 
 While in general this optimization is considered to be dangerous, the runtime performance might be significantly increased due to this optimization. 
 Try to compile without and with this flag and compare the performance and stability of the resulted binaries (for further information see section **How to use**).
-We notice, that the QGD Python interface does not fully support this optimization resulting in lower performance than a standalone C applications.
 On the other hand, if one choses Intel compiler to built the QGD package, the following configuration settings should be invoked:
 
-$ ./configure --prefix=path/to/qgd --with-mkl CC=icc CXX=icpc
+$ ./configure --prefix=path/to/qgd --with-mkl --with-tbb CXX=icpc
 
-The **--with-mkl** flag sets the appropriate linking of the QGD package with the Intel MKL package.
+The **--with-mkl** flag sets the appropriate linking of the QGD package with the Intel MKL package. The **--with-tbb** flag is optional
 If the flag is missing from the configuration than the CBLAS library of the GNU Scientific Library is used for linear algebra operations.
 After the successful configuration the QGD package can be compiled by the shell command executed in the directory **path/to/qgdsource**:
 
@@ -138,8 +156,7 @@ The QGD API enables the extension of the capabilities of the QGD packages into f
 The QGD header files needed for the compilation of the project are provided in the directory **path/to/qgd/include**. 
 The compiled object files should than be linked against the static or shared QGD libraries libqgd.a or libqgd.so, respectively,
 located in the directory **path/to/qgd/lib64**.
-In order to exploit the speedup comming from the floating point optimization, we notice that Intel's compiler (usually) use this optimization by default,
-but when linking with GNU compiler, the -ffast-math option must be append when linking against the QGD API library is done.
+In order to exploit the speedup comming from agile floating point optimization the **-ffast-math** option must be append when linking against the QGD API library is done.
 The full documentation of the QGD API can be accessed by a Doxygen manual which can be accessed and recreated by steps described in the following section
 
 ## Doxygen manual

@@ -55,7 +55,7 @@ public:
 /**
 @brief Constructor of the class.
 @param matrix_in Arry containing the input matrix
-@param matrix_size The number rows in the matrix.
+@param matrix_size_in The number rows in the matrix.
 @param partial_cost_functions_in Preallocated array storing the calculated partial cost functions.
 @param partial_cost_fnc_num_in The number of partial cost function values (equal to the number of distinct submatrix products.)
 @return Returns with the instance of the class.

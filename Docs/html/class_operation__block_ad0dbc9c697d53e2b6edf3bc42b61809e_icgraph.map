@@ -1,9 +1,8 @@
 <map id="Operation_block::reorder_qubits" name="Operation_block::reorder_qubits">
-<area shape="rect" id="node1" title="Call to reorder the qubits in the matrix of the operation." alt="" coords="860,57,1023,98"/>
-<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e." alt="" coords="649,57,812,98"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e." alt="" coords="439,27,601,69"/>
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary." alt="" coords="228,57,391,98"/>
-<area shape="rect" id="node5" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates." alt="" coords="67,5,118,32"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices." alt="" coords="11,57,174,98"/>
-<area shape="rect" id="node7" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary." alt="" coords="5,123,180,149"/>
+<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="216,57,379,98"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="427,27,589,69"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="637,57,800,98"/>
+<area shape="rect" id="node5" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="910,5,961,32"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="854,57,1017,98"/>
+<area shape="rect" id="node7" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="848,123,1023,149"/>
 </map>

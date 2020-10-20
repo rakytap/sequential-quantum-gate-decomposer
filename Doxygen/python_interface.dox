@@ -25,12 +25,14 @@ The Python interface of QGD is developed using [Ctypes](https://docs.python.org/
 native C, and only the input and final output parameters are casted between C and Python types.
 
 In the forthcoming sections we provide some tricks and best practices to use the QGD Python interface. 
-The QGD Python interface can be tested by running the **example.py** script right in the installation directory of the QGD package.
-(To install the QGD package follow the manual at @index).
+The QGD Python interface can be tested by running the **example.py** script right in the installation directory of the QGD package:
+(To install the QGD package follow the manual at @index. 
+If the QGD package was compiled with OpenMP than one can also externally set the number of logical threads by the environment variable OMP_NUM_THREADS.)
 
 <div class="snippet">
 $ cd path/to/qgd && python3 example.py
 </div>
+
 
 The example solves two problems:
 - the decomposition of a general three-qubit unitary
@@ -136,12 +138,5 @@ Finally, we can export a Qiskit compatible quantum circuit via the QGD Python in
 
 The documentation of Qiskit, which is needed to fully understand the above code snippet, can be found [here](https://qiskit.org/documentation/).
  
-# Single- vs multi-threaded decomposition
-
-We notice that running the decomposition of smaller unitaries (i.e. less than 6 qubits) on multiple threads leads to performance loss. 
-To limit the QGD to run on a single thread one need to set the number of OpenMP threads to one by the environment variable 
-[OMP_NUM_THREADS](https://computing.llnl.gov/tutorials/openMP/?newwindow=true#EnvironmentVariables).
-When it comes to the decomposition of larges unitaries (i.e. more than 5 qubits), the decomposition starts to benefit from multithreaded settings.
-
  @} 
 */

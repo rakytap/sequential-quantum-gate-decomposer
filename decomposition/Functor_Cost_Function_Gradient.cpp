@@ -3,6 +3,11 @@
 #include "qgd/N_Qubit_Decomposition.h"
 
 
+/*! \file Functor_Cost_Function_Gradient.cpp
+    \brief Methods for the paralleized calculation of the gradient components of the cost functions (supporting TBB and OpenMP).
+*/
+
+
 /**
 @brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
 @param parameters A GNU Scientific Library vector containing the free parameters to be optimized.

@@ -55,8 +55,8 @@ public:
 /**
 @brief Constructor of the class.
 @param matrix_in The square shaped complex matrix from which the cost function is calculated during the submatrix decomposition process.
-@param matrix_size The number rows in the matrix matrix_in
-@param submatrices_in Preallocated array for the submatrices
+@param matrix_size_in The number rows in the matrix matrix_in
+@param submatrices_in Preallocated arrays for the submatrices
 @return Returns with the instance of the class.
 */
 functor_extract_submatrices( QGD_Complex16* matrix_in, int matrix_size_in, QGD_Complex16** submatrices_in );
@@ -93,12 +93,12 @@ public:
 /**
 @brief Constructor of the class.
 @param submatrices_in The array of the submatrices.
-@param submatrix_size The number rows in the submatrices.
+@param submatrix_size_in The number rows in the submatrices.
 @param prod_cost_functions_in Preallocated array storing the calculated partial cost functions.
 @param prod_num_in The number of partial cost function values (equal to the number of distinct submatrix products.)
 @return Returns with the instance of the class.
 */
-functor_submtx_cost_fnc( QGD_Complex16** submatrices_in, int submatrix_size, double* prod_cost_functions_in, int prod_num_in );
+functor_submtx_cost_fnc( QGD_Complex16** submatrices_in, int submatrix_size_in, double* prod_cost_functions_in, int prod_num_in );
 
 /**
 @brief Operator to calculate the partial cost function labeled by product_idx

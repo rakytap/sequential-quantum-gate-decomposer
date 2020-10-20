@@ -1,0 +1,6 @@
+<map id="get_cost_function" name="get_cost_function">
+<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#a975b868302471a7b3f623f55384fc973" title="The optimization problem of the final optimization. " alt="" coords="179,26,341,67"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a10eb690b650a33a1ab8c4de4f9f8ab6e" title="Call to solve layer by layer the optimization problem. " alt="" coords="831,10,1000,66"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#afa5445b98f74d661a50a85c1240546fd" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="389,26,572,67"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#adf6b02469b89a561d0c53b08f1f8ceb3" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="620,76,783,132"/>
+</map>

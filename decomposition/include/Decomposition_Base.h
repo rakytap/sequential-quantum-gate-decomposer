@@ -102,9 +102,6 @@ protected:
     /// auxiliary variable storing the transformed matrix
     QGD_Complex16* transformed_mtx;
 
-    /// The number of threads for the parallel optimization (The remaining threads are used for nested parallelism at matrix multiplications)
-    int num_threads;
-
 public:
 
 /** Contructor of the class
@@ -338,19 +335,6 @@ void set_verbose( bool verbose_in );
 @return Returns with the error of the decomposition
 */
 double get_decomposition_error( );
-
-
-/**
-@brief Call to set the number of threads for the parallel optimization (The remaining threads are used for nested parallelism at matrix multiplications)
-@param num_threads_in the number of threads for the parallel optimization
-*/
-void set_num_threads_optimization( int num_threads_in );
-
-/**
-@brief Call to get the number of threads for the parallel optimization (The remaining threads are used for nested parallelism at matrix multiplications)
-@return Returns with the number of threads for the parallel optimization
-*/
-int get_num_threads_optimization();
 
 
 

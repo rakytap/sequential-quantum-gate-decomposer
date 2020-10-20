@@ -1,5 +1,4 @@
 <map id="Random_Unitary::M" name="Random_Unitary::M">
-<area shape="rect" id="node1" title="Implements Eq (8) of arXiv:1303:5904v1." alt="" coords="448,13,583,39"/>
-<area shape="rect" id="node2" href="$class_random___unitary.html#a1dfd08ca71a8609ae71325a9f40e7570" title="Eq (6) of arXiv:1303:5904v1." alt="" coords="233,13,400,39"/>
-<area shape="rect" id="node3" href="$class_random___unitary.html#ace2ab5baafad04139f4ffc52c1174881" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1." alt="" coords="5,5,185,47"/>
+<area shape="rect" id="node2" href="$class_random___unitary.html#a1dfd08ca71a8609ae71325a9f40e7570" title="Eq (6) of arXiv:1303:5904v1. " alt="" coords="188,13,355,39"/>
+<area shape="rect" id="node3" href="$class_random___unitary.html#ace2ab5baafad04139f4ffc52c1174881" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="403,5,583,47"/>
 </map>

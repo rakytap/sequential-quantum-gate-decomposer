@@ -299,7 +299,7 @@ QGD_Complex16* Random_Unitary::Omega(int varalpha, int varbeta, QGD_Complex16 x,
         }
 
 
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for ( int idx=0; idx<dim*dim; idx++ ) {
             ret[idx].real = ret[idx].real + Mloc[idx].real;
             ret[idx].imag = ret[idx].imag + Mloc[idx].imag;
@@ -341,7 +341,7 @@ QGD_Complex16* Random_Unitary::M( int varalpha, int varbeta, QGD_Complex16 s, QG
 
 
         QGD_Complex16* ret = (QGD_Complex16*)qgd_calloc(dim*dim,sizeof(QGD_Complex16), 64);
-        #pragma omp parallel for
+        //#pragma omp parallel for
         for ( int idx=0; idx<dim*dim; idx++ ) {
             ret[idx].real = ret1[idx].real + ret2[idx].real + ret3[idx].real + ret4[idx].real;
             ret[idx].imag = ret1[idx].imag + ret2[idx].imag + ret3[idx].imag + ret4[idx].imag;

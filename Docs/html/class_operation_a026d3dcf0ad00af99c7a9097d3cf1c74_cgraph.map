@@ -1,5 +1,4 @@
 <map id="Operation::set_matrix" name="Operation::set_matrix">
-<area shape="rect" id="node1" title="Call to set the stored matrix in the operation." alt="" coords="5,5,149,32"/>
-<area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function." alt="" coords="197,5,281,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way." alt="" coords="329,5,427,32"/>
+<area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="197,5,281,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="329,5,427,32"/>
 </map>

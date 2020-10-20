@@ -1,0 +1,23 @@
+<map id="N_Qubit_Decomposition::final_optimization" name="N_Qubit_Decomposition::final_optimization">
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="216,596,361,652"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1065,480,1149,507"/>
+<area shape="rect" id="node5" href="$class_operation.html#a55f76bcb8990f4dba577990af0c8399e" title="Default constructor of the class. " alt="" coords="424,84,564,111"/>
+<area shape="rect" id="node6" href="$common_8cpp.html#ad2809f4012fcf8a7375a959c5b816413" title="Call to create an identity matrix. " alt="" coords="673,876,779,903"/>
+<area shape="rect" id="node7" href="$class_decomposition___base.html#a9ff86ec9582c9e65bea603b22ff3ca31" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="412,522,576,563"/>
+<area shape="rect" id="node10" href="$class_operation.html#acf7d1765143285ff73772ae860109988" title="Call to terive the operation matrix. " alt="" coords="886,236,1005,263"/>
+<area shape="rect" id="node16" href="$class_decomposition___base.html#a4963d3fe033c225eb19a0e6f271ef37a" title="Apply an operations on the input matrix. " alt="" coords="653,709,799,750"/>
+<area shape="rect" id="node17" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="690,775,762,801"/>
+<area shape="rect" id="node19" href="$class_decomposition___base.html#a7f3fd202c32e65cbc312ec61d426442a" title="Calculate the list of gate operation matrices such that the i&gt;0&#45;th element in the result list is the ..." alt="" coords="413,713,575,754"/>
+<area shape="rect" id="node20" href="$class_operation.html#a026d3dcf0ad00af99c7a9097d3cf1c74" title="Call to set the stored matrix in the operation. " alt="" coords="873,59,1017,85"/>
+<area shape="rect" id="node21" href="$class_decomposition___base.html#a5a4fba71fd475a25fd55b1f4f2dc4c86" title="Abstarct function to be used to solve a single sub&#45;layer optimization problem. " alt="" coords="409,829,579,885"/>
+<area shape="rect" id="node22" href="$class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="421,909,567,965"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="1197,480,1295,507"/>
+<area shape="rect" id="node8" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="659,404,793,431"/>
+<area shape="rect" id="node9" href="$class_c_n_o_t.html#a50fefe3d884b9d5fcc20d6855e75e602" title="Call to retrieve the operation matrix. " alt="" coords="676,607,776,633"/>
+<area shape="rect" id="node11" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="627,657,825,684"/>
+<area shape="rect" id="node12" href="$class_u3.html#a92b07b2d856a85bd6a706d4bfc071ac8" title="Call to retrieve the operation matrix. " alt="" coords="905,455,985,481"/>
+<area shape="rect" id="node13" href="$class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="656,287,796,329"/>
+<area shape="rect" id="node14" href="$class_operation__block.html#a916db3ef5d6fcf25367843a1306cd4e0" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="647,353,805,380"/>
+<area shape="rect" id="node15" href="$common_8cpp.html#a7e4fbff01bddac17c7499d1da136f004" title="Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or c..." alt="" coords="878,556,1013,583"/>
+<area shape="rect" id="node18" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="Free memory allocated with aligned_alloc. " alt="" coords="899,775,991,801"/>
+</map>

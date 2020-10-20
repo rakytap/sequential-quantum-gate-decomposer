@@ -1,4 +1,0 @@
-<map id="Sub_Matrix_Decomposition::optimalization_problem_combined" name="Sub_Matrix_Decomposition::optimalization_problem_combined">
-<area shape="rect" id="node1" title="Call to calculate both the cost function and the its gradient components." alt="" coords="233,5,413,61"/>
-<area shape="rect" id="node2" href="$class_sub___matrix___decomposition.html#ad2f34f8f0dbaced159b29ec882a3c4d2" title="Call to solve layer by layer the optimization problem." alt="" coords="5,5,185,61"/>
-</map>

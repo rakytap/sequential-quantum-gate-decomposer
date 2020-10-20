@@ -1,0 +1,18 @@
+<map id="Sub_Matrix_Decomposition::optimization_problem_grad" name="Sub_Matrix_Decomposition::optimization_problem_grad">
+<area shape="rect" id="node2" href="$class_sub___matrix___decomposition.html#a56b7a2e77d0426ab2b1283f12d848190" title="The optimization problem of the final optimization. " alt="" coords="236,503,416,545"/>
+<area shape="rect" id="node3" href="$class_decomposition___base.html#a9ff86ec9582c9e65bea603b22ff3ca31" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="464,293,628,334"/>
+<area shape="rect" id="node15" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="739,544,811,571"/>
+<area shape="rect" id="node17" href="$_sub___matrix___decomposition___cost___function_8cpp.html#a9fc1f100e9b691101568edd960a268e8" title="Call to calculate the cost function of a given matrix during the submatrix decomposition process..." alt="" coords="479,562,613,603"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1105,224,1189,251"/>
+<area shape="rect" id="node6" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="709,443,842,469"/>
+<area shape="rect" id="node7" href="$class_c_n_o_t.html#a50fefe3d884b9d5fcc20d6855e75e602" title="Call to retrieve the operation matrix. " alt="" coords="725,493,825,520"/>
+<area shape="rect" id="node8" href="$class_operation.html#acf7d1765143285ff73772ae860109988" title="Call to terive the operation matrix. " alt="" coords="931,275,1049,301"/>
+<area shape="rect" id="node9" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="676,5,875,32"/>
+<area shape="rect" id="node10" href="$class_u3.html#a92b07b2d856a85bd6a706d4bfc071ac8" title="Call to retrieve the operation matrix. " alt="" coords="950,173,1030,200"/>
+<area shape="rect" id="node11" href="$class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="705,57,845,98"/>
+<area shape="rect" id="node12" href="$class_operation__block.html#a916db3ef5d6fcf25367843a1306cd4e0" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="697,224,854,251"/>
+<area shape="rect" id="node13" href="$common_8cpp.html#a7e4fbff01bddac17c7499d1da136f004" title="Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or c..." alt="" coords="923,325,1057,352"/>
+<area shape="rect" id="node14" href="$class_decomposition___base.html#a4963d3fe033c225eb19a0e6f271ef37a" title="Apply an operations on the input matrix. " alt="" coords="703,377,848,418"/>
+<area shape="rect" id="node5" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="1237,224,1335,251"/>
+<area shape="rect" id="node16" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="Free memory allocated with aligned_alloc. " alt="" coords="944,544,1036,571"/>
+</map>

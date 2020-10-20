@@ -49,11 +49,13 @@ int main() {
 
 
 #ifndef TBB
-    // setting the number of threads to one
+//! [OMP]
+    // setting the number of threads to 4
     omp_set_num_threads(4);
 
     // enbabling nested parallelism
     omp_set_nested(true);
+//! [OMP]
 #endif
 
 //! [few CNOT]
@@ -126,11 +128,6 @@ int main() {
 
     // setting operation layer
     cDecomposition.set_optimization_blocks( 1 );
-
-#ifndef TBB
-    // settign the number of threads for the optimization
-    cDecomposition.set_num_threads_optimization( 2 );
-#endif
 
     // setting the verbosity of the decomposition
     cDecomposition.set_verbose( true );

@@ -45,7 +45,7 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
     int element_num = matrix_size*matrix_size;
     QGD_Complex16* Umtx = (QGD_Complex16*)qgd_calloc(element_num,sizeof(QGD_Complex16), 64);
 
-    #pragma omp parallel for
+    //#pragma omp parallel for
     for(int idx = 0; idx < element_num; idx++) {
         Umtx[idx].real = mtx_real[idx];
         Umtx[idx].imag = mtx_imag[idx];

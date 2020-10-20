@@ -30,8 +30,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @brief Call to calculate the cost function of a given matrix during the submatrix decomposition process.
 @param matrix The square shaped complex matrix from which the cost function is calculated during the submatrix decomposition process.
 @param matrix_size The number rows in the matrix matrix_new
-@param submatrices Pointer to the preallocated array of the submatrices of the matrix matrix_new.
-@param submatrix_prod Preallocated array for the product of two submatrices.
 @return Returns with the calculated cost function.
 */
 double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
@@ -110,8 +108,8 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
 /**
 @brief Constructor of the class.
 @param matrix_in The square shaped complex matrix from which the cost function is calculated during the submatrix decomposition process.
-@param matrix_size The number rows in the matrix matrix_in
-@param submatrices_in Preallocated array for the submatrices
+@param matrix_size_in The number rows in the matrix matrix_in
+@param submatrices_in Preallocated arrays for the submatrices
 @return Returns with the instance of the class.
 */
 functor_extract_submatrices::functor_extract_submatrices( QGD_Complex16* matrix_in, int matrix_size_in, QGD_Complex16** submatrices_in ) {
@@ -164,7 +162,7 @@ void functor_extract_submatrices::operator()( int submtx_idx ) const {
 /**
 @brief Constructor of the class.
 @param submatrices_in The array of the submatrices.
-@param submatrix_size The number rows in the submatrices.
+@param submatrix_size_in The number rows in the submatrices.
 @param prod_cost_functions_in Preallocated array storing the calculated partial cost functions.
 @param prod_num_in The number of partial cost function values (equal to the number of distinct submatrix products.)
 @return Returns with the instance of the class.
@@ -190,7 +188,6 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
     QGD_Complex16* submatrix_prod = (QGD_Complex16*)qgd_calloc(element_num,sizeof(QGD_Complex16), 64);
 
     // number of submatrices
-    int submatrices_num = 4;
     int submatrices_num_row = 2;
 
     // select the given submatrices used to calculate the partial cost_function

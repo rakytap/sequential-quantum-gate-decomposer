@@ -35,7 +35,7 @@ import numpy as np
 
     
 # the number of qubits spanning the unitary
-qbit_num = 4
+qbit_num = 3
 
 # determine the soze of the unitary to be decomposed
 matrix_size = int(2**qbit_num)
