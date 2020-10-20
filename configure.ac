@@ -1,4 +1,4 @@
-AC_INIT([qgd], [1.1], [rakytap@caesar.elte.hu])
+AC_INIT([qgd], [1.2], [rakytap@caesar.elte.hu])
 AM_INIT_AUTOMAKE
 LT_INIT
 AC_PROG_CXX
@@ -52,6 +52,39 @@ fi
 fi
 
 
+#checking TBB library
+if test $TBB_OPT = yes ; then
+CXXFLAGS="$CXXFLAGS -DTBB"
+LDFLAGS="${LDFLAGS}"
+if test x$TBB_LIB_DIR != x ; then
+LDFLAGS="${LDFLAGS} -L$TBB_LIB_DIR"
+fi
+
+TBB_LIBS=""
+AC_CHECK_LIB([tbb], [pthread_attr_init], [
+if test $CXX = g++; then
+TBB_LIBS="-ltbb"
+fi
+], 
+AC_MSG_ERROR([TBB library not found]), [])
+fi
+
+#checking TBB HEADERS
+if test $TBB_OPT = yes ; then
+CPPFLAGS_SAVE=$CPPFLAGS
+if test x$TBBROOT != x ; then
+CPPFLAGS="$CPPFLAGS  -I$TBBROOT/include"
+fi
+if test x$TBB_INC_DIR != x ; then
+CPPFLAGS="$CPPFLAGS  -I$TBB_INC_DIR"
+fi
+
+AC_CHECK_HEADER([tbb/tbb.h], [], AC_MSG_ERROR([tbb.h header not found]))
+CFLAGS=$CFLAGS_SAVE
+CPPFLAGS=$CPPFLAGS_SAVE
+fi
+
+
 #checking MKL library
 if test $MKL_OPT = yes ; then
 CXXFLAGS="$CXXFLAGS -DMKL -mkl"
@@ -74,7 +107,7 @@ CPPFLAGS=$CPPFLAGS_SAVE
 fi
 
 #checking GNU SCIENTIFIC LIBRARY
-if test x$TBB_LIB_DIR != x ; then
+if test x$GSL_LIB_DIR != x ; then
 LDFLAGS="${LDFLAGS} -L$GSL_LIB_DIR"
 fi
 GSL_LIBS=
@@ -99,36 +132,7 @@ CFLAGS=$CFLAGS_SAVE
 CPPFLAGS=$CPPFLAGS_SAVE
 
 
-#checking TBB library
-if test $TBB_OPT = yes ; then
-CXXFLAGS="$CXXFLAGS -DTBB"
-LDFLAGS="${LDFLAGS}"
-if test x$TBB_LIB_DIR != x ; then
-LDFLAGS="${LDFLAGS} -L$TBB_LIB_DIR"
-fi
 
-TBB_LIBS=""
-AC_CHECK_LIB([tbb], [pthread_attr_init], [
-if test $CXX = g++; then
-TBB_LIBS="-ltbb"
-fi
-], 
-AC_MSG_ERROR([TBB library not found]), [])
-fi
-
-#checking TBB HEADERS
-if test $TBB_OPT = yes ; then
-CFLAGS_SAVE=$CFLAGS
-CPPFLAGS_SAVE=$CPPFLAGS
-if test x$TBB_INC_DIR != x ; then
-CFLAGS="$CFLAGS -I$TBB_INC_DIR"
-CPPFLAGS="$CPPFLAGS  -I$TBB_INC_DIR"
-fi
-
-AC_CHECK_HEADER([tbb/tbb.h], [], AC_MSG_ERROR([tbb.h header not found]))
-CFLAGS=$CFLAGS_SAVE
-CPPFLAGS=$CPPFLAGS_SAVE
-fi
 
 # setting linking flags for libtool
 LDFLAGS="$LDFLAGS $GSL_LIBS $TBB_LIBS"
@@ -168,7 +172,6 @@ fi
 
 
 CXXFLAGS="$CXXFLAGS -g -Wall"
-CFLAGS="$CFLAGS -g"
 echo "LDFLAGS:" $LDFLAGS
 echo "postdeps:" $postdeps_CXX
 echo "CXX flags:" $CXXFLAGS
