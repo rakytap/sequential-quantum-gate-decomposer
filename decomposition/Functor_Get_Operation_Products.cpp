@@ -1,0 +1,138 @@
+/*
+Created on Fri Jun 26 14:13:26 2020
+Copyright (C) 2020 Peter Rakyta, Ph.D.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see http://www.gnu.org/licenses/.
+
+@author: Peter Rakyta, Ph.D.
+*/
+/*! \file Functor_Get_Operation_Products.cpp
+    \brief Methods and classes for the parallelized calculation of the vector containing the products of operations (supporting TBB and OpenMP).
+*/
+
+#include "qgd/Decomposition_Base.h"
+#include "qgd/Functor_Get_Operation_Products.h"
+
+
+/**
+@brief Calculate the list of gate operation matrices such that the i>0-th element in the result list is the product of the operations of all 0<=n<i operations from the input list and the 0th element in the result list is the identity.
+@param parameters An array containing the parameters of the operations.
+@param operations_it An iterator pointing to the first operation.
+@param num_of_operations The number of operations involved in the calculations
+@return Returns with a vector of the product matrices.
+*/
+std::vector<QGD_Complex16*> Decomposition_Base::get_operation_products(double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations) {
+
+
+    // construct the vector of matrix representation of the gates
+    std::vector<QGD_Complex16*> operation_mtxs;
+
+    // preallocate memory for the operation products
+    operation_mtxs.reserve(num_of_operations);
+    for ( int idx=0; idx<num_of_operations; idx++) {
+        operation_mtxs.push_back( (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64) );
+        if ( operation_mtxs[idx] == NULL ) {
+            printf("Decomposition_Base::get_operation_products: unable to preallocate memory for matrix products\n");
+            exit(-1);
+        }
+    }
+
+#ifdef TBB
+    // calculate the matrices of the individual block operations
+    tbb::parallel_for(0, num_of_operations, 1, functor_get_operation_matrices( parameters, operations_it, operation_mtxs, num_of_operations ));
+#else
+    functor_get_operation_matrices tmp = functor_get_operation_matrices( parameters, operations_it, operation_mtxs, num_of_operations );
+    #pragma omp parallel for
+    for (int idx=0; idx<num_of_operations; idx++) {
+        tmp(idx);
+    }
+#endif // TBB
+    // calculate the operations products
+    QGD_Complex16* operation_product_mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
+    for (int idx=1; idx<num_of_operations; idx++) {
+        apply_operation(operation_mtxs[idx-1], operation_mtxs[idx], operation_product_mtx);
+        memcpy( operation_mtxs[idx], operation_product_mtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+
+        operations_it++;
+    }
+
+    // creating identity operation if no operations were involved in the calculations
+    if (operation_mtxs.size()==0) {
+        create_identity(operation_product_mtx, matrix_size);
+        operation_mtxs.push_back( operation_product_mtx );
+    }
+    else {
+        qgd_free(operation_product_mtx);
+        operation_product_mtx = NULL;
+    }
+
+    return operation_mtxs;
+
+}
+
+
+
+/**
+@brief Constructor of the class.
+@param parameters_in An array containing the parameters of the operations.
+@param operations_it_in An iterator pointing to the first operation.
+@param operation_mtxs_in vector containing the matrix representation of the operations/operation blocks.
+@param num_of_operations_in The number of operations in the vector
+@return Returns with the instance of the class.
+*/
+functor_get_operation_matrices::functor_get_operation_matrices( double* parameters_in, std::vector<Operation*>::iterator operations_it_in, std::vector<QGD_Complex16*> operation_mtxs_in, int num_of_operations_in ) {
+
+    parameters = parameters_in;
+    operations_it = operations_it_in;
+    operation_mtxs = operation_mtxs_in;
+    num_of_operations = num_of_operations_in;
+}
+
+/**
+@brief Operator to calculate the matrix representation of operation labeled by i.
+@param i The index labeling the operation in the vector of operations iterated by operations_it.
+*/
+void functor_get_operation_matrices::operator()( int i ) const {
+
+    // preallocate the arry of the matrix representation
+    QGD_Complex16* operation_mtx = operation_mtxs[i];
+
+
+    // determine the range parameters
+    double* parameters_loc = parameters;
+    for (int idx=0; idx<i; idx++) {
+        Operation* operation = *(operations_it+idx);
+        parameters_loc = parameters_loc + operation->get_parameter_num();
+    }
+
+    // get the matrix representation of th eoperation
+    Operation* operation = *(operations_it+i);
+
+    if (operation->get_type() == CNOT_OPERATION ) {
+        CNOT* cnot_operation = static_cast<CNOT*>(operation);
+        cnot_operation->matrix(operation_mtx);
+    }
+    else if (operation->get_type() == GENERAL_OPERATION ) {
+        operation->matrix(operation_mtx);
+    }
+    else if (operation->get_type() == U3_OPERATION ) {
+        U3* u3_operation = static_cast<U3*>(operation);
+        u3_operation->matrix(parameters_loc, operation_mtx);
+    }
+    else if (operation->get_type() == BLOCK_OPERATION ) {
+        Operation_block* block_operation = static_cast<Operation_block*>(operation);
+        block_operation->matrix(parameters_loc, operation_mtx);
+    }
+
+}

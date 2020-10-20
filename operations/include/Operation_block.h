@@ -23,7 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 #pragma once
-#include <vector> 
+#include <vector>
 #include "qgd/common.h"
 #include "qgd/Operation.h"
 
@@ -34,9 +34,9 @@ using namespace std;
 @brief A class responsible for grouping CNOT and U3 operations into layers
 */
 class Operation_block :  public Operation {
-    
 
-protected:    
+
+protected:
     /// The list of stored operations
     vector<Operation*> operations;
     /// number of operation layers
@@ -97,7 +97,7 @@ std::vector<QGD_Complex16*> get_matrices(const double* parameters );
 @param Lambda The Lambda parameter of the U3 operation
 */
 void add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool Lambda);
-    
+
 /**
 @brief Add a U3 gate to the front of the list of operations
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
@@ -106,55 +106,55 @@ void add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool Lambda);
 @param Lambda The Lambda parameter of the U3 operation
 */
 void add_u3_to_front(int target_qbit, bool Theta, bool Phi, bool Lambda);
-        
-/** 
+
+/**
 @brief Append a C_NOT gate operation to the list of operations
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
 void add_cnot_to_end( int control_qbit, int target_qbit);
-        
-        
-    
+
+
+
 /**
 @brief Add a C_NOT gate operation to the front of the list of operations
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
 void add_cnot_to_front( int control_qbit, int target_qbit );
-    
+
 /**
 @brief Append a list of operations to the list of operations
 @param operations_in A list of operation class instances.
 */
 void add_operations_to_end( vector<Operation*> operations_in );
-            
-    
+
+
 /**
 @brief Add an array of operations to the front of the list of operations
 @param operations_in A list of operation class instances.
 */
 void add_operations_to_front( vector<Operation*> operations_in );
-    
-    
+
+
 /**
 @brief Append a general operation to the list of operations
 @param operation A pointer to a class Operation describing an operation.
 */
 void add_operation_to_end( Operation* operation );
-    
+
 /**
 @brief Add an operation to the front of the list of operations
 @param operation A pointer to a class Operation describing an operation.
 */
 void add_operation_to_front( Operation* operation );
 
-            
-            
+
+
 /**
 @brief Call to get the number of the individual gate types in the list of operations
 @return Returns with an instance gates_num describing the number of the individual gate types
-*/ 
+*/
 gates_num get_gate_nums();
 
 
@@ -170,16 +170,16 @@ int get_parameter_num();
 @return Return with the number of the operations grouped in the operation block.
 */
 int get_operation_num();
-   
-    
+
+
 /**
 @brief Call to print the list of operations stored in the block of operations for a specific set of parameters
 @param parameters The parameters of the operations that should be printed.
 @param start_index The ordinal number of the first operation.
 */
 void list_operations( const double* parameters, int start_index );
-    
-    
+
+
 /**
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
@@ -219,7 +219,15 @@ void set_qbit_num( int qbit_num_in );
 */
 Operation_block* clone();
 
+/**
+@brief Call to extract the operations stored in the class.
+@param op_block An instance of Operation_block class in which the operations will be stored. (The current operations will be erased)
+@return Return with 0 on success.
+*/
+int extract_operations( Operation_block* op_block );
+
+
 };
 
 
-        
+

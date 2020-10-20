@@ -1,13 +1,3 @@
 <map id="Operation.h" name="Operation.h">
-<area shape="rect" id="node1" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations." alt="" coords="196,5,284,32"/>
-<area shape="rect" id="node2" title=" " alt="" coords="5,155,64,181"/>
-<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions." alt="" coords="352,80,459,107"/>
-<area shape="rect" id="node4" title=" " alt="" coords="88,155,227,181"/>
-<area shape="rect" id="node5" title=" " alt="" coords="251,155,314,181"/>
-<area shape="rect" id="node6" title=" " alt="" coords="338,155,393,181"/>
-<area shape="rect" id="node7" title=" " alt="" coords="417,155,477,181"/>
-<area shape="rect" id="node8" title=" " alt="" coords="501,155,573,181"/>
-<area shape="rect" id="node9" title=" " alt="" coords="597,155,656,181"/>
-<area shape="rect" id="node10" title=" " alt="" coords="680,155,741,181"/>
-<area shape="rect" id="node11" title=" " alt="" coords="765,155,835,181"/>
+<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="393,80,500,107"/>
 </map>

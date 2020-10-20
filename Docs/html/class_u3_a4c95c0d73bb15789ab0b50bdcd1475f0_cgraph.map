@@ -1,5 +1,4 @@
 <map id="U3::set_optimized_parameters" name="U3::set_optimized_parameters">
-<area shape="rect" id="node1" title="Call to set the final optimized parameters of the operation." alt="" coords="5,5,203,32"/>
-<area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function." alt="" coords="251,5,335,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way." alt="" coords="383,5,480,32"/>
+<area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="251,5,335,32"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="383,5,480,32"/>
 </map>

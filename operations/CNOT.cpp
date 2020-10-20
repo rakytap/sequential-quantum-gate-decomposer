@@ -50,7 +50,7 @@ CNOT::CNOT(int qbit_num_in, int target_qbit_in,  int control_qbit_in) {
             printf("The index of the target qubit is larger than the number of qubits");
             throw "The index of the target qubit is larger than the number of qubits";
         }
-        // The index of the qubit on which the operation acts (target_qbit >= 0) 
+        // The index of the qubit on which the operation acts (target_qbit >= 0)
         target_qbit = target_qbit_in;
 
 
@@ -91,7 +91,7 @@ int CNOT::matrix(QGD_Complex16* retrieve_matrix ) {
 }
 
 
-        
+
 
 /**
 @brief Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits.
@@ -124,7 +124,6 @@ int CNOT::composite_cnot( QGD_Complex16* CNOT_mtx ) {
 
 
         // setting the operation elements
-        #pragma omp parallel for
         for(int idx = 0; idx < matrix_size*matrix_size; ++idx)
         {
 
@@ -132,7 +131,7 @@ int CNOT::composite_cnot( QGD_Complex16* CNOT_mtx ) {
             int row_idx = (idx-col_idx)/matrix_size;
 
 
-            
+
             // determine the row state of the control and target qubits corresponding to the given thread
             int target_qubit_state_row = int(row_idx / target_qbit_power) % 2;
             int control_qubit_state_row = int(row_idx / control_qbit_power) % 2;
@@ -156,7 +155,7 @@ int CNOT::composite_cnot( QGD_Complex16* CNOT_mtx ) {
                 state_col_remaining = state_col_remaining - control_qbit_power;
             }
 
-            
+
             // setting the col_idx-th element in the row
             if (control_qubit_state_row == 0 && control_qubit_state_col == 0 && target_qubit_state_row == target_qubit_state_col && state_row_remaining == state_col_remaining) {
                 CNOT_mtx[idx].real = 1;
@@ -206,11 +205,6 @@ void CNOT::reorder_qubits( vector<int> qbit_list) {
 
         Operation::reorder_qubits(qbit_list);
 
-/*        // setting the control qubit
-        if ( control_qbit != -1 ) {
-            control_qbit = qbit_list[qbit_list.size()-control_qbit-1];
-        }*/
-
 }
 
 
@@ -222,17 +216,17 @@ void CNOT::reorder_qubits( vector<int> qbit_list) {
 CNOT* CNOT::clone() {
 
     CNOT* ret = new CNOT( qbit_num, target_qbit, control_qbit );
- 
+
     if (matrix_alloc != NULL) {
         QGD_Complex16* mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
         memcpy( mtx, matrix_alloc, matrix_size*matrix_size*sizeof(QGD_Complex16) );
         ret->set_matrix( mtx);
     }
-    
+
 
     return ret;
 
 }
 
 
-                   
+

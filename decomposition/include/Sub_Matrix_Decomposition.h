@@ -21,9 +21,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class responsible for the disentanglement of one qubit from the others.
 */
 
-
 #pragma once
 #include "qgd/Decomposition_Base.h"
+#include "qgd/Sub_Matrix_Decomposition_Cost_Function.h"
+#include "qgd/Functor_Cost_Function_Gradient.h"
 
 
 /**
@@ -34,7 +35,7 @@ class Sub_Matrix_Decomposition : public Decomposition_Base {
 
 public:
 
-    /// logical value indicating whether the disentamglement of a qubit from the othetrs was done or not 
+    /// logical value indicating whether the disentamglement of a qubit from the othetrs was done or not
     bool subdisentaglement_done;
 
     /// The subdecomposed matrix
@@ -46,17 +47,6 @@ public:
     /// A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
     std::map<int,int> identical_blocks;
 
-protected:
-
-    /// auxiliary variable storing the submatrices of the transformed matrix
-    QGD_Complex16** submatrices;
-
-    /// auxiliary variable storing the product of two submatrices when calculating the cost function of the subdecomposition
-    QGD_Complex16* submatrix_prod;
-
-    /// The number of submatrices
-    int submatrices_num;
-
 
 public:
 
@@ -64,8 +54,8 @@ public:
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param optimize_layer_num_in Optional logical value. If true, then the optimalization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimalization is performed for the maximal number of layers.
-@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimalization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
+@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
 Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
@@ -77,7 +67,7 @@ Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize
 
 
 /**
-@brief Start the optimalization process to disentangle the most significant qubit from the others. The optimized parameters and operations are stored in the attributes optimized_parameters and operations.
+@brief Start the optimization process to disentangle the most significant qubit from the others. The optimized parameters and operations are stored in the attributes optimized_parameters and operations.
 */
 void disentangle_submatrices();
 
@@ -87,27 +77,27 @@ void disentangle_submatrices();
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
+void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 
 
 
 /**
-@brief The optimalization problem of the final optimization
+@brief The optimization problem of the final optimization
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double optimalization_problem( const double* parameters);
+double optimization_problem( const double* parameters);
 
 
 
 /**
-@brief The optimalization problem of the final optimization
+@brief The optimization problem of the final optimization
 @param parameters A GNU Scientific Library containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-static double optimalization_problem( const gsl_vector* parameters, void* void_instance );
+static double optimization_problem( const gsl_vector* parameters, void* void_instance );
 
 
 /**
@@ -116,7 +106,7 @@ static double optimalization_problem( const gsl_vector* parameters, void* void_i
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-static void optimalization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad  );
+static void optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad  );
 
 
 /**
@@ -126,7 +116,7 @@ static void optimalization_problem_grad( const gsl_vector* parameters, void* voi
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 @param f0 The value of the cost function at x0.
 */
-static void optimalization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad, double f0 );
+static void optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad, double f0 );
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
@@ -135,7 +125,7 @@ static void optimalization_problem_grad( const gsl_vector* parameters, void* voi
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-static void optimalization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad );
+static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad );
 
 /**
 @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
@@ -155,15 +145,10 @@ int set_identical_blocks( std::map<int, int> identical_blocks_in );
 
 
 /**
-@brief Call to retrive the pointer pointing to the preallocated memory space of submatrices.
-@return Returns with a pointer to the preallocated memory space.
+@brief Call to create a clone of the present class
+@return Return with a pointer pointing to the cloned object
 */
-QGD_Complex16** get_submatrices();
+Sub_Matrix_Decomposition* clone();
 
-/**
-@brief Call to retrive the pointer pointing to the preallocated array of submatrix product
-@return Returns with a pointer to the preallocated memory space.
-*/
-QGD_Complex16* get_submatrix_prod();
 
 };

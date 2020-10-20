@@ -1,7 +1,6 @@
 <map id="Operation_block::reorder_qubits" name="Operation_block::reorder_qubits">
-<area shape="rect" id="node1" title="Call to reorder the qubits in the matrix of the operation." alt="" coords="5,49,168,90"/>
-<area shape="rect" id="node2" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation." alt="" coords="223,5,356,32"/>
-<area shape="rect" id="node3" href="$class_c_n_o_t.html#a2685ba9fe5fa414609a8ea6a9c2d18c7" title="Call to reorder the qubits in the matrix of the operation." alt="" coords="216,56,363,83"/>
-<area shape="rect" id="node5" href="$class_u3.html#a700efa043c863f32465861d338efdd2b" title="Call to reorder the qubits in the matrix of the operation." alt="" coords="226,107,353,133"/>
-<area shape="rect" id="node4" href="$class_operation.html#a73a8408873507d5630f57c200915a0c0" title="Call to reorder the qubits in the matrix of the operation." alt="" coords="411,74,535,115"/>
+<area shape="rect" id="node2" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="223,5,356,32"/>
+<area shape="rect" id="node3" href="$class_c_n_o_t.html#a2685ba9fe5fa414609a8ea6a9c2d18c7" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="216,56,363,83"/>
+<area shape="rect" id="node5" href="$class_u3.html#a700efa043c863f32465861d338efdd2b" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="226,107,353,133"/>
+<area shape="rect" id="node4" href="$class_operation.html#a73a8408873507d5630f57c200915a0c0" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="411,74,535,115"/>
 </map>

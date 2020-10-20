@@ -31,7 +31,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <time.h> 
 #include <ctime>
 #include "gsl/gsl_multimin.h"
-#include <gsl/gsl_statistics.h>
+#include "gsl/gsl_statistics.h"
+
 
 /// @brief Type definition of the types of the initial guess
 typedef enum guess_type {ZEROS, RANDOM, CLOSE_TO_ZERO} guess_type;
@@ -48,18 +49,16 @@ public:
     /// Logical variable. Set true for verbose mode, or to false to suppress output messages.
     bool verbose;
 
-    /// number of operation blocks used in one shot of the optimalization process
-    int optimalization_block;
+    /// number of operation blocks used in one shot of the optimization process
+    int optimization_block;
 
     /// A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process by default for the subdecomposing of the nth qubits.
     static std::map<int,int> max_layer_num_def;
 
-    /// The maximal allowed error of the optimalization problem
-    double optimalization_tolerance;
+    /// The maximal allowed error of the optimization problem
+    double optimization_tolerance;
 
 protected:
-
-
 
     ///  A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process for the subdecomposing of the nth qubits.
     std::map<int,int> max_layer_num;
@@ -85,24 +84,23 @@ protected:
     /// the number of the finalizing (deterministic) parameters of operations rotating the disentangled qubits into state |0>.
     int finalizing_parameter_num;
         
-    /// The current minimum of the optimalization problem
+    /// The current minimum of the optimization problem
     double current_minimum;
         
-    /// The global target minimum of the optimalization problem
+    /// The global target minimum of the optimization problem
     double global_target_minimum;
         
-    /// logical value describing whether the optimalization problem was solved or not
-    bool optimalization_problem_solved;
+    /// logical value describing whether the optimization problem was solved or not
+    bool optimization_problem_solved;
         
-    /// Maximal number of iterations allowed in the optimalization process
+    /// Maximal number of iterations allowed in the optimization process
     int max_iterations;
         
-    /// type to guess the initial values for the optimalization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
+    /// type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
     guess_type initial_guess;
 
     /// auxiliary variable storing the transformed matrix
     QGD_Complex16* transformed_mtx;
-
 
 public:
 
@@ -110,7 +108,7 @@ public:
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary to be decomposed.
-@param initial_guess_in Type to guess the initial values for the optimalization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
+@param initial_guess_in Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return An instance of the class
 */
 Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, guess_type initial_guess_in);
@@ -123,19 +121,19 @@ virtual ~Decomposition_Base();
 
 /**   
 @brief Call to set the number of operation blocks to be optimized in one shot
-@param optimalization_block_in The number of operation blocks to be optimized in one shot 
+@param optimization_block_in The number of operation blocks to be optimized in one shot 
 */
-void set_optimalization_blocks( int optimalization_block_in );
+void set_optimization_blocks( int optimization_block_in );
         
 /**   
-@brief Call to set the maximal number of the iterations in the optimalization process
-@param max_iterations_in maximal number of iteartions in the optimalization process
+@brief Call to set the maximal number of the iterations in the optimization process
+@param max_iterations_in maximal number of iteartions in the optimization process
 */
 void set_max_iteration( int max_iterations_in);
 
 
 /** 
-@brief After the main optimalization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
+@brief After the main optimization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
 */
 void finalize_decomposition();
 
@@ -156,18 +154,18 @@ void get_finalizing_operations( QGD_Complex16* mtx, Operation_block* finalizing_
 
 
 /** 
-@brief This method can be used to solve the main optimalization problem which is devidid into sub-layer optimalization processes. (The aim of the optimalization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute optimized_parameters.
+@brief This method can be used to solve the main optimization problem which is devidid into sub-layer optimization processes. (The aim of the optimization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute optimized_parameters.
 @param solution_guess An array of the guessed parameters
 @param solution_guess_num The number of guessed parameters. (not necessarily equal to the number of free parameters)
 */
-void solve_optimalization_problem( double* solution_guess, int solution_guess_num );
+void solve_optimization_problem( double* solution_guess, int solution_guess_num );
 
 /**
-@brief Abstarct function to be used to solve a single sub-layer optimalization problem. The optimalized parameters are stored in attribute optimized_parameters.
+@brief Abstarct function to be used to solve a single sub-layer optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
 @param 'num_of_parameters' The number of free parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Libarary vector containing the free parameters to be optimized.
 */
-virtual void solve_layer_optimalization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
+virtual void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 
 
@@ -175,13 +173,13 @@ virtual void solve_layer_optimalization_problem( int num_of_parameters, gsl_vect
 @brief This is an abstact definition of function giving the cost functions measuring the entaglement of the qubits. When the qubits are indepent, teh cost function should be zero.
 @param parameters An array of the free parameters to be optimized. (The number of the free paramaters should be equal to the number of parameters in one sub-layer)
 */
-virtual double optimalization_problem( const double* parameters );
+virtual double optimization_problem( const double* parameters );
 
-/** check_optimalization_solution
-@brief Checks the convergence of the optimalization problem.
-@return Returns with true if the target global minimum was reached during the optimalization process, or false otherwise.
+/** check_optimization_solution
+@brief Checks the convergence of the optimization problem.
+@return Returns with true if the target global minimum was reached during the optimization process, or false otherwise.
 */
-bool check_optimalization_solution();
+bool check_optimization_solution();
 
 
 /**
@@ -337,6 +335,7 @@ void set_verbose( bool verbose_in );
 @return Returns with the error of the decomposition
 */
 double get_decomposition_error( );
+
 
 
 };

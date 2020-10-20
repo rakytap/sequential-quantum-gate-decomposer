@@ -1,4 +1,3 @@
 <map id="iface_get_operation_num" name="iface_get_operation_num">
-<area shape="rect" id="node1" title="Call to get the number of decomposing operations." alt="" coords="5,13,172,39"/>
-<area shape="rect" id="node2" href="$class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class." alt="" coords="220,5,360,47"/>
+<area shape="rect" id="node2" href="$class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="220,5,360,47"/>
 </map>

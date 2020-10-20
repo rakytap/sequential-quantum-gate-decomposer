@@ -24,8 +24,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #pragma once
 #include <vector> 
-
-
 #include "qgd/common.h"
 
 using namespace std;
@@ -141,6 +139,12 @@ unsigned int get_parameter_num();
 @return Return with the type of the operation (see operation_type for details) 
 */
 operation_type get_type();
+
+/**
+@brief Call to get the number of qubits composing the unitary
+@return Return with the number of qubits composing the unitary
+*/
+int get_qbit_num();
 
 /**
 @brief Call to create a clone of the present class

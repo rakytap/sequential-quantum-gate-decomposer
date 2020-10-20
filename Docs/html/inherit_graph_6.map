@@ -1,0 +1,9 @@
+<map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
+<area shape="rect" id="node1" href="$class_operation.html" title="Base class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="5,56,84,83"/>
+<area shape="rect" id="node2" href="$class_c_n_o_t.html" title="A class representing a CNOT operation. " alt="" coords="161,5,219,32"/>
+<area shape="rect" id="node3" href="$class_operation__block.html" title="A class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="132,56,248,83"/>
+<area shape="rect" id="node7" href="$class_u3.html" title="A class representing a U3 operation. " alt="" coords="171,107,209,133"/>
+<area shape="rect" id="node4" href="$class_decomposition___base.html" title="A class containing basic methods for the decomposition process. " alt="" coords="296,56,441,83"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations..." alt="" coords="498,31,661,57"/>
+<area shape="rect" id="node6" href="$class_sub___matrix___decomposition.html" title="A class responsible for the disentanglement of one qubit from the others. " alt="" coords="489,81,669,108"/>
+</map>

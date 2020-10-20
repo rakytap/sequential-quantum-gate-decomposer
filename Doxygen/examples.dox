@@ -56,7 +56,16 @@ The second line includes the definition of the class to perform the decompositio
 This class is the key element to access the decomposition capabilities of the QGD package.
 The third line imports the method and class definitions for creating random unitaries to be decomposed.
 
-The QGD package provide two ways to create random unitaries. The first way can be used to construct a random unitary as a product of CNOT and U3 operations. 
+If OpenMP was chosen as the parallelization environment for the QGD package, then it is advised to set the number of logical threads by
+
+<div class="snippet">
+\snippet decomposition_test.cpp OMP
+</div>
+
+The second command enables nested parallelism provided by the OpenMP library. (If there are more physical threads in the system than the number of free parameters 
+optimized in one shot than some of the threads can be utilized in lower parallelization levels.)
+
+The QGD package provides two ways to create random unitaries. The first way can be used to construct a random unitary as a product of CNOT and U3 operations. 
 The parameters of the operations are chosen randomly, but the overall number of CNOT operations is predefined:
 
 <div class="snippet">
@@ -153,12 +162,5 @@ or use the -Lpath/to/qgd/lib(64) flag during linking and do at least one of the 
 Another option to build portable standalone application is to link against static library of the QGD named **libqgd.a** located in the directory **path/to/qgd/lib(64)**.
 
 
-# Single- vs multi-threaded decomposition
-
-We notice that running the decomposition of smaller unitaries (i.e. less than 6 qubits) on multiple threads leads to performance loss. 
-To limit the QGD to run on a single thread one need to set the number of OpenMP threads to one either by using run-time libarary
-function [OMP_SET_NUM_THREADS](https://computing.llnl.gov/tutorials/openMP/?newwindow=true#OMP_SET_NUM_THREADS) or by the environment variable 
-[OMP_NUM_THREADS](https://computing.llnl.gov/tutorials/openMP/?newwindow=true#EnvironmentVariables).
-When it comes to the decomposition of larges unitaries (i.e. more than 5 qubits), the decomposition starts to benefit from multithreaded settings.
 
 */

@@ -31,6 +31,12 @@ extern "C"
 }
 #endif
 
+#ifdef TBB
+#include <tbb/tbb.h>
+#else
+#include <omp.h>
+#endif // TBB
+
 #include <stdlib.h>
 #include <string>
 #include <stdio.h>
@@ -39,6 +45,7 @@ extern "C"
 #include <vector>
 #include <cstring>
 #include <sstream>
+
 
 // include MKL header if MKL package and intel compiler are present
 #if CXX==icpc
@@ -88,7 +95,7 @@ struct gates_num {
 };
 
 
-/** 
+/**
 @brief Allocate aligned memory in a portable way. Memory allocated with aligned alloc *MUST* be freed using aligned_free. The allocated memory is initialized to zero.
 @param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
 @param size The number of bytes to allocate.
@@ -97,7 +104,7 @@ struct gates_num {
 */
 void *aligned_alloc(size_t alignment, size_t size, bool zero);
 
-/** 
+/**
 @brief Reallocate aligned memory in a portable way. Memory allocated with aligned realloc *MUST* be freed using aligned_free. The reallocation is done by either:
 a) expanding or contracting the existing area pointed to by aligned_ptr, if possible. The contents of the area remain unchanged up to the lesser of the new and old sizes. If the area is expanded, the contents of the new part of the array is set to zero.
 b) allocating a new memory block of size new_size bytes, copying memory area with size equal the lesser of the new and the old sizes, and freeing the old block.
@@ -238,17 +245,8 @@ int reduce_zgemm( std::vector<QGD_Complex16*> mtxs, QGD_Complex16* C, int matrix
 @param matrix_size The number rows in the matrix
 @param scalar The complex scalar to be subtracked from the diagonal elements of the matrix
 */
-void subtract_diag( QGD_Complex16* & mtx,  int matrix_size, QGD_Complex16 scalar ); 
+void subtract_diag( QGD_Complex16* & mtx,  int matrix_size, QGD_Complex16 scalar );
 
-/**
-@brief Call to calculate the cost function of a given matrix during the submatrix decomposition process.
-@param matrix The square shaped complex matrix from which the cost function is calculated during the submatrix decomposition process.
-@param matrix_size The number rows in the matrix matrix_new
-@param submatrices Pointer to the preallocated array of the submatrices of the matrix matrix_new.
-@param submatrix_prod Preallocated array for the product of two submatrices.
-@return Returns with the calculated cost function.
-*/
-double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size, QGD_Complex16** submatrices, QGD_Complex16* submatrix_prod);
 
 /**
 @brief Call co calculate the cost funtion during the final optimization process.

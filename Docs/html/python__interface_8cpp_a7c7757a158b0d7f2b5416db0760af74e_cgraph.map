@@ -1,8 +1,7 @@
 <map id="iface_get_operation" name="iface_get_operation">
-<area shape="rect" id="node1" title="Call to get the n&#45;th optimized operation." alt="" coords="5,81,140,108"/>
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a1b076dd293978004b7636ed8b1d41119" title="Call to prepare the optimized operations to export." alt="" coords="188,74,333,115"/>
-<area shape="rect" id="node3" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation." alt="" coords="413,5,547,32"/>
-<area shape="rect" id="node4" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit." alt="" coords="395,56,565,83"/>
-<area shape="rect" id="node5" href="$class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit." alt="" coords="392,107,568,133"/>
-<area shape="rect" id="node6" href="$class_u3.html#a7ebc4a0bf0eb7c4d37034d04ed787aaa" title="Call to get the final optimized parameters of the operation." alt="" coords="381,157,579,184"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a1b076dd293978004b7636ed8b1d41119" title="Call to prepare the optimized operations to export. " alt="" coords="188,74,333,115"/>
+<area shape="rect" id="node3" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="413,5,547,32"/>
+<area shape="rect" id="node4" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="395,56,565,83"/>
+<area shape="rect" id="node5" href="$class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit. " alt="" coords="392,107,568,133"/>
+<area shape="rect" id="node6" href="$class_u3.html#a7ebc4a0bf0eb7c4d37034d04ed787aaa" title="Call to get the final optimized parameters of the operation. " alt="" coords="381,157,579,184"/>
 </map>

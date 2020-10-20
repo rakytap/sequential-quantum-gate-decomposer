@@ -1,4 +1,3 @@
 <map id="U3" name="U3">
-<area shape="rect" id="node1" title="A class representing a U3 operation." alt="" coords="25,80,64,107"/>
-<area shape="rect" id="node2" href="$class_operation.html" title="Base class for the representation of one&#45; and two&#45;qubit operations." alt="" coords="5,5,84,32"/>
+<area shape="rect" id="node2" href="$class_operation.html" title="Base class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="5,5,84,32"/>
 </map>

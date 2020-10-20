@@ -1,5 +1,4 @@
 <map id="Decomposition_Base::prepare_operations_to_export" name="Decomposition_Base::prepare_operations_to_export">
-<area shape="rect" id="node1" title="Call to prepare the operations of an operation block to export." alt="" coords="5,35,151,91"/>
-<area shape="rect" id="node2" href="$class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class." alt="" coords="201,5,341,47"/>
-<area shape="rect" id="node3" href="$class_decomposition___base.html#a965838902240670119c0ad68d087c322" title="Call to prepare the optimized operations to export." alt="" coords="199,71,344,127"/>
+<area shape="rect" id="node2" href="$class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="201,5,341,47"/>
+<area shape="rect" id="node3" href="$class_decomposition___base.html#a965838902240670119c0ad68d087c322" title="Call to prepare the optimized operations to export. " alt="" coords="199,70,344,126"/>
 </map>

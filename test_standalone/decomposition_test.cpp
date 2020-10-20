@@ -22,7 +22,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include <iostream>
+#ifndef TBB
 #include <omp.h>
+#endif //TBB
 #include <stdio.h>
 #include <map>
 
@@ -36,42 +38,47 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 using namespace std;
 
 
-
 /**
 @brief Decomposition of general random unitary matrix into U3 and CNOT gates
 */
 int main() {
-    
+
     printf("\n\n****************************************\n");
     printf("Test of N qubit decomposition\n");
     printf("****************************************\n\n\n");
 
-    // setting the number of threads to one
-    omp_set_num_threads(1);
 
+#ifndef TBB
+//! [OMP]
+    // setting the number of threads to 4
+    omp_set_num_threads(4);
+
+    // enbabling nested parallelism
+    omp_set_nested(true);
+//! [OMP]
+#endif
 
 //! [few CNOT]
     // The number of qubits spanning the random unitary
-    int qbit_num = 4;   
+    int qbit_num = 4;
 
     // the number of rows of the random unitary
     int matrix_size = Power_of_2(qbit_num);
 
     // creating random unitary constructing from 6 CNOT gates.
-    int cnot_num = 6;
+    int cnot_num = 1;
     QGD_Complex16* Umtx_few_CNOT = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
     few_CNOT_unitary( qbit_num, cnot_num, Umtx_few_CNOT);
 //! [few CNOT]
-    
+
     // release the constructed random unitary
     qgd_free( Umtx_few_CNOT );
     Umtx_few_CNOT = NULL;
 
 
-
 //! [general random]
-    // creating class to generate general random unitary 
-    Random_Unitary ru = Random_Unitary(matrix_size); 
+    // creating class to generate general random unitary
+    Random_Unitary ru = Random_Unitary(matrix_size);
     // create general random unitary
     QGD_Complex16* Umtx = ru.Construct_Unitary_Matrix();
 //! [general random]
@@ -90,15 +97,15 @@ int main() {
         Umtx_adj[element_idx].real = element.real;
         Umtx_adj[element_idx].imag = -element.imag;
     }
-  
+
     // creating the class for the decomposition
     N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx_adj, qbit_num, false, CLOSE_TO_ZERO );
-//! [creating decomp class]  
+//! [creating decomp class]
 
-//! [set parameters]    
+//! [set parameters]
     // setting the number of successive identical layers used in the decomposition
     std::map<int,int> identical_blocks;
-    identical_blocks[3] = 1;
+    identical_blocks[3] = 2;
     identical_blocks[4] = 2;
     cDecomposition.set_identical_blocks( identical_blocks );
 
@@ -109,26 +116,30 @@ int main() {
     num_of_layers[4] = 60;
     num_of_layers[5] = 240;
     num_of_layers[6] = 960;
+    num_of_layers[7] = 3775;
     cDecomposition.set_max_layer_num( num_of_layers );
 
     // setting the number of optimization iteration loops in each step of the decomposition
     std::map<int,int> num_of_iterations;
-    num_of_iterations[2] = 1;
+    num_of_iterations[2] = 3;
     num_of_iterations[3] = 1;
     num_of_iterations[4] = 1;
     cDecomposition.set_iteration_loops( num_of_iterations );
 
+    // setting operation layer
+    cDecomposition.set_optimization_blocks( 1 );
+
     // setting the verbosity of the decomposition
     cDecomposition.set_verbose( true );
-//! [set parameters]    
+//! [set parameters]
 
     printf("Starting the decompsition\n");
-//! [performing decomposition]  
+//! [performing decomposition]
     // starting the decomposition
     cDecomposition.start_decomposition(true, true);
 
     cDecomposition.list_operations(1);
-//! [performing decomposition]  
+//! [performing decomposition]
 
 
     qgd_free( Umtx );
@@ -139,7 +150,7 @@ int main() {
 
 
 
-  return 0;  
+  return 0;
 
 };
 

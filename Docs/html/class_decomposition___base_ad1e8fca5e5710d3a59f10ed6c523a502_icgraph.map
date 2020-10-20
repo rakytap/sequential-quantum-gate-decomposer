@@ -1,6 +1,5 @@
 <map id="Decomposition_Base::get_Umtx" name="Decomposition_Base::get_Umtx">
-<area shape="rect" id="node1" title="Call to retrive a pointer to the unitary to be transformed." alt="" coords="233,71,379,112"/>
-<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#a8494fcf34e2896b9272def3b0fd36f0b" title="The optimalization problem of the final optimization." alt="" coords="14,5,177,47"/>
-<area shape="rect" id="node3" href="$python__interface_8h.html#ab6eb9c96ee2bdf7756f0cd62a722136d" title="Call to deallocate the N_Qubit_Decomposition class." alt="" coords="22,71,169,112"/>
-<area shape="rect" id="node4" href="$class_sub___matrix___decomposition.html#a3270d215316879d7300d40637958ba0c" title="The optimalization problem of the final optimization." alt="" coords="5,136,185,177"/>
+<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#a642d37a3b072239af74f507cc8d4914b" title="The optimization problem of the final optimization. " alt="" coords="207,5,370,47"/>
+<area shape="rect" id="node3" href="$python__interface_8h.html#ab6eb9c96ee2bdf7756f0cd62a722136d" title="Call to deallocate the N_Qubit_Decomposition class. " alt="" coords="215,71,362,112"/>
+<area shape="rect" id="node4" href="$class_sub___matrix___decomposition.html#a850f0d87ca7132652ad6e973a0ef3816" title="The optimization problem of the final optimization. " alt="" coords="199,136,379,177"/>
 </map>
