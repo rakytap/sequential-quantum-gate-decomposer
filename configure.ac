@@ -62,9 +62,7 @@ fi
 
 TBB_LIBS=""
 AC_CHECK_LIB([tbb], [pthread_attr_init], [
-if test $CXX = g++; then
 TBB_LIBS="-ltbb"
-fi
 ], 
 AC_MSG_ERROR([TBB library not found]), [])
 fi

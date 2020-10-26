@@ -15919,9 +15919,7 @@ fi
 $as_echo "$ac_cv_lib_tbb_pthread_attr_init" >&6; }
 if test "x$ac_cv_lib_tbb_pthread_attr_init" = xyes; then :
 
-if test $CXX = g++; then
 TBB_LIBS="-ltbb"
-fi
 
 else
   as_fn_error $? "TBB library not found" "$LINENO" 5
