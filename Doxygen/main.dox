@@ -19,7 +19,7 @@
 
  
 @QGD @version is a free software distributed under the <a href="http://www.gnu.org/licenses/">GNU General Public License</a>.
-The project was supported by the National Research Development and Innovation Office of Hungary via the Quantum Technology National Excellence Program (Project No. 2017-1.2.1-NKP-2017-00001). 
+The project was supported by OTKA PD123927 grant and by the National Research Development and Innovation Office of Hungary via the Quantum Technology National Excellence Program (Project No. 2017-1.2.1-NKP-2017-00001). 
 
 @QGD (QGD) is an optimization method to decompose an arbitrary NxN Unitary matrix into a sequence of U3 and CNOT gates. 
 It is written in C/C++ providing a simple Python interface via [ctypes](https://docs.python.org/3/library/ctypes.html) and a possibility to run QGD as a standalone C executable.

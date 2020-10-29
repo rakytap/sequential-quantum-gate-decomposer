@@ -129,6 +129,9 @@ Functions</h2></td></tr>
 <tr class="memitem:a13709bfbcc030047503eb14648d62d1b"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="python__interface_8h.html#a13709bfbcc030047503eb14648d62d1b">iface_set_max_layer_num</a> (void *ptr, int qbit, int max_layer_num)</td></tr>
 <tr class="memdesc:a13709bfbcc030047503eb14648d62d1b"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.  <a href="#a13709bfbcc030047503eb14648d62d1b">More...</a><br /></td></tr>
 <tr class="separator:a13709bfbcc030047503eb14648d62d1b"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0e5fa8588f5f2604d790a19774fdff7e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="python__interface_8h.html#a0e5fa8588f5f2604d790a19774fdff7e">iface_set_optimalization_block</a> (void *ptr, int optimalization_block)</td></tr>
+<tr class="memdesc:a0e5fa8588f5f2604d790a19774fdff7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to set the number of blocks to be optimized in one shot.  <a href="#a0e5fa8588f5f2604d790a19774fdff7e">More...</a><br /></td></tr>
+<tr class="separator:a0e5fa8588f5f2604d790a19774fdff7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6162349931d0c3b22b449dc9fb7a7541"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="python__interface_8h.html#a6162349931d0c3b22b449dc9fb7a7541">iface_set_verbose</a> (void *ptr, bool verbose)</td></tr>
 <tr class="memdesc:a6162349931d0c3b22b449dc9fb7a7541"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to set the verbosity of the <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class.  <a href="#a6162349931d0c3b22b449dc9fb7a7541">More...</a><br /></td></tr>
 <tr class="separator:a6162349931d0c3b22b449dc9fb7a7541"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -585,6 +588,54 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
+<a class="anchor" id="a0e5fa8588f5f2604d790a19774fdff7e"></a>
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int iface_set_optimalization_block </td>
+          <td>(</td>
+          <td class="paramtype">void *&#160;</td>
+          <td class="paramname"><em>ptr</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>optimalization_block</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Call to set the number of blocks to be optimized in one shot. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">optimalization_block</td><td>The number of blocks to be optimized in one shot </td></tr>
+  </table>
+  </dd>
+</dl>
+<dl class="section return"><dt>Returns</dt><dd>Returns with 0 on success </dd></dl>
+
+<p>Definition at line <a class="el" href="python__interface_8cpp_source.html#l00226">226</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+
+<p><div class="dynheader">
+Here is the call graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="python__interface_8h_a0e5fa8588f5f2604d790a19774fdff7e_cgraph.png" border="0" usemap="#python__interface_8h_a0e5fa8588f5f2604d790a19774fdff7e_cgraph" alt=""/></div>
+<map name="python__interface_8h_a0e5fa8588f5f2604d790a19774fdff7e_cgraph" id="python__interface_8h_a0e5fa8588f5f2604d790a19774fdff7e_cgraph">
+<area shape="rect" id="node2" href="class_decomposition___base.html#af10692ec27c3db9e422d057c5f0347a6" title="Call to set the number of operation blocks to be optimized in one shot. " alt="" coords="215,5,381,47"/>
+</map>
+</div>
+</p>
+
+</div>
+</div>
 <a class="anchor" id="a6162349931d0c3b22b449dc9fb7a7541"></a>
 <div class="memitem">
 <div class="memproto">
@@ -724,7 +775,7 @@ Here is the call graph for this function:</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Tue Oct 20 2020 18:39:43 for Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Thu Oct 29 2020 11:18:24 for Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.11
 </small></address>
