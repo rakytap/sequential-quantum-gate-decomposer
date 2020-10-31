@@ -37,7 +37,6 @@ extern "C"
 #include <omp.h>
 #endif // TBB
 
-#include <stdlib.h>
 #include <string>
 #include <stdio.h>
 #include <iostream>

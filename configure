@@ -15871,11 +15871,16 @@ fi
 
 fi
 
+# dont use built in malloc when TBB is on
+if test $TBB_OPT = yes ; then
+  CXXFLAGS="$CXXFLAGS"
+fi
+
 
 #checking TBB library
 if test $TBB_OPT = yes ; then
 CXXFLAGS="$CXXFLAGS -DTBB"
-LDFLAGS="${LDFLAGS}"
+LDFLAGS="${LDFLAGS}  -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free"
 if test x$TBB_LIB_DIR != x ; then
 LDFLAGS="${LDFLAGS} -L$TBB_LIB_DIR"
 fi
@@ -15919,7 +15924,7 @@ fi
 $as_echo "$ac_cv_lib_tbb_pthread_attr_init" >&6; }
 if test "x$ac_cv_lib_tbb_pthread_attr_init" = xyes; then :
 
-TBB_LIBS="-ltbb"
+TBB_LIBS="-ltbb -ltbbmalloc_proxy"
 
 else
   as_fn_error $? "TBB library not found" "$LINENO" 5
@@ -16125,7 +16130,7 @@ fi
 if test $CXX = icpc; then
 postdeps_CXX=""
 else
-postdeps_CXX="$postdeps_CXX $TBB_LIBS"
+postdeps_CXX="$TBB_LIBS"
 fi
 
 
