@@ -513,37 +513,8 @@ double N_Qubit_Decomposition::optimization_problem( const gsl_vector* parameters
 
 
 
-/**
-@brief Calculate the approximate derivative of the cost function with respect to the free parameters.
-@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param grad A GNU Scientific Library vector containing the calculated gradient components.
-*/
-void N_Qubit_Decomposition::optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad ) {
-
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(void_instance);
-
-    double f0 = instance->optimization_problem(parameters, instance);
-
-    optimization_problem_grad( parameters, instance, grad, f0 );
-
-}
 
 
-
-
-
-/**
-@brief Call to calculate both the cost function and the its gradient components.
-@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param f0 The value of the cost function at x0.
-@param grad A GNU Scientific Library vector containing the calculated gradient components.
-*/
-void N_Qubit_Decomposition::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
-    *f0 = optimization_problem(parameters, void_instance);
-    optimization_problem_grad(parameters, void_instance, grad, *f0);
-}
 
 
 /**

@@ -31,7 +31,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @brief Function operator class to calculate the gradient components of the cost function in parallel
 */
 template<typename decomp_class>
-class functor_sub_optimization_grad {
+class functor_grad {
 
 protected:
 
@@ -39,10 +39,10 @@ protected:
     const gsl_vector* parameters;
     /// A pointer pointing to the instance of a class Sub_Matrix_Decomposition.
     decomp_class* instance;
-    /// A GNU Scientific Library vector containing the calculated gradient components.
-    gsl_vector* grad;
+    /// A GNU Scientific Library vector containing the calculated values of the cost function at displaced points x = x0+dparam.
+    gsl_vector* f;
     /// The value of the cost function at parameters_in.
-    double f0;
+    double* f0;
     /// the difference in one direction in the parameter for the gradient calculaiton
     double dparam;
 
@@ -56,7 +56,7 @@ public:
 @param f0_in The value of the cost function at parameters_in.
 @return Returns with the instance of the class.
 */
-functor_sub_optimization_grad( const gsl_vector* parameters_in, decomp_class* instance_in, gsl_vector* grad_in, double f0_in );
+functor_grad( const gsl_vector* parameters_in, decomp_class* instance_in, gsl_vector* f_in, double* f0_in, double dparam_in );
 
 /**
 @brief Operator to calculate a gradient component of a cost function labeled by index i.
