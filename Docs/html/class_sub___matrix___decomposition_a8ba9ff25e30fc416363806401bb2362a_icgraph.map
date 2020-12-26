@@ -1,0 +1,5 @@
+<map id="Sub_Matrix_Decomposition::optimalization_problem_grad" name="Sub_Matrix_Decomposition::optimalization_problem_grad">
+<area shape="rect" id="node1" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="461,13,653,54"/>
+<area shape="rect" id="node2" href="$class_sub___matrix___decomposition.html#ad2f34f8f0dbaced159b29ec882a3c4d2" title="Call to solve layer by layer the optimization problem." alt="" coords="5,5,185,61"/>
+<area shape="rect" id="node3" href="$class_sub___matrix___decomposition.html#a14464f9019cd3f02e6ed4110535e6ff0" title="Call to calculate both the cost function and the its gradient components." alt="" coords="233,37,413,93"/>
+</map>

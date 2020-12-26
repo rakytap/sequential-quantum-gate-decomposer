@@ -1,0 +1,4 @@
+<map id="N_Qubit_Decomposition::set_identical_blocks" name="N_Qubit_Decomposition::set_identical_blocks">
+<area shape="rect" id="node1" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit." alt="" coords="184,5,347,47"/>
+<area shape="rect" id="node2" href="$python__interface_8h.html#a433927c0881f65beb0d462fe9423918f" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit." alt="" coords="5,5,136,47"/>
+</map>

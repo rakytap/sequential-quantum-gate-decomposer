@@ -1,0 +1,10 @@
+<map id="test_CNOT_operation" name="test_CNOT_operation">
+<area shape="rect" id="node1" title=" " alt="" coords="5,132,153,159"/>
+<area shape="rect" id="node2" href="$class_c_n_o_t.html#a50fefe3d884b9d5fcc20d6855e75e602" title="Call to retrieve the operation matrix." alt="" coords="239,5,339,32"/>
+<area shape="rect" id="node3" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit." alt="" coords="204,56,375,83"/>
+<area shape="rect" id="node4" href="$class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit." alt="" coords="201,107,377,133"/>
+<area shape="rect" id="node5" href="$common_8cpp.html#a9edfe300cce2d458905077bda1bdf374" title="Print a CNOT matrix on standard output." alt="" coords="244,157,335,184"/>
+<area shape="rect" id="node6" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2." alt="" coords="244,232,335,259"/>
+<area shape="rect" id="node7" href="$class_c_n_o_t.html#a2685ba9fe5fa414609a8ea6a9c2d18c7" title="Call to reorder the qubits in the matrix of the operation." alt="" coords="216,283,363,309"/>
+<area shape="rect" id="node8" href="$class_operation.html#a73a8408873507d5630f57c200915a0c0" title="Call to reorder the qubits in the matrix of the operation." alt="" coords="425,275,549,317"/>
+</map>
