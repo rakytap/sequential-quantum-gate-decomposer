@@ -27,6 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #endif //TBB
 #include <stdio.h>
 #include <map>
+#include <mpi.h>
 
 
 //! [include]
@@ -56,11 +57,27 @@ int main() {
     // enbabling nested parallelism
     omp_set_nested(true);
 //! [OMP]
+#else
+    // initialize TBB task scheduler
+    tbb::task_scheduler_init init;
 #endif
+
+    // Initialize the MPI environment
+    MPI_Init(NULL, NULL);
+
+    // Get the number of processes
+    int world_size;
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    // Get the rank of the process
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+
 
 //! [few CNOT]
     // The number of qubits spanning the random unitary
-    int qbit_num = 4;
+    int qbit_num = 7;
 
     // the number of rows of the random unitary
     int matrix_size = Power_of_2(qbit_num);
@@ -76,17 +93,21 @@ int main() {
     Umtx_few_CNOT = NULL;
 
 
+
+
+    QGD_Complex16* Umtx = NULL;
+    QGD_Complex16* Umtx_adj = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+if (rank==0) {
+
 //! [general random]
-    // creating class to generate general random unitary
+    // creating class to generate general random unitary on process rank=0
     Random_Unitary ru = Random_Unitary(matrix_size);
     // create general random unitary
-    QGD_Complex16* Umtx = ru.Construct_Unitary_Matrix();
+    Umtx = ru.Construct_Unitary_Matrix();
 //! [general random]
 
-
-//! [creating decomp class]
     // construct the complex transpose of the random unitary
-    QGD_Complex16* Umtx_adj = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+    Umtx_adj = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
     for (int element_idx=0; element_idx<matrix_size*matrix_size; element_idx++) {
         // determine the row and column index of the element to be filled.
         int col_idx = element_idx % matrix_size;
@@ -98,8 +119,20 @@ int main() {
         Umtx_adj[element_idx].imag = -element.imag;
     }
 
+
+
+}
+
+
+    // ensure by MPI broadcast that each process has the same random unitary
+    MPI_Bcast((void*) Umtx_adj, matrix_size*matrix_size*sizeof(QGD_Complex16), MPI_BYTE, 0, MPI_COMM_WORLD);
+
+
+//! [creating decomp class]
+
+
     // creating the class for the decomposition
-    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx_adj, qbit_num, false, CLOSE_TO_ZERO );
+    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx_adj, qbit_num, false, RANDOM );
 //! [creating decomp class]
 
 //! [set parameters]
@@ -141,14 +174,19 @@ int main() {
     cDecomposition.list_operations(1);
 //! [performing decomposition]
 
-
+// release Umtx on the root process
+if (rank==0) {
     qgd_free( Umtx );
     Umtx = NULL;
+}
 
     qgd_free( Umtx_adj );
     Umtx_adj = NULL;
 
 
+
+    // Finalize the MPI environment.
+    MPI_Finalize();
 
   return 0;
 

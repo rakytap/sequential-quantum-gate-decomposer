@@ -241,6 +241,10 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 */
 void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
+        // Get the rank of the process
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
 
         if (operations.size() == 0 ) {
             return;
@@ -264,6 +268,8 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
         catch (...) {
             iteration_loops_max = 1;
         }
+
+
 
 
         // do the optimization loops
@@ -297,6 +303,9 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
             do {
                 iter++;
 
+                // sync the processes before starting optimization
+                MPI_Barrier(MPI_COMM_WORLD);
+
                 status = gsl_multimin_fdfminimizer_iterate (s);
 
                 if (status) {
@@ -310,23 +319,35 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
 
             } while (status == GSL_CONTINUE && iter < 100);
 
+
+
 //printf("s->f: %f\n", s->f);
             if (current_minimum > s->f) {
                 current_minimum = s->f;
                 memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
                 gsl_multimin_fdfminimizer_free (s);
 
-                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
-                }
+                // do the creation of new guess values only on the root process
+                if (rank == 0 ) {
+                    for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                        solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                    }
+                } // rank == 0
             }
             else {
-                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
-                }
+                if (rank == 0 ) {
+                    for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                        solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
+                    }
+                } // rank == 0
 
                 gsl_multimin_fdfminimizer_free (s);
             }
+
+            // ensure that all processes get the right optimized parameters, current minimum and solution guess
+            MPI_Bcast((void*) optimized_parameters, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Bcast((void*) solution_guess_gsl->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Bcast((void*) &current_minimum, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 
 
 
@@ -346,15 +367,15 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
 */
 double Sub_Matrix_Decomposition::optimization_problem( const double* parameters ) {
 
-        // get the transformed matrix with the operations in the list
-        QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
+    // get the transformed matrix with the operations in the list
+    QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
 
-        double cost_function = get_submatrix_cost_function(matrix_new, matrix_size); //NEW METHOD
+    double cost_function = get_submatrix_cost_function(matrix_new, matrix_size); //NEW METHOD
 
     qgd_free( matrix_new );
     matrix_new = NULL;
 
-        return cost_function;
+    return cost_function;
 }
 
 
@@ -371,19 +392,10 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 
     QGD_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
 
-/*if ( instance->qbit_num == 2 ) {
-print_mtx(instance->get_Umtx(), instance->get_Umtx_size(), instance->get_Umtx_size());
-}*/
-
     double cost_function = get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());  //NEW METHOD
-    //double cost_function = get_submatrix_cost_function_2(matrix_new, instance->get_Umtx_size());  //OLD METHOD
 
     qgd_free( matrix_new );
     matrix_new = NULL;
-
-/*if ( instance->qbit_num == 2 ) {
-printf("%f\n", cost_function );
-}*/
 
     return cost_function;
 }

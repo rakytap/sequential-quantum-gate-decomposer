@@ -318,6 +318,11 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             return;
         }
 
+        // Get the rank of the process
+        int rank;
+        MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+
 
         // array containing minimums to check convergence of the solution
         int min_vec_num = 20;
@@ -350,6 +355,9 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         // the array storing the optimized parameters
         gsl_vector* optimized_parameters_gsl = gsl_vector_alloc (parameter_num_loc);
 
+// construct the random initial parameters on the root process
+if (rank==0) {
+
         // preparing solution guess for the iterations
         if ( initial_guess == ZEROS ) {
             for(unsigned int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
@@ -374,6 +382,11 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         if ( solution_guess_num > 0) {
             memcpy(optimized_parameters_gsl->data + parameter_num-solution_guess_num, solution_guess, solution_guess_num*sizeof(double));
         }
+
+}
+
+// broadcasting the constructed initial values
+        MPI_Bcast((void*) optimized_parameters_gsl->data, parameter_num_loc*sizeof(double), MPI_BYTE, 0, MPI_COMM_WORLD);
 
         // starting number of operation block applied prior to the optimalized operation blocks
         int pre_operation_parameter_num = 0;
@@ -523,7 +536,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // optimization result is displayed in each 500th iteration
             if (iter_idx % 500 == 0) {
                 if (verbose) {
-                    printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, float(time(NULL) - start_time));
+                    printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds on process %d\n", layer_num, iter_idx, current_minimum, float(time(NULL) - start_time), rank);
                     fflush(stdout);
                 }
                 start_time = time(NULL);
@@ -548,6 +561,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 break;
             }
 
+// sync the processes
+MPI_Barrier(MPI_COMM_WORLD);
 
         }
 

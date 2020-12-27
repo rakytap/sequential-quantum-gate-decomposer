@@ -45,6 +45,10 @@ protected:
     double* f0;
     /// the difference in one direction in the parameter for the gradient calculaiton
     double dparam;
+    /// The number of processes
+    int num_of_processes;
+    /// the rank of the current process
+    int rank;
 
 public:
 

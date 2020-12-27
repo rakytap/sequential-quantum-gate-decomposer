@@ -95,6 +95,15 @@ void Sub_Matrix_Decomposition::optimization_problem_grad( const gsl_vector* para
 */
 void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
 
+    // Get the number of processes
+    int num_of_processes;
+    MPI_Comm_size(MPI_COMM_WORLD, &num_of_processes);
+
+    // Get the rank of the process
+    int rank;
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
+
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
 
     int parameter_num_loc = instance->get_parameter_num();
@@ -105,16 +114,27 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* 
     // the difference in one direction in the parameter for the gradient calculation
     double dparam = 1e-8;
 
-#ifdef TBB
-    // calculate the function values at displaced x and the central x0 points through TBB parallel for
-    tbb::parallel_for(0, parameter_num_loc+1, 1, functor_grad<Sub_Matrix_Decomposition>( parameters, instance, f, f0, dparam ));
-#else
-    functor_sub_optimization_grad<Sub_Matrix_Decomposition> tmp = functor_grad<Sub_Matrix_Decomposition>( parameters, instance, f, f0, dparam );
-    #pragma omp parallel for
+    // calculate the gradient components. This is divided between the processes
+    functor_grad<Sub_Matrix_Decomposition> tmp = functor_grad<Sub_Matrix_Decomposition>( parameters, instance, f, f0, dparam );
     for (int idx=0; idx<parameter_num_loc+1; idx++) {
         tmp(idx);
     }
-#endif
+
+    // now we collect the calculated data
+    for (int idx=0; idx<parameter_num_loc+1; idx++) {
+
+        if (idx == parameter_num_loc) {
+            // broadcast the calculated value f0
+            MPI_Bcast((void*) f0, 1, MPI_DOUBLE, idx % num_of_processes, MPI_COMM_WORLD);
+        }
+        else {
+            // broadcast the calculated value for the displaced x_i
+            MPI_Bcast((void*) &(f->data[idx]), 1, MPI_DOUBLE, idx % num_of_processes, MPI_COMM_WORLD);
+
+        }
+
+    }
+
 
 
     for (int idx=0; idx<parameter_num_loc; idx++) {
@@ -149,6 +169,12 @@ functor_grad<decomp_class>::functor_grad( const gsl_vector* parameters_in, decom
     // the difference in one direction in the parameter for the gradient calculation
     dparam = dparam_in;
 
+    // Get the number of processes
+    MPI_Comm_size(MPI_COMM_WORLD, &num_of_processes);
+
+    // Get the rank of the process
+    MPI_Comm_rank(MPI_COMM_WORLD, &rank);
+
 }
 
 
@@ -159,34 +185,48 @@ functor_grad<decomp_class>::functor_grad( const gsl_vector* parameters_in, decom
 template<typename decomp_class>
 void functor_grad<decomp_class>::operator()( int i ) const {
 
-    decomp_class* instance_loc = NULL;
+
+    // Do the calculations only for chosen processes
+    // The cumulation of the results is done later
+    if ( i % num_of_processes == rank ) {
+
+//printf("calculate component %d on process %d\n", i, rank);
+
+        decomp_class* instance_loc = NULL;
+        if (i == (int)parameters->size) {
+            // calculate function value at x0
+            *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance));
+        }
+        else {
+            // calculate function value at displaced x_i
+            instance_loc = instance->clone();
+
+            gsl_vector* parameters_d = gsl_vector_calloc(parameters->size);
+            memcpy( parameters_d->data, parameters->data, parameters->size*sizeof(double) );
+            parameters_d->data[i] = parameters_d->data[i] + dparam;
+
+            // calculate the cost function at the displaced point
+            f->data[i] = instance_loc->optimization_problem(parameters_d, reinterpret_cast<void*>(instance_loc));
+
+            // release vectors
+            gsl_vector_free(parameters_d);
+            parameters_d = NULL;
+
+            delete instance_loc;
+        }
+
+    } // i % num_of_processes == rank
+/*
     if (i == (int)parameters->size) {
-        // calculate function value at x0
-        *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance));
+        // broadcast the calculated value f0
+        MPI_Bcast((void*) f0, 1, MPI_DOUBLE, i % num_of_processes, MPI_COMM_WORLD);
     }
     else {
-        // calculate function value at displaced x
-        instance_loc = instance->clone();
-
-        gsl_vector* parameters_d = gsl_vector_calloc(parameters->size);
-        memcpy( parameters_d->data, parameters->data, parameters->size*sizeof(double) );
-        parameters_d->data[i] = parameters_d->data[i] + dparam;
-
-        // calculate the cost function at the displaced point
-        f->data[i] = instance_loc->optimization_problem(parameters_d, reinterpret_cast<void*>(instance_loc));
-
-        // release vectors
-        gsl_vector_free(parameters_d);
-        parameters_d = NULL;
-
-        delete instance_loc;
-    }
-
-
-
-    if ( i >0 ) {
+        // broadcast the calculated value for the displaced x_i
+        MPI_Bcast((void*) &(f->data[i]), 1, MPI_DOUBLE, i % num_of_processes, MPI_COMM_WORLD);
 
     }
+*/
 
 }
 
