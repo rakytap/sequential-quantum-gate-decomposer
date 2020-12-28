@@ -50,15 +50,15 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
     // array to store the sumbatrices
     QGD_Complex16** submatrices = (QGD_Complex16**)qgd_calloc( submatrices_num, sizeof(QGD_Complex16*), 64);
 
-#ifdef TBB
     tbb::parallel_for(0, submatrices_num, 1, functor_extract_submatrices( matrix, matrix_size, submatrices ));
-#else
+/*
+    // sequential version
     functor_extract_submatrices tmp = functor_extract_submatrices( matrix, matrix_size, submatrices );
     #pragma omp parallel for
     for (int idx=0; idx<submatrices_num; idx++) {
         tmp(idx);
     }
-#endif // TBB
+*/
 
     // ********************************
     // Calculate the partial cost functions
@@ -67,15 +67,16 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
 
     int prod_num = submatrices_num*submatrices_num_row;
     double* prod_cost_functions = (double*)qgd_calloc( prod_num, sizeof(double), 64);
-#ifdef TBB
+
     tbb::parallel_for(0, prod_num, 1, functor_submtx_cost_fnc( submatrices, submatrix_size, prod_cost_functions, prod_num ));
-#else
+/*
+    // sequential version
     functor_submtx_cost_fnc tmp2 = functor_submtx_cost_fnc( submatrices, submatrix_size, prod_cost_functions, prod_num );
     #pragma omp parallel for
     for (int idx=0; idx<prod_num; idx++) {
         tmp2(idx);
     }
-#endif //TBB
+*/
 
     // ********************************
     // Calculate the total cost function

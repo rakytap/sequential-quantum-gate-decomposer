@@ -31,11 +31,8 @@ extern "C"
 }
 #endif
 
-#ifdef TBB
 #include <tbb/tbb.h>
-#else
 #include <omp.h>
-#endif // TBB
 
 #include <string>
 #include <stdio.h>
@@ -45,37 +42,36 @@ extern "C"
 #include <cstring>
 #include <sstream>
 
-
-// include MKL header if MKL package and intel compiler are present
-#if CXX==icpc
-#ifdef MKL
-#include <mkl_service.h>
-
-// headers of cblas of MKL and GSL are in conflict and GSL headers need to be inculed due to multimin package,
-// thus function zgemm3m needs to be declared inline
+#ifdef CBLAS
 #ifdef __cplusplus
 extern "C"
 {
 #endif
-typedef CBLAS_ORDER CBLAS_LAYOUT;
 
+/// Definition of the zgemm3m function from CBLAS. (Since headers of GNU Scientific Library and other CBLAS libraries are not compatible, we must define function zgemm3m on our own.)
+void cblas_zgemm3m(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA, const enum CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+		 const void *alpha, const void *A, const int lda, const void *B, const int ldb, const void *beta, void *C, const int ldc);
 
-void cblas_zgemm3m(const  CBLAS_LAYOUT Layout, const  CBLAS_TRANSPOSE TransA,
-                 const  CBLAS_TRANSPOSE TransB, const MKL_INT M, const MKL_INT N,
-                 const MKL_INT K, const void *alpha, const void *A,
-                 const MKL_INT lda, const void *B, const MKL_INT ldb,
-                 const void *beta, void *C, const MKL_INT ldc);
+#if CBLAS==1 // MKL
+    /// Set the number of threads on runtime in MKL
+    void MKL_Set_Num_Threads(int num_threads);
+    /// get the number of threads in MKL
+    int mkl_get_max_threads();
+#elif CBLAS==2 // OpenBLAS
+    /// Set the number of threads on runtime in OpenBlas
+    void openblas_set_num_threads(int num_threads);
+    /// get the number of threads in OpenBlas
+    int openblas_get_num_threads();
+#endif
 
 #ifdef __cplusplus
 }
 #endif
-
-#endif
 #endif
 
 
 
-/// @brief Structure type representing complex numbers in the QGD package (compatible with cblas libraries)
+/// @brief Structure type representing complex numbers in the QGD package
 struct QGD_Complex16 {
   /// the real part of a complex number
   double real;

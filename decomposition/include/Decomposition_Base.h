@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "qgd/U3.h"
 #include <map>
 #include <cstdlib>
-#include <time.h> 
+#include <time.h>
 #include <ctime>
 #include "gsl/gsl_multimin.h"
 #include "gsl/gsl_statistics.h"
@@ -71,36 +71,39 @@ protected:
 
     /// The optimized parameters for the operations
     double* optimized_parameters;
-        
+
     /// logical value describing whether the decomposition was finalized or not (i.e. whether the decomposed qubits were rotated into the state |0> or not)
-    bool decomposition_finalized; 
-        
+    bool decomposition_finalized;
+
     /// error of the unitarity of the final decomposition
     double decomposition_error;
-        
+
     /// number of finalizing (deterministic) opertaions rotating the disentangled qubits into state |0>.
     int finalizing_operations_num;
-        
+
     /// the number of the finalizing (deterministic) parameters of operations rotating the disentangled qubits into state |0>.
     int finalizing_parameter_num;
-        
+
     /// The current minimum of the optimization problem
     double current_minimum;
-        
+
     /// The global target minimum of the optimization problem
     double global_target_minimum;
-        
+
     /// logical value describing whether the optimization problem was solved or not
     bool optimization_problem_solved;
-        
+
     /// Maximal number of iterations allowed in the optimization process
     int max_iterations;
-        
+
     /// type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
     guess_type initial_guess;
 
     /// auxiliary variable storing the transformed matrix
     QGD_Complex16* transformed_mtx;
+
+    /// Number of outer OpenMP threads. (During the calculations OpenMP multithreading is turned off.)
+    int num_threads;
 
 public:
 
@@ -113,26 +116,26 @@ public:
 */
 Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, guess_type initial_guess_in);
 
-/** 
+/**
 @brief Destructor of the class
 */
 virtual ~Decomposition_Base();
 
 
-/**   
+/**
 @brief Call to set the number of operation blocks to be optimized in one shot
-@param optimization_block_in The number of operation blocks to be optimized in one shot 
+@param optimization_block_in The number of operation blocks to be optimized in one shot
 */
 void set_optimization_blocks( int optimization_block_in );
-        
-/**   
+
+/**
 @brief Call to set the maximal number of the iterations in the optimization process
 @param max_iterations_in maximal number of iteartions in the optimization process
 */
 void set_max_iteration( int max_iterations_in);
 
 
-/** 
+/**
 @brief After the main optimization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
 */
 void finalize_decomposition();
@@ -148,12 +151,12 @@ void list_operations( int start_index );
 @brief This method determine the operations needed to rotate the indepent qubits into the state |0>
 @param mtx The unitary describing indepent qubits. The resulting matrix is returned by this pointer
 @param finalizing_operations Pointer pointig to a block of operations containing the final operations.
-@param finalizing_parameters Parameters corresponding to the finalizing operations. 
+@param finalizing_parameters Parameters corresponding to the finalizing operations.
 */
 void get_finalizing_operations( QGD_Complex16* mtx, Operation_block* finalizing_operations, double* finalizing_parameters);
 
 
-/** 
+/**
 @brief This method can be used to solve the main optimization problem which is devidid into sub-layer optimization processes. (The aim of the optimization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute optimized_parameters.
 @param solution_guess An array of the guessed parameters
 @param solution_guess_num The number of guessed parameters. (not necessarily equal to the number of free parameters)
@@ -212,7 +215,7 @@ double* get_optimized_parameters();
 
 /**
 @brief Call to get the optimized parameters.
-@param ret Preallocated array to store the optimized parameters. 
+@param ret Preallocated array to store the optimized parameters.
 */
 void get_optimized_parameters( double* ret );
 

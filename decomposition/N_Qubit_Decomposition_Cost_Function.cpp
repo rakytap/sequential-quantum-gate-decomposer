@@ -35,15 +35,17 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 double get_cost_function(QGD_Complex16* matrix, int matrix_size) {
 
     double* partial_cost_functions = (double*)qgd_calloc( matrix_size, sizeof(double), 64);
-#ifdef TBB
+
     tbb::parallel_for(0, matrix_size, 1, functor_cost_fnc( matrix, matrix_size, partial_cost_functions, matrix_size ));
-#else
+
+/*
+    //sequential version
     functor_cost_fnc tmp = functor_cost_fnc( matrix, matrix_size, partial_cost_functions, matrix_size );
     #pragma omp parallel for
     for (int idx=0; idx<matrix_size; idx++) {
         tmp(idx);
     }
-#endif // TBB
+*/
 
     // sum up the partial cost funtions
     double cost_function = 0;

@@ -83,9 +83,14 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
         printf("***************************************************************\n\n\n");
     }
 
-#ifdef TBB
-    //initialize TBB threads
+    //initialize TBB task scheduler
     tbb::task_scheduler_init init;
+
+    // temporarily turn off OpenMP parallelism
+#if BLAS==1
+    MKL_Set_Num_Threads(1);
+#elif BLAS==2
+    openblas_set_num_threads(1);
 #endif
 
     //measure the time for the decompositin
@@ -169,6 +174,11 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
 
     }
 
+#if BLAS==1
+    MKL_Set_Num_Threads(num_threads);
+#elif BLAS==2
+    openblas_set_num_threads(num_threads);
+#endif
 
 }
 

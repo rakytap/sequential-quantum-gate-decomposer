@@ -24,8 +24,7 @@ EXTRA_DIST = common/include/common.h \
              qgd_python/__init__.py \
              Umtx.mat \
              LICENSE \
-             Doxygen \
-             Quantum Gate Decomposition.cbp
+             Doxygen
 
 lib_LTLIBRARIES = libqgd.la
 pkginclude_HEADERS = python_interface.h

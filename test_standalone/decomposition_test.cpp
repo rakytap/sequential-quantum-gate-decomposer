@@ -47,17 +47,6 @@ int main() {
     printf("Test of N qubit decomposition\n");
     printf("****************************************\n\n\n");
 
-
-#ifndef TBB
-//! [OMP]
-    // setting the number of threads to 4
-    omp_set_num_threads(4);
-
-    // enbabling nested parallelism
-    omp_set_nested(true);
-//! [OMP]
-#endif
-
 //! [few CNOT]
     // The number of qubits spanning the random unitary
     int qbit_num = 4;

@@ -90,6 +90,12 @@ Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in,
     // auxiliary variable storing the transformed matrix
     transformed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
+#if BLAS==1
+    num_threads = mkl_get_max_threads();
+#elif BLAS==2
+    num_threads = openblas_get_num_threads();
+#endif
+
 }
 
 /**
@@ -268,22 +274,15 @@ void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operatio
             finalizing_operations->add_operation_to_front( u3_loc );
             // get the new matrix
 
-//printf("Decomposition_Base::get_finalizing_operations 1\n");
-//print_mtx(mtx, matrix_size, matrix_size );
-
 
             memset(u3_mtx, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
             u3_loc->matrix(parameters_loc, u3_mtx);
-            //QGD_Complex16* u3_mtx = u3_loc->matrix(parameters_loc);
-//printf("Decomposition_Base::get_finalizing_operations umtx\n");
-//print_mtx(u3_mtx, matrix_size, matrix_size );
+
             apply_operation( u3_mtx, mtx_tmp, mtx_tmp2);
-            //qgd_free( u3_mtx );
 
 
             memcpy( mtx_tmp, mtx_tmp2, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-//printf("Decomposition_Base::get_finalizing_operations 2\n");
-//print_mtx(mtx, matrix_size, matrix_size );
+
         }
 
         memcpy( mtx, mtx_tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
@@ -296,9 +295,6 @@ void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operatio
         u3_mtx = NULL;
 
 
-
-//printf("Decomposition_Base::get_finalizing_operations 3\n");
-//print_mtx(mtx, matrix_size, matrix_size );
         return;
 
 
@@ -314,10 +310,10 @@ void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operatio
 */
 void  Decomposition_Base::solve_optimization_problem( double* solution_guess, int solution_guess_num ) {
 
+
         if ( operations.size() == 0 ) {
             return;
         }
-
 
         // array containing minimums to check convergence of the solution
         int min_vec_num = 20;

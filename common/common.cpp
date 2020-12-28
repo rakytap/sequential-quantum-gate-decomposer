@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "qgd/common.h"
 
 
-/** 
+/**
 @brief Allocate aligned memory in a portable way. Memory allocated with aligned alloc *MUST* be freed using aligned_free. The allocated memory is initialized to zero.
 @param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
 @param size The number of bytes to allocate.
@@ -56,7 +56,7 @@ void *aligned_alloc(size_t alignment, size_t size, bool zero) {
 }
 
 
-/** 
+/**
 @brief Reallocate aligned memory in a portable way. Memory allocated with aligned realloc *MUST* be freed using aligned_free. The reallocation is done by either:
 a) expanding or contracting the existing area pointed to by aligned_ptr, if possible. The contents of the area remain unchanged up to the lesser of the new and old sizes. If the area is expanded, the contents of the new part of the array is set to zero.
 b) allocating a new memory block of size new_size bytes, copying memory area with size equal the lesser of the new and the old sizes, and freeing the old block.
@@ -162,7 +162,7 @@ void print_mtx( QGD_Complex16* matrix, int rows, int cols ) {
 
     for ( int row_idx=0; row_idx < rows; row_idx++ ) {
         for ( int col_idx=0; col_idx < cols; col_idx++ ) {
-            int element_idx = row_idx*cols + col_idx;    
+            int element_idx = row_idx*cols + col_idx;
             printf("%1.3f + i*%1.3f,  ", matrix[element_idx].real, matrix[element_idx].imag);
 //            printf("%1.3f,  ", matrix[element_idx].real);
         }
@@ -182,7 +182,7 @@ void print_CNOT( QGD_Complex16* matrix, int size ) {
 
     for ( int row_idx=0; row_idx < size; row_idx++ ) {
         for ( int col_idx=0; col_idx < size; col_idx++ ) {
-            int element_idx = row_idx*size+col_idx;    
+            int element_idx = row_idx*size+col_idx;
             printf("%d,  ", int(matrix[element_idx].real));
         }
         printf("\n");
@@ -208,7 +208,7 @@ void add_unique_elelement( std::vector<int> &involved_qbits, int qbit ) {
 
         if (current_val == qbit) {
             return;
-        } 
+        }
         else if (current_val > qbit) {
             involved_qbits.insert( it, qbit );
             return;
@@ -282,10 +282,10 @@ QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_siz
     double beta = 0.0;
 
     // preallocate array for the result
-    QGD_Complex16 C; 
+    QGD_Complex16 C;
 
     // calculate the product of A and B
-#ifdef MKL
+#ifdef CBLAS
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasConjTrans, 1, 1, vector_size, &alpha, A, vector_size, B, vector_size, &beta, &C, 1);
 #else
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasConjTrans, 1, 1, vector_size, &alpha, A, vector_size, B, vector_size, &beta, &C, 1);
@@ -312,7 +312,7 @@ int zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, i
     memset( C, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
     // calculate the product of A and B
-#ifdef MKL
+#ifdef CBLAS
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
 #else
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
@@ -338,13 +338,13 @@ QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, int matrix_s
     double beta = 0.0;
 
     // preallocate array for the result
-    QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64); 
+    QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
     // remove memory trash from the allocated memory of the results
     memset( C, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
     // calculate the product of A and B
-#ifdef MKL
+#ifdef CBLAS
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
 #else
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
@@ -372,7 +372,7 @@ int zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int m
     memset( C, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
     // calculate the product of A and B
-#ifdef MKL
+#ifdef CBLAS
     cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
 #else
     cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A, matrix_size, B, matrix_size, &beta, C, matrix_size);
@@ -391,7 +391,7 @@ int zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int m
 @return Returns with zero on success.
 */
 int reduce_zgemm( std::vector<QGD_Complex16*> mtxs, QGD_Complex16* C, int matrix_size ) {
-    
+
 
     if (mtxs.size() == 0 ) {
         return create_identity(C, matrix_size);
@@ -400,16 +400,16 @@ int reduce_zgemm( std::vector<QGD_Complex16*> mtxs, QGD_Complex16* C, int matrix
 
 
     // pointers to matrices to be used in the multiplications
-    QGD_Complex16* A = NULL;   
+    QGD_Complex16* A = NULL;
     QGD_Complex16* B = NULL;
 
     // the iteration number
     int iteration = 0;
 
 
-    QGD_Complex16* tmp = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64); 
+    QGD_Complex16* tmp = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
     A = *mtxs.begin();
- 
+
     // calculate the product of complex matrices
     for(std::vector<QGD_Complex16*>::iterator it=++mtxs.begin(); it != mtxs.end(); ++it) {
 

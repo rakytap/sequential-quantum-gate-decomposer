@@ -44,17 +44,16 @@ void N_Qubit_Decomposition::optimization_problem_combined( const gsl_vector* par
     // the difference in one direction in the parameter for the gradient calculation
     double dparam = 1e-8;
 
-#ifdef TBB
     // calculate the function values at displaced x and the central x0 points through TBB parallel for
     tbb::parallel_for(0, parameter_num_loc+1, 1, functor_grad<N_Qubit_Decomposition>( parameters, instance, f, f0, dparam ));
-#else
+
+/*
+    // sequential version
     functor_sub_optimization_grad<N_Qubit_Decomposition> tmp = functor_grad<N_Qubit_Decomposition>( parameters, instance, f, f0, dparam );
-    #pragma omp parallel for
     for (int idx=0; idx<parameter_num_loc+1; idx++) {
         tmp(idx);
     }
-#endif
-
+*/
 
     for (int idx=0; idx<parameter_num_loc; idx++) {
         // calculate and set the gradient
@@ -105,16 +104,17 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* 
     // the difference in one direction in the parameter for the gradient calculation
     double dparam = 1e-8;
 
-#ifdef TBB
     // calculate the function values at displaced x and the central x0 points through TBB parallel for
     tbb::parallel_for(0, parameter_num_loc+1, 1, functor_grad<Sub_Matrix_Decomposition>( parameters, instance, f, f0, dparam ));
-#else
+
+/*
+    // sequential version
     functor_sub_optimization_grad<Sub_Matrix_Decomposition> tmp = functor_grad<Sub_Matrix_Decomposition>( parameters, instance, f, f0, dparam );
     #pragma omp parallel for
     for (int idx=0; idx<parameter_num_loc+1; idx++) {
         tmp(idx);
     }
-#endif
+*/
 
 
     for (int idx=0; idx<parameter_num_loc; idx++) {
