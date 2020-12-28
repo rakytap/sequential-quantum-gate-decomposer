@@ -160,13 +160,11 @@ CPPFLAGS=$CPPFLAGS_SAVE
 LDFLAGS="$LDFLAGS $GSL_LIBS $TBB_LIBS $OBLAS_LIBS"
 
 # adding TBB include paths
-if test $TBB_OPT = yes; then
 if test x$TBBROOT != x ; then
 CXXFLAGS="$CXXFLAGS -I$TBBROOT/include"
 fi
 if test x$TBB_INC_DIR != x ; then
 CXXFLAGS="$CXXFLAGS -I$TBB_INC_DIR"
-fi
 fi
 
 # adding GSL include paths
