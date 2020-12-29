@@ -84,10 +84,18 @@ CPPFLAGS=$CPPFLAGS_SAVE
 ################################################################################
 #checking MKL library
 if test $MKL_OPT = yes ; then
-CXXFLAGS="$CXXFLAGS -DCBLAS=1 -mkl"
+CXXFLAGS="$CXXFLAGS -DCBLAS=1"
+
+if test $CXX = "icpc"; then
+  CXXFLAGS="$CXXFLAGS -mkl"
+fi
 
 if test x$MKL_LIB_DIR != x ; then
 LDFLAGS="${LDFLAGS} -L$MKL_LIB_DIR"
+fi
+
+if test $CXX = "g++"; then
+  LDFLAGS="${LDFLAGS} -L$MKL_LIB_DIR -lmkl_intel_lp64 -lmkl_gnu_thread -lmkl_core -lgomp -lpthread -lm -ldl"
 fi
 
 AC_CHECK_LIB([mkl_intel_lp64], [cblas_zgemm3m], [
