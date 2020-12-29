@@ -74,11 +74,13 @@ CNOT::~CNOT() {
 
 
 /**
-@brief Call to terive the operation matrix
+@brief Call to retrieve the operation matrix
 @return Returns with a pointer to the operation matrix
 */
 QGD_Complex16* CNOT::matrix() {
-    return composite_cnot();
+    Matrix CNOT_mtx = composite_cnot();
+    CNOT_mtx.set_owner(false);
+    return CNOT_mtx.get_data();
 }
 
 /**
@@ -87,7 +89,9 @@ QGD_Complex16* CNOT::matrix() {
 @return Returns with 0 on success.
 */
 int CNOT::matrix(QGD_Complex16* retrieve_matrix ) {
-    return composite_cnot( retrieve_matrix );
+    Matrix CNOT_mtx = composite_cnot();
+    memcpy(retrieve_matrix, CNOT_mtx.get_data(), CNOT_mtx.size()*sizeof(QGD_Complex16));
+    return 0;
 }
 
 
@@ -95,33 +99,21 @@ int CNOT::matrix(QGD_Complex16* retrieve_matrix ) {
 
 /**
 @brief Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits.
-@return Returns with a pointer to the operation matrix
+@return Returns with the operation matrix
 */
-QGD_Complex16* CNOT::composite_cnot() {
+Matrix CNOT::composite_cnot() {
 
 
         // preallocate array for the composite u3 operation
-        //matrix CNOT_mtx = matrix(matrix_size, matrix_size);
-        QGD_Complex16* CNOT_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+        Matrix CNOT_mtx = Matrix(matrix_size, matrix_size);
+        QGD_Complex16* CNOT_mtx_data = CNOT_mtx.get_data();
 
-        composite_cnot( CNOT_mtx );
+        // set to zero all the elements of the matrix
+        memset(CNOT_mtx_data, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
-        return CNOT_mtx;
-
-}
-
-/**
-@brief Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits.
-@param CNOT_mtx A pointer to the preallocated array of the operation matrix.
-@return Returns with 0 on success.
-*/
-int CNOT::composite_cnot( QGD_Complex16* CNOT_mtx ) {
 
         int target_qbit_power = Power_of_2(target_qbit);
         int control_qbit_power = Power_of_2(control_qbit);
-
-        // set to zero all the elements of the matrix
-        memset(CNOT_mtx, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
 
         // setting the operation elements
@@ -182,7 +174,7 @@ int CNOT::composite_cnot( QGD_Complex16* CNOT_mtx ) {
 
         }
 
-        return 0;
+        return CNOT_mtx;
 }
 
 

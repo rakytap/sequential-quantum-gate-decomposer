@@ -24,7 +24,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef CNOT_H
 #define CNOT_H
 
-#pragma once
 #include "qgd/matrix.h"
 #include "qgd/Operation.h"
 #include <math.h>
@@ -74,16 +73,9 @@ void set_qbit_num(int qbit_num);
 
 /**
 @brief Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits.
-@return Returns with a pointer to the operation matrix
+@return Returns with the operation matrix
 */
-QGD_Complex16* composite_cnot();
-
-/**
-@brief Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits.
-@param CNOT_mtx A pointer to the preallocated array of the operation matrix.
-@return Returns with 0 on success.
-*/
-int composite_cnot(QGD_Complex16* CNOT_mtx);
+Matrix composite_cnot();
 
 
 
