@@ -54,12 +54,18 @@ CNOT(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 
 /**
 @brief Call to retrieve the operation matrix
+@return Returns with the matrix of the operation
+*/
+Matrix get_matrix();
+
+/**
+@brief Call to retrieve the operation matrix --- OBSOLETE
 @return Returns with a pointer to the operation matrix
 */
 QGD_Complex16* matrix();
 
 /**
-@brief Call to retrieve the operation matrix
+@brief Call to retrieve the operation matrix --- OBSOLETE
 @param retrieve_matrix A pointer to the preallocated array of the operation matrix.
 @return Returns with 0 on success.
 */

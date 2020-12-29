@@ -21,10 +21,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class for the representation of one- and two-qubit operations.
 */
 
+#ifndef OPERATION_H
+#define OPERATION_H
 
-#pragma once
-#include <vector> 
+#include <vector>
 #include "qgd/common.h"
+#include "qgd/matrix.h"
 
 using namespace std;
 
@@ -45,7 +47,7 @@ protected:
     int qbit_num;
     /// The type of the operation (see enumeration operation_type)
     operation_type type;
-    /// The index of the qubit on which the operation acts (target_qbit >= 0) 
+    /// The index of the qubit on which the operation acts (target_qbit >= 0)
     int target_qbit;
     /// The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     int control_qbit;
@@ -55,7 +57,7 @@ protected:
     QGD_Complex16* matrix_alloc;
     /// the number of free parameters of the operation
     unsigned int parameter_num;
-    
+
 
 
 public:
@@ -80,7 +82,14 @@ virtual ~Operation();
 Operation(int qbit_num_in);
 
 /**
-@brief Call to terive the operation matrix
+@brief Call to retrieve the operation matrix
+@return Returns with a matrix of the operation
+*/
+Matrix get_matrix();
+
+
+/**
+@brief Call to terive the operation matrix --- OBSOLETE
 @return Returns with a pointer to the operation matrix
 */
 virtual QGD_Complex16* matrix();
@@ -99,13 +108,13 @@ virtual int matrix(QGD_Complex16* retrieve_matrix );
 @return Returns with 0 on success.
 */
 void set_matrix( QGD_Complex16* input );
-   
+
 /**
 @brief Set the number of qubits spanning the matrix of the operation
 @param qbit_num_in The number of qubits spanning the matrix
 */
 virtual void set_qbit_num( int qbit_num_in );
-     
+
 /**
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
@@ -136,7 +145,7 @@ unsigned int get_parameter_num();
 
 /**
 @brief Call to get the type of the operation
-@return Return with the type of the operation (see operation_type for details) 
+@return Return with the type of the operation (see operation_type for details)
 */
 operation_type get_type();
 
@@ -154,4 +163,5 @@ Operation* clone();
 
 };
 
-        
+
+#endif //OPERATION

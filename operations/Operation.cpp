@@ -39,7 +39,7 @@ Operation::Operation() {
     matrix_size = -1;
     /// The type of the operation (see enumeration operation_type)
     type = GENERAL_OPERATION;
-    /// The index of the qubit on which the operation acts (target_qbit >= 0) 
+    /// The index of the qubit on which the operation acts (target_qbit >= 0)
     target_qbit = -1;
     /// The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     control_qbit = -1;
@@ -64,7 +64,7 @@ Operation::Operation(int qbit_num_in) {
     matrix_size = Power_of_2(qbit_num);
     // A string describing the type of the operation
     type = GENERAL_OPERATION;
-    // The index of the qubit on which the operation acts (target_qbit >= 0) 
+    // The index of the qubit on which the operation acts (target_qbit >= 0)
     target_qbit = -1;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     control_qbit = -1;
@@ -85,7 +85,7 @@ Operation::~Operation() {
         matrix_alloc = NULL;
     }
 }
-   
+
 /**
 @brief Set the number of qubits spanning the matrix of the operation
 @param qbit_num_in The number of qubits spanning the matrix
@@ -96,6 +96,21 @@ void Operation::set_qbit_num( int qbit_num_in ) {
 
     // update the size of the matrix
     matrix_size = Power_of_2(qbit_num);
+
+}
+
+
+/**
+@brief Call to retrieve the operation matrix
+@return Returns with a matrix of the operation
+*/
+Matrix
+Operation::get_matrix() {
+
+    Matrix ret = Matrix(matrix_size, matrix_size );
+
+    return ret;
+
 
 }
 
@@ -130,13 +145,13 @@ void Operation::set_matrix( QGD_Complex16* input) {
     memcpy( matrix_alloc, input, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 }
 
-     
+
 /**
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void Operation::reorder_qubits( vector<int> qbit_list ) {
-      
+
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
         printf("Wrong number of qubits\n");
@@ -146,7 +161,7 @@ void Operation::reorder_qubits( vector<int> qbit_list ) {
 
     int control_qbit_new = control_qbit;
     int target_qbit_new = target_qbit;
-       
+
     // setting the new value for the target qubit
     for (int idx=0; idx<qbit_num; idx++) {
         if (target_qbit == qbit_list[idx]) {
@@ -189,7 +204,7 @@ unsigned int Operation::get_parameter_num() {
 
 /**
 @brief Call to get the type of the operation
-@return Return with the type of the operation (see operation_type for details) 
+@return Return with the type of the operation (see operation_type for details)
 */
 operation_type Operation::get_type() {
     return type;
@@ -212,14 +227,14 @@ int Operation::get_qbit_num() {
 Operation* Operation::clone() {
 
     Operation* ret = new Operation( qbit_num );
- 
+
     if (matrix_alloc != NULL) {
         ret->set_matrix( matrix_alloc );
     }
-    
+
 
     return ret;
 
 }
 
-  
+

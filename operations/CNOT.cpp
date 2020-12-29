@@ -75,6 +75,15 @@ CNOT::~CNOT() {
 
 /**
 @brief Call to retrieve the operation matrix
+@return Returns with the matrix of the operation
+*/
+Matrix
+CNOT::get_matrix() {
+    return composite_cnot();
+}
+
+/**
+@brief Call to retrieve the operation matrix
 @return Returns with a pointer to the operation matrix
 */
 QGD_Complex16* CNOT::matrix() {
