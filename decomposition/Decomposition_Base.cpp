@@ -90,9 +90,9 @@ Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in,
     // auxiliary variable storing the transformed matrix
     transformed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
-#if BLAS==1
+#if CBLAS==1
     num_threads = mkl_get_max_threads();
-#elif BLAS==2
+#elif CBLAS==2
     num_threads = openblas_get_num_threads();
 #endif
 
@@ -394,6 +394,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         //measure the time for the decompositin
         clock_t start_time = time(NULL);
 
+        ////////////////////////////////////////
+        // Start the iterations
         int iter_idx;
         for ( iter_idx=0;  iter_idx<max_iterations+1; iter_idx++) {
 
@@ -405,12 +407,12 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
             // determine the number of free parameters to be optimized
             block_parameter_num = 0;
-            for ( int block_idx=block_idx_start-1; block_idx>=block_idx_end; block_idx--) { //for block_idx in range(block_idx_start-1,block_idx_end-1,-1):
+            for ( int block_idx=block_idx_start-1; block_idx>=block_idx_end; block_idx--) {
                 block_parameter_num = block_parameter_num + operations_loc[block_idx]->get_parameter_num();
             }
 
             // ***** get the fixed operations applied before the optimized operations *****
-            if (block_idx_start < operations_loc.size() ) { //if block_idx_start < len(operations):
+            if (block_idx_start < operations_loc.size() ) {
                 std::vector<Operation*>::iterator fixed_operations_pre_it = operations.begin() + 1;
                 tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre);
                 memcpy( operations_mtx_pre, tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
@@ -448,6 +450,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 // matrix of the fixed operations aplied after the operations to be varied
                 double* fixed_parameters_post = optimized_parameters_gsl->data;
                 std::vector<Operation*>::iterator fixed_operations_post_it = operations_loc.begin();
+
                 operations_mtxs_post = get_operation_products(fixed_parameters_post, fixed_operations_post_it, block_idx_end);
             }
 
