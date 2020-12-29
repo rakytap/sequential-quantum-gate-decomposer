@@ -643,7 +643,7 @@ void N_Qubit_Decomposition::simplify_layers() {
                 operations_loc->combine( simplified_layer );
 
                 if (parameter_num < parameter_num_loc + simplified_parameter_num ) {
-                    optimized_parameters_loc = (double*)qgd_realloc( optimized_parameters_loc, parameter_num, parameter_num_loc + simplified_parameter_num, sizeof(double), 64 );
+                    optimized_parameters_loc = (double*)qgd_realloc( optimized_parameters_loc, parameter_num_loc + simplified_parameter_num, sizeof(double), 64 );
                 }
                 memcpy(optimized_parameters_loc+parameter_num_loc, simplified_parameters, simplified_parameter_num*sizeof(double) );
                 parameter_num_loc = parameter_num_loc + simplified_parameter_num;
@@ -653,7 +653,7 @@ void N_Qubit_Decomposition::simplify_layers() {
                 operations_loc->combine( blocks_to_save );
 
                 if (parameter_num < parameter_num_loc + parameter_num_block ) {
-                    optimized_parameters_loc = (double*)qgd_realloc( optimized_parameters_loc, parameter_num, parameter_num_loc + parameter_num_block, sizeof(double), 64 );
+                    optimized_parameters_loc = (double*)qgd_realloc( optimized_parameters_loc, parameter_num_loc + parameter_num_block, sizeof(double), 64 );
                 }
                 memcpy(optimized_parameters_loc+parameter_num_loc, optimized_parameters+parameter_idx, parameter_num_block*sizeof(double) );
                 parameter_num_loc = parameter_num_loc + parameter_num_block;

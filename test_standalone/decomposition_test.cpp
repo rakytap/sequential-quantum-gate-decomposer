@@ -22,9 +22,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include <iostream>
-#ifndef TBB
-#include <omp.h>
-#endif //TBB
 #include <stdio.h>
 #include <map>
 
@@ -88,7 +85,7 @@ int main() {
     }
 
     // creating the class for the decomposition
-    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx_adj, qbit_num, false, CLOSE_TO_ZERO );
+    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx_adj, qbit_num, false, RANDOM );
 //! [creating decomp class]
 
 //! [set parameters]

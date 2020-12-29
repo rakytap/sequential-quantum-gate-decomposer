@@ -28,72 +28,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "qgd/common.h"
 
 
-/**
-@brief Allocate aligned memory in a portable way. Memory allocated with aligned alloc *MUST* be freed using aligned_free. The allocated memory is initialized to zero.
-@param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
-@param size The number of bytes to allocate.
-@param zero If true, the returned memory will be zeroed. If false, the contents of the returned memory are undefined.
-@returns A pointer to `size` bytes of memory, aligned to an `alignment`-byte boundary.
-*/
-void *aligned_alloc(size_t alignment, size_t size, bool zero) {
-
-    size_t request_size = size + alignment;
-    char* buf = (char*)malloc(request_size);
-
-    if (zero) {
-        memset( buf, 0, request_size );
-    }
-
-    size_t remainder = ((size_t)buf) % alignment;
-    size_t offset = alignment - remainder;
-    char* ret = buf + (unsigned char)offset;
-
-    // store how many extra bytes we allocated in the byte just before the
-    // pointer we return
-    *(unsigned char*)(ret - 1) = offset;
-
-    return (void*)ret;
-}
-
-
-/**
-@brief Reallocate aligned memory in a portable way. Memory allocated with aligned realloc *MUST* be freed using aligned_free. The reallocation is done by either:
-a) expanding or contracting the existing area pointed to by aligned_ptr, if possible. The contents of the area remain unchanged up to the lesser of the new and old sizes. If the area is expanded, the contents of the new part of the array is set to zero.
-b) allocating a new memory block of size new_size bytes, copying memory area with size equal the lesser of the new and the old sizes, and freeing the old block.
-@param aligned_ptr The aligned pointer created by aigned_alloc
-@param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
-@param old_size The number of bytes to allocated in pointer aligned_ptr.
-@param size The number of bytes to allocate.
-@param zero If true, the returned memory will be zeroed. If false, the contents of the returned memory are undefined.
-@returns A pointer to `size` bytes of memory, aligned to an `alignment`-byte boundary.
-*/
-void *aligned_realloc(void* aligned_ptr, size_t alignment, size_t old_size, size_t size, bool zero) {
-
-    void* new_aligned_ptr = aligned_alloc(alignment, size, true);
-
-    if (old_size >= size) {
-        memcpy( new_aligned_ptr, aligned_ptr, size );
-    }
-    else {
-        memcpy( new_aligned_ptr, aligned_ptr, old_size );
-    }
-
-    qgd_free(aligned_ptr);
-    aligned_ptr = NULL;
-
-    return new_aligned_ptr;
-}
-
-
-/**
-@brief Free memory allocated with aligned_alloc
-@param aligned_ptr The aligned pointer created by aigned_alloc
-*/
-void aligned_free(void* aligned_ptr) {
-    int offset = *(((char*)aligned_ptr) - 1);
-    free(((char*)aligned_ptr) - offset);
-}
-
 
 /**
 @brief custom defined memory allocation function.  Memory allocated with aligned realloc *MUST* be freed using qgd_free.
@@ -103,7 +37,8 @@ void aligned_free(void* aligned_ptr) {
 */
 void* qgd_calloc( size_t element_num, size_t size, size_t alignment ) {
 
-    void* ret = aligned_alloc(alignment, size*element_num, true);
+    void* ret = scalable_aligned_malloc( size*element_num, CACHELINE);
+    memset(ret, 0, element_num*size);
     return ret;
 }
 
@@ -112,14 +47,13 @@ void* qgd_calloc( size_t element_num, size_t size, size_t alignment ) {
 a) expanding or contracting the existing area pointed to by aligned_ptr, if possible. The contents of the area remain unchanged up to the lesser of the new and old sizes. If the area is expanded, the contents of the new part of the array is set to zero.
 b) allocating a new memory block of size new_size bytes, copying memory area with size equal the lesser of the new and the old sizes, and freeing the old block.
 @param aligned_ptr The aligned pointer created by qgd_calloc
-@param element_num_old The number of elements in the old array to be reallocated.
 @param element_num The number of elements in the array to be allocated.
 @param size A size of one element (such as sizeof(double) )
 @param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
 */
-void* qgd_realloc(void* aligned_ptr, size_t element_num_old, size_t element_num, size_t size, size_t alignment ) {
+void* qgd_realloc(void* aligned_ptr, size_t element_num, size_t size, size_t alignment ) {
 
-    void* ret = aligned_realloc(aligned_ptr, alignment, size*element_num_old, size*element_num, true);
+    void* ret = scalable_aligned_realloc(aligned_ptr, size*element_num, CACHELINE);
     return ret;
 
 }
@@ -133,7 +67,7 @@ void qgd_free( void* ptr ) {
 
     // preventing double free corruption
     if (ptr != NULL ) {
-        aligned_free(ptr);
+        scalable_aligned_free(ptr);
     }
     ptr = NULL;
 }
@@ -151,44 +85,6 @@ int Power_of_2(int n) {
   return 2 * Power_of_2(n-1);
 }
 
-
-/**
-@brief Print a complex matrix on standard output
-@param matrix A pointer pointing to the matrix to be printed
-@param rows The number of rows in the matrix.
-@param cols The number of columns in the matrix.
-*/
-void print_mtx( QGD_Complex16* matrix, int rows, int cols ) {
-
-    for ( int row_idx=0; row_idx < rows; row_idx++ ) {
-        for ( int col_idx=0; col_idx < cols; col_idx++ ) {
-            int element_idx = row_idx*cols + col_idx;
-            printf("%1.3f + i*%1.3f,  ", matrix[element_idx].real, matrix[element_idx].imag);
-//            printf("%1.3f,  ", matrix[element_idx].real);
-        }
-        printf("\n");
-    }
-    printf("\n\n\n");
-
-}
-
-
-/**
-@brief Print a CNOT matrix on standard output
-@param matrix A pointer pointing to the matrix to be printed
-@param size The number of rows in the matrix.
-*/
-void print_CNOT( QGD_Complex16* matrix, int size ) {
-
-    for ( int row_idx=0; row_idx < size; row_idx++ ) {
-        for ( int col_idx=0; col_idx < size; col_idx++ ) {
-            int element_idx = row_idx*size+col_idx;
-            printf("%d,  ", int(matrix[element_idx].real));
-        }
-        printf("\n");
-    }
-    printf("\n\n\n");
-}
 
 
 /**

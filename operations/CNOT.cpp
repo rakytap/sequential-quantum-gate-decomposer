@@ -101,6 +101,7 @@ QGD_Complex16* CNOT::composite_cnot() {
 
 
         // preallocate array for the composite u3 operation
+        //matrix CNOT_mtx = matrix(matrix_size, matrix_size);
         QGD_Complex16* CNOT_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
         composite_cnot( CNOT_mtx );

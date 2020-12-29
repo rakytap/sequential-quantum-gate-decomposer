@@ -32,7 +32,9 @@ extern "C"
 #endif
 
 #include <tbb/tbb.h>
+#include <tbb/scalable_allocator.h>
 #include <omp.h>
+#include "qgd/QGDTypes.h"
 
 #include <string>
 #include <stdio.h>
@@ -71,53 +73,6 @@ void cblas_zgemm3m(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE Tran
 
 
 
-/// @brief Structure type representing complex numbers in the QGD package
-struct QGD_Complex16 {
-  /// the real part of a complex number
-  double real;
-  /// the imaginary part of a complex number
-  double imag;
-};
-
-/// @brief Structure type conatining numbers of gates.
-struct gates_num {
-  /// The number of U3 gates
-  int u3;
-  /// The number of CNOT gates
-  int cnot;
-  /// The number of general gates
-  int general;
-};
-
-
-/**
-@brief Allocate aligned memory in a portable way. Memory allocated with aligned alloc *MUST* be freed using aligned_free. The allocated memory is initialized to zero.
-@param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
-@param size The number of bytes to allocate.
-@param zero If true, the returned memory will be zeroed. If false, the contents of the returned memory are undefined.
-@returns A pointer to `size` bytes of memory, aligned to an `alignment`-byte boundary.
-*/
-void *aligned_alloc(size_t alignment, size_t size, bool zero);
-
-/**
-@brief Reallocate aligned memory in a portable way. Memory allocated with aligned realloc *MUST* be freed using aligned_free. The reallocation is done by either:
-a) expanding or contracting the existing area pointed to by aligned_ptr, if possible. The contents of the area remain unchanged up to the lesser of the new and old sizes. If the area is expanded, the contents of the new part of the array is set to zero.
-b) allocating a new memory block of size new_size bytes, copying memory area with size equal the lesser of the new and the old sizes, and freeing the old block.
-@param aligned_ptr The aligned pointer created by aigned_alloc
-@param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
-@param old_size The number of bytes to allocated in pointer aligned_ptr.
-@param size The number of bytes to allocate.
-@param zero If true, the returned memory will be zeroed. If false, the contents of the returned memory are undefined.
-@returns A pointer to `size` bytes of memory, aligned to an `alignment`-byte boundary.
-*/
-void *aligned_realloc(void* aligned_ptr, size_t alignment, size_t old_size, size_t size, bool zero);
-
-/**
-@brief Free memory allocated with aligned_alloc
-@param aligned_ptr The aligned pointer created by aigned_alloc
-*/
-void aligned_free(void* aligned_ptr);
-
 
 /**
 @brief custom defined memory allocation function.  Memory allocated with aligned realloc *MUST* be freed using qgd_free
@@ -132,12 +87,11 @@ void* qgd_calloc( size_t element_num, size_t size, size_t alignment );
 a) expanding or contracting the existing area pointed to by aligned_ptr, if possible. The contents of the area remain unchanged up to the lesser of the new and old sizes. If the area is expanded, the contents of the new part of the array is set to zero.
 b) allocating a new memory block of size new_size bytes, copying memory area with size equal the lesser of the new and the old sizes, and freeing the old block.
 @param aligned_ptr The aligned pointer created by qgd_calloc
-@param element_num_old The number of elements in the old array to be reallocated.
 @param element_num The number of elements in the array to be allocated.
 @param size A size of one element (such as sizeof(double) )
 @param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
 */
-void* qgd_realloc(void* aligned_ptr, size_t element_num_old, size_t element_num, size_t size, size_t alignment );
+void* qgd_realloc(void* aligned_ptr, size_t element_num, size_t size, size_t alignment );
 
 /**
 @brief custom defined memory release function.
@@ -151,20 +105,6 @@ void qgd_free( void* ptr );
 */
 int Power_of_2(int n);
 
-/**
-@brief Print a complex matrix on standard output
-@param matrix A pointer pointing to the matrix to be printed
-@param rows The number of rows in the matrix.
-@param cols The number of columns in the matrix.
-*/
-void print_mtx( QGD_Complex16* matrix, int rows, int cols );
-
-/**
-@brief Print a CNOT matrix on standard output
-@param matrix A pointer pointing to the matrix to be printed
-@param size The number of rows in the matrix.
-*/
-void print_CNOT( QGD_Complex16* matrix, int size );
 
 /**
 @brief Add an integer to a vector of integers if the integer is not already an element of the vector. The ascending order is kept during the process.

@@ -21,11 +21,14 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class representing a CNOT operation.
 */
 
+#ifndef CNOT_H
+#define CNOT_H
+
 #pragma once
+#include "qgd/matrix.h"
 #include "qgd/Operation.h"
 #include <math.h>
 
-using namespace std;
 
 
 /**
@@ -33,10 +36,10 @@ using namespace std;
 */
 class CNOT: public Operation {
 
-protected:   
-        
+protected:
 
-public: 
+
+public:
 /**
 @brief Constructor of the class.
 @param qbit_num_in The number of qubits in the unitaries
@@ -98,4 +101,4 @@ CNOT* clone();
 
 };
 
-                   
+#endif //CNOT
