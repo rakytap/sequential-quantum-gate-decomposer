@@ -35,6 +35,7 @@ extern "C"
 #include <tbb/scalable_allocator.h>
 #include <omp.h>
 #include "qgd/QGDTypes.h"
+#include "qgd/matrix.h"
 
 #include <string>
 #include <stdio.h>
@@ -146,6 +147,16 @@ QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_siz
 */
 int zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size);
 
+
+/**
+@brief Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or cblas_zgemm
+@param A The first matrix.
+@param B The second matrix
+@return Returns with the resulted matrix.
+*/
+Matrix zgemm3m_wrapper( Matrix& A , Matrix& B );
+
+
 /**
 @brief Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or cblas_zgemm
 @param A The first matrix.
@@ -173,6 +184,14 @@ int zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int m
 @return Returns with zero on success.
 */
 int reduce_zgemm( std::vector<QGD_Complex16*> mtxs, QGD_Complex16* C, int matrix_size );
+
+/**
+@brief Calculate the product of several square shaped complex matrices stored in a vector.
+@param mtxs The vector of matrices.
+@param matrix_size The number rows in the matrices
+@return Returns with the calculated product matrix
+*/
+Matrix reduce_zgemm( std::vector<Matrix>& mtxs );
 
 /**
 @brief Call to subtract a scalar from the diagonal of a complex matrix.

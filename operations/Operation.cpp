@@ -25,8 +25,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "qgd/Operation.h"
 
 
-using namespace std;
-
 /**
 @brief Deafult constructor of the class.
 @return An instance of the class
@@ -107,7 +105,7 @@ void Operation::set_qbit_num( int qbit_num_in ) {
 Matrix
 Operation::get_matrix() {
 
-    Matrix ret = Matrix(matrix_size, matrix_size );
+    Matrix ret = Matrix(matrix_alloc, matrix_size, matrix_size );
 
     return ret;
 
@@ -150,7 +148,7 @@ void Operation::set_matrix( QGD_Complex16* input) {
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void Operation::reorder_qubits( vector<int> qbit_list ) {
+void Operation::reorder_qubits( std::vector<int> qbit_list ) {
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {

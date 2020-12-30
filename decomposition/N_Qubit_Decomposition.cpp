@@ -756,7 +756,7 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         // get the matrix of the two qubit space
 
         // reorder the control and target qubits to the end of the list
-        vector<int> qbits_reordered;
+        std::vector<int> qbits_reordered;
         for (int qbit_idx=qbit_num-1; qbit_idx>-1; qbit_idx-- ) { // in range(self.qbit_num-1,-1,-1):
             if (  (qbit_idx != target_qbit) && (qbit_idx != control_qbit) )  {
                 qbits_reordered.push_back(qbit_idx);
@@ -821,7 +821,7 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
 
         // contruct the layer containing the simplified operations in the N-qubit space
         // but first get the inverse reordered qubit list
-        vector<int> qbits_inverse_reordered;
+        std::vector<int> qbits_inverse_reordered;
         for (int idx=0; idx<qbit_num; idx++) {
             qbits_inverse_reordered.push_back(-1);
         }

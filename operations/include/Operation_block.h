@@ -21,14 +21,14 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class responsible for grouping CNOT and U3 operations into layers
 */
 
+#ifndef OPERATION_BLOCK_H
+#define OPERATION_BLOCK_H
 
-#pragma once
 #include <vector>
 #include "qgd/common.h"
 #include "qgd/Operation.h"
 
 
-using namespace std;
 
 /**
 @brief A class responsible for grouping CNOT and U3 operations into layers
@@ -38,7 +38,7 @@ class Operation_block :  public Operation {
 
 protected:
     /// The list of stored operations
-    vector<Operation*> operations;
+    std::vector<Operation*> operations;
     /// number of operation layers
     int layer_num;
 
@@ -69,13 +69,21 @@ void release_operations();
 /**
 @brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)
 @param parameters An array pointing to the parameters of the operations
+@return Returns with the operation matrix
+*/
+Matrix get_matrix( const double* parameters );
+
+
+/**
+@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block) --- OBSOLETE
+@param parameters An array pointing to the parameters of the operations
 @return Returns with a pointer to the operation matrix
 */
 QGD_Complex16* matrix( const double* parameters );
 
 
 /**
-@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)
+@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block) --- OBSOLETE
 @param parameters An array pointing to the parameters of the operations
 @param block_mtx A preallocated array to store the matrix of the operation block.
 @return Returns with 0 on seccess
@@ -87,7 +95,7 @@ int matrix( const double* parameters, QGD_Complex16* block_mtx  );
 @param parameters Array of parameters to calculate the matrix of the operation block
 @return Returns with the list of the operations
 */
-std::vector<QGD_Complex16*> get_matrices(const double* parameters );
+std::vector<Matrix> get_matrices(const double* parameters );
 
 /**
 @brief Append a U3 gate to the list of operations
@@ -127,14 +135,14 @@ void add_cnot_to_front( int control_qbit, int target_qbit );
 @brief Append a list of operations to the list of operations
 @param operations_in A list of operation class instances.
 */
-void add_operations_to_end( vector<Operation*> operations_in );
+void add_operations_to_end( std::vector<Operation*> operations_in );
 
 
 /**
 @brief Add an array of operations to the front of the list of operations
 @param operations_in A list of operation class instances.
 */
-void add_operations_to_front( vector<Operation*> operations_in );
+void add_operations_to_front( std::vector<Operation*> operations_in );
 
 
 /**
@@ -184,7 +192,7 @@ void list_operations( const double* parameters, int start_index );
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void reorder_qubits( vector<int> qbit_list );
+void reorder_qubits( std::vector<int> qbit_list );
 
 
 /**
@@ -229,5 +237,5 @@ int extract_operations( Operation_block* op_block );
 
 };
 
-
+#endif //OPERATION_BLOCK
 

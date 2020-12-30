@@ -28,7 +28,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "qgd/common.h"
 #include "qgd/matrix.h"
 
-using namespace std;
 
 /// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)
 typedef enum operation_type {GENERAL_OPERATION, CNOT_OPERATION, U3_OPERATION, BLOCK_OPERATION, DECOMPOSITION_BASE_CLASS, SUB_MATRIX_DECOMPOSITION_CLASS, N_QUBIT_DECOMPOSITION_CLASS} operation_type;
@@ -119,7 +118,7 @@ virtual void set_qbit_num( int qbit_num_in );
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-virtual void reorder_qubits( vector<int> qbit_list );
+virtual void reorder_qubits( std::vector<int> qbit_list );
 
 
 /**

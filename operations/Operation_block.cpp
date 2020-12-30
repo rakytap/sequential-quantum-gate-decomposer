@@ -26,7 +26,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "qgd/U3.h"
 #include "qgd/Operation_block.h"
 
-using namespace std;
 
 /**
 @brief Deafult constructor of the class.
@@ -65,7 +64,8 @@ Operation_block::~Operation_block() {
 /**
 @brief Call to release the stored operations
 */
-void Operation_block::release_operations() {
+void
+Operation_block::release_operations() {
 
     //free the alloctaed memory of the stored operations
     for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
@@ -98,27 +98,47 @@ void Operation_block::release_operations() {
 }
 
 
-
 /**
 @brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)
+@param parameters An array pointing to the parameters of the operations
+@return Returns with the operation matrix
+*/
+Matrix
+Operation_block::get_matrix( const double* parameters ) {
+
+    // get the matrices of the operations grouped in the block
+    std::vector<Matrix> operation_mtxs = get_matrices( parameters );
+
+    // calculate the product of the matrices
+    Matrix block_mtx = reduce_zgemm( operation_mtxs );
+
+    return block_mtx;
+
+
+}
+
+
+/**
+@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block) --- OBSOLETE
 @param parameters An array pointing to the parameters of the operations
 @return Returns with a pointer to the operation matrix
 */
 QGD_Complex16* Operation_block::matrix( const double* parameters  ) {
 
-    // preallocate array for the composite u3 operation
-    QGD_Complex16* block_matrix = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+    // get the matrices of the operations grouped in the block
+    std::vector<Matrix> operation_mtxs = get_matrices( parameters );
 
-    // determine the matrix representation of the operations
-    matrix( parameters, block_matrix  );
+    // calculate the product of the matrices
+    Matrix block_mtx = reduce_zgemm( operation_mtxs );
 
-    return block_matrix;
+    block_mtx.set_owner(false);
+    return block_mtx.get_data();
 }
 
 
 
 /**
-@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)
+@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block) --- OBSOLETE
 @param parameters An array pointing to the parameters of the operations
 @param block_mtx A preallocated array to store the matrix of the operation block.
 @return Returns with 0 on seccess
@@ -127,81 +147,18 @@ int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx 
 
 
     // get the matrices of the operations grouped in the block
-    vector<QGD_Complex16*> operation_mtxs = get_matrices( parameters );
+    std::vector<Matrix> operation_mtxs = get_matrices( parameters );
 
     // calculate the product of the matrices
-    reduce_zgemm( operation_mtxs, block_mtx, matrix_size );
-
-    // free the constituent matrices if possible
-    for ( std::vector<QGD_Complex16*>::iterator it=operation_mtxs.begin(); it!=operation_mtxs.end(); it++) {
-        qgd_free(*it);
-        *it = NULL;
-    }
+    Matrix block_mtx_mtx = reduce_zgemm( operation_mtxs );
 
     operation_mtxs.clear();
+
+    memcpy(block_mtx, block_mtx_mtx.get_data(), block_mtx_mtx.size()*sizeof(QGD_Complex16));
 
 
     return 0;
 
-
-
-/*
-    QGD_Complex16* tmp = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size*sizeof(QGD_Complex16), 64 );
-    QGD_Complex16* operation_mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size*sizeof(QGD_Complex16), 64 );
-
-    int idx = 0;
-    for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
-
-        Operation* operation = *it;
-
-
-        if (operation->get_type() == CNOT_OPERATION) {
-            CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            cnot_operation->matrix(operation_mtx);
-        }
-        else if (operation->get_type() == U3_OPERATION) {
-
-            U3* u3_operation = static_cast<U3*>(operation);
-
-            if (u3_operation->get_parameter_num() == 1 ) {
-                u3_operation->matrix( parameters, operation_mtx );
-                parameters = parameters + 1;
-            }
-            else if (u3_operation->get_parameter_num() == 2 ) {
-                u3_operation->matrix( parameters, operation_mtx );
-                parameters = parameters + 2;
-            }
-            else if (u3_operation->get_parameter_num() == 3 ) {
-                u3_operation->matrix( parameters, operation_mtx );
-                parameters = parameters + 3;
-            }
-            else {
-                printf("The U3 operation has wrong number of parameters");
-                throw "The U3 operation has wrong number of parameters";
-            }
-
-
-        }
-        else if (operation->get_type() == GENERAL_OPERATION) {
-            operation->matrix(operation_mtx);
-        }
-
-
-        if (idx == 0) {
-            memcpy( block_mtx, operation_mtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-        }
-        else {
-            zgemm3m_wrapper(block_mtx, operation_mtx, tmp, matrix_size);
-            memcpy( block_mtx, tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-        }
-
-
-    }
-
-    qgd_free(tmp);
-    qgd_free(operation_mtx);
-
-*/
 }
 
 
@@ -212,19 +169,19 @@ int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx 
 @param parameters Array of parameters to calculate the matrix of the operation block
 @return Returns with the list of the operations
 */
-std::vector<QGD_Complex16*> Operation_block::get_matrices( const double* parameters ) {
+std::vector<Matrix> Operation_block::get_matrices( const double* parameters ) {
 
-    std::vector<QGD_Complex16*> matrices;
-    QGD_Complex16* operation_mtx=NULL;
+    std::vector<Matrix> matrices;
+
 
     for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
 
         Operation* operation = *it;
-
+        Matrix operation_mtx;
 
         if (operation->get_type() == CNOT_OPERATION) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            operation_mtx = cnot_operation->matrix();
+            operation_mtx = cnot_operation->get_matrix();
 
         }
         else if (operation->get_type() == U3_OPERATION) {
@@ -232,15 +189,15 @@ std::vector<QGD_Complex16*> Operation_block::get_matrices( const double* paramet
             U3* u3_operation = static_cast<U3*>(operation);
 
             if (u3_operation->get_parameter_num() == 1 ) {
-                operation_mtx = u3_operation->matrix( parameters );
+                operation_mtx = u3_operation->get_matrix( parameters );
                 parameters = parameters + 1;
             }
             else if (u3_operation->get_parameter_num() == 2 ) {
-                operation_mtx = u3_operation->matrix( parameters );
+                operation_mtx = u3_operation->get_matrix( parameters );
                 parameters = parameters + 2;
             }
             else if (u3_operation->get_parameter_num() == 3 ) {
-                operation_mtx = u3_operation->matrix( parameters );
+                operation_mtx = u3_operation->get_matrix( parameters );
                 parameters = parameters + 3;
             }
             else {
@@ -250,7 +207,7 @@ std::vector<QGD_Complex16*> Operation_block::get_matrices( const double* paramet
 
         }
         else if (operation->get_type() == GENERAL_OPERATION) {
-            operation_mtx = operation->matrix();
+            operation_mtx = operation->get_matrix();
         }
 
         matrices.push_back(operation_mtx);
@@ -333,7 +290,7 @@ void Operation_block::add_cnot_to_front( int control_qbit, int target_qbit) {
 @brief Append a list of operations to the list of operations
 @param operations_in A list of operation class instances.
 */
-void Operation_block::add_operations_to_end( vector<Operation*> operations_in) {
+void Operation_block::add_operations_to_end( std::vector<Operation*> operations_in) {
 
         for(std::vector<Operation*>::iterator it = operations_in.begin(); it != operations_in.end(); ++it) {
             add_operation_to_end( *it );
@@ -346,7 +303,7 @@ void Operation_block::add_operations_to_end( vector<Operation*> operations_in) {
 @brief Add an array of operations to the front of the list of operations
 @param operations_in A list of operation class instances.
 */
-void Operation_block::add_operations_to_front( vector<Operation*>  operations_in) {
+void Operation_block::add_operations_to_front( std::vector<Operation*>  operations_in) {
 
         // adding operations in reversed order!!
         for(std::vector<Operation*>::iterator it = operations_in.end(); it != operations_in.begin(); --it) {
@@ -560,7 +517,7 @@ void Operation_block::list_operations( const double* parameters, int start_index
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void Operation_block::reorder_qubits( vector<int>  qbit_list) {
+void Operation_block::reorder_qubits( std::vector<int>  qbit_list) {
 
     for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
 

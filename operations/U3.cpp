@@ -470,7 +470,7 @@ void U3::set_qbit_num(int qbit_num_in) {
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void U3::reorder_qubits( vector<int> qbit_list) {
+void U3::reorder_qubits( std::vector<int> qbit_list) {
 
     Operation::reorder_qubits(qbit_list);
 

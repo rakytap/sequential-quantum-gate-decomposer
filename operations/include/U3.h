@@ -21,13 +21,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class representing a U3 operation.
 */
 
+#ifndef U3_H
+#define U3_H
 
-#pragma once
 #include "qgd/Operation.h"
 #include "qgd/matrix.h"
 #include <math.h>
 
-using namespace std;
 
 /**
 @brief A class representing a U3 operation.
@@ -185,7 +185,7 @@ void set_qbit_num(int qbit_num_in);
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void reorder_qubits( vector<int> qbit_list);
+void reorder_qubits( std::vector<int> qbit_list);
 
 /**
 @brief Call to check whether theta is a free parameter of the gate
@@ -241,4 +241,5 @@ void get_optimized_parameters(double *parameters_in );
 };
 
 
+#endif //U3
 

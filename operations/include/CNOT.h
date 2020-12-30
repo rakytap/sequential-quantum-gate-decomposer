@@ -89,7 +89,7 @@ Matrix composite_cnot();
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void reorder_qubits( vector<int> qbit_list);
+void reorder_qubits( std::vector<int> qbit_list);
 
 /**
 @brief Call to create a clone of the present class

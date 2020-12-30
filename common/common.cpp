@@ -218,6 +218,37 @@ int zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, i
 }
 
 
+/**
+@brief Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or cblas_zgemm
+@param A The first matrix.
+@param B The second matrix
+@return Returns with the resulted matrix.
+*/
+Matrix zgemm3m_wrapper( Matrix& A , Matrix& B ) {
+
+    // parameters alpha and beta for the cblas_zgemm3m function
+    double alpha = 1.0;
+    double beta = 0.0;
+
+    int matrix_size = (int) A.rows;
+
+    // preallocate array for the result
+    Matrix C = Matrix( A.rows, B.cols );
+
+    // remove memory trash from the allocated memory of the results
+    memset( C.get_data(), 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+
+    // calculate the product of A and B
+#ifdef CBLAS
+    cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A.get_data(), matrix_size, B.get_data(), matrix_size, &beta, C.get_data(), matrix_size);
+#else
+    cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A.get_data(), matrix_size, B.get_data(), matrix_size, &beta, C.get_data(), matrix_size);
+#endif
+
+    return C;
+
+}
+
 
 
 /**
@@ -334,6 +365,58 @@ print_mtx( C, matrix_size, matrix_size);
     tmp = NULL;
 
     return 0;
+
+}
+
+
+
+/**
+@brief Calculate the product of several square shaped complex matrices stored in a vector.
+@param mtxs The vector of matrices.
+@param matrix_size The number rows in the matrices
+@return Returns with the calculated product matrix
+*/
+Matrix
+reduce_zgemm( std::vector<Matrix>& mtxs ) {
+
+
+
+    if (mtxs.size() == 0 ) {
+        return Matrix();
+    }
+
+    // pointers to matrices to be used in the multiplications
+    Matrix A;
+    Matrix B;
+    Matrix C;
+
+    // the iteration number
+    int iteration = 0;
+
+
+    A = *mtxs.begin();
+
+    // calculate the product of complex matrices
+    for(std::vector<Matrix>::iterator it=++mtxs.begin(); it != mtxs.end(); ++it) {
+
+        iteration++;
+        B = *it;
+
+        if ( iteration>1 ) {
+            A = C;
+        }
+
+        // calculate the product of A and B
+        C = zgemm3m_wrapper(A, B);
+/*
+A.print_matrix();
+B.print_matrix();
+C.print_matrix();
+*/
+    }
+
+    //C.print_matrix();
+    return C;
 
 }
 
