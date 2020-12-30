@@ -71,7 +71,7 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
     // creating an instance of class N_Qubit_decomposition
     // TODO: remove get_data()
     Umtx.set_owner(false);
-    N_Qubit_Decomposition* instance = new N_Qubit_Decomposition( Umtx.get_data(), qbit_num, optimize_layer_num, initial_guess );
+    N_Qubit_Decomposition* instance = new N_Qubit_Decomposition( Umtx, qbit_num, optimize_layer_num, initial_guess );
 
     return (void*)instance;
 

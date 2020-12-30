@@ -67,7 +67,7 @@ protected:
     std::map<int,int> iteration_loops;
 
     /// The unitary to be decomposed
-    QGD_Complex16* Umtx;
+    Matrix Umtx;
 
     /// The optimized parameters for the operations
     double* optimized_parameters;
@@ -114,7 +114,7 @@ public:
 @param initial_guess_in Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return An instance of the class
 */
-Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, guess_type initial_guess_in);
+Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_type initial_guess_in);
 
 /**
 @brief Destructor of the class

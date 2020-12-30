@@ -35,7 +35,7 @@ std::map<int,int> Decomposition_Base::max_layer_num_def;
 @param initial_guess_in Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return An instance of the class
 */
-Decomposition_Base::Decomposition_Base( QGD_Complex16* Umtx_in, int qbit_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Operation_block(qbit_num_in) {
+Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Operation_block(qbit_num_in) {
 
     Init_max_layer_num();
 
@@ -143,7 +143,7 @@ void Decomposition_Base::set_max_iteration( int max_iterations_in) {
 void Decomposition_Base::finalize_decomposition() {
 
         // get the transformed matrix resulted by the operations in the list
-        QGD_Complex16* transformed_matrix = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+        QGD_Complex16* transformed_matrix = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx.get_data() );
 
         // preallocate the storage for the finalizing parameters
         finalizing_parameter_num = 3*qbit_num;
@@ -335,7 +335,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
         // store the initial unitary to be decomposed
         QGD_Complex16* Umtx_loc = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-        memcpy(Umtx_loc, Umtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+        memcpy(Umtx_loc, Umtx.get_data(), matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
         // storing the initial computational parameters
         int optimization_block_loc = optimization_block;
@@ -421,7 +421,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             }
 
             // Transform the initial unitary upon the fixed pre-optimization operations
-            apply_operation(operations_mtx_pre.get_data(), Umtx_loc, Umtx);
+            apply_operation(operations_mtx_pre.get_data(), Umtx_loc, Umtx.get_data());
 
 
             // clear the operation list used in the previous iterations
@@ -581,7 +581,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         delete(fixed_operation_post);
 
         // restore the original unitary
-        memcpy(Umtx, Umtx_loc, matrix_size*matrix_size*sizeof(QGD_Complex16)) ;
+        memcpy(Umtx.get_data(), Umtx_loc, matrix_size*matrix_size*sizeof(QGD_Complex16)) ;
 
         // free the allocated temporary Umtx
         qgd_free(Umtx_loc);
@@ -631,7 +631,7 @@ bool Decomposition_Base::check_optimization_solution() {
 @return Return with a pointer pointing to the unitary Umtx
 */
 QGD_Complex16* Decomposition_Base::get_Umtx() {
-    return Umtx;
+    return Umtx.get_data();
 }
 
 
@@ -673,7 +673,7 @@ Matrix
 Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations ) {
 
     // TODO: make Matrix from Umtx
-    Matrix Umtx_mtx = Matrix( Umtx, matrix_size, matrix_size);
+    Matrix Umtx_mtx = Matrix( Umtx.get_data(), matrix_size, matrix_size);
     return get_transformed_matrix( parameters, operations_it, num_of_operations, Umtx_mtx );
 
 }
@@ -766,7 +766,7 @@ QGD_Complex16* Decomposition_Base::get_transformed_matrix( const double* paramet
 
 
         if (initial_matrix == NULL) {
-            initial_matrix = Umtx;
+            initial_matrix = Umtx.get_data();
         }
 
         if (num_of_operations==0) {
@@ -855,7 +855,7 @@ print_mtx( initial_matrix, matrix_size, matrix_size );
 */
 QGD_Complex16* Decomposition_Base::get_decomposed_matrix() {
 
-        return get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+        return get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx.get_data() );
 }
 
 /**

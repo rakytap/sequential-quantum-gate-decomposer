@@ -35,7 +35,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize_layer_num_in=false, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
+Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in=false, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
 
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -117,7 +117,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
             printf("Disentanglig not needed\n");
         }
         subdecomposed_mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-        memcpy( subdecomposed_mtx, Umtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+        memcpy( subdecomposed_mtx, Umtx.get_data(), matrix_size*matrix_size*sizeof(QGD_Complex16) );
         subdisentaglement_done = true;
         return;
     }
@@ -227,7 +227,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
     // The subunitarized matrix
     //subdecomposed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-    subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+    subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx.get_data() );
 }
 
 
@@ -347,7 +347,7 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
 double Sub_Matrix_Decomposition::optimization_problem( const double* parameters ) {
 
         // get the transformed matrix with the operations in the list
-        QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
+        QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx.get_data() );
 
         double cost_function = get_submatrix_cost_function(matrix_new, matrix_size); //NEW METHOD
 

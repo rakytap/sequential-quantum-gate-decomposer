@@ -55,7 +55,7 @@ public:
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
+N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
 
 
 

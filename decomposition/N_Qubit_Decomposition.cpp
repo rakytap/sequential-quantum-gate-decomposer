@@ -32,7 +32,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition::N_Qubit_Decomposition( QGD_Complex16* Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
+N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
 
     // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -154,7 +154,7 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
         }
 
         // calculating the final error of the decomposition
-        QGD_Complex16* matrix_decomposed = get_transformed_matrix(optimized_parameters, operations.begin(), operations.size(), Umtx );
+        QGD_Complex16* matrix_decomposed = get_transformed_matrix(optimized_parameters, operations.begin(), operations.size(), Umtx.get_data() );
 //print_mtx(matrix_decomposed, matrix_size, matrix_size);
 
         subtract_diag( matrix_decomposed, matrix_size, matrix_decomposed[0] );
@@ -262,7 +262,7 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
         }
 
         // obtaining the subdecomposed submatrices
-        QGD_Complex16* subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+        QGD_Complex16* subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx.get_data() );
 
         // get the most unitary submatrix
         // get the number of 2qubit submatrices
@@ -319,7 +319,9 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
         // if the qubit number in the submatirx is greater than 2 new N-qubit decomposition is started
 
         // create class tp decompose submatrices
-        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(most_unitary_submatrix, qbit_num-1, optimize_layer_num, initial_guess);
+        // TODO
+        Matrix most_unitary_submatrix_mtx = Matrix(most_unitary_submatrix, submatrix_size, submatrix_size );
+        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(most_unitary_submatrix_mtx, qbit_num-1, optimize_layer_num, initial_guess);
 
         // setting the verbosity
         cdecomposition->set_verbose( verbose );
@@ -486,7 +488,7 @@ void N_Qubit_Decomposition::solve_layer_optimization_problem( int num_of_paramet
 double N_Qubit_Decomposition::optimization_problem( const double* parameters ) {
 
         // get the transformed matrix with the operations in the list
-        QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
+        QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx.get_data() );
 
         double cost_function = get_cost_function(matrix_new, matrix_size);
 
@@ -790,7 +792,9 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         }
 
         // decompose the chosen 2-qubit unitary
-        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(submatrix, 2, true, initial_guess);
+        //TODO
+        Matrix submatrix_mtx = Matrix(submatrix, 4, 4);
+        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(submatrix_mtx, 2, true, initial_guess);
 
         // set the maximal number of layers
         cdecomposition->set_max_layer_num( max_layer_num_loc );

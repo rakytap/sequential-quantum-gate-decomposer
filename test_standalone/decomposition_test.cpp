@@ -46,33 +46,28 @@ int main() {
 
 //! [few CNOT]
     // The number of qubits spanning the random unitary
-    int qbit_num = 4;
+    int qbit_num = 3;
 
     // the number of rows of the random unitary
     int matrix_size = Power_of_2(qbit_num);
 
     // creating random unitary constructing from 6 CNOT gates.
     int cnot_num = 1;
-    QGD_Complex16* Umtx_few_CNOT = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-    few_CNOT_unitary( qbit_num, cnot_num, Umtx_few_CNOT);
+    Matrix Umtx_few_CNOT = few_CNOT_unitary( qbit_num, cnot_num);
 //! [few CNOT]
-
-    // release the constructed random unitary
-    qgd_free( Umtx_few_CNOT );
-    Umtx_few_CNOT = NULL;
 
 
 //! [general random]
     // creating class to generate general random unitary
     Random_Unitary ru = Random_Unitary(matrix_size);
     // create general random unitary
-    QGD_Complex16* Umtx = ru.Construct_Unitary_Matrix();
+    Matrix Umtx = ru.Construct_Unitary_Matrix();
 //! [general random]
 
 
 //! [creating decomp class]
     // construct the complex transpose of the random unitary
-    QGD_Complex16* Umtx_adj = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+    Matrix Umtx_adj = Matrix(matrix_size, matrix_size);
     for (int element_idx=0; element_idx<matrix_size*matrix_size; element_idx++) {
         // determine the row and column index of the element to be filled.
         int col_idx = element_idx % matrix_size;
@@ -127,12 +122,6 @@ int main() {
     cDecomposition.list_operations(1);
 //! [performing decomposition]
 
-
-    qgd_free( Umtx );
-    Umtx = NULL;
-
-    qgd_free( Umtx_adj );
-    Umtx_adj = NULL;
 
 
 
