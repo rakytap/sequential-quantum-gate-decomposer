@@ -380,7 +380,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         int block_parameter_num;
         Matrix operations_mtx_pre;
         Operation* fixed_operation_post = new Operation( qbit_num );
-        std::vector<QGD_Complex16*> operations_mtxs_post;
+        std::vector<Matrix> operations_mtxs_post;
 
         // the identity matrix used in the calcualtions
         Matrix Identity =  create_identity( matrix_size );
@@ -444,16 +444,12 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
             // Create a general operation describing the cumulative effect of gates following the optimized operations
             if (block_idx_end > 0) {
-                fixed_operation_post->set_matrix( operations_mtxs_post[block_idx_end-1] );
+                fixed_operation_post->set_matrix( operations_mtxs_post[block_idx_end-1].get_data() );
 //printf("operations_mtxs_post with prefixed:\n");
 //print_mtx(operations_mtxs_post[block_idx_end-1], matrix_size, matrix_size);
             }
             else {
                 // release operation products
-                for (std::vector<QGD_Complex16*>::iterator mtxs_it=operations_mtxs_post.begin(); mtxs_it != operations_mtxs_post.end(); mtxs_it++ ) {
-                    qgd_free( *mtxs_it );
-                    *mtxs_it = NULL;
-                }
                 operations_mtxs_post.clear();
                 fixed_operation_post->set_matrix( Identity.get_data() );
             }
@@ -568,14 +564,14 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         solution_guess_gsl = NULL;
 
         QGD_Complex16* operations_mtx_post = fixed_operation_post->matrix();
-
+/*
         // release post operation products
         for (std::vector<QGD_Complex16*>::iterator mtxs_it=operations_mtxs_post.begin(); mtxs_it != operations_mtxs_post.end(); mtxs_it++ ) {
             qgd_free( *mtxs_it );
             *mtxs_it = NULL;
         }
         operations_mtxs_post.clear();
-
+*/
 
         delete(fixed_operation_post);
 

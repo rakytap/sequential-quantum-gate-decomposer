@@ -192,7 +192,7 @@ bool check_optimization_solution();
 @param num_of_operations The number of operations involved in the calculations
 @return Returns with a vector of the product matrices.
 */
-std::vector<QGD_Complex16*> get_operation_products(double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations);
+std::vector<Matrix> get_operation_products(double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations);
 
 
 /**

@@ -41,8 +41,8 @@ protected:
     double* parameters;
     /// An iterator pointing to the first operation.
     std::vector<Operation*>::iterator operations_it;
-    /// vector containing the matrix representation of the operations/operation blocks.
-    std::vector<QGD_Complex16*> operation_mtxs;
+    /// pointer to a vector containing the matrix representation of the operations/operation blocks.
+    std::vector<Matrix>* operation_mtxs;
     ///  The number of operations in the vector
     int num_of_operations;
 
@@ -52,11 +52,11 @@ public:
 @brief Constructor of the class.
 @param parameters_in An array containing the parameters of the operations.
 @param operations_it_in An iterator pointing to the first operation.
-@param operation_mtxs_in vector containing the matrix representation of the operations/operation blocks.
+@param operation_mtxs_in Pointer to a vector containing the matrix representation of the operations/operation blocks.
 @param num_of_operations_in The number of operations in the vector
 @return Returns with the instance of the class.
 */
-functor_get_operation_matrices( double* parameters_in, std::vector<Operation*>::iterator operations_it_in, std::vector<QGD_Complex16*> operation_mtxs_in, int num_of_operations_in );
+functor_get_operation_matrices( double* parameters_in, std::vector<Operation*>::iterator operations_it_in, std::vector<Matrix>* operation_mtxs_in, int num_of_operations_in );
 
 /**
 @brief Operator to calculate th ematrix representation of operation labeled by i.
