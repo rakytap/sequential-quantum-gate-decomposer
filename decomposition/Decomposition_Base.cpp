@@ -334,8 +334,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         int parameter_num_loc = parameter_num;
 
         // store the initial unitary to be decomposed
-        QGD_Complex16* Umtx_loc = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-        memcpy(Umtx_loc, Umtx.get_data(), matrix_size*matrix_size*sizeof(QGD_Complex16) );
+        Matrix Umtx_loc = Umtx; // copy??
 
         // storing the initial computational parameters
         int optimization_block_loc = optimization_block;
@@ -421,8 +420,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             }
 
             // Transform the initial unitary upon the fixed pre-optimization operations
-            apply_operation(operations_mtx_pre.get_data(), Umtx_loc, Umtx.get_data());
-
+            //apply_operation(operations_mtx_pre.get_data(), Umtx_loc, Umtx.get_data());
+            Umtx = apply_operation(operations_mtx_pre, Umtx_loc);
 
             // clear the operation list used in the previous iterations
             operations.clear();
@@ -581,11 +580,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         delete(fixed_operation_post);
 
         // restore the original unitary
-        memcpy(Umtx.get_data(), Umtx_loc, matrix_size*matrix_size*sizeof(QGD_Complex16)) ;
+        Umtx = Umtx_loc; // copy?
 
-        // free the allocated temporary Umtx
-        qgd_free(Umtx_loc);
-        Umtx_loc = NULL;
 
 }
 
