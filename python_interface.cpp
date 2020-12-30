@@ -34,7 +34,7 @@ extern "C" {
 @param mtx_imag Pointer to the imaginary part of the unitary to be decomposed
 @param qbit_num Number of qubits spanning the unitary
 @param optimize_layer_num Logical value. Set true to optimize the number of decomposing layers during the decomposition procedure, or false otherwise.
-@param initial_guess_num Integer encoding the method to guess initial values for the optimalization. Possible values: 'zeros=0','random=1', 'close_to_zero=2'
+@param initial_guess_num Integer encoding the method to guess initial values for the optimization. Possible values: 'zeros=0','random=1', 'close_to_zero=2'
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int qbit_num, bool optimize_layer_num, int initial_guess_num ) {

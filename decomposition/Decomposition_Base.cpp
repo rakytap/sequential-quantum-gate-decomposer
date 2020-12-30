@@ -379,14 +379,14 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         unsigned int block_idx_start = operations.size();
         operations.clear();
         int block_parameter_num;
-        QGD_Complex16* operations_mtx_pre = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+        Matrix operations_mtx_pre;
         QGD_Complex16* tmp = NULL;
         Operation* fixed_operation_post = new Operation( qbit_num );
         std::vector<QGD_Complex16*> operations_mtxs_post;
 
         // the identity matrix used in the calcualtions
-        QGD_Complex16* Identity =  (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-        create_identity( Identity, matrix_size );
+        Matrix Identity =  create_identity( matrix_size );
+
 
         gsl_vector *solution_guess_gsl = NULL;
 
@@ -414,16 +414,13 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // ***** get the fixed operations applied before the optimized operations *****
             if (block_idx_start < operations_loc.size() ) {
                 std::vector<Operation*>::iterator fixed_operations_pre_it = operations.begin() + 1;
-                tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre);
-                memcpy( operations_mtx_pre, tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+                tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre.get_data());
+                memcpy( operations_mtx_pre.get_data(), tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
                 qgd_free(tmp);
                 tmp = NULL;
-                //QGD_Complex16* operations_mtx_pre_tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre );
-                //qgd_free( operations_mtx_pre );
-                //operations_mtx_pre = operations_mtx_pre_tmp;
             }
             else {
-                memcpy( operations_mtx_pre, Identity, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+                operations_mtx_pre = Identity.copy();
             }
 
 //print_mtx(operations_mtx_pre, matrix_size, matrix_size );
@@ -432,7 +429,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 /////////////////////
 
             // Transform the initial unitary upon the fixed pre-optimization operations
-            apply_operation(operations_mtx_pre, Umtx_loc, Umtx);
+            apply_operation(operations_mtx_pre.get_data(), Umtx_loc, Umtx);
 
 
             // clear the operation list used in the previous iterations
@@ -467,7 +464,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                     *mtxs_it = NULL;
                 }
                 operations_mtxs_post.clear();
-                fixed_operation_post->set_matrix( Identity );
+                fixed_operation_post->set_matrix( Identity.get_data() );
             }
 
 
@@ -580,17 +577,6 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         solution_guess_gsl = NULL;
 
         QGD_Complex16* operations_mtx_post = fixed_operation_post->matrix();
-
-        // Identity can be freed if operations_mtx_post and operations_mtx_pre are not equal to identity
-        if ( operations_mtx_post!=Identity ) {
-            qgd_free(Identity);
-        }
-        Identity = NULL;
-
-
-        // release preoperation matrix
-        qgd_free( operations_mtx_pre );
-        operations_mtx_pre = NULL;
 
         // release post operation products
         for (std::vector<QGD_Complex16*>::iterator mtxs_it=operations_mtxs_post.begin(); mtxs_it != operations_mtxs_post.end(); mtxs_it++ ) {

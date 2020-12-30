@@ -117,12 +117,13 @@ void add_unique_elelement( std::vector<int>& involved_qbits, int qbit );
 /**
 @brief Call to create an identity matrix
 @param matrix_size The number of rows in the resulted identity matrix
-@return Returns with a pointer to the created identity matrix.
+@return Returns with an identity matrix.
 */
-QGD_Complex16* create_identity( int matrix_size );
+Matrix create_identity( int matrix_size );
+
 
 /**
-@brief Call to create an identity matrix
+@brief Call to create an identity matrix --- OBSOLETE
 @param matrix The pointer to the memory array allocated for the identity matrix. The result is returned via this pointer.
 @param matrix_size The number of rows in the resulted identity matrix
 @return Returns with zero on success.
