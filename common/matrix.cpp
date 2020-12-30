@@ -22,9 +22,10 @@ Matrix::Matrix() {
   // logical value indicating whether the class instance is the owner of the stored data or not. (If true, the data array is released in the destructor)
   owner = false;
   // mutual exclusion to count the references for class instances refering to the same data.
-  reference_mutex = NULL;
+  reference_mutex = new tbb::spin_mutex;
   // the number of the current references of the present object
-  references = NULL;
+  references = new int64_t;
+  (*references)=1;
 
 }
 
