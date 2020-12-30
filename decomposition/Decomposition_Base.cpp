@@ -380,7 +380,6 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         operations.clear();
         int block_parameter_num;
         Matrix operations_mtx_pre;
-        QGD_Complex16* tmp = NULL;
         Operation* fixed_operation_post = new Operation( qbit_num );
         std::vector<QGD_Complex16*> operations_mtxs_post;
 
@@ -414,19 +413,12 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // ***** get the fixed operations applied before the optimized operations *****
             if (block_idx_start < operations_loc.size() ) {
                 std::vector<Operation*>::iterator fixed_operations_pre_it = operations.begin() + 1;
-                tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre.get_data());
-                memcpy( operations_mtx_pre.get_data(), tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-                qgd_free(tmp);
-                tmp = NULL;
+                Matrix tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre);
+                operations_mtx_pre = tmp; // copy?
             }
             else {
                 operations_mtx_pre = Identity.copy();
             }
-
-//print_mtx(operations_mtx_pre, matrix_size, matrix_size );
-//////////////////////////
-//operations_mtx_pre = Identity;
-/////////////////////
 
             // Transform the initial unitary upon the fixed pre-optimization operations
             apply_operation(operations_mtx_pre.get_data(), Umtx_loc, Umtx);
@@ -670,6 +662,92 @@ void Decomposition_Base::get_optimized_parameters( double* ret ) {
     return;
 }
 
+/**
+@brief Calculate the transformed matrix resulting by an array of operations on the matrix Umtx
+@param parameters An array containing the parameters of the U3 operations.
+@param operations_it An iterator pointing to the first operation to be applied on the initial matrix.
+@param num_of_operations The number of operations to be applied on the initial matrix
+@return Returns with the transformed matrix.
+*/
+Matrix
+Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations ) {
+
+    // TODO: make Matrix from Umtx
+    Matrix Umtx_mtx = Matrix( Umtx, matrix_size, matrix_size);
+    return get_transformed_matrix( parameters, operations_it, num_of_operations, Umtx_mtx );
+
+}
+
+
+/**
+@brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
+@param parameters An array containing the parameters of the U3 operations.
+@param operations_it An iterator pointing to the first operation to be applied on the initial matrix.
+@param num_of_operations The number of operations to be applied on the initial matrix
+@param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute Umtx)
+@return Returns with the transformed matrix.
+*/
+Matrix
+Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations, Matrix& initial_matrix ) {
+
+
+    if (num_of_operations==0) {
+        return initial_matrix.copy();
+    }
+
+    // The matrix of the transformed matrix
+    Matrix Operation_product;
+
+    // The matrix to be returned
+    Matrix ret_matrix;
+
+    for (int idx=0; idx<num_of_operations; idx++) {
+
+        // The current operation
+        Operation* operation = *operations_it;
+
+        // The matrix of the current operation
+        Matrix operation_mtx;
+
+        if (operation->get_type() == CNOT_OPERATION ) {
+            CNOT* cnot_operation = static_cast<CNOT*>( operation );
+            operation_mtx = cnot_operation->get_matrix();
+        }
+        else if (operation->get_type() == GENERAL_OPERATION ) {
+            operation_mtx = operation->get_matrix();
+        }
+        else if (operation->get_type() == U3_OPERATION ) {
+            U3* u3_operation = static_cast<U3*>( operation );
+            int parameters_num = u3_operation->get_parameter_num();
+            operation_mtx = u3_operation->get_matrix( parameters );
+            parameters = parameters + parameters_num;
+        }
+        else if (operation->get_type() == BLOCK_OPERATION ) {
+            Operation_block* block_operation = static_cast<Operation_block*>( operation );
+            int parameters_num = block_operation->get_parameter_num();
+            operation_mtx = block_operation->get_matrix( parameters );
+            parameters = parameters + parameters_num;
+        }
+
+        if ( idx == 0 ) {
+            Operation_product = operation_mtx; //copy?
+        }
+        else {
+            ret_matrix = zgemm3m_wrapper( Operation_product, operation_mtx );
+            Operation_product = ret_matrix; // copy?
+
+        }
+
+        operations_it++;
+    }
+
+    ret_matrix = apply_operation( Operation_product, initial_matrix );
+
+    return ret_matrix;
+
+
+
+}
 
 
 /**
@@ -778,6 +856,20 @@ print_mtx( initial_matrix, matrix_size, matrix_size );
 QGD_Complex16* Decomposition_Base::get_decomposed_matrix() {
 
         return get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+}
+
+/**
+@brief Apply an operations on the input matrix
+@param operation_mtx The matrix of the operation.
+@param input_matrix The input matrix to be transformed.
+@return Returns with the transformed matrix
+*/
+Matrix
+Decomposition_Base::apply_operation( Matrix& operation_mtx, Matrix& input_matrix ) {
+
+    // Getting the transformed state upon the transformation given by operation
+    return zgemm3m_wrapper( operation_mtx, input_matrix );
+
 }
 
 
