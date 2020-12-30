@@ -23,16 +23,17 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 #include "qgd/Random_Unitary.h"
-#include "qgd/matrix.h"
+
 
 
 /**
 @brief Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by random U3 operations.
 @param qbit_num The number of qubits spanning the unitary.
 @param cnot_num The number of CNOT gates composing the random unitary.
-@param mtx The preallocated array for the constructed unitary.
+@return Returns with the the constructed random unitary.
 */
-void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx) {
+Matrix
+few_CNOT_unitary( int qbit_num, int cnot_num) {
 
     // the current number of CNOT gates
     int cnot_num_curr = 0;
@@ -40,14 +41,8 @@ void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx) {
     // the size of the matrix
     int matrix_size = Power_of_2(qbit_num);
 
-    // The unitary discribing each qubits in their initial state
-    memset( mtx, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-    create_identity( mtx, matrix_size );
-
-    QGD_Complex16* mtx_tmp = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-
-    QGD_Complex16* gate_matrix = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-    memset( gate_matrix, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+    // The unitary describing each qubits in their initial state
+    Matrix mtx = create_identity( matrix_size );
 
     // constructing the unitary
     while (true) {
@@ -55,6 +50,8 @@ void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx) {
 
         CNOT* cnot_op = NULL;
         U3* u3_op = NULL;
+
+        Matrix gate_matrix;
 
         if (cnot_or_u3 <= 4) {
             // creating random parameters for the U3 operation
@@ -72,7 +69,7 @@ void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx) {
             u3_op = new U3(qbit_num, target_qbit, true, true, true);
 
             // get the matrix of the operation
-            u3_op->matrix(parameters, gate_matrix);
+            gate_matrix = u3_op->get_matrix(parameters);
         }
         else if ( cnot_or_u3 == 5 ) {
             // randomly choose the target qbit
@@ -82,7 +79,7 @@ void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx) {
             int control_qbit = rand() % qbit_num;
 
             if (target_qbit == control_qbit) {
-                create_identity( gate_matrix, matrix_size );
+                gate_matrix = create_identity( matrix_size );
             }
             else {
 
@@ -90,21 +87,19 @@ void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx) {
                 cnot_op = new CNOT(qbit_num, control_qbit, target_qbit);
 
                 // get the matrix of the operation
-                cnot_op->matrix(gate_matrix);
+                gate_matrix = cnot_op->get_matrix();
 
                 cnot_num_curr = cnot_num_curr + 1;
             }
         }
         else {
-            create_identity( gate_matrix, matrix_size );
+            gate_matrix = create_identity( matrix_size );
         }
 
 
         // get the current unitary
-        zgemm3m_wrapper(gate_matrix, mtx, mtx_tmp, matrix_size);
-        memset( gate_matrix, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-        memcpy( mtx, mtx_tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-
+        Matrix mtx_tmp = zgemm3m_wrapper(gate_matrix, mtx);
+        mtx = mtx_tmp;
 
         delete u3_op;
         u3_op = NULL;
@@ -112,23 +107,9 @@ void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx) {
         delete cnot_op;
         cnot_op = NULL;
 
-
-
-
-        // exit the loop if the maximal number of CNOT gates reched
+        // exit the loop if the maximal number of CNOT gates reached
         if (cnot_num_curr >= cnot_num) {
-
-            if (mtx_tmp != NULL) {
-                qgd_free( mtx_tmp );
-                mtx_tmp = NULL;
-            }
-
-            if (gate_matrix != NULL) {
-                qgd_free( gate_matrix );
-                gate_matrix = NULL;
-            }
-
-            return;
+            return mtx;
         }
 
     }
@@ -157,7 +138,8 @@ Random_Unitary::Random_Unitary( int dim_in ) {
 @brief Call to create a random unitary
 @return Returns with a pointer to the created random unitary
 */
-QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix() {
+Matrix
+Random_Unitary::Construct_Unitary_Matrix() {
 
     // create array of random parameters to construct random unitary
     double* vartheta = (double*) qgd_calloc( int(dim*(dim-1)/2),sizeof(double), 64);
@@ -181,7 +163,7 @@ QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix() {
         varkappa[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
     }
 
-    QGD_Complex16* Umtx = Construct_Unitary_Matrix( vartheta, varphi, varkappa );
+    Matrix Umtx = Construct_Unitary_Matrix( vartheta, varphi, varkappa );
 
     qgd_free(vartheta);
     qgd_free(varphi);
@@ -189,7 +171,6 @@ QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix() {
     vartheta = NULL;
     varphi = NULL;
     varkappa = NULL;
-
 
     return Umtx;
 
@@ -203,10 +184,12 @@ QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix() {
 @param varkappa array of dim-1 elements
 @return Returns with a pointer to the generated unitary
 */
-QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix( double* vartheta, double* varphi, double* varkappa ) {
+Matrix
+Random_Unitary::Construct_Unitary_Matrix( double* vartheta, double* varphi, double* varkappa ) {
 
 
         Matrix ret = create_identity(dim);
+
         for (int varalpha=1; varalpha<dim; varalpha++) { // = 2:obj.dim
            for (int varbeta = 0; varbeta<varalpha; varbeta++) {//   1:varalpha-1
 
@@ -227,12 +210,8 @@ QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix( double* vartheta, doubl
 
                a.real = -a.real;
                b.imag = -b.imag;
-               QGD_Complex16* Omega_loc = Omega( varalpha, varbeta, a, b );
-               Matrix Omega_loc_mtx = Matrix(Omega_loc, dim, dim);
-               Omega_loc_mtx.set_owner(true);
-
-
-               Matrix ret_tmp = zgemm3m_wrapper( ret, Omega_loc_mtx); //   ret * Omega_loc
+               Matrix Omega_loc = Omega( varalpha, varbeta, a, b );
+               Matrix ret_tmp = zgemm3m_wrapper( ret, Omega_loc); //   ret * Omega_loc
 
                ret = ret_tmp;
            }
@@ -247,16 +226,21 @@ QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix( double* vartheta, doubl
             ret[idx] = mult(ret[idx], gamma_loc);
         }
 
-        ret.set_owner(false);
-        return ret.get_data();
+        return ret;
 
 
 
 }
 
 
-
-int  Random_Unitary::convert_indexes( int varalpha, int varbeta ) {
+/**
+@brief Calculates an index from paramaters varalpha and varbeta
+@param varalpha An integer
+@param varbeta An integer
+@return Returns with the calculated index.
+*/
+int
+Random_Unitary::convert_indexes( int varalpha, int varbeta ) {
      int ret = varbeta + (varalpha-1)*(varalpha-2)/2;
      return ret;
 }
@@ -267,10 +251,8 @@ int  Random_Unitary::convert_indexes( int varalpha, int varbeta ) {
 @param parameters array of (dim+1)*(dim-1) elements
 @return The constructed unitary
 */
-QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix(double* parameters ) {
-   QGD_Complex16* ret = Construct_Unitary_Matrix( parameters, parameters+int(dim*(dim-1)/2), parameters+int(dim*(dim-1)));
-
-    return ret;
+Matrix Random_Unitary::Construct_Unitary_Matrix(double* parameters ) {
+   return Construct_Unitary_Matrix( parameters, parameters+int(dim*(dim-1)/2), parameters+int(dim*(dim-1)));
 }
 
 
@@ -282,12 +264,13 @@ QGD_Complex16* Random_Unitary::Construct_Unitary_Matrix(double* parameters ) {
 @param y A complex number
 @return Return with a pointer to the calculated Omega matrix of Eq. (6) of arXiv:1303:5904v1
 */
-QGD_Complex16* Random_Unitary::Omega(int varalpha, int varbeta, QGD_Complex16 x, QGD_Complex16 y )   {
+Matrix
+Random_Unitary::Omega(int varalpha, int varbeta, QGD_Complex16 x, QGD_Complex16 y )   {
 
-        QGD_Complex16* ret = I_alpha_beta( varalpha, varbeta );
+        Matrix ret = I_alpha_beta( varalpha, varbeta );
 
 
-        QGD_Complex16* Mloc;
+        Matrix Mloc;
 
         if (varalpha + varbeta != (3 + kronecker( dim, 2 )) ) {
             Mloc = M( varalpha, varbeta, x, y );
@@ -305,9 +288,6 @@ QGD_Complex16* Random_Unitary::Omega(int varalpha, int varbeta, QGD_Complex16 x,
             ret[idx].imag = ret[idx].imag + Mloc[idx].imag;
         }
 
-        qgd_free( Mloc );
-        Mloc = NULL;
-
         return ret;
 
 
@@ -322,40 +302,28 @@ QGD_Complex16* Random_Unitary::Omega(int varalpha, int varbeta, QGD_Complex16 x,
 @param t A complex number
 @return Return with a pointer to the calculated M matrix of Eq. (8) of arXiv:1303:5904v1
 */
-QGD_Complex16* Random_Unitary::M( int varalpha, int varbeta, QGD_Complex16 s, QGD_Complex16 t )   {
+Matrix
+Random_Unitary::M( int varalpha, int varbeta, QGD_Complex16 s, QGD_Complex16 t )   {
 
-        QGD_Complex16* Qloc = Q( s, t);
+        Matrix Qloc = Q( s, t);
 
-        QGD_Complex16* ret1 = E_alpha_beta( varbeta, varbeta );
-        QGD_Complex16* ret2 = E_alpha_beta( varbeta, varalpha );
-        QGD_Complex16* ret3 = E_alpha_beta( varalpha, varbeta );
-        QGD_Complex16* ret4 = E_alpha_beta( varalpha, varalpha );
-
-
-        mult(Qloc[0], ret1, dim);
-        mult(Qloc[1], ret2, dim);
-        mult(Qloc[2], ret3, dim);
-        mult(Qloc[3], ret4, dim);
-        qgd_free(Qloc);
-        Qloc = NULL;
+        Matrix ret1 = E_alpha_beta( varbeta, varbeta );
+        Matrix ret2 = E_alpha_beta( varbeta, varalpha );
+        Matrix ret3 = E_alpha_beta( varalpha, varbeta );
+        Matrix ret4 = E_alpha_beta( varalpha, varalpha );
 
 
-        QGD_Complex16* ret = (QGD_Complex16*)qgd_calloc(dim*dim,sizeof(QGD_Complex16), 64);
-        //#pragma omp parallel for
+        mult(Qloc[0], ret1);
+        mult(Qloc[1], ret2);
+        mult(Qloc[2], ret3);
+        mult(Qloc[3], ret4);
+
+        Matrix ret = Matrix(dim, dim);
+
         for ( int idx=0; idx<dim*dim; idx++ ) {
             ret[idx].real = ret1[idx].real + ret2[idx].real + ret3[idx].real + ret4[idx].real;
             ret[idx].imag = ret1[idx].imag + ret2[idx].imag + ret3[idx].imag + ret4[idx].imag;
         }
-
-        qgd_free(ret1);
-        qgd_free(ret2);
-        qgd_free(ret3);
-        qgd_free(ret4);
-        ret1 = NULL;
-        ret2 = NULL;
-        ret3 = NULL;
-        ret4 = NULL;
-
 
         return ret;
 
@@ -368,9 +336,10 @@ QGD_Complex16* Random_Unitary::M( int varalpha, int varbeta, QGD_Complex16 s, QG
 @param u2 A complex number
 @return Return with a pointer to the calculated Q matrix of Eq. (9) of arXiv:1303:5904v1
 */
-QGD_Complex16* Random_Unitary::Q(  QGD_Complex16 u1, QGD_Complex16 u2 )   {
+Matrix
+Random_Unitary::Q(  QGD_Complex16 u1, QGD_Complex16 u2 )   {
 
-    QGD_Complex16* ret = (QGD_Complex16*)qgd_calloc(2*2, sizeof(QGD_Complex16), 64);
+    Matrix ret = Matrix(2, 2);
     ret[0] = u2;
     ret[1] = u1;
     ret[2].real = -u1.real;
@@ -389,9 +358,11 @@ QGD_Complex16* Random_Unitary::Q(  QGD_Complex16 u1, QGD_Complex16 u2 )   {
 @param varbeta An integer
 @return Return with a pointer to the calculated E matrix of Eq. (7) of arXiv:1303:5904v1
 */
-QGD_Complex16* Random_Unitary::E_alpha_beta( int varalpha, int varbeta )   {
+Matrix
+Random_Unitary::E_alpha_beta( int varalpha, int varbeta )   {
 
-    QGD_Complex16* ret = (QGD_Complex16*)qgd_calloc(dim*dim, sizeof(QGD_Complex16), 64);
+    Matrix ret = Matrix(dim, dim);
+    memset( ret.get_data(), 0, dim*dim*sizeof(QGD_Complex16));
     ret[varalpha*dim+varbeta].real = 1;
 
     return ret;
@@ -404,7 +375,8 @@ QGD_Complex16* Random_Unitary::E_alpha_beta( int varalpha, int varbeta )   {
 @param varbeta An integer
 @return Return with a pointer to the calculated I matrix of Eq. (7) of arXiv:1303:5904v1
 */
-QGD_Complex16* Random_Unitary::I_alpha_beta( int varalpha, int varbeta ) {
+Matrix
+Random_Unitary::I_alpha_beta( int varalpha, int varbeta ) {
 
 
    Matrix ret = create_identity(dim);
@@ -412,8 +384,7 @@ QGD_Complex16* Random_Unitary::I_alpha_beta( int varalpha, int varbeta ) {
    ret[varalpha*dim+varalpha].real = 0;
    ret[varbeta*dim+varbeta].real = 0;
 
-   ret.set_owner(false);
-   return ret.get_data();
+   return ret;
 
 }
 
@@ -422,7 +393,8 @@ QGD_Complex16* Random_Unitary::I_alpha_beta( int varalpha, int varbeta ) {
 @brief Implements Eq (11) of arXiv:1303:5904v1
 @return Returns eith the value of gamma
 */
-double Random_Unitary::gamma() {
+double
+Random_Unitary::gamma() {
 
     double ret = pow(-1, 0.25*(2*dim-1+pow(-1,dim)));//(-1)^(0.25*(2*dim-1+(-1)^dim));
     return ret;
@@ -435,7 +407,8 @@ double Random_Unitary::gamma() {
 @param b An integer
 @return Returns with the Kronecker delta value of a and b.
 */
-double Random_Unitary::kronecker( int a, int b ) {
+double
+Random_Unitary::kronecker( int a, int b ) {
 
         if (a == b) {
             return 1;

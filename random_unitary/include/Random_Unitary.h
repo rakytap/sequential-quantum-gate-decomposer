@@ -24,11 +24,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #pragma once
 #include <map>
 #include <cstdlib>
-#include <time.h> 
+#include <time.h>
 #include <ctime>
 #include "qgd/common.h"
 #include "qgd/U3.h"
 #include "qgd/CNOT.h"
+#include "qgd/matrix.h"
 
 
 
@@ -36,9 +37,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @brief Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by random U3 operations.
 @param qbit_num The number of qubits spanning the unitary.
 @param cnot_num The number of CNOT gates composing the random unitary.
-@param mtx The preallocated array for the constructed unitary.
+@return Returns with the the constructed random unitary.
 */
-void few_CNOT_unitary( int qbit_num, int cnot_num, QGD_Complex16* mtx);
+Matrix few_CNOT_unitary( int qbit_num, int cnot_num);
 
 
 
@@ -56,20 +57,20 @@ public:
 
 public:
 
-/** 
+/**
 @brief Constructor of the class.
 @param dim_in The number of rows in the random unitary to be ceated.
 @return An instance of the class
 */
-Random_Unitary( int dim_in );   
- 
+Random_Unitary( int dim_in );
+
 
 /**
 @brief Call to create a random unitary
 @return Returns with a pointer to the created random unitary
 */
-QGD_Complex16* Construct_Unitary_Matrix();    
-    
+Matrix Construct_Unitary_Matrix();
+
 /**
 @brief Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1
 @param vartheta array of dim*(dim-1)/2 elements
@@ -77,7 +78,7 @@ QGD_Complex16* Construct_Unitary_Matrix();
 @param varkappa array of dim-1 elements
 @return Returns with a pointer to the generated unitary
 */
-QGD_Complex16* Construct_Unitary_Matrix( double* vartheta, double* varphi, double* varkappa );
+Matrix Construct_Unitary_Matrix( double* vartheta, double* varphi, double* varkappa );
 
 
 /**
@@ -87,14 +88,14 @@ QGD_Complex16* Construct_Unitary_Matrix( double* vartheta, double* varphi, doubl
 @return Returns with the calculated index.
 */
 int  convert_indexes( int varalpha, int varbeta );
-    
+
 /**
 @brief Generates a unitary matrix from parameters parameters according to arXiv:1303:5904v1
 @param parameters array of (dim+1)*(dim-1) elements
 @return The constructed unitary
 */
-QGD_Complex16* Construct_Unitary_Matrix( double* parameters );
-    
+Matrix Construct_Unitary_Matrix( double* parameters );
+
 /**
 @brief Eq (6) of arXiv:1303:5904v1
 @param varalpha An integer
@@ -103,9 +104,9 @@ QGD_Complex16* Construct_Unitary_Matrix( double* parameters );
 @param y A complex number
 @return Return with a pointer to the calculated Omega matrix of Eq. (6) of arXiv:1303:5904v1
 */
-QGD_Complex16* Omega(int varalpha, int varbeta, QGD_Complex16 x, QGD_Complex16 y );  
-    
-    
+Matrix Omega(int varalpha, int varbeta, QGD_Complex16 x, QGD_Complex16 y );
+
+
 /**
 @brief Implements Eq (8) of arXiv:1303:5904v1
 @param varalpha An integer
@@ -114,40 +115,40 @@ QGD_Complex16* Omega(int varalpha, int varbeta, QGD_Complex16 x, QGD_Complex16 y
 @param t A complex number
 @return Return with a pointer to the calculated M matrix of Eq. (8) of arXiv:1303:5904v1
 */
-QGD_Complex16* M( int varalpha, int varbeta, QGD_Complex16 s, QGD_Complex16 t );
-    
+Matrix M( int varalpha, int varbeta, QGD_Complex16 s, QGD_Complex16 t );
+
 /**
-@brief Implements Eq (9) of arXiv:1303:5904v1 
+@brief Implements Eq (9) of arXiv:1303:5904v1
 @param u1 A complex number
 @param u2 A complex number
 @return Return with a pointer to the calculated Q matrix of Eq. (9) of arXiv:1303:5904v1
 */
-QGD_Complex16* Q(  QGD_Complex16 u1, QGD_Complex16 u2 );
-    
-    
+Matrix Q(  QGD_Complex16 u1, QGD_Complex16 u2 );
+
+
 /**
-@brief Implements matrix I below Eq (7) of arXiv:1303:5904v1 
+@brief Implements matrix I below Eq (7) of arXiv:1303:5904v1
 @param varalpha An integer
 @param varbeta An integer
 @return Return with a pointer to the calculated E matrix of Eq. (7) of arXiv:1303:5904v1
 */
-QGD_Complex16* E_alpha_beta( int varalpha, int varbeta );
+Matrix E_alpha_beta( int varalpha, int varbeta );
 
 
 /**
-@brief Implements matrix I below Eq (7) of arXiv:1303:5904v1 
+@brief Implements matrix I below Eq (7) of arXiv:1303:5904v1
 @param varalpha An integer
 @param varbeta An integer
 @return Return with a pointer to the calculated I matrix of Eq. (7) of arXiv:1303:5904v1
 */
-QGD_Complex16* I_alpha_beta( int varalpha, int varbeta );
-    
+Matrix I_alpha_beta( int varalpha, int varbeta );
+
 /**
-@brief Implements Eq (11) of arXiv:1303:5904v1 
+@brief Implements Eq (11) of arXiv:1303:5904v1
 @return Returns eith the value of gamma
 */
 double gamma();
-    
+
 /**
 @brief Kronecker delta
 @param a An integer
@@ -158,7 +159,7 @@ double kronecker( int a, int b );
 
 
 };
-    
+
 
 
 

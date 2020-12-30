@@ -478,12 +478,13 @@ QGD_Complex16 mult( double a, QGD_Complex16 b ) {
 /**
 @brief Multiply the elements of matrix b by a scalar a.
 @param a A complex scalar.
-@param b Pointer to the square shaped matrix.
-@param matrix_size The number rows in the matrix b
+@param b A square shaped matrix.
 */
-void mult( QGD_Complex16 a, QGD_Complex16* b, int matrix_size ) {
+void mult( QGD_Complex16 a, Matrix& b ) {
 
-    for (int idx=0; idx<matrix_size*matrix_size; idx++) {
+    size_t element_num = b.size();
+
+    for (size_t idx=0; idx<element_num; idx++) {
         QGD_Complex16 tmp = b[idx];
         b[idx].real = a.real*tmp.real - a.imag*tmp.imag;
         b[idx].imag = a.real*tmp.imag + a.imag*tmp.real;

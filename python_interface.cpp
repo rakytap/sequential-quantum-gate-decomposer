@@ -23,6 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "qgd/python_interface.h"
 #include "qgd/N_Qubit_Decomposition.h"
+#include "qgd/matrix.h"
 
 
 extern "C" {
@@ -43,7 +44,7 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
 
     // combining real and imaginary parts of the matrix inti MKL complex matrix
     int element_num = matrix_size*matrix_size;
-    QGD_Complex16* Umtx = (QGD_Complex16*)qgd_calloc(element_num,sizeof(QGD_Complex16), 64);
+    Matrix Umtx = Matrix(matrix_size, matrix_size);
 
     //#pragma omp parallel for
     for(int idx = 0; idx < element_num; idx++) {
@@ -67,9 +68,10 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
         exit(-1);
     }
 
-
     // creating an instance of class N_Qubit_decomposition
-    N_Qubit_Decomposition* instance = new N_Qubit_Decomposition( Umtx, qbit_num, optimize_layer_num, initial_guess );
+    // TODO: remove get_data()
+    Umtx.set_owner(false);
+    N_Qubit_Decomposition* instance = new N_Qubit_Decomposition( Umtx.get_data(), qbit_num, optimize_layer_num, initial_guess );
 
     return (void*)instance;
 

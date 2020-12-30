@@ -230,8 +230,7 @@ QGD_Complex16 mult( double a, QGD_Complex16 b );
 /**
 @brief Multiply the elements of matrix b by a scalar a.
 @param a A complex scalar.
-@param b Pointer to the square shaped matrix.
-@param matrix_size The number rows in the matrix b
+@param b A square shaped matrix.
 */
-void mult( QGD_Complex16 a, QGD_Complex16* b, int matrix_size );
+void mult( QGD_Complex16 a, Matrix& b );
 
