@@ -382,14 +382,14 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         Operation* fixed_operation_post = new Operation( qbit_num );
         std::vector<Matrix> operations_mtxs_post;
 
-        // the identity matrix used in the calcualtions
+        // the identity matrix used in the calculations
         Matrix Identity =  create_identity( matrix_size );
 
 
         gsl_vector *solution_guess_gsl = NULL;
 
 
-        //measure the time for the decompositin
+        //measure the time for the decomposition
         clock_t start_time = time(NULL);
 
         ////////////////////////////////////////
@@ -420,7 +420,6 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             }
 
             // Transform the initial unitary upon the fixed pre-optimization operations
-            //apply_operation(operations_mtx_pre.get_data(), Umtx_loc, Umtx.get_data());
             Umtx = apply_operation(operations_mtx_pre, Umtx_loc);
 
             // clear the operation list used in the previous iterations
@@ -444,20 +443,13 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
             // Create a general operation describing the cumulative effect of gates following the optimized operations
             if (block_idx_end > 0) {
-                fixed_operation_post->set_matrix( operations_mtxs_post[block_idx_end-1].get_data() );
-//printf("operations_mtxs_post with prefixed:\n");
-//print_mtx(operations_mtxs_post[block_idx_end-1], matrix_size, matrix_size);
+                fixed_operation_post->set_matrix( operations_mtxs_post[block_idx_end-1] );
             }
             else {
                 // release operation products
                 operations_mtxs_post.clear();
-                fixed_operation_post->set_matrix( Identity.get_data() );
+                fixed_operation_post->set_matrix( Identity );
             }
-
-
-////////////////////////
-//fixed_operation_post->set_matrix( Identity );
-////////////////////
 
             // create a list of operations for the optimization process
             operations.push_back( fixed_operation_post );
@@ -562,16 +554,6 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         gsl_vector_free(solution_guess_gsl);
         optimized_parameters_gsl = NULL;
         solution_guess_gsl = NULL;
-
-        QGD_Complex16* operations_mtx_post = fixed_operation_post->matrix();
-/*
-        // release post operation products
-        for (std::vector<QGD_Complex16*>::iterator mtxs_it=operations_mtxs_post.begin(); mtxs_it != operations_mtxs_post.end(); mtxs_it++ ) {
-            qgd_free( *mtxs_it );
-            *mtxs_it = NULL;
-        }
-        operations_mtxs_post.clear();
-*/
 
         delete(fixed_operation_post);
 
@@ -742,7 +724,7 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
 }
 
 
-/**
+/** OBSOLETE
 @brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
 @param parameters An array containing the parameters of the U3 operations.
 @param operations_it An iterator pointing to the first operation to be applied on the initial matrix.

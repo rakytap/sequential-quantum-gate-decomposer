@@ -31,19 +31,17 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 Operation::Operation() {
 
-    /// number of qubits spanning the matrix of the operation
+    // number of qubits spanning the matrix of the operation
     qbit_num = -1;
-    /// The size N of the NxN matrix associated with the operations.
+    // The size N of the NxN matrix associated with the operations.
     matrix_size = -1;
-    /// The type of the operation (see enumeration operation_type)
+    // The type of the operation (see enumeration operation_type)
     type = GENERAL_OPERATION;
-    /// The index of the qubit on which the operation acts (target_qbit >= 0)
+    // The index of the qubit on which the operation acts (target_qbit >= 0)
     target_qbit = -1;
-    /// The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     control_qbit = -1;
-    /// Pointer to the operatrion matrix (if it is a constant general matrix)
-    matrix_alloc = NULL;
-    /// the number of free parameters of the operation
+    // the number of free parameters of the operation
     parameter_num = 0;
 }
 
@@ -66,8 +64,6 @@ Operation::Operation(int qbit_num_in) {
     target_qbit = -1;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     control_qbit = -1;
-    // The matrix (or function handle to generate the matrix) of the operation
-    matrix_alloc = NULL;
     // The number of parameters
     parameter_num = 0;
 }
@@ -77,11 +73,6 @@ Operation::Operation(int qbit_num_in) {
 @brief Destructor of the class
 */
 Operation::~Operation() {
-
-    if ( matrix_alloc != NULL ) {
-        qgd_free(matrix_alloc);
-        matrix_alloc = NULL;
-    }
 }
 
 /**
@@ -105,11 +96,7 @@ void Operation::set_qbit_num( int qbit_num_in ) {
 Matrix
 Operation::get_matrix() {
 
-    Matrix ret = Matrix(matrix_alloc, matrix_size, matrix_size );
-
-    return ret;
-
-
+    return matrix_alloc;
 }
 
 /**
@@ -117,7 +104,7 @@ Operation::get_matrix() {
 @return Returns with a pointer to the operation matrix
 */
 QGD_Complex16* Operation::matrix() {
-    return matrix_alloc;
+    return matrix_alloc.get_data();
 }
 
 /**
@@ -126,21 +113,31 @@ QGD_Complex16* Operation::matrix() {
 @return Returns with 0 on success.
 */
 int Operation::matrix(QGD_Complex16* retrieve_matrix ) {
-    memcpy( retrieve_matrix, matrix_alloc, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+    memcpy( retrieve_matrix, matrix_alloc.get_data(), matrix_size*matrix_size*sizeof(QGD_Complex16) );
     return 0;
 }
 
 
 /**
 @brief Call to set the stored matrix in the operation.
+@param input The operation matrix to be stored. The matrix is stored by attribute matrix_alloc.
+@return Returns with 0 on success.
+*/
+void
+Operation::set_matrix( Matrix input ) {
+    matrix_alloc = input;
+}
+
+/**
+@brief Call to set the stored matrix in the operation. ---- OBSOLETE
 @param input a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by matrix_alloc.
 @return Returns with 0 on success.
 */
 void Operation::set_matrix( QGD_Complex16* input) {
-    if ( matrix_alloc == NULL ) {
-        matrix_alloc = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
-    }
-    memcpy( matrix_alloc, input, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+
+    matrix_alloc = Matrix( matrix_size, matrix_size);
+    memcpy(matrix_alloc.get_data(), input, matrix_size*matrix_size*sizeof(QGD_Complex16));
+
 }
 
 
@@ -225,11 +222,7 @@ int Operation::get_qbit_num() {
 Operation* Operation::clone() {
 
     Operation* ret = new Operation( qbit_num );
-
-    if (matrix_alloc != NULL) {
-        ret->set_matrix( matrix_alloc );
-    }
-
+    ret->set_matrix( matrix_alloc );
 
     return ret;
 

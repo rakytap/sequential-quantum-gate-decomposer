@@ -61,8 +61,6 @@ CNOT::CNOT(int qbit_num_in, int target_qbit_in,  int control_qbit_in) {
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
         control_qbit = control_qbit_in;
 
-        // Contruct the matrix of the operation
-        matrix_alloc = NULL;
 
 }
 
@@ -218,13 +216,6 @@ void CNOT::reorder_qubits( vector<int> qbit_list) {
 CNOT* CNOT::clone() {
 
     CNOT* ret = new CNOT( qbit_num, target_qbit, control_qbit );
-
-    if (matrix_alloc != NULL) {
-        QGD_Complex16* mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
-        memcpy( mtx, matrix_alloc, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-        ret->set_matrix( mtx);
-    }
-
 
     return ret;
 

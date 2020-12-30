@@ -52,12 +52,13 @@ protected:
     int control_qbit;
     /// The size N of the NxN matrix associated with the operations.
     int matrix_size;
-    /// Pointer to the operatrion matrix (if it is a constant general matrix)
-    QGD_Complex16* matrix_alloc;
     /// the number of free parameters of the operation
     unsigned int parameter_num;
 
+private:
 
+    /// Matrix of the operation
+    Matrix matrix_alloc;
 
 public:
 
@@ -103,6 +104,14 @@ virtual int matrix(QGD_Complex16* retrieve_matrix );
 
 /**
 @brief Call to set the stored matrix in the operation.
+@param input The operation matrix to be stored. The matrix is stored by attribute matrix_alloc.
+@return Returns with 0 on success.
+*/
+void set_matrix( Matrix input );
+
+
+/**
+@brief Call to set the stored matrix in the operation. --- OBSOLETE
 @param input a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by matrix_alloc.
 @return Returns with 0 on success.
 */
