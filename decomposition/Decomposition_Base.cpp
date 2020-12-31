@@ -646,10 +646,7 @@ void Decomposition_Base::get_optimized_parameters( double* ret ) {
 Matrix
 Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations ) {
 
-    // TODO: make Matrix from Umtx
-    Matrix Umtx_mtx = Matrix( Umtx.get_data(), matrix_size, matrix_size);
-    return get_transformed_matrix( parameters, operations_it, num_of_operations, Umtx_mtx );
-
+    return get_transformed_matrix( parameters, operations_it, num_of_operations, Umtx );
 }
 
 
@@ -827,9 +824,9 @@ print_mtx( initial_matrix, matrix_size, matrix_size );
 @brief Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx
 @return Returns with the decomposed matrix.
 */
-QGD_Complex16* Decomposition_Base::get_decomposed_matrix() {
+Matrix Decomposition_Base::get_decomposed_matrix() {
 
-        return get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx.get_data() );
+        return get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
 }
 
 /**
@@ -847,7 +844,7 @@ Decomposition_Base::apply_operation( Matrix& operation_mtx, Matrix& input_matrix
 }
 
 
-/**
+/** OBSOLETE
 @brief Apply an operations on the input matrix
 @param operation_mtx The matrix of the operation.
 @param input_matrix The input matrix to be transformed.
@@ -859,7 +856,7 @@ QGD_Complex16* Decomposition_Base::apply_operation( QGD_Complex16* operation_mtx
     return zgemm3m_wrapper( operation_mtx, input_matrix, matrix_size);
 }
 
-/**
+/** OBSOLETE
 @brief Apply an operations on the input matrix
 @param operation_mtx The matrix of the operation.
 @param input_matrix The input matrix to be transformed.

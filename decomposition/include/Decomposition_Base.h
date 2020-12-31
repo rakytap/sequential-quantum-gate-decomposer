@@ -21,8 +21,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class containing basic methods for the decomposition process.
 */
 
+#ifndef DECOMPOSITION_BASE_H
+#define DECOMPOSITION_BASE_H
 
-#pragma once
+
 #include "qgd/Operation_block.h"
 #include "qgd/CNOT.h"
 #include "qgd/U3.h"
@@ -256,7 +258,7 @@ QGD_Complex16* get_transformed_matrix( const double* parameters, std::vector<Ope
 @brief Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx
 @return Returns with the decomposed matrix.
 */
-QGD_Complex16* get_decomposed_matrix();
+Matrix get_decomposed_matrix();
 
 
 /**
@@ -372,3 +374,5 @@ double get_decomposition_error( );
 
 
 };
+
+#endif //DECOMPOSITION_BASE
