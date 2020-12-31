@@ -333,12 +333,10 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
 double Sub_Matrix_Decomposition::optimization_problem( const double* parameters ) {
 
         // get the transformed matrix with the operations in the list
-        QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx.get_data() );
+        Matrix matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
 
-        double cost_function = get_submatrix_cost_function(matrix_new, matrix_size); //NEW METHOD
+        double cost_function = get_submatrix_cost_function(matrix_new); //NEW METHOD
 
-    qgd_free( matrix_new );
-    matrix_new = NULL;
 
         return cost_function;
 }
@@ -355,17 +353,16 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
     std::vector<Operation*> operations_loc = instance->get_operations();
 
-    QGD_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
+    Matrix Umtx_loc = instance->get_Umtx();
+    Matrix matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
 
 /*if ( instance->qbit_num == 2 ) {
 print_mtx(instance->get_Umtx(), instance->get_Umtx_size(), instance->get_Umtx_size());
 }*/
 
-    double cost_function = get_submatrix_cost_function(matrix_new, instance->get_Umtx_size());  //NEW METHOD
+    double cost_function = get_submatrix_cost_function(matrix_new);  //NEW METHOD
     //double cost_function = get_submatrix_cost_function_2(matrix_new, instance->get_Umtx_size());  //OLD METHOD
 
-    qgd_free( matrix_new );
-    matrix_new = NULL;
 
 /*if ( instance->qbit_num == 2 ) {
 printf("%f\n", cost_function );

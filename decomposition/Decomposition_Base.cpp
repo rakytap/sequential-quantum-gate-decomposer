@@ -602,10 +602,10 @@ bool Decomposition_Base::check_optimization_solution() {
 
 /**
 @brief Call to retrive a pointer to the unitary to be transformed
-@return Return with a pointer pointing to the unitary Umtx
+@return Return with the unitary Umtx
 */
-QGD_Complex16* Decomposition_Base::get_Umtx() {
-    return Umtx.get_data();
+Matrix Decomposition_Base::get_Umtx() {
+    return Umtx;
 }
 
 

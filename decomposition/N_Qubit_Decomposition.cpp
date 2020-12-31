@@ -510,7 +510,8 @@ double N_Qubit_Decomposition::optimization_problem( const gsl_vector* parameters
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(void_instance);
     std::vector<Operation*> operations_loc = instance->get_operations();
 
-    QGD_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), instance->get_Umtx() );
+    Matrix Umtx_loc = instance->get_Umtx();
+    QGD_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), Umtx_loc.get_data() );
 
     double cost_function = get_cost_function(matrix_new, instance->get_Umtx_size());
 

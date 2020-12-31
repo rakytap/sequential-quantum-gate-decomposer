@@ -32,51 +32,32 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @param matrix_size The number rows in the matrix matrix_new
 @return Returns with the calculated cost function.
 */
-double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
+double get_submatrix_cost_function(Matrix& matrix) {
 
     // ********************************
     // Extract Submatrices
     // ********************************
 
     // number of submatrices
-    int submatrices_num = 4;
+    size_t submatrices_num = 4;
 
-    int submatrices_num_row = 2;
-
-    // number ofcolumns in the submatrices
-    int submatrix_size = matrix_size/2;
+    size_t submatrices_num_row = 2;
 
 
     // Extracting submatrices from the unitary
-    //QGD_Complex16** submatrices = (QGD_Complex16**)qgd_calloc( submatrices_num, sizeof(QGD_Complex16*), 64);
     std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> submatrices(submatrices_num);
 
-    tbb::parallel_for( tbb::blocked_range<size_t>(0, submatrices_num, 1), functor_extract_submatrices( matrix, matrix_size, &submatrices ));
-/*
-    // sequential version
-    functor_extract_submatrices tmp = functor_extract_submatrices( matrix, matrix_size, submatrices );
-    for (int idx=0; idx<submatrices_num; idx++) {
-        tmp(idx);
-    }
-*/
+    tbb::parallel_for( tbb::blocked_range<size_t>(0, submatrices_num, 1), functor_extract_submatrices( matrix, &submatrices ));
 
     // ********************************
     // Calculate the partial cost functions
     // ********************************
 
 
-    int prod_num = submatrices_num*submatrices_num_row;
-    double* prod_cost_functions = (double*)qgd_calloc( prod_num, sizeof(double), 64);
+    size_t prod_num = submatrices_num*submatrices_num_row;
+    tbb::combinable<double> priv_prod_cost_functions{[](){return 0;}};
 
-    tbb::parallel_for(0, prod_num, 1, functor_submtx_cost_fnc( &submatrices, submatrix_size, prod_cost_functions, prod_num ));
-
-/*
-    // sequential version
-    functor_submtx_cost_fnc tmp2 = functor_submtx_cost_fnc( submatrices, submatrix_size, prod_cost_functions, prod_num );q
-    for (int idx=0; idx<prod_num; idx++) {
-        tmp2(idx);
-    }
-*/
+    tbb::parallel_for(0, (int) prod_num, 1, functor_submtx_cost_fnc( &submatrices, &priv_prod_cost_functions, prod_num ));
 
     // ********************************
     // Calculate the total cost function
@@ -84,11 +65,10 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
 
     // calculate the final cost function
     double cost_function = 0;
-    for (int idx=0; idx<prod_num; idx++) {
-        cost_function = cost_function + prod_cost_functions[idx];
-    }
-    qgd_free( prod_cost_functions );
-    prod_cost_functions = NULL;
+    priv_prod_cost_functions.combine_each([&cost_function](double a) {
+        cost_function = cost_function + a;
+    });
+
 
 
     return cost_function;
@@ -102,10 +82,9 @@ double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size) {
 @param submatrices_in Preallocated arrays for the submatrices
 @return Returns with the instance of the class.
 */
-functor_extract_submatrices::functor_extract_submatrices( QGD_Complex16* matrix_in, int matrix_size_in, std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices_in ) {
+functor_extract_submatrices::functor_extract_submatrices( Matrix& matrix_in, std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices_in ) {
 
     matrix = matrix_in;
-    matrix_size = matrix_size_in;
     submatrices = submatrices_in;
 
 
@@ -123,25 +102,28 @@ void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) con
         Matrix& submatrix = (*submatrices)[ submtx_idx ];
 
         // number of submatrices
-        int submatrices_num_row = 2;
+        size_t submatrices_num_row = 2;
 
-        // number ofcolumns in the submatrices
-        int submatrix_size = matrix_size/2;
+        // number of columns in the input matrix
+        size_t matrix_size = matrix.rows;
+
+        // number of columns in the submatrices
+        size_t submatrix_size = matrix_size/2;
 
         // preallocate memory for the submatrix
         submatrix = Matrix(submatrix_size, submatrix_size);
 
 
         // extract the submatrix
-        int jdx = submtx_idx % submatrices_num_row;
-        int idx = (int) (submtx_idx-jdx)/submatrices_num_row;
+        size_t jdx = submtx_idx % submatrices_num_row;
+        size_t idx = (size_t) (submtx_idx-jdx)/submatrices_num_row;
 
         // copy memory to submatrices
-        for ( int row_idx=0; row_idx<submatrix_size; row_idx++ ) {
+        for ( size_t row_idx=0; row_idx<submatrix_size; row_idx++ ) {
 
-            int matrix_offset = idx*(matrix_size*submatrix_size) + jdx*(submatrix_size) + row_idx*matrix_size;
-            int submatrix_offset = row_idx*submatrix_size;
-            memcpy(submatrix.get_data()+submatrix_offset, matrix+matrix_offset, submatrix_size*sizeof(QGD_Complex16));
+            size_t matrix_offset = idx*(matrix_size*submatrix_size) + jdx*(submatrix_size) + row_idx*matrix_size;
+            size_t submatrix_offset = row_idx*submatrix_size;
+            memcpy(submatrix.get_data()+submatrix_offset, matrix.get_data()+matrix_offset, submatrix_size*sizeof(QGD_Complex16));
 
         }
 
@@ -155,15 +137,13 @@ void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) con
 /**
 @brief Constructor of the class.
 @param submatrices_in The array of the submatrices.
-@param submatrix_size_in The number rows in the submatrices.
 @param prod_cost_functions_in Preallocated array storing the calculated partial cost functions.
 @param prod_num_in The number of partial cost function values (equal to the number of distinct submatrix products.)
 @return Returns with the instance of the class.
 */
-functor_submtx_cost_fnc::functor_submtx_cost_fnc( std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices_in, int submatrix_size_in, double* prod_cost_functions_in, int prod_num_in ) {
+functor_submtx_cost_fnc::functor_submtx_cost_fnc( std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices_in, tbb::combinable<double>* prod_cost_functions_in, size_t prod_num_in ) {
 
     submatrices = submatrices_in;
-    submatrix_size = submatrix_size_in;
     prod_cost_functions = prod_cost_functions_in;
     prod_num = prod_num_in;
 }
@@ -174,30 +154,34 @@ functor_submtx_cost_fnc::functor_submtx_cost_fnc( std::vector<Matrix, tbb::cache
 */
 void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
-    // number of elements in the matrix of submatrix products
-    int element_num = submatrix_size*submatrix_size;
+
 
     // number of submatrices
-    int submatrices_num_row = 2;
+    size_t submatrices_num_row = 2;
 
     // select the given submatrices used to calculate the partial cost_function
-    int jdx = product_idx % submatrices_num_row;
-    int idx = (int) ( product_idx - jdx )/submatrices_num_row;
+    size_t jdx = product_idx % submatrices_num_row;
+    size_t idx = (size_t) ( product_idx - jdx )/submatrices_num_row;
 
     // calculate the submatrix product
     Matrix submatrix_prod = zgemm3m_wrapper_adj( (*submatrices)[idx], (*submatrices)[jdx]);
 
 
+
+    // number of elements in the matrix of submatrix products
+    size_t submatrix_size = submatrix_prod.rows;
+    size_t element_num = submatrix_size*submatrix_size;
+
     // subtract the corner element from the diagonal
     QGD_Complex16 corner_element = submatrix_prod[0];
-    for ( int row_idx=0; row_idx<submatrix_size; row_idx++) {
-        int element_idx = row_idx*submatrix_size+row_idx;
+    for ( size_t row_idx=0; row_idx<submatrix_size; row_idx++) {
+        size_t element_idx = row_idx*submatrix_size+row_idx;
         submatrix_prod[element_idx].real = submatrix_prod[element_idx].real  - corner_element.real;
         submatrix_prod[element_idx].imag = submatrix_prod[element_idx].imag  - corner_element.imag;
     }
 
     // Calculate the |x|^2 value of the elements of the submatrixproducts
-    for ( int idx=0; idx<element_num; idx++ ) {
+    for ( size_t idx=0; idx<element_num; idx++ ) {
         submatrix_prod[idx].real = submatrix_prod[idx].real*submatrix_prod[idx].real + submatrix_prod[idx].imag*submatrix_prod[idx].imag;
         // for performance reason we leave the imaginary part intact (we dont neet it anymore)
         //submatrix_prods[idx].imag = 0;
@@ -207,11 +191,11 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
     // summing up elements and calculate the final cost function
     double cost_function_partial = 0;
-    for ( int row_idx=0; row_idx<submatrix_size; row_idx++ ) {
+    for ( size_t row_idx=0; row_idx<submatrix_size; row_idx++ ) {
 
         // calculate the sum for each row
-        for (int col_idx=0; col_idx<submatrix_size; col_idx++) {
-            int element_idx = row_idx*submatrix_size + col_idx;
+        for (size_t col_idx=0; col_idx<submatrix_size; col_idx++) {
+            size_t element_idx = row_idx*submatrix_size + col_idx;
             cost_function_partial = cost_function_partial + submatrix_prod[element_idx].real;
         }
     }
@@ -225,8 +209,8 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
 
     // store the calculated value for the given submatrix product
-    // TODO padding
-    prod_cost_functions[product_idx] = cost_function_partial;
+    double &prod_cost_function_priv = prod_cost_functions->local();
+    prod_cost_function_priv = prod_cost_function_priv + cost_function_partial;
 
 
 

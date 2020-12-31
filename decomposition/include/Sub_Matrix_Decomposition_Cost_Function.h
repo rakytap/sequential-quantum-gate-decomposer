@@ -31,7 +31,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @param matrix_size The number rows in the matrix matrix_new
 @return Returns with the calculated cost function.
 */
-double get_submatrix_cost_function(QGD_Complex16* matrix, int matrix_size);
+double get_submatrix_cost_function(Matrix& matrix);
 
 
 
@@ -43,10 +43,8 @@ class functor_extract_submatrices {
 
 protected:
 
-    /// Array stroing the matrix
-    QGD_Complex16* matrix;
-    /// NUmber of rows in the matrix
-    int matrix_size;
+    /// The matrix from which submatrices would be extracted
+    Matrix matrix;
     /// preallocated container storing the submatrices
     std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices;
 
@@ -55,11 +53,10 @@ public:
 /**
 @brief Constructor of the class.
 @param matrix_in The square shaped complex matrix from which the cost function is calculated during the submatrix decomposition process.
-@param matrix_size_in The number rows in the matrix matrix_in
 @param submatrices_in Preallocated arrays for the submatrices
 @return Returns with the instance of the class.
 */
-functor_extract_submatrices( QGD_Complex16* matrix_in, int matrix_size_in, std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices_in );
+functor_extract_submatrices( Matrix& matrix_in, std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices_in );
 
 /**
 @brief Operator to extract the sumbatrix indexed by submtx_idx
@@ -79,14 +76,12 @@ class functor_submtx_cost_fnc {
 
 protected:
 
-    /// The number of rows in the submatrices
-    int submatrix_size;
     /// number of distinct submatix products
     int prod_num;
     /// container storing the submatrices
     std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices;
     //// array storing the partial cost functions
-    double* prod_cost_functions;
+    tbb::combinable<double>* prod_cost_functions;
 
 public:
 
@@ -98,7 +93,7 @@ public:
 @param prod_num_in The number of partial cost function values (equal to the number of distinct submatrix products.)
 @return Returns with the instance of the class.
 */
-functor_submtx_cost_fnc( std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices_in, int submatrix_size_in, double* prod_cost_functions_in, int prod_num_in );
+functor_submtx_cost_fnc( std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices_in, tbb::combinable<double>* prod_cost_functions_in, size_t prod_num_in );
 
 /**
 @brief Operator to calculate the partial cost function labeled by product_idx

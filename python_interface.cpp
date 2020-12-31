@@ -69,8 +69,6 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
     }
 
     // creating an instance of class N_Qubit_decomposition
-    // TODO: remove get_data()
-    Umtx.set_owner(false);
     N_Qubit_Decomposition* instance = new N_Qubit_Decomposition( Umtx, qbit_num, optimize_layer_num, initial_guess );
 
     return (void*)instance;
@@ -102,9 +100,6 @@ int iface_delete_N_Qubit_Decomposition( void* ptr ) {
 
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
 
-    QGD_Complex16* Umtx = instance->get_Umtx();
-    qgd_free( Umtx );
-    Umtx = NULL;
 
     delete instance;
 

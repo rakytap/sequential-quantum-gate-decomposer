@@ -199,9 +199,9 @@ std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> get_operation_products
 
 /**
 @brief Call to retrive a pointer to the unitary to be transformed
-@return Return with a pointer pointing to the unitary Umtx
+@return Return with the unitary Umtx
 */
-QGD_Complex16* get_Umtx();
+Matrix get_Umtx();
 
 /**
 @brief Call to get the size of the unitary to be transformed

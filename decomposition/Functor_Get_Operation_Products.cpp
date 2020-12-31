@@ -47,14 +47,6 @@ std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> Decomposition_Base::ge
     // calculate the matrices of the individual block operations
     tbb::parallel_for(tbb::blocked_range<size_t>(0, num_of_operations, 1), functor_get_operation_matrices( parameters, operations_it, &operation_mtxs, num_of_operations ));
 
-/*
-    // sequential version
-    functor_get_operation_matrices tmp = functor_get_operation_matrices( parameters, operations_it, operation_mtxs, num_of_operations );
-    for (int idx=0; idx<num_of_operations; idx++) {
-        tmp(idx);
-    }
-*/
-
     // calculate the operations products
     Matrix operation_product_mtx = Matrix(matrix_size, matrix_size);
     for (int idx=1; idx<num_of_operations; idx++) {
