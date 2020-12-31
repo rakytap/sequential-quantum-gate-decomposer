@@ -139,6 +139,15 @@ int create_identity( QGD_Complex16* matrix, int matrix_size );
 */
 QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_size);
 
+
+/**
+@brief Call to calculate the product of a square shaped complex matrix and a complex transpose of a second square shaped complex matrix using function cblas_zgemm3m or cblas_zgemm.
+@param A The first matrix.
+@param B The second matrix
+@return Returns with the resulted matrix.
+*/
+Matrix zgemm3m_wrapper_adj( Matrix& A, Matrix& B);
+
 /**
 @brief Call to calculate the product of a square shaped complex matrix and a complex transpose of a second square shaped complex matrix using function cblas_zgemm3m or cblas_zgemm.
 @param A The first matrix.

@@ -196,6 +196,40 @@ QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_siz
 @brief Call to calculate the product of a square shaped complex matrix and a complex transpose of a second square shaped complex matrix using function cblas_zgemm3m or cblas_zgemm.
 @param A The first matrix.
 @param B The second matrix
+@return Returns with the resulted matrix.
+*/
+Matrix zgemm3m_wrapper_adj( Matrix& A, Matrix& B) {
+
+
+    // parameters alpha and beta for the cblas_zgemm3m function
+    double alpha = 1.0;
+    double beta = 0.0;
+
+    int matrix_size = (int) A.rows;
+
+    // preallocate array for the result
+    Matrix C = Matrix( A.rows, B.cols );
+
+    // remove memory trash from the allocated memory of the results
+    memset( C.get_data(), 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+
+    // calculate the product of A and B
+#ifdef CBLAS
+    cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, A.get_data(), matrix_size, B.get_data(), matrix_size, &beta, C.get_data(), matrix_size);
+#else
+    cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, A.get_data(), matrix_size, B.get_data(), matrix_size, &beta, C.get_data(), matrix_size);
+#endif
+
+    return C;
+
+
+
+}
+
+/**
+@brief Call to calculate the product of a square shaped complex matrix and a complex transpose of a second square shaped complex matrix using function cblas_zgemm3m or cblas_zgemm.
+@param A The first matrix.
+@param B The second matrix
 @param C Pointer to the resulted matrix. The calculated matrix is returned via this pointer.
 @param matrix_size The number rows in the matrices
 */

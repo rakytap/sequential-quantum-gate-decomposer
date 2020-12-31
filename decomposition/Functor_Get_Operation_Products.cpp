@@ -32,11 +32,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @param num_of_operations The number of operations involved in the calculations
 @return Returns with a vector of the product matrices.
 */
-std::vector<Matrix> Decomposition_Base::get_operation_products(double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations) {
+std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> Decomposition_Base::get_operation_products(double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations) {
 
 
     // construct the vector of matrix representation of the gates
-    std::vector<Matrix> operation_mtxs(num_of_operations);
+    std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> operation_mtxs(num_of_operations);
 
     // creating identity operation if no operations were involved in the calculations
     if (num_of_operations==0) {
@@ -45,7 +45,8 @@ std::vector<Matrix> Decomposition_Base::get_operation_products(double* parameter
     }
 
     // calculate the matrices of the individual block operations
-    tbb::parallel_for(0, num_of_operations, 1, functor_get_operation_matrices( parameters, operations_it, &operation_mtxs, num_of_operations ));
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, num_of_operations, 1), functor_get_operation_matrices( parameters, operations_it, &operation_mtxs, num_of_operations ));
+
 /*
     // sequential version
     functor_get_operation_matrices tmp = functor_get_operation_matrices( parameters, operations_it, operation_mtxs, num_of_operations );
@@ -76,7 +77,7 @@ std::vector<Matrix> Decomposition_Base::get_operation_products(double* parameter
 @param num_of_operations_in The number of operations in the vector
 @return Returns with the instance of the class.
 */
-functor_get_operation_matrices::functor_get_operation_matrices( double* parameters_in, std::vector<Operation*>::iterator operations_it_in, std::vector<Matrix>* operation_mtxs_in, int num_of_operations_in ) {
+functor_get_operation_matrices::functor_get_operation_matrices( double* parameters_in, std::vector<Operation*>::iterator operations_it_in, std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* operation_mtxs_in, int num_of_operations_in ) {
 
     parameters = parameters_in;
     operations_it = operations_it_in;
@@ -87,33 +88,37 @@ functor_get_operation_matrices::functor_get_operation_matrices( double* paramete
 
 /**
 @brief Operator to calculate the matrix representation of operation labeled by i.
-@param i The index labeling the operation in the vector of operations iterated by operations_it.
+@param r Range of indexes labeling the operation in the vector of operations iterated by operations_it.
 */
-void functor_get_operation_matrices::operator()( int i ) const {
+void functor_get_operation_matrices::operator()( const tbb::blocked_range<size_t> r ) const {
 
-    // determine the range parameters
-    double* parameters_loc = parameters;
-    for (int idx=0; idx<i; idx++) {
-        Operation* operation = *(operations_it+idx);
-        parameters_loc = parameters_loc + operation->get_parameter_num();
-    }
+    for ( size_t i = r.begin(); i!=r.end(); i++) {
 
-    // get the matrix representation of th eoperation
-    Operation* operation = *(operations_it+i);
+        // determine the range parameters
+        double* parameters_loc = parameters;
+        for (size_t idx=0; idx<i; idx++) {
+            Operation* operation = *(operations_it+idx);
+            parameters_loc = parameters_loc + operation->get_parameter_num();
+        }
 
-    if (operation->get_type() == CNOT_OPERATION ) {
-        CNOT* cnot_operation = static_cast<CNOT*>(operation);
-        (*operation_mtxs)[i] = cnot_operation->get_matrix();
-    }
-    else if (operation->get_type() == GENERAL_OPERATION ) {
-        (*operation_mtxs)[i] = operation->get_matrix();
-    }
-    else if (operation->get_type() == U3_OPERATION ) {
-        U3* u3_operation = static_cast<U3*>(operation);
-        (*operation_mtxs)[i] = u3_operation->get_matrix(parameters_loc);
-    }
-    else if (operation->get_type() == BLOCK_OPERATION ) {
-        Operation_block* block_operation = static_cast<Operation_block*>(operation);
-        (*operation_mtxs)[i] = block_operation->get_matrix(parameters_loc);
+        // get the matrix representation of th eoperation
+        Operation* operation = *(operations_it+i);
+
+        if (operation->get_type() == CNOT_OPERATION ) {
+            CNOT* cnot_operation = static_cast<CNOT*>(operation);
+            (*operation_mtxs)[i] = cnot_operation->get_matrix();
+        }
+        else if (operation->get_type() == GENERAL_OPERATION ) {
+            (*operation_mtxs)[i] = operation->get_matrix();
+        }
+            else if (operation->get_type() == U3_OPERATION ) {
+            U3* u3_operation = static_cast<U3*>(operation);
+            (*operation_mtxs)[i] = u3_operation->get_matrix(parameters_loc);
+        }
+        else if (operation->get_type() == BLOCK_OPERATION ) {
+            Operation_block* block_operation = static_cast<Operation_block*>(operation);
+            (*operation_mtxs)[i] = block_operation->get_matrix(parameters_loc);
+        }
+
     }
 }

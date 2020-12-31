@@ -7,7 +7,7 @@
 @brief Default constructor of the class.
 @return Returns with the instance of the class.
 */
-Matrix::Matrix() {
+Matrix_base::Matrix_base() {
 
   // The number of rows
   rows = 0;
@@ -37,7 +37,7 @@ Matrix::Matrix() {
 @param cols_in The number of columns in the stored Matrix
 @return Returns with the instance of the class.
 */
-Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in) {
+Matrix_base::Matrix_base( QGD_Complex16* data_in, size_t rows_in, size_t cols_in) {
 
   // The number of rows
   rows = rows_in;
@@ -67,7 +67,7 @@ Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in) {
 @param cols_in The number of columns in the stored Matrix
 @return Returns with the instance of the class.
 */
-Matrix::Matrix( size_t rows_in, size_t cols_in) {
+Matrix_base::Matrix_base( size_t rows_in, size_t cols_in) {
 
   // The number of rows
   rows = rows_in;
@@ -95,7 +95,7 @@ Matrix::Matrix( size_t rows_in, size_t cols_in) {
 @brief Copy constructor of the class. The new instance shares the stored memory with the input Matrix. (Needed for TBB calls)
 @param An instance of class Matrix to be copied.
 */
-Matrix::Matrix(const Matrix &in) {
+Matrix_base::Matrix_base(const Matrix_base &in) {
 
     data = in.data;
     rows = in.rows;
@@ -120,7 +120,7 @@ Matrix::Matrix(const Matrix &in) {
 /**
 @brief Destructor of the class
 */
-Matrix::~Matrix() {
+Matrix_base::~Matrix_base() {
   release_data();
 }
 
@@ -129,7 +129,7 @@ Matrix::~Matrix() {
 @return Returns with true if the Matrix should be conjugated in CBLAS functions or false otherwise.
 */
 bool
-Matrix::is_conjugated() {
+Matrix_base::is_conjugated() {
   return conjugated;
 }
 
@@ -137,7 +137,7 @@ Matrix::is_conjugated() {
 @brief Call to conjugate (or un-conjugate) the Matrix for CBLAS functions.
 */
 void
-Matrix::conjugate() {
+Matrix_base::conjugate() {
 
   conjugated = !conjugated;
 
@@ -149,7 +149,7 @@ Matrix::conjugate() {
 @return Returns with true if the Matrix should be conjugated in CBLAS functions or false otherwise.
 */
 bool
-Matrix::is_transposed() {
+Matrix_base::is_transposed() {
 
   return transposed;
 
@@ -159,7 +159,7 @@ Matrix::is_transposed() {
 @brief Call to transpose (or un-transpose) the Matrix for CBLAS functions.
 */
 void
-Matrix::transpose()  {
+Matrix_base::transpose()  {
 
   transposed = !transposed;
 
@@ -170,7 +170,7 @@ Matrix::transpose()  {
 @brief Call to get the pointer to the stored data
 */
 QGD_Complex16*
-Matrix::get_data() {
+Matrix_base::get_data() {
 
   return data;
 
@@ -183,7 +183,7 @@ Matrix::get_data() {
 @param owner_in Set true to set the current class instance to be the owner of the data array, or false otherwise.
 */
 void
-Matrix::replace_data( QGD_Complex16* data_in, bool owner_in) {
+Matrix_base::replace_data( QGD_Complex16* data_in, bool owner_in) {
 
     release_data();
     data = data_in;
@@ -200,7 +200,7 @@ Matrix::replace_data( QGD_Complex16* data_in, bool owner_in) {
 @brief Call to release the data stored by the Matrix. (If the class instance was not the owner of the data, then the data pointer is simply set to NULL pointer.)
 */
 void
-Matrix::release_data() {
+Matrix_base::release_data() {
 
     if (references==NULL) return;
     bool call_delete = false;
@@ -242,7 +242,7 @@ Matrix::release_data() {
 @param owner_in Set true to set the current class instance to be the owner of the data array, or false otherwise.
 */
 void
-Matrix::set_owner( bool owner_in)  {
+Matrix_base::set_owner( bool owner_in)  {
 
     owner=owner_in;
 
@@ -254,7 +254,7 @@ Matrix::set_owner( bool owner_in)  {
 @return Returns with the instance of the class.
 */
 void
-Matrix::operator= (const Matrix& mtx ) {
+Matrix_base::operator= (const Matrix_base& mtx ) {
 
   // releasing the containing data
   release_data();
@@ -289,9 +289,67 @@ Matrix::operator= (const Matrix& mtx ) {
 @return Returns with a reference to the idx-th element.
 */
 QGD_Complex16&
-Matrix::operator[](size_t idx) {
+Matrix_base::operator[](size_t idx) {
     return data[idx];
 }
+
+
+
+
+/**
+@brief Call to create a copy of the Matrix
+@return Returns with the instance of the class.
+*/
+Matrix_base
+Matrix_base::copy() {
+
+  Matrix_base ret = Matrix_base(rows, cols);
+
+  // logical variable indicating whether the Matrix needs to be conjugated in CBLAS operations
+  ret.conjugated = conjugated;
+  // logical variable indicating whether the Matrix needs to be transposed in CBLAS operations
+  ret.transposed = transposed;
+  // logical value indicating whether the class instance is the owner of the stored data or not. (If true, the data array is released in the destructor)
+  ret.owner = true;
+
+  memcpy( ret.data, data, rows*cols*sizeof(QGD_Complex16));
+
+  return ret;
+
+}
+
+
+
+/**
+@brief Call to get the number of the allocated elements
+@return Returns with the number of the allocated elements (rows*cols)
+*/
+size_t
+Matrix_base::size() {
+
+  return rows*cols;
+
+}
+
+
+/**
+@brief Call to prints the stored Matrix on the standard output
+*/
+void
+Matrix_base::print_matrix() {
+    std::cout << std::endl << "The stored Matrix:" << std::endl;
+    for ( size_t row_idx=0; row_idx < rows; row_idx++ ) {
+        for ( size_t col_idx=0; col_idx < cols; col_idx++ ) {
+            size_t element_idx = row_idx*cols + col_idx;
+            QGD_Complex16 element = data[element_idx];
+              std::cout << " " << element.real << " + i*" << element.imag;
+        }
+        std::cout << std::endl;
+    }
+    std::cout << std::endl << std::endl << std::endl;
+
+}
+
 
 
 
@@ -320,35 +378,11 @@ Matrix::copy() {
 
 
 
-/**
-@brief Call to get the number of the allocated elements
-@return Returns with the number of the allocated elements (rows*cols)
-*/
-size_t
-Matrix::size() {
-
-  return rows*cols;
-
-}
 
 
-/**
-@brief Call to prints the stored Matrix on the standard output
-*/
-void
-Matrix::print_matrix() {
-    std::cout << std::endl << "The stored Matrix:" << std::endl;
-    for ( size_t row_idx=0; row_idx < rows; row_idx++ ) {
-        for ( size_t col_idx=0; col_idx < cols; col_idx++ ) {
-            size_t element_idx = row_idx*cols + col_idx;
-            QGD_Complex16 element = data[element_idx];
-              std::cout << " " << element.real << " + i*" << element.imag;
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl << std::endl << std::endl;
 
-}
+
+
 
 
 

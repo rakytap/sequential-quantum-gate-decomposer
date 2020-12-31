@@ -348,7 +348,7 @@ double Sub_Matrix_Decomposition::optimization_problem( const double* parameters 
 @brief The optimization problem of the final optimization
 @param parameters A GNU Scientific Library containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@return Returns with the cost function. (zero if the qubits are disentangled.)
 */
 double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* parameters, void* void_instance ) {
 

@@ -42,7 +42,7 @@ protected:
     /// An iterator pointing to the first operation.
     std::vector<Operation*>::iterator operations_it;
     /// pointer to a vector containing the matrix representation of the operations/operation blocks.
-    std::vector<Matrix>* operation_mtxs;
+    std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* operation_mtxs;
     ///  The number of operations in the vector
     int num_of_operations;
 
@@ -56,13 +56,13 @@ public:
 @param num_of_operations_in The number of operations in the vector
 @return Returns with the instance of the class.
 */
-functor_get_operation_matrices( double* parameters_in, std::vector<Operation*>::iterator operations_it_in, std::vector<Matrix>* operation_mtxs_in, int num_of_operations_in );
+functor_get_operation_matrices( double* parameters_in, std::vector<Operation*>::iterator operations_it_in, std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* operation_mtxs_in, int num_of_operations_in );
 
 /**
 @brief Operator to calculate th ematrix representation of operation labeled by i.
-@param i The index labeling the operation in the vector of operations iterated by operations_it.
+@param r Range of indexes labeling the operation in the vector of operations iterated by operations_it.
 */
-void operator()( int i ) const;
+void operator()( const tbb::blocked_range<size_t> r ) const;
 
 };
 

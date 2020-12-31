@@ -47,8 +47,8 @@ protected:
     QGD_Complex16* matrix;
     /// NUmber of rows in the matrix
     int matrix_size;
-    /// array storing the submatrices
-    QGD_Complex16** submatrices;
+    /// preallocated container storing the submatrices
+    std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices;
 
 public:
 
@@ -59,13 +59,13 @@ public:
 @param submatrices_in Preallocated arrays for the submatrices
 @return Returns with the instance of the class.
 */
-functor_extract_submatrices( QGD_Complex16* matrix_in, int matrix_size_in, QGD_Complex16** submatrices_in );
+functor_extract_submatrices( QGD_Complex16* matrix_in, int matrix_size_in, std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices_in );
 
 /**
 @brief Operator to extract the sumbatrix indexed by submtx_idx
-@param submtx_idx The index labeling the given submatrix to be extracted
+@param r A range of indices labeling the given submatrix to be extracted
 */
-void operator()( int submtx_idx ) const;
+void operator()( tbb::blocked_range<size_t> r ) const;
 
 };
 
@@ -83,8 +83,8 @@ protected:
     int submatrix_size;
     /// number of distinct submatix products
     int prod_num;
-    /// array storing the submatrices
-    QGD_Complex16** submatrices;
+    /// container storing the submatrices
+    std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices;
     //// array storing the partial cost functions
     double* prod_cost_functions;
 
@@ -98,7 +98,7 @@ public:
 @param prod_num_in The number of partial cost function values (equal to the number of distinct submatrix products.)
 @return Returns with the instance of the class.
 */
-functor_submtx_cost_fnc( QGD_Complex16** submatrices_in, int submatrix_size_in, double* prod_cost_functions_in, int prod_num_in );
+functor_submtx_cost_fnc( std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices_in, int submatrix_size_in, double* prod_cost_functions_in, int prod_num_in );
 
 /**
 @brief Operator to calculate the partial cost function labeled by product_idx

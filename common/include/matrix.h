@@ -11,7 +11,7 @@
 /**
 @brief Class to store data of complex arrays and its properties.
 */
-class Matrix {
+class Matrix_base {
 
 public:
   /// The number of rows
@@ -33,6 +33,8 @@ protected:
   tbb::spin_mutex* reference_mutex;
   /// the number of the current references of the present object
   int64_t* references;
+  /// padding bytes. Useful to avoid false sharing when a concurrent list of Matrix objects is about to used.
+  //uint8_t padding[CACHELINE-48];
 
 
 
@@ -42,7 +44,7 @@ public:
 @brief Default constructor of the class.
 @return Returns with the instance of the class.
 */
-Matrix();
+Matrix_base();
 
 
 /**
@@ -52,7 +54,7 @@ Matrix();
 @param cols_in The number of columns in the stored Matrix
 @return Returns with the instance of the class.
 */
-Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in);
+Matrix_base( QGD_Complex16* data_in, size_t rows_in, size_t cols_in);
 
 
 
@@ -62,7 +64,7 @@ Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in);
 @param cols_in The number of columns in the stored Matrix
 @return Returns with the instance of the class.
 */
-Matrix( size_t rows_in, size_t cols_in);
+Matrix_base( size_t rows_in, size_t cols_in);
 
 
 /**
@@ -70,14 +72,14 @@ Matrix( size_t rows_in, size_t cols_in);
 @param An instance of class Matrix to be copied.
 */
 
-Matrix(const Matrix &in);
+Matrix_base(const Matrix_base &in);
 
 
 
 /**
 @brief Destructor of the class
 */
-~Matrix();
+~Matrix_base();
 
 /**
 @brief Call to get whether the Matrix should be conjugated in CBLAS functions or not.
@@ -136,7 +138,7 @@ void set_owner( bool owner_in);
 @param mtx An instance of class Matrix
 @return Returns with the instance of the class.
 */
-void operator= (const Matrix& mtx );
+void operator= (const Matrix_base& mtx );
 
 
 /**
@@ -151,7 +153,7 @@ QGD_Complex16& operator[](size_t idx);
 @brief Call to create a copy of the Matrix
 @return Returns with the instance of the class.
 */
-Matrix copy();
+Matrix_base copy();
 
 
 
@@ -168,6 +170,32 @@ size_t size();
 void print_matrix();
 
 
+
+
+}; //Matrix
+
+
+/**
+@brief Class to store data of complex arrays and its properties.
+*/
+
+class Matrix : public Matrix_base {
+
+private:
+  /// padding bytes. Useful to avoid false/true sharing between Matrix objects in concurrent containers.
+  uint8_t padding[CACHELINE-sizeof(Matrix_base)];
+
+
+public:
+  // inherit all the constructors of Matrix_base
+  using Matrix_base::Matrix_base;
+
+
+/**
+@brief Call to create a copy of the Matrix
+@return Returns with the instance of the class.
+*/
+Matrix copy();
 
 
 }; //Matrix

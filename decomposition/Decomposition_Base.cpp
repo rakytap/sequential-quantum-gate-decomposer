@@ -380,7 +380,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         int block_parameter_num;
         Matrix operations_mtx_pre;
         Operation* fixed_operation_post = new Operation( qbit_num );
-        std::vector<Matrix> operations_mtxs_post;
+        std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> operations_mtxs_post;
 
         // the identity matrix used in the calculations
         Matrix Identity =  create_identity( matrix_size );

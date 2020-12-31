@@ -194,7 +194,7 @@ bool check_optimization_solution();
 @param num_of_operations The number of operations involved in the calculations
 @return Returns with a vector of the product matrices.
 */
-std::vector<Matrix> get_operation_products(double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations);
+std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> get_operation_products(double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations);
 
 
 /**
