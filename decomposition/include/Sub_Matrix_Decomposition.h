@@ -21,7 +21,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class responsible for the disentanglement of one qubit from the others.
 */
 
-#pragma once
+#ifndef SUB_MATRIX_DECOMPOSITION_H
+#define SUB_MATRIX_DECOMPOSITION_H
+
 #include "qgd/Decomposition_Base.h"
 #include "qgd/Sub_Matrix_Decomposition_Cost_Function.h"
 #include "qgd/Functor_Cost_Function_Gradient.h"
@@ -39,7 +41,7 @@ public:
     bool subdisentaglement_done;
 
     /// The subdecomposed matrix
-    QGD_Complex16* subdecomposed_mtx;
+    Matrix subdecomposed_mtx;
 
     /// logical value. Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
     bool optimize_layer_num;
@@ -143,3 +145,6 @@ Sub_Matrix_Decomposition* clone();
 
 
 };
+
+
+#endif //SUB_MATRIX_DECOMPOSITION

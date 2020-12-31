@@ -52,9 +52,6 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num
     // logical value indicating whether the quasi-unitarization of the submatrices was done or not
     subdisentaglement_done = false;
 
-    // The subunitarized matrix
-    subdecomposed_mtx = NULL;
-
     // filling in numbers that were not given in the input
     for ( std::map<int,int>::iterator it = max_layer_num_def.begin(); it!=max_layer_num_def.end(); it++) {
         if ( max_layer_num.count( it->first ) == 0 ) {
@@ -74,15 +71,6 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num
 @brief Destructor of the class
 */
 Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
-
-
-
-
-    if (subdecomposed_mtx != NULL ) {
-        qgd_free( subdecomposed_mtx );
-        subdecomposed_mtx = NULL;
-    }
-
 
 }
 
@@ -116,8 +104,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         if (verbose) {
             printf("Disentanglig not needed\n");
         }
-        subdecomposed_mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-        memcpy( subdecomposed_mtx, Umtx.get_data(), matrix_size*matrix_size*sizeof(QGD_Complex16) );
+        subdecomposed_mtx = Umtx;
         subdisentaglement_done = true;
         return;
     }
@@ -226,8 +213,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     subdisentaglement_done = true;
 
     // The subunitarized matrix
-    //subdecomposed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-    subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx.get_data() );
+    subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
 }
 
 
