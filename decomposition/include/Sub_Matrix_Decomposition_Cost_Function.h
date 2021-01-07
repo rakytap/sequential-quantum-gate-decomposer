@@ -80,7 +80,7 @@ protected:
     int prod_num;
     /// container storing the submatrices
     std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* submatrices;
-    //// array storing the partial cost functions
+    //// array storing the thread local partial cost functions
     tbb::combinable<double>* prod_cost_functions;
 
 public:
@@ -88,7 +88,6 @@ public:
 /**
 @brief Constructor of the class.
 @param submatrices_in The array of the submatrices.
-@param submatrix_size_in The number rows in the submatrices.
 @param prod_cost_functions_in Preallocated array storing the calculated partial cost functions.
 @param prod_num_in The number of partial cost function values (equal to the number of distinct submatrix products.)
 @return Returns with the instance of the class.

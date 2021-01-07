@@ -488,12 +488,9 @@ void N_Qubit_Decomposition::solve_layer_optimization_problem( int num_of_paramet
 double N_Qubit_Decomposition::optimization_problem( const double* parameters ) {
 
         // get the transformed matrix with the operations in the list
-        QGD_Complex16* matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx.get_data() );
+        Matrix matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
 
-        double cost_function = get_cost_function(matrix_new, matrix_size);
-
-    qgd_free( matrix_new );
-    matrix_new = NULL;
+        double cost_function = get_cost_function(matrix_new);
 
         return cost_function;
 }
@@ -510,16 +507,11 @@ double N_Qubit_Decomposition::optimization_problem( const gsl_vector* parameters
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(void_instance);
     std::vector<Operation*> operations_loc = instance->get_operations();
 
+    // get the transformed matrix with the operations in the list
     Matrix Umtx_loc = instance->get_Umtx();
-    QGD_Complex16* matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), Umtx_loc.get_data() );
+    Matrix matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
 
-    double cost_function = get_cost_function(matrix_new, instance->get_Umtx_size());
-
-    qgd_free( matrix_new );
-    matrix_new = NULL;
-
-//printf("%f, \n", cblas_dznrm2( instance->get_Umtx_size()*instance->get_Umtx_size(), matrix_new, 1) );
-//printf("%f\n", cost_function);
+    double cost_function = get_cost_function(matrix_new);
 
     return cost_function;
 }

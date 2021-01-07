@@ -27,16 +27,16 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /**
-@brief Call co calculate the cost funtion during the final optimization process.
+@brief Call co calculate the cost function during the final optimization process.
 @param matrix The square shaped complex matrix from which the cost function is calculated.
-@param matrix_size The number rows in the matrix
 @return Returns with the calculated cost function.
 */
-double get_cost_function(QGD_Complex16* matrix, int matrix_size) {
+double get_cost_function(Matrix matrix) {
 
-    double* partial_cost_functions = (double*)qgd_calloc( matrix_size, sizeof(double), 64);
+    size_t matrix_size = matrix.rows;
 
-    tbb::parallel_for(0, matrix_size, 1, functor_cost_fnc( matrix, matrix_size, partial_cost_functions, matrix_size ));
+    tbb::combinable<double> priv_partial_cost_functions{[](){return 0;}};
+    tbb::parallel_for( tbb::blocked_range<size_t>(0, matrix_size, 1), functor_cost_fnc( matrix, &priv_partial_cost_functions ));
 
 /*
     //sequential version
@@ -47,14 +47,11 @@ double get_cost_function(QGD_Complex16* matrix, int matrix_size) {
     }
 */
 
-    // sum up the partial cost funtions
+    // calculate the final cost function
     double cost_function = 0;
-    for (int idx=0; idx<matrix_size; idx++) {
-        cost_function = cost_function + partial_cost_functions[idx];
-    }
-    qgd_free(partial_cost_functions);
-    partial_cost_functions = NULL;
-
+    priv_partial_cost_functions.combine_each([&cost_function](double a) {
+        cost_function = cost_function + a;
+    });
 
     return cost_function;
 
@@ -71,51 +68,57 @@ double get_cost_function(QGD_Complex16* matrix, int matrix_size) {
 @param partial_cost_fnc_num_in The number of partial cost function values (equal to the number of distinct submatrix products.)
 @return Returns with the instance of the class.
 */
-functor_cost_fnc::functor_cost_fnc( QGD_Complex16* matrix_in, int matrix_size_in, double* partial_cost_functions_in, int partial_cost_fnc_num_in ) {
+functor_cost_fnc::functor_cost_fnc( Matrix matrix_in, tbb::combinable<double>* partial_cost_functions_in ) {
 
     matrix = matrix_in;
-    matrix_size = matrix_size_in;
+    data = matrix.get_data();
     partial_cost_functions = partial_cost_functions_in;
-    partial_cost_fnc_num = partial_cost_fnc_num_in;
 }
 
 /**
 @brief Operator to calculate the partial cost function derived from the row of the matrix labeled by row_idx
-@param row_idx The index labeling the partial cost function to be calculated.
+@param r A TBB range labeling the partial cost function to be calculated.
 */
-void functor_cost_fnc::operator()( int row_idx ) const {
+void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
 
-    if ( row_idx > partial_cost_fnc_num ) {
-        printf("Error: row idx should be less than the number of roes in the matrix\n");
-        exit(-1);
+    size_t matrix_size = matrix.rows;
+    double &cost_function_priv = partial_cost_functions->local();
+
+    for ( size_t row_idx = r.begin(); row_idx != r.end(); row_idx++) {
+
+        if ( row_idx > matrix_size ) {
+            printf("Error: row idx should be less than the number of roes in the matrix\n");
+            exit(-1);
+        }
+
+        // getting the corner element
+        QGD_Complex16 corner_element = data[0];
+
+
+        // Calculate the |x|^2 value of the elements of the matrix and summing them up to calculate the partial cost function
+        double partial_cost_function = 0;
+        size_t idx_offset = row_idx*matrix_size;
+        size_t idx_max = idx_offset + row_idx;
+        for ( size_t idx=idx_offset; idx<idx_max; idx++ ) {
+            partial_cost_function = partial_cost_function + data[idx].real*data[idx].real + data[idx].imag*data[idx].imag;
+        }
+
+        size_t diag_element_idx = row_idx*matrix_size + row_idx;
+        double diag_real = data[diag_element_idx].real - corner_element.real;
+        double diag_imag = data[diag_element_idx].imag - corner_element.imag;
+        partial_cost_function = partial_cost_function + diag_real*diag_real + diag_imag*diag_imag;
+
+
+        idx_offset = idx_max + 1;
+        idx_max = row_idx*matrix_size + matrix_size;
+        for ( size_t idx=idx_offset; idx<idx_max; idx++ ) {
+            partial_cost_function = partial_cost_function + data[idx].real*data[idx].real + data[idx].imag*data[idx].imag;
+        }
+
+        // storing the calculated partial cost function
+        cost_function_priv = cost_function_priv + partial_cost_function;
+
     }
-
-    // getting the corner element
-    QGD_Complex16 corner_element = matrix[0];
-
-
-    // Calculate the |x|^2 value of the elements of the matrix and summing them up to calculate the partial cost function
-    double partial_cost_function = 0;
-    int idx_offset = row_idx*matrix_size;
-    int idx_max = idx_offset + row_idx;
-    for ( int idx=idx_offset; idx<idx_max; idx++ ) {
-         partial_cost_function = partial_cost_function + matrix[idx].real*matrix[idx].real + matrix[idx].imag*matrix[idx].imag;
-    }
-
-    int diag_element_idx = row_idx*matrix_size + row_idx;
-    double diag_real = matrix[diag_element_idx].real - corner_element.real;
-    double diag_imag = matrix[diag_element_idx].imag - corner_element.imag;
-    partial_cost_function = partial_cost_function + diag_real*diag_real + diag_imag*diag_imag;
-
-
-    idx_offset = idx_max + 1;
-    idx_max = row_idx*matrix_size + matrix_size;
-    for ( int idx=idx_offset; idx<idx_max; idx++ ) {
-         partial_cost_function = partial_cost_function + matrix[idx].real*matrix[idx].real + matrix[idx].imag*matrix[idx].imag;
-    }
-
-    // storing the calculated partial cost function
-    partial_cost_functions[row_idx] = partial_cost_function;
 }
 
 

@@ -25,12 +25,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /**
-@brief Call co calculate the cost funtion during the final optimization process.
+@brief Call co calculate the cost function during the final optimization process.
 @param matrix The square shaped complex matrix from which the cost function is calculated.
-@param matrix_size The number rows in the matrix
 @return Returns with the calculated cost function.
 */
-double get_cost_function(QGD_Complex16* matrix, int matrix_size);
+double get_cost_function(Matrix matrix);
 
 
 
@@ -42,31 +41,27 @@ class functor_cost_fnc {
 protected:
 
     /// Array stroing the matrix
-    QGD_Complex16* matrix;
-    /// Number of rows in the matrix
-    int matrix_size;
+    Matrix matrix;
+    /// Pointer to the data stored in the matrix
+    QGD_Complex16* data;
     /// array storing the partial cost functions
-    double* partial_cost_functions;
-    /// The number of partial cost functions
-    int partial_cost_fnc_num;
+    tbb::combinable<double>* partial_cost_functions;
 
 public:
 
 /**
 @brief Constructor of the class.
 @param matrix_in Arry containing the input matrix
-@param matrix_size_in The number rows in the matrix.
 @param partial_cost_functions_in Preallocated array storing the calculated partial cost functions.
-@param partial_cost_fnc_num_in The number of partial cost function values (equal to the number of distinct submatrix products.)
 @return Returns with the instance of the class.
 */
-functor_cost_fnc( QGD_Complex16* matrix_in, int matrix_size_in,  double* partial_cost_functions_in, int partial_cost_fnc_num_in );
+functor_cost_fnc( Matrix matrix_in,  tbb::combinable<double>* partial_cost_functions_in );
 
 /**
 @brief Operator to calculate the partial cost function derived from the row of the matrix labeled by row_idx
-@param row_idx The index labeling the partial cost function to be calculated.
+@param r A TBB range labeling the partial cost function to be calculated.
 */
-void operator()( int row_idx ) const;
+void operator()( tbb::blocked_range<size_t> r ) const;
 
 };
 
