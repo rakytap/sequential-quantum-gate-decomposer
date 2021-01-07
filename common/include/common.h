@@ -22,20 +22,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #pragma once
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-#include <gsl/gsl_blas_types.h>
-#ifdef __cplusplus
-}
-#endif
 
 #include <tbb/tbb.h>
 #include <tbb/scalable_allocator.h>
 #include <omp.h>
 #include "qgd/QGDTypes.h"
-#include "qgd/matrix.h"
+#include "qgd/dot.h"
+
 
 #include <string>
 #include <stdio.h>
@@ -50,10 +43,6 @@ extern "C"
 extern "C"
 {
 #endif
-
-/// Definition of the zgemm3m function from CBLAS. (Since headers of GNU Scientific Library and other CBLAS libraries are not compatible, we must define function zgemm3m on our own.)
-void cblas_zgemm3m(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA, const enum CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
-		 const void *alpha, const void *A, const int lda, const void *B, const int ldb, const void *beta, void *C, const int ldc);
 
 #if CBLAS==1 // MKL
     /// Set the number of threads on runtime in MKL
@@ -144,27 +133,11 @@ QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_siz
 @brief Call to calculate the product of a square shaped complex matrix and a complex transpose of a second square shaped complex matrix using function cblas_zgemm3m or cblas_zgemm.
 @param A The first matrix.
 @param B The second matrix
-@return Returns with the resulted matrix.
-*/
-Matrix zgemm3m_wrapper_adj( Matrix& A, Matrix& B);
-
-/**
-@brief Call to calculate the product of a square shaped complex matrix and a complex transpose of a second square shaped complex matrix using function cblas_zgemm3m or cblas_zgemm.
-@param A The first matrix.
-@param B The second matrix
 @param C Pointer to the resulted matrix. The calculated matrix is returned via this pointer.
 @param matrix_size The number rows in the matrices
 */
 int zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size);
 
-
-/**
-@brief Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or cblas_zgemm
-@param A The first matrix.
-@param B The second matrix
-@return Returns with the resulted matrix.
-*/
-Matrix zgemm3m_wrapper( Matrix& A , Matrix& B );
 
 
 /**
@@ -186,14 +159,6 @@ QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* A , QGD_Complex16* B, int matrix_
 */
 int zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size);
 
-/**
-@brief Calculate the product of several square shaped complex matrices stored in a vector.
-@param mtxs The vector of matrices.
-@param C Pointer to the resulted matrix. The calculated matrix is returned via this pointer.
-@param matrix_size The number rows in the matrices
-@return Returns with zero on success.
-*/
-int reduce_zgemm( std::vector<QGD_Complex16*> mtxs, QGD_Complex16* C, int matrix_size );
 
 /**
 @brief Calculate the product of several square shaped complex matrices stored in a vector.

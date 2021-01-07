@@ -7,6 +7,7 @@ SUBLIBS = common/libcommon.la operations/liboperations.la decomposition/libdecom
 
 EXTRA_DIST = common/include/common.h \
              common/include/matrix.h \
+             common/include/matrix_base.hpp \
              common/include/QGDTypes.h \
              operations/include/Operation.h \
              operations/include/CNOT.h \

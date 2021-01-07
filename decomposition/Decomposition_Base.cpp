@@ -704,7 +704,7 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
             Operation_product = operation_mtx; //copy?
         }
         else {
-            ret_matrix = zgemm3m_wrapper( Operation_product, operation_mtx );
+            ret_matrix = dot( Operation_product, operation_mtx );
             Operation_product = ret_matrix; // copy?
 
         }
@@ -839,7 +839,7 @@ Matrix
 Decomposition_Base::apply_operation( Matrix& operation_mtx, Matrix& input_matrix ) {
 
     // Getting the transformed state upon the transformation given by operation
-    return zgemm3m_wrapper( operation_mtx, input_matrix );
+    return dot( operation_mtx, input_matrix );
 
 }
 

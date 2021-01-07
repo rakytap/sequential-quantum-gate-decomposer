@@ -48,7 +48,7 @@ fi
 # checking TBB library
 LDFLAGS="${LDFLAGS}  -fno-builtin-malloc -fno-builtin-calloc -fno-builtin-realloc -fno-builtin-free"
 if test x$TBB_LIB_DIR != x ; then
-LDFLAGS="${LDFLAGS} -L$TBB_LIB_DIR"
+LDFLAGS="${LDFLAGS} -Wl,-rpath=$TBB_LIB_DIR  -L$TBB_LIB_DIR"
 fi
 
 TBB_LIBS=""

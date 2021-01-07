@@ -175,8 +175,12 @@ int create_identity( QGD_Complex16* matrix, int matrix_size ) {
 QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_size) {
 
     // parameters alpha and beta for the cblas_zgemm3m function
-    double alpha = 1.0;
-    double beta = 0.0;
+    QGD_Complex16 alpha;
+    alpha.real = 1.0;
+    alpha.imag = 0.0;
+    QGD_Complex16 beta;
+    beta.real = 0.0;
+    beta.imag = 0.0;
 
     // preallocate array for the result
     QGD_Complex16 C;
@@ -192,39 +196,6 @@ QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_siz
 }
 
 
-/**
-@brief Call to calculate the product of a square shaped complex matrix and a complex transpose of a second square shaped complex matrix using function cblas_zgemm3m or cblas_zgemm.
-@param A The first matrix.
-@param B The second matrix
-@return Returns with the resulted matrix.
-*/
-Matrix zgemm3m_wrapper_adj( Matrix& A, Matrix& B) {
-
-
-    // parameters alpha and beta for the cblas_zgemm3m function
-    double alpha = 1.0;
-    double beta = 0.0;
-
-    int matrix_size = (int) A.rows;
-
-    // preallocate array for the result
-    Matrix C = Matrix( A.rows, B.cols );
-
-    // remove memory trash from the allocated memory of the results
-    memset( C.get_data(), 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-
-    // calculate the product of A and B
-#ifdef CBLAS
-    cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, A.get_data(), matrix_size, B.get_data(), matrix_size, &beta, C.get_data(), matrix_size);
-#else
-    cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasConjTrans, matrix_size, matrix_size, matrix_size, &alpha, A.get_data(), matrix_size, B.get_data(), matrix_size, &beta, C.get_data(), matrix_size);
-#endif
-
-    return C;
-
-
-
-}
 
 /**
 @brief Call to calculate the product of a square shaped complex matrix and a complex transpose of a second square shaped complex matrix using function cblas_zgemm3m or cblas_zgemm.
@@ -236,11 +207,12 @@ Matrix zgemm3m_wrapper_adj( Matrix& A, Matrix& B) {
 int zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size) {
 
     // parameters alpha and beta for the cblas_zgemm3m function
-    double alpha = 1.0;
-    double beta = 0.0;
-
-    // remove memory trash from the allocated memory of the results
-    memset( C, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+    QGD_Complex16 alpha;
+    alpha.real = 1.0;
+    alpha.imag = 0.0;
+    QGD_Complex16 beta;
+    beta.real = 0.0;
+    beta.imag = 0.0;
 
     // calculate the product of A and B
 #ifdef CBLAS
@@ -250,38 +222,6 @@ int zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, i
 #endif
 
     return 0;
-}
-
-
-/**
-@brief Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or cblas_zgemm
-@param A The first matrix.
-@param B The second matrix
-@return Returns with the resulted matrix.
-*/
-Matrix zgemm3m_wrapper( Matrix& A , Matrix& B ) {
-
-    // parameters alpha and beta for the cblas_zgemm3m function
-    double alpha = 1.0;
-    double beta = 0.0;
-
-    int matrix_size = (int) A.rows;
-
-    // preallocate array for the result
-    Matrix C = Matrix( A.rows, B.cols );
-
-    // remove memory trash from the allocated memory of the results
-    memset( C.get_data(), 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-
-    // calculate the product of A and B
-#ifdef CBLAS
-    cblas_zgemm3m (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A.get_data(), matrix_size, B.get_data(), matrix_size, &beta, C.get_data(), matrix_size);
-#else
-    cblas_zgemm (CblasRowMajor, CblasNoTrans, CblasNoTrans, matrix_size, matrix_size, matrix_size, &alpha, A.get_data(), matrix_size, B.get_data(), matrix_size, &beta, C.get_data(), matrix_size);
-#endif
-
-    return C;
-
 }
 
 
@@ -296,14 +236,15 @@ Matrix zgemm3m_wrapper( Matrix& A , Matrix& B ) {
 QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, int matrix_size) {
 
     // parameters alpha and beta for the cblas_zgemm3m function
-    double alpha = 1.0;
-    double beta = 0.0;
+    QGD_Complex16 alpha;
+    alpha.real = 1.0;
+    alpha.imag = 0.0;
+    QGD_Complex16 beta;
+    beta.real = 0.0;
+    beta.imag = 0.0;
 
     // preallocate array for the result
     QGD_Complex16* C = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-
-    // remove memory trash from the allocated memory of the results
-    memset( C, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
     // calculate the product of A and B
 #ifdef CBLAS
@@ -327,11 +268,12 @@ QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, int matrix_s
 int zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size) {
 
     // parameters alpha and beta for the cblas_zgemm3m function
-    double alpha = 1.0;
-    double beta = 0.0;
-
-    // remove memory trash from the allocated memory of the results
-    memset( C, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+    QGD_Complex16 alpha;
+    alpha.real = 1.0;
+    alpha.imag = 0.0;
+    QGD_Complex16 beta;
+    beta.real = 0.0;
+    beta.imag = 0.0;
 
     // calculate the product of A and B
 #ifdef CBLAS
@@ -341,66 +283,6 @@ int zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int m
 #endif
 
     return 0;
-}
-
-
-
-/**
-@brief Calculate the product of several square shaped complex matrices stored in a vector.
-@param mtxs The vector of matrices.
-@param C Pointer to the resulted matrix. The calculated matrix is returned via this pointer.
-@param matrix_size The number rows in the matrices
-@return Returns with zero on success.
-*/
-int reduce_zgemm( std::vector<QGD_Complex16*> mtxs, QGD_Complex16* C, int matrix_size ) {
-
-
-    if (mtxs.size() == 0 ) {
-        return create_identity(C, matrix_size);
-    }
-
-
-
-    // pointers to matrices to be used in the multiplications
-    QGD_Complex16* A = NULL;
-    QGD_Complex16* B = NULL;
-
-    // the iteration number
-    int iteration = 0;
-
-
-    QGD_Complex16* tmp = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
-    A = *mtxs.begin();
-
-    // calculate the product of complex matrices
-    for(std::vector<QGD_Complex16*>::iterator it=++mtxs.begin(); it != mtxs.end(); ++it) {
-
-        iteration++;
-        B = *it;
-
-        if ( iteration>1 ) {
-            A = tmp;
-            memcpy(A, C, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-        }
-
-
-
-        // calculate the product of A and B
-        zgemm3m_wrapper(A, B, C, matrix_size);
-/*if (matrix_size == 4) {
-printf("reduce_zgemm\n");
-print_mtx( A, matrix_size, matrix_size);
-print_mtx( B, matrix_size, matrix_size);
-print_mtx( C, matrix_size, matrix_size);
-}*/
-
-    }
-
-    qgd_free(tmp);
-    tmp = NULL;
-
-    return 0;
-
 }
 
 
@@ -442,7 +324,7 @@ reduce_zgemm( std::vector<Matrix>& mtxs ) {
         }
 
         // calculate the product of A and B
-        C = zgemm3m_wrapper(A, B);
+        C = dot(A, B);
 /*
 A.print_matrix();
 B.print_matrix();

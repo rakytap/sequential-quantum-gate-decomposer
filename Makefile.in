@@ -387,6 +387,7 @@ SUBDIRS = qgd common operations decomposition random_unitary test_standalone
 SUBLIBS = common/libcommon.la operations/liboperations.la decomposition/libdecomposition.la random_unitary/librandomunitary.la
 EXTRA_DIST = common/include/common.h \
              common/include/matrix.h \
+             common/include/matrix_base.hpp \
              common/include/QGDTypes.h \
              operations/include/Operation.h \
              operations/include/CNOT.h \

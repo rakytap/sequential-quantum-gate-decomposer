@@ -103,7 +103,7 @@ CONFIG_CLEAN_FILES =
 CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libcommon_la_LIBADD =
-am_libcommon_la_OBJECTS = common.lo matrix.lo
+am_libcommon_la_OBJECTS = common.lo matrix.lo dot.lo
 libcommon_la_OBJECTS = $(am_libcommon_la_OBJECTS)
 AM_V_lt = $(am__v_lt_@AM_V@)
 am__v_lt_ = $(am__v_lt_@AM_DEFAULT_V@)
@@ -323,7 +323,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LTLIBRARIES = libcommon.la
 pkginclude_HEADERS = include/common.h
-libcommon_la_SOURCES = common.cpp matrix.cpp
+libcommon_la_SOURCES = common.cpp matrix.cpp dot.cpp
 AM_CPPFLAGS = $(CXXFLAGS) -I$(top_srcdir)  -I$(GSL_INC_DIR)
 all: all-am
 
@@ -380,6 +380,7 @@ distclean-compile:
 	-rm -f *.tab.c
 
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/common.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/dot.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/matrix.Plo@am__quote@
 
 .cpp.o:

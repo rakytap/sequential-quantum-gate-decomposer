@@ -98,7 +98,7 @@ few_CNOT_unitary( int qbit_num, int cnot_num) {
 
 
         // get the current unitary
-        Matrix mtx_tmp = zgemm3m_wrapper(gate_matrix, mtx);
+        Matrix mtx_tmp = dot(gate_matrix, mtx);
         mtx = mtx_tmp;
 
         delete u3_op;
@@ -211,7 +211,7 @@ Random_Unitary::Construct_Unitary_Matrix( double* vartheta, double* varphi, doub
                a.real = -a.real;
                b.imag = -b.imag;
                Matrix Omega_loc = Omega( varalpha, varbeta, a, b );
-               Matrix ret_tmp = zgemm3m_wrapper( ret, Omega_loc); //   ret * Omega_loc
+               Matrix ret_tmp = dot( ret, Omega_loc); //   ret * Omega_loc
 
                ret = ret_tmp;
            }

@@ -159,34 +159,25 @@ functor_grad<decomp_class>::functor_grad( const gsl_vector* parameters_in, decom
 template<typename decomp_class>
 void functor_grad<decomp_class>::operator()( int i ) const {
 
-    decomp_class* instance_loc = NULL;
     if (i == (int)parameters->size) {
         // calculate function value at x0
         *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance));
     }
     else {
-        // calculate function value at displaced x
-        instance_loc = instance->clone();
 
         gsl_vector* parameters_d = gsl_vector_calloc(parameters->size);
         memcpy( parameters_d->data, parameters->data, parameters->size*sizeof(double) );
         parameters_d->data[i] = parameters_d->data[i] + dparam;
 
         // calculate the cost function at the displaced point
-        f->data[i] = instance_loc->optimization_problem(parameters_d, reinterpret_cast<void*>(instance_loc));
+        f->data[i] = instance->optimization_problem(parameters_d, reinterpret_cast<void*>(instance));
 
         // release vectors
         gsl_vector_free(parameters_d);
         parameters_d = NULL;
 
-        delete instance_loc;
     }
 
-
-
-    if ( i >0 ) {
-
-    }
 
 }
 
