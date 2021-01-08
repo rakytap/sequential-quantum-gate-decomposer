@@ -170,11 +170,10 @@ Matrix reduce_zgemm( std::vector<Matrix>& mtxs );
 
 /**
 @brief Call to subtract a scalar from the diagonal of a complex matrix.
-@param mtx A pointer to the matrix. The resulted matrix is returned via this pointer.
-@param matrix_size The number rows in the matrix
+@param mtx The input-output matrix
 @param scalar The complex scalar to be subtracked from the diagonal elements of the matrix
 */
-void subtract_diag( QGD_Complex16* & mtx,  int matrix_size, QGD_Complex16 scalar );
+void subtract_diag( Matrix& mtx,  QGD_Complex16 scalar );
 
 
 /**

@@ -154,15 +154,12 @@ void N_Qubit_Decomposition::start_decomposition(bool finalize_decomp=true, bool 
         }
 
         // calculating the final error of the decomposition
-        QGD_Complex16* matrix_decomposed = get_transformed_matrix(optimized_parameters, operations.begin(), operations.size(), Umtx.get_data() );
+        Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters, operations.begin(), operations.size(), Umtx );
 //print_mtx(matrix_decomposed, matrix_size, matrix_size);
 
-        subtract_diag( matrix_decomposed, matrix_size, matrix_decomposed[0] );
+        subtract_diag( matrix_decomposed, matrix_decomposed[0] );
 
-        decomposition_error = cblas_dznrm2( matrix_size*matrix_size, matrix_decomposed, 1 );
-
-        qgd_free( matrix_decomposed );
-        matrix_decomposed = NULL;
+        decomposition_error = cblas_dznrm2( matrix_size*matrix_size, matrix_decomposed.get_data(), 1 );
 
         // get the number of gates used in the decomposition
         gates_num gates_num = get_gate_nums();
@@ -262,7 +259,8 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
         }
 
         // obtaining the subdecomposed submatrices
-        QGD_Complex16* subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx.get_data() );
+        Matrix subdecomposed_matrix_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+        QGD_Complex16* subdecomposed_matrix = subdecomposed_matrix_mtx.get_data();
 
         // get the most unitary submatrix
         // get the number of 2qubit submatrices
@@ -273,23 +271,27 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
 
         // fill up the submatrices and select the most unitary submatrix
 
-        QGD_Complex16* most_unitary_submatrix = (QGD_Complex16*)qgd_calloc( submatrix_size*submatrix_size,sizeof(QGD_Complex16), 64 );
+        Matrix most_unitary_submatrix_mtx = Matrix(submatrix_size, submatrix_size );
+        QGD_Complex16* most_unitary_submatrix = most_unitary_submatrix_mtx.get_data();
         double unitary_error_min = 1e8;
 
         for (int idx=0; idx<submatrices_num_row; idx++) { // in range(0,submatrices_num_row):
             for (int jdx=0; jdx<submatrices_num_row; jdx++) { // in range(0,submatrices_num_row):
 
-                QGD_Complex16* submatrix_prod = (QGD_Complex16*)qgd_calloc( submatrix_size*submatrix_size,sizeof(QGD_Complex16), 64 );
-                QGD_Complex16* submatrix = (QGD_Complex16*)qgd_calloc( submatrix_size*submatrix_size,sizeof(QGD_Complex16), 64 );
+                Matrix submatrix_mtx = Matrix(submatrix_size, submatrix_size);
+                QGD_Complex16* submatrix = submatrix_mtx.get_data();
 
                 for ( int row_idx=0; row_idx<submatrix_size; row_idx++ ) {
                     int matrix_offset = idx*(matrix_size*submatrix_size) + jdx*(submatrix_size) + row_idx*matrix_size;
                     int submatrix_offset = row_idx*submatrix_size;
-                    memcpy(submatrix+submatrix_offset, subdecomposed_mtx+matrix_offset, submatrix_size*sizeof(QGD_Complex16));
+                    memcpy(submatrix+submatrix_offset, subdecomposed_matrix+matrix_offset, submatrix_size*sizeof(QGD_Complex16));
                 }
 
                 // calculate the product of submatrix*submatrix'
-                zgemm3m_wrapper_adj( submatrix, submatrix, submatrix_prod, submatrix_size);
+                Matrix submatrix_mtx_adj = submatrix_mtx;
+                submatrix_mtx_adj.transpose();
+                submatrix_mtx_adj.conjugate();
+                Matrix submatrix_prod = dot( submatrix_mtx, submatrix_mtx_adj);
 
                 // subtract corner element
                 QGD_Complex16 corner_element = submatrix_prod[0];
@@ -298,29 +300,20 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
                     submatrix_prod[row_idx*submatrix_size+row_idx].imag = submatrix_prod[row_idx*submatrix_size+row_idx].imag - corner_element.imag;
                 }
 
-                double unitary_error = cblas_dznrm2( submatrix_size*submatrix_size, submatrix_prod, 1 );
+                double unitary_error = cblas_dznrm2( submatrix_size*submatrix_size, submatrix_prod.get_data(), 1 );
 
                 if (unitary_error < unitary_error_min) {
                     unitary_error_min = unitary_error;
                     memcpy(most_unitary_submatrix, submatrix, submatrix_size*submatrix_size*sizeof(QGD_Complex16));
                 }
 
-                qgd_free(submatrix);
-                qgd_free(submatrix_prod);
-                submatrix = NULL;
-                submatrix_prod = NULL;
             }
         }
-
-        qgd_free( subdecomposed_mtx );
-        subdecomposed_mtx = NULL;
 
 
         // if the qubit number in the submatirx is greater than 2 new N-qubit decomposition is started
 
         // create class tp decompose submatrices
-        // TODO
-        Matrix most_unitary_submatrix_mtx = Matrix(most_unitary_submatrix, submatrix_size, submatrix_size );
         N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(most_unitary_submatrix_mtx, qbit_num-1, optimize_layer_num, initial_guess);
 
         // setting the verbosity
@@ -350,8 +343,6 @@ void  N_Qubit_Decomposition::decompose_submatrix() {
         extract_subdecomposition_results( reinterpret_cast<Sub_Matrix_Decomposition*>(cdecomposition) );
 
         delete cdecomposition;
-        qgd_free( most_unitary_submatrix );
-        most_unitary_submatrix = NULL;
 
 }
 

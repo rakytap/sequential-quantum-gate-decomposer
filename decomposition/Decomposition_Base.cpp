@@ -87,8 +87,6 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
     // optimized parameters
     optimized_parameters = NULL;
 
-    // auxiliary variable storing the transformed matrix
-    transformed_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
 
 #if CBLAS==1
     num_threads = mkl_get_max_threads();
@@ -108,15 +106,6 @@ Decomposition_Base::~Decomposition_Base() {
         optimized_parameters = NULL;
     }
 
-    if (transformed_mtx != NULL ) {
-        qgd_free( transformed_mtx );
-        transformed_mtx = NULL;
-    }
-
-/*    if (m_x != NULL) {
-        lbfgs_free(m_x);
-        m_x = NULL;
-    }*/
 }
 
 
@@ -151,7 +140,7 @@ void Decomposition_Base::finalize_decomposition() {
 
         // obtaining the final operations of the decomposition
         Operation_block* finalizing_operations = new Operation_block( qbit_num );;
-        get_finalizing_operations( transformed_matrix.get_data(), finalizing_operations, finalizing_parameters );
+        Matrix final_matrix = get_finalizing_operations( transformed_matrix, finalizing_operations, finalizing_parameters );
 
         // adding the finalizing operations to the list of operations
         // adding the opeartion block to the operations
@@ -174,15 +163,12 @@ void Decomposition_Base::finalize_decomposition() {
         finalizing_operations_num = finalizing_operations->get_operation_num();
 
 
-        // indicat that the decomposition was finalized
+        // indicate that the decomposition was finalized
         decomposition_finalized = true;
 
         // calculating the final error of the decomposition
-        //decomposition_error = LA.norm(matrix_new*np.exp(np.complex(0,-np.angle(matrix_new[0,0]))) - np.identity(len(matrix_new))*abs(matrix_new[0,0]), 2)
-        QGD_Complex16* tmp = transformed_matrix.get_data();
-        subtract_diag( tmp, matrix_size, transformed_matrix[0] );
-        decomposition_error = cblas_dznrm2( matrix_size*matrix_size, (void*)transformed_matrix.get_data(), 1 );
-        //qgd_free( finalized_matrix_new );
+        subtract_diag( final_matrix, final_matrix[0] );
+        decomposition_error = cblas_dznrm2( matrix_size*matrix_size, (void*)final_matrix.get_data(), 1 );
 
         // get the number of gates used in the decomposition
         gates_num gates_num = get_gate_nums();
@@ -212,16 +198,15 @@ void Decomposition_Base::list_operations( int start_index ) {
 @param mtx The unitary describing indepent qubits.  The resulting matrix is returned by this pointer
 @param finalizing_operations Pointer pointig to a block of operations containing the final operations.
 @param finalizing_parameters Parameters corresponding to the finalizing operations.
+@return Returns with the finalized matrix
 */
-void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operation_block* finalizing_operations, double* finalizing_parameters  ) {
+Matrix Decomposition_Base::get_finalizing_operations( Matrix& mtx, Operation_block* finalizing_operations, double* finalizing_parameters  ) {
 
 
         int parameter_idx = finalizing_parameter_num-1;
 
-        QGD_Complex16* mtx_tmp = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-        memcpy( mtx_tmp, mtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-        QGD_Complex16* mtx_tmp2 = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-        QGD_Complex16* u3_mtx = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
+        Matrix mtx_tmp = mtx.copy();
+
 
         double Theta, Lambda, Phi;
         for (int target_qbit=0;  target_qbit<qbit_num; target_qbit++ ) {
@@ -274,27 +259,15 @@ void Decomposition_Base::get_finalizing_operations( QGD_Complex16* mtx, Operatio
             // get the new matrix
 
 
-            memset(u3_mtx, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-            u3_loc->matrix(parameters_loc, u3_mtx);
+            Matrix u3_mtx = u3_loc->get_matrix(parameters_loc);
 
-            apply_operation( u3_mtx, mtx_tmp, mtx_tmp2);
-
-
-            memcpy( mtx_tmp, mtx_tmp2, matrix_size*matrix_size*sizeof(QGD_Complex16) );
+            Matrix tmp2 = apply_operation( u3_mtx, mtx_tmp);
+            mtx_tmp = tmp2;
 
         }
 
-        memcpy( mtx, mtx_tmp, matrix_size*matrix_size*sizeof(QGD_Complex16) );
 
-        qgd_free( mtx_tmp );
-        qgd_free( mtx_tmp2 );
-        qgd_free( u3_mtx );
-        mtx_tmp = NULL;
-        mtx_tmp2 = NULL;
-        u3_mtx = NULL;
-
-
-        return;
+        return mtx_tmp;
 
 
 }

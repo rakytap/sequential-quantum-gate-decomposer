@@ -101,9 +101,6 @@ protected:
     /// type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
     guess_type initial_guess;
 
-    /// auxiliary variable storing the transformed matrix
-    QGD_Complex16* transformed_mtx;
-
     /// Number of outer OpenMP threads. (During the calculations OpenMP multithreading is turned off.)
     int num_threads;
 
@@ -154,8 +151,9 @@ void list_operations( int start_index );
 @param mtx The unitary describing indepent qubits. The resulting matrix is returned by this pointer
 @param finalizing_operations Pointer pointig to a block of operations containing the final operations.
 @param finalizing_parameters Parameters corresponding to the finalizing operations.
+@return Returns with the finalized matrix
 */
-void get_finalizing_operations( QGD_Complex16* mtx, Operation_block* finalizing_operations, double* finalizing_parameters);
+Matrix get_finalizing_operations( Matrix& mtx, Operation_block* finalizing_operations, double* finalizing_parameters);
 
 
 /**
