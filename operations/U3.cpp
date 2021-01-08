@@ -186,80 +186,6 @@ U3::get_matrix( const double* parameters ) {
 
 
 /**
-@brief Call to retrieve the operation matrix
-@param parameters An array of parameters to calculate the matrix of the U3 operation.
-@return Returns with a pointer to the operation matrix
-*/
-QGD_Complex16* U3::matrix( const double* parameters ) {
-
-        // preallocate array for the composite u3 operation
-        Matrix U3_matrix = Matrix(matrix_size, matrix_size);
-
-        if (theta && !phi && lambda) {
-            // function handle to calculate the operation on the target qubit
-            composite_u3_Theta_Lambda( parameters, U3_matrix );
-        }
-
-        else if (theta && phi && lambda) {
-            // function handle to calculate the operation on the target qubit
-            composite_u3_Theta_Phi_Lambda( parameters, U3_matrix );
-        }
-
-        else if (!theta && phi && lambda) {
-            // function handle to calculate the operation on the target qubit
-            composite_u3_Phi_Lambda( parameters, U3_matrix );
-        }
-
-        else if (theta && phi && !lambda) {
-            // function handle to calculate the operation on the target qubit
-            composite_u3_Theta_Phi( parameters, U3_matrix );
-        }
-
-        else if (!theta && !phi && lambda) {
-            // function handle to calculate the operation on the target qubit
-            composite_u3_Lambda( parameters, U3_matrix );
-        }
-
-        else if (!theta && phi && !lambda) {
-            // function handle to calculate the operation on the target qubit
-            composite_u3_Phi( parameters, U3_matrix );
-        }
-
-        else if (theta && !phi && !lambda) {
-            // function handle to calculate the operation on the target qubit
-            composite_u3_Theta( parameters, U3_matrix );
-        }
-
-        else {
-            composite_u3(0, 0, 0, U3_matrix );
-        }
-
-
-        U3_matrix.set_owner(false);
-        return U3_matrix.get_data();
-
-}
-
-
-/**
-@brief Call to retrieve the operation matrix
-@param parameters An array of parameters to calculate the matrix of the U3 operation.
-@param U3_matrix A pointer to the preallocated array of the operation matrix.
-@return Returns with 0 on success.
-*/
-int U3::matrix( const double* parameters, QGD_Complex16* U3_matrix ) {
-
-        QGD_Complex16* ret = matrix(parameters);
-        memcpy(U3_matrix, ret, matrix_size*matrix_size*sizeof(QGD_Complex16));
-
-        return 0;
-
-}
-
-
-
-
-/**
 @brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
 @param parameters An array containing the parameters of the U3 operation.
 @param U3_matrix A pointer to the preallocated array of the operation matrix.
@@ -393,18 +319,6 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, Matrix& U3_matrix 
         return 0;
 }
 
-/*np.identity(2 ** self.qbit_num, dtype=np.complex128)
-
-        u3 = self.u3( Theta, Phi, Lambda )
-
-        matrix[self.indexes_target_qubit['0'], self.indexes_target_qubit['0']] = u3[0,0]
-        matrix[self.indexes_target_qubit['0'], self.indexes_target_qubit['1']] = u3[0,1]
-        matrix[self.indexes_target_qubit['1'], self.indexes_target_qubit['0']] = u3[1,0]
-        matrix[self.indexes_target_qubit['1'], self.indexes_target_qubit['1']] = u3[1,1]
-
-        return matrix
-
-*/
 
 /**
 @brief Determine the base indices corresponding to the target qubit states |0> and |1>

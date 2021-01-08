@@ -692,106 +692,6 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
 
 }
 
-
-/** OBSOLETE
-@brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
-@param parameters An array containing the parameters of the U3 operations.
-@param operations_it An iterator pointing to the first operation to be applied on the initial matrix.
-@param num_of_operations The number of operations to be applied on the initial matrix
-@param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute Umtx)
-@return Returns with the transformed matrix (ehich is also stored in the attribute transformed_mtx).
-*/
-QGD_Complex16* Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations, QGD_Complex16* initial_matrix=NULL  ) {
-
-    //QGD_Complex16* ret_matrix = transformed_mtx;
-    // auxiliary variable storing the transformed matrix
-    QGD_Complex16* ret_matrix = (QGD_Complex16*)qgd_calloc(matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-
-
-        if (initial_matrix == NULL) {
-            initial_matrix = Umtx.get_data();
-        }
-
-        if (num_of_operations==0) {
-            memcpy(ret_matrix, initial_matrix, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-            return ret_matrix;
-        }
-
-        // The matrix of the current operation
-        QGD_Complex16* operation_mtx;
-        // The matrix of the transformed matrix
-        QGD_Complex16* Operation_product = NULL;
-
-        operation_mtx = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
-        Operation_product = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size,sizeof(QGD_Complex16), 64);
-
-        for (int idx=0; idx<num_of_operations; idx++) {
-
-            Operation* operation = *operations_it;
-
-            if (operation->get_type() == CNOT_OPERATION ) {
-                CNOT* cnot_operation = static_cast<CNOT*>( operation );
-                cnot_operation->matrix(operation_mtx);
-            }
-            else if (operation->get_type() == GENERAL_OPERATION ) {
-                operation->matrix(operation_mtx);
-            }
-            else if (operation->get_type() == U3_OPERATION ) {
-                U3* u3_operation = static_cast<U3*>( operation );
-                int parameters_num = u3_operation->get_parameter_num();
-                u3_operation->matrix( parameters, operation_mtx );
-                parameters = parameters + parameters_num;
-            }
-            else if (operation->get_type() == BLOCK_OPERATION ) {
-                Operation_block* block_operation = static_cast<Operation_block*>( operation );
-                int parameters_num = block_operation->get_parameter_num();
-                block_operation->matrix( parameters, operation_mtx );
-                parameters = parameters + parameters_num;
-            }
-/*if (verbose) {
-printf("Decomposition_Base::get_transformed_matrix 4\n");
-print_mtx( operation_mtx, matrix_size, matrix_size );
-print_mtx( Operation_product, matrix_size, matrix_size );
-}*/
-
-            if ( idx == 0 ) {
-                //Operation_product = operation_mtx;
-                memcpy( Operation_product, operation_mtx, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-            }
-            else {
-                zgemm3m_wrapper( Operation_product, operation_mtx, ret_matrix, matrix_size );
-/*if (verbose) {
-printf("Decomposition_Base::get_transformed_matrix 4b\n");
-print_mtx( ret_matrix, matrix_size, matrix_size );
-}*/
-                memcpy( Operation_product, ret_matrix, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-
-            }
-
-            operations_it++;
-        }
-/*if (verbose) {
-printf("Decomposition_Base::get_transformed_matrix 5\n");
-print_mtx( Operation_product, matrix_size, matrix_size );
-printf("Decomposition_Base::get_transformed_matrix 5b\n");
-print_mtx( ret_matrix, matrix_size, matrix_size );
-printf("Decomposition_Base::get_transformed_matrix 5c\n");
-print_mtx( initial_matrix, matrix_size, matrix_size );
-//throw "jjj";
-}*/
-        apply_operation( Operation_product, initial_matrix, ret_matrix );
-        qgd_free( Operation_product );
-        qgd_free( operation_mtx );
-        Operation_product = NULL;
-        operation_mtx = NULL;
-
-//printf("Decomposition_Base::get_transformed_matrix 6\n");
-//print_mtx( ret_matrix, matrix_size, matrix_size );
-
-        return ret_matrix;
-}
-
-
 /**
 @brief Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx
 @return Returns with the decomposed matrix.
@@ -814,32 +714,6 @@ Decomposition_Base::apply_operation( Matrix& operation_mtx, Matrix& input_matrix
     return dot( operation_mtx, input_matrix );
 
 }
-
-
-/** OBSOLETE
-@brief Apply an operations on the input matrix
-@param operation_mtx The matrix of the operation.
-@param input_matrix The input matrix to be transformed.
-@return Returns with the transformed matrix
-*/
-QGD_Complex16* Decomposition_Base::apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* input_matrix ) {
-
-    // Getting the transformed state upon the transformation given by operation
-    return zgemm3m_wrapper( operation_mtx, input_matrix, matrix_size);
-}
-
-/** OBSOLETE
-@brief Apply an operations on the input matrix
-@param operation_mtx The matrix of the operation.
-@param input_matrix The input matrix to be transformed.
-@param result_matrix The result is returned via this matrix
-*/
-int Decomposition_Base::apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* input_matrix,  QGD_Complex16* result_matrix) {
-
-    // Getting the transformed state upon the transformation given by operation
-    return zgemm3m_wrapper( operation_mtx, input_matrix, result_matrix, matrix_size);
-}
-
 
 /**
 @brief Set the maximal number of layers used in the subdecomposition of the n-th qubit.

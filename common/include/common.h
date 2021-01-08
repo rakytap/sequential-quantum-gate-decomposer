@@ -21,7 +21,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for commonly used functions and wrappers to CBLAS functions.
 */
 
-#pragma once
+#ifndef common_H
+#define common_H
 
 #include <tbb/tbb.h>
 #include <tbb/scalable_allocator.h>
@@ -207,3 +208,4 @@ QGD_Complex16 mult( double a, QGD_Complex16 b );
 */
 void mult( QGD_Complex16 a, Matrix& b );
 
+#endif

@@ -73,23 +73,6 @@ void release_operations();
 */
 Matrix get_matrix( const double* parameters );
 
-
-/**
-@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block) --- OBSOLETE
-@param parameters An array pointing to the parameters of the operations
-@return Returns with a pointer to the operation matrix
-*/
-QGD_Complex16* matrix( const double* parameters );
-
-
-/**
-@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block) --- OBSOLETE
-@param parameters An array pointing to the parameters of the operations
-@param block_mtx A preallocated array to store the matrix of the operation block.
-@return Returns with 0 on seccess
-*/
-int matrix( const double* parameters, QGD_Complex16* block_mtx  );
-
 /**
 @brief Call to get the list of matrix representation of the operations grouped in the block.
 @param parameters Array of parameters to calculate the matrix of the operation block

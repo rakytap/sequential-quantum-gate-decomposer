@@ -74,23 +74,6 @@ U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lambda_
 */
 Matrix get_matrix( const double* parameters );
 
-
-/**
-@brief Call to retrieve the operation matrix --- OBSOLETE
-@param parameters An array of parameters to calculate the matrix of the U3 operation.
-@return Returns with a pointer to the operation matrix
-*/
-QGD_Complex16* matrix( const double* parameters );
-
-
-/**
-@brief Call to retrieve the operation matrix --- OBSOLETE
-@param parameters An array of parameters to calculate the matrix of the U3 operation.
-@param U3_matrix A pointer to the preallocated array of the operation matrix.
-@return Returns with 0 on success.
-*/
-int matrix( const double* parameters, QGD_Complex16* U3_matrix );
-
 /**
 @brief Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space of qbit_num qubits.
 @param parameters An array containing the parameters of the U3 operation.

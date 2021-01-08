@@ -21,7 +21,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for the paralleized calculation of the cost function of the subdecomposition (supporting TBB and OpenMP).
 */
 
-#pragma once
+#ifndef Sub_Matrix_Decomposition_Cost_Function_H
+#define Sub_Matrix_Decomposition_Cost_Function_H
+
+
 #include "qgd/common.h"
 
 
@@ -109,3 +112,4 @@ void operator()( int product_idx ) const;
 
 
 
+#endif

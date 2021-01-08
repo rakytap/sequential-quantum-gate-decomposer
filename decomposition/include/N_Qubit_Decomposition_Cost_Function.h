@@ -21,6 +21,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for the paralleized calculation of the cost function of the final optimization problem (supporting TBB and OpenMP).
 */
 
+#ifndef N_Qubit_Decomposition_Cost_Function_H
+#define N_Qubit_Decomposition_Cost_Function_H
+
 #include "qgd/common.h"
 
 
@@ -66,7 +69,7 @@ void operator()( tbb::blocked_range<size_t> r ) const;
 };
 
 
-
+#endif
 
 
 

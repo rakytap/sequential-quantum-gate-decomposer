@@ -21,6 +21,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a methods of the @python_iface.
 */
 
+
+
+#ifndef python_interface_H
+#define python_interface_H
+
+
 #include "qgd/Operation.h"
 
 
@@ -123,3 +129,4 @@ int iface_set_optimalization_block( void* ptr, int optimalization_block );
 
 
 
+#endif

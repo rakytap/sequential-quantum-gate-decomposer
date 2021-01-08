@@ -296,7 +296,6 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
 
             } while (status == GSL_CONTINUE && iter < 100);
 
-//printf("s->f: %f\n", s->f);
             if (current_minimum > s->f) {
                 current_minimum = s->f;
                 memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
@@ -356,17 +355,9 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
     Matrix Umtx_loc = instance->get_Umtx();
     Matrix matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
 
-/*if ( instance->qbit_num == 2 ) {
-print_mtx(instance->get_Umtx(), instance->get_Umtx_size(), instance->get_Umtx_size());
-}*/
 
     double cost_function = get_submatrix_cost_function(matrix_new);  //NEW METHOD
-    //double cost_function = get_submatrix_cost_function_2(matrix_new, instance->get_Umtx_size());  //OLD METHOD
 
-
-/*if ( instance->qbit_num == 2 ) {
-printf("%f\n", cost_function );
-}*/
 
     return cost_function;
 }

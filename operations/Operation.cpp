@@ -99,24 +99,6 @@ Operation::get_matrix() {
     return matrix_alloc;
 }
 
-/**
-@brief Call to terive the operation matrix
-@return Returns with a pointer to the operation matrix
-*/
-QGD_Complex16* Operation::matrix() {
-    return matrix_alloc.get_data();
-}
-
-/**
-@brief Call to retrieve the operation matrix
-@param retrieve_matrix Preallocated array where the operation matrix is copied
-@return Returns with 0 on success.
-*/
-int Operation::matrix(QGD_Complex16* retrieve_matrix ) {
-    memcpy( retrieve_matrix, matrix_alloc.get_data(), matrix_size*matrix_size*sizeof(QGD_Complex16) );
-    return 0;
-}
-
 
 /**
 @brief Call to set the stored matrix in the operation.
@@ -126,18 +108,6 @@ int Operation::matrix(QGD_Complex16* retrieve_matrix ) {
 void
 Operation::set_matrix( Matrix input ) {
     matrix_alloc = input;
-}
-
-/**
-@brief Call to set the stored matrix in the operation. ---- OBSOLETE
-@param input a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by matrix_alloc.
-@return Returns with 0 on success.
-*/
-void Operation::set_matrix( QGD_Complex16* input) {
-
-    matrix_alloc = Matrix( matrix_size, matrix_size);
-    memcpy(matrix_alloc.get_data(), input, matrix_size*matrix_size*sizeof(QGD_Complex16));
-
 }
 
 

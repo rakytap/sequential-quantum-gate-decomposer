@@ -117,53 +117,6 @@ Operation_block::get_matrix( const double* parameters ) {
 
 }
 
-
-/**
-@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block) --- OBSOLETE
-@param parameters An array pointing to the parameters of the operations
-@return Returns with a pointer to the operation matrix
-*/
-QGD_Complex16* Operation_block::matrix( const double* parameters  ) {
-
-    // get the matrices of the operations grouped in the block
-    std::vector<Matrix> operation_mtxs = get_matrices( parameters );
-
-    // calculate the product of the matrices
-    Matrix block_mtx = reduce_zgemm( operation_mtxs );
-
-    block_mtx.set_owner(false);
-    return block_mtx.get_data();
-}
-
-
-
-/**
-@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block) --- OBSOLETE
-@param parameters An array pointing to the parameters of the operations
-@param block_mtx A preallocated array to store the matrix of the operation block.
-@return Returns with 0 on seccess
-*/
-int Operation_block::matrix( const double* parameters, QGD_Complex16* block_mtx  ) {
-
-
-    // get the matrices of the operations grouped in the block
-    std::vector<Matrix> operation_mtxs = get_matrices( parameters );
-
-    // calculate the product of the matrices
-    Matrix block_mtx_mtx = reduce_zgemm( operation_mtxs );
-
-    operation_mtxs.clear();
-
-    memcpy(block_mtx, block_mtx_mtx.get_data(), block_mtx_mtx.size()*sizeof(QGD_Complex16));
-
-
-    return 0;
-
-}
-
-
-
-
 /**
 @brief Call to get the list of matrix representation of the operations grouped in the block.
 @param parameters Array of parameters to calculate the matrix of the operation block

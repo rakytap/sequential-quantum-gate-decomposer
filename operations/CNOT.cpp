@@ -81,30 +81,6 @@ CNOT::get_matrix() {
 }
 
 /**
-@brief Call to retrieve the operation matrix
-@return Returns with a pointer to the operation matrix
-*/
-QGD_Complex16* CNOT::matrix() {
-    Matrix CNOT_mtx = composite_cnot();
-    CNOT_mtx.set_owner(false);
-    return CNOT_mtx.get_data();
-}
-
-/**
-@brief Call to retrieve the operation matrix
-@param retrieve_matrix A pointer to the preallocated array of the operation matrix.
-@return Returns with 0 on success.
-*/
-int CNOT::matrix(QGD_Complex16* retrieve_matrix ) {
-    Matrix CNOT_mtx = composite_cnot();
-    memcpy(retrieve_matrix, CNOT_mtx.get_data(), CNOT_mtx.size()*sizeof(QGD_Complex16));
-    return 0;
-}
-
-
-
-
-/**
 @brief Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits.
 @return Returns with the operation matrix
 */

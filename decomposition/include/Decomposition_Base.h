@@ -242,17 +242,6 @@ Matrix get_transformed_matrix( const double* parameters, std::vector<Operation*>
 
 
 /**
-@brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix. --- OBSOLETE
-@param parameters An array containing the parameters of the U3 operations.
-@param operations_it An iterator pointing to the first operation to be applied on the initial matrix.
-@param num_of_operations The number of operations to be applied on the initial matrix
-@param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute Umtx)
-@return Returns with the transformed matrix (ehich is also stored in the attribute transformed_mtx).
-*/
-QGD_Complex16* get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations, QGD_Complex16* initial_matrix );
-
-
-/**
 @brief Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx
 @return Returns with the decomposed matrix.
 */
@@ -266,22 +255,6 @@ Matrix get_decomposed_matrix();
 @return Returns with the transformed matrix
 */
 Matrix apply_operation( Matrix& operation_mtx, Matrix& input_matrix );
-
-/**
-@brief Apply an operations on the input matrix --- OBSOLETE
-@param operation_mtx The matrix of the operation.
-@param input_matrix The input matrix to be transformed.
-@return Returns with the transformed matrix
-*/
-QGD_Complex16* apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* input_matrix );
-
-/**
-@brief Apply an operations on the input matrix --- OBSOLETE
-@param operation_mtx The matrix of the operation.
-@param input_matrix The input matrix to be transformed.
-@param result_matrix The result is returned via this matrix
-*/
-int apply_operation( QGD_Complex16* operation_mtx, QGD_Complex16* input_matrix, QGD_Complex16* result_matrix);
 
 /**
 @brief Set the maximal number of layers used in the subdecomposition of the n-th qubit.

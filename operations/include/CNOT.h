@@ -59,19 +59,6 @@ CNOT(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 Matrix get_matrix();
 
 /**
-@brief Call to retrieve the operation matrix --- OBSOLETE
-@return Returns with a pointer to the operation matrix
-*/
-QGD_Complex16* matrix();
-
-/**
-@brief Call to retrieve the operation matrix --- OBSOLETE
-@param retrieve_matrix A pointer to the preallocated array of the operation matrix.
-@return Returns with 0 on success.
-*/
-int matrix(QGD_Complex16* retrieve_matrix );
-
-/**
 @brief Call to set the number of qubits spanning the matrix of the operation
 @param qbit_num The number of qubits
 */
@@ -82,8 +69,6 @@ void set_qbit_num(int qbit_num);
 @return Returns with the operation matrix
 */
 Matrix composite_cnot();
-
-
 
 /**
 @brief Call to reorder the qubits in the matrix of the operation

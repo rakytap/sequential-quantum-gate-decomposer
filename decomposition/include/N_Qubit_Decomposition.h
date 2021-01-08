@@ -21,6 +21,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations.
 */
 
+#ifndef N_QUBIT_DECOMPOSITION_H
+#define N_QUBIT_DECOMPOSITION_H
+
 #pragma once
 #include "qgd/Decomposition_Base.h"
 #include "qgd/Sub_Matrix_Decomposition.h"
@@ -174,3 +177,6 @@ int set_identical_blocks( std::map<int, int> identical_blocks_in );
 N_Qubit_Decomposition* clone();
 
 };
+
+
+#endif

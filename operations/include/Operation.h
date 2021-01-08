@@ -87,21 +87,6 @@ Operation(int qbit_num_in);
 */
 Matrix get_matrix();
 
-
-/**
-@brief Call to terive the operation matrix --- OBSOLETE
-@return Returns with a pointer to the operation matrix
-*/
-virtual QGD_Complex16* matrix();
-
-
-/**
-@brief Call to retrieve the operation matrix
-@param retrieve_matrix Preallocated array where the operation matrix is copied
-@return Returns with 0 on success.
-*/
-virtual int matrix(QGD_Complex16* retrieve_matrix );
-
 /**
 @brief Call to set the stored matrix in the operation.
 @param input The operation matrix to be stored. The matrix is stored by attribute matrix_alloc.
@@ -109,13 +94,6 @@ virtual int matrix(QGD_Complex16* retrieve_matrix );
 */
 void set_matrix( Matrix input );
 
-
-/**
-@brief Call to set the stored matrix in the operation. --- OBSOLETE
-@param input a pointer to the operation matrix to be stored. The matrix is copied into the storage pointed by matrix_alloc.
-@return Returns with 0 on success.
-*/
-void set_matrix( QGD_Complex16* input );
 
 /**
 @brief Set the number of qubits spanning the matrix of the operation

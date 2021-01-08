@@ -357,16 +357,10 @@ void  N_Qubit_Decomposition::final_optimization() {
             printf("***************************************************************\n");
         }
 
-//printf("%f\n", optimization_problem(optimized_parameters ) );
-//QGD_Complex16* matrix_new = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
-//print_mtx( matrix_new, matrix_size, matrix_size );
 
         //# setting the global minimum
         global_target_minimum = 0;
         solve_optimization_problem( optimized_parameters, parameter_num) ;
-//matrix_new = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
-//print_mtx( matrix_new, matrix_size, matrix_size );
-//printf("%f\n", optimization_problem(optimized_parameters ) );
 }
 
 
@@ -445,7 +439,6 @@ void N_Qubit_Decomposition::solve_layer_optimization_problem( int num_of_paramet
 
             } while (status == GSL_CONTINUE && iter < 100);
 
-//printf("s->f: %f\n", s->f);
             if (current_minimum > s->f) {
                 current_minimum = s->f;
                 memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
@@ -621,7 +614,7 @@ void N_Qubit_Decomposition::simplify_layers() {
 
             // Try to simplify the sequence of 2-qubit operations
             int simplification_status = simplify_layer( block_to_simplify, optimized_parameters+parameter_idx, parameter_num_block, max_layer_num_loc, simplified_layer, simplified_parameters, simplified_parameter_num );
-//simplification_status = -1;
+
 
 
             // adding the simplified operations (or the non-simplified if the simplification was not successfull)
@@ -829,17 +822,6 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         simplified_parameters = (double*)qgd_calloc(simplified_parameter_num, sizeof(double), 64);
         cdecomposition->get_optimized_parameters( simplified_parameters );
 
-/*delete cdecomposition;
-qgd_free( submatrix );
-qgd_free( full_matrix_reordered );
-return -1; */
-
-
-
-
-//QGD_Complex16* tmp = simplified_layer->matrix(simplified_parameters);
-//QGD_Complex16* tmp2 = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64);
-//print_mtx( zgemm3m_wrapper_adj( full_matrix, tmp, tmp2, matrix_size), matrix_size, matrix_size );
 
         gates_num gate_nums_layer = layer->get_gate_nums();
         gates_num gate_nums_simplified = simplified_layer->get_gate_nums();
