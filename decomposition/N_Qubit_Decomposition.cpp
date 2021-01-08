@@ -766,8 +766,7 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         reordered_layer->reorder_qubits( qbits_reordered );
 
         //  get the reordered N-qubit matrix of the layer
-        QGD_Complex16* full_matrix_reordered = (QGD_Complex16*)qgd_calloc( matrix_size*matrix_size, sizeof(QGD_Complex16), 64 );
-        reordered_layer->matrix( parameters, full_matrix_reordered );
+        Matrix full_matrix_reordered = reordered_layer->get_matrix( parameters );
         delete reordered_layer;
 
 
@@ -776,7 +775,7 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
 
 
         // construct the Two-qubit submatrix from the reordered matrix
-        QGD_Complex16* submatrix = (QGD_Complex16*)qgd_calloc( 16, sizeof(QGD_Complex16), 64 );
+        Matrix submatrix = Matrix(4,4);
         for ( int element_idx=0; element_idx<16; element_idx++) {
             int col_idx = element_idx % 4;
             int row_idx = int((element_idx-col_idx)/4);
@@ -785,9 +784,7 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
         }
 
         // decompose the chosen 2-qubit unitary
-        //TODO
-        Matrix submatrix_mtx = Matrix(submatrix, 4, 4);
-        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(submatrix_mtx, 2, true, initial_guess);
+        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(submatrix, 2, true, initial_guess);
 
         // set the maximal number of layers
         cdecomposition->set_max_layer_num( max_layer_num_loc );
@@ -807,10 +804,6 @@ int N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* param
                 printf("The simplification of the sub-structure was not possible\n");
             }
             delete cdecomposition;
-            qgd_free( submatrix );
-            qgd_free( full_matrix_reordered );
-            submatrix = NULL;
-            full_matrix_reordered = NULL;
             return 1;
         }
 
@@ -866,11 +859,6 @@ return -1; */
 
         //release allocated memory
         delete cdecomposition;
-        qgd_free( submatrix );
-        qgd_free( full_matrix_reordered );
-        submatrix = NULL;
-        full_matrix_reordered = NULL;
-
 
 
         return 0;

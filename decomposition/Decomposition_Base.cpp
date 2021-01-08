@@ -143,7 +143,7 @@ void Decomposition_Base::set_max_iteration( int max_iterations_in) {
 void Decomposition_Base::finalize_decomposition() {
 
         // get the transformed matrix resulted by the operations in the list
-        QGD_Complex16* transformed_matrix = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx.get_data() );
+        Matrix transformed_matrix = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
 
         // preallocate the storage for the finalizing parameters
         finalizing_parameter_num = 3*qbit_num;
@@ -151,7 +151,7 @@ void Decomposition_Base::finalize_decomposition() {
 
         // obtaining the final operations of the decomposition
         Operation_block* finalizing_operations = new Operation_block( qbit_num );;
-        get_finalizing_operations( transformed_matrix, finalizing_operations, finalizing_parameters );
+        get_finalizing_operations( transformed_matrix.get_data(), finalizing_operations, finalizing_parameters );
 
         // adding the finalizing operations to the list of operations
         // adding the opeartion block to the operations
@@ -179,15 +179,14 @@ void Decomposition_Base::finalize_decomposition() {
 
         // calculating the final error of the decomposition
         //decomposition_error = LA.norm(matrix_new*np.exp(np.complex(0,-np.angle(matrix_new[0,0]))) - np.identity(len(matrix_new))*abs(matrix_new[0,0]), 2)
-        subtract_diag( transformed_matrix, matrix_size, transformed_matrix[0] );
-        decomposition_error = cblas_dznrm2( matrix_size*matrix_size, transformed_matrix, 1 );
+        QGD_Complex16* tmp = transformed_matrix.get_data();
+        subtract_diag( tmp, matrix_size, transformed_matrix[0] );
+        decomposition_error = cblas_dznrm2( matrix_size*matrix_size, (void*)transformed_matrix.get_data(), 1 );
         //qgd_free( finalized_matrix_new );
 
         // get the number of gates used in the decomposition
         gates_num gates_num = get_gate_nums();
 
-        qgd_free( transformed_matrix );
-        transformed_matrix = NULL;
 
         if (verbose) {
             printf( "The error of the decomposition after finalyzing operations is %f with %d layers containing %d U3 operations and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
