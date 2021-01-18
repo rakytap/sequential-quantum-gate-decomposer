@@ -515,9 +515,9 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         parameter_num = parameter_num_loc;
         if (optimized_parameters != NULL ) {
             qgd_free( optimized_parameters );
-            optimized_parameters = (double*)qgd_calloc(parameter_num,sizeof(double), 64);
         }
 
+        optimized_parameters = (double*)qgd_calloc(parameter_num,sizeof(double), CACHELINE);
         memcpy( optimized_parameters, optimized_parameters_gsl->data, parameter_num*sizeof(double) );
 
 
@@ -752,6 +752,60 @@ int Decomposition_Base::set_max_layer_num( std::map<int, int> max_layer_num_in )
 
 }
 
+
+/**
+@brief Call to reorder the qubits in the matrix of the operation
+@param qbit_list The reordered list of qubits spanning the matrix
+*/
+void Decomposition_Base::reorder_qubits( std::vector<int>  qbit_list) {
+
+    Operation_block::reorder_qubits( qbit_list );
+
+    // now reorder the unitary to be decomposed
+
+    // obtain the permutation indices of the matrix rows/cols
+    std::vector<int> perm_indices;
+    perm_indices.reserve(matrix_size);
+
+    for (int idx=0; idx<matrix_size; idx++) {
+        int row_idx=0;
+
+        // get the binary representation of idx
+        std::vector<int> bin_rep;
+        bin_rep.reserve(qbit_num);
+        for (int i = 1 << (qbit_num-1); i > 0; i = i / 2) {
+            (idx & i) ? bin_rep.push_back(1) : bin_rep.push_back(0);
+        }
+
+        // determine the permutation row index
+        for (int jdx=0; jdx<qbit_num; jdx++) {
+            row_idx = row_idx + bin_rep[qbit_num-1-jdx]*Power_of_2(qbit_list[jdx]);
+        }
+        perm_indices.push_back(row_idx);
+    }
+/*
+    for (auto it=qbit_list.begin(); it!=qbit_list.end(); it++) {
+        std::cout << *it;
+    }
+    std::cout << std::endl;
+
+    for (auto it=perm_indices.begin(); it!=perm_indices.end(); it++) {
+        std::cout << *it+1 << std::endl;
+    }
+*/
+
+    // reordering the matrix elements
+    Matrix reordered_mtx = Matrix(matrix_size, matrix_size);
+    for (int row_idx = 0; row_idx<matrix_size; row_idx++) {
+        for (int col_idx = 0; col_idx<matrix_size; col_idx++) {
+            int index_umtx = perm_indices[row_idx]*Umtx.rows + perm_indices[col_idx];
+            int index_reordered = row_idx*Umtx.rows + col_idx;
+            reordered_mtx[index_reordered] = Umtx[index_umtx];
+        }
+    }
+
+    Umtx = reordered_mtx;
+}
 
 
 

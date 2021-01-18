@@ -257,6 +257,12 @@ Matrix get_decomposed_matrix();
 Matrix apply_operation( Matrix& operation_mtx, Matrix& input_matrix );
 
 /**
+@brief Call to reorder the qubits in the matrix of the operation
+@param qbit_list The reordered list of qubits spanning the matrix
+*/
+void reorder_qubits( std::vector<int> qbit_list);
+
+/**
 @brief Set the maximal number of layers used in the subdecomposition of the n-th qubit.
 @param n The number of qubits for which the maximal number of layers should be used in the subdecomposition.
 @param max_layer_num_in The maximal number of the operation layers used in the subdecomposition.

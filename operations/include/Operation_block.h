@@ -172,7 +172,7 @@ void list_operations( const double* parameters, int start_index );
 
 
 /**
-@brief Call to reorder the qubits in the matrix of the operation
+@brief Call to reorder the qubits in the matrix of the operations
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void reorder_qubits( std::vector<int> qbit_list );
