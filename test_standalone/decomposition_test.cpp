@@ -46,13 +46,13 @@ int main() {
 
 //! [few CNOT]
     // The number of qubits spanning the random unitary
-    int qbit_num = 3;
+    int qbit_num = 4;
 
     // the number of rows of the random unitary
     int matrix_size = Power_of_2(qbit_num);
 
     // creating random unitary constructing from 6 CNOT gates.
-    int cnot_num = 1;
+    int cnot_num = 6;
     Matrix Umtx_few_CNOT = few_CNOT_unitary( qbit_num, cnot_num);
 //! [few CNOT]
 
@@ -65,7 +65,7 @@ int main() {
 //! [general random]
 
 
-//! [creating decomp class]
+
     // construct the complex transpose of the random unitary
     Matrix Umtx_adj = Matrix(matrix_size, matrix_size);
     for (int element_idx=0; element_idx<matrix_size*matrix_size; element_idx++) {
@@ -78,15 +78,15 @@ int main() {
         Umtx_adj[element_idx].real = element.real;
         Umtx_adj[element_idx].imag = -element.imag;
     }
-
-    // creating the class for the decomposition
-    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx_adj, qbit_num, false, RANDOM );
+//! [creating decomp class]
+    // creating the class for the decomposition. Here Umtx_adj is the complex transposition of unitary Umtx
+    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx_adj, qbit_num, /* optimize_layer_num= */ false, /* initial_guess= */ RANDOM );
 //! [creating decomp class]
 
 //! [set parameters]
     // setting the number of successive identical layers used in the decomposition
     std::map<int,int> identical_blocks;
-    identical_blocks[3] = 2;
+    identical_blocks[3] = 1;
     identical_blocks[4] = 2;
     cDecomposition.set_identical_blocks( identical_blocks );
 
@@ -117,7 +117,7 @@ int main() {
     printf("Starting the decompsition\n");
 //! [performing decomposition]
     // starting the decomposition
-    cDecomposition.start_decomposition(true, true);
+    cDecomposition.start_decomposition(/* finalize_decomposition = */ true, /* prepare_export= */ true);
 
     cDecomposition.list_operations(1);
 //! [performing decomposition]

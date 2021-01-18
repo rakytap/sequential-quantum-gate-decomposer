@@ -1,3 +1,7 @@
 <map id="Functor_Cost_Function_Gradient.h" name="Functor_Cost_Function_Gradient.h">
-<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="437,95,544,121"/>
+<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="521,95,628,121"/>
+<area shape="rect" id="node7" href="$_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="285,393,406,420"/>
+<area shape="rect" id="node11" href="$dot_8h.html" title="qgd/dot.h" alt="" coords="319,169,393,196"/>
+<area shape="rect" id="node13" href="$matrix_8h.html" title="qgd/matrix.h" alt="" coords="310,244,402,271"/>
+<area shape="rect" id="node14" href="$matrix__base_8h.html" title="qgd/matrix_base.h" alt="" coords="275,319,402,345"/>
 </map>

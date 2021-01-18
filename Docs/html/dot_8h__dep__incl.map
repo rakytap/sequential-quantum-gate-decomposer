@@ -1,0 +1,35 @@
+<map id="dot.h" name="dot.h">
+<area shape="rect" id="node2" href="$dot_8cpp.html" title="dot.cpp" alt="" coords="753,80,817,107"/>
+<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="841,80,924,107"/>
+<area shape="rect" id="node4" href="$common_8cpp.html" title="Provides commonly used functions and wrappers to CBLAS functions. " alt="" coords="16,162,112,189"/>
+<area shape="rect" id="node5" href="$_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="5,333,163,375"/>
+<area shape="rect" id="node13" href="$standalone_2decomposition__test_8cpp.html" title="decomposition_test.cpp" alt="" coords="1318,594,1477,621"/>
+<area shape="rect" id="node14" href="$_functor___get___operation___products_8h.html" title="Header file for the parallelized calculation of the vector containing the products of operations (sup..." alt="" coords="1043,333,1200,375"/>
+<area shape="rect" id="node16" href="$_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="1447,155,1609,196"/>
+<area shape="rect" id="node18" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="839,162,927,189"/>
+<area shape="rect" id="node27" href="$_random___unitary_8h.html" title="Header file for a class and methods to cerate random unitary matrices. " alt="" coords="1224,341,1352,367"/>
+<area shape="rect" id="node30" href="$_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="613,251,739,278"/>
+<area shape="rect" id="node33" href="$_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="297,155,477,196"/>
+<area shape="rect" id="node6" href="$_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="567,587,724,628"/>
+<area shape="rect" id="node7" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="558,430,749,457"/>
+<area shape="rect" id="node8" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="683,512,887,539"/>
+<area shape="rect" id="node9" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of a unitary into a sequence of CNOT and U3 op..." alt="" coords="928,512,1101,539"/>
+<area shape="rect" id="node10" href="$_n___qubit___decomposition_8cpp.html" title="Class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations. " alt="" coords="937,594,1124,621"/>
+<area shape="rect" id="node11" href="$python__interface_8cpp.html" title="Methods of the QGD Python Interface. " alt="" coords="1151,594,1292,621"/>
+<area shape="rect" id="node12" href="$decomposition__test_8cpp.html" title="decomposition_test.cpp" alt="" coords="754,594,913,621"/>
+<area shape="rect" id="node15" href="$_functor___get___operation___products_8cpp.html" title="Methods and classes for the parallelized calculation of the vector containing the products of operati..." alt="" coords="1035,423,1192,464"/>
+<area shape="rect" id="node17" href="$_n___qubit___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the final optimization problem (supporting parallel computa..." alt="" coords="1565,244,1728,285"/>
+<area shape="rect" id="node19" href="$_operation_8cpp.html" title="Class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="931,251,1034,278"/>
+<area shape="rect" id="node20" href="$python__interface_8h.html" title="Header file for a methods of the QGD Python Interface. " alt="" coords="1197,512,1323,539"/>
+<area shape="rect" id="node21" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="764,251,833,278"/>
+<area shape="rect" id="node29" href="$operation__test_8cpp.html" title="operation_test.cpp" alt="" coords="237,341,365,367"/>
+<area shape="rect" id="node31" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="858,251,907,278"/>
+<area shape="rect" id="node22" href="$_c_n_o_t_8cpp.html" title="Class representing a CNOT operation. " alt="" coords="757,341,840,367"/>
+<area shape="rect" id="node23" href="$_operation__block_01_07copy_08_8cpp.html" title="Operation_block (copy).cpp" alt="" coords="389,341,568,367"/>
+<area shape="rect" id="node24" href="$_operation__block_8cpp.html" title="Class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="593,341,733,367"/>
+<area shape="rect" id="node25" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="864,341,1019,367"/>
+<area shape="rect" id="node26" href="$_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process. " alt="" coords="790,430,959,457"/>
+<area shape="rect" id="node28" href="$_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="1217,430,1359,457"/>
+<area shape="rect" id="node32" href="$_u3_8cpp.html" title="Class representing a U3 operation. " alt="" coords="1377,341,1439,367"/>
+<area shape="rect" id="node34" href="$_sub___matrix___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the sub&#45;disantenglement problem with TBB parallelization..." alt="" coords="297,244,477,285"/>
+</map>

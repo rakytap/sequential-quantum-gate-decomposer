@@ -1,4 +1,8 @@
 <map id="Sub_Matrix_Decomposition_Cost_Function.cpp" name="Sub_Matrix_Decomposition_Cost_Function.cpp">
-<area shape="rect" id="node2" href="$_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="388,95,593,136"/>
-<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="437,184,544,211"/>
+<area shape="rect" id="node2" href="$_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="472,95,677,136"/>
+<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="521,184,628,211"/>
+<area shape="rect" id="node7" href="$_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="285,483,406,509"/>
+<area shape="rect" id="node11" href="$dot_8h.html" title="qgd/dot.h" alt="" coords="319,259,393,285"/>
+<area shape="rect" id="node13" href="$matrix_8h.html" title="qgd/matrix.h" alt="" coords="310,333,402,360"/>
+<area shape="rect" id="node14" href="$matrix__base_8h.html" title="qgd/matrix_base.h" alt="" coords="275,408,402,435"/>
 </map>

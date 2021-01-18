@@ -1,12 +1,13 @@
 <map id="Decomposition_Base::set_max_layer_num" name="Decomposition_Base::set_max_layer_num">
 <area shape="rect" id="node2" href="$class_decomposition___base.html#a4c5adff298534525e6c4bdec589992f3" title="Set the maximal number of layers used in the subdecomposition of the n&#45;th qubit. " alt="" coords="216,5,361,47"/>
-<area shape="rect" id="node3" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="489,63,539,90"/>
+<area shape="rect" id="node3" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="489,63,539,90"/>
 <area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="207,173,370,215"/>
-<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="433,115,595,156"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="433,283,595,324"/>
-<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#a6acc444ca154290f10d4ee93d2aaa0d4" title="Create a clone of the present class. " alt="" coords="207,291,370,332"/>
-<area shape="rect" id="node10" href="$python__interface_8h.html#a13709bfbcc030047503eb14648d62d1b" title="Set the maximal number of layers used in the subdecomposition of the qbit&#45;th qubit. " alt="" coords="203,357,375,383"/>
-<area shape="rect" id="node11" href="$class_sub___matrix___decomposition.html#ad5498a197a442b5cf878c83fccfe0180" title="Call to create a clone of the present class. " alt="" coords="199,408,379,449"/>
-<area shape="rect" id="node8" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="427,181,601,207"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="649,253,812,295"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="433,115,595,156"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="433,333,595,375"/>
+<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#a6acc444ca154290f10d4ee93d2aaa0d4" title="Create a clone of the present class. " alt="" coords="207,291,370,332"/>
+<area shape="rect" id="node11" href="$python__interface_8h.html#a13709bfbcc030047503eb14648d62d1b" title="Set the maximal number of layers used in the subdecomposition of the qbit&#45;th qubit. " alt="" coords="203,357,375,383"/>
+<area shape="rect" id="node12" href="$class_sub___matrix___decomposition.html#ad5498a197a442b5cf878c83fccfe0180" title="Call to create a clone of the present class. " alt="" coords="199,408,379,449"/>
+<area shape="rect" id="node5" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="429,181,599,207"/>
+<area shape="rect" id="node9" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="427,282,601,309"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="649,279,812,320"/>
 </map>

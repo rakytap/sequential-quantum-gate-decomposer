@@ -1,0 +1,17 @@
+<map id="create_identity" name="create_identity">
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="417,135,563,191"/>
+<area shape="rect" id="node12" href="$class_decomposition___base.html#aff590cb39666a9b900058ed775c402fb" title="Calculate the list of gate operation matrices such that the i&gt;0&#45;th element in the result list is the ..." alt="" coords="178,200,341,241"/>
+<area shape="rect" id="node13" href="$_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="865,266,997,292"/>
+<area shape="rect" id="node14" href="$class_random___unitary.html#a6b84f487a4b806a1a3af0ad6ff135119" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="621,338,801,380"/>
+<area shape="rect" id="node15" href="$class_random___unitary.html#af3985ddf05656dcf003aa18379cd5cd0" title="Implements matrix I below Eq (7) of arXiv:1303:5904v1. " alt="" coords="160,367,359,394"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="630,81,793,122"/>
+<area shape="rect" id="node11" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="621,146,801,188"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="849,84,1012,125"/>
+<area shape="rect" id="node5" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="1062,32,1233,59"/>
+<area shape="rect" id="node6" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="1122,266,1173,292"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1066,84,1229,125"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="1066,149,1229,190"/>
+<area shape="rect" id="node10" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="1060,215,1235,242"/>
+<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1283,62,1445,104"/>
+<area shape="rect" id="node16" href="$class_random___unitary.html#a485d4f76c4bfc3fcbccc90580831d79a" title="Eq (6) of arXiv:1303:5904v1. " alt="" coords="407,367,573,394"/>
+</map>

@@ -1,7 +1,7 @@
 <map id="U3::is_lambda_parameter" name="U3::is_lambda_parameter">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a68dcc2cdfa644cf8043021367cc07d28" title="Call to prepare the optimized operations to export. " alt="" coords="223,5,368,61"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#ac328450a7b97fa993ed21fa4bf1b2c20" title="Call to prepare the optimized operations to export. " alt="" coords="223,5,368,61"/>
 <area shape="rect" id="node3" href="$class_operation__block.html#a29e2c74d7fa7344193a17e39248eb803" title="Call to print the list of operations stored in the block of operations for a specific set of paramete..." alt="" coords="226,110,365,151"/>
 <area shape="rect" id="node4" href="$class_decomposition___base.html#a4c6c81d70f49ee249aa455a4f2718ee2" title="Call to print the operations decomposing the initial unitary. " alt="" coords="416,110,561,151"/>
-<area shape="rect" id="node5" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="655,92,705,119"/>
+<area shape="rect" id="node5" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="655,92,705,119"/>
 <area shape="rect" id="node6" href="$python__interface_8h.html#a851ccbc4db2a5b49d44419f74bed966e" title="Call to list the operations giving the decomposition of the unitary. " alt="" coords="609,143,751,169"/>
 </map>

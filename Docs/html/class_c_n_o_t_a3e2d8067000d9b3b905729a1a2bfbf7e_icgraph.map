@@ -1,0 +1,13 @@
+<map id="CNOT::reorder_qubits" name="CNOT::reorder_qubits">
+<area shape="rect" id="node2" href="$class_operation__block.html#afadad4dd28e881666a46e114eb7958e4" title="Call to reorder the qubits in the matrix of the operations. " alt="" coords="200,197,363,238"/>
+<area shape="rect" id="node12" href="$operation__test_8cpp.html#a583be6d267255f6ca7dfceac18bbd551" title="test_CNOT_operation" alt="" coords="207,263,355,289"/>
+<area shape="rect" id="node3" href="$class_decomposition___base.html#a5d5c560ad2269f5594a70f47aa1831ed" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="411,155,556,197"/>
+<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="1031,275,1194,317"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#a74a4f413f937d974a22e437d97f8cc87" title="Call to find the qubit that is the easiest to uncouple from the others. " alt="" coords="604,143,767,185"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="815,137,977,178"/>
+<area shape="rect" id="node6" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="1027,5,1198,32"/>
+<area shape="rect" id="node7" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="1087,56,1138,83"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1031,107,1194,149"/>
+<area shape="rect" id="node11" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="1025,173,1200,200"/>
+<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1248,246,1411,287"/>
+</map>

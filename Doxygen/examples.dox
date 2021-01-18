@@ -56,15 +56,6 @@ The second line includes the definition of the class to perform the decompositio
 This class is the key element to access the decomposition capabilities of the QGD package.
 The third line imports the method and class definitions for creating random unitaries to be decomposed.
 
-If OpenMP was chosen as the parallelization environment for the QGD package, then it is advised to set the number of logical threads by
-
-<div class="snippet">
-\snippet decomposition_test.cpp OMP
-</div>
-
-The second command enables nested parallelism provided by the OpenMP library. (If there are more physical threads in the system than the number of free parameters 
-optimized in one shot than some of the threads can be utilized in lower parallelization levels.)
-
 The QGD package provides two ways to create random unitaries. The first way can be used to construct a random unitary as a product of CNOT and U3 operations. 
 The parameters of the operations are chosen randomly, but the overall number of CNOT operations is predefined:
 
@@ -97,7 +88,7 @@ Along with the input unitary we provided two other inputs for the decomposition 
        - RANDOM: the initial guessed values are random doubles, 
        - CLOSE_TO_ZERO: the initial guessed values are random numbers close to zero.
 
-In case we would like to minimize the number of CNOT gates in the decomposition, the best choice for the **initial_guess** values are **ZEROS** 
+In case we would like to try to minimize the number of CNOT gates in the decomposition, the best choice for the **initial_guess** values are **ZEROS** 
 (discussed in more details in the forthcoming sections). However, this kind of the choice might result unwanted convergence of the optimization to local minimum instead of the global one.
 Thus, the solution of this example might sometimes fail to reach the global minimum. 
 For the same reason, unitaries consisting of much CNOT gates can be well decomposed by initial guess values **RANDOM** or **CLOSE_TO_ZERO**.
@@ -141,7 +132,7 @@ After setting the parameters of the decomposition we can start the optimization 
 </div>
 
 The last command in the above code snippet prints the decomposing operations into the standard output. 
-For further programming usage, however, the list of decomposing operations can be retrieved via the method N_Qubit_Decomposition.get_operations of the class N_Qubit_Decomposition.
+For further programming usage the list of decomposed operations can be retrieved via the method N_Qubit_Decomposition.get_operations of the class N_Qubit_Decomposition.
 
 ## Compiling and linking against QGD libraries
 

@@ -1,0 +1,31 @@
+<map id="Decomposition_Base::get_transformed_matrix" name="Decomposition_Base::get_transformed_matrix">
+<area shape="rect" id="node2" href="$class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="245,43,335,69"/>
+<area shape="rect" id="node4" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="631,93,765,120"/>
+<area shape="rect" id="node5" href="$class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="635,144,761,171"/>
+<area shape="rect" id="node6" href="$class_operation.html#a65614494dab9424bdac15cf936bd5a18" title="Call to retrieve the operation matrix. " alt="" coords="626,195,770,221"/>
+<area shape="rect" id="node7" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="599,245,797,272"/>
+<area shape="rect" id="node8" href="$class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="645,296,751,323"/>
+<area shape="rect" id="node19" href="$class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="220,730,360,771"/>
+<area shape="rect" id="node20" href="$class_operation__block.html#a2e978e3b5773b7ab03b4f15021207090" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="220,435,360,477"/>
+<area shape="rect" id="node23" href="$dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="678,643,718,669"/>
+<area shape="rect" id="node30" href="$class_decomposition___base.html#af9bd082b6c17ecaea5657059dabfe083" title="Apply an operations on the input matrix. " alt="" coords="217,665,363,706"/>
+<area shape="rect" id="node3" href="$class_matrix.html#a2dba13c45127354c9f75ef576f49269b" title="Default constructor of the class. " alt="" coords="431,43,530,69"/>
+<area shape="rect" id="node9" href="$class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="858,158,1025,199"/>
+<area shape="rect" id="node10" href="$class_u3.html#abf83dd26afd16cde8c759dacdbaa4278" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="1093,264,1220,291"/>
+<area shape="rect" id="node13" href="$class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="858,223,1025,265"/>
+<area shape="rect" id="node14" href="$class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="865,289,1017,330"/>
+<area shape="rect" id="node15" href="$class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="845,355,1037,381"/>
+<area shape="rect" id="node16" href="$class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="851,405,1031,432"/>
+<area shape="rect" id="node17" href="$class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="865,5,1017,32"/>
+<area shape="rect" id="node18" href="$class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="858,56,1025,83"/>
+<area shape="rect" id="node11" href="$classmatrix__base.html#a89715b6abd4eeaaf5da5226b386951d3" title="Call to set the current class instance to be (or not to be) the owner of the stored data array..." alt="" coords="1286,376,1445,403"/>
+<area shape="rect" id="node12" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="1291,540,1439,567"/>
+<area shape="rect" id="node21" href="$class_operation__block.html#a9950bdb493faaf4ed050c39b07a4ac02" title="Call to get the list of matrix representation of the operations grouped in the block. " alt="" coords="411,246,551,287"/>
+<area shape="rect" id="node22" href="$common_8cpp.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="425,565,536,592"/>
+<area shape="rect" id="node29" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="420,464,541,491"/>
+<area shape="rect" id="node24" href="$dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="1099,616,1214,643"/>
+<area shape="rect" id="node25" href="$classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1276,667,1455,693"/>
+<area shape="rect" id="node26" href="$classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1276,755,1455,781"/>
+<area shape="rect" id="node27" href="$classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="863,718,1019,759"/>
+<area shape="rect" id="node28" href="$dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="1085,725,1228,752"/>
+</map>

@@ -1,0 +1,5 @@
+<map id="U3::composite_u3_Theta_Phi" name="U3::composite_u3_Theta_Phi">
+<area shape="rect" id="node2" href="$class_u3.html#abf83dd26afd16cde8c759dacdbaa4278" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="245,31,372,57"/>
+<area shape="rect" id="node3" href="$classmatrix__base.html#a89715b6abd4eeaaf5da5226b386951d3" title="Call to set the current class instance to be (or not to be) the owner of the stored data array..." alt="" coords="420,5,579,32"/>
+<area shape="rect" id="node4" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="425,56,573,83"/>
+</map>

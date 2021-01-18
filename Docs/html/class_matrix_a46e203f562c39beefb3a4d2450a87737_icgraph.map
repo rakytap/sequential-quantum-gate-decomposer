@@ -1,0 +1,16 @@
+<map id="Matrix::copy" name="Matrix::copy">
+<area shape="rect" id="node2" href="$class_decomposition___base.html#ad1502d076d0ec0c5cd8b301340fe8ffe" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="144,5,313,47"/>
+<area shape="rect" id="node11" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="156,71,301,127"/>
+<area shape="rect" id="node14" href="$class_decomposition___base.html#a7523e317319932fe86ee5eb5e18b95a0" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="147,152,311,193"/>
+<area shape="rect" id="node15" href="$class_n___qubit___decomposition.html#a74a4f413f937d974a22e437d97f8cc87" title="Call to find the qubit that is the easiest to uncouple from the others. " alt="" coords="370,208,533,249"/>
+<area shape="rect" id="node3" href="$class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="372,8,531,49"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="589,111,752,152"/>
+<area shape="rect" id="node5" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="802,9,973,35"/>
+<area shape="rect" id="node6" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="862,59,913,86"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="806,111,969,152"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="806,176,969,217"/>
+<area shape="rect" id="node10" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="800,242,975,269"/>
+<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1023,231,1185,272"/>
+<area shape="rect" id="node12" href="$class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="370,77,533,119"/>
+<area shape="rect" id="node13" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="361,143,541,184"/>
+</map>

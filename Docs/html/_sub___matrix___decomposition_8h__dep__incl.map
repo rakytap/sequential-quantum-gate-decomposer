@@ -1,8 +1,9 @@
 <map id="Sub_Matrix_Decomposition.h" name="Sub_Matrix_Decomposition.h">
-<area shape="rect" id="node2" href="$_functor___cost___function___gradient_8cpp.html" title="Methods for the paralleized calculation of the gradient components of the cost functions (supporting ..." alt="" coords="5,155,163,196"/>
-<area shape="rect" id="node3" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="122,80,326,107"/>
-<area shape="rect" id="node4" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of a unitary into a sequence of CNOT and U3 op..." alt="" coords="351,80,524,107"/>
+<area shape="rect" id="node2" href="$_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="5,155,163,196"/>
+<area shape="rect" id="node3" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="145,80,349,107"/>
+<area shape="rect" id="node4" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of a unitary into a sequence of CNOT and U3 op..." alt="" coords="377,80,551,107"/>
 <area shape="rect" id="node5" href="$_n___qubit___decomposition_8cpp.html" title="Class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations. " alt="" coords="187,162,373,189"/>
 <area shape="rect" id="node6" href="$python__interface_8cpp.html" title="Methods of the QGD Python Interface. " alt="" coords="397,162,539,189"/>
-<area shape="rect" id="node7" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="563,162,722,189"/>
+<area shape="rect" id="node7" href="$decomposition__test_8cpp.html" title="decomposition_test.cpp" alt="" coords="563,162,722,189"/>
+<area shape="rect" id="node8" href="$standalone_2decomposition__test_8cpp.html" title="decomposition_test.cpp" alt="" coords="746,162,905,189"/>
 </map>

@@ -1,28 +1,29 @@
 <map id="N_Qubit_Decomposition::extract_subdecomposition_results" name="N_Qubit_Decomposition::extract_subdecomposition_results">
 <area shape="rect" id="node2" href="$class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="239,5,379,47"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1123,173,1207,199"/>
-<area shape="rect" id="node5" href="$class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="433,56,613,97"/>
-<area shape="rect" id="node6" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="273,857,345,883"/>
-<area shape="rect" id="node8" href="$class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="239,908,379,949"/>
-<area shape="rect" id="node9" href="$class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="239,973,379,1015"/>
-<area shape="rect" id="node10" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="906,467,1039,494"/>
-<area shape="rect" id="node11" href="$class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="695,274,791,301"/>
-<area shape="rect" id="node13" href="$class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="672,777,815,803"/>
-<area shape="rect" id="node14" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="891,701,1054,727"/>
-<area shape="rect" id="node16" href="$class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="672,609,815,651"/>
-<area shape="rect" id="node18" href="$class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="705,173,781,199"/>
-<area shape="rect" id="node20" href="$class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="682,675,805,702"/>
-<area shape="rect" id="node21" href="$class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="232,365,385,391"/>
-<area shape="rect" id="node26" href="$class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="686,223,801,250"/>
-<area shape="rect" id="node27" href="$class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="453,668,593,709"/>
-<area shape="rect" id="node4" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="1259,173,1356,199"/>
-<area shape="rect" id="node7" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="Free memory allocated with aligned_alloc. " alt="" coords="477,857,569,883"/>
-<area shape="rect" id="node12" href="$class_operation.html#a026d3dcf0ad00af99c7a9097d3cf1c74" title="Call to set the stored matrix in the operation. " alt="" coords="901,223,1045,250"/>
-<area shape="rect" id="node15" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="1120,701,1211,727"/>
-<area shape="rect" id="node17" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="873,583,1072,610"/>
-<area shape="rect" id="node19" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation. " alt="" coords="874,173,1071,199"/>
-<area shape="rect" id="node22" href="$class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Deafult constructor of the class. " alt="" coords="434,391,613,432"/>
-<area shape="rect" id="node23" href="$class_operation__block.html#ae1eebd44b1c6fd8d4d379784c5a22887" title="Call to extract the operations stored in the class. " alt="" coords="443,325,604,367"/>
-<area shape="rect" id="node24" href="$class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce" title="Call to release the stored operations. " alt="" coords="661,376,825,417"/>
-<area shape="rect" id="node25" href="$class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="672,544,815,585"/>
+<area shape="rect" id="node3" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1367,175,1451,202"/>
+<area shape="rect" id="node4" href="$class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="1127,123,1307,164"/>
+<area shape="rect" id="node5" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="1373,253,1445,279"/>
+<area shape="rect" id="node6" href="$class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="239,228,379,269"/>
+<area shape="rect" id="node7" href="$class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="239,293,379,335"/>
+<area shape="rect" id="node8" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="905,795,1038,822"/>
+<area shape="rect" id="node9" href="$class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="694,795,790,822"/>
+<area shape="rect" id="node10" href="$class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="671,461,813,487"/>
+<area shape="rect" id="node11" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="890,511,1053,538"/>
+<area shape="rect" id="node13" href="$class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="671,613,813,655"/>
+<area shape="rect" id="node15" href="$class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="704,359,780,386"/>
+<area shape="rect" id="node19" href="$class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="681,410,803,437"/>
+<area shape="rect" id="node20" href="$class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="232,795,385,822"/>
+<area shape="rect" id="node25" href="$class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="685,1014,799,1041"/>
+<area shape="rect" id="node28" href="$class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="453,536,593,577"/>
+<area shape="rect" id="node12" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="1364,362,1455,389"/>
+<area shape="rect" id="node14" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="872,654,1071,681"/>
+<area shape="rect" id="node16" href="$class_u3.html#a3fbe983c050339a247e05a2eea070542" title="Constructor of the class. " alt="" coords="940,359,1003,386"/>
+<area shape="rect" id="node18" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation. " alt="" coords="1119,189,1316,215"/>
+<area shape="rect" id="node17" href="$class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="1149,296,1286,337"/>
+<area shape="rect" id="node21" href="$class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Deafult constructor of the class. " alt="" coords="433,755,612,796"/>
+<area shape="rect" id="node22" href="$class_operation__block.html#ae1eebd44b1c6fd8d4d379784c5a22887" title="Call to extract the operations stored in the class. " alt="" coords="442,820,603,861"/>
+<area shape="rect" id="node23" href="$class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce" title="Call to release the stored operations. " alt="" coords="660,897,824,939"/>
+<area shape="rect" id="node24" href="$class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="671,679,813,720"/>
+<area shape="rect" id="node26" href="$class_operation.html#a55f76bcb8990f4dba577990af0c8399e" title="Default constructor of the class. " alt="" coords="901,1039,1041,1066"/>
+<area shape="rect" id="node27" href="$class_operation.html#a5930c5c4c2e430cdbf03a145a00594d2" title="Call to set the stored matrix in the operation. " alt="" coords="899,989,1043,1015"/>
 </map>

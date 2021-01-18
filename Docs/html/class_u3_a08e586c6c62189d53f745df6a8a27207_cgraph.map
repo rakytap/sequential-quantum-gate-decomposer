@@ -1,0 +1,12 @@
+<map id="U3::get_matrix" name="U3::get_matrix">
+<area shape="rect" id="node2" href="$class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="171,5,338,47"/>
+<area shape="rect" id="node3" href="$class_u3.html#abf83dd26afd16cde8c759dacdbaa4278" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="399,225,525,251"/>
+<area shape="rect" id="node6" href="$class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="171,123,338,164"/>
+<area shape="rect" id="node7" href="$class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="179,188,331,229"/>
+<area shape="rect" id="node8" href="$class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="159,254,351,281"/>
+<area shape="rect" id="node9" href="$class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="165,305,345,331"/>
+<area shape="rect" id="node10" href="$class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="179,355,331,382"/>
+<area shape="rect" id="node11" href="$class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="171,406,338,433"/>
+<area shape="rect" id="node4" href="$classmatrix__base.html#a89715b6abd4eeaaf5da5226b386951d3" title="Call to set the current class instance to be (or not to be) the owner of the stored data array..." alt="" coords="573,199,732,226"/>
+<area shape="rect" id="node5" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="579,250,727,277"/>
+</map>

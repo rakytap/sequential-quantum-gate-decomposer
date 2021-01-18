@@ -1,5 +1,5 @@
 <map id="Decomposition_Base::check_optimization_solution" name="Decomposition_Base::check_optimization_solution">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="199,137,344,193"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="199,127,344,183"/>
 <area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="837,275,999,317"/>
 <area shape="rect" id="node11" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="392,185,572,226"/>
 <area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="401,119,563,161"/>

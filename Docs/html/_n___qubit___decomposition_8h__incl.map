@@ -1,12 +1,16 @@
 <map id="N_Qubit_Decomposition.h" name="N_Qubit_Decomposition.h">
-<area shape="rect" id="node2" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="532,177,712,203"/>
-<area shape="rect" id="node25" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="939,87,1153,114"/>
-<area shape="rect" id="node29" href="$_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="1204,80,1392,121"/>
-<area shape="rect" id="node3" href="$_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="5,259,156,285"/>
-<area shape="rect" id="node16" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="575,259,669,285"/>
-<area shape="rect" id="node18" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="849,259,923,285"/>
-<area shape="rect" id="node5" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="979,423,1086,449"/>
-<area shape="rect" id="node15" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="565,341,679,367"/>
-<area shape="rect" id="node26" href="$_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="1070,333,1275,375"/>
-<area shape="rect" id="node27" href="$_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="955,169,1137,211"/>
+<area shape="rect" id="node2" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="447,177,627,203"/>
+<area shape="rect" id="node33" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="932,87,1147,114"/>
+<area shape="rect" id="node37" href="$_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="1187,80,1375,121"/>
+<area shape="rect" id="node3" href="$_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="845,259,996,285"/>
+<area shape="rect" id="node24" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="627,259,721,285"/>
+<area shape="rect" id="node26" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="746,259,821,285"/>
+<area shape="rect" id="node5" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="1198,423,1305,449"/>
+<area shape="rect" id="node23" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="719,341,832,367"/>
+<area shape="rect" id="node9" href="$_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="1152,721,1273,748"/>
+<area shape="rect" id="node13" href="$dot_8h.html" title="qgd/dot.h" alt="" coords="1127,497,1202,524"/>
+<area shape="rect" id="node15" href="$matrix_8h.html" title="qgd/matrix.h" alt="" coords="785,572,877,599"/>
+<area shape="rect" id="node16" href="$matrix__base_8h.html" title="qgd/matrix_base.h" alt="" coords="1328,647,1455,673"/>
+<area shape="rect" id="node34" href="$_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="1009,333,1214,375"/>
+<area shape="rect" id="node35" href="$_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="1077,169,1260,211"/>
 </map>

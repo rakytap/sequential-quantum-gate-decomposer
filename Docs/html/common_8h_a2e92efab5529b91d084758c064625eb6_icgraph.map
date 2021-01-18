@@ -1,0 +1,12 @@
+<map id="reduce_zgemm" name="reduce_zgemm">
+<area shape="rect" id="node2" href="$class_operation__block.html#a2e978e3b5773b7ab03b4f15021207090" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="164,71,304,112"/>
+<area shape="rect" id="node3" href="$class_decomposition___base.html#a7523e317319932fe86ee5eb5e18b95a0" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="352,5,516,47"/>
+<area shape="rect" id="node4" href="$classfunctor__get__operation__matrices.html#a13a446a1da6ee8ed165801ad66b49784" title="Operator to calculate th ematrix representation of operation labeled by i. " alt="" coords="361,71,507,112"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="353,136,515,177"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="564,107,727,148"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="775,136,937,177"/>
+<area shape="rect" id="node8" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="987,34,1158,61"/>
+<area shape="rect" id="node9" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="1047,85,1098,111"/>
+<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="991,136,1154,177"/>
+<area shape="rect" id="node11" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="985,202,1160,229"/>
+</map>

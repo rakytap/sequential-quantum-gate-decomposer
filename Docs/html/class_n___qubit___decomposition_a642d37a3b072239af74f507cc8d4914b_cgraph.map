@@ -1,20 +1,6 @@
 <map id="N_Qubit_Decomposition::optimization_problem" name="N_Qubit_Decomposition::optimization_problem">
-<area shape="rect" id="node2" href="$class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="228,253,368,294"/>
-<area shape="rect" id="node3" href="$class_decomposition___base.html#a9ff86ec9582c9e65bea603b22ff3ca31" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="216,318,380,359"/>
-<area shape="rect" id="node15" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="491,544,563,571"/>
-<area shape="rect" id="node17" href="$class_decomposition___base.html#ad1e8fca5e5710d3a59f10ed6c523a502" title="Call to retrive a pointer to the unitary to be transformed. " alt="" coords="225,595,371,637"/>
-<area shape="rect" id="node18" href="$_n___qubit___decomposition___cost___function_8cpp.html#a7917831f6df360f23578190263a7cfee" title="Call co calculate the cost funtion during the final optimization process. " alt="" coords="235,544,361,571"/>
-<area shape="rect" id="node19" href="$class_decomposition___base.html#a3a1f83b85fd9e7e67a89a79b8cdc1e4a" title="Call to get the size of the unitary to be transformed. " alt="" coords="225,661,371,702"/>
-<area shape="rect" id="node4" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="857,224,941,251"/>
-<area shape="rect" id="node6" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="461,443,594,469"/>
-<area shape="rect" id="node7" href="$class_c_n_o_t.html#a50fefe3d884b9d5fcc20d6855e75e602" title="Call to retrieve the operation matrix. " alt="" coords="477,493,577,520"/>
-<area shape="rect" id="node8" href="$class_operation.html#acf7d1765143285ff73772ae860109988" title="Call to terive the operation matrix. " alt="" coords="683,275,801,301"/>
-<area shape="rect" id="node9" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="428,5,627,32"/>
-<area shape="rect" id="node10" href="$class_u3.html#a92b07b2d856a85bd6a706d4bfc071ac8" title="Call to retrieve the operation matrix. " alt="" coords="702,173,782,200"/>
-<area shape="rect" id="node11" href="$class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="457,57,597,98"/>
-<area shape="rect" id="node12" href="$class_operation__block.html#a916db3ef5d6fcf25367843a1306cd4e0" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="449,224,606,251"/>
-<area shape="rect" id="node13" href="$common_8cpp.html#a7e4fbff01bddac17c7499d1da136f004" title="Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or c..." alt="" coords="675,325,809,352"/>
-<area shape="rect" id="node14" href="$class_decomposition___base.html#a4963d3fe033c225eb19a0e6f271ef37a" title="Apply an operations on the input matrix. " alt="" coords="455,377,600,418"/>
-<area shape="rect" id="node5" href="$common_8cpp.html#a5f6f94e041e47585a575240c0692aa2c" title="Allocate aligned memory in a portable way. " alt="" coords="989,224,1087,251"/>
-<area shape="rect" id="node16" href="$common_8cpp.html#a603d31308dbc48a67eb6570ea63927a1" title="Free memory allocated with aligned_alloc. " alt="" coords="696,544,788,571"/>
+<area shape="rect" id="node2" href="$class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="228,5,368,47"/>
+<area shape="rect" id="node3" href="$class_decomposition___base.html#a5ad6641386b1eea4dd1244599660c462" title="Call to retrive a pointer to the unitary to be transformed. " alt="" coords="225,71,371,112"/>
+<area shape="rect" id="node4" href="$class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="216,136,380,177"/>
+<area shape="rect" id="node5" href="$_n___qubit___decomposition___cost___function_8cpp.html#aa5db632f7e7078d0e9bf48b22fa7525d" title="Call co calculate the cost function during the final optimization process. " alt="" coords="235,202,361,229"/>
 </map>
