@@ -11,7 +11,8 @@
 */
 class Matrix : public matrix_base<QGD_Complex16> {
 
-
+    /// padding class object to cache line borders
+    char padding[CACHELINE-48];
 
 public:
 
