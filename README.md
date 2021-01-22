@@ -20,8 +20,10 @@ The dependencies necessary to compile and build the QGD package are the followin
 * [make](https://www.gnu.org/software/make/)
 * [GNU Scientific Library](https://www.gnu.org/software/gsl/doc/html/index.html) (>=2.5)
 * C++/C [Intel](https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html) (>=14.0.1) or [GNU](https://gcc.gnu.org/) (>=v4.4.7) compiler
-* [OpenMP](https://www.openmp.org/) or [TBB](https://github.com/oneapi-src/oneTBB) library
+* [OpenMP](https://www.openmp.org/) 
+* [TBB](https://github.com/oneapi-src/oneTBB) library
 * [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html) (optional)
+* [OpenBlas](https://www.openblas.net/) (optional)
 * [Doxygen](https://www.doxygen.nl/index.html) (optional)
 
 The Python interface of QGD was developed and tested with Python 3.6 and 3.7.
@@ -78,17 +80,10 @@ $ source /opt/intel/composerxe/bin/compilervars.sh intel64
 where **/opt/intel/composerxe** is the path to the Intel compiler package location which might be different from the given one.
 (This step can be omitted when using GNU compiler, or when we do not have intention to use Intel MKL or the Intel TBB library)
 
-The QGD package is parallelized via both OpenMP and TBB libraries. At compilation time it is possible to chose between them: to use TBB parallelization the 
---with-tbb flag should be passed to the configuration script. If this flag is missing OpenMP is chosen instead of TBB. 
-The following tips might help to choose between the two parallelization environments:
-* OpenMP is usually part of the base C++ compiler
-* Intel TBB combined with Intel MKL gives the most powerful combination.
-* If Intel TBB is not present in the system, it can be easily installed via the apt utility (sudo apt install libtbb-dev) or it can be downloaded and built from 
-[https://github.com/oneapi-src/oneTBB](https://github.com/oneapi-src/oneTBB)
-* TBB automatically determines the best distribution of recourses. (This feature comes very handy in codes containing nested parallelism like the QGD package.)
-* The nested OpenMP threads can be set by hand in the QGD package
-If TBB parallelization is chosen, one should supply also the necessary environment variables pointing to the header and lib files of the TBB package. For newer
-Intel compilers the TBB package is part of the Intel compiler package, similarly to the MKL package. If the TBB library is located at non-standrad path, then setting the
+The QGD package is parallelized via Threading Building Block (TBB) libraries (OpenMP library is used only to turn off openmp parallelism of the underlying BLAS libraries to avoid over-subscription of the cores). If TBB is not present in the system, it can be easily installed via the apt utility (sudo apt install libtbb-dev) or it can be downloaded and built from source at 
+[https://github.com/oneapi-src/oneTBB](https://github.com/oneapi-src/oneTBB) 
+To exploit TBB parallelization, one should supply also the necessary environment variables pointing to the header and library files of the TBB package. For newer
+Intel compilers the TBB package is part of the Intel compiler package, similarly to the MKL package. If the TBB library is located at non-standrad path or the QGD package is compiled with GNU compiler, then setting the
 
 $ export TBB_LIB_DIR=path/to/TBB/lib(64)
 
@@ -97,21 +92,21 @@ $ export TBB_INC_DIR=path/to/TBB/include
 environment variables are sufficient for succesfull compilation. 
 After the basic environment variables are set, the compilation can be configured by the command executed in the source directory **path/to/qgdsource** of the QGD package:
 
-$ ./configure --prefix=path/to/qgd --with-tbb CXX=g++
+$ ./configure --prefix=path/to/qgd --with-openblas CXX=g++
 
-where **path/to/qgd** is the installation path of the Quantum Gate Decomposer package. (The **--with-tbb** flag is optional)
+where **path/to/qgd** is the installation path of the Quantum Gate Decomposer package. The **--with-openblas** flag is optional for using OpenBLAS library.
 
 The installation directory of the compiled QGD package is given by **--prefix=path/to/qgd** (which is different from the directory path of the source files given by **path/to/qgdsource**).
 The user should have read and write permissions on the path **path/to/qgd** (which can be for example /home/username/qgd).
 Another optional flag **--enable-ffast-math** enables the compiler's agile floating-point optimization. 
 While in general this optimization is considered to be dangerous, the runtime performance might be significantly increased due to this optimization. 
 Try to compile without and with this flag and compare the performance and stability of the resulted binaries (for further information see section **How to use**).
-On the other hand, if one choses Intel compiler to built the QGD package, the following configuration settings should be invoked:
+On the other hand, if one chooses Intel compiler to built the QGD package, the following configuration settings should be invoked:
 
-$ ./configure --prefix=path/to/qgd --with-mkl --with-tbb CXX=icpc
+$ ./configure --prefix=path/to/qgd --with-mkl  CXX=icpc
 
-The **--with-mkl** flag sets the appropriate linking of the QGD package with the Intel MKL package. The **--with-tbb** flag is optional
-If the flag is missing from the configuration than the CBLAS library of the GNU Scientific Library is used for linear algebra operations.
+The **--with-mkl** flag sets the appropriate linking of the QGD package with the Intel MKL package.
+If the **--with-mkl** flag is missing from the configuration than the CBLAS library of the GNU Scientific Library is used for linear algebra operations.
 After the successful configuration the QGD package can be compiled by the shell command executed in the directory **path/to/qgdsource**:
 
 $ make
@@ -161,6 +156,13 @@ The full documentation of the QGD API can be accessed by a Doxygen manual which 
 
 ## Doxygen manual
 
-Also, the QGD API is supprted by a Doxygen documentation, which can be accessed trough the file **path/to/qgd/Docs/html/index.html**
+The QGD API is supported by a Doxygen documentation. 
+To recreate the Doxygen documentation run the command 
 
------ how to create doxygen API documentation --------
+<div class="snippet">
+$ make doxygen && make doxygen-install
+</div>
+
+in the source directory **path/to/qgdsource** of the QGD package. 
+In the end of the process the Doxygen documentation would be accessible trough the file **path/to/qgd/Docs/html/index.html** or via the 
+web documentation of the project located at [this](https://itl88.elte.hu/rakytap/Download/QGD/html) site.
