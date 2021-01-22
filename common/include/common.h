@@ -111,56 +111,6 @@ void add_unique_elelement( std::vector<int>& involved_qbits, int qbit );
 */
 Matrix create_identity( int matrix_size );
 
-
-/**
-@brief Call to create an identity matrix --- OBSOLETE
-@param matrix The pointer to the memory array allocated for the identity matrix. The result is returned via this pointer.
-@param matrix_size The number of rows in the resulted identity matrix
-@return Returns with zero on success.
-*/
-int create_identity( QGD_Complex16* matrix, int matrix_size );
-
-/**
-@brief Call to calculate the scalar product of two complex vectors using function cblas_zgemm3m or cblas_zgemm
-@param A The first vector of the product
-@param B The second vector of the product
-@param vector_size The size of the vectors.
-@return Returns the scalar product of the two vectors.
-*/
-QGD_Complex16 scalar_product( QGD_Complex16* A, QGD_Complex16* B, int vector_size);
-
-
-/**
-@brief Call to calculate the product of a square shaped complex matrix and a complex transpose of a second square shaped complex matrix using function cblas_zgemm3m or cblas_zgemm.
-@param A The first matrix.
-@param B The second matrix
-@param C Pointer to the resulted matrix. The calculated matrix is returned via this pointer.
-@param matrix_size The number rows in the matrices
-*/
-int zgemm3m_wrapper_adj( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size);
-
-
-
-/**
-@brief Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or cblas_zgemm
-@param A The first matrix.
-@param B The second matrix
-@param matrix_size The number rows in the matrices
-@return Returns with a pointer to the resulted matrix.
-*/
-QGD_Complex16* zgemm3m_wrapper( QGD_Complex16* A , QGD_Complex16* B, int matrix_size);
-
-/**
-@brief Call to calculate the product of two square shaped complex matrices using function cblas_zgemm3m or cblas_zgemm
-@param A The first matrix.
-@param B The second matrix
-@param C Pointer to the resulted matrix. The calculated matrix is returned via this pointer.
-@param matrix_size The number rows in the matrices
-@return Returns with zero on success.
-*/
-int zgemm3m_wrapper( QGD_Complex16* A, QGD_Complex16* B, QGD_Complex16* C, int matrix_size);
-
-
 /**
 @brief Calculate the product of several square shaped complex matrices stored in a vector.
 @param mtxs The vector of matrices.
@@ -176,14 +126,6 @@ Matrix reduce_zgemm( std::vector<Matrix>& mtxs );
 */
 void subtract_diag( Matrix& mtx,  QGD_Complex16 scalar );
 
-
-/**
-@brief Call co calculate the cost funtion during the final optimization process.
-@param matrix The square shaped complex matrix from which the cost function is calculated.
-@param matrix_size The number rows in the matrix
-@return Returns with the calculated cost function.
-*/
-double get_cost_function(QGD_Complex16* matrix, int matrix_size);
 
 /**
 @brief Call to calculate the product of two complex scalars
