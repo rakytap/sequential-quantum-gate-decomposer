@@ -29,6 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //! [include]
 #include "qgd/common.h"
 #include "qgd/N_Qubit_Decomposition.h"
+#include "qgd/Sub_Matrix_Decomposition.h"
 #include "qgd/Random_Unitary.h"
 //! [include]
 
@@ -80,14 +81,16 @@ int main() {
     }
 //! [creating decomp class]
     // creating the class for the decomposition. Here Umtx_adj is the complex transposition of unitary Umtx
-    N_Qubit_Decomposition cDecomposition = N_Qubit_Decomposition( Umtx_adj, qbit_num, /* optimize_layer_num= */ false, /* initial_guess= */ RANDOM );
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition> cDecomposition = N_Qubit_Decomposition<Sub_Matrix_Decomposition>( Umtx_adj, qbit_num,
+                                                                                                                     /* optimize_layer_num= */ false,
+                                                                                                                      /* initial_guess= */ RANDOM );
 //! [creating decomp class]
 
 //! [set parameters]
     // setting the number of successive identical layers used in the decomposition
     std::map<int,int> identical_blocks;
     identical_blocks[3] = 1;
-    identical_blocks[4] = 2;
+    identical_blocks[4] = 1;
     cDecomposition.set_identical_blocks( identical_blocks );
 
     // setting the maximal number of layers used in the decomposition

@@ -104,7 +104,8 @@ CONFIG_CLEAN_VPATH_FILES =
 LTLIBRARIES = $(noinst_LTLIBRARIES)
 libdecomposition_la_LIBADD =
 am_libdecomposition_la_OBJECTS = Decomposition_Base.lo \
-	Functor_Cost_Function_Gradient.lo N_Qubit_Decomposition.lo \
+	Functor_Cost_Function_Gradient.lo \
+	N_Qubit_Decomposition_Base.lo \
 	N_Qubit_Decomposition_Cost_Function.lo \
 	Sub_Matrix_Decomposition.lo \
 	Sub_Matrix_Decomposition_Cost_Function.lo \
@@ -328,6 +329,7 @@ top_builddir = @top_builddir@
 top_srcdir = @top_srcdir@
 noinst_LTLIBRARIES = libdecomposition.la
 pkginclude_HEADERS = include/Decomposition_Base.h \
+                     include/N_Qubit_Decomposition_Base.h \
                      include/N_Qubit_Decomposition.h \
                      include/Sub_Matrix_Decomposition.h \
                      include/N_Qubit_Decomposition_Cost_Function.h \
@@ -337,7 +339,7 @@ pkginclude_HEADERS = include/Decomposition_Base.h \
 
 libdecomposition_la_SOURCES = Decomposition_Base.cpp \
                                   Functor_Cost_Function_Gradient.cpp \
-                                  N_Qubit_Decomposition.cpp \
+                                  N_Qubit_Decomposition_Base.cpp \
                                   N_Qubit_Decomposition_Cost_Function.cpp \
                                   Sub_Matrix_Decomposition.cpp \
                                   Sub_Matrix_Decomposition_Cost_Function.cpp \
@@ -401,7 +403,7 @@ distclean-compile:
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Decomposition_Base.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Functor_Cost_Function_Gradient.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Functor_Get_Operation_Products.Plo@am__quote@
-@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/N_Qubit_Decomposition.Plo@am__quote@
+@AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/N_Qubit_Decomposition_Base.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/N_Qubit_Decomposition_Cost_Function.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Sub_Matrix_Decomposition.Plo@am__quote@
 @AMDEP_TRUE@@am__include@ @am__quote@./$(DEPDIR)/Sub_Matrix_Decomposition_Cost_Function.Plo@am__quote@

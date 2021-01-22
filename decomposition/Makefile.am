@@ -10,6 +10,7 @@ all:
 noinst_LTLIBRARIES	= libdecomposition.la
 
 pkginclude_HEADERS = include/Decomposition_Base.h \
+                     include/N_Qubit_Decomposition_Base.h \
                      include/N_Qubit_Decomposition.h \
                      include/Sub_Matrix_Decomposition.h \
                      include/N_Qubit_Decomposition_Cost_Function.h \
@@ -19,7 +20,7 @@ pkginclude_HEADERS = include/Decomposition_Base.h \
 
 libdecomposition_la_SOURCES	= Decomposition_Base.cpp \
                                   Functor_Cost_Function_Gradient.cpp \
-                                  N_Qubit_Decomposition.cpp \
+                                  N_Qubit_Decomposition_Base.cpp \
                                   N_Qubit_Decomposition_Cost_Function.cpp \
                                   Sub_Matrix_Decomposition.cpp \
                                   Sub_Matrix_Decomposition_Cost_Function.cpp \

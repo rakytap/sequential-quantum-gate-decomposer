@@ -395,6 +395,7 @@ EXTRA_DIST = common/include/common.h \
              operations/include/U3.h \
              operations/include/Operation_block.h \
              decomposition/include/Decomposition_Base.h \
+             decomposition/include/N_Qubit_Decomposition_Base.h \
              decomposition/include/N_Qubit_Decomposition.h \
              decomposition/include/Sub_Matrix_Decomposition.h \
              decomposition/include/Functor_Cost_Function_Gradient.h \

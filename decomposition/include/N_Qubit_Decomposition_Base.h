@@ -17,31 +17,33 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/Sub_Matrix_Decomposition.h
-    \brief Header file for a class responsible for the disentanglement of one qubit from the others.
+/*! \file qgd/N_Qubit_Decomposition_Base.h
+    \brief Header file for a base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 operations.
+    This class contains the non-template implementation of the decomposition class.
+
 */
 
-#ifndef SUB_MATRIX_DECOMPOSITION_H
-#define SUB_MATRIX_DECOMPOSITION_H
+#ifndef N_QUBIT_DECOMPOSITION_BASE_H
+#define N_QUBIT_DECOMPOSITION_BASE_H
 
 #include "qgd/Decomposition_Base.h"
-#include "qgd/Sub_Matrix_Decomposition_Cost_Function.h"
-#include "qgd/Functor_Cost_Function_Gradient.h"
+#include "qgd/Sub_Matrix_Decomposition.h"
+#include "qgd/N_Qubit_Decomposition_Cost_Function.h"
+
+
 
 
 /**
-@brief A class responsible for the disentanglement of one qubit from the others.
+@brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 operations.
+This class contains the non-template implementation of the decomposition class.
 */
-class Sub_Matrix_Decomposition : public Decomposition_Base {
+class N_Qubit_Decomposition_Base : public Decomposition_Base {
 
 
 public:
 
-    /// logical value indicating whether the disentamglement of a qubit from the othetrs was done or not
-    bool subdisentaglement_done;
+protected:
 
-    /// The subdecomposed matrix
-    Matrix subdecomposed_mtx;
 
     /// logical value. Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
     bool optimize_layer_num;
@@ -60,21 +62,19 @@ public:
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
+N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
+
+
 
 /**
 @brief Destructor of the class
 */
-~Sub_Matrix_Decomposition();
-
+~N_Qubit_Decomposition_Base();
 
 /**
-@brief Start the optimization process to disentangle the most significant qubit from the others. The optimized parameters and operations are stored in the attributes optimized_parameters and operations.
+@brief final optimization procedure improving the accuracy of the decompositin when all the qubits were already disentangled.
 */
-void disentangle_submatrices();
-
-
-void add_operation_layers();
+void final_optimization();
 
 
 /**
@@ -83,8 +83,6 @@ void add_operation_layers();
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
-
-
 
 
 /**
@@ -111,8 +109,7 @@ static double optimization_problem( const gsl_vector* parameters, void* void_ins
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-static void optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad  );
-
+static void optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad );
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
@@ -121,16 +118,33 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad );
+static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
 
 /**
-@brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
-@param qbit The number of qubits for which the maximal number of layers should be used in the subdecomposition.
+@brief Call to simplify the gate structure in the layers if possible (i.e. tries to reduce the number of CNOT gates)
+*/
+void simplify_layers();
+
+/**
+@brief Call to simplify the gate structure in a block of operations (i.e. tries to reduce the number of CNOT gates)
+@param layer An instance of class Operation_block containing the 2-qubit gate structure to be simplified
+@param parameters An array of parameters to calculate the matrix representation of the operations in the block of operations.
+@param parameter_num_block NUmber of parameters in the block of operations to be simplified.
+@param max_layer_num_loc A map of <int n: int num> indicating the maximal number of CNOT operations allowed in the simplification.
+@param simplified_layer An instance of Operation_block containing the simplified structure of operations.
+@param simplified_parameters An array of parameters containing the parameters of the simplified block structure.
+@param simplified_parameter_num The number of parameters in the simplified block structure.
+@return Returns with 0 if the simplification wa ssuccessful.
+*/
+int simplify_layer( Operation_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Operation_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num);
+
+/**
+@brief Set the number of identical successive blocks during the subdecomposition of the n-th qubit.
+@param n The number of qubits for which the maximal number of layers should be used in the subdecomposition.
 @param identical_blocks_in The number of successive identical layers used in the subdecomposition.
 @return Returns with zero in case of success.
 */
-int set_identical_blocks( int qbit, int identical_blocks_in );
-
+int set_identical_blocks( int n, int identical_blocks_in );
 
 /**
 @brief Set the number of identical successive blocks during the subdecomposition of the n-th qubit.
@@ -140,14 +154,8 @@ int set_identical_blocks( int qbit, int identical_blocks_in );
 int set_identical_blocks( std::map<int, int> identical_blocks_in );
 
 
-/**
-@brief Call to create a clone of the present class
-@return Return with a pointer pointing to the cloned object
-*/
-Sub_Matrix_Decomposition* clone();
-
 
 };
 
 
-#endif //SUB_MATRIX_DECOMPOSITION
+#endif

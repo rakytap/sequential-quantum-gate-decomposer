@@ -23,6 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "qgd/python_interface.h"
 #include "qgd/N_Qubit_Decomposition.h"
+#include "qgd/Sub_Matrix_Decomposition.h"
 #include "qgd/matrix.h"
 
 
@@ -69,7 +70,7 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
     }
 
     // creating an instance of class N_Qubit_decomposition
-    N_Qubit_Decomposition* instance = new N_Qubit_Decomposition( Umtx, qbit_num, optimize_layer_num, initial_guess );
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* instance = new N_Qubit_Decomposition<Sub_Matrix_Decomposition>( Umtx, qbit_num, optimize_layer_num, initial_guess );
 
     return (void*)instance;
 
@@ -84,7 +85,7 @@ void* iface_new_N_Qubit_Decomposition( double* mtx_real, double* mtx_imag, int q
 */
 int iface_start_decomposition( void* ptr ) {
 
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* instance = reinterpret_cast<N_Qubit_Decomposition<Sub_Matrix_Decomposition>*>(ptr);
 
     instance->start_decomposition(true, true);
 
@@ -98,7 +99,7 @@ int iface_start_decomposition( void* ptr ) {
 */
 int iface_delete_N_Qubit_Decomposition( void* ptr ) {
 
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* instance = reinterpret_cast<N_Qubit_Decomposition<Sub_Matrix_Decomposition>*>(ptr);
 
 
     delete instance;
@@ -117,7 +118,7 @@ int iface_delete_N_Qubit_Decomposition( void* ptr ) {
 */
 int iface_set_identical_blocks( void* ptr, int qbit, int identical_blocks ) {
 
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* instance = reinterpret_cast<N_Qubit_Decomposition<Sub_Matrix_Decomposition>*>(ptr);
     return instance->set_identical_blocks( qbit, identical_blocks );
 
 }
@@ -130,7 +131,7 @@ int iface_set_identical_blocks( void* ptr, int qbit, int identical_blocks ) {
 */
 int iface_set_iteration_loops( void* ptr, int qbit, int iteration_loops ) {
 
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* instance = reinterpret_cast<N_Qubit_Decomposition<Sub_Matrix_Decomposition>*>(ptr);
     return instance->set_iteration_loops( qbit, iteration_loops );
 
 }
@@ -143,7 +144,7 @@ int iface_set_iteration_loops( void* ptr, int qbit, int iteration_loops ) {
 */
 int iface_set_max_layer_num( void* ptr, int qbit, int max_layer_num ) {
 
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* instance = reinterpret_cast<N_Qubit_Decomposition<Sub_Matrix_Decomposition>*>(ptr);
     return instance->set_max_layer_num( qbit, max_layer_num );
 
 }
@@ -155,7 +156,7 @@ int iface_set_max_layer_num( void* ptr, int qbit, int max_layer_num ) {
 */
 void iface_list_operations( void* ptr, int start_index ) {
 
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* instance = reinterpret_cast<N_Qubit_Decomposition<Sub_Matrix_Decomposition>*>(ptr);
     return instance->list_operations( start_index );
 
 }
@@ -166,7 +167,7 @@ void iface_list_operations( void* ptr, int start_index ) {
 */
 int iface_get_operation_num( void* ptr ) {
 
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* instance = reinterpret_cast<N_Qubit_Decomposition<Sub_Matrix_Decomposition>*>(ptr);
     return instance->get_operation_num();
 
 }
@@ -187,7 +188,7 @@ int iface_get_operation( void* ptr, int n, int &op_type, int &target_qbit, int &
 
     operation_type type;
 //printf("a %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* instance = reinterpret_cast<N_Qubit_Decomposition<Sub_Matrix_Decomposition>*>(ptr);
     int ret =  instance->get_operation( n, type, target_qbit, control_qbit, parameters );
 //printf("b %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
     op_type = type;
@@ -206,7 +207,7 @@ int iface_get_operation( void* ptr, int n, int &op_type, int &target_qbit, int &
 */
 int iface_set_verbose( void* ptr, bool verbose ) {
 
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* instance = reinterpret_cast<N_Qubit_Decomposition<Sub_Matrix_Decomposition>*>(ptr);
     instance->set_verbose( verbose );
 
     return 0;
@@ -222,7 +223,7 @@ int iface_set_verbose( void* ptr, bool verbose ) {
 */
 int iface_set_optimalization_block( void* ptr, int optimalization_block ) {
 
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(ptr);
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* instance = reinterpret_cast<N_Qubit_Decomposition<Sub_Matrix_Decomposition>*>(ptr);
     instance->set_optimization_blocks( optimalization_block );
 
     return 0;
