@@ -127,45 +127,10 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         }
 
 
-        // the  number of succeeding identicallayers in the subdeconposition
-        int identical_blocks_loc;
-        try {
-            identical_blocks_loc = identical_blocks[qbit_num];
-            if (identical_blocks_loc==0) {
-                identical_blocks_loc = 1;
-            }
-        }
-        catch (...) {
-            identical_blocks_loc=1;
-        }
-
         while ( layer_num < max_layer_num_loc ) {
 
-            int control_qbit_loc = qbit_num-1;
-            int solution_guess_num = parameter_num;
-
-            for (int target_qbit_loc = 0; target_qbit_loc<control_qbit_loc; target_qbit_loc++ ) {
-
-                for (int idx=0;  idx<identical_blocks_loc; idx++) {
-
-                    // creating block of operations
-                    Operation_block* block = new Operation_block( qbit_num );
-
-                    // add CNOT gate to the block
-                    block->add_cnot_to_end(control_qbit_loc, target_qbit_loc);
-
-                    // adding U3 operation to the block
-                    bool Theta = true;
-                    bool Phi = false;
-                    bool Lambda = true;
-                    block->add_u3_to_end(target_qbit_loc, Theta, Phi, Lambda);
-                    block->add_u3_to_end(control_qbit_loc, Theta, Phi, Lambda);
-
-                    // adding the opeartion block to the operations
-                    add_operation_to_end( block );
-
-                }
-            }
+            // add another operation layers to the gate structure used in the decomposition
+            add_operation_layers();
 
             // get the number of blocks
             layer_num = operations.size();
@@ -178,7 +143,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
                     solve_optimization_problem( optimized_parameters, 0);
                 }
                 else {
-                    solve_optimization_problem( optimized_parameters, solution_guess_num);
+                    solve_optimization_problem( optimized_parameters, parameter_num);
                 }
 
                 if (check_optimization_solution()) {
@@ -217,6 +182,50 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 }
 
 
+/**
+@brief Call to add further layer to the gate structure used in the subdecomposition.
+*/
+void Sub_Matrix_Decomposition::add_operation_layers() {
+
+    int control_qbit_loc = qbit_num-1;
+
+    // the  number of succeeding identical layers in the subdecomposition
+    int identical_blocks_loc;
+    try {
+        identical_blocks_loc = identical_blocks[qbit_num];
+        if (identical_blocks_loc==0) {
+            identical_blocks_loc = 1;
+        }
+    }
+    catch (...) {
+        identical_blocks_loc=1;
+    }
+
+    for (int target_qbit_loc = 0; target_qbit_loc<control_qbit_loc; target_qbit_loc++ ) {
+
+        for (int idx=0;  idx<identical_blocks_loc; idx++) {
+
+            // creating block of operations
+            Operation_block* block = new Operation_block( qbit_num );
+
+            // add CNOT gate to the block
+            block->add_cnot_to_end(control_qbit_loc, target_qbit_loc);
+
+            // adding U3 operation to the block
+            bool Theta = true;
+            bool Phi = false;
+            bool Lambda = true;
+            block->add_u3_to_end(target_qbit_loc, Theta, Phi, Lambda);
+            block->add_u3_to_end(control_qbit_loc, Theta, Phi, Lambda);
+
+            // adding the opeartion block to the operations
+            add_operation_to_end( block );
+
+        }
+    }
+
+
+}
 
 
 
@@ -427,6 +436,5 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
     return ret;
 
 }
-
 
 

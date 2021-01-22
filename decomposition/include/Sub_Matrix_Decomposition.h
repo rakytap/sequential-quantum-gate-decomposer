@@ -73,7 +73,9 @@ Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_n
 */
 void disentangle_submatrices();
 
-
+/**
+@brief Call to add further layer to the gate structure used in the subdecomposition.
+*/
 void add_operation_layers();
 
 

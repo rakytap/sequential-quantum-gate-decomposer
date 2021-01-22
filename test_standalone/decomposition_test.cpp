@@ -90,7 +90,7 @@ int main() {
     // setting the number of successive identical layers used in the decomposition
     std::map<int,int> identical_blocks;
     identical_blocks[3] = 1;
-    identical_blocks[4] = 1;
+    identical_blocks[4] = 2;
     cDecomposition.set_identical_blocks( identical_blocks );
 
     // setting the maximal number of layers used in the decomposition
