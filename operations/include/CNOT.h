@@ -39,6 +39,13 @@ protected:
 
 
 public:
+
+/**
+@brief Nullary constructor of the class.
+*/
+CNOT();
+
+
 /**
 @brief Constructor of the class.
 @param qbit_num_in The number of qubits in the unitaries

@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /**
-@brief Deafult constructor of the class.
+@brief Default constructor of the class.
 */
 Operation_block::Operation_block() : Operation() {
 

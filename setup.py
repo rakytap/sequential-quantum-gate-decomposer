@@ -297,18 +297,15 @@ class BuildCythonExt(build_ext):
 
 
 # compiler options for cython extensions
-extra_compiler_flags = extra_compiler_flags + ['-std=c++11', '-I' + os.path.join('piquasso', 'common', 'source' ), '-DCYTHON']
+extra_compiler_flags = extra_compiler_flags + ['-std=c++11', '-I' + os.path.join('common', 'include'), '-DCYTHON']
 extra_link_args = extra_link_args + ['-L' + CQGD_LIB_DIR]
 runtime_library_dirs = [CQGD_LIB_DIR]
 libraries= libraries + [CQGD_LIBRARY_NAME]
 
 
-extensions = [{'name': 'numpy_interface', 'path': os.path.join('piquasso', 'common' )}, 
-              {'name': 'state', 'path': os.path.join('piquasso', 'gaussian' )},
-              {'name': 'Boson_Sampling_Utilities', 'path': os.path.join('piquasso', 'sampling' )},
-              {'name': 'SimulationStrategy', 'path': os.path.join('piquasso', 'sampling', 'simulation_strategies' )},
-              {'name': 'GeneralizedCliffordsSimulationStrategy', 'path': os.path.join('piquasso', 'sampling', 'simulation_strategies' )},
-              {'name': 'test_example_wrapper', 'path': os.path.join('performance_tests', 'test_wrappers' )}
+extensions = [{'name': 'qgd_CNOT', 'path': os.path.join('qgd_python', 'gates' )},
+              {'name': 'qgd_U3', 'path': os.path.join('qgd_python', 'gates' )},
+              {'name': 'qgd_Operation_Block', 'path': os.path.join('qgd_python', 'gates' )}
              ]
 
 

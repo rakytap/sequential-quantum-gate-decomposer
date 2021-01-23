@@ -52,6 +52,13 @@ protected:
 
 
 public:
+
+/**
+@brief Nullary constructor of the class.
+*/
+U3();
+
+
 /**
 @brief Constructor of the class.
 @param qbit_num_in The number of qubits spanning the operation.

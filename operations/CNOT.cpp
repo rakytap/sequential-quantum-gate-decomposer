@@ -27,6 +27,28 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 using namespace std;
 
 
+/**
+@brief Nullary constructor of the class.
+*/
+CNOT::CNOT() {
+
+        // number of qubits spanning the matrix of the operation
+        qbit_num = -1;
+        // the size of the matrix
+        matrix_size = -1;
+        // A string describing the type of the operation
+        type = CNOT_OPERATION;
+        // The number of free parameters
+        parameter_num = 0;
+
+        // The index of the qubit on which the operation acts (target_qbit >= 0)
+        target_qbit = -1;
+
+        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
+        control_qbit = -1;
+
+
+}
 
 
 /**

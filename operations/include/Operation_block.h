@@ -45,7 +45,7 @@ protected:
 public:
 
 /**
-@brief Deafult constructor of the class.
+@brief Default constructor of the class.
 */
 Operation_block();
 
@@ -99,7 +99,7 @@ void add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool Lambda);
 void add_u3_to_front(int target_qbit, bool Theta, bool Phi, bool Lambda);
 
 /**
-@brief Append a C_NOT gate operation to the list of operations
+@brief Append a CNOT gate operation to the list of operations
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */

@@ -23,6 +23,42 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "U3.h"
 
+/**
+@brief Nullary constructor of the class.
+*/
+U3::U3() {
+
+        // number of qubits spanning the matrix of the operation
+        qbit_num = -1;
+        // the size of the matrix
+        matrix_size = -1;
+        // A string describing the type of the operation
+        type = U3_OPERATION;
+
+        // The index of the qubit on which the operation acts (target_qbit >= 0)
+        target_qbit = -1;
+        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
+        control_qbit = -1;
+        // the base indices of the target qubit for state |0>
+        indexes_target_qubit_0 = NULL;
+        // the base indices of the target qubit for state |1>
+        indexes_target_qubit_1 = NULL;
+
+        // logical value indicating whether the matrix creation takes an argument theta
+        theta = false;
+        // logical value indicating whether the matrix creation takes an argument phi
+        phi = false;
+        // logical value indicating whether the matrix creation takes an argument lambda
+        lambda = false;
+
+        parameter_num = 0;
+
+        // Parameters theta, phi, lambda of the U3 operation after the decomposition of the unitary is done
+        parameters = NULL;
+
+
+}
+
 
 
 /**
