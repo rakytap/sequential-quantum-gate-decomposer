@@ -25,8 +25,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define OPERATION_H
 
 #include <vector>
-#include "qgd/common.h"
-#include "qgd/matrix.h"
+#include "common.h"
+#include "matrix.h"
 
 
 /// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)

@@ -21,7 +21,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Class containing basic methods for the decomposition process.
 */
 
-#include "qgd/Decomposition_Base.h"
+#include "Decomposition_Base.h"
 
 
 // default layer numbers

@@ -21,7 +21,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Methods to calculate the cost function of the sub-disantenglement problem with TBB parallelization.
 */
 
-#include "qgd/Sub_Matrix_Decomposition_Cost_Function.h"
+#include "Sub_Matrix_Decomposition_Cost_Function.h"
 
 
 

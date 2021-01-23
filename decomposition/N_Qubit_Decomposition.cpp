@@ -22,7 +22,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     This class contains the non-template implementation of the decomposition class
 */
 
-#include "qgd/N_Qubit_Decomposition_Base.h"
+#include "N_Qubit_Decomposition_Base.h"
 
 
 /**

@@ -1,0 +1,6 @@
+// the configure options and settings for CPiquasso
+#define CPiquasso_VERSION_MAJOR @CPiquasso_VERSION_MAJOR@
+#define CPiquasso_VERSION_MINOR @CPiquasso_VERSION_MINOR@
+
+#cmakedefine USE_OPENBLAS
+#cmakedefine USE_MKL

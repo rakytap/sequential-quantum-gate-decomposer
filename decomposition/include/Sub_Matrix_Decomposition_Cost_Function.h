@@ -25,7 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define Sub_Matrix_Decomposition_Cost_Function_H
 
 
-#include "qgd/common.h"
+#include "common.h"
 
 
 /**

@@ -21,7 +21,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Class representing a CNOT operation.
 */
 
-#include "qgd/CNOT.h"
+#include "CNOT.h"
 
 
 using namespace std;

@@ -22,7 +22,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 
-#include "qgd/Random_Unitary.h"
+#include "Random_Unitary.h"
 
 
 

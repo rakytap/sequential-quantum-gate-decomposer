@@ -1,7 +1,7 @@
 #ifndef matrix_BASE_H
 #define matrix_BASE_H
 
-#include "qgd/QGDTypes.h"
+#include "QGDTypes.h"
 #include <cstring>
 #include <iostream>
 #include <tbb/scalable_allocator.h>

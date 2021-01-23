@@ -25,8 +25,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define OPERATION_BLOCK_H
 
 #include <vector>
-#include "qgd/common.h"
-#include "qgd/Operation.h"
+#include "common.h"
+#include "Operation.h"
 
 
 

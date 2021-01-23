@@ -25,7 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define FUNCTOR_COST_FUNCTION_GRADIENT_H_INCLUDED
 
 #include <gsl/gsl_vector.h>
-#include "qgd/common.h"
+#include "common.h"
 
 /**
 @brief Function operator class to calculate the gradient components of the cost function in parallel

@@ -24,8 +24,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef CNOT_H
 #define CNOT_H
 
-#include "qgd/matrix.h"
-#include "qgd/Operation.h"
+#include "matrix.h"
+#include "Operation.h"
 #include <math.h>
 
 

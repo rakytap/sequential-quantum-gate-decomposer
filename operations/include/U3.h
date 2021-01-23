@@ -24,8 +24,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef U3_H
 #define U3_H
 
-#include "qgd/Operation.h"
-#include "qgd/matrix.h"
+#include "Operation.h"
+#include "matrix.h"
 #include <math.h>
 
 

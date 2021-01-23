@@ -25,11 +25,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef FUNCTOR_GET_OPERATION_PRODUCTS_INCLUDED
 #define FUNCTOR_GET_OPERATION_PRODUCTS_INCLUDED
 
-#include "qgd/common.h"
-#include "qgd/Operation.h"
-#include "qgd/Operation_block.h"
-#include "qgd/CNOT.h"
-#include "qgd/U3.h"
+#include "common.h"
+#include "Operation.h"
+#include "Operation_block.h"
+#include "CNOT.h"
+#include "U3.h"
 
 /**
 @brief Function operator class to calculate the matrix representation of multiple operators in parallel

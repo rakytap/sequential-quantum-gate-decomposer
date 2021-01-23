@@ -21,7 +21,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Class responsible for the disentanglement of one qubit from the others.
 */
 
-#include "qgd/Sub_Matrix_Decomposition.h"
+#include "Sub_Matrix_Decomposition.h"
 
 
 

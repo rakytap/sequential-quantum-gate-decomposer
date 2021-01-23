@@ -1,6 +1,6 @@
-#include "qgd/Functor_Cost_Function_Gradient.h"
-#include "qgd/Sub_Matrix_Decomposition.h"
-#include "qgd/N_Qubit_Decomposition_Base.h"
+#include "Functor_Cost_Function_Gradient.h"
+#include "Sub_Matrix_Decomposition.h"
+#include "N_Qubit_Decomposition_Base.h"
 
 
 /*! \file Functor_Cost_Function_Gradient.cpp

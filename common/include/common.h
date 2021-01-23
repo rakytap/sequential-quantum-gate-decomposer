@@ -27,8 +27,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <tbb/tbb.h>
 #include <tbb/scalable_allocator.h>
 #include <omp.h>
-#include "qgd/QGDTypes.h"
-#include "qgd/dot.h"
+#include "QGDTypes.h"
+#include "dot.h"
 
 
 #include <string>

@@ -24,7 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef N_QUBIT_DECOMPOSITION_H
 #define N_QUBIT_DECOMPOSITION_H
 
-#include "qgd/N_Qubit_Decomposition_Base.h"
+#include "N_Qubit_Decomposition_Base.h"
 
 
 /**
@@ -268,7 +268,7 @@ void  decompose_submatrix() {
 
 
         // saving the decomposition operations
-        extract_subdecomposition_results( reinterpret_cast<Sub_Matrix_Decomposition*>(cdecomposition) );
+        extract_subdecomposition_results( reinterpret_cast<subdecomp_class*>(cdecomposition) );
 
         delete cdecomposition;
 

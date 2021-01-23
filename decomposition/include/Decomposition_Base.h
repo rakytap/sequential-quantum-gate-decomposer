@@ -25,9 +25,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define DECOMPOSITION_BASE_H
 
 
-#include "qgd/Operation_block.h"
-#include "qgd/CNOT.h"
-#include "qgd/U3.h"
+#include "Operation_block.h"
+#include "CNOT.h"
+#include "U3.h"
 #include <map>
 #include <cstdlib>
 #include <time.h>

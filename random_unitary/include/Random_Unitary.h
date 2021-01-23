@@ -26,10 +26,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <cstdlib>
 #include <time.h>
 #include <ctime>
-#include "qgd/common.h"
-#include "qgd/U3.h"
-#include "qgd/CNOT.h"
-#include "qgd/matrix.h"
+#include "common.h"
+#include "U3.h"
+#include "CNOT.h"
+#include "matrix.h"
 
 
 

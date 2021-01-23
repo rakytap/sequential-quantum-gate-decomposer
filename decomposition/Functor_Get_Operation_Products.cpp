@@ -21,8 +21,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Methods and classes for the parallelized calculation of the vector containing the products of operations (supporting TBB and OpenMP).
 */
 
-#include "qgd/Decomposition_Base.h"
-#include "qgd/Functor_Get_Operation_Products.h"
+#include "Decomposition_Base.h"
+#include "Functor_Get_Operation_Products.h"
 
 
 /**

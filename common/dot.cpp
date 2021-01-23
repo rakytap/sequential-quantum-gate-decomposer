@@ -1,4 +1,4 @@
-#include "qgd/dot.h"
+#include "dot.h"
 #include <cstring>
 #include <iostream>
 #include "tbb/tbb.h"

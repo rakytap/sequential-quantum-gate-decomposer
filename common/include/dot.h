@@ -15,7 +15,7 @@ extern "C"
 #endif
 
 
-#include "qgd/matrix.h"
+#include "matrix.h"
 
 #ifdef CBLAS
 #ifdef __cplusplus

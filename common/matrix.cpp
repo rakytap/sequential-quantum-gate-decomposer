@@ -1,4 +1,4 @@
-#include "qgd/matrix.h"
+#include "matrix.h"
 #include <cstring>
 #include <iostream>
 #include "tbb/tbb.h"

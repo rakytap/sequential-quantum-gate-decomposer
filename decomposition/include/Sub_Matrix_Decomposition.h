@@ -24,9 +24,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef SUB_MATRIX_DECOMPOSITION_H
 #define SUB_MATRIX_DECOMPOSITION_H
 
-#include "qgd/Decomposition_Base.h"
-#include "qgd/Sub_Matrix_Decomposition_Cost_Function.h"
-#include "qgd/Functor_Cost_Function_Gradient.h"
+#include "Decomposition_Base.h"
+#include "Sub_Matrix_Decomposition_Cost_Function.h"
+#include "Functor_Cost_Function_Gradient.h"
 
 
 /**
@@ -76,7 +76,7 @@ void disentangle_submatrices();
 /**
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
-void add_operation_layers();
+virtual void add_operation_layers();
 
 
 /**

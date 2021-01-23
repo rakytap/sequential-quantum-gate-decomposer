@@ -25,7 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 // @brief A base class responsible for constructing matrices of C-NOT, U3
 // gates acting on the N-qubit space
 
-#include "qgd/common.h"
+#include "common.h"
 
 
 
