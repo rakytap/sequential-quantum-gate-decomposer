@@ -26,10 +26,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 
-
 /**
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
+
 void Sub_Matrix_Decomposition_Custom::add_operation_layers() {
 
     int control_qbit_loc = qbit_num-1;

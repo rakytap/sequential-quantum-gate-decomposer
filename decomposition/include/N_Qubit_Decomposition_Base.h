@@ -55,6 +55,14 @@ protected:
 public:
 
 /**
+@brief Nullary constructor of the class.
+@return An instance of the class
+*/
+N_Qubit_Decomposition_Base();
+
+
+
+/**
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx

@@ -78,7 +78,7 @@ void  N_Qubit_Decomposition_Base::final_optimization() {
             printf("***************************************************************\n");
         }
 
-
+std::cout << "N_Qubit_Decomposition_Base::final_optimization 0" << std::endl;
         //# setting the global minimum
         global_target_minimum = 0;
         solve_optimization_problem( optimized_parameters, parameter_num) ;
@@ -92,7 +92,7 @@ void  N_Qubit_Decomposition_Base::final_optimization() {
 // @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) {
-
+std::cout << "N_Qubit_Decomposition_Base::solve_layer_optimization_problem 0" << std::endl;
         if (operations.size() == 0 ) {
             return;
         }
@@ -115,7 +115,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
         catch (...) {
             iteration_loops_max = 1;
         }
-
+std::cout << "N_Qubit_Decomposition_Base::solve_layer_optimization_problem 1" << std::endl;
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
 

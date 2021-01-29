@@ -297,15 +297,15 @@ class BuildCythonExt(build_ext):
 
 
 # compiler options for cython extensions
-extra_compiler_flags = extra_compiler_flags + ['-std=c++11', '-I' + os.path.join('common', 'include'), '-DCYTHON']
+extra_compiler_flags = extra_compiler_flags + ['-std=c++11', '-I' + os.path.join('common', 'include'), '-I' + os.path.join('operations', 'include'), '-I' + os.path.join('decomposition', 'include'), '-DCYTHON']
 extra_link_args = extra_link_args + ['-L' + CQGD_LIB_DIR]
 runtime_library_dirs = [CQGD_LIB_DIR]
 libraries= libraries + [CQGD_LIBRARY_NAME]
 
-
+"""
 extensions = [{'name': 'qgd_CNOT', 'path': os.path.join('qgd_python', 'gates' )},
-              {'name': 'qgd_U3', 'path': os.path.join('qgd_python', 'gates' )},
-              {'name': 'qgd_Operation_Block', 'path': os.path.join('qgd_python', 'gates' )}
+              {'name': 'qgd_Operation_Block', 'path': os.path.join('qgd_python', 'gates' )},
+              {'name': 'qgd_N_Qubit_Decomposition', 'path': os.path.join('qgd_python')}
              ]
 
 
@@ -328,6 +328,34 @@ for ext in extensions:
            cmdclass={
               'build_ext': BuildCythonExt
            })
+"""
 
+extensions = [{'name': 'qgd_U3', 'path': os.path.join('qgd_python', 'gates' )},
+              {'name': 'qgd_CNOT', 'path': os.path.join('qgd_python', 'gates' )},
+              {'name': 'qgd_Operation_Block', 'path': os.path.join('qgd_python', 'gates' )},
+              {'name': 'qgd_N_Qubit_Decomposition', 'path': os.path.join('qgd_python' )}
+             ]
+
+#os.environ["CC"] = "g++"
+
+for ext in extensions:
+    # building individual extensions
+    print('building ' + ext['name'] + '  extension')
+    EXTENSION_PATH = ext['path']
+
+    setup(name=ext['name'], version="1.0",
+      ext_modules=[
+         Extension(ext['name'], 
+                    sources=[os.path.join(EXTENSION_PATH, ext['name']+'.cpp')],
+                    language='c++', 
+                    include_dirs=[np.get_include()],
+                    extra_compile_args=extra_compiler_flags,
+                    runtime_library_dirs=runtime_library_dirs,
+                    libraries=libraries,
+                    extra_link_args=extra_link_args),
+         ],
+        cmdclass={
+              'build_ext': BuildCythonExt
+           })
 
 

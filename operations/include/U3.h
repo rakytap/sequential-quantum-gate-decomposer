@@ -143,16 +143,6 @@ int composite_u3_Theta(const double* parameters, Matrix& U3_matrix );
 @param Theta Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.
 @param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the U3 gate.
-*/
-QGD_Complex16* composite_u3(double Theta, double Phi, double Lambda );
-
-
-/**
-@brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
 @param U3_matrix A pointer to the preallocated array of the operation matrix.
 @return Returns with 0 on success.
 */

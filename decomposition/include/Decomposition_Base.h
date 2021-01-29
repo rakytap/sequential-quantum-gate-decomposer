@@ -106,6 +106,11 @@ protected:
 
 public:
 
+/** Nullary constructor of the class
+@return An instance of the class
+*/
+Decomposition_Base();
+
 /** Contructor of the class
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed

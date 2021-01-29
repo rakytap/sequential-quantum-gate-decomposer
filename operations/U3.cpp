@@ -22,7 +22,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "U3.h"
-
+tbb::spin_mutex my_mutex2;
 /**
 @brief Nullary constructor of the class.
 */
@@ -136,9 +136,8 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         // Parameters theta, phi, lambda of the U3 operation after the decomposition of the unitary is done
         parameters = NULL;
 
-        // determione the basis indices of the |0> and |1> states of the target qubit
+        // determine the basis indices of the |0> and |1> states of the target qubit
         determine_base_indices();
-
 }
 
 
@@ -161,6 +160,7 @@ U3::~U3() {
         qgd_free(parameters);
         parameters = NULL;
     }
+
 }
 
 
@@ -214,7 +214,6 @@ U3::get_matrix( const double* parameters ) {
         else {
             composite_u3(0, 0, 0, U3_matrix );
         }
-
 
         return U3_matrix;
 
@@ -291,24 +290,6 @@ int U3::composite_u3_Theta( const double* parameters, Matrix& U3_matrix ) {
         return composite_u3( parameters[0], 0, 0, U3_matrix );
 }
 
-/**
-@brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the U3 gate.
-*/
-QGD_Complex16* U3::composite_u3(double Theta, double Phi, double Lambda ) {
-
-        // preallocate array for the composite u3 operation
-        Matrix U3_matrix = Matrix(matrix_size, matrix_size);
-
-        composite_u3(Theta, Phi, Lambda, U3_matrix );
-
-        U3_matrix.set_owner(false);
-        return U3_matrix.get_data();
-
-}
 
 /**
 @brief Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
@@ -323,7 +304,6 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, Matrix& U3_matrix 
         // set to zero all the elements of the matrix
         memset(U3_matrix.get_data(), 0, U3_matrix.size()*sizeof(QGD_Complex16) );
 
-
         // get the U3 operation of one qubit
         Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
 
@@ -334,6 +314,7 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, Matrix& U3_matrix 
 
             // element |0> -> |0>
             element_index = indexes_target_qubit_0[idx]*matrix_size + indexes_target_qubit_0[idx];
+
             U3_matrix[element_index] = u3_1qbit[0];
 
             // element |1> -> |0>
@@ -362,7 +343,7 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, Matrix& U3_matrix 
 void U3::determine_base_indices() {
 
 
-        // fre the previously allocated memories
+        // free the previously allocated memories
         if ( indexes_target_qubit_1 != NULL ) {
             qgd_free( indexes_target_qubit_1 );
             indexes_target_qubit_1 = NULL;
@@ -372,8 +353,11 @@ void U3::determine_base_indices() {
             indexes_target_qubit_0 = NULL;
         }
 
+
         indexes_target_qubit_1 = (int*)qgd_calloc(matrix_size/2,sizeof(int), 64);
         indexes_target_qubit_0 = (int*)qgd_calloc(matrix_size/2,sizeof(int), 64);
+
+
 
         int target_qbit_power = Power_of_2(target_qbit);
         int indexes_target_qubit_1_idx = 0;
@@ -393,12 +377,14 @@ void U3::determine_base_indices() {
             }
         }
 
-        /*
+/*
         // print the result
+        printf("\n");
+        printf("qbit num: %d, target qubit: %d\n", qbit_num, target_qbit);
         for(int idx = 0; idx<matrix_size/2; ++idx) {
             printf ("base indexes for target bit state 0 and 1 are: %d and %d \n", indexes_target_qubit_0[idx], indexes_target_qubit_1[idx]);
         }
-        */
+*/
 }
 
 /**

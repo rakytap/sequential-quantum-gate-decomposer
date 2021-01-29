@@ -24,6 +24,25 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "N_Qubit_Decomposition.h"
 
+/**
+@brief Nullary constructor of the class.
+@return An instance of the class
+*/
+N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
+
+    // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
+    optimize_layer_num  = false;
+
+    // A string describing the type of the class
+    type = N_QUBIT_DECOMPOSITION_CLASS_BASE;
+
+    // The global minimum of the optimization problem
+    global_target_minimum = 0;
+
+
+
+
+}
 
 /**
 @brief Constructor of the class.

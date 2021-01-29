@@ -28,6 +28,68 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 std::map<int,int> Decomposition_Base::max_layer_num_def;
 
 
+/** Nullary constructor of the class
+@return An instance of the class
+*/
+Decomposition_Base::Decomposition_Base() {
+
+    Init_max_layer_num();
+
+    // Logical variable. Set true for verbose mode, or to false to suppress output messages.
+    verbose = true;
+
+    // logical value describing whether the decomposition was finalized or not
+    decomposition_finalized = false;
+
+    // A string describing the type of the class
+    type = DECOMPOSITION_BASE_CLASS;
+
+    // error of the unitarity of the final decomposition
+    decomposition_error = -1;
+
+    // number of finalizing (deterministic) opertaions counted from the top of the array of operations
+    finalizing_operations_num = 0;
+
+    // the number of the finalizing (deterministic) parameters counted from the top of the optimized_parameters list
+    finalizing_parameter_num = 0;
+
+    // The current minimum of the optimization problem
+    current_minimum = 1e10;
+
+    // The global minimum of the optimization problem
+    global_target_minimum = 0;
+
+    // logical value describing whether the optimization problem was solved or not
+    optimization_problem_solved = false;
+
+    // number of iteratrion loops in the finale optimization
+    //iteration_loops = dict()
+
+    // The maximal allowed error of the optimization problem
+    optimization_tolerance = 1e-7;
+
+    // Maximal number of iteartions in the optimization process
+    max_iterations = 1e8;
+
+    // number of operators in one sub-layer of the optimization process
+    optimization_block = 1;
+
+    // method to guess initial values for the optimization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
+    initial_guess = ZEROS;
+
+    // optimized parameters
+    optimized_parameters = NULL;
+
+
+#if CBLAS==1
+    num_threads = mkl_get_max_threads();
+#elif CBLAS==2
+    num_threads = openblas_get_num_threads();
+#endif
+
+}
+
+
 /** Contructor of the class
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
@@ -632,7 +694,6 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
 */
 Matrix
 Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations, Matrix& initial_matrix ) {
-
 
     if (num_of_operations==0) {
         return initial_matrix.copy();

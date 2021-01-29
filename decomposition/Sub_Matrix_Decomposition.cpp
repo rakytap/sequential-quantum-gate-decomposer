@@ -23,8 +23,29 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Sub_Matrix_Decomposition.h"
 
+tbb::spin_mutex my_mutex;
+
+/**
+@brief Nullary constructor of the class.
+@return An instance of the class
+*/
+Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( ) {
+
+    // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
+    optimize_layer_num  = false;
+
+    // A string describing the type of the class
+    type = SUB_MATRIX_DECOMPOSITION_CLASS;
+
+    // The global minimum of the optimization problem
+    global_target_minimum = 0;
+
+    // logical value indicating whether the quasi-unitarization of the submatrices was done or not
+    subdisentaglement_done = false;
 
 
+
+}
 
 
 /**
@@ -125,7 +146,6 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         catch (...) {
             throw "Layer number not given";
         }
-
 
         while ( layer_num < max_layer_num_loc ) {
 
@@ -361,8 +381,15 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
     std::vector<Operation*> operations_loc = instance->get_operations();
 
-    Matrix Umtx_loc = instance->get_Umtx();
-    Matrix matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
+    Matrix Umtx_loc, matrix_new;
+
+//{
+//tbb::spin_mutex::scoped_lock my_lock{my_mutex};
+
+    Umtx_loc = instance->get_Umtx();
+    matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
+
+//}
 
 
     double cost_function = get_submatrix_cost_function(matrix_new);  //NEW METHOD

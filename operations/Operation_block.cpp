@@ -138,7 +138,6 @@ std::vector<Matrix> Operation_block::get_matrices( const double* parameters ) {
 
         }
         else if (operation->get_type() == U3_OPERATION) {
-
             U3* u3_operation = static_cast<U3*>(operation);
 
             if (u3_operation->get_parameter_num() == 1 ) {

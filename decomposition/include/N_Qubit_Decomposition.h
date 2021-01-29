@@ -36,6 +36,18 @@ class N_Qubit_Decomposition : public N_Qubit_Decomposition_Base {
 
 public:
 
+
+/**
+@brief Nullary constructor of the class.
+@return An instance of the class
+*/
+N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
+
+    // A string describing the type of the class
+    type = N_QUBIT_DECOMPOSITION_CLASS_BASE;
+
+}
+
 /**
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
@@ -83,7 +95,6 @@ void start_decomposition(bool finalize_decomp=true, bool prepare_export=true) {
     //measure the time for the decompositin
     clock_t start_time = time(NULL);
 
-
     // create an instance of class to disentangle the given qubit pair
     subdecomp_class* cSub_decomposition = new subdecomp_class(Umtx, qbit_num, optimize_layer_num, initial_guess);
 
@@ -122,6 +133,8 @@ void start_decomposition(bool finalize_decomp=true, bool prepare_export=true) {
 
     // decompose the qubits in the disentangled submatrices
     decompose_submatrix();
+
+
 
     if (finalize_decomp) {
         // finalizing the decompostition

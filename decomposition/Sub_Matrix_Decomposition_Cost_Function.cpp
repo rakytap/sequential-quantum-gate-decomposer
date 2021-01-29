@@ -70,7 +70,6 @@ double get_submatrix_cost_function(Matrix& matrix) {
     });
 
 
-
     return cost_function;
 
 }

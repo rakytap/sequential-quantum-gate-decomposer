@@ -53,6 +53,12 @@ public:
 public:
 
 /**
+@brief Nullary constructor of the class.
+@return An instance of the class
+*/
+Sub_Matrix_Decomposition( );
+
+/**
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
