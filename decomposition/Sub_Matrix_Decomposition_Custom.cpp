@@ -34,7 +34,7 @@ void Sub_Matrix_Decomposition_Custom::add_operation_layers() {
 
     int control_qbit_loc = qbit_num-1;
 
-if (qbit_num == 4 || qbit_num == 3) {
+if (qbit_num == 40 || qbit_num == 30) {
 
     for (int target_qbit_loc = 0; target_qbit_loc<control_qbit_loc; target_qbit_loc++ ) {
 

@@ -51,41 +51,6 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
         super(qgd_N_Qubit_Decomposition, self).__init__(Umtx, self.qbit_num, optimize_layer_num, initial_guess)
 
 
-        
-                
-
-
-
-##
-# @brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
-# @param max_layer_num A dictionary {'n': max_layer_num} labeling the maximal number of the operation layers used in the subdecomposition.
-    def set_max_layer_num(self, max_layer_num ):
-
-        for qbit in max_layer_num.keys() :
-            # Set the maximal number of layers throug the C-interface
-            _qgd_library.iface_set_max_layer_num( self.c_instance, ctypes.c_int(qbit), ctypes.c_int(max_layer_num.get(qbit,0)) )
-
-##
-# @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
-# @param iteration_loops A dictionary {'n': iteration_loops} labeling the number of iteration loops in each step of the subdecomposition.
-    def set_iteration_loops(self, iteration_loops ):
-
-        for qbit in iteration_loops.keys() :
-            # Set the number of iteration loops throug the C-interface
-            _qgd_library.iface_set_iteration_loops( self.c_instance, ctypes.c_int(qbit), ctypes.c_int(iteration_loops.get(qbit,3)) )
-
-
-##
-# @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
-# @param identical_blocks A dictionary {'n': identical_blocks} labeling the number of successive identical layers used in the subdecomposition at the disentangling of the n-th qubit.
-    def set_identical_blocks(self, identical_blocks ):
-
-        for qbit in identical_blocks.keys() :
-            # Set the number of identical successive blocks  throug the C-interface
-            _qgd_library.iface_set_identical_blocks( self.c_instance, ctypes.c_int(qbit), ctypes.c_int(identical_blocks.get(qbit,1)) )
-
-
-
 
 ##
 # @brief Export the unitary decomposition into Qiskit format.
@@ -116,15 +81,6 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
 
         return circuit
 
-
-##
-# @brief Set the verbosity of the N_Qubit_Decomposition class
-# @param verbose Set False to suppress the output messages of the decompostion, or True (deafult) otherwise.
-    def set_verbose( self, verbose ):
-            
-        _qgd_library.iface_set_verbose( self.c_instance, ctypes.c_bool(verbose) )
-
- 
 
 ##
 # @brief Call to set the number of blocks to be optimized in one shot

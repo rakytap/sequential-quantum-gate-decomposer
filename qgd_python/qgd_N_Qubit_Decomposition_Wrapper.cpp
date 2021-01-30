@@ -210,38 +210,6 @@ qgd_N_Qubit_Decomposition_Wrapper_Start_Decomposition(qgd_N_Qubit_Decomposition_
 }
 
 
-/**
-@brief Wrapper function to set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
-@param args A tuple of the input arguments: qbit (bool), identical_blocks (bool)
-qbit: The number of qubits for which the subdecomposition should contain identical_blocks successive identical blocks.
-identical_blocks: Number of successive identical blocks in the decomposition.
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_Wrapper_set_identical_blocks( qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args, PyObject *kwds ) {
-
-
-    // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"qbit", (char*)"identical_blocks", NULL};
-
-    // initiate variables for input arguments
-    int  qbit; 
-    int  identical_blocks; 
-
-    // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
-                                     &qbit, &identical_blocks))
-        return Py_BuildValue("i", -1);
-
-
-    // setting the number of identical blocks
-    self->decomp->set_identical_blocks( qbit, identical_blocks );
-
-
-    return Py_BuildValue("i", 0);
-
-}
-
 
 
 
@@ -413,6 +381,162 @@ qgd_N_Qubit_Decomposition_Wrapper_List_Operations( qgd_N_Qubit_Decomposition_Wra
 
 
 
+/**
+@brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
+@param max_layer_num A dictionary {'n': max_layer_num} labeling the maximal number of the operation layers used in the subdecomposition.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_set_Max_Layer_Num(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    PyObject* max_layer_num; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &max_layer_num )) return Py_BuildValue("i", -1);
+
+    // Check whether input is dictionary
+    if (!PyDict_Check(max_layer_num)) {
+        printf("Input must be dictionary!\n");
+        return Py_BuildValue("i", -1);
+    }
+
+
+    PyObject* key = NULL;
+    PyObject* value = NULL;
+    Py_ssize_t pos = 0;
+
+
+    while (PyDict_Next(max_layer_num, &pos, &key, &value)) {
+
+        // convert value fron PyObject to int
+        assert(PyInt_Check(value) == 1);
+        int value_int = (int) PyLong_AsLong(value);
+
+        // convert keylue fron PyObject to int
+        assert(PyInt_Check(key) == 1);
+        int key_int = (int) PyLong_AsLong(key);
+
+        // set maximal layer nums on the C++ side
+        self->decomp->set_max_layer_num( key_int, value_int );
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+
+/**
+@brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
+@param identical_blocks A dictionary {'n': identical_blocks} labeling the number of successive identical layers used in the subdecomposition at the disentangling of the n-th qubit.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_set_Identical_Blocks(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    PyObject* identical_blocks; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &identical_blocks )) return Py_BuildValue("i", -1);
+
+    // Check whether input is dictionary
+    if (!PyDict_Check(identical_blocks)) {
+        printf("Input must be dictionary!\n");
+        return Py_BuildValue("i", -1);
+    }
+
+
+    PyObject* key = NULL;
+    PyObject* value = NULL;
+    Py_ssize_t pos = 0;
+
+
+    while (PyDict_Next(identical_blocks, &pos, &key, &value)) {
+
+        // convert value fron PyObject to int
+        assert(PyInt_Check(value) == 1);
+        int value_int = (int) PyLong_AsLong(value);
+
+        // convert keylue fron PyObject to int
+        assert(PyInt_Check(key) == 1);
+        int key_int = (int) PyLong_AsLong(key);
+
+        // set maximal layer nums on the C++ side
+        self->decomp->set_identical_blocks( key_int, value_int );
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+
+
+/**
+@brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
+@param identical_blocks A dictionary {'n': iteration_loops} labeling the number of successive identical layers used in the subdecomposition at the disentangling of the n-th qubit.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_set_Iteration_Loops(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    PyObject* iteration_loops; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &iteration_loops )) return Py_BuildValue("i", -1);
+
+    // Check whether input is dictionary
+    if (!PyDict_Check(iteration_loops)) {
+        printf("Input must be dictionary!\n");
+        return Py_BuildValue("i", -1);
+    }
+
+
+    PyObject* key = NULL;
+    PyObject* value = NULL;
+    Py_ssize_t pos = 0;
+
+
+    while (PyDict_Next(iteration_loops, &pos, &key, &value)) {
+
+        // convert value fron PyObject to int
+        assert(PyInt_Check(value) == 1);
+        int value_int = (int) PyLong_AsLong(value);
+
+        // convert keylue fron PyObject to int
+        assert(PyInt_Check(key) == 1);
+        int key_int = (int) PyLong_AsLong(key);
+
+        // set maximal layer nums on the C++ side
+        self->decomp->set_iteration_loops( key_int, value_int );
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+/**
+@brief Set the verbosity of the N_Qubit_Decomposition class
+@param verbose Set False to suppress the output messages of the decompostion, or True (deafult) otherwise.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    bool verbose; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|b", &verbose )) return Py_BuildValue("i", -1);
+
+
+    // set maximal layer nums on the C++ side
+    self->decomp->set_verbose( verbose );
+
+    return Py_BuildValue("i", 0);
+}
+
+
 
 /**
 @brief Structure containing metadata about the members of class qgd_N_Qubit_Decomposition_Wrapper.
@@ -428,9 +552,6 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Wrapper_methods[] = {
     {"Start_Decomposition", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_Start_Decomposition, METH_VARARGS | METH_KEYWORDS,
      "Method to start the decomposition."
     },
-    {"set_Identical_Blocks", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_identical_blocks, METH_VARARGS | METH_KEYWORDS,
-     "Method to set the number of identical successive blocks during the subdecomposition of the qbit-th qubit."
-    },
     {"get_Operation_Num", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_operation_num, METH_NOARGS,
      "Method to get the number of decomposing operations."
     },
@@ -442,6 +563,18 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Wrapper_methods[] = {
     },
     {"List_Operations", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_List_Operations, METH_NOARGS,
      "Call to print the decomposing nitaries on standard output"
+    },
+    {"set_Max_Layer_Num", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Max_Layer_Num, METH_VARARGS,
+     "Call to set the maximal number of layers used in the subdecomposition of the qbit-th qubit."
+    },
+    {"set_Identical_Blocks", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Identical_Blocks, METH_VARARGS,
+     "Call to set the number of identical successive blocks during the subdecomposition of the qbit-th qubit."
+    },
+    {"set_Iteration_Loops", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Iteration_Loops, METH_VARARGS,
+     "Call to set the number of iteration loops during the subdecomposition of the qbit-th qubit."
+    },
+    {"set_Verbose", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Verbose, METH_VARARGS,
+     "Call to set the verbosity of the qgd_N_Qubit_Decomposition class."
     },
     {NULL}  /* Sentinel */
 };
