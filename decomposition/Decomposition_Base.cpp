@@ -1059,7 +1059,7 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( Operat
 
 
 /**
-@brief Call to prepare the optimized operations to export
+@brief Call to prepare the optimized operations to export --- OBSOLETE
 @param n Integer labeling the n-th oepration  (n>=0).
 @param type The type of the operation from enumeration operation_type is returned via this parameter.
 @param target_qbit The ID of the target qubit is returned via this input parameter.
@@ -1098,6 +1098,24 @@ int Decomposition_Base::get_operation( unsigned int n, operation_type &type, int
     else {
         return -2;
     }
+
+}
+
+
+
+/**
+@brief Call to prepare the optimized operations to export
+@param n Integer labeling the n-th oepration  (n>=0).
+@return Returns with a pointer to the n-th Operation, or with MULL if the n-th operation cant be retrived.
+*/
+Operation* Decomposition_Base::get_operation( int n ) {
+
+    // get the n-th operation if exists
+    if ( n >= operations.size() ) {
+        return NULL;
+    }
+
+    return operations[n];
 
 }
 

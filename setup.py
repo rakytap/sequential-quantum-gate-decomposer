@@ -333,7 +333,7 @@ for ext in extensions:
 extensions = [{'name': 'qgd_U3', 'path': os.path.join('qgd_python', 'gates' )},
               {'name': 'qgd_CNOT', 'path': os.path.join('qgd_python', 'gates' )},
               {'name': 'qgd_Operation_Block', 'path': os.path.join('qgd_python', 'gates' )},
-              {'name': 'qgd_N_Qubit_Decomposition', 'path': os.path.join('qgd_python' )}
+              {'name': 'qgd_N_Qubit_Decomposition_Wrapper', 'path': os.path.join('qgd_python' )}
              ]
 
 #os.environ["CC"] = "g++"
