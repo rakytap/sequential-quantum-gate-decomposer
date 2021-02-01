@@ -1,10 +1,10 @@
 # Quantum Gate Decomposer
 
-Quantum Gate Decomposer (QGD) is an optimization method to decompose an arbitrary NxN Unitary matrix into a sequence of U3 and CNOT gates. 
-It is written in C/C++ providing a simple Python interface via [ctypes](https://docs.python.org/3/library/ctypes.html) and a possibility to run QGD as a standalone C executable.
-The present package is supplied with automake tools to ease its deployment.
-The QGD package can be built with both Intel and GNU compilers, and link against various CBLAS libraries installed on the system.
-(So far the CLBAS libraries of the GNU Scientific Library and the Intel MKL packages were tested.)
+Quantum Gate Decomposer (QGD) is a heuristic method to decompose an arbitrary NxN Unitary matrix into a sequence of U3 and CNOT gates. 
+QGD library is written in C/C++ providing a Python interface via a [C++ extensions](https://docs.python.org/3/library/ctypes.html).
+The present package is supplied with Python and CMake tools to ease its deployment.
+The QGD package can be built with both Intel and GNU compilers, and can be link against various CBLAS libraries installed on the system.
+(So far the CLBAS libraries of the GNU Scientific Library, OpenBLAS and the Intel MKL packages were tested.)
 In the following we briefly summarize the steps to build, install and use the QGD package. 
 
 
@@ -14,13 +14,9 @@ The optimization algorithm of QGD relies on the [multimin](https://www.gnu.org/s
 We developed and tested the QGD package with GNU Scientific Library of version 2.5 and 2.6.
 The dependencies necessary to compile and build the QGD package are the followings:
 
-* [automake](https://www.gnu.org/software/automake/) (for further development purposes)
-* [autoconf](https://www.gnu.org/software/autoconf/) (for further development purposes)
-* [libtool](https://www.gnu.org/software/libtool/)
-* [make](https://www.gnu.org/software/make/)
+* [CMake](https://cmake.org/) (>=3.10.2)
 * [GNU Scientific Library](https://www.gnu.org/software/gsl/doc/html/index.html) (>=2.5)
 * C++/C [Intel](https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html) (>=14.0.1) or [GNU](https://gcc.gnu.org/) (>=v4.4.7) compiler
-* [OpenMP](https://www.openmp.org/) 
 * [TBB](https://github.com/oneapi-src/oneTBB) library
 * [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html) (optional)
 * [OpenBlas](https://www.openblas.net/) (optional)
@@ -32,7 +28,6 @@ The QGD Python interface needs the following packages to be installed on the sys
 * [Qiskit](https://qiskit.org/documentation/install.html)
 * [Numpy](https://numpy.org/install/)
 * [scipy](https://www.scipy.org/install.html)
-* [ctypes](https://docs.python.org/3/library/ctypes.html)
 
 
 
@@ -60,109 +55,73 @@ $ make install
 
 ### Download the Quantum Gate Decomposer package
 
-The developer version Quantum Gate Decomposer package can be downloaded from github repository [https://github.com/rakytap/quantum-gate-decomposer/tree/master](https://github.com/rakytap/quantum-gate-decomposer/tree/master).
-After the downloaded package is extracted into the directory **path/to/qgdsource** (which would be the path to the source code of the QGD package), one can proceed to the compilation steps described in the next section.
+The developer version of the Quantum Gate Decomposer package can be downloaded from github repository [https://github.com/rakytap/quantum-gate-decomposer/tree/master](https://github.com/rakytap/quantum-gate-decomposer/tree/master).
+After the downloaded package is downloaded into the directory **path/to/QGD/package** (which would be the path to the source code of the QGD package), one can proceed to the compilation steps described in the next section.
 
 ### How to deploy the Quantum Gate Decomposer package
 
-Similarly to GNU Scientific Library, the QGD package is also equipped with automake tools to ease the compilation and the deployment of the package.
+The QGD package is equipped with a Python script and CMake tools to ease the compilation and the deployment of the package.
 To ensure that QGD package would find the necessary libraries and header files during compilation time it is advised to define the following environment variables:
 
 $ export GSL_LIB_DIR=path/to/gsl/lib(64)
 
 $ export GSL_INC_DIR=path/to/gsl/include
 
-When using Intel compiler equipped with Intel MKL, the compiler may find his way to the MKL libraries automatically through the environment variable MKLROOT which points to the root directory of the MKL package. 
-If the Intel environment variables are not set, they can be initialized by the shell command:
-
-$ source /opt/intel/composerxe/bin/compilervars.sh intel64
-
-where **/opt/intel/composerxe** is the path to the Intel compiler package location which might be different from the given one.
-(This step can be omitted when using GNU compiler, or when we do not have intention to use Intel MKL or the Intel TBB library)
-
-The QGD package is parallelized via Threading Building Block (TBB) libraries (OpenMP library is used only to turn off openmp parallelism of the underlying BLAS libraries to avoid over-subscription of the cores). If TBB is not present in the system, it can be easily installed via the apt utility (sudo apt install libtbb-dev) or it can be downloaded and built from source at 
+The QGD package is parallelized via Threading Building Block (TBB) libraries. If TBB is not present in the system, it can be easily installed via the apt utility (sudo apt install libtbb-dev) or it can be downloaded and built from source at 
 [https://github.com/oneapi-src/oneTBB](https://github.com/oneapi-src/oneTBB) 
-To exploit TBB parallelization, one should supply also the necessary environment variables pointing to the header and library files of the TBB package. For newer
+(Notice, that the newest version of the TBB library under the branch onetbb_2021 is aiming to be compatible with the Intel oneApi programming model. It does not contain all the functionalities of previous TBB libraries yet, so QGD package is not compatible with this version of the TBB library. 
+For compilation of the QGD package please use previous versions of the library, such as tbb_2017, tbb_2018, tbb_2019 or tbb_2020.)
+To exploit TBB parallelization, one should supply the necessary environment variables pointing to the header and library files of the TBB package. For newer
 Intel compilers the TBB package is part of the Intel compiler package, similarly to the MKL package. If the TBB library is located at non-standrad path or the QGD package is compiled with GNU compiler, then setting the
 
 $ export TBB_LIB_DIR=path/to/TBB/lib(64)
 
 $ export TBB_INC_DIR=path/to/TBB/include
 
-environment variables are sufficient for succesfull compilation. 
-After the basic environment variables are set, the compilation can be configured by the command executed in the source directory **path/to/qgdsource** of the QGD package:
+environment variables are sufficient for successful compilation. 
+The QGD package with C++ Python extensions can be compiled via the Python script **setup.py** located in the root directory of the QGD package.
+The script automatically finds out the CBLAS library working behind the numpy package and uses it in further linking. 
+The **setup.py** script also build the C++ library of the QGD package by making the appropriate CMake calls. 
 
-$ ./configure --prefix=path/to/qgd --with-openblas CXX=g++
 
-where **path/to/qgd** is the installation path of the Quantum Gate Decomposer package. The **--with-openblas** flag is optional for using OpenBLAS library.
+After the basic environment variables are set, the compilation can be started by the Python command:
 
-The installation directory of the compiled QGD package is given by **--prefix=path/to/qgd** (which is different from the directory path of the source files given by **path/to/qgdsource**).
-The user should have read and write permissions on the path **path/to/qgd** (which can be for example /home/username/qgd).
-Another optional flag **--enable-ffast-math** enables the compiler's agile floating-point optimization. 
-While in general this optimization is considered to be dangerous, the runtime performance might be significantly increased due to this optimization. 
-Try to compile without and with this flag and compare the performance and stability of the resulted binaries (for further information see section **How to use**).
-On the other hand, if one chooses Intel compiler to built the QGD package, the following configuration settings should be invoked:
+$ python3 setup.py build_ext
 
-$ ./configure --prefix=path/to/qgd --with-mkl  CXX=icpc
-
-The **--with-mkl** flag sets the appropriate linking of the QGD package with the Intel MKL package.
-If the **--with-mkl** flag is missing from the configuration than the CBLAS library of the GNU Scientific Library is used for linear algebra operations.
-After the successful configuration the QGD package can be compiled by the shell command executed in the directory **path/to/qgdsource**:
-
-$ make
-
-After a successful compilation of the QGD package, it can be installed into the directory **path/to/gsl** by the shell command:
-
-$ make install
-
-The installation procedure will copy all the C header files, the static and shared libraries needed for further developments and the python interface files including a simple python example file **example.py** into the installation destination defined by the **path/to*qgd** path.
+The command above starts the compilation of the C++ library and builds the necessary C++ Python extensions for the Python interface of the QGD package.
 
 
 ### How to use
 
 The algorithm implemented in the QGD package intends to transform the given unitary into an identity matrix via a sequence of CNOT and U3 operations applied on the unitary. 
-Thus, in order to really get the decomposition of a unitary, one should rather provide the complex transpose of this unitary as the input for the QGD decomposing process.
+Thus, in order to get the decomposition of a unitary, one should rather provide the complex transpose of this unitary as the input for the QGD decomposing process, as can be seen in the examples.
 
 ## Standalone executable
 
-During the compilation and the installation processes of the QGD package a standalone executable was also built and copied into the directory **path/to/gsl/bin**. 
-This executable can be executed by a command
+During the compilation processes of the QGD package standalone test executables are also built. 
+These executables can be launched from directory **/path/to/QGD/package/build/lib*/test_standalone** by command:
 
 $ ./decomposition_test
 
-and it starts a decomposition of a random general unitary matrix. 
-The source of this example is located in **path/to/qgdsource/test_standalone/** and shows a simple test case of the usage of the QGD package. 
-The Doxygen documentation of the QGD API can be also generated in order fully exploit the functionalities of the QGD package (for further details see section **Doxygen manual** at the end of this manual).
+and
+
+$ ./custom_gate_structure_test
+
+The standalone test programs starts the decomposition of general unitaries.
+Alternatively the test programs can be run by the command
+
+$ ctest
+
+from directory **/path/to/QGD/package/build**. 
+The sources of these example are located in **path/to/QGD/package/test_standalone/** and show simple test cases of the usage of the QGD package. 
 
 ## Python Interface
 
-The QGD package contains a simple python interface allowing the access of the functionalities of the QGD package from Python. 
-The usage of the QGD Python interface is demonstrated in the example file **example.py** located in the directory **path/to/qgd** and can be run similarly to any python scripts.
-The example file imports the **qgd_python** module containing the wrapper class for the decomposition of a given unitary matrix.
-The wrapper class loads the shared library libqgd.so and performs the data conversion between the python and C sides.
+The QGD package contains a Python interface allowing the access of the functionalities of the QGD package from Python. 
+The usage of the QGD Python interface is demonstrated in the example file **example.py** located in the directory **path/to/QGD/package**, or in the test files located in sub-directories of **path/to/QGD/package/qgd_python/*/test**. 
+The **example.py** script can be run similarly to any python scripts, while the test files can be invoked by the **pytest** unility.
+The example files import the necessary **qgd_python** modules containing the wrapper classes to interface with the C++ QGD library.
 
 It should be noted, however, that the python interface functions are implemented only for few functionalities of the whole QGD API. 
-Another desired interface functions can be implemented following the source of already implemented interface function in source file **python_interface.cpp** in the main directory of the QGD source code.
-
-
-### Development
-
-The QGD API enables the extension of the capabilities of the QGD packages into further projects. 
-The QGD header files needed for the compilation of the project are provided in the directory **path/to/qgd/include**. 
-The compiled object files should than be linked against the static or shared QGD libraries libqgd.a or libqgd.so, respectively,
-located in the directory **path/to/qgd/lib64**.
-In order to exploit the speedup comming from agile floating point optimization the **-ffast-math** option must be append when linking against the QGD API library is done.
-The full documentation of the QGD API can be accessed by a Doxygen manual which can be accessed and recreated by steps described in the following section
-
-## Doxygen manual
-
-The QGD API is supported by a Doxygen documentation. 
-To recreate the Doxygen documentation run the command 
-
-<div class="snippet">
-$ make doxygen && make doxygen-install
-</div>
-
-in the source directory **path/to/qgdsource** of the QGD package. 
-In the end of the process the Doxygen documentation would be accessible trough the file **path/to/qgd/Docs/html/index.html** or via the 
-web documentation of the project located at [this](https://itl88.elte.hu/rakytap/Download/QGD/html) site.
+Another desired interface functions can be implemented following the sources of already implemented interface functions in *.cpp source files located in directory .
+**path/to/QGD/package/qgd_python**
