@@ -7,10 +7,16 @@
 #include <stdio.h>
 
 #include "N_Qubit_Decomposition.h"
-#include "Sub_Matrix_Decomposition_Custom.h"
+#include "Sub_Matrix_Decomposition.h"
 
 
-
+/**
+@brief Type definition of the qgd_Operation_Block Python class of the qgd_Operation_Block module
+*/
+typedef struct qgd_Operation_Block {
+    PyObject_HEAD
+    Operation_block* gate;
+} qgd_Operation_Block;
 
 
 /**
@@ -21,7 +27,7 @@ typedef struct qgd_N_Qubit_Decomposition_Wrapper {
     /// pointer to the unitary to be decomposed to keep it alive
     PyObject *Umtx;
     /// An object to decompose the unitary
-    N_Qubit_Decomposition<Sub_Matrix_Decomposition_Custom>* decomp;
+    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* decomp;
 
 } qgd_N_Qubit_Decomposition_Wrapper;
 
@@ -35,10 +41,10 @@ typedef struct qgd_N_Qubit_Decomposition_Wrapper {
 @param initial_guess Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
-N_Qubit_Decomposition<Sub_Matrix_Decomposition_Custom>* 
+N_Qubit_Decomposition<Sub_Matrix_Decomposition>* 
 create_N_Qubit_Decomposition( Matrix& Umtx, int qbit_num, bool optimize_layer_num, guess_type initial_guess ) {
 
-    return new N_Qubit_Decomposition<Sub_Matrix_Decomposition_Custom>( Umtx, qbit_num, optimize_layer_num, initial_guess );
+    return new N_Qubit_Decomposition<Sub_Matrix_Decomposition>( Umtx, qbit_num, optimize_layer_num, initial_guess );
 }
 
 
@@ -47,7 +53,7 @@ create_N_Qubit_Decomposition( Matrix& Umtx, int qbit_num, bool optimize_layer_nu
 @param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 void
-release_N_Qubit_Decomposition( N_Qubit_Decomposition<Sub_Matrix_Decomposition_Custom>*  instance ) {
+release_N_Qubit_Decomposition( N_Qubit_Decomposition<Sub_Matrix_Decomposition>*  instance ) {
     delete instance;
     return;
 }
@@ -238,7 +244,7 @@ qgd_N_Qubit_Decomposition_Wrapper_get_operation_num( qgd_N_Qubit_Decomposition_W
 @return Returns with a python dictionary containing the metadata of the idx-th operation
 */
 static PyObject *
-get_operation( N_Qubit_Decomposition<Sub_Matrix_Decomposition_Custom>* decomp, int &idx ) {
+get_operation( N_Qubit_Decomposition<Sub_Matrix_Decomposition>* decomp, int &idx ) {
 
 
     // create dictionary conatining the gate data
@@ -539,6 +545,64 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition_Wrapper 
 
 
 /**
+@brief Wrapper function to set custom gate structure for the decomposition.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
+@param args A tuple of the input arguments: gate_structure_dict (PyDict)
+gate_structure_dict: ?????????????????????????????
+@return Returns with zero on success.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
+
+
+    // initiate variables for input arguments
+    PyObject* gate_structure_dict; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &gate_structure_dict )) return Py_BuildValue("i", -1);
+
+    // Check whether input is dictionary
+    if (!PyDict_Check(gate_structure_dict)) {
+        printf("Input must be dictionary!\n");
+        return Py_BuildValue("i", -1);
+    }
+
+
+    PyObject* key = NULL;
+    PyObject* value = NULL;
+    Py_ssize_t pos = 0;
+
+    std::map< int, Operation_block* > gate_structure;
+
+
+    while (PyDict_Next(gate_structure_dict, &pos, &key, &value)) {
+
+        // convert keylue from PyObject to int
+        assert(PyInt_Check(key) == 1);
+        int key_int = (int) PyLong_AsLong(key);
+
+        // convert keylue from PyObject to qgd_Operation_Block
+        qgd_Operation_Block* qgd_op_block = (qgd_Operation_Block*) value;
+
+
+std::cout << qgd_op_block->gate->get_operation_num() << " " <<  qgd_op_block->gate->get_parameter_num() << std::endl;
+
+        gate_structure.insert( std::pair<int, Operation_block*>( key_int, qgd_op_block->gate ));
+
+    }
+
+    self->decomp->set_custom_gate_structure( gate_structure );
+
+    return Py_BuildValue("i", 0);
+
+
+}
+
+
+
+
+
+/**
 @brief Structure containing metadata about the members of class qgd_N_Qubit_Decomposition_Wrapper.
 */
 static PyMemberDef qgd_N_Qubit_Decomposition_Wrapper_members[] = {
@@ -575,6 +639,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Wrapper_methods[] = {
     },
     {"set_Verbose", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Verbose, METH_VARARGS,
      "Call to set the verbosity of the qgd_N_Qubit_Decomposition class."
+    },
+    {"set_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure, METH_VARARGS,
+     "Call to set custom gate structure in the decomposition."
     },
     {NULL}  /* Sentinel */
 };

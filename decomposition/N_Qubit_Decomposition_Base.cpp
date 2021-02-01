@@ -83,6 +83,12 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 */
 N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
 
+    // release custom gate structure
+    for ( std::map<int,Operation_block*>::iterator it=gate_structure.begin(); it!= gate_structure.end(); it++ ) {
+        delete it->second;
+        it->second = NULL;
+    }
+
 }
 
 
@@ -242,6 +248,27 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
 
 
 
+/**
+@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
+@param gate_structure An <int, Operation_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
+*/
+void N_Qubit_Decomposition_Base::set_custom_gate_structure( std::map<int, Operation_block*> gate_structure_in ) {
+
+
+    for ( std::map<int,Operation_block*>::iterator it=gate_structure_in.begin(); it!= gate_structure_in.end(); it++ ) {
+        int key = it->first;
+
+        std::map<int,Operation_block*>::iterator key_it = gate_structure.find( key );
+
+        if ( key_it != gate_structure.end() ) {
+            gate_structure.erase( key_it );
+        }
+
+        gate_structure.insert( std::pair<int,Operation_block*>(key, it->second->clone()));
+
+    }
+
+}
 
 
 /**

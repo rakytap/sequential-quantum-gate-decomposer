@@ -1111,7 +1111,7 @@ int Decomposition_Base::get_operation( unsigned int n, operation_type &type, int
 Operation* Decomposition_Base::get_operation( int n ) {
 
     // get the n-th operation if exists
-    if ( n >= operations.size() ) {
+    if ( (unsigned int) n >= operations.size() ) {
         return NULL;
     }
 

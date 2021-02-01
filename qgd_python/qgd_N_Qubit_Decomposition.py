@@ -20,7 +20,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 """
 
-## \file N_Qubit_Decomposition.py
+## \file qgd_N_Qubit_Decomposition.py
 ##    \brief A QGD Python interface class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
 
 

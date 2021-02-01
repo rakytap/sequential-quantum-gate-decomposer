@@ -22,6 +22,10 @@ set(CXX_FLAGS_RELEASE)
 set(EXTRA_LIBS)
 set(EXTRA_INCLUDES)
 
+#enable test target
+enable_testing()
+
+
 # If MKL is enabled, ObenBLAS should be disabled
 if(USE_MKL)
   set(USE_OPENBLAS OFF)

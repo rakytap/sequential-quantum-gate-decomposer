@@ -43,6 +43,9 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( ) {
     // logical value indicating whether the quasi-unitarization of the submatrices was done or not
     subdisentaglement_done = false;
 
+    // custom gate structure used in the decomposition
+    unit_gate_structure = NULL;
+
 
 
 }
@@ -80,6 +83,9 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num
         }
     }
 
+    // custom gate structure used in the decomposition
+    unit_gate_structure = NULL;
+
 
 
 
@@ -92,6 +98,9 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num
 @brief Destructor of the class
 */
 Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
+
+    delete unit_gate_structure;
+    unit_gate_structure = NULL;
 
 }
 
@@ -201,11 +210,72 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
 }
 
-
 /**
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
 void Sub_Matrix_Decomposition::add_operation_layers() {
+
+    if ( unit_gate_structure == NULL ) {
+        // add default gate structure if custom is not given
+        add_default_operation_layers();
+        return;
+    }
+
+    //////////////////////////////////////
+    // add custom gate structure
+
+    // the  number of succeeding identical layers in the subdecomposition
+    int identical_blocks_loc;
+    try {
+        identical_blocks_loc = identical_blocks[qbit_num];
+        if (identical_blocks_loc==0) {
+            identical_blocks_loc = 1;
+        }
+    }
+    catch (...) {
+        identical_blocks_loc=1;
+    }
+
+    // get the list of sub-blocks in the custom gate structure
+    std::vector<Operation*> operations = unit_gate_structure->get_operations();
+
+
+
+    for (std::vector<Operation*>::iterator operations_it = operations.begin(); operations_it != operations.end(); operations_it++ ) {
+
+        // The current operation
+        Operation* operation = *operations_it;
+
+        for (int idx=0;  idx<identical_blocks_loc; idx++) {
+
+            if (operation->get_type() == CNOT_OPERATION ) {
+                CNOT* cnot_operation = static_cast<CNOT*>( operation );
+                add_operation_to_end( (Operation*)cnot_operation->clone() );
+            }
+            else if (operation->get_type() == GENERAL_OPERATION ) {
+                add_operation_to_end( operation->clone() );
+            }
+            else if (operation->get_type() == U3_OPERATION ) {
+                U3* u3_operation = static_cast<U3*>( operation );
+                add_operation_to_end( (Operation*)u3_operation->clone() );
+            }
+            else if (operation->get_type() == BLOCK_OPERATION ) {
+                Operation_block* block_operation = static_cast<Operation_block*>( operation );
+                add_operation_to_end( (Operation*)block_operation->clone() );
+            }
+
+        }
+    }
+
+
+}
+
+
+
+/**
+@brief Call to add default gate layers to the gate structure used in the subdecomposition.
+*/
+void Sub_Matrix_Decomposition::add_default_operation_layers() {
 
     int control_qbit_loc = qbit_num-1;
 
@@ -220,6 +290,7 @@ void Sub_Matrix_Decomposition::add_operation_layers() {
     catch (...) {
         identical_blocks_loc=1;
     }
+
 
     for (int target_qbit_loc = 0; target_qbit_loc<control_qbit_loc; target_qbit_loc++ ) {
 
@@ -246,6 +317,20 @@ void Sub_Matrix_Decomposition::add_operation_layers() {
 
 
 }
+
+
+
+/**
+@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
+@param block_in A pointer to the block of operations to be used in the decomposition
+*/
+void Sub_Matrix_Decomposition::set_custom_operation_layers( Operation_block* block_in) {
+
+    unit_gate_structure = block_in->clone();
+
+}
+
+
 
 
 

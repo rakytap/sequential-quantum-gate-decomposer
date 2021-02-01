@@ -110,6 +110,12 @@ void start_decomposition(bool finalize_decomp=true, bool prepare_export=true) {
     // setting the iteration loops in each step of the optimization process
     cSub_decomposition->set_iteration_loops( iteration_loops );
 
+    // set custom gate structure if given
+    std::map<int,Operation_block*>::iterator key_it = gate_structure.find( qbit_num );
+    if ( key_it != gate_structure.end() ) {
+        cSub_decomposition->set_custom_operation_layers( gate_structure[qbit_num] );
+    }
+
     // The maximal error of the optimization problem
     //cSub_decomposition->optimization_tolerance = self.optimization_tolerance
 
@@ -275,6 +281,9 @@ void  decompose_submatrix() {
 
         // setting operation layer
         cdecomposition->set_optimization_blocks( optimization_block );
+
+        // set custom gate structure if given
+        cdecomposition->set_custom_gate_structure( gate_structure );
 
         // starting the decomposition of the random unitary
         cdecomposition->start_decomposition(false, false);
@@ -685,6 +694,9 @@ int simplify_layer( Operation_block* layer, double* parameters, unsigned int par
 
 
 }
+
+
+
 
 
 

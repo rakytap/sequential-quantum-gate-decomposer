@@ -48,8 +48,11 @@ protected:
     /// logical value. Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
     bool optimize_layer_num;
 
-    /// A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
+    /// A map of <int n: int num> indicating that how many identical successive blocks should be used in the disentanglement of the nth qubit from the others
     std::map<int,int> identical_blocks;
+
+    /// A map of <int n: Operation_block* block> describing custom gate structure to be used in the decomposition. Operation block corresponding to n is used in the subdecomposition of the n-th qubit. The Operation block is repeated periodically.
+    std::map<int, Operation_block*> gate_structure;
 
 
 public:
@@ -145,6 +148,13 @@ void simplify_layers();
 @return Returns with 0 if the simplification wa ssuccessful.
 */
 int simplify_layer( Operation_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Operation_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num);
+
+
+/**
+@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
+@param gate_structure An <int, Operation_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
+*/
+void set_custom_gate_structure( std::map<int, Operation_block*> gate_structure_in );
 
 /**
 @brief Set the number of identical successive blocks during the subdecomposition of the n-th qubit.

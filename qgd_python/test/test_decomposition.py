@@ -3,8 +3,8 @@ from scipy.stats import unitary_group
 import numpy as np
 
 
-class Test_Example:
-    """This is an example class to demonstrate how to interface with a C++ part of the piquasso project."""
+class Test_Decomposition:
+    """This is a test class of the python iterface to the decompsition classes of the QGD package"""
 
     def test_N_Qubit_Decomposition_creation(self):
         r"""
@@ -28,7 +28,7 @@ class Test_Example:
         decomp = qgd_N_Qubit_Decomposition( Umtx, False, "RANDOM" )
 
 
-    def test_N_Qubit_Decomposition_3qubit(self):
+    def ptest_N_Qubit_Decomposition_3qubit(self):
         r"""
         This method is called by pytest. 
         Test to decompose a 3-qubit unitary
@@ -112,7 +112,7 @@ class Test_Example:
         print('The error of the decomposition is ' + str(decomposition_error))
 
 
-    def test_IBM_Chellenge(self):
+    def ptest_IBM_Chellenge(self):
         r"""
         This method is called by pytest. 
         Test to decompose a 4-qubit unitary of the IBM chellenge
@@ -181,4 +181,89 @@ class Test_Example:
         print('The error of the decomposition is ' + str(decomposition_error))
 
       
+    def ptest_N_Qubit_Decomposition_define_structure(self):
+        r"""
+        This method is called by pytest. 
+        Test to define custom gate structure in the decomposition
 
+        """
+
+        from qgd_python.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition
+        from qgd_python.gates.qgd_Operation_Block import qgd_Operation_Block
+
+        # the number of qubits spanning the unitary
+        qbit_num = 3
+
+        # determine the soze of the unitary to be decomposed
+        matrix_size = int(2**qbit_num)
+   
+        # creating a random unitary to be decomposed
+        Umtx = unitary_group.rvs(matrix_size)
+    
+        # creating an instance of the C++ class
+        decomp = qgd_N_Qubit_Decomposition( Umtx, False, "RANDOM" )
+
+        # create custom gate structure
+        gate_structure = { 4: self.create_custom_gate_structure(4), 3: self.create_custom_gate_structure(3)}        
+
+
+        # adding custom gate structure to the decomposition
+        decomp.set_Gate_Structure( gate_structure )
+
+
+        # starting the decomposition
+        decomp.Start_Decomposition(True, True)
+
+        # list the decomposing operations
+        decomp.List_Operations()
+
+
+
+
+    def create_custom_gate_structure(self, qbit_num):
+        r"""
+        This method is called to create custom gate structure for the decomposition
+
+        """
+
+        from qgd_python.gates.qgd_Operation_Block import qgd_Operation_Block
+
+        # creating an instance of the wrapper class qgd_Operation_Block
+        Operation_Block_ret = qgd_Operation_Block( qbit_num )
+
+        control_qbit = qbit_num - 1 
+
+        for target_qbit in range(0, control_qbit ):
+
+            # creating an instance of the wrapper class qgd_Operation_Block
+            Operation_Block_inner = qgd_Operation_Block( qbit_num )
+
+            if target_qbit == 1:
+
+                # add CNOT gate to the block
+                Operation_Block_inner.add_CNOT_To_End( 0, 1)
+
+                # add U3 fate to the block
+                Theta = True
+                Phi = False
+                Lambda = True      
+                Operation_Block_inner.add_U3_To_End( 0, Theta, Phi, Lambda )                 
+                Operation_Block_inner.add_U3_To_End( 1, Theta, Phi, Lambda ) 
+
+            else:
+
+                # add CNOT gate to the block
+                Operation_Block_inner.add_CNOT_To_End( control_qbit, target_qbit )
+
+                # add U3 fate to the block
+                Theta = True
+                Phi = False
+                Lambda = True      
+                Operation_Block_inner.add_U3_To_End( target_qbit, Theta, Phi, Lambda )    
+                Operation_Block_inner.add_U3_To_End( control_qbit, Theta, Phi, Lambda )  
+
+
+            Operation_Block_ret.add_Operation_Block_To_End( Operation_Block_inner )
+
+        return Operation_Block_ret
+    

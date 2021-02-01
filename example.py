@@ -24,7 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 ## [import]
-from qgd_python.N_Qubit_Decomposition import N_Qubit_Decomposition 
+from qgd_python.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition 
 ## [import]
 
 print('******************** Decomposing general 3-qubit matrix *******************************')
@@ -44,10 +44,10 @@ matrix_size = int(2**qbit_num)
 Umtx = unitary_group.rvs(matrix_size)
 
 # creating a class to decompose the 
-cDecompose = N_Qubit_Decomposition( Umtx.conj().T )
+cDecompose = qgd_N_Qubit_Decomposition( Umtx.conj().T, False, "ZEROS"  )
 
 # starting the decomposition
-cDecompose.start_decomposition()
+cDecompose.Start_Decomposition(True, True)
 
 # list the decomposing operations
 cDecompose.list_operations()

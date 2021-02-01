@@ -1,10 +1,10 @@
 
 
 
-class Test_Example:
-    """This is an example class to demonstrate how to interface with a C++ part of the piquasso project."""
+class Test_operations:
+    """This is a test class of the python iterface to the gates of the QGD package"""
 
-    def test_CNOT_creation(self):
+    def etest_CNOT_creation(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of CNOT gate.
@@ -108,5 +108,64 @@ class Test_Example:
 
         # add CNOT gate to the block
         Operation_Block.add_CNOT_To_End( target_qbit, control_qbit )
+
+
+
+
+
+    def test_Operation_Block_add_block(self):
+        r"""
+        This method is called by pytest. 
+        Test to add operations to a block of gates
+
+        """
+
+        from qgd_python.gates.qgd_Operation_Block import qgd_Operation_Block        
+
+        # number of qubits
+        qbit_num = 3
+     
+
+        # creating an instance of the C++ class
+        Operation_Block_inner = qgd_Operation_Block( qbit_num )
+
+        # target qbit
+        target_qbit = 0
+
+        # set the free parameters
+        Theta = True
+        Phi = True
+        Lambda = True        
+
+
+        # add U3 gate to the block
+        Operation_Block_inner.add_U3_To_End( target_qbit, Theta, Phi, Lambda )
+
+
+        # target qbit
+        target_qbit = 0
+
+        # control_qbit
+        control_qbit = 1  
+
+        # add CNOT gate to the block
+        Operation_Block_inner.add_CNOT_To_End( control_qbit, target_qbit )
+
+
+        # creating an instance of the C++ class
+        Operation_Block_outher = qgd_Operation_Block( qbit_num )   
+
+        # add inner operation block to the outher operation block
+        Operation_Block_outher.add_Operation_Block_To_End( Operation_Block_inner )
+
+
+
+
+
+
+
+
+
+
       
 

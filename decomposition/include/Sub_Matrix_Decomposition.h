@@ -49,6 +49,9 @@ public:
     /// A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
     std::map<int,int> identical_blocks;
 
+    /// Custom gate structure describing the gate structure used in the decomposition. The gate structure is repeated periodically in the decomposing gate structure
+    Operation_block* unit_gate_structure;
+
 
 public:
 
@@ -83,6 +86,20 @@ void disentangle_submatrices();
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
 virtual void add_operation_layers();
+
+
+/**
+@brief Call to add default gate layers to the gate structure used in the subdecomposition.
+*/
+void add_default_operation_layers();
+
+
+/**
+@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
+@param block_in A pointer to the block of operations to be used in the decomposition
+*/
+void set_custom_operation_layers( Operation_block* block_in);
+
 
 
 /**
