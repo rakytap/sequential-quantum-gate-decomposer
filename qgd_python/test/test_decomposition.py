@@ -25,10 +25,10 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
     
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx, False, "RANDOM" )
+        decomp = qgd_N_Qubit_Decomposition( Umtx, optimize_layer_num=False, initial_guess="randomc" )
 
 
-    def ptest_N_Qubit_Decomposition_3qubit(self):
+    def test_N_Qubit_Decomposition_3qubit(self):
         r"""
         This method is called by pytest. 
         Test to decompose a 3-qubit unitary
@@ -47,7 +47,7 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
 
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx, False, "ZEROS" )
+        decomp = qgd_N_Qubit_Decomposition( Umtx, optimize_layer_num=False, initial_guess="zeros" )
 
         # start the decomposition
         decomp.Start_Decomposition(True, True)
@@ -73,7 +73,7 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
 
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, False, "ZEROS" )
+        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="zeros" )
 
         # start the decomposition
         decomp.Start_Decomposition(True, True)
@@ -112,7 +112,7 @@ class Test_Decomposition:
         print('The error of the decomposition is ' + str(decomposition_error))
 
 
-    def ptest_IBM_Chellenge(self):
+    def test_IBM_Chellenge(self):
         r"""
         This method is called by pytest. 
         Test to decompose a 4-qubit unitary of the IBM chellenge
@@ -201,7 +201,7 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
     
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx, False, "RANDOM" )
+        decomp = qgd_N_Qubit_Decomposition( Umtx, optimize_layer_num=False, initial_guess="random" )
 
         # create custom gate structure
         gate_structure = { 4: self.create_custom_gate_structure(4), 3: self.create_custom_gate_structure(3)}        

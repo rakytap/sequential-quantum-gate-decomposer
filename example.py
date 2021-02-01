@@ -50,7 +50,7 @@ cDecompose = qgd_N_Qubit_Decomposition( Umtx.conj().T, False, "ZEROS"  )
 cDecompose.Start_Decomposition(True, True)
 
 # list the decomposing operations
-cDecompose.list_operations()
+cDecompose.List_Operations()
 
 print(' ')
 print(' ')
@@ -75,29 +75,29 @@ Umtx = data['Umtx']
 
 ## [create decomposition class]
 ## creating a class to decompose the unitary
-cDecompose = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, initial_guess="zeros" )
+cDecompose = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, initial_guess="zeros" )
 ## [create decomposition class]
 
 ## [set parameters]
 # set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
-cDecompose.set_identical_blocks( {4: 2, 3: 1} )
+cDecompose.set_Identical_Blocks( {4: 2, 3: 1} )
 
 # set the maximal number of layers in the decomposition
-cDecompose.set_max_layer_num( {4: 9, 3:4})
+cDecompose.set_Max_Layer_Num( {4: 9, 3:4})
 
 # set the number of iteration loops in the decomposition
-cDecompose.set_iteration_loops({4: 3, 3: 3, 2: 3})
+cDecompose.set_Iteration_Loops({4: 3, 3: 3, 2: 3})
 
 # setting the verbosity of the decomposition
-cDecompose.set_verbose( True )
+cDecompose.set_Verbose( True )
 ## [set parameters]
 
 ## [start decomposition]
 # starting the decomposition
-cDecompose.start_decomposition()
+cDecompose.Start_Decomposition(True, True)
 
 # list the decomposing operations
-cDecompose.list_operations()
+cDecompose.List_Operations()
 ## [start decomposition]
 
 
@@ -106,7 +106,7 @@ print(' ')
 print('Constructing quantum circuit:')
 print(' ')
 ## Qiskit quantum circuit
-quantum_circuit = cDecompose.get_quantum_circuit()
+quantum_circuit = cDecompose.get_Quantum_Circuit()
 
 print(quantum_circuit)
 
