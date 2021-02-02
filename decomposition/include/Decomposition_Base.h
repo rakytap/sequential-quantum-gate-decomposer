@@ -57,7 +57,7 @@ public:
     /// A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process by default for the subdecomposing of the nth qubits.
     static std::map<int,int> max_layer_num_def;
 
-    /// The maximal allowed error of the optimization problem
+    /// The maximal allowed error of the optimization problem (The error of the decomposition would scale with the square root of this value)
     double optimization_tolerance;
 
 protected:
@@ -353,6 +353,13 @@ Operation* get_operation( int n );
 @param verbose_in Logical variable. Set true for verbose mode, or to false to suppress output messages.
 */
 void set_verbose( bool verbose_in );
+
+
+/**
+@brief Call to set the tolerance of the optimization processes.
+@param tolerance_in The value of the tolerance. The error of the decomposition would scale with the square root of this value.
+*/
+void set_optimization_tolerance( double tolerance_in );
 
 
 /**
