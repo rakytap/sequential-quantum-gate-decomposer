@@ -56,7 +56,7 @@ $ make install
 ### Download the Quantum Gate Decomposer package
 
 The developer version of the Quantum Gate Decomposer package can be downloaded from github repository [https://github.com/rakytap/quantum-gate-decomposer/tree/master](https://github.com/rakytap/quantum-gate-decomposer/tree/master).
-After the downloaded package is downloaded into the directory **path/to/QGD/package** (which would be the path to the source code of the QGD package), one can proceed to the compilation steps described in the next section.
+After the downloaded package is extracted into the directory **path/to/QGD/package** (which would be the path to the source code of the QGD package), one can proceed to the compilation steps described in the next section.
 
 ### How to deploy the Quantum Gate Decomposer package
 
