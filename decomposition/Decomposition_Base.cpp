@@ -840,10 +840,11 @@ void Decomposition_Base::reorder_qubits( std::vector<int>  qbit_list) {
 
         // determine the permutation row index
         for (int jdx=0; jdx<qbit_num; jdx++) {
-            row_idx = row_idx + bin_rep[qbit_num-1-jdx]*Power_of_2(qbit_list[jdx]);
+            row_idx = row_idx + bin_rep[qbit_num-1-qbit_list[jdx]]*Power_of_2(qbit_num-1-jdx);
         }
         perm_indices.push_back(row_idx);
     }
+
 /*
     for (auto it=qbit_list.begin(); it!=qbit_list.end(); it++) {
         std::cout << *it;
@@ -851,7 +852,7 @@ void Decomposition_Base::reorder_qubits( std::vector<int>  qbit_list) {
     std::cout << std::endl;
 
     for (auto it=perm_indices.begin(); it!=perm_indices.end(); it++) {
-        std::cout << *it+1 << std::endl;
+        std::cout << *it << std::endl;
     }
 */
 
@@ -859,8 +860,8 @@ void Decomposition_Base::reorder_qubits( std::vector<int>  qbit_list) {
     Matrix reordered_mtx = Matrix(matrix_size, matrix_size);
     for (int row_idx = 0; row_idx<matrix_size; row_idx++) {
         for (int col_idx = 0; col_idx<matrix_size; col_idx++) {
-            int index_umtx = perm_indices[row_idx]*Umtx.rows + perm_indices[col_idx];
-            int index_reordered = row_idx*Umtx.rows + col_idx;
+            int index_reordered = perm_indices[row_idx]*Umtx.rows + perm_indices[col_idx];
+            int index_umtx = row_idx*Umtx.rows + col_idx;
             reordered_mtx[index_reordered] = Umtx[index_umtx];
         }
     }
@@ -1132,6 +1133,17 @@ void Decomposition_Base::set_verbose( bool verbose_in ) {
 
 
 /**
+@brief Call to set the tolerance of the optimization processes.
+@param tolerance_in The value of the tolerance. The error of the decomposition would scale with the square root of this value.
+*/
+void Decomposition_Base::set_optimization_tolerance( double tolerance_in ) {
+
+    optimization_tolerance = tolerance_in;
+    return;
+}
+
+
+/**
 @brief Call to get the error of the decomposition
 @return Returns with the error of the decomposition
 */
@@ -1140,4 +1152,7 @@ double Decomposition_Base::get_decomposition_error( ) {
     return decomposition_error;
 
 }
+
+
+
 
