@@ -25,7 +25,7 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
     
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx, optimize_layer_num=False, initial_guess="randomc" )
+        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="randomc" )
 
 
     def test_N_Qubit_Decomposition_3qubit(self):
@@ -50,7 +50,7 @@ class Test_Decomposition:
         decomp = qgd_N_Qubit_Decomposition( Umtx, optimize_layer_num=False, initial_guess="zeros" )
 
         # start the decomposition
-        decomp.Start_Decomposition(True, True)
+        decomp.Start_Decomposition(finalize_decomp=True, prepare_export=True)
 
 
 
@@ -76,7 +76,7 @@ class Test_Decomposition:
         decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="zeros" )
 
         # start the decomposition
-        decomp.Start_Decomposition(True, True)
+        decomp.Start_Decomposition(finalize_decomp=True, prepare_export=True)
 
         # get the decomposing operations
         quantum_circuit = decomp.get_Quantum_Circuit()
@@ -111,6 +111,7 @@ class Test_Decomposition:
 
         print('The error of the decomposition is ' + str(decomposition_error))
 
+        assert( decomposition_error < 1e-3 )
 
     def test_IBM_Chellenge(self):
         r"""
@@ -145,7 +146,7 @@ class Test_Decomposition:
         cDecompose.set_Verbose( True )
 
         # starting the decomposition
-        cDecompose.Start_Decomposition(True, True)
+        cDecompose.Start_Decomposition(finalize_decomp=True, prepare_export=True)
 
         # list the decomposing operations
         cDecompose.List_Operations()
@@ -180,8 +181,9 @@ class Test_Decomposition:
 
         print('The error of the decomposition is ' + str(decomposition_error))
 
+
       
-    def ptest_N_Qubit_Decomposition_define_structure(self):
+    def test_N_Qubit_Decomposition_define_structure(self):
         r"""
         This method is called by pytest. 
         Test to define custom gate structure in the decomposition
@@ -201,7 +203,49 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
     
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx, optimize_layer_num=False, initial_guess="random" )
+        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="random" )
+
+        # create custom gate structure
+        gate_structure = { 4: self.create_custom_gate_structure(4), 3: self.create_custom_gate_structure(3) }        
+
+
+        # adding custom gate structure to the decomposition
+        decomp.set_Gate_Structure( gate_structure )
+
+
+        # starting the decomposition
+        decomp.Start_Decomposition(finalize_decomp=True, prepare_export=True)
+
+        # list the decomposing operations
+        decomp.List_Operations()
+
+      
+
+
+    def test_N_Qubit_Decomposition_reorder_qbits(self):
+        r"""
+        This method is called by pytest. 
+        Test to define custom gate structure in the decomposition
+
+        """
+
+        from qgd_python.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition
+        from qgd_python.gates.qgd_Operation_Block import qgd_Operation_Block
+
+        # the number of qubits spanning the unitary
+        qbit_num = 4
+
+        # determine the soze of the unitary to be decomposed
+        matrix_size = int(2**qbit_num)
+   
+        # creating a random unitary to be decomposed
+        Umtx = unitary_group.rvs(matrix_size)
+    
+        # creating an instance of the C++ class
+        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="random" )    
+
+        # list of reordered qubits (original: (2,1,0) )
+        reordered_qbits = (3,1,0,2)
 
         # create custom gate structure
         gate_structure = { 4: self.create_custom_gate_structure(4), 3: self.create_custom_gate_structure(3)}        
@@ -211,11 +255,50 @@ class Test_Decomposition:
         decomp.set_Gate_Structure( gate_structure )
 
 
+        # adding custom gate structure to the decomposition
+        decomp.Reorder_Qubits( reordered_qbits )
+
         # starting the decomposition
-        decomp.Start_Decomposition(True, True)
+        decomp.Start_Decomposition(finalize_decomp=True, prepare_export=True)
+
+        # list of reordered qubits to revert the initial order
+        revert_qbits = (3,0,2,1)                
+
+        # adding custom gate structure to the decomposition
+        decomp.Reorder_Qubits( revert_qbits )
 
         # list the decomposing operations
         decomp.List_Operations()
+
+        # get the decomposing operations
+        quantum_circuit = decomp.get_Quantum_Circuit()
+
+
+        from qiskit import execute
+        from qiskit import Aer
+        import numpy.linalg as LA
+    
+        # test the decomposition of the matrix
+        # Qiskit backend for simulator
+        backend = Aer.get_backend('unitary_simulator')
+     
+        # job execution and getting the result as an object
+        job = execute(quantum_circuit, backend)
+        # the result of the Qiskit job
+        result = job.result()
+    
+        # the unitary matrix from the result object
+        decomposed_matrix = result.get_unitary(quantum_circuit)
+    
+        # the Umtx*Umtx' matrix
+        product_matrix = np.dot(Umtx, decomposed_matrix.conj().T)
+
+        # the error of the decomposition
+        decomposition_error =  LA.norm(product_matrix - np.identity(int(2**qbit_num))*product_matrix[0,0], 2)
+
+        print('The error of the decomposition is ' + str(decomposition_error))
+
+        assert( decomposition_error < 1e-3 )
 
 
 

@@ -46,6 +46,9 @@ Umtx = unitary_group.rvs(matrix_size)
 # creating a class to decompose the 
 cDecompose = qgd_N_Qubit_Decomposition( Umtx.conj().T, False, "ZEROS"  )
 
+# setting the tolerance of the optimization process. The final error of the decomposition would scale with the square root of this value.
+cDecompose.set_Optimization_Tolerance( 1e-12 )
+
 # starting the decomposition
 cDecompose.Start_Decomposition(True, True)
 
@@ -90,11 +93,12 @@ cDecompose.set_Iteration_Loops({4: 3, 3: 3, 2: 3})
 
 # setting the verbosity of the decomposition
 cDecompose.set_Verbose( True )
+
 ## [set parameters]
 
 ## [start decomposition]
 # starting the decomposition
-cDecompose.Start_Decomposition(True, True)
+cDecompose.Start_Decomposition(finalize_decomp=True, prepare_export=True)
 
 # list the decomposing operations
 cDecompose.List_Operations()
@@ -135,4 +139,8 @@ decomposition_error =  LA.norm(product_matrix - np.identity(16)*product_matrix[0
 print('The error of the decomposition is ' + str(decomposition_error))
 
 ## [qiskit]
+
+
+
+
 
