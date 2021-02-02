@@ -117,7 +117,7 @@ void start_decomposition(bool finalize_decomp=true, bool prepare_export=true) {
     }
 
     // The maximal error of the optimization problem
-    //cSub_decomposition->optimization_tolerance = self.optimization_tolerance
+    cSub_decomposition->set_optimization_tolerance( optimization_tolerance );
 
     // setting the maximal number of iterations in the disentangling process
     cSub_decomposition->optimization_block = optimization_block;
@@ -284,6 +284,9 @@ void  decompose_submatrix() {
 
         // set custom gate structure if given
         cdecomposition->set_custom_gate_structure( gate_structure );
+
+        // set the toleration of the optimization process
+        cdecomposition->set_optimization_tolerance( optimization_tolerance );
 
         // starting the decomposition of the random unitary
         cdecomposition->start_decomposition(false, false);

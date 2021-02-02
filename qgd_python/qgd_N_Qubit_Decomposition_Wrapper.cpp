@@ -480,7 +480,9 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Identical_Blocks(qgd_N_Qubit_Decomposition
 
 /**
 @brief Set the number of iteration loops during the subdecomposition of the qbit-th qubit.
-@param identical_blocks A dictionary {'n': iteration_loops} labeling the number of successive identical layers used in the subdecomposition at the disentangling of the n-th qubit.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
+@param args A tuple of the input arguments: identical_blocks (PyDict)
+identical_blocks: A dictionary {'n': iteration_loops} labeling the number of successive identical layers used in the subdecomposition at the disentangling of the n-th qubit.
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_set_Iteration_Loops(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
@@ -524,7 +526,9 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Iteration_Loops(qgd_N_Qubit_Decomposition_
 
 /**
 @brief Set the verbosity of the N_Qubit_Decomposition class
-@param verbose Set False to suppress the output messages of the decompostion, or True (deafult) otherwise.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
+@param args A tuple of the input arguments: verbose (bool)
+verbose: Set False to suppress the output messages of the decompostion, or True (deafult) otherwise.
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
@@ -538,6 +542,30 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition_Wrapper 
 
     // set maximal layer nums on the C++ side
     self->decomp->set_verbose( verbose );
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+/**
+@brief Wrapper method to set the optimization tolerance of the optimization process during the decomposition. The final error of the decomposition would scale with the square root of this value.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
+@param args A tuple of the input arguments: tolerance (double)
+tolerance: Set False to suppress the output messages of the decompostion, or True (deafult) otherwise.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_set_Optimization_Tolerance(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    double tolerance; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|d", &tolerance )) return Py_BuildValue("i", -1);
+
+
+    // set maximal layer nums on the C++ side
+    self->decomp->set_optimization_tolerance( tolerance );
 
     return Py_BuildValue("i", 0);
 }
@@ -584,9 +612,6 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decomposition_
         // convert keylue from PyObject to qgd_Operation_Block
         qgd_Operation_Block* qgd_op_block = (qgd_Operation_Block*) value;
 
-
-std::cout << qgd_op_block->gate->get_operation_num() << " " <<  qgd_op_block->gate->get_parameter_num() << std::endl;
-
         gate_structure.insert( std::pair<int, Operation_block*>( key_int, qgd_op_block->gate ));
 
     }
@@ -599,6 +624,59 @@ std::cout << qgd_op_block->gate->get_operation_num() << " " <<  qgd_op_block->ga
 }
 
 
+/**
+@brief Wrapper method to reorder the qubits in the decomposition class.
+@param 
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_Reorder_Qubits(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    PyObject* qbit_list; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &qbit_list )) return Py_BuildValue("i", -1);
+
+    bool is_tuple = PyTuple_Check(qbit_list);
+    bool is_list = PyList_Check(qbit_list);
+
+    // Check whether input is dictionary
+    if (!is_list && !is_tuple) {
+        printf("Input must be tuple or list!\n");
+        return Py_BuildValue("i", -1);
+    }
+
+    // get the number of qbubits
+    Py_ssize_t element_num;
+
+    if (is_tuple) {
+        element_num = PyTuple_GET_SIZE(qbit_list);
+    }
+    else {
+        element_num = PyList_GET_SIZE(qbit_list);
+    }
+
+
+    // create C++ variant of the tuple/list
+    std::vector<int> qbit_list_C( (int) element_num);
+    for ( Py_ssize_t idx=0; idx<element_num; idx++ ) {
+        if (is_tuple) {        
+            qbit_list_C[(int) idx] = (int) PyLong_AsLong( PyTuple_GetItem(qbit_list, idx ) );
+        }
+        else {
+            qbit_list_C[(int) idx] = (int) PyLong_AsLong( PyList_GetItem(qbit_list, idx ) );
+        }
+
+    }
+
+
+    // reorder the qubits in the decomposition class
+    self->decomp->reorder_qubits( qbit_list_C );
+
+    
+
+    return Py_BuildValue("i", 0);
+}
 
 
 
@@ -642,6 +720,12 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Wrapper_methods[] = {
     },
     {"set_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure, METH_VARARGS,
      "Call to set custom gate structure in the decomposition."
+    },
+    {"Reorder_Qubits", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_Reorder_Qubits, METH_VARARGS,
+     "Wrapper method to reorder the qubits in the decomposition class."
+    },
+    {"set_Optimization_Tolerance", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Optimization_Tolerance, METH_VARARGS,
+     "Wrapper method to set the optimization tolerance of the optimization process during the decomposition. The final error of the decomposition would scale with the square root of this value."
     },
     {NULL}  /* Sentinel */
 };
