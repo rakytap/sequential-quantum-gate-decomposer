@@ -53,11 +53,14 @@ BLAS_TYPE = None
 for item in blas_info.get("libraries"," "):
     if item.startswith('mkl'):
         BLAS_TYPE = 'MKL'
+        BLAS_TYPE_NUM = 1
     elif item.startswith('openblas'):
         BLAS_TYPE = 'OPENBLAS'
+        BLAS_TYPE_NUM = 2
 
     libraries = libraries + [item]
-    print(item)
+
+print('Using ' + BLAS_TYPE + ' CBLAS')
 
 # adding TBB include flags to the compiler if necessary
 extra_compiler_flags = []
@@ -134,7 +137,7 @@ class InstallCMakeLibs(install_lib):
                 os.listdir(bin_dir) if 
                 os.path.isfile(os.path.join(bin_dir, _lib)) and 
                 os.path.splitext(_lib)[1] in [".dll", ".so"]
-                and not (_lib.startswith("python") or _lib.startswith('libpiquasso'))]
+                and not (_lib.startswith("python") or _lib.startswith('libqgd'))]
 
         for lib in libs:
 
@@ -320,7 +323,7 @@ class BuildCythonExt(build_ext):
 
 
 # compiler options for cython extensions
-extra_compiler_flags = extra_compiler_flags + ['-std=c++11', '-I' + os.path.join('common', 'include'), '-I' + os.path.join('operations', 'include'), '-I' + os.path.join('decomposition', 'include'), '-DCYTHON']
+extra_compiler_flags = extra_compiler_flags + ['-std=c++11', '-DCBLAS=' + str(BLAS_TYPE_NUM), '-I' + os.path.join('common', 'include'), '-I' + os.path.join('operations', 'include'), '-I' + os.path.join('decomposition', 'include'), '-DCYTHON']
 extra_link_args = extra_link_args + ['-L' + CQGD_LIB_DIR]
 runtime_library_dirs = [CQGD_LIB_DIR]
 libraries= libraries + [CQGD_LIBRARY_NAME]
