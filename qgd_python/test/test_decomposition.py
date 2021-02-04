@@ -267,10 +267,8 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
     
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="random" )    
+        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="random" )
 
-        # list of reordered qubits (original: (2,1,0) )
-        reordered_qbits = (3,1,0,2)
 
         # create custom gate structure
         gate_structure = { 4: self.create_custom_gate_structure(4), 3: self.create_custom_gate_structure(3)}        
@@ -280,14 +278,20 @@ class Test_Decomposition:
         decomp.set_Gate_Structure( gate_structure )
 
 
+        # list of reordered qubits (original: (3,2,1,0) )
+        reordered_qbits = (0,1,3,2)
+
         # adding custom gate structure to the decomposition
         decomp.Reorder_Qubits( reordered_qbits )
+
+
+
 
         # starting the decomposition
         decomp.Start_Decomposition(finalize_decomp=True, prepare_export=True)
 
         # list of reordered qubits to revert the initial order
-        revert_qbits = (3,0,2,1)                
+        revert_qbits = (1,0,2,3)             
 
         # adding custom gate structure to the decomposition
         decomp.Reorder_Qubits( revert_qbits )
