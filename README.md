@@ -1,4 +1,4 @@
-# Quantum Gate Decomposer
+# Sequential Quantum Gate Decomposer (SQUANDER)
 
 The project was supported by OTKA PD123927 grant and by the Ministry of Innovation and Technology and the National Research, Development and Innovation
 Office within the Quantum Information National Laboratory of Hungary.
