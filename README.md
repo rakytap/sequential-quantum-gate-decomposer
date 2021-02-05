@@ -1,15 +1,28 @@
 # Sequential Quantum Gate Decomposer (SQUANDER)
 
-The project was supported by OTKA PD123927 grant and by the Ministry of Innovation and Technology and the National Research, Development and Innovation
-Office within the Quantum Information National Laboratory of Hungary.
 
+The Sequential Quantum Gate Decomposer (SQUANDER) package provides a novel solution to decompose any n-qubit unitary into a sequence of one-qubit rotations and CNOT gates. SQUANDER utilizes a new gate synthesis technique that applies periodic layers of CNOTs and parametric one-qubit gates to an n-qubit unitary such that the resulting unitary is 1-qubit decoupled, i.e., is a tensor product of an (n-1)-qubit and a 1-qubit unitary. Continuing the decoupling procedure sequentially one arrives at the end to a full decomposition of the original unitary into 1- and 2-qubit gates. SQUANDER provides lower CNOT counts for generic n-qubit unitaries (upto n=7)  than the previously provided upper bounds.
 
-Sequential Quantum Gate Decomposer (SQUANDER) is a heuristic method to decompose an arbitrary NxN Unitary matrix into a sequence of U3 and CNOT gates. 
 The SQUANDER library is written in C/C++ providing a Python interface via [C++ extensions](https://docs.python.org/3/library/ctypes.html).
 The present package is supplied with Python building script and CMake tools to ease its deployment.
 The SQUANDER package can be built with both Intel and GNU compilers, and can be link against various CBLAS libraries installed on the system.
 (So far the CLBAS libraries of the GNU Scientific Library, OpenBLAS and the Intel MKL packages were tested.)
 In the following we briefly summarize the steps to build, install and use the SQUANDER package. 
+
+
+The project was supported by grant OTKA PD123927 and by the Ministry of Innovation and Technology and the National Research, Development and Innovation
+Office within the Quantum Information National Laboratory of Hungary.
+
+
+
+
+
+### Contact Us
+
+Have a question about the SQUANDER package? Don't hesitate to contact us at the following e-mails:
+
+* Zoltán Zimborás (researcher): zimboras.zoltan@wigner.hu
+* Peter Rakyta (developer): peter.rakyta@ttk.elte.hu
 
 
 
