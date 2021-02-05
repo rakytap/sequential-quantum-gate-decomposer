@@ -19,12 +19,12 @@
 
 # Introduction
 
-The @QGD (QGD) package provides an interface to Python which makes it possible to combine @QGD with well known quantum computing back ends, like [Qiskit](https://qiskit.org/).
+Sequential Quantum Gate Decomposer (@QGD) package provides an interface to Python which makes it possible to combine @QGD with well known quantum computing back ends, like [Qiskit](https://qiskit.org/).
 In fact, @QGD has already established an interface to export the decomposed quantum circuit in Qiskit format.
 The Python interface of @QGD is developed [C++ extensions](https://docs.python.org/3/library/ctypes.html), while all the massive calculations related to the decomposition run in C++, and only the input and final output parameters are casted between C++ and Python types.
 
-In the forthcoming sections we provide some tricks and best practices to use the QGD Python interface. 
-The QGD Python interface can be tested by running the test cases in file **test_decomposition.py** by pytest utility or by the **example.py** script right in the source directory of the @QGD package:
+In the forthcoming sections we provide some tricks and best practices to use the @QGD Python interface. 
+The @QGD Python interface can be tested by running the test cases in file **test_decomposition.py** by pytest utility or by the **example.py** script right in the source directory of the @QGD package:
 (To build the @QGD package follow the manual at @index.)
 
 <div class="snippet">
@@ -58,15 +58,15 @@ not equipped yet to do such simplifications.
 
 In this example we show how to use the python interface of the @QGD package for our own purposes. 
 To this end we demonstrate the steps in the example.py to solve the 4th problem of the IBM Challenge 2020. 
-The QGD Python interface is installed into the Python module **qgd_python** located in the installation path of the QGD package. 
-In order to start using the QGD Python interface, one need to import the N_Qubit_Decomposition class from this module:
+The @QGD Python interface is installed into the Python module **qgd_python** located in the installation path of the @QGD package. 
+In order to start using the @QGD Python interface, one need to import the N_Qubit_Decomposition class from this module:
 
 <div class="snippet">
 \snippet example.py import
 </div>
 
-In general, to import the QGD Python module, the Python interpreter should see it on the module search path (for further details see the [module tutorial](https://docs.python.org/3/tutorial/modules.html)).
-After loading the qgd_python module we need to load the 4-qubit matrix of the problem from a file shipped with the QGD package:
+In general, to import the @QGD Python module, the Python interpreter should see it on the module search path (for further details see the [module tutorial](https://docs.python.org/3/tutorial/modules.html)).
+After loading the qgd_python module we need to load the 4-qubit matrix of the problem from a file shipped with the @QGD package:
 
 <div class="snippet">
 \snippet example.py load Umtx
@@ -134,7 +134,7 @@ After setting the parameters of the decomposition we can start the optimization 
 </div>
 
 The second command in the above code snippet prints the list of decomposing operations on the standard output.
-Finally, we can export a Qiskit compatible quantum circuit via the QGD Python interface and calculate the final error of the decomposition by the following code snippet:
+Finally, we can export a Qiskit compatible quantum circuit via the @QGD Python interface and calculate the final error of the decomposition by the following code snippet:
 
 <div class="snippet">
 \snippet example.py qiskit

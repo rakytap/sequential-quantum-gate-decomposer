@@ -3,7 +3,7 @@
 <area shape="rect" id="node22" href="$_n___qubit___decomposition_8h.html" title="Header file for a base class to determine the decomposition of an N&#45;qubit unitary into a sequence of ..." alt="" coords="641,80,815,107"/>
 <area shape="rect" id="node40" href="$_sub___matrix___decomposition___custom_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="439,155,619,196"/>
 <area shape="rect" id="node41" href="$_random___unitary_8h.html" title="Random_Unitary.h" alt="" coords="1068,341,1196,367"/>
-<area shape="rect" id="node9" href="$_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="569,885,665,912"/>
+<area shape="rect" id="node9" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="569,885,665,912"/>
 <area shape="rect" id="node13" href="$dot_8h.html" title="Header file to calculate product of two matrices. " alt="" coords="968,661,1019,688"/>
 <area shape="rect" id="node15" href="$matrix_8h.html" title="Header file matrix storing complex types. " alt="" coords="1187,736,1253,763"/>
 <area shape="rect" id="node16" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="723,811,826,837"/>

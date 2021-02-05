@@ -17,16 +17,16 @@
 
 /*! \addtogroup examples Examples
 
-The @QGD (QGD) package provides static and shared libraries (located in the directory **path/to/qgd/lib(64)**) that can be linked againts our own C++ code. 
+Sequential Quantum Gate Decomposer (@QGD) package provides static and shared libraries (located in the directory **path/to/qgd/lib(64)**) that can be linked againts our own C++ code. 
 (Alternatively, the C functions defined in python_interface.h can be used to link against C code as well.)
 The header files of the package are located in the directory **path/to/qgd/include**
-In the forthcoming sections we provide some tricks and best practices to use the QGD API.
-Also, the QGD API is supprted by a Doxygen documentation, which can be accessed trough the file **path/to/qgd/Docs/html/index.html**.
+In the forthcoming sections we provide some tricks and best practices to use the @QGD API.
+Also, the @QGD API is supprted by a Doxygen documentation, which can be accessed trough the file **path/to/qgd/Docs/html/index.html**.
 (To build the Doxygen documentation follow the manual at @index.)
 
 
-The QGD Python interface can be tested by running the **decomposition_test** executable in the directory **path/to/qgd/bin**.
-(To install the QGD package follow the manual at @index). 
+The @QGD Python interface can be tested by running the **decomposition_test** executable in the directory **path/to/qgd/bin**.
+(To install the @QGD package follow the manual at @index). 
 
 The expected outcome of the test script should look as:
 
@@ -40,23 +40,23 @@ These information are followed by the list of the decomposing operations.
 
 
 
-# Using the QGD library
+# Using the @QGD library
 
-In this example we show how to use the QGD library for developing applications using the decomposition capabilities of the QGD package.
+In this example we show how to use the @QGD library for developing applications using the decomposition capabilities of the @QGD package.
 Here we explain the steps provided in the example file decomposition_test.cpp to decompose a general random 4-qubit unitary.
 
-To include the functionalities of the QGD package, provide the following lines in your code:
+To include the functionalities of the @QGD package, provide the following lines in your code:
 
 <div class="snippet">
 \snippet decomposition_test.cpp include
 </div>
 
-The first include provide basic functionalities of the QGD package, for example methods for aligned memory allocation and memory release.
+The first include provide basic functionalities of the @QGD package, for example methods for aligned memory allocation and memory release.
 The second line includes the definition of the class to perform the decomposition of the N-qubit unitaries. 
-This class is the key element to access the decomposition capabilities of the QGD package.
+This class is the key element to access the decomposition capabilities of the @QGD package.
 The third line imports the method and class definitions for creating random unitaries to be decomposed.
 
-The QGD package provides two ways to create random unitaries. The first way can be used to construct a random unitary as a product of CNOT and U3 operations. 
+The @QGD package provides two ways to create random unitaries. The first way can be used to construct a random unitary as a product of CNOT and U3 operations. 
 The parameters of the operations are chosen randomly, but the overall number of CNOT operations is predefined:
 
 <div class="snippet">
@@ -134,13 +134,13 @@ After setting the parameters of the decomposition we can start the optimization 
 The last command in the above code snippet prints the decomposing operations into the standard output. 
 For further programming usage the list of decomposed operations can be retrieved via the method N_Qubit_Decomposition.get_operations of the class N_Qubit_Decomposition.
 
-## Compiling and linking against QGD libraries
+## Compiling and linking against @QGD libraries
 
-To successfully compile a software using the QGD package, one need to provide the include path of the header files for the compiler. 
+To successfully compile a software using the @QGD package, one need to provide the include path of the header files for the compiler. 
 This can be done by providing the compiler flag **-Ipath/to/qgd/include** at compilation time.
-After a successful installation described at @index the header files are copied in to the **include** directory in the QGD installation location.
+After a successful installation described at @index the header files are copied in to the **include** directory in the @QGD installation location.
 
-Similarly, the QGD libraries are installed into the directory **path/to/qgd/lib(64)**. 
+Similarly, the @QGD libraries are installed into the directory **path/to/qgd/lib(64)**. 
 In order to link against the installed libraries located in **path/to/qgd/lib(64)**, you must either use libtool, and specify the full pathname of the library, 
 or use the -Lpath/to/qgd/lib(64) flag during linking and do at least one of the following:
    - add path/to/qgd/lib(64) to the 'LD_LIBRARY_PATH' environment variable
@@ -150,7 +150,7 @@ or use the -Lpath/to/qgd/lib(64) flag during linking and do at least one of the 
    - use the '-Wl,-rpath -Wl,path/to/qgd/lib(64)' linker flag
    - have your system administrator add path/to/qgd/lib(64) to '/etc/ld.so.conf'
 
-Another option to build portable standalone application is to link against static library of the QGD named **libqgd.a** located in the directory **path/to/qgd/lib(64)**.
+Another option to build portable standalone application is to link against static library of the @QGD named **libqgd.a** located in the directory **path/to/qgd/lib(64)**.
 
 
 

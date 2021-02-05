@@ -9,7 +9,7 @@
 <area shape="rect" id="node28" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="720,437,769,464"/>
 <area shape="rect" id="node7" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="1122,601,1205,628"/>
 <area shape="rect" id="node25" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="681,519,769,546"/>
-<area shape="rect" id="node11" href="$_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="1073,900,1169,927"/>
+<area shape="rect" id="node11" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="1073,900,1169,927"/>
 <area shape="rect" id="node15" href="$dot_8h.html" title="Header file to calculate product of two matrices. " alt="" coords="1063,676,1114,703"/>
 <area shape="rect" id="node17" href="$matrix_8h.html" title="Header file matrix storing complex types. " alt="" coords="734,751,801,777"/>
 <area shape="rect" id="node18" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="1240,825,1343,852"/>

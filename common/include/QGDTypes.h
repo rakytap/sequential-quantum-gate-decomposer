@@ -18,7 +18,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file QGDTypes.h
-    \brief Custom types for the QGD package
+    \brief Custom types for the SQUANDER package
 */
 
 #ifndef QGDTypes_H
@@ -35,7 +35,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #endif
 
 
-/// @brief Structure type representing complex numbers in the QGD package
+/// @brief Structure type representing complex numbers in the SQUANDER package
 struct QGD_Complex16 {
   /// the real part of a complex number
   double real;
