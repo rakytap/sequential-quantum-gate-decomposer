@@ -1,16 +1,15 @@
 <map id="Operation_block::release_operations" name="Operation_block::release_operations">
-<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="905,104,1068,145"/>
-<area shape="rect" id="node9" href="$class_operation__block.html#a45267880235adbe428861c9838ae0459" title="Destructor of the class. " alt="" coords="217,261,403,303"/>
-<area shape="rect" id="node10" href="$class_operation__block.html#ae1eebd44b1c6fd8d4d379784c5a22887" title="Call to extract the operations stored in the class. " alt="" coords="229,79,391,120"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="1124,165,1287,207"/>
-<area shape="rect" id="node4" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="1337,122,1507,149"/>
-<area shape="rect" id="node5" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="1397,173,1447,199"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1341,224,1503,265"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="1341,5,1503,47"/>
-<area shape="rect" id="node8" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="1335,71,1509,98"/>
-<area shape="rect" id="node11" href="$class_n___qubit___decomposition.html#a6acc444ca154290f10d4ee93d2aaa0d4" title="Create a clone of the present class. " alt="" coords="459,144,622,185"/>
-<area shape="rect" id="node12" href="$class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="464,27,617,54"/>
-<area shape="rect" id="node15" href="$class_sub___matrix___decomposition.html#ad5498a197a442b5cf878c83fccfe0180" title="Call to create a clone of the present class. " alt="" coords="451,79,631,120"/>
-<area shape="rect" id="node13" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="897,170,1076,226"/>
-<area shape="rect" id="node14" href="$class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="679,53,849,79"/>
+<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#acc2aed15e5043f47de9077ff95ca0995" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="935,5,1125,61"/>
+<area shape="rect" id="node3" href="$class_operation__block.html#a45267880235adbe428861c9838ae0459" title="Destructor of the class. " alt="" coords="217,75,403,117"/>
+<area shape="rect" id="node4" href="$class_operation__block.html#ae1eebd44b1c6fd8d4d379784c5a22887" title="Call to extract the operations stored in the class. " alt="" coords="229,177,391,218"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a891c57bdf19c50114a94b56d2a6405a5" title="Create a clone of the present class. " alt="" coords="451,104,641,160"/>
+<area shape="rect" id="node6" href="$class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="469,184,623,211"/>
+<area shape="rect" id="node14" href="$class_sub___matrix___decomposition.html#ad5498a197a442b5cf878c83fccfe0180" title="Call to create a clone of the present class. " alt="" coords="456,235,636,277"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#ad80e5f27114ac9fc7ffdfccae5ac4b98" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="693,38,883,109"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#a23a54ffec2693340bdd1a376db060a8a" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="935,144,1125,200"/>
+<area shape="rect" id="node9" href="$class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="703,133,873,160"/>
+<area shape="rect" id="node10" href="$qgd___operation___block_8cpp.html#a2fb4bcfc61b29f1750f3734187cb11bb" title="Wrapper function to add a block of operations to the end of the gate structure. " alt="" coords="711,235,865,291"/>
+<area shape="rect" id="node11" href="$class_sub___matrix___decomposition.html#a63938bf57a68b0595711c865053f7871" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="698,315,878,357"/>
+<area shape="rect" id="node13" href="$class_sub___matrix___decomposition.html#a0d16a3d20f6261f99c8f1fe1cb43bc34" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="689,381,887,422"/>
+<area shape="rect" id="node12" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="940,315,1120,357"/>
 </map>

@@ -1,0 +1,4 @@
+<map id="N_Qubit_Decomposition_Base::set_custom_gate_structure" name="N_Qubit_Decomposition_Base::set_custom_gate_structure">
+<area shape="rect" id="node2" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="289,5,339,32"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a57b4f96cdb4ba687b4fd9172881805c8" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="219,56,409,112"/>
+</map>

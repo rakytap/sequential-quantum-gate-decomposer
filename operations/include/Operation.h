@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/Operation.h
+/*! \file Operation.h
     \brief Header file for a class for the representation of one- and two-qubit operations.
 */
 

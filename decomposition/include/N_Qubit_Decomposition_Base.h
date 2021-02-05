@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/N_Qubit_Decomposition_Base.h
+/*! \file N_Qubit_Decomposition_Base.h
     \brief Header file for a base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 operations.
     This class contains the non-template implementation of the decomposition class.
 

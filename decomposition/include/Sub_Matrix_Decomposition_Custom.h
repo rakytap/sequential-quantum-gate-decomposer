@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/Sub_Matrix_Decomposition_Custom.h
+/*! \file Sub_Matrix_Decomposition_Custom.h
     \brief Header file for a class responsible for the disentanglement of one qubit from the others.
     This class enables to define custom gate structure for the decomposition.
 */

@@ -1,9 +1,10 @@
 <map id="N_Qubit_Decomposition_Cost_Function.h" name="N_Qubit_Decomposition_Cost_Function.h">
-<area shape="rect" id="node2" href="$_n___qubit___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the final optimization problem (supporting parallel computa..." alt="" coords="195,95,357,136"/>
-<area shape="rect" id="node3" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of a unitary into a sequence of CNOT and U3 op..." alt="" coords="381,102,555,129"/>
-<area shape="rect" id="node4" href="$_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="5,184,163,225"/>
-<area shape="rect" id="node5" href="$_n___qubit___decomposition_8cpp.html" title="Class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations. " alt="" coords="187,191,373,218"/>
-<area shape="rect" id="node6" href="$python__interface_8cpp.html" title="Methods of the QGD Python Interface. " alt="" coords="397,191,539,218"/>
-<area shape="rect" id="node7" href="$decomposition__test_8cpp.html" title="decomposition_test.cpp" alt="" coords="563,191,722,218"/>
-<area shape="rect" id="node8" href="$standalone_2decomposition__test_8cpp.html" title="decomposition_test.cpp" alt="" coords="746,191,905,218"/>
+<area shape="rect" id="node2" href="$_n___qubit___decomposition___base_8h.html" title="Header file for a base class to determine the decomposition of an N&#45;qubit unitary into a sequence of ..." alt="" coords="211,95,373,136"/>
+<area shape="rect" id="node9" href="$_n___qubit___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the final optimization problem (supporting parallel computa..." alt="" coords="397,95,560,136"/>
+<area shape="rect" id="node3" href="$_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="119,184,276,225"/>
+<area shape="rect" id="node4" href="$_n___qubit___decomposition_8h.html" title="Header file for a base class to determine the decomposition of an N&#45;qubit unitary into a sequence of ..." alt="" coords="300,191,473,218"/>
+<area shape="rect" id="node5" href="$_n___qubit___decomposition___base_8cpp.html" title="N_Qubit_Decomposition\l_Base.cpp" alt="" coords="5,273,168,315"/>
+<area shape="rect" id="node6" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="193,273,383,315"/>
+<area shape="rect" id="node7" href="$custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="408,273,563,315"/>
+<area shape="rect" id="node8" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="587,281,746,307"/>
 </map>

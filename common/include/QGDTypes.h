@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/QGDTypes.h
+/*! \file QGDTypes.h
     \brief Custom types for the QGD package
 */
 

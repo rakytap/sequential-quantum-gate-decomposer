@@ -5,13 +5,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Quantum Gate Decomposer: Class Members</title>
+<title>Sequential Quantum Gate Decomposer: Class Members</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
-<link rel="search" href="search_opensearch.php?v=opensearch.xml" type="application/opensearchdescription+xml" title="Quantum Gate Decomposer"/>
+<link rel="search" href="search_opensearch.php?v=opensearch.xml" type="application/opensearchdescription+xml" title="Sequential Quantum Gate Decomposer"/>
 <link href="QGD_customdoxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -21,8 +21,8 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.2</span>
+   <div id="projectname">Sequential Quantum Gate Decomposer
+   &#160;<span id="projectnumber">v1.4</span>
    </div>
    <div id="projectbrief">Powerful decomposition of almost any unitary into U3 and CNOT gates</div>
   </td>
@@ -51,12 +51,18 @@ $(function() {
 <div class="textblock">Here is a list of all class members with links to the classes they belong to:</div>
 
 <h3><a id="index_s"></a>- s -</h3><ul>
+<li>set_custom_gate_structure()
+: <a class="el" href="class_n___qubit___decomposition___base.html#af66d6d12de1d2d28a7fcf2d5ff9104bc">N_Qubit_Decomposition_Base</a>
+</li>
+<li>set_custom_operation_layers()
+: <a class="el" href="class_sub___matrix___decomposition.html#a0d16a3d20f6261f99c8f1fe1cb43bc34">Sub_Matrix_Decomposition</a>
+</li>
 <li>set_identical_blocks()
-: <a class="el" href="class_n___qubit___decomposition.html#a180ca3406189b079fb2defc5054c8700">N_Qubit_Decomposition</a>
-, <a class="el" href="class_sub___matrix___decomposition.html#ac2e84002b2e43617ca6a57c4ade3bfef">Sub_Matrix_Decomposition</a>
+: <a class="el" href="class_n___qubit___decomposition___base.html#a9dc57f0f4d4320a13a2018bca6e599f6">N_Qubit_Decomposition_Base</a>
+, <a class="el" href="class_sub___matrix___decomposition.html#a05944754b07d6b5ec16b6febbc79c1a9">Sub_Matrix_Decomposition</a>
 </li>
 <li>set_iteration_loops()
-: <a class="el" href="class_decomposition___base.html#a461f735688248c8f04756e4abadb0516">Decomposition_Base</a>
+: <a class="el" href="class_decomposition___base.html#aa376f8cfdb1b9ed06bceff9c72ddf496">Decomposition_Base</a>
 </li>
 <li>set_matrix()
 : <a class="el" href="class_operation.html#a5930c5c4c2e430cdbf03a145a00594d2">Operation</a>
@@ -69,6 +75,9 @@ $(function() {
 </li>
 <li>set_optimization_blocks()
 : <a class="el" href="class_decomposition___base.html#af10692ec27c3db9e422d057c5f0347a6">Decomposition_Base</a>
+</li>
+<li>set_optimization_tolerance()
+: <a class="el" href="class_decomposition___base.html#a871056822bf7cc558ea9a59e22084d5b">Decomposition_Base</a>
 </li>
 <li>set_optimized_parameters()
 : <a class="el" href="class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0">U3</a>
@@ -86,27 +95,33 @@ $(function() {
 : <a class="el" href="class_decomposition___base.html#a0a46d0f9ad1cc240256211acc30a9add">Decomposition_Base</a>
 </li>
 <li>simplify_layer()
-: <a class="el" href="class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704">N_Qubit_Decomposition</a>
+: <a class="el" href="class_n___qubit___decomposition.html#a23a54ffec2693340bdd1a376db060a8a">N_Qubit_Decomposition&lt; subdecomp_class &gt;</a>
+, <a class="el" href="class_n___qubit___decomposition___base.html#a806dc0d5aea41899ec17d4d419b49da2">N_Qubit_Decomposition_Base</a>
 </li>
 <li>simplify_layers()
-: <a class="el" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f">N_Qubit_Decomposition</a>
+: <a class="el" href="class_n___qubit___decomposition.html#acc2aed15e5043f47de9077ff95ca0995">N_Qubit_Decomposition&lt; subdecomp_class &gt;</a>
+, <a class="el" href="class_n___qubit___decomposition___base.html#a4d00fb15e0c2add84af29ad13565d8ef">N_Qubit_Decomposition_Base</a>
 </li>
 <li>size()
 : <a class="el" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a">matrix_base&lt; scalar &gt;</a>
 </li>
+<li>skip_build
+: <a class="el" href="classsetup_1_1_install_c_make_libs.html#a278fa31a7d3775adcd347df73e4f53c3">setup.InstallCMakeLibs</a>
+, <a class="el" href="classsetup_1_1_install_c_make_scripts.html#afd99c1dff5e672a98766809fe5c3f3fd">setup.InstallCMakeScripts</a>
+</li>
 <li>solve_layer_optimization_problem()
 : <a class="el" href="class_decomposition___base.html#a5a4fba71fd475a25fd55b1f4f2dc4c86">Decomposition_Base</a>
-, <a class="el" href="class_n___qubit___decomposition.html#a10eb690b650a33a1ab8c4de4f9f8ab6e">N_Qubit_Decomposition</a>
+, <a class="el" href="class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b">N_Qubit_Decomposition_Base</a>
 , <a class="el" href="class_sub___matrix___decomposition.html#ad2cf3bd1c085aa71283df9c9271f6eaf">Sub_Matrix_Decomposition</a>
 </li>
 <li>solve_optimization_problem()
 : <a class="el" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36">Decomposition_Base</a>
 </li>
 <li>start_decomposition()
-: <a class="el" href="class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287">N_Qubit_Decomposition</a>
+: <a class="el" href="class_n___qubit___decomposition.html#a752d5664cc0011a231f2e417211c9433">N_Qubit_Decomposition&lt; subdecomp_class &gt;</a>
 </li>
 <li>Sub_Matrix_Decomposition()
-: <a class="el" href="class_sub___matrix___decomposition.html#ab484f09a55fe6f806972f3b9d62df5b9">Sub_Matrix_Decomposition</a>
+: <a class="el" href="class_sub___matrix___decomposition.html#a339e92194be7c621bd306f224fb9a281">Sub_Matrix_Decomposition</a>
 </li>
 <li>subdecomposed_mtx
 : <a class="el" href="class_sub___matrix___decomposition.html#a19772cbc8f1e1c8a0e31cdb23a978229">Sub_Matrix_Decomposition</a>
@@ -122,7 +137,7 @@ $(function() {
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jan 18 2021 17:39:28 for Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Feb 5 2021 08:34:38 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

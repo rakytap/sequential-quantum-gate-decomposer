@@ -1,9 +1,0 @@
-<map id="test_U3_operation" name="test_U3_operation">
-<area shape="rect" id="node2" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="585,29,676,56"/>
-<area shape="rect" id="node3" href="$class_u3.html#a53b0a784fbf2b26a9bcbd2502e849670" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="203,64,330,91"/>
-<area shape="rect" id="node8" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="181,115,352,141"/>
-<area shape="rect" id="node4" href="$class_operation.html#aa11dab745a5dbca70c3c437f813340fe" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="407,57,531,98"/>
-<area shape="rect" id="node5" href="$class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="400,122,537,163"/>
-<area shape="rect" id="node6" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="595,104,667,131"/>
-<area shape="rect" id="node7" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="589,155,673,181"/>
-</map>

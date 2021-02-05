@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/N_Qubit_Decomposition_Cost_Function.h
+/*! \file N_Qubit_Decomposition_Cost_Function.h
     \brief Header file for the paralleized calculation of the cost function of the final optimization problem (supporting TBB and OpenMP).
 */
 

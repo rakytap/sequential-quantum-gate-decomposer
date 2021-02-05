@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/Decomposition_Base.h
+/*! \file Decomposition_Base.h
     \brief Header file for a class containing basic methods for the decomposition process.
 */
 

@@ -1,5 +1,6 @@
 <map id="U3::composite_u3_Lambda" name="U3::composite_u3_Lambda">
-<area shape="rect" id="node2" href="$class_u3.html#abf83dd26afd16cde8c759dacdbaa4278" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="233,31,360,57"/>
-<area shape="rect" id="node3" href="$classmatrix__base.html#a89715b6abd4eeaaf5da5226b386951d3" title="Call to set the current class instance to be (or not to be) the owner of the stored data array..." alt="" coords="408,5,567,32"/>
-<area shape="rect" id="node4" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="413,56,561,83"/>
+<area shape="rect" id="node2" href="$class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="233,56,360,83"/>
+<area shape="rect" id="node3" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="411,5,559,32"/>
+<area shape="rect" id="node4" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="424,56,545,83"/>
+<area shape="rect" id="node5" href="$class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="408,107,561,133"/>
 </map>

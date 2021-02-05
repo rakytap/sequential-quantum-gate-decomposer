@@ -1,0 +1,4 @@
+<map id="Sub_Matrix_Decomposition::add_default_operation_layers" name="Sub_Matrix_Decomposition::add_default_operation_layers">
+<area shape="rect" id="node2" href="$class_sub___matrix___decomposition.html#a63938bf57a68b0595711c865053f7871" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="249,5,429,47"/>
+<area shape="rect" id="node3" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="477,5,657,47"/>
+</map>

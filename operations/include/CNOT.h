@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/CNOT.h
+/*! \file CNOT.h
     \brief Header file for a class representing a CNOT operation.
 */
 

@@ -1,6 +1,0 @@
-<map id="zgemm3m_Task_serial::zgemm3m_chunk_iterative" name="zgemm3m_Task_serial::zgemm3m_chunk_iterative">
-<area shape="rect" id="node2" href="$classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="236,23,392,65"/>
-<area shape="rect" id="node3" href="$dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="440,31,583,57"/>
-<area shape="rect" id="node4" href="$classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="631,5,809,32"/>
-<area shape="rect" id="node5" href="$classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="631,56,809,83"/>
-</map>

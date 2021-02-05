@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/Functor_Get_Operation_Products.h
+/*! \file Functor_Get_Operation_Products.h
     \brief Header file for the parallelized calculation of the vector containing the products of operations (supporting TBB and OpenMP).
 */
 

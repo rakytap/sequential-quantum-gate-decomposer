@@ -15,6 +15,11 @@ extern "C"
 #endif
 
 
+/*! \file dot.h
+    \brief Header file to calculate product of two matrices.
+*/
+
+
 #include "matrix.h"
 
 #ifdef CBLAS

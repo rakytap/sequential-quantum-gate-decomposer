@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/Sub_Matrix_Decomposition_Cost_Function.h
+/*! \file Sub_Matrix_Decomposition_Cost_Function.h
     \brief Header file for the paralleized calculation of the cost function of the subdecomposition (supporting TBB and OpenMP).
 */
 

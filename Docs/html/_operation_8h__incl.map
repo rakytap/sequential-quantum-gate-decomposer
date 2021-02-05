@@ -1,7 +1,7 @@
 <map id="Operation.h" name="Operation.h">
-<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="411,80,517,107"/>
-<area shape="rect" id="node13" href="$matrix_8h.html" title="qgd/matrix.h" alt="" coords="826,229,918,256"/>
-<area shape="rect" id="node7" href="$_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="806,379,927,405"/>
-<area shape="rect" id="node11" href="$dot_8h.html" title="qgd/dot.h" alt="" coords="695,155,769,181"/>
-<area shape="rect" id="node14" href="$matrix__base_8h.html" title="qgd/matrix_base.h" alt="" coords="749,304,875,331"/>
+<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="423,80,505,107"/>
+<area shape="rect" id="node13" href="$matrix_8h.html" title="Header file matrix storing complex types. " alt="" coords="825,229,892,256"/>
+<area shape="rect" id="node7" href="$_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="805,379,901,405"/>
+<area shape="rect" id="node11" href="$dot_8h.html" title="Header file to calculate product of two matrices. " alt="" coords="707,155,757,181"/>
+<area shape="rect" id="node14" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="754,304,857,331"/>
 </map>

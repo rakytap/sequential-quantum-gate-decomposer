@@ -1,8 +1,0 @@
-<map id="python_interface.h" name="python_interface.h">
-<area shape="rect" id="node2" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="407,80,521,107"/>
-<area shape="rect" id="node4" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="411,155,517,181"/>
-<area shape="rect" id="node14" href="$matrix_8h.html" title="qgd/matrix.h" alt="" coords="826,304,918,331"/>
-<area shape="rect" id="node8" href="$_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="806,453,927,480"/>
-<area shape="rect" id="node12" href="$dot_8h.html" title="qgd/dot.h" alt="" coords="695,229,769,256"/>
-<area shape="rect" id="node15" href="$matrix__base_8h.html" title="qgd/matrix_base.h" alt="" coords="749,379,875,405"/>
-</map>

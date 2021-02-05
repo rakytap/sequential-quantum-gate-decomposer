@@ -4,7 +4,9 @@
 #include "matrix_base.h"
 
 
-
+/*! \file matrix.h
+    \brief Header file matrix storing complex types.
+*/
 
 /**
 @brief Class to store data of complex arrays and its properties. Compatible with the Picasso numpy interface.

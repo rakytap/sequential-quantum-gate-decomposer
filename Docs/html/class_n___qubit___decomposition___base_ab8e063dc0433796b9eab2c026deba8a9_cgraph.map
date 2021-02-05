@@ -1,0 +1,4 @@
+<map id="N_Qubit_Decomposition_Base::optimization_problem_grad" name="N_Qubit_Decomposition_Base::optimization_problem_grad">
+<area shape="rect" id="node2" href="$class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="272,5,459,61"/>
+<area shape="rect" id="node3" href="$class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="507,13,647,54"/>
+</map>

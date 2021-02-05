@@ -1,8 +1,0 @@
-<map id="N_Qubit_Decomposition::decompose_submatrix" name="N_Qubit_Decomposition::decompose_submatrix">
-<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="216,107,379,149"/>
-<area shape="rect" id="node3" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="429,5,599,32"/>
-<area shape="rect" id="node4" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="489,56,539,83"/>
-<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="433,107,595,149"/>
-<area shape="rect" id="node7" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="427,173,601,200"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="649,162,812,203"/>
-</map>

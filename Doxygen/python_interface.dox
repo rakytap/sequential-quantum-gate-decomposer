@@ -19,22 +19,26 @@
 
 # Introduction
 
-The @QGD (QGD) package provides a very simple interface to Python which makes it possible to combine QGD with well known quantum computing back ends, like [Qiskit](https://qiskit.org/).
-In fact, QGD has already established an interface to export the decomposed quantum circuit in Qiskit format.
-The Python interface of QGD is developed using [Ctypes](https://docs.python.org/3/library/ctypes.html), while all the massive calculations related to the decomposition run in
-native C, and only the input and final output parameters are casted between C and Python types.
+The @QGD (QGD) package provides an interface to Python which makes it possible to combine @QGD with well known quantum computing back ends, like [Qiskit](https://qiskit.org/).
+In fact, @QGD has already established an interface to export the decomposed quantum circuit in Qiskit format.
+The Python interface of @QGD is developed [C++ extensions](https://docs.python.org/3/library/ctypes.html), while all the massive calculations related to the decomposition run in C++, and only the input and final output parameters are casted between C++ and Python types.
 
 In the forthcoming sections we provide some tricks and best practices to use the QGD Python interface. 
-The QGD Python interface can be tested by running the **example.py** script right in the installation directory of the QGD package:
-(To install the QGD package follow the manual at @index. 
-If the QGD package was compiled with OpenMP than one can also externally set the number of logical threads by the environment variable OMP_NUM_THREADS.)
+The QGD Python interface can be tested by running the test cases in file **test_decomposition.py** by pytest utility or by the **example.py** script right in the source directory of the @QGD package:
+(To build the @QGD package follow the manual at @index.)
+
+<div class="snippet">
+$ cd path/to/qgd && pytest
+</div>
+
+or
 
 <div class="snippet">
 $ cd path/to/qgd && python3 example.py
 </div>
 
 
-The example solves two problems:
+The script example.py solves two problems:
 - the decomposition of a general three-qubit unitary
 - the decomposition of the [4th IBM Challenge problem](https://www.ibm.com/blogs/research/2020/05/quantum-challenge-results/)
 
@@ -45,9 +49,9 @@ The expected outcome of the test script should look as:
 @image html example_result.png "Expected result for the 4th IBM Challenge problem"
 
 The output informs us that the 4th IBM Challenge problem was solved by using 4 CNOT gates with decomposition error 0.00010325....
-It is evident that the given decomposition can be further simplified by the union of successive U3 operations, however the QGD package is 
+It is evident that the given decomposition can be further simplified by the union of successive U3 operations, however the @QGD package is 
 not equipped yet to do such simplifications.
-(The decomposition result of the general three-qubit matrix can be found somewhere above the result of the IBM challenge in the standard output.)
+(The decomposition result of the general three-qubit matrix can be found above the result of the IBM challenge in the standard output.)
 
 
 # Writing your own scripts
@@ -74,7 +78,7 @@ Then we create the class to be used for the decomposition, which tries to bring 
 \snippet example.py create decomposition class
 </div>
 
-Notice, that we gave the complex transpose of the unitary Umtx as an input for the class N_Qubit_Decomposition.
+Notice, that we gave the complex transpose of the unitary Umtx as an input for the class qgd_N_Qubit_Decomposition.
 This can be explained by simple linear algebra considerations: since the product of the unitary with it's complex transpose (\f$U U^\dagger=I\f$) gives identity, 
 the sequence of operations bringing a unitary \f$U\f$ into identity would naturally equal to the complex transpose \f$U^\dagger\f$ of the unitary \f$U\f$.
 
@@ -86,7 +90,7 @@ Along with the input unitary we provided two other inputs for the decomposition 
        - "close_to_zero": the initial guessed values are random numbers close to zero.
 
 In case we would like to minimize the number of CNOT gates in the decomposition, the best choice for the **initial_guess** values are "zeros" 
-(discussed in more details in the forthcoming sections). However, this kind of the choice might result unwanted convergence of the optimization to local minimum 
+(discussed in more details in the forthcoming sections). However, this kind of the choice might result in unwanted convergence of the optimization to local minimum 
 instead of the global one.
 Thus, the solution of this example might sometimes fail to reach the global minimum. 
 For the same reason, unitaries consisting of much CNOT gates can be well decomposed by initial guess values "random" or "close_to_zero".

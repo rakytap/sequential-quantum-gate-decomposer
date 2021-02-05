@@ -1,6 +1,0 @@
-<map id="Decomposition_Base::get_operation" name="Decomposition_Base::get_operation">
-<area shape="rect" id="node2" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Operation::get_type" alt="" coords="231,5,364,32"/>
-<area shape="rect" id="node3" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Operation::get_target_qbit" alt="" coords="212,56,383,83"/>
-<area shape="rect" id="node4" href="$class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Operation::get_control_qbit" alt="" coords="209,107,385,133"/>
-<area shape="rect" id="node5" href="$class_u3.html#a7ebc4a0bf0eb7c4d37034d04ed787aaa" title="U3::get_optimized_parameters" alt="" coords="199,157,396,184"/>
-</map>

@@ -5,13 +5,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Quantum Gate Decomposer: Operation_block.h File Reference</title>
+<title>Sequential Quantum Gate Decomposer: Operation_block.h File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
-<link rel="search" href="search_opensearch.php?v=opensearch.xml" type="application/opensearchdescription+xml" title="Quantum Gate Decomposer"/>
+<link rel="search" href="search_opensearch.php?v=opensearch.xml" type="application/opensearchdescription+xml" title="Sequential Quantum Gate Decomposer"/>
 <link href="QGD_customdoxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -21,8 +21,8 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.2</span>
+   <div id="projectname">Sequential Quantum Gate Decomposer
+   &#160;<span id="projectnumber">v1.4</span>
    </div>
    <div id="projectbrief">Powerful decomposition of almost any unitary into U3 and CNOT gates</div>
   </td>
@@ -48,7 +48,7 @@ $(function() {
 <div id="main-nav"></div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_2fe6011175a69874944f2340a6cc9cf4.html">qgd</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_ce81d3468f62db2922d7d87035174548.html">operations</a></li><li class="navelem"><a class="el" href="dir_876f2c8477b760c0a2c9a198f9c4c555.html">include</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -62,19 +62,19 @@ $(function() {
 <p>Header file for a class responsible for grouping <a class="el" href="class_c_n_o_t.html" title="A class representing a CNOT operation. ">CNOT</a> and <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operations into layers.  
 <a href="#details">More...</a></p>
 <div class="textblock"><code>#include &lt;vector&gt;</code><br />
-<code>#include &quot;<a class="el" href="common_8h_source.html">qgd/common.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="_operation_8h_source.html">qgd/Operation.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="common_8h_source.html">common.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="_operation_8h_source.html">Operation.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for Operation_block.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="_operation__block_8h__incl.png" border="0" usemap="#_operation__block_8h" alt=""/></div>
 <map name="_operation__block_8h" id="_operation__block_8h">
-<area shape="rect" id="node3" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="336,155,443,181"/>
-<area shape="rect" id="node21" href="_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="95,80,209,107"/>
-<area shape="rect" id="node7" href="_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="811,453,933,480"/>
-<area shape="rect" id="node11" href="dot_8h.html" title="qgd/dot.h" alt="" coords="661,229,736,256"/>
-<area shape="rect" id="node13" href="matrix_8h.html" title="qgd/matrix.h" alt="" coords="481,304,573,331"/>
-<area shape="rect" id="node14" href="matrix__base_8h.html" title="qgd/matrix_base.h" alt="" coords="467,379,594,405"/>
+<area shape="rect" id="node3" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="348,155,431,181"/>
+<area shape="rect" id="node21" href="_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="108,80,196,107"/>
+<area shape="rect" id="node7" href="_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="800,453,896,480"/>
+<area shape="rect" id="node11" href="dot_8h.html" title="Header file to calculate product of two matrices. " alt="" coords="661,229,712,256"/>
+<area shape="rect" id="node13" href="matrix_8h.html" title="Header file matrix storing complex types. " alt="" coords="483,304,549,331"/>
+<area shape="rect" id="node14" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="467,379,570,405"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -82,21 +82,23 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="_operation__block_8h__dep__incl.png" border="0" usemap="#_operation__block_8hdep" alt=""/></div>
 <map name="_operation__block_8hdep" id="_operation__block_8hdep">
-<area shape="rect" id="node2" href="_operation__block_01_07copy_08_8cpp.html" title="Operation_block (copy).cpp" alt="" coords="5,87,184,114"/>
-<area shape="rect" id="node3" href="_operation__block_8cpp.html" title="Class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="209,87,349,114"/>
-<area shape="rect" id="node4" href="_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="555,87,709,114"/>
-<area shape="rect" id="node15" href="_functor___get___operation___products_8h.html" title="Header file for the parallelized calculation of the vector containing the products of operations (sup..." alt="" coords="373,80,531,121"/>
-<area shape="rect" id="node16" href="operation__test_8cpp.html" title="operation_test.cpp" alt="" coords="733,87,861,114"/>
-<area shape="rect" id="node5" href="_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process. " alt="" coords="821,177,990,203"/>
-<area shape="rect" id="node6" href="_functor___get___operation___products_8cpp.html" title="Methods and classes for the parallelized calculation of the vector containing the products of operati..." alt="" coords="373,169,531,211"/>
-<area shape="rect" id="node7" href="_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of a unitary into a sequence of CNOT and U3 op..." alt="" coords="441,259,615,285"/>
-<area shape="rect" id="node13" href="_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="606,177,797,203"/>
-<area shape="rect" id="node8" href="_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="809,333,967,375"/>
-<area shape="rect" id="node9" href="_n___qubit___decomposition_8cpp.html" title="Class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations. " alt="" coords="67,341,253,367"/>
-<area shape="rect" id="node10" href="python__interface_8cpp.html" title="Methods of the QGD Python Interface. " alt="" coords="277,341,419,367"/>
-<area shape="rect" id="node11" href="decomposition__test_8cpp.html" title="decomposition_test.cpp" alt="" coords="443,341,602,367"/>
-<area shape="rect" id="node12" href="standalone_2decomposition__test_8cpp.html" title="decomposition_test.cpp" alt="" coords="626,341,785,367"/>
-<area shape="rect" id="node14" href="_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="639,259,843,285"/>
+<area shape="rect" id="node2" href="_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="270,87,425,114"/>
+<area shape="rect" id="node16" href="_functor___get___operation___products_8h.html" title="Header file for the parallelized calculation of the vector containing the products of operations (sup..." alt="" coords="89,80,246,121"/>
+<area shape="rect" id="node17" href="_operation__block_8cpp.html" title="Class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="449,87,589,114"/>
+<area shape="rect" id="node18" href="qgd___operation___block_8cpp.html" title="qgd_Operation_Block.cpp" alt="" coords="614,87,785,114"/>
+<area shape="rect" id="node3" href="_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process. " alt="" coords="536,177,705,203"/>
+<area shape="rect" id="node4" href="_functor___get___operation___products_8cpp.html" title="Methods and classes for the parallelized calculation of the vector containing the products of operati..." alt="" coords="89,169,246,211"/>
+<area shape="rect" id="node5" href="_n___qubit___decomposition___base_8h.html" title="Header file for a base class to determine the decomposition of an N&#45;qubit unitary into a sequence of ..." alt="" coords="209,259,371,300"/>
+<area shape="rect" id="node12" href="_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="321,177,512,203"/>
+<area shape="rect" id="node6" href="_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="401,348,558,389"/>
+<area shape="rect" id="node7" href="_n___qubit___decomposition_8h.html" title="Header file for a base class to determine the decomposition of an N&#45;qubit unitary into a sequence of ..." alt="" coords="203,355,377,382"/>
+<area shape="rect" id="node8" href="_n___qubit___decomposition___base_8cpp.html" title="N_Qubit_Decomposition\l_Base.cpp" alt="" coords="221,437,383,479"/>
+<area shape="rect" id="node9" href="qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="5,437,196,479"/>
+<area shape="rect" id="node10" href="custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="591,437,746,479"/>
+<area shape="rect" id="node11" href="decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="408,445,567,471"/>
+<area shape="rect" id="node13" href="_sub___matrix___decomposition___custom_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="591,348,771,389"/>
+<area shape="rect" id="node15" href="_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="447,266,651,293"/>
+<area shape="rect" id="node14" href="_sub___matrix___decomposition___custom_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. This class enables to define ..." alt="" coords="771,437,951,479"/>
 </map>
 </div>
 </div>
@@ -115,7 +117,7 @@ Classes</h2></td></tr>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jan 18 2021 17:39:28 for Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Feb 5 2021 08:34:37 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

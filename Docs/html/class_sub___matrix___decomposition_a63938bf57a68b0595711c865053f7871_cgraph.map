@@ -1,0 +1,23 @@
+<map id="Sub_Matrix_Decomposition::add_operation_layers" name="Sub_Matrix_Decomposition::add_operation_layers">
+<area shape="rect" id="node2" href="$class_sub___matrix___decomposition.html#af578e73dd71db96b2fe1a1d04383b745" title="Call to add default gate layers to the gate structure used in the subdecomposition. " alt="" coords="233,124,429,165"/>
+<area shape="rect" id="node5" href="$class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="715,92,857,133"/>
+<area shape="rect" id="node9" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="949,231,1082,258"/>
+<area shape="rect" id="node11" href="$class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="261,525,401,566"/>
+<area shape="rect" id="node12" href="$class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="738,372,834,399"/>
+<area shape="rect" id="node13" href="$class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="729,423,843,450"/>
+<area shape="rect" id="node16" href="$class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="748,474,824,500"/>
+<area shape="rect" id="node20" href="$class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="255,314,408,340"/>
+<area shape="rect" id="node3" href="$class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="477,189,656,230"/>
+<area shape="rect" id="node4" href="$class_operation__block.html#a3779e559654f12c5544129c46305b6ce" title="Append a CNOT gate operation to the list of operations. " alt="" coords="495,58,638,100"/>
+<area shape="rect" id="node10" href="$class_operation__block.html#a44940209dbc5754b676b5a493bb153f4" title="Append a U3 gate to the list of operations. " alt="" coords="495,124,638,165"/>
+<area shape="rect" id="node6" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="934,124,1097,151"/>
+<area shape="rect" id="node8" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="916,74,1115,100"/>
+<area shape="rect" id="node7" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="1163,124,1253,151"/>
+<area shape="rect" id="node14" href="$class_operation.html#a55f76bcb8990f4dba577990af0c8399e" title="Default constructor of the class. " alt="" coords="945,423,1085,450"/>
+<area shape="rect" id="node15" href="$class_operation.html#a5930c5c4c2e430cdbf03a145a00594d2" title="Call to set the stored matrix in the operation. " alt="" coords="943,372,1087,399"/>
+<area shape="rect" id="node17" href="$class_u3.html#a11a8fca65dd56a6bdc42a98927040a05" title="Nullary constructor of the class. " alt="" coords="984,524,1047,551"/>
+<area shape="rect" id="node18" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation. " alt="" coords="917,474,1114,500"/>
+<area shape="rect" id="node19" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1166,474,1250,500"/>
+<area shape="rect" id="node21" href="$class_operation__block.html#ae1eebd44b1c6fd8d4d379784c5a22887" title="Call to extract the operations stored in the class. " alt="" coords="486,306,647,348"/>
+<area shape="rect" id="node22" href="$class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce" title="Call to release the stored operations. " alt="" coords="704,306,868,348"/>
+</map>

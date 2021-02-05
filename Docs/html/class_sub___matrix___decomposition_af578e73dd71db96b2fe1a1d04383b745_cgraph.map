@@ -1,0 +1,10 @@
+<map id="Sub_Matrix_Decomposition::add_default_operation_layers" name="Sub_Matrix_Decomposition::add_default_operation_layers">
+<area shape="rect" id="node2" href="$class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="249,5,428,47"/>
+<area shape="rect" id="node3" href="$class_operation__block.html#a3779e559654f12c5544129c46305b6ce" title="Append a CNOT gate operation to the list of operations. " alt="" coords="267,71,410,112"/>
+<area shape="rect" id="node4" href="$class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="476,129,619,171"/>
+<area shape="rect" id="node9" href="$class_operation__block.html#a44940209dbc5754b676b5a493bb153f4" title="Append a U3 gate to the list of operations. " alt="" coords="267,188,410,229"/>
+<area shape="rect" id="node5" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="685,86,847,113"/>
+<area shape="rect" id="node7" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="667,137,865,163"/>
+<area shape="rect" id="node8" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="699,187,833,214"/>
+<area shape="rect" id="node6" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="913,86,1004,113"/>
+</map>

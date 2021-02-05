@@ -1,14 +1,14 @@
 <map id="Sub_Matrix_Decomposition.h" name="Sub_Matrix_Decomposition.h">
-<area shape="rect" id="node2" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="1179,87,1359,114"/>
-<area shape="rect" id="node33" href="$_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="495,244,700,285"/>
-<area shape="rect" id="node34" href="$_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="654,80,837,121"/>
-<area shape="rect" id="node3" href="$_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="814,169,965,196"/>
-<area shape="rect" id="node24" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="989,169,1083,196"/>
-<area shape="rect" id="node26" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="1108,169,1183,196"/>
-<area shape="rect" id="node5" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="567,333,673,360"/>
-<area shape="rect" id="node23" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="926,251,1039,278"/>
-<area shape="rect" id="node9" href="$_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="511,632,633,659"/>
-<area shape="rect" id="node13" href="$dot_8h.html" title="qgd/dot.h" alt="" coords="504,408,579,435"/>
-<area shape="rect" id="node15" href="$matrix_8h.html" title="qgd/matrix.h" alt="" coords="981,483,1073,509"/>
-<area shape="rect" id="node16" href="$matrix__base_8h.html" title="qgd/matrix_base.h" alt="" coords="251,557,378,584"/>
+<area shape="rect" id="node2" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="1124,87,1279,114"/>
+<area shape="rect" id="node33" href="$_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="487,244,667,285"/>
+<area shape="rect" id="node34" href="$_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="649,80,807,121"/>
+<area shape="rect" id="node3" href="$_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="815,169,942,196"/>
+<area shape="rect" id="node24" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="972,169,1041,196"/>
+<area shape="rect" id="node26" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="1066,169,1115,196"/>
+<area shape="rect" id="node5" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="540,333,623,360"/>
+<area shape="rect" id="node23" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="904,251,992,278"/>
+<area shape="rect" id="node9" href="$_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="500,632,596,659"/>
+<area shape="rect" id="node13" href="$dot_8h.html" title="Header file to calculate product of two matrices. " alt="" coords="480,408,531,435"/>
+<area shape="rect" id="node15" href="$matrix_8h.html" title="Header file matrix storing complex types. " alt="" coords="945,483,1012,509"/>
+<area shape="rect" id="node16" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="251,557,354,584"/>
 </map>

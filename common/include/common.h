@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/common.h
+/*! \file common.h
     \brief Header file for commonly used functions and wrappers to CBLAS functions.
 */
 

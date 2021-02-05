@@ -5,13 +5,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Quantum Gate Decomposer: File Members</title>
+<title>Sequential Quantum Gate Decomposer: File Members</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
-<link rel="search" href="search_opensearch.php?v=opensearch.xml" type="application/opensearchdescription+xml" title="Quantum Gate Decomposer"/>
+<link rel="search" href="search_opensearch.php?v=opensearch.xml" type="application/opensearchdescription+xml" title="Sequential Quantum Gate Decomposer"/>
 <link href="QGD_customdoxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -21,8 +21,8 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.2</span>
+   <div id="projectname">Sequential Quantum Gate Decomposer
+   &#160;<span id="projectnumber">v1.4</span>
    </div>
    <div id="projectbrief">Powerful decomposition of almost any unitary into U3 and CNOT gates</div>
   </td>
@@ -63,10 +63,24 @@ $(function() {
 : <a class="el" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec">dot.cpp</a>
 , <a class="el" href="dot_8h.html#ad672d17d67e98a6960a0850d540224ec">dot.h</a>
 </li>
+<li>create_CNOT()
+: <a class="el" href="qgd___c_n_o_t_8cpp.html#ac7a7569d635d6a8847f9a1a4ea35dcd0">qgd_CNOT.cpp</a>
+</li>
+<li>create_custom_gate_structure()
+: <a class="el" href="custom__gate__structure__test_8cpp.html#a3e7c68f9633b89821e2306ec761bf249">custom_gate_structure_test.cpp</a>
+</li>
 <li>create_identity()
-: <a class="el" href="common_8h.html#a478212437ad8647d21171d23c98ae52a">common.h</a>
-, <a class="el" href="common_8cpp.html#ac153d1e5b3f8065ddc46254f779dc8d7">common.cpp</a>
-, <a class="el" href="common_8h.html#ac153d1e5b3f8065ddc46254f779dc8d7">common.h</a>
+: <a class="el" href="common_8cpp.html#a478212437ad8647d21171d23c98ae52a">common.cpp</a>
+, <a class="el" href="common_8h.html#a478212437ad8647d21171d23c98ae52a">common.h</a>
+</li>
+<li>create_N_Qubit_Decomposition()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#af9b0976a514f87167663db05075837d7">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>create_Operation_block()
+: <a class="el" href="qgd___operation___block_8cpp.html#a12ea0a5530f2816cd62fbc5d25f03d1e">qgd_Operation_Block.cpp</a>
+</li>
+<li>create_U3()
+: <a class="el" href="qgd___u3_8cpp.html#a0efa6c836b73f40f12605ae5555760a0">qgd_U3.cpp</a>
 </li>
 </ul>
 
@@ -84,9 +98,6 @@ $(function() {
 : <a class="el" href="_random___unitary_8h.html#ac755edbef39273d53b90d33316963b37">Random_Unitary.h</a>
 , <a class="el" href="_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37">Random_Unitary.cpp</a>
 </li>
-<li>four_qubit_decomposition()
-: <a class="el" href="decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790">decomposition_test.cpp</a>
-</li>
 </ul>
 
 
@@ -96,9 +107,11 @@ $(function() {
 , <a class="el" href="dot_8h.html#a3c8fbd47f03f178c533305ae1717f098">dot.h</a>
 </li>
 <li>get_cost_function()
-: <a class="el" href="common_8h.html#a7917831f6df360f23578190263a7cfee">common.h</a>
+: <a class="el" href="_n___qubit___decomposition___cost___function_8cpp.html#aa5db632f7e7078d0e9bf48b22fa7525d">N_Qubit_Decomposition_Cost_Function.cpp</a>
 , <a class="el" href="_n___qubit___decomposition___cost___function_8h.html#aa5db632f7e7078d0e9bf48b22fa7525d">N_Qubit_Decomposition_Cost_Function.h</a>
-, <a class="el" href="_n___qubit___decomposition___cost___function_8cpp.html#aa5db632f7e7078d0e9bf48b22fa7525d">N_Qubit_Decomposition_Cost_Function.cpp</a>
+</li>
+<li>get_operation()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#acca1f8f2ca528d0e918779e6fe118073">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
 </li>
 <li>get_submatrix_cost_function()
 : <a class="el" href="_sub___matrix___decomposition___cost___function_8h.html#a6f8a34a10e6654b40f899ecb8d199776">Sub_Matrix_Decomposition_Cost_Function.h</a>
@@ -110,58 +123,49 @@ $(function() {
 <h3><a id="index_i"></a>- i -</h3><ul>
 <li>iface_delete_N_Qubit_Decomposition()
 : <a class="el" href="python__interface_8cpp.html#ab6eb9c96ee2bdf7756f0cd62a722136d">python_interface.cpp</a>
-, <a class="el" href="python__interface_8h.html#ab6eb9c96ee2bdf7756f0cd62a722136d">python_interface.h</a>
 </li>
 <li>iface_get_operation()
-: <a class="el" href="python__interface_8h.html#a7c7757a158b0d7f2b5416db0760af74e">python_interface.h</a>
-, <a class="el" href="python__interface_8cpp.html#a7c7757a158b0d7f2b5416db0760af74e">python_interface.cpp</a>
+: <a class="el" href="python__interface_8cpp.html#a7c7757a158b0d7f2b5416db0760af74e">python_interface.cpp</a>
 </li>
 <li>iface_get_operation_num()
 : <a class="el" href="python__interface_8cpp.html#af2e8bda0ad51941408639ebbe52c6f8e">python_interface.cpp</a>
-, <a class="el" href="python__interface_8h.html#af2e8bda0ad51941408639ebbe52c6f8e">python_interface.h</a>
 </li>
 <li>iface_list_operations()
-: <a class="el" href="python__interface_8h.html#a851ccbc4db2a5b49d44419f74bed966e">python_interface.h</a>
-, <a class="el" href="python__interface_8cpp.html#a851ccbc4db2a5b49d44419f74bed966e">python_interface.cpp</a>
+: <a class="el" href="python__interface_8cpp.html#a851ccbc4db2a5b49d44419f74bed966e">python_interface.cpp</a>
 </li>
 <li>iface_new_N_Qubit_Decomposition()
 : <a class="el" href="python__interface_8cpp.html#aeaa04ac618f4c354c05b442188a5b30f">python_interface.cpp</a>
-, <a class="el" href="python__interface_8h.html#aeaa04ac618f4c354c05b442188a5b30f">python_interface.h</a>
 </li>
 <li>iface_set_identical_blocks()
 : <a class="el" href="python__interface_8cpp.html#a433927c0881f65beb0d462fe9423918f">python_interface.cpp</a>
-, <a class="el" href="python__interface_8h.html#a433927c0881f65beb0d462fe9423918f">python_interface.h</a>
 </li>
 <li>iface_set_iteration_loops()
 : <a class="el" href="python__interface_8cpp.html#aa67493822615c546c7daf269ad6e7650">python_interface.cpp</a>
-, <a class="el" href="python__interface_8h.html#aa67493822615c546c7daf269ad6e7650">python_interface.h</a>
 </li>
 <li>iface_set_max_layer_num()
-: <a class="el" href="python__interface_8h.html#a13709bfbcc030047503eb14648d62d1b">python_interface.h</a>
-, <a class="el" href="python__interface_8cpp.html#a13709bfbcc030047503eb14648d62d1b">python_interface.cpp</a>
+: <a class="el" href="python__interface_8cpp.html#a13709bfbcc030047503eb14648d62d1b">python_interface.cpp</a>
 </li>
 <li>iface_set_optimalization_block()
 : <a class="el" href="python__interface_8cpp.html#a0e5fa8588f5f2604d790a19774fdff7e">python_interface.cpp</a>
-, <a class="el" href="python__interface_8h.html#a0e5fa8588f5f2604d790a19774fdff7e">python_interface.h</a>
 </li>
 <li>iface_set_verbose()
 : <a class="el" href="python__interface_8cpp.html#a6162349931d0c3b22b449dc9fb7a7541">python_interface.cpp</a>
-, <a class="el" href="python__interface_8h.html#a6162349931d0c3b22b449dc9fb7a7541">python_interface.h</a>
 </li>
 <li>iface_start_decomposition()
-: <a class="el" href="python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55">python_interface.h</a>
-, <a class="el" href="python__interface_8cpp.html#a1dbc73536ad346a068266b5bd2e7cd55">python_interface.cpp</a>
+: <a class="el" href="python__interface_8cpp.html#a1dbc73536ad346a068266b5bd2e7cd55">python_interface.cpp</a>
 </li>
 </ul>
 
 
 <h3><a id="index_m"></a>- m -</h3><ul>
 <li>main()
-: <a class="el" href="standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4">standalone/decomposition_test.cpp</a>
+: <a class="el" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4">custom_gate_structure_test.cpp</a>
+, <a class="el" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4">decomposition_test.cpp</a>
 </li>
 <li>mult()
-: <a class="el" href="common_8h.html#a1617d8e09733abda49e8a85b8b377cc1">common.h</a>
+: <a class="el" href="common_8h.html#aa9775b20de198cee5c002277d68d3526">common.h</a>
 , <a class="el" href="common_8cpp.html#a1617d8e09733abda49e8a85b8b377cc1">common.cpp</a>
+, <a class="el" href="common_8h.html#a1617d8e09733abda49e8a85b8b377cc1">common.h</a>
 </li>
 </ul>
 
@@ -171,6 +175,18 @@ $(function() {
 : <a class="el" href="common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9">common.cpp</a>
 , <a class="el" href="common_8h.html#a2085ad6d70ccf80dd353a70fe8262ff9">common.h</a>
 </li>
+<li>PyInit_qgd_CNOT()
+: <a class="el" href="qgd___c_n_o_t_8cpp.html#af5bbafb562144b16c5fbf7a5cc48bc0e">qgd_CNOT.cpp</a>
+</li>
+<li>PyInit_qgd_N_Qubit_Decomposition_Wrapper()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a245c0428748f686af4a45a1ef8af8da1">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>PyInit_qgd_Operation_Block()
+: <a class="el" href="qgd___operation___block_8cpp.html#a2d90d2b74410d52d972af0c6a4edb8ce">qgd_Operation_Block.cpp</a>
+</li>
+<li>PyInit_qgd_U3()
+: <a class="el" href="qgd___u3_8cpp.html#a6c9f761c87ebccb4ba99b1c765069b83">qgd_U3.cpp</a>
+</li>
 </ul>
 
 
@@ -179,13 +195,94 @@ $(function() {
 : <a class="el" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979">common.cpp</a>
 , <a class="el" href="common_8h.html#aa0242605afa8a983a22aa1165cea5979">common.h</a>
 </li>
+<li>qgd_CNOT_dealloc()
+: <a class="el" href="qgd___c_n_o_t_8cpp.html#a8a3fdb559e9e5ad12652d9a2d1adf18c">qgd_CNOT.cpp</a>
+</li>
+<li>qgd_CNOT_init()
+: <a class="el" href="qgd___c_n_o_t_8cpp.html#a293ff98943dcdd987d9f4f35d2cb5873">qgd_CNOT.cpp</a>
+</li>
+<li>qgd_CNOT_new()
+: <a class="el" href="qgd___c_n_o_t_8cpp.html#ae1b5918a8105dab1c4ce0532d9ca4b5f">qgd_CNOT.cpp</a>
+</li>
 <li>qgd_free()
-: <a class="el" href="common_8h.html#afbe838f9ac6bc59a609014c7e1f757c3">common.h</a>
-, <a class="el" href="common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3">common.cpp</a>
+: <a class="el" href="common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3">common.cpp</a>
+, <a class="el" href="common_8h.html#afbe838f9ac6bc59a609014c7e1f757c3">common.h</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_dealloc()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a7eba496794cbcd484744be06f8c208ba">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_get_operation()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a05ba4746064677c0f65f7d57ed1af3be">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_get_operation_num()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#af517428882a622551598ef4eec06a4df">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_get_operations()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#aa1e7d1c7649bec942c3aeb7c3bb81919">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_init()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a024f9b81bdfa9de1b20faabfccfbaf3f">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_List_Operations()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#ac0b44bf0f29a35e096920030ea120678">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_new()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a05489d1f7683a6bfc044a679b71cc0c1">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_Reorder_Qubits()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a958e2883d6000f9b61cd53a9007987c2">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a7c64a8f2623762efbcf1f2769aba3fc9">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_set_Identical_Blocks()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a0bfe9d3d4987fad044c2a53a02aa5d12">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_set_Iteration_Loops()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a02cef77890e4d01d144895814689af37">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_set_Max_Layer_Num()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#ad78573c377460eec752713eded330e3b">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_set_Optimization_Tolerance()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#acf5be81d3a59c38e9f401dc7b208a1e7">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_set_Verbose()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a94d04ac2e1c2bc86358c56f35f5c3bcd">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_N_Qubit_Decomposition_Wrapper_Start_Decomposition()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#aa6ea75e20298496bf1a0bf4da6893cb4">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>qgd_Operation_Block_add_CNOT_To_End()
+: <a class="el" href="qgd___operation___block_8cpp.html#ad8b8e4da0a2ea5d72a513b59eabc29df">qgd_Operation_Block.cpp</a>
+</li>
+<li>qgd_Operation_Block_add_Operation_Block_To_End()
+: <a class="el" href="qgd___operation___block_8cpp.html#a2fb4bcfc61b29f1750f3734187cb11bb">qgd_Operation_Block.cpp</a>
+</li>
+<li>qgd_Operation_Block_add_U3_To_End()
+: <a class="el" href="qgd___operation___block_8cpp.html#ad60ceed61070810e6e88202ef4e77d82">qgd_Operation_Block.cpp</a>
+</li>
+<li>qgd_Operation_Block_dealloc()
+: <a class="el" href="qgd___operation___block_8cpp.html#ada7c91ac0f5fb57811dc282ecd143fdc">qgd_Operation_Block.cpp</a>
+</li>
+<li>qgd_Operation_Block_init()
+: <a class="el" href="qgd___operation___block_8cpp.html#a959bd8d7587558f8f4d4360e5e0c2fcf">qgd_Operation_Block.cpp</a>
+</li>
+<li>qgd_Operation_Block_new()
+: <a class="el" href="qgd___operation___block_8cpp.html#a197ef42126c46df221cfcff4f03c6ee9">qgd_Operation_Block.cpp</a>
 </li>
 <li>qgd_realloc()
 : <a class="el" href="common_8h.html#abe45e0c72de2b8d2b20dc68ec85581c2">common.h</a>
 , <a class="el" href="common_8cpp.html#abe45e0c72de2b8d2b20dc68ec85581c2">common.cpp</a>
+</li>
+<li>qgd_U3_dealloc()
+: <a class="el" href="qgd___u3_8cpp.html#aa984126db536942873f45c135798d876">qgd_U3.cpp</a>
+</li>
+<li>qgd_U3_init()
+: <a class="el" href="qgd___u3_8cpp.html#a08b02c0d0a2e901901c3bb66d5e9796a">qgd_U3.cpp</a>
+</li>
+<li>qgd_U3_new()
+: <a class="el" href="qgd___u3_8cpp.html#a7418f7b2a8a824ee42a4b99cf63b88d9">qgd_U3.cpp</a>
 </li>
 </ul>
 
@@ -195,57 +292,31 @@ $(function() {
 : <a class="el" href="common_8cpp.html#a2e92efab5529b91d084758c064625eb6">common.cpp</a>
 , <a class="el" href="common_8h.html#a2e92efab5529b91d084758c064625eb6">common.h</a>
 </li>
+<li>release_CNOT()
+: <a class="el" href="qgd___c_n_o_t_8cpp.html#a0663270df9133db7b03c0e9c12038a6e">qgd_CNOT.cpp</a>
+</li>
+<li>release_N_Qubit_Decomposition()
+: <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#aa7b06614f2abc3b73b2b2694e2e12e30">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>
+</li>
+<li>release_Operation_block()
+: <a class="el" href="qgd___operation___block_8cpp.html#aa9935ad76cf22a381898359d46f4b398">qgd_Operation_Block.cpp</a>
+</li>
+<li>release_U3()
+: <a class="el" href="qgd___u3_8cpp.html#adfedcc61235223d7635178e5b105f8ff">qgd_U3.cpp</a>
+</li>
 </ul>
 
 
 <h3><a id="index_s"></a>- s -</h3><ul>
-<li>scalar_product()
-: <a class="el" href="common_8cpp.html#a29568a6904c401fb8c85486c9b9ff50c">common.cpp</a>
-, <a class="el" href="common_8h.html#a29568a6904c401fb8c85486c9b9ff50c">common.h</a>
-</li>
 <li>subtract_diag()
 : <a class="el" href="common_8cpp.html#a0edb99c36d663a8fe718ab7f097c7f96">common.cpp</a>
 , <a class="el" href="common_8h.html#a0edb99c36d663a8fe718ab7f097c7f96">common.h</a>
 </li>
 </ul>
-
-
-<h3><a id="index_t"></a>- t -</h3><ul>
-<li>test_CNOT_operation()
-: <a class="el" href="operation__test_8cpp.html#a583be6d267255f6ca7dfceac18bbd551">operation_test.cpp</a>
-</li>
-<li>test_general_operation()
-: <a class="el" href="operation__test_8cpp.html#aafee3dcd3395813eb2aa8cdac8885a15">operation_test.cpp</a>
-</li>
-<li>test_operation_block()
-: <a class="el" href="operation__test_8cpp.html#a14cd9dca8567feb783abd295c1e401fa">operation_test.cpp</a>
-</li>
-<li>test_operations()
-: <a class="el" href="operation__test_8cpp.html#a0c26d4e65c94edc000ec7d983df88cf3">operation_test.cpp</a>
-</li>
-<li>test_U3_operation()
-: <a class="el" href="operation__test_8cpp.html#a3ead76665b209b6eda8368d47146943c">operation_test.cpp</a>
-</li>
-<li>two_qubit_decomposition()
-: <a class="el" href="decomposition__test_8cpp.html#a8f911441b9c1b845c5ae9ee318a685e8">decomposition_test.cpp</a>
-</li>
-</ul>
-
-
-<h3><a id="index_z"></a>- z -</h3><ul>
-<li>zgemm3m_wrapper()
-: <a class="el" href="common_8cpp.html#a7e4fbff01bddac17c7499d1da136f004">common.cpp</a>
-, <a class="el" href="common_8h.html#adf9965852efaf1296940f43a722fdd69">common.h</a>
-</li>
-<li>zgemm3m_wrapper_adj()
-: <a class="el" href="common_8h.html#ac508def41bc9941f7ae5d4caf067c565">common.h</a>
-, <a class="el" href="common_8cpp.html#ac508def41bc9941f7ae5d4caf067c565">common.cpp</a>
-</li>
-</ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jan 18 2021 17:39:28 for Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Feb 5 2021 08:34:38 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

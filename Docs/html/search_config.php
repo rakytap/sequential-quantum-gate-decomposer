@@ -1,7 +1,7 @@
 <script language="php">
 
 $config = array(
-  'PROJECT_NAME' => "Quantum Gate Decomposer",
+  'PROJECT_NAME' => "Sequential Quantum Gate Decomposer",
   'GENERATE_TREEVIEW' => false,
   'DISABLE_INDEX' => false,
 );
@@ -16,7 +16,7 @@ $translator = array(
   'search_matches' => "Matches:",
   'search' => "Search",
   'split_bar' => "",
-  'logo' => "Generated on Mon Jan 18 2021 17:39:28 for Quantum Gate Decomposer by&#160;\n<a href=\"http://www.doxygen.org/index.html\">\n<img class=\"footer\" src=\"doxygen.png\" alt=\"doxygen\"/></a> 1.8.13 ",
+  'logo' => "Generated on Fri Feb 5 2021 08:34:38 for Sequential Quantum Gate Decomposer by&#160;\n<a href=\"http://www.doxygen.org/index.html\">\n<img class=\"footer\" src=\"doxygen.png\" alt=\"doxygen\"/></a> 1.8.13 ",
 );
 
 </script>

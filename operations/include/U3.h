@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file qgd/U3.h
+/*! \file U3.h
     \brief Header file for a class representing a U3 operation.
 */
 

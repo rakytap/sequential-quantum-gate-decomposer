@@ -1,0 +1,7 @@
+<map id="N_Qubit_Decomposition_Base" name="N_Qubit_Decomposition_Base">
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations..." alt="" coords="757,5,920,47"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html" title="N_Qubit_Decomposition\l\&lt; Sub_Matrix_Decomposition \&gt;" alt="" coords="737,71,940,112"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html" title="A class containing basic methods for the decomposition process. " alt="" coords="296,46,441,73"/>
+<area shape="rect" id="node3" href="$class_operation__block.html" title="A class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="132,46,248,73"/>
+<area shape="rect" id="node4" href="$class_operation.html" title="Base class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="5,46,84,73"/>
+</map>

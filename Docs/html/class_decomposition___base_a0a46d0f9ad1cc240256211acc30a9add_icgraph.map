@@ -1,10 +1,6 @@
 <map id="Decomposition_Base::set_verbose" name="Decomposition_Base::set_verbose">
-<area shape="rect" id="node2" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="471,5,522,32"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="199,115,361,157"/>
-<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="415,57,578,98"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="415,275,578,317"/>
-<area shape="rect" id="node9" href="$python__interface_8h.html#a6162349931d0c3b22b449dc9fb7a7541" title="Call to set the verbosity of the N_Qubit_Decomposition class. " alt="" coords="216,232,344,259"/>
-<area shape="rect" id="node4" href="$decomposition__test_8cpp.html#a005b60a7d76feb761cdaf7b438dad790" title="four_qubit_decomposition" alt="" coords="411,123,582,149"/>
-<area shape="rect" id="node8" href="$python__interface_8h.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="409,224,584,251"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="632,221,795,262"/>
+<area shape="rect" id="node2" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="269,5,319,32"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a57b4f96cdb4ba687b4fd9172881805c8" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="199,56,389,112"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#a23a54ffec2693340bdd1a376db060a8a" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="199,136,389,192"/>
+<area shape="rect" id="node5" href="$python__interface_8cpp.html#a6162349931d0c3b22b449dc9fb7a7541" title="Call to set the verbosity of the N_Qubit_Decomposition class. " alt="" coords="230,216,358,243"/>
 </map>

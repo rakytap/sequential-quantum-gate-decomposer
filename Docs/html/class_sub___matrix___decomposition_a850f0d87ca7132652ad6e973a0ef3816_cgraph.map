@@ -2,5 +2,5 @@
 <area shape="rect" id="node2" href="$class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="245,5,385,47"/>
 <area shape="rect" id="node3" href="$class_decomposition___base.html#a5ad6641386b1eea4dd1244599660c462" title="Call to retrive a pointer to the unitary to be transformed. " alt="" coords="243,71,388,112"/>
 <area shape="rect" id="node4" href="$class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="233,136,397,177"/>
-<area shape="rect" id="node5" href="$_sub___matrix___decomposition___cost___function_8cpp.html#a6f8a34a10e6654b40f899ecb8d199776" title="Call to calculate the cost function of a given matrix during the submatrix decomposition process..." alt="" coords="248,201,383,243"/>
+<area shape="rect" id="node5" href="$_sub___matrix___decomposition___cost___function_8h.html#a6f8a34a10e6654b40f899ecb8d199776" title="Call to calculate the cost function of a given matrix during the submatrix decomposition process..." alt="" coords="248,201,383,243"/>
 </map>

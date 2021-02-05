@@ -9,7 +9,9 @@
 
 
 
-
+/*! \file matrix_base.h
+    \brief Header file for the base class of Matrix.
+*/
 
 
 /**

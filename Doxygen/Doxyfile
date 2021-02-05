@@ -1,4 +1,4 @@
-# Doxyfile 1.8.11
+# Doxyfile 1.8.13
 
 # This file describes the settings to be used by the documentation system
 # doxygen (www.doxygen.org) for a project.
@@ -32,13 +32,13 @@ DOXYFILE_ENCODING      = UTF-8
 # title of most generated pages and in a few other places.
 # The default value is: My Project.
 
-PROJECT_NAME           = "Quantum Gate Decomposer"
+PROJECT_NAME           = "Sequential Quantum Gate Decomposer"
 
 # The PROJECT_NUMBER tag can be used to enter a project or revision number. This
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = v1.2
+PROJECT_NUMBER         = v1.4
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -238,8 +238,8 @@ TAB_SIZE               = 5
 # "Side Effects:". You can put \n's in the value part of an alias to insert
 # newlines.
 
-ALIASES                = "QGD=Quantum Gate Decomposer" \
-                         version=v1.1 \
+ALIASES                = QGD=SQUANDER \
+                         version=v1.4 \
                          "index=<a href=\"index.html\">Main Page</a>" \
                          "python_iface=<a href=\"group__python.html\">QGD Python Interface</a>" \
                          "example=<a href=\"group__examples.html\">Examples</a>"
@@ -306,6 +306,15 @@ EXTENSION_MAPPING      =
 # The default value is: YES.
 
 MARKDOWN_SUPPORT       = YES
+
+# When the TOC_INCLUDE_HEADINGS tag is set to a non-zero value, all headings up
+# to that level are automatically included in the table of contents, even if
+# they do not have an id attribute.
+# Note: This feature currently applies only to Markdown headings.
+# Minimum value: 0, maximum value: 99, default value: 0.
+# This tag requires that the tag MARKDOWN_SUPPORT is set to YES.
+
+TOC_INCLUDE_HEADINGS   = 0
 
 # When enabled doxygen tries to link words that correspond to documented
 # classes, or namespaces to their corresponding documentation. Such a link can
@@ -807,8 +816,8 @@ INPUT_ENCODING         = ISO-8859-1
 # If left blank the following patterns are tested:*.c, *.cc, *.cxx, *.cpp,
 # *.c++, *.java, *.ii, *.ixx, *.ipp, *.i++, *.inl, *.idl, *.ddl, *.odl, *.h,
 # *.hh, *.hxx, *.hpp, *.h++, *.cs, *.d, *.php, *.php4, *.php5, *.phtml, *.inc,
-# *.m, *.markdown, *.md, *.mm, *.dox, *.py, *.pyw, *.f90, *.f, *.for, *.tcl,
-# *.vhd, *.vhdl, *.ucf, *.qsf, *.as and *.js.
+# *.m, *.markdown, *.md, *.mm, *.dox, *.py, *.pyw, *.f90, *.f95, *.f03, *.f08,
+# *.f, *.for, *.tcl, *.vhd, *.vhdl, *.ucf and *.qsf.
 
 FILE_PATTERNS          = *.c \
                          *.cc \
@@ -856,12 +865,10 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = ../common/include \
-                         ../decomposition/include \
-                         ../operations/include \
-                         ../random_unitary/include \
-                         ../python_interface.h \
-                         ../qgd_python/__init__.py
+EXCLUDE                = ../python_interface.h \
+                         ../qgd_python/__init__.py \
+                         ../build \
+                         ../common/include/Config.h
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -2411,6 +2418,11 @@ DIAFILE_DIRS           =
 # will not generate output for the diagram.
 
 PLANTUML_JAR_PATH      = 
+
+# When using plantuml, the PLANTUML_CFG_FILE tag can be used to specify a
+# configuration file for plantuml.
+
+PLANTUML_CFG_FILE      = 
 
 # When using plantuml, the specified paths are searched for files specified by
 # the !include statement in a plantuml block.

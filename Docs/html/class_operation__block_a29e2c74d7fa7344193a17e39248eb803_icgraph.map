@@ -1,5 +1,5 @@
 <map id="Operation_block::list_operations" name="Operation_block::list_operations">
 <area shape="rect" id="node2" href="$class_decomposition___base.html#a4c6c81d70f49ee249aa455a4f2718ee2" title="Call to print the operations decomposing the initial unitary. " alt="" coords="192,29,337,71"/>
-<area shape="rect" id="node3" href="$standalone_2decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="431,11,481,38"/>
-<area shape="rect" id="node4" href="$python__interface_8h.html#a851ccbc4db2a5b49d44419f74bed966e" title="Call to list the operations giving the decomposition of the unitary. " alt="" coords="385,62,527,89"/>
+<area shape="rect" id="node3" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="431,11,481,38"/>
+<area shape="rect" id="node4" href="$python__interface_8cpp.html#a851ccbc4db2a5b49d44419f74bed966e" title="Call to list the operations giving the decomposition of the unitary. " alt="" coords="385,62,527,89"/>
 </map>

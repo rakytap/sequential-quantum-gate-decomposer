@@ -5,13 +5,13 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Quantum Gate Decomposer: python_interface.cpp File Reference</title>
+<title>Sequential Quantum Gate Decomposer: python_interface.cpp File Reference</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
 <link href="search/search.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="search/search.js"></script>
-<link rel="search" href="search_opensearch.php?v=opensearch.xml" type="application/opensearchdescription+xml" title="Quantum Gate Decomposer"/>
+<link rel="search" href="search_opensearch.php?v=opensearch.xml" type="application/opensearchdescription+xml" title="Sequential Quantum Gate Decomposer"/>
 <link href="QGD_customdoxygen.css" rel="stylesheet" type="text/css" />
 </head>
 <body>
@@ -21,8 +21,8 @@
  <tbody>
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
-   <div id="projectname">Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.2</span>
+   <div id="projectname">Sequential Quantum Gate Decomposer
+   &#160;<span id="projectnumber">v1.4</span>
    </div>
    <div id="projectbrief">Powerful decomposition of almost any unitary into U3 and CNOT gates</div>
   </td>
@@ -57,30 +57,15 @@ $(function() {
 
 <p>Methods of the <a href="group__python.html">QGD Python Interface</a>.  
 <a href="#details">More...</a></p>
-<div class="textblock"><code>#include &quot;<a class="el" href="python__interface_8h_source.html">qgd/python_interface.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="_n___qubit___decomposition_8h_source.html">qgd/N_Qubit_Decomposition.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="matrix_8h_source.html">qgd/matrix.h</a>&quot;</code><br />
+<div class="textblock"><code>#include &quot;qgd/python_interface.h&quot;</code><br />
+<code>#include &quot;qgd/N_Qubit_Decomposition.h&quot;</code><br />
+<code>#include &quot;qgd/Sub_Matrix_Decomposition.h&quot;</code><br />
+<code>#include &quot;qgd/matrix.h&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for python_interface.cpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="python__interface_8cpp__incl.png" border="0" usemap="#python__interface_8cpp" alt=""/></div>
 <map name="python__interface_8cpp" id="python__interface_8cpp">
-<area shape="rect" id="node2" href="python__interface_8h.html" title="Header file for a methods of the QGD Python Interface. " alt="" coords="820,80,972,107"/>
-<area shape="rect" id="node15" href="matrix_8h.html" title="qgd/matrix.h" alt="" coords="659,647,751,673"/>
-<area shape="rect" id="node23" href="_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of a unitary into a sequence of CNOT and U3 op..." alt="" coords="1031,80,1230,107"/>
-<area shape="rect" id="node3" href="_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="747,415,861,442"/>
-<area shape="rect" id="node5" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="1163,497,1269,524"/>
-<area shape="rect" id="node9" href="_q_g_d_types_8h.html" title="Custom types for the QGD package. " alt="" coords="910,796,1031,823"/>
-<area shape="rect" id="node13" href="dot_8h.html" title="qgd/dot.h" alt="" coords="857,572,932,599"/>
-<area shape="rect" id="node16" href="matrix__base_8h.html" title="qgd/matrix_base.h" alt="" coords="1063,721,1190,748"/>
-<area shape="rect" id="node24" href="_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="461,251,641,278"/>
-<area shape="rect" id="node35" href="_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="1041,162,1255,189"/>
-<area shape="rect" id="node39" href="_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="1326,155,1514,196"/>
-<area shape="rect" id="node25" href="_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="934,333,1085,360"/>
-<area shape="rect" id="node26" href="_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="613,333,707,360"/>
-<area shape="rect" id="node28" href="_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="513,333,588,360"/>
-<area shape="rect" id="node36" href="_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="1253,408,1459,449"/>
-<area shape="rect" id="node37" href="_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="1074,244,1257,285"/>
 </map>
 </div>
 </div>
@@ -89,7 +74,7 @@ Include dependency graph for python_interface.cpp:</div>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:ab6eb9c96ee2bdf7756f0cd62a722136d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="python__interface_8cpp.html#ab6eb9c96ee2bdf7756f0cd62a722136d">iface_delete_N_Qubit_Decomposition</a> (void *ptr)</td></tr>
-<tr class="memdesc:ab6eb9c96ee2bdf7756f0cd62a722136d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to deallocate the <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class.  <a href="#ab6eb9c96ee2bdf7756f0cd62a722136d">More...</a><br /></td></tr>
+<tr class="memdesc:ab6eb9c96ee2bdf7756f0cd62a722136d"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to deallocate the <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class.  <a href="#ab6eb9c96ee2bdf7756f0cd62a722136d">More...</a><br /></td></tr>
 <tr class="separator:ab6eb9c96ee2bdf7756f0cd62a722136d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a7c7757a158b0d7f2b5416db0760af74e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="python__interface_8cpp.html#a7c7757a158b0d7f2b5416db0760af74e">iface_get_operation</a> (void *ptr, int n, int &amp;op_type, int &amp;target_qbit, int &amp;control_qbit, double *parameters)</td></tr>
 <tr class="memdesc:a7c7757a158b0d7f2b5416db0760af74e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the n-th optimized operation.  <a href="#a7c7757a158b0d7f2b5416db0760af74e">More...</a><br /></td></tr>
@@ -101,7 +86,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:a851ccbc4db2a5b49d44419f74bed966e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to list the operations giving the decomposition of the unitary.  <a href="#a851ccbc4db2a5b49d44419f74bed966e">More...</a><br /></td></tr>
 <tr class="separator:a851ccbc4db2a5b49d44419f74bed966e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aeaa04ac618f4c354c05b442188a5b30f"><td class="memItemLeft" align="right" valign="top">void *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="python__interface_8cpp.html#aeaa04ac618f4c354c05b442188a5b30f">iface_new_N_Qubit_Decomposition</a> (double *mtx_real, double *mtx_imag, int qbit_num, <a class="el" href="classbool.html">bool</a> optimize_layer_num, int initial_guess_num)</td></tr>
-<tr class="memdesc:aeaa04ac618f4c354c05b442188a5b30f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> and return with a void pointer pointing to the class instance.  <a href="#aeaa04ac618f4c354c05b442188a5b30f">More...</a><br /></td></tr>
+<tr class="memdesc:aeaa04ac618f4c354c05b442188a5b30f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> and return with a void pointer pointing to the class instance.  <a href="#aeaa04ac618f4c354c05b442188a5b30f">More...</a><br /></td></tr>
 <tr class="separator:aeaa04ac618f4c354c05b442188a5b30f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a433927c0881f65beb0d462fe9423918f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="python__interface_8cpp.html#a433927c0881f65beb0d462fe9423918f">iface_set_identical_blocks</a> (void *ptr, int qbit, int identical_blocks)</td></tr>
 <tr class="memdesc:a433927c0881f65beb0d462fe9423918f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.  <a href="#a433927c0881f65beb0d462fe9423918f">More...</a><br /></td></tr>
@@ -116,7 +101,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:a0e5fa8588f5f2604d790a19774fdff7e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to set the number of blocks to be optimized in one shot.  <a href="#a0e5fa8588f5f2604d790a19774fdff7e">More...</a><br /></td></tr>
 <tr class="separator:a0e5fa8588f5f2604d790a19774fdff7e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6162349931d0c3b22b449dc9fb7a7541"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="python__interface_8cpp.html#a6162349931d0c3b22b449dc9fb7a7541">iface_set_verbose</a> (void *ptr, <a class="el" href="classbool.html">bool</a> verbose)</td></tr>
-<tr class="memdesc:a6162349931d0c3b22b449dc9fb7a7541"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to set the verbosity of the <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class.  <a href="#a6162349931d0c3b22b449dc9fb7a7541">More...</a><br /></td></tr>
+<tr class="memdesc:a6162349931d0c3b22b449dc9fb7a7541"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to set the verbosity of the <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class.  <a href="#a6162349931d0c3b22b449dc9fb7a7541">More...</a><br /></td></tr>
 <tr class="separator:a6162349931d0c3b22b449dc9fb7a7541"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1dbc73536ad346a068266b5bd2e7cd55"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="python__interface_8cpp.html#a1dbc73536ad346a068266b5bd2e7cd55">iface_start_decomposition</a> (void *ptr)</td></tr>
 <tr class="memdesc:a1dbc73536ad346a068266b5bd2e7cd55"><td class="mdescLeft">&#160;</td><td class="mdescRight">Starts the decomposition of the unitary.  <a href="#a1dbc73536ad346a068266b5bd2e7cd55">More...</a><br /></td></tr>
@@ -143,15 +128,15 @@ Functions</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Call to deallocate the <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </p>
+<p>Call to deallocate the <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00099">99</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00100">100</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
 
 </div>
 </div>
@@ -208,7 +193,7 @@ Functions</h2></td></tr>
 <p>Call to get the n-th optimized operation. </p>
 <p>The values are returned via the input parameter references, and pointers </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
     <tr><td class="paramname">n</td><td>Integer labeling the n-th oepration (n&gt;=0). </td></tr>
     <tr><td class="paramname">op_type</td><td>The type of operation. (Possible values: CNOT_OPERATION=2, U3_OPERATION=3) </td></tr>
     <tr><td class="paramname">target_qbit</td><td>The id of the target qubit. </td></tr>
@@ -219,13 +204,13 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a <a class="el" href="class_c_n_o_t.html" title="A class representing a CNOT operation. ">CNOT</a> or <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operation, then -2 is returned. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00186">186</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00187">187</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="python__interface_8cpp_a7c7757a158b0d7f2b5416db0760af74e_cgraph.png" border="0" usemap="#python__interface_8cpp_a7c7757a158b0d7f2b5416db0760af74e_cgraph" alt=""/></div>
 <map name="python__interface_8cpp_a7c7757a158b0d7f2b5416db0760af74e_cgraph" id="python__interface_8cpp_a7c7757a158b0d7f2b5416db0760af74e_cgraph">
-<area shape="rect" id="node2" href="class_decomposition___base.html#a1b076dd293978004b7636ed8b1d41119" title="Call to prepare the optimized operations to export. " alt="" coords="188,74,333,115"/>
+<area shape="rect" id="node2" href="class_decomposition___base.html#a1b076dd293978004b7636ed8b1d41119" title="Call to prepare the optimized operations to export — OBSOLETE. " alt="" coords="188,74,333,115"/>
 <area shape="rect" id="node3" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="413,5,547,32"/>
 <area shape="rect" id="node4" href="class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="395,56,565,83"/>
 <area shape="rect" id="node5" href="class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit. " alt="" coords="392,107,568,133"/>
@@ -254,12 +239,12 @@ Here is the call graph for this function:</div>
 <p>Call to get the number of decomposing operations. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00167">167</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00168">168</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -300,13 +285,13 @@ Here is the call graph for this function:</div>
 <p>Call to list the operations giving the decomposition of the unitary. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
     <tr><td class="paramname">start_index</td><td>The starting number of the operations to be listed. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00156">156</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00157">157</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -372,7 +357,7 @@ Here is the call graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> and return with a void pointer pointing to the class instance. </p>
+<p>Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> and return with a void pointer pointing to the class instance. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">mtx_real</td><td>Pointer to the real part of the unitary to be decomposed </td></tr>
@@ -383,9 +368,9 @@ Here is the call graph for this function:</div>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Return with a void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Return with a void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00041">41</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00042">42</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -432,20 +417,20 @@ Here is the call graph for this function:</div>
 <p>Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
     <tr><td class="paramname">qbit</td><td>The number of qubits for which the subdecomposition should contain identical_blocks successive identical blocks. </td></tr>
     <tr><td class="paramname">identical_blocks</td><td>Number of successive identical blocks in the decomposition. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00118">118</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00119">119</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="python__interface_8cpp_a433927c0881f65beb0d462fe9423918f_cgraph.png" border="0" usemap="#python__interface_8cpp_a433927c0881f65beb0d462fe9423918f_cgraph" alt=""/></div>
 <map name="python__interface_8cpp_a433927c0881f65beb0d462fe9423918f_cgraph" id="python__interface_8cpp_a433927c0881f65beb0d462fe9423918f_cgraph">
-<area shape="rect" id="node2" href="class_n___qubit___decomposition.html#a180ca3406189b079fb2defc5054c8700" title="Set the number of identical successive blocks during the subdecomposition of the n&#45;th qubit..." alt="" coords="184,5,347,47"/>
+<area shape="rect" id="node2" href="class_n___qubit___decomposition___base.html#a25be490afb823dc84b035a6c5305f9fa" title="Set the number of identical successive blocks during the subdecomposition of the n&#45;th qubit..." alt="" coords="184,5,347,61"/>
 </map>
 </div>
 
@@ -486,14 +471,14 @@ Here is the call graph for this function:</div>
 <p>Set the number of iteration loops during the subdecomposition of the qbit-th qubit. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
     <tr><td class="paramname">qbit</td><td>The number of qubits for which the subdecomposition should run iteration_loops number of iterations in each step of the optimization. </td></tr>
     <tr><td class="paramname">iteration_loops</td><td>Number of iteration in each step of the subdecomposition. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00131">131</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00132">132</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -540,14 +525,14 @@ Here is the call graph for this function:</div>
 <p>Set the maximal number of layers used in the subdecomposition of the qbit-th qubit. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
     <tr><td class="paramname">qbit</td><td>The number of qubits for which the subdecomposition should contain maximum max_layer_num layers of operation blocks. </td></tr>
     <tr><td class="paramname">max_layer_num</td><td>The number of maximal number of layers used in the subdecomposition. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00144">144</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00145">145</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -588,14 +573,14 @@ Here is the call graph for this function:</div>
 <p>Call to set the number of blocks to be optimized in one shot. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
     <tr><td class="paramname">optimalization_block</td><td>The number of blocks to be optimized in one shot </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with 0 on success </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00223">223</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00224">224</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -633,17 +618,17 @@ Here is the call graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Call to set the verbosity of the <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </p>
+<p>Call to set the verbosity of the <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
     <tr><td class="paramname">verbose</td><td>Set False to suppress the output messages of the decompostion, or True (deafult) otherwise. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with 0 on success </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00207">207</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00208">208</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -674,70 +659,18 @@ Here is the call graph for this function:</div>
 <p>Starts the decomposition of the unitary. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00085">85</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="python__interface_8cpp_source.html#l00086">86</a> of file <a class="el" href="python__interface_8cpp_source.html">python_interface.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="python__interface_8cpp_a1dbc73536ad346a068266b5bd2e7cd55_cgraph.png" border="0" usemap="#python__interface_8cpp_a1dbc73536ad346a068266b5bd2e7cd55_cgraph" alt=""/></div>
 <map name="python__interface_8cpp_a1dbc73536ad346a068266b5bd2e7cd55_cgraph" id="python__interface_8cpp_a1dbc73536ad346a068266b5bd2e7cd55_cgraph">
-<area shape="rect" id="node2" href="class_n___qubit___decomposition.html#ad221c61f8347afbd535b05ab23845287" title="Start the disentanglig process of the unitary. " alt="" coords="228,1761,391,1803"/>
-<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#a74a4f413f937d974a22e437d97f8cc87" title="Call to find the qubit that is the easiest to uncouple from the others. " alt="" coords="447,183,610,224"/>
-<area shape="rect" id="node7" href="class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="903,432,1067,473"/>
-<area shape="rect" id="node8" href="class_decomposition___base.html#a0a46d0f9ad1cc240256211acc30a9add" title="Call to set the verbose attribute to true or false. " alt="" coords="684,2337,829,2379"/>
-<area shape="rect" id="node9" href="class_decomposition___base.html#a70fd9a8663499f135fe93cdf2ce389c0" title="Set the maximal number of layers used in the subdecomposition of the n&#45;th qubit. " alt="" coords="684,2403,829,2444"/>
-<area shape="rect" id="node10" href="class_sub___matrix___decomposition.html#a05944754b07d6b5ec16b6febbc79c1a9" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit..." alt="" coords="439,2207,619,2248"/>
-<area shape="rect" id="node11" href="class_decomposition___base.html#a461f735688248c8f04756e4abadb0516" title="Set the number of iteration loops during the subdecomposition of the n&#45;th qubit. " alt="" coords="684,2468,829,2509"/>
-<area shape="rect" id="node12" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="439,363,619,404"/>
-<area shape="rect" id="node23" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="667,1435,846,1491"/>
-<area shape="rect" id="node36" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="447,1988,610,2029"/>
-<area shape="rect" id="node37" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="911,2049,1059,2075"/>
-<area shape="rect" id="node45" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="449,1559,608,1600"/>
-<area shape="rect" id="node47" href="common_8cpp.html#a0edb99c36d663a8fe718ab7f097c7f96" title="Call to subtract a scalar from the diagonal of a complex matrix. " alt="" coords="707,1769,807,1795"/>
-<area shape="rect" id="node48" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7" title="Call to get the number of the individual gate types in the list of operations. " alt="" coords="687,897,827,939"/>
-<area shape="rect" id="node49" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="447,956,610,997"/>
-<area shape="rect" id="node53" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="447,264,610,305"/>
-<area shape="rect" id="node54" href="class_decomposition___base.html#a965838902240670119c0ad68d087c322" title="Call to prepare the optimized operations to export. " alt="" coords="456,2273,601,2329"/>
-<area shape="rect" id="node4" href="class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="939,289,1030,315"/>
-<area shape="rect" id="node5" href="class_decomposition___base.html#a5d5c560ad2269f5594a70f47aa1831ed" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="684,5,829,47"/>
-<area shape="rect" id="node6" href="class_sub___matrix___decomposition.html#a56b7a2e77d0426ab2b1283f12d848190" title="The optimization problem of the final optimization. " alt="" coords="667,304,847,345"/>
-<area shape="rect" id="node13" href="class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="912,139,1057,195"/>
-<area shape="rect" id="node14" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Deafult constructor of the class. " alt="" coords="1123,828,1301,869"/>
-<area shape="rect" id="node15" href="class_operation__block.html#a3779e559654f12c5544129c46305b6ce" title="Append a C_NOT gate operation to the list of operations. " alt="" coords="685,421,828,463"/>
-<area shape="rect" id="node16" href="class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="913,567,1056,608"/>
-<area shape="rect" id="node19" href="class_operation__block.html#a44940209dbc5754b676b5a493bb153f4" title="Append a U3 gate to the list of operations. " alt="" coords="685,487,828,528"/>
-<area shape="rect" id="node20" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="684,223,829,279"/>
-<area shape="rect" id="node17" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="1349,1838,1512,1865"/>
-<area shape="rect" id="node18" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="1145,1069,1279,1095"/>
-<area shape="rect" id="node21" href="common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="949,967,1021,994"/>
-<area shape="rect" id="node22" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1170,1579,1254,1606"/>
-<area shape="rect" id="node24" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="915,1389,1055,1431"/>
-<area shape="rect" id="node25" href="class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="895,1572,1075,1613"/>
-<area shape="rect" id="node26" href="class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="915,1120,1055,1161"/>
-<area shape="rect" id="node27" href="class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="915,1689,1055,1731"/>
-<area shape="rect" id="node28" href="class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="937,1237,1033,1263"/>
-<area shape="rect" id="node29" href="class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="1141,1863,1283,1890"/>
-<area shape="rect" id="node30" href="class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="913,1507,1056,1548"/>
-<area shape="rect" id="node31" href="class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="947,1287,1023,1314"/>
-<area shape="rect" id="node32" href="class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="1151,1914,1273,1941"/>
-<area shape="rect" id="node33" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="908,1186,1061,1213"/>
-<area shape="rect" id="node34" href="class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="915,1831,1055,1872"/>
-<area shape="rect" id="node35" href="class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="927,1338,1042,1365"/>
-<area shape="rect" id="node38" href="classmatrix__base.html#a8b45035198dd164a2c60b75af5613dae" title="Call to transpose (or un&#45;transpose) the matrix for CBLAS functions. " alt="" coords="679,2170,834,2197"/>
-<area shape="rect" id="node39" href="classmatrix__base.html#a5908c0f3c1099343c3994e548125b414" title="Call to conjugate (or un&#45;conjugate) the matrix for CBLAS functions. " alt="" coords="679,2221,834,2247"/>
-<area shape="rect" id="node40" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="737,2119,777,2146"/>
-<area shape="rect" id="node41" href="class_n___qubit___decomposition.html#a23d026d07cfa56942c80d8697ac0c9c7" title="Constructor of the class. " alt="" coords="672,2272,841,2313"/>
-<area shape="rect" id="node42" href="class_decomposition___base.html#abae5d21859730a358c3d10051f957420" title="Call to set the maximal number of the iterations in the optimization process. " alt="" coords="684,1871,829,1912"/>
-<area shape="rect" id="node43" href="class_n___qubit___decomposition.html#a180ca3406189b079fb2defc5054c8700" title="Set the number of identical successive blocks during the subdecomposition of the n&#45;th qubit..." alt="" coords="675,1988,838,2029"/>
-<area shape="rect" id="node44" href="class_decomposition___base.html#af10692ec27c3db9e422d057c5f0347a6" title="Call to set the number of operation blocks to be optimized in one shot. " alt="" coords="673,2053,840,2095"/>
-<area shape="rect" id="node46" href="class_decomposition___base.html#ad1502d076d0ec0c5cd8b301340fe8ffe" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="672,1369,841,1411"/>
-<area shape="rect" id="node50" href="class_operation__block.html#a92e4f0566e4b36830652729377a8e936" title="Call to get the qubits involved in the operations stored in the block of operations. " alt="" coords="687,705,827,747"/>
-<area shape="rect" id="node51" href="common_8cpp.html#aba6badd873191e752e949e21670e67be" title="Add an integer to a vector of integers if the integer is not already an element of the vector..." alt="" coords="909,735,1060,762"/>
-<area shape="rect" id="node52" href="class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="671,1267,842,1294"/>
+<area shape="rect" id="node2" href="class_n___qubit___decomposition.html#a752d5664cc0011a231f2e417211c9433" title="Start the disentanglig process of the unitary. " alt="" coords="228,5,391,47"/>
 </map>
 </div>
 
@@ -746,7 +679,7 @@ Here is the call graph for this function:</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Mon Jan 18 2021 17:39:28 for Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Feb 5 2021 08:34:37 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>
