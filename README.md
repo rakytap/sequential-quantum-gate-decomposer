@@ -1,3 +1,5 @@
+[![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4508680.svg)](https://doi.org/10.5281/zenodo.4508680)
+
 # Sequential Quantum Gate Decomposer (SQUANDER)
 
 
@@ -143,3 +145,13 @@ The example files import the necessary **qgd_python** modules containing the wra
 It should be noted, however, that the python interface functions are implemented only for few functionalities of the whole SQUANDER API. 
 Another desired interface functions can be implemented following the sources of already implemented interface functions in *.cpp source files located in directory
 **path/to/SQUANDER/package/qgd_python**
+
+### How to cite us
+
+If you have found our work useful for your research project, please cite us by
+
+Peter Rakyta, Zoltan Zimboras, Sequential Quantum Gate Decomposer (SQUANDER), https://doi.org/10.5281/zenodo.4508680
+
+
+
+
