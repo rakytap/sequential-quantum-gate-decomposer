@@ -22,7 +22,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "U3.h"
-tbb::spin_mutex my_mutex2;
+//tbb::spin_mutex my_mutex2;
 /**
 @brief Nullary constructor of the class.
 */
