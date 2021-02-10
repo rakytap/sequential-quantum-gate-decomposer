@@ -19,7 +19,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 """
 ## \file test_decomposition.py
-## \brief Functionality test cases for the N_Qubit_Decomposition class.
+## \brief Functionality test cases for the qgd_N_Qubit_Decomposition class.
 
 
 
@@ -50,7 +50,7 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
     
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="randomc" )
+        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="random" )
 
 
     def test_N_Qubit_Decomposition_3qubit(self):
