@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef FUNCTOR_GET_OPERATION_PRODUCTS_INCLUDED
 #define FUNCTOR_GET_OPERATION_PRODUCTS_INCLUDED
 
+#include <tbb/blocked_range.h>
 #include "common.h"
 #include "Operation.h"
 #include "Operation_block.h"

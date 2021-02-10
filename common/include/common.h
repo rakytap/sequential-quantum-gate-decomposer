@@ -24,8 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef common_H
 #define common_H
 
-#include <tbb/tbb.h>
-#include <tbb/scalable_allocator.h>
+
 #include <omp.h>
 #include "QGDTypes.h"
 #include "dot.h"
@@ -39,18 +38,22 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <cstring>
 #include <sstream>
 
-#ifdef CBLAS
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
-#if CBLAS==1 // MKL
+#if BLAS==0 // undefined blas
+    /// Set the number of threads on runtime in MKL
+    void omp_set_num_threads(int num_threads);
+    /// get the number of threads in MKL
+    int omp_get_max_threads();
+#elif BLAS==1 // MKL
     /// Set the number of threads on runtime in MKL
     void MKL_Set_Num_Threads(int num_threads);
     /// get the number of threads in MKL
     int mkl_get_max_threads();
-#elif CBLAS==2 // OpenBLAS
+#elif BLAS==2 // OpenBLAS
     /// Set the number of threads on runtime in OpenBlas
     void openblas_set_num_threads(int num_threads);
     /// get the number of threads in OpenBlas
@@ -60,7 +63,7 @@ extern "C"
 #ifdef __cplusplus
 }
 #endif
-#endif
+
 
 
 

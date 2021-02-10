@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 // gates acting on the N-qubit space
 
 #include "common.h"
+#include <tbb/scalable_allocator.h>
 
 
 

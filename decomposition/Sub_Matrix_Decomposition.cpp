@@ -22,8 +22,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "Sub_Matrix_Decomposition.h"
+#include "Sub_Matrix_Decomposition_Cost_Function.h"
+#include "Functor_Cost_Function_Gradient.h"
 
-tbb::spin_mutex my_mutex;
+//tbb::spin_mutex my_mutex;
 
 /**
 @brief Nullary constructor of the class.
@@ -99,7 +101,9 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num
 */
 Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
 
-    delete unit_gate_structure;
+    if ( unit_gate_structure != NULL ) {
+        delete unit_gate_structure;
+    }
     unit_gate_structure = NULL;
 
 }

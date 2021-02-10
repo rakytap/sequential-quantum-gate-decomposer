@@ -1,3 +1,28 @@
+/*
+Created on Fri Jun 26 14:13:26 2020
+Copyright (C) 2020 Peter Rakyta, Ph.D.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see http://www.gnu.org/licenses/.
+
+@author: Peter Rakyta, Ph.D.
+*/
+/*! \file dot.cpp
+    \brief Provides multithreaded binding for CBLAS function zgemm to calculate matrix products
+*/
+
+
+#include "common.h"
 #include "dot.h"
 #include <cstring>
 #include <iostream>
@@ -19,10 +44,13 @@
 Matrix
 dot( Matrix &A, Matrix &B ) {
 
-#if BLAS==1
+#if BLAS==0 // undefined BLAS
+    int NumThreads = omp_get_max_threads();
+    omp_set_num_threads(1);
+#elif BLAS==1 // MKL
     int NumThreads = mkl_get_max_threads();
     MKL_Set_Num_Threads(1);
-#elif BLAS==2
+#elif BLAS==2 //OpenBLAS
     int NumThreads = openblas_get_num_threads();
     openblas_set_num_threads(1);
 #endif
@@ -80,7 +108,9 @@ dot( Matrix &A, Matrix &B ) {
         tbb::task::spawn_root_and_wait(calc_task);
     }
 
-#if BLAS==1 //MKL
+#if BLAS==0 // undefined BLAS
+    omp_set_num_threads(NumThreads);
+#elif BLAS==1 //MKL
     MKL_Set_Num_Threads(NumThreads);
 #elif BLAS==2 //OpenBLAS
     openblas_set_num_threads(NumThreads);

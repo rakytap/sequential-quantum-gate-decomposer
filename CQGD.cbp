@@ -183,20 +183,17 @@
 		<Unit filename="decomposition/Functor_Cost_Function_Gradient.cpp" />
 		<Unit filename="decomposition/Functor_Get_Operation_Products.cpp" />
 		<Unit filename="decomposition/N_Qubit_Decomposition.cpp" />
-		<Unit filename="decomposition/N_Qubit_Decomposition_Base.cpp" />
 		<Unit filename="decomposition/N_Qubit_Decomposition_Cost_Function.cpp" />
 		<Unit filename="decomposition/Sub_Matrix_Decomposition.cpp" />
 		<Unit filename="decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp" />
-		<Unit filename="decomposition/Sub_Matrix_Decomposition_Custom.cpp" />
 		<Unit filename="decomposition/include/Decomposition_Base.h" />
 		<Unit filename="decomposition/include/Functor_Cost_Function_Gradient.h" />
 		<Unit filename="decomposition/include/Functor_Get_Operation_Products.h" />
 		<Unit filename="decomposition/include/N_Qubit_Decomposition.h" />
-		<Unit filename="decomposition/include/N_Qubit_Decomposition_Base.h" />
 		<Unit filename="decomposition/include/N_Qubit_Decomposition_Cost_Function.h" />
+		<Unit filename="decomposition/include/N_Qubit_Decomposition_tmp.h" />
 		<Unit filename="decomposition/include/Sub_Matrix_Decomposition.h" />
 		<Unit filename="decomposition/include/Sub_Matrix_Decomposition_Cost_Function.h" />
-		<Unit filename="decomposition/include/Sub_Matrix_Decomposition_Custom.h" />
 		<Unit filename="operations/CNOT.cpp" />
 		<Unit filename="operations/Operation.cpp" />
 		<Unit filename="operations/Operation_block.cpp" />
@@ -210,9 +207,8 @@
 		<Unit filename="test_standalone/CMakeLists.txt">
 			<Option virtualFolder="CMake Files/test_standalone/" />
 		</Unit>
-		<Unit filename="test_standalone/decomposition_test.cpp">
-			<Option target="decomposition_test" />
-		</Unit>
+		<Unit filename="test_standalone/custom_gate_structure_test.cpp" />
+		<Unit filename="test_standalone/decomposition_test.cpp" />
 		<Extensions />
 	</Project>
 </CodeBlocks_project_file>

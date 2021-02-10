@@ -19,26 +19,90 @@ include(CheckIncludeFileCXX)
 # variables for compile and link options
 set(CXX_FLAGS_DEBUG)
 set(CXX_FLAGS_RELEASE)
-set(EXTRA_LIBS)
+set(TBB_LIBS)
+set(GSL_LIBS)
 set(EXTRA_INCLUDES)
+set(CXX_FLAGS_DEBUG)
+set(CXX_FLAGS_RELEASE)
+set(TBB_LIBS)
+set(BLAS_LIBRARIES)
+set(BLAS_LINKER_FLAGS)
+set(NUMPY_BLAS_LIB_DIR)
+set(NUMPY_INC_DIR)
+set(PYTHON_LIB_DIR)
+
 
 #enable test target
 enable_testing()
 
 
+#################################################################
+# checking python developer packages
+
+
+# find out python packages
+find_package(PythonInterp)
+find_package(PythonLibs)
+
+
+# Determine Numpy input directory
+exec_program(${PYTHON_EXECUTABLE}
+             ARGS "-c \"import numpy; print(numpy.get_include())\""
+             OUTPUT_VARIABLE NUMPY_INC_DIR
+             RETURN_VALUE NUMPY_NOT_FOUND
+            )
+if(NUMPY_NOT_FOUND)
+    message(FATAL_ERROR "NumPy headers not found")
+endif()
+
+
+# Determine CBLAS library directory Numpy
+exec_program(${PYTHON_EXECUTABLE}
+             ARGS "-c \"import numpy; blas_info=numpy.__config__.get_info('blas_opt_info'); libs=blas_info.get('library_dirs',' '); print(libs[0])\""
+             OUTPUT_VARIABLE NUMPY_BLAS_LIB_DIR
+             RETURN_VALUE NUMPY_BLAS_NOT_FOUND
+            )
+if(NUMPY_NOT_FOUND)
+    message(FATAL_ERROR "NumPy headers not found")
+endif()
+
+
+
+#################################################################
+
+
+
 # If MKL is enabled, ObenBLAS should be disabled
 if(USE_MKL)
   set(USE_OPENBLAS OFF)
-  list(APPEND CXX_FLAGS_DEBUG "-DCBLAS=1")
-  list(APPEND CXX_FLAGS_RELEASE "-DCBLAS=1")
+  list(APPEND CXX_FLAGS_DEBUG "-DBLAS=1")
+  list(APPEND CXX_FLAGS_RELEASE "-DBLAS=1")
+  list(APPEND BLAS_LIBRARIES "-Wl,-rpath=${NUMPY_BLAS_LIB_DIR}" "-L${NUMPY_BLAS_LIB_DIR}" "-lmkl_rt" "-lpthread")
 endif()
 
-# setting macros for openblas
+# If OpenBlas is enabled, MKL should be disabled
 if(USE_OPENBLAS)
-  list(APPEND CXX_FLAGS_DEBUG "-DCBLAS=2")
-  list(APPEND CXX_FLAGS_RELEASE "-DCBLAS=2")
+  set(USE_MKL OFF)
+  list(APPEND CXX_FLAGS_DEBUG "-DBLAS=2")
+  list(APPEND CXX_FLAGS_RELEASE "-DBLAS=2")
+  list(APPEND BLAS_LIBRARIES "-Wl,-rpath=${NUMPY_BLAS_LIB_DIR}" "-L${NUMPY_BLAS_LIB_DIR}" "-lopenblas")
 endif()
 
+
+
+# If no CLBAS library was given for CMAKE trying to find out the BLAS library
+if((NOT USE_MKL) AND (NOT USE_OPENBLAS))
+  find_package(BLAS)
+
+  if(NOT BLAS_FOUND)
+    message(FATAL_ERROR "BLAS library not found")
+  endif()
+
+  list(APPEND BLAS_LIBRARIES ${BLAS_LIBRARIES})
+  list(APPEND CXX_FLAGS_DEBUG "-DBLAS=0")
+  list(APPEND CXX_FLAGS_RELEASE "-DBLAS=0")
+
+endif()
 
 
 # setting basic compile flags
@@ -85,7 +149,7 @@ if(DEFINED ENV{GSL_LIB_DIR})
 
 
   message("-- Adding library directory $ENV{GSL_LIB_DIR}")
-  list(APPEND EXTRA_LIBS "-Wl,-rpath=$ENV{GSL_LIB_DIR}" "-L$ENV{GSL_LIB_DIR}" "-lgsl")
+  list(APPEND GSL_LIBS "-Wl,-rpath=$ENV{GSL_LIB_DIR}" "-L$ENV{GSL_LIB_DIR}" "-lgsl")
 
 else()
 
@@ -95,7 +159,7 @@ else()
     message(FATAL_ERROR "GSL library not found")
   endif()
 
-  list(APPEND EXTRA_LIBS "-lgsl")
+  list(APPEND GSL_LIBS "-lgsl")
 
 endif()
 
@@ -142,7 +206,7 @@ if(DEFINED ENV{TBB_LIB_DIR})
   endif()
 
   message("-- Adding library directory $ENV{TBB_LIB_DIR}")
-  list(APPEND EXTRA_LIBS "-Wl,-rpath=$ENV{TBB_LIB_DIR}" "-L$ENV{TBB_LIB_DIR}" "-ltbb" "-ltbbmalloc_proxy" "-ltbbmalloc")
+  list(APPEND TBB_LIBS "-Wl,-rpath=$ENV{TBB_LIB_DIR}" "-L$ENV{TBB_LIB_DIR}" "-ltbb" "-ltbbmalloc_proxy" "-ltbbmalloc")
 
 else()
 
@@ -158,7 +222,7 @@ else()
     message(FATAL_ERROR "TBBMALLOC_PROXY library not found")
   endif()
 
-  list(APPEND EXTRA_LIBS "-ltbb" "-ltbbmalloc_proxy" "-ltbbmalloc")
+  list(APPEND TBB_LIBS "-ltbb" "-ltbbmalloc_proxy" "-ltbbmalloc")
 
 endif()
 
@@ -188,68 +252,6 @@ else()
 
 endif()
 
-############################################################xx
-# checking MKL library
-
-if(USE_MKL)
-# adding MKL library dir if given
-if(DEFINED ENV{CBLAS_LIB_DIR})
-  find_library(CBLAS_LIB mkl_rt PATH $ENV{CBLAS_LIB_DIR} )
-
-  if(NOT CBLAS_LIB)
-    message(FATAL_ERROR "MKL library not found")
-  endif()
-
-
-  message("-- Adding library directory $ENV{CBLAS_LIB_DIR}")
-  list(APPEND EXTRA_LIBS "-Wl,-rpath=$ENV{CBLAS_LIB_DIR}" "-L$ENV{CBLAS_LIB_DIR}" "-lmkl_rt" "-lpthread")
-
-else()
-
-  find_library(CBLAS_LIB openblas)
-
-  if(NOT CBLAS_LIB)
-    message(FATAL_ERROR "MKL library not found")
-  endif()
-
-  list(APPEND EXTRA_LIBS "-lmkl_rt" "-lpthread")
-
-endif()
-
-endif()
-
-
-############################################################xx
-# checking CBLAS library
-
-if(USE_OPENBLAS)
-
-# adding OpenBLAS library dir if given
-if(DEFINED ENV{CBLAS_LIB_DIR})
-  find_library(CBLAS_LIB openblas PATH $ENV{CBLAS_LIB_DIR} )
-
-  if(NOT CBLAS_LIB)
-    message(FATAL_ERROR "OpenBLAS library not found")
-  endif()
-
-
-  message("-- Adding library directory $ENV{CBLAS_LIB_DIR}")
-  list(APPEND EXTRA_LIBS "-Wl,-rpath=$ENV{CBLAS_LIB_DIR}" "-L$ENV{CBLAS_LIB_DIR}" "-lopenblas")
-
-else()
-
-  find_library(CBLAS_LIB openblas)
-
-  if(NOT CBLAS_LIB)
-    message(FATAL_ERROR "OpenBLAS library not found")
-  endif()
-
-  list(APPEND EXTRA_LIBS "-lopenblas")
-
-endif()
-
-endif()
-
 
 add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/common/common.cpp
@@ -262,13 +264,24 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Functor_Cost_Function_Gradient.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Functor_Get_Operation_Products.cpp
-    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Base.cpp
+    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
-    ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition_Custom.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition.cpp  
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Unitary.cpp
 )
+
+
+
+set_target_properties(
+    qgd
+    PROPERTIES
+        PREFIX ""
+        SUFFIX ""
+        OUTPUT_NAME "qgd${EXT_SUFFIX}"
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib
+    )
+
 
 # adding compile options
 target_compile_options(qgd PUBLIC
@@ -278,12 +291,13 @@ target_compile_options(qgd PUBLIC
 )
 
 # adding linking options
-target_link_libraries( qgd PUBLIC
-    "$<$<CONFIG:Debug>:${EXTRA_LIBS}>"
-    "$<$<CONFIG:Release>:${EXTRA_LIBS}>"
+target_link_libraries( qgd PRIVATE
+    ${TBB_LIBS}
+    ${BLAS_LIBRARIES}
+    ${GSL_LIBS}
 )
 
-target_include_directories(qgd PUBLIC
+target_include_directories(qgd PRIVATE
                             .
                             ./common/include
                             ./operations/include
@@ -306,17 +320,21 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Decomposition_Base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Functor_Cost_Function_Gradient.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Functor_Get_Operation_Products.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_Base.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_Cost_Function.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Sub_Matrix_Decomposition_Cost_Function.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Sub_Matrix_Decomposition_Custom.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Sub_Matrix_Decomposition.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Unitary.h
 )
 
 configure_file(${PROJECT_SOURCE_DIR}/common/include/Config.h.in
                ${PROJECT_SOURCE_DIR}/common/include/Config.h)
+
+
+# adding CMAKE files for Python extensions
+add_subdirectory (qgd_python)
+add_subdirectory (qgd_python/gates)
 
 
 # adding CMAKE files for executables

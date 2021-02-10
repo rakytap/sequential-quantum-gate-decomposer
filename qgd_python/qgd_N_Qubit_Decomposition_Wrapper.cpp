@@ -29,9 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <numpy/arrayobject.h>
 #include "structmember.h"
 #include <stdio.h>
-
 #include "N_Qubit_Decomposition.h"
-#include "Sub_Matrix_Decomposition.h"
 
 
 /**
@@ -51,7 +49,7 @@ typedef struct qgd_N_Qubit_Decomposition_Wrapper {
     /// pointer to the unitary to be decomposed to keep it alive
     PyObject *Umtx;
     /// An object to decompose the unitary
-    N_Qubit_Decomposition<Sub_Matrix_Decomposition>* decomp;
+    N_Qubit_Decomposition* decomp;
 
 } qgd_N_Qubit_Decomposition_Wrapper;
 
@@ -65,10 +63,10 @@ typedef struct qgd_N_Qubit_Decomposition_Wrapper {
 @param initial_guess Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
-N_Qubit_Decomposition<Sub_Matrix_Decomposition>* 
+N_Qubit_Decomposition* 
 create_N_Qubit_Decomposition( Matrix& Umtx, int qbit_num, bool optimize_layer_num, guess_type initial_guess ) {
 
-    return new N_Qubit_Decomposition<Sub_Matrix_Decomposition>( Umtx, qbit_num, optimize_layer_num, initial_guess );
+    return new N_Qubit_Decomposition( Umtx, qbit_num, optimize_layer_num, initial_guess );
 }
 
 
@@ -77,11 +75,50 @@ create_N_Qubit_Decomposition( Matrix& Umtx, int qbit_num, bool optimize_layer_nu
 @param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 void
-release_N_Qubit_Decomposition( N_Qubit_Decomposition<Sub_Matrix_Decomposition>*  instance ) {
-    delete instance;
+release_N_Qubit_Decomposition( N_Qubit_Decomposition*  instance ) {
+    if (instance != NULL ) {
+        delete instance;
+    }
     return;
 }
 
+
+
+/**
+@brief Call to create a PIC matrix representation of a numpy array
+*/
+Matrix
+numpy2matrix(PyObject *arr) {
+
+    // test C-style contiguous memory allocation of the arrays
+    if ( !PyArray_IS_C_CONTIGUOUS(arr) ) {
+        std::cout << "array is not memory contiguous" << std::endl;
+    }
+
+    // get the pointer to the data stored in the input matrices
+    QGD_Complex16* data = (QGD_Complex16*)PyArray_DATA(arr);
+
+    // get the dimensions of the array self->C
+    int dim_num = PyArray_NDIM( arr );
+    npy_intp* dims = PyArray_DIMS(arr);
+
+    // create PIC version of the input matrices
+    if (dim_num == 2) {
+        Matrix mtx = Matrix(data, dims[0], dims[1]);
+        return mtx;
+    }
+    else if (dim_num == 1) {
+        Matrix mtx = Matrix(data, dims[0], 1);
+        return mtx;
+    }
+    else {
+        std::cout << "numpy2matrix: Wrong matrix dimension was given" << std::endl;
+        return Matrix(0,0);
+    }
+
+
+
+}
 
 
 
@@ -97,11 +134,17 @@ static void
 qgd_N_Qubit_Decomposition_Wrapper_dealloc(qgd_N_Qubit_Decomposition_Wrapper *self)
 {
 
-    // deallocate the instance of class N_Qubit_Decomposition
-    release_N_Qubit_Decomposition( self->decomp );
+    if ( self->decomp != NULL ) {
+        // deallocate the instance of class N_Qubit_Decomposition
+        release_N_Qubit_Decomposition( self->decomp );
+        self->decomp = NULL;
+    }
 
-    // release the unitary to be decomposed
-    Py_DECREF(self->Umtx);    
+    if ( self->Umtx != NULL ) {
+        // release the unitary to be decomposed
+        Py_DECREF(self->Umtx);    
+        self->Umtx = NULL;
+    }
     
     Py_TYPE(self)->tp_free((PyObject *) self);
 
@@ -117,6 +160,10 @@ qgd_N_Qubit_Decomposition_Wrapper_new(PyTypeObject *type, PyObject *args, PyObje
     qgd_N_Qubit_Decomposition_Wrapper *self;
     self = (qgd_N_Qubit_Decomposition_Wrapper *) type->tp_alloc(type, 0);
     if (self != NULL) {}
+
+    self->decomp = NULL;
+    self->Umtx = NULL;
+
     return (PyObject *) self;
 }
 
@@ -153,22 +200,9 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
         std::cout << "Umtx is not memory contiguous" << std::endl;
     }
 
-    // get the dimensions of the array self->Umtx
-    int dim_num = PyArray_NDIM( self->Umtx );
-    npy_intp* dims = PyArray_DIMS(self->Umtx);
-
-    // insert a test for dimensions
-    if (dim_num != 2) {
-        std::cout << "The number of dimensions of the input matrix should be 2, but Umtx with " << dim_num << " dimensions was given" << std::endl; 
-        return -1;
-    }
-
-    // get the pointer to the data stored in the matrix self->Umtx
-    QGD_Complex16* data = (QGD_Complex16*)PyArray_DATA(self->Umtx);
- 
 
     // create QGD version of the Umtx
-    Matrix Umtx_mtx = Matrix(data, dims[0], dims[1]);    
+    Matrix Umtx_mtx = numpy2matrix(self->Umtx);  
 
 
     // determine the initial guess type
@@ -187,10 +221,10 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
         qgd_initial_guess = CLOSE_TO_ZERO;        
     }
     else {
-        std::cout << "Wring initial guess format. Using default ZEROS." << std::endl; 
+        std::cout << "Wrong initial guess format. Using default ZEROS." << std::endl; 
         qgd_initial_guess = ZEROS;     
     }
-   
+  
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
         self->decomp =  create_N_Qubit_Decomposition( Umtx_mtx, qbit_num, optimize_layer_num, qgd_initial_guess);
@@ -268,7 +302,7 @@ qgd_N_Qubit_Decomposition_Wrapper_get_operation_num( qgd_N_Qubit_Decomposition_W
 @return Returns with a python dictionary containing the metadata of the idx-th operation
 */
 static PyObject *
-get_operation( N_Qubit_Decomposition<Sub_Matrix_Decomposition>* decomp, int &idx ) {
+get_operation( N_Qubit_Decomposition* decomp, int &idx ) {
 
 
     // create dictionary conatining the gate data

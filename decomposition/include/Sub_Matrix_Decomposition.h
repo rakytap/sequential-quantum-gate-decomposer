@@ -25,8 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define SUB_MATRIX_DECOMPOSITION_H
 
 #include "Decomposition_Base.h"
-#include "Sub_Matrix_Decomposition_Cost_Function.h"
-#include "Functor_Cost_Function_Gradient.h"
+
 
 
 /**

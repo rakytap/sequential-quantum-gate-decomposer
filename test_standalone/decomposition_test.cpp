@@ -29,7 +29,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //! [include]
 #include "common.h"
 #include "N_Qubit_Decomposition.h"
-#include "Sub_Matrix_Decomposition_Custom.h"
 #include "Random_Unitary.h"
 //! [include]
 
@@ -81,8 +80,8 @@ int main() {
     }
 //! [creating decomp class]
     // creating the class for the decomposition. Here Umtx_adj is the complex transposition of unitary Umtx
-    N_Qubit_Decomposition<Sub_Matrix_Decomposition> cDecomposition =
-                   N_Qubit_Decomposition<Sub_Matrix_Decomposition>( Umtx_adj, qbit_num, /* optimize_layer_num= */ false, /* initial_guess= */ RANDOM );
+    N_Qubit_Decomposition cDecomposition =
+                   N_Qubit_Decomposition( Umtx_adj, qbit_num, /* optimize_layer_num= */ false, /* initial_guess= */ RANDOM );
 //! [creating decomp class]
 
 //! [set parameters]

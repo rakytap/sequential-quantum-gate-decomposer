@@ -24,7 +24,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 ##    \brief A QGD Python interface class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
 
 
-import ctypes
 import numpy as np
 from os import path
 from qgd_python.qgd_N_Qubit_Decomposition_Wrapper import qgd_N_Qubit_Decomposition_Wrapper

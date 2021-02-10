@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define N_Qubit_Decomposition_Cost_Function_H
 
 #include "common.h"
+#include <tbb/combinable.h>
 
 
 /**

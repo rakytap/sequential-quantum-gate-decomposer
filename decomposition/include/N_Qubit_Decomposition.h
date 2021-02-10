@@ -17,18 +17,18 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file N_Qubit_Decomposition_Base.h
-    \brief Header file for a base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 operations.
+/*! \file N_Qubit_Decomposition.h
+    \brief Header file for a class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 operations.
     This class contains the non-template implementation of the decomposition class.
 
 */
 
-#ifndef N_QUBIT_DECOMPOSITION_BASE_H
-#define N_QUBIT_DECOMPOSITION_BASE_H
+#ifndef N_Qubit_Decomposition_H
+#define N_Qubit_Decomposition_H
 
 #include "Decomposition_Base.h"
 #include "Sub_Matrix_Decomposition.h"
-#include "N_Qubit_Decomposition_Cost_Function.h"
+
 
 
 
@@ -37,7 +37,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 operations.
 This class contains the non-template implementation of the decomposition class.
 */
-class N_Qubit_Decomposition_Base : public Decomposition_Base {
+class N_Qubit_Decomposition : public Decomposition_Base {
 
 
 public:
@@ -61,7 +61,7 @@ public:
 @brief Nullary constructor of the class.
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base();
+N_Qubit_Decomposition();
 
 
 
@@ -73,14 +73,37 @@ N_Qubit_Decomposition_Base();
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
+N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
 
 
 
 /**
 @brief Destructor of the class
 */
-~N_Qubit_Decomposition_Base();
+~N_Qubit_Decomposition();
+
+
+/**
+@brief Start the disentanglig process of the unitary
+@param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
+@param prepare_export Logical parameter. Set true to prepare the list of operations to be exported, or false otherwise.
+*/
+void start_decomposition(bool finalize_decomp=true, bool prepare_export=true);
+
+
+
+/**
+@brief Start the decompostion process to recursively decompose the submatrices.
+*/
+void  decompose_submatrix();
+
+
+/**
+@brief Call to extract and store the calculated parameters and operations of the sub-decomposition processes
+@param cSub_decomposition An instance of class Sub_Matrix_Decomposition used to disentangle the n-th qubit from the others.
+*/
+void  extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposition );
+
 
 /**
 @brief final optimization procedure improving the accuracy of the decompositin when all the qubits were already disentangled.
