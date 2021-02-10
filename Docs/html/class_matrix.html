@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.4</span>
+   &#160;<span id="projectnumber">v1.5</span>
    </div>
    <div id="projectbrief">Powerful decomposition of almost any unitary into U3 and CNOT gates</div>
   </td>
@@ -163,7 +163,7 @@ Private Attributes</h2></td></tr>
 <div class="textblock"><p>Class to store data of complex arrays and its properties. </p>
 <p>Compatible with the Picasso numpy interface. </p>
 
-<p class="definition">Definition at line <a class="el" href="matrix_8h_source.html#l00014">14</a> of file <a class="el" href="matrix_8h_source.html">matrix.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix_8h_source.html#l00038">38</a> of file <a class="el" href="matrix_8h_source.html">matrix.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a2dba13c45127354c9f75ef576f49269b"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2dba13c45127354c9f75ef576f49269b">&#9670;&nbsp;</a></span>Matrix() <span class="overload">[1/4]</span></h2>
@@ -183,7 +183,7 @@ Private Attributes</h2></td></tr>
 <p>Default constructor of the class. </p>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the instance of the class. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="matrix_8cpp_source.html#l00011">11</a> of file <a class="el" href="matrix_8cpp_source.html">matrix.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix_8cpp_source.html#l00034">34</a> of file <a class="el" href="matrix_8cpp_source.html">matrix.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -191,12 +191,16 @@ Here is the caller graph for this function:</div>
 <map name="class_matrix_a2dba13c45127354c9f75ef576f49269b_icgraph" id="class_matrix_a2dba13c45127354c9f75ef576f49269b_icgraph">
 <area shape="rect" id="node2" href="class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="152,86,243,113"/>
 <area shape="rect" id="node3" href="class_decomposition___base.html#ad1502d076d0ec0c5cd8b301340fe8ffe" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="291,5,460,47"/>
-<area shape="rect" id="node6" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="303,71,448,127"/>
-<area shape="rect" id="node9" href="class_decomposition___base.html#a7523e317319932fe86ee5eb5e18b95a0" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="293,152,457,193"/>
+<area shape="rect" id="node10" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="303,71,448,127"/>
+<area shape="rect" id="node13" href="class_decomposition___base.html#a7523e317319932fe86ee5eb5e18b95a0" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="293,152,457,193"/>
 <area shape="rect" id="node4" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="519,5,677,47"/>
-<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#a752d5664cc0011a231f2e417211c9433" title="Start the disentanglig process of the unitary. " alt="" coords="736,31,927,87"/>
-<area shape="rect" id="node7" href="class_n___qubit___decomposition___base.html#a382d8110a0de379bcc1fe862bedaa2be" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="516,71,680,112"/>
-<area shape="rect" id="node8" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="508,136,688,177"/>
+<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="736,71,899,112"/>
+<area shape="rect" id="node6" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1003,19,1053,46"/>
+<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="947,71,1109,112"/>
+<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="947,136,1109,177"/>
+<area shape="rect" id="node9" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1157,165,1320,207"/>
+<area shape="rect" id="node11" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="517,71,679,112"/>
+<area shape="rect" id="node12" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="508,136,688,177"/>
 </map>
 </div>
 
@@ -245,7 +249,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the instance of the class. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="matrix_8cpp_source.html#l00022">22</a> of file <a class="el" href="matrix_8cpp_source.html">matrix.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix_8cpp_source.html#l00045">45</a> of file <a class="el" href="matrix_8cpp_source.html">matrix.cpp</a>.</p>
 
 </div>
 </div>
@@ -285,7 +289,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the instance of the class. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="matrix_8cpp_source.html#l00033">33</a> of file <a class="el" href="matrix_8cpp_source.html">matrix.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix_8cpp_source.html#l00056">56</a> of file <a class="el" href="matrix_8cpp_source.html">matrix.cpp</a>.</p>
 
 </div>
 </div>
@@ -313,7 +317,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="matrix_8cpp_source.html#l00043">43</a> of file <a class="el" href="matrix_8cpp_source.html">matrix.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix_8cpp_source.html#l00066">66</a> of file <a class="el" href="matrix_8cpp_source.html">matrix.cpp</a>.</p>
 
 </div>
 </div>
@@ -343,7 +347,7 @@ Here is the caller graph for this function:</div>
 
 <p>Call to conjugate (or un-conjugate) the matrix for CBLAS functions. </p>
 
-<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00190">190</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00178">178</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
 
 </div>
 </div>
@@ -365,7 +369,7 @@ Here is the caller graph for this function:</div>
 <p>Call to create a copy of the matrix. </p>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the instance of the class. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="matrix_8cpp_source.html#l00054">54</a> of file <a class="el" href="matrix_8cpp_source.html">matrix.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix_8cpp_source.html#l00077">77</a> of file <a class="el" href="matrix_8cpp_source.html">matrix.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -380,12 +384,16 @@ Here is the caller graph for this function:</div>
 <div class="center"><img src="class_matrix_a46e203f562c39beefb3a4d2450a87737_icgraph.png" border="0" usemap="#class_matrix_a46e203f562c39beefb3a4d2450a87737_icgraph" alt=""/></div>
 <map name="class_matrix_a46e203f562c39beefb3a4d2450a87737_icgraph" id="class_matrix_a46e203f562c39beefb3a4d2450a87737_icgraph">
 <area shape="rect" id="node2" href="class_decomposition___base.html#ad1502d076d0ec0c5cd8b301340fe8ffe" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="144,5,313,47"/>
-<area shape="rect" id="node5" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="156,71,301,127"/>
-<area shape="rect" id="node8" href="class_decomposition___base.html#a7523e317319932fe86ee5eb5e18b95a0" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="147,152,311,193"/>
+<area shape="rect" id="node9" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="156,71,301,127"/>
+<area shape="rect" id="node12" href="class_decomposition___base.html#a7523e317319932fe86ee5eb5e18b95a0" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="147,152,311,193"/>
 <area shape="rect" id="node3" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="372,5,531,47"/>
-<area shape="rect" id="node4" href="class_n___qubit___decomposition.html#a752d5664cc0011a231f2e417211c9433" title="Start the disentanglig process of the unitary. " alt="" coords="589,31,780,87"/>
-<area shape="rect" id="node6" href="class_n___qubit___decomposition___base.html#a382d8110a0de379bcc1fe862bedaa2be" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="369,71,533,112"/>
-<area shape="rect" id="node7" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="361,136,541,177"/>
+<area shape="rect" id="node4" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="589,71,752,112"/>
+<area shape="rect" id="node5" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="856,19,907,46"/>
+<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="800,71,963,112"/>
+<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="800,136,963,177"/>
+<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1011,165,1173,207"/>
+<area shape="rect" id="node10" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="370,71,533,112"/>
+<area shape="rect" id="node11" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="361,136,541,177"/>
 </map>
 </div>
 
@@ -416,7 +424,7 @@ Here is the caller graph for this function:</div>
 
 <p>Call to get the pointer to the stored data. </p>
 
-<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00223">223</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00211">211</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
 
 </div>
 </div>
@@ -446,7 +454,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get whether the matrix should be conjugated in CBLAS functions or not. </p>
 <dl class="section return"><dt>Returns</dt><dd>Returns with true if the matrix should be conjugated in CBLAS functions or false otherwise. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00183">183</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00171">171</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
 
 </div>
 </div>
@@ -476,7 +484,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get whether the matrix should be conjugated in CBLAS functions or not. </p>
 <dl class="section return"><dt>Returns</dt><dd>Returns with true if the matrix should be conjugated in CBLAS functions or false otherwise. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00201">201</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00189">189</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
 
 </div>
 </div>
@@ -513,7 +521,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with a reference to the idx-th element. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00342">342</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00328">328</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
 
 </div>
 </div>
@@ -542,7 +550,7 @@ Here is the caller graph for this function:</div>
 
 <p>Call to prints the stored matrix on the standard output. </p>
 
-<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00386">386</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00372">372</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
 
 </div>
 </div>
@@ -572,7 +580,7 @@ Here is the caller graph for this function:</div>
 <p>Call to release the data stored by the matrix. </p>
 <p>(If the class instance was not the owner of the data, then the data pointer is simply set to NULL pointer.) </p>
 
-<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00254">254</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00240">240</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
 
 </div>
 </div>
@@ -619,7 +627,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00235">235</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00223">223</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
 
 </div>
 </div>
@@ -655,7 +663,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00297">297</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00283">283</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
 
 </div>
 </div>
@@ -685,7 +693,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the number of the allocated elements. </p>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the number of the allocated elements (rows*cols) </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00376">376</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00362">362</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
 
 </div>
 </div>
@@ -714,7 +722,7 @@ Here is the caller graph for this function:</div>
 
 <p>Call to transpose (or un-transpose) the matrix for CBLAS functions. </p>
 
-<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00211">211</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix__base_8h_source.html#l00199">199</a> of file <a class="el" href="matrix__base_8h_source.html">matrix_base.h</a>.</p>
 
 </div>
 </div>
@@ -845,7 +853,7 @@ Here is the caller graph for this function:</div>
 
 <p>padding class object to cache line borders </p>
 
-<p class="definition">Definition at line <a class="el" href="matrix_8h_source.html#l00017">17</a> of file <a class="el" href="matrix_8h_source.html">matrix.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="matrix_8h_source.html#l00041">41</a> of file <a class="el" href="matrix_8h_source.html">matrix.h</a>.</p>
 
 </div>
 </div>
@@ -960,7 +968,7 @@ Here is the caller graph for this function:</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Feb 5 2021 08:44:52 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Feb 10 2021 14:12:59 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

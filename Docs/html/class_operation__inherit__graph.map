@@ -1,11 +1,8 @@
 <map id="Operation" name="Operation">
-<area shape="rect" id="node2" href="$class_c_n_o_t.html" title="A class representing a CNOT operation. " alt="" coords="161,59,219,86"/>
-<area shape="rect" id="node3" href="$class_operation__block.html" title="A class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="132,110,248,137"/>
-<area shape="rect" id="node10" href="$class_u3.html" title="A class representing a U3 operation. " alt="" coords="171,161,209,187"/>
-<area shape="rect" id="node4" href="$class_decomposition___base.html" title="A class containing basic methods for the decomposition process. " alt="" coords="296,110,441,137"/>
-<area shape="rect" id="node5" href="$class_n___qubit___decomposition___base.html" title="A base class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT and U3 oper..." alt="" coords="489,78,689,105"/>
-<area shape="rect" id="node8" href="$class_sub___matrix___decomposition.html" title="A class responsible for the disentanglement of one qubit from the others. " alt="" coords="499,135,679,162"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations..." alt="" coords="757,5,920,47"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html" title="N_Qubit_Decomposition\l\&lt; Sub_Matrix_Decomposition \&gt;" alt="" coords="737,71,940,112"/>
-<area shape="rect" id="node9" href="$class_sub___matrix___decomposition___custom.html" title="A class responsible for the disentanglement of one qubit from the others. " alt="" coords="749,136,929,177"/>
+<area shape="rect" id="node2" href="$class_c_n_o_t.html" title="A class representing a CNOT operation. " alt="" coords="43,80,101,107"/>
+<area shape="rect" id="node3" href="$class_operation__block.html" title="A class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="126,80,242,107"/>
+<area shape="rect" id="node7" href="$class_u3.html" title="A class representing a U3 operation. " alt="" coords="266,80,305,107"/>
+<area shape="rect" id="node4" href="$class_decomposition___base.html" title="A class containing basic methods for the decomposition process. " alt="" coords="111,155,257,181"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT and U3 oper..." alt="" coords="5,229,168,256"/>
+<area shape="rect" id="node6" href="$class_sub___matrix___decomposition.html" title="A class responsible for the disentanglement of one qubit from the others. " alt="" coords="193,229,373,256"/>
 </map>

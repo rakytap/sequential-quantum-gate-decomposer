@@ -1,7 +1,0 @@
-<map id="N_Qubit_Decomposition_Base::set_identical_blocks" name="N_Qubit_Decomposition_Base::set_identical_blocks">
-<area shape="rect" id="node2" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="286,5,337,32"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a57b4f96cdb4ba687b4fd9172881805c8" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="216,56,407,112"/>
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#a891c57bdf19c50114a94b56d2a6405a5" title="Create a clone of the present class. " alt="" coords="216,136,407,192"/>
-<area shape="rect" id="node5" href="$class_n___qubit___decomposition___base.html#a9dc57f0f4d4320a13a2018bca6e599f6" title="Set the number of identical successive blocks during the subdecomposition of the n&#45;th qubit..." alt="" coords="230,216,393,272"/>
-<area shape="rect" id="node6" href="$python__interface_8cpp.html#a433927c0881f65beb0d462fe9423918f" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit..." alt="" coords="246,297,377,338"/>
-</map>

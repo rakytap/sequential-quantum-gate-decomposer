@@ -1,11 +1,13 @@
 <map id="functor_submtx_cost_fnc::operator()" name="functor_submtx_cost_fnc::operator()">
-<area shape="rect" id="node2" href="$classmatrix__base.html#a8b45035198dd164a2c60b75af5613dae" title="Call to transpose (or un&#45;transpose) the matrix for CBLAS functions. " alt="" coords="196,5,351,32"/>
-<area shape="rect" id="node3" href="$classmatrix__base.html#a5908c0f3c1099343c3994e548125b414" title="Call to conjugate (or un&#45;conjugate) the matrix for CBLAS functions. " alt="" coords="196,56,351,83"/>
-<area shape="rect" id="node4" href="$dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="253,107,293,133"/>
-<area shape="rect" id="node5" href="$dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="419,107,534,133"/>
-<area shape="rect" id="node6" href="$classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="799,107,977,133"/>
-<area shape="rect" id="node7" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="603,56,751,83"/>
-<area shape="rect" id="node8" href="$classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="799,195,977,221"/>
-<area shape="rect" id="node9" href="$classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="399,158,555,199"/>
-<area shape="rect" id="node10" href="$dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="605,165,748,192"/>
+<area shape="rect" id="node2" href="$classmatrix__base.html#a8b45035198dd164a2c60b75af5613dae" title="Call to transpose (or un&#45;transpose) the matrix for CBLAS functions. " alt="" coords="196,56,351,83"/>
+<area shape="rect" id="node3" href="$classmatrix__base.html#a5908c0f3c1099343c3994e548125b414" title="Call to conjugate (or un&#45;conjugate) the matrix for CBLAS functions. " alt="" coords="196,107,351,133"/>
+<area shape="rect" id="node4" href="$dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="253,157,293,184"/>
+<area shape="rect" id="node5" href="$common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="400,5,553,32"/>
+<area shape="rect" id="node6" href="$common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="399,56,554,83"/>
+<area shape="rect" id="node7" href="$dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="419,208,534,235"/>
+<area shape="rect" id="node8" href="$classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="799,208,977,235"/>
+<area shape="rect" id="node9" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="603,157,751,184"/>
+<area shape="rect" id="node10" href="$classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="799,296,977,323"/>
+<area shape="rect" id="node11" href="$classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="399,259,555,301"/>
+<area shape="rect" id="node12" href="$dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="605,267,748,293"/>
 </map>

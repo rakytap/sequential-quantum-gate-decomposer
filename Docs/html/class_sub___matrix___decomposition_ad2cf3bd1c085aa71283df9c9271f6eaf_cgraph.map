@@ -2,9 +2,9 @@
 <area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="283,22,367,49"/>
 <area shape="rect" id="node3" href="$class_sub___matrix___decomposition.html#a56b7a2e77d0426ab2b1283f12d848190" title="The optimization problem of the final optimization. " alt="" coords="235,73,415,115"/>
 <area shape="rect" id="node6" href="$class_sub___matrix___decomposition.html#abf7481db498d40aaf53935513e8c4447" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="233,143,416,184"/>
-<area shape="rect" id="node9" href="$class_sub___matrix___decomposition.html#aae3fe5273a4259ee2028fbf2e4fde8d7" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="467,217,647,273"/>
-<area shape="rect" id="node4" href="$class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="475,5,639,47"/>
-<area shape="rect" id="node5" href="$_sub___matrix___decomposition___cost___function_8h.html#a6f8a34a10e6654b40f899ecb8d199776" title="Call to calculate the cost function of a given matrix during the submatrix decomposition process..." alt="" coords="490,71,625,112"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="464,137,651,193"/>
-<area shape="rect" id="node8" href="$class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="699,184,839,225"/>
+<area shape="rect" id="node9" href="$class_sub___matrix___decomposition.html#aae3fe5273a4259ee2028fbf2e4fde8d7" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="464,217,644,273"/>
+<area shape="rect" id="node4" href="$class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="472,5,636,47"/>
+<area shape="rect" id="node5" href="$_sub___matrix___decomposition___cost___function_8h.html#a6f8a34a10e6654b40f899ecb8d199776" title="Call to calculate the cost function of a given matrix during the submatrix decomposition process..." alt="" coords="487,71,621,112"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#adf6b02469b89a561d0c53b08f1f8ceb3" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="473,137,635,193"/>
+<area shape="rect" id="node8" href="$class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="692,184,832,225"/>
 </map>

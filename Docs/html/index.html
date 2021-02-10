@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.4</span>
+   &#160;<span id="projectnumber">v1.5</span>
    </div>
    <div id="projectbrief">Powerful decomposition of almost any unitary into U3 and CNOT gates</div>
   </td>
@@ -83,9 +83,9 @@ $(function() {
 <h1>How to build the Quantum Gate Decomposer package</h1>
 <p>The SQUANDER package is equipped with a Python build script and CMake tools to ease the compilation and the deployment of the package. To ensure that SQUANDER package would find the necessary libraries and header files during compilation time it is advised to define the following environment variables:</p>
 <div class="snippet"> $ export GSL_LIB_DIR=path/to/gsl/lib(64) &amp;&amp; export GSL_INC_DIR=path/to/gsl/include </div><p>The SQUANDER package is parallelized via Threading Building Block (TBB) libraries. If TBB is not present in the system, it can be easily installed via the apt utility (sudo apt install libtbb-dev) or it can be downloaded and built from source at <a href="https://github.com/oneapi-src/oneTBB">https://github.com/oneapi-src/oneTBB</a> (Notice, that the newest version of the TBB library under the branch onetbb_2021 is aiming to be compatible with the Intel oneApi programming model. It does not contain all the functionalities of previous TBB libraries yet, so SQUANDER package is not compatible with this version of the TBB library. For compilation of the SQUANDER package please use previous versions of the library, such as tbb_2017, tbb_2018, tbb_2019 or tbb_2020.) To exploit TBB parallelism, one should supply the necessary environment variables pointing to the header and library files of the TBB package. For newer Intel compilers the TBB package is part of the Intel compiler package, similarly to the MKL package. If the TBB library is located at non-standrad path or the SQUANDER package is compiled with GNU compiler, then setting the</p>
-<div class="snippet"> $ export TBB_LIB_DIR=path/to/TBB/lib(64) &amp;&amp; export TBB_INC_DIR=path/to/TBB/include </div><p>environment variables are sufficient for successful compilation. The SQUANDER package with C++ Python extensions can be compiled via the Python script <b><a class="el" href="setup_8py.html" title="Building script for the QGD package. ">setup.py</a></b> located in the root directory of the SQUANDER package. The script automatically finds out the CBLAS library working behind the numpy package and uses it in further linking. The <b><a class="el" href="setup_8py.html" title="Building script for the QGD package. ">setup.py</a></b> script also build the C++ library of the SQUANDER package by making the appropriate CMake calls.</p>
+<div class="snippet"> $ export TBB_LIB_DIR=path/to/TBB/lib(64) &amp;&amp; export TBB_INC_DIR=path/to/TBB/include </div><p>environment variables are sufficient for successful compilation. The SQUANDER package with C++ Python extensions can be compiled via the Python script <b><a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a></b> located in the root directory of the SQUANDER package. The script automatically finds out the CBLAS library working behind the numpy package and uses it in further linking. The <b><a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a></b> script also build the C++ library of the SQUANDER package by making the appropriate CMake calls.</p>
 <p>After the basic environment variables are set, the compilation can be started by the Python command:</p>
-<div class="snippet"> $ python3 <a class="el" href="setup_8py.html" title="Building script for the QGD package. ">setup.py</a> build_ext </div><p>The command above starts the compilation of the C++ library and builds the necessary C++ Python extensions for the Python interface of the SQUANDER package.</p>
+<div class="snippet"> $ python3 <a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a> build_ext </div><p>The command above starts the compilation of the C++ library and builds the necessary C++ Python extensions for the Python interface of the SQUANDER package.</p>
 <h1>How to use</h1>
 <p>The algorithm implemented in the SQUANDER package intends to transform the given unitary into an identity matrix via a sequence of <a class="el" href="class_c_n_o_t.html" title="A class representing a CNOT operation. ">CNOT</a> and <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operations applied on the unitary. Thus, in order to get the decomposition of a unitary, one should rather provide the complex transpose of this unitary as the input for the decomposition process.</p>
 <h2>Standalone executable</h2>
@@ -99,7 +99,7 @@ $(function() {
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Feb 5 2021 08:44:52 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Feb 10 2021 14:13:00 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

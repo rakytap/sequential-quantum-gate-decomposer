@@ -1,7 +1,6 @@
 <map id="U3::get_optimized_parameters" name="U3::get_optimized_parameters">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a1b076dd293978004b7636ed8b1d41119" title="Call to prepare the optimized operations to export — OBSOLETE. " alt="" coords="251,5,396,47"/>
-<area shape="rect" id="node4" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#acca1f8f2ca528d0e918779e6fe118073" title="Call to get the metadata organised into Python dictionary of the idx&#45;th operation. " alt="" coords="461,67,561,94"/>
-<area shape="rect" id="node3" href="$python__interface_8cpp.html#a7c7757a158b0d7f2b5416db0760af74e" title="Call to get the n&#45;th optimized operation. " alt="" coords="444,13,579,39"/>
-<area shape="rect" id="node5" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#a05ba4746064677c0f65f7d57ed1af3be" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="627,27,817,68"/>
-<area shape="rect" id="node6" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#aa1e7d1c7649bec942c3aeb7c3bb81919" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="627,92,817,133"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a1b076dd293978004b7636ed8b1d41119" title="Call to prepare the optimized operations to export — OBSOLETE. " alt="" coords="251,9,396,51"/>
+<area shape="rect" id="node3" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#a5c6d5d28dc6ec6466bb4ed6bfb7c3307" title="Call to get the metadata organised into Python dictionary of the idx&#45;th operation. " alt="" coords="444,46,544,73"/>
+<area shape="rect" id="node4" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#a05ba4746064677c0f65f7d57ed1af3be" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="592,5,783,47"/>
+<area shape="rect" id="node5" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#aa1e7d1c7649bec942c3aeb7c3bb81919" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="592,71,783,112"/>
 </map>

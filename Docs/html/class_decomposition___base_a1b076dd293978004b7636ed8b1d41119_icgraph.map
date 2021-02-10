@@ -1,6 +1,5 @@
 <map id="Decomposition_Base::get_operation" name="Decomposition_Base::get_operation">
-<area shape="rect" id="node2" href="$python__interface_8cpp.html#a7c7757a158b0d7f2b5416db0760af74e" title="Call to get the n&#45;th optimized operation. " alt="" coords="199,5,333,32"/>
-<area shape="rect" id="node3" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#acca1f8f2ca528d0e918779e6fe118073" title="Call to get the metadata organised into Python dictionary of the idx&#45;th operation. " alt="" coords="216,56,316,83"/>
-<area shape="rect" id="node4" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#a05ba4746064677c0f65f7d57ed1af3be" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="381,15,572,57"/>
-<area shape="rect" id="node5" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#aa1e7d1c7649bec942c3aeb7c3bb81919" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="381,81,572,122"/>
+<area shape="rect" id="node2" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#a5c6d5d28dc6ec6466bb4ed6bfb7c3307" title="Call to get the metadata organised into Python dictionary of the idx&#45;th operation. " alt="" coords="199,46,299,73"/>
+<area shape="rect" id="node3" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#a05ba4746064677c0f65f7d57ed1af3be" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="347,5,537,47"/>
+<area shape="rect" id="node4" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#aa1e7d1c7649bec942c3aeb7c3bb81919" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="347,71,537,112"/>
 </map>

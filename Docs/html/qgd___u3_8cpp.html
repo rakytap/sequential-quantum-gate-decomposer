@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.4</span>
+   &#160;<span id="projectnumber">v1.5</span>
    </div>
    <div id="projectbrief">Powerful decomposition of almost any unitary into U3 and CNOT gates</div>
   </td>
@@ -69,13 +69,13 @@ Include dependency graph for qgd_U3.cpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="qgd___u3_8cpp__incl.png" border="0" usemap="#qgd___u3_8cpp" alt=""/></div>
 <map name="qgd___u3_8cpp" id="qgd___u3_8cpp">
-<area shape="rect" id="node4" href="_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="1058,80,1107,107"/>
-<area shape="rect" id="node5" href="_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="712,155,800,181"/>
-<area shape="rect" id="node17" href="matrix_8h.html" title="Header file matrix storing complex types. " alt="" coords="1053,379,1120,405"/>
-<area shape="rect" id="node7" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="460,229,543,256"/>
-<area shape="rect" id="node11" href="_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="632,528,728,555"/>
-<area shape="rect" id="node15" href="dot_8h.html" title="Header file to calculate product of two matrices. " alt="" coords="935,304,985,331"/>
-<area shape="rect" id="node18" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="662,453,765,480"/>
+<area shape="rect" id="node4" href="_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="873,80,922,107"/>
+<area shape="rect" id="node5" href="_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="592,155,680,181"/>
+<area shape="rect" id="node15" href="matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="461,379,528,405"/>
+<area shape="rect" id="node7" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="415,229,497,256"/>
+<area shape="rect" id="node9" href="_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="84,528,180,555"/>
+<area shape="rect" id="node13" href="dot_8h.html" title="Provides multithreaded binding for CBLAS function zgemm to calculate matrix products. " alt="" coords="309,304,360,331"/>
+<area shape="rect" id="node16" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="438,453,541,480"/>
 </map>
 </div>
 </div>
@@ -95,7 +95,7 @@ Macros</h2></td></tr>
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
 <tr class="memitem:a0efa6c836b73f40f12605ae5555760a0"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_u3.html">U3</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___u3_8cpp.html#a0efa6c836b73f40f12605ae5555760a0">create_U3</a> (int qbit_num, int target_qbit, <a class="el" href="classbool.html">bool</a> Theta, <a class="el" href="classbool.html">bool</a> Phi, <a class="el" href="classbool.html">bool</a> Lambda)</td></tr>
-<tr class="memdesc:a0efa6c836b73f40f12605ae5555760a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> and return with a pointer pointing to the class instance (C++ linking is needed)  <a href="#a0efa6c836b73f40f12605ae5555760a0">More...</a><br /></td></tr>
+<tr class="memdesc:a0efa6c836b73f40f12605ae5555760a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> and return with a pointer pointing to the class instance (C++ linking is needed)  <a href="#a0efa6c836b73f40f12605ae5555760a0">More...</a><br /></td></tr>
 <tr class="separator:a0efa6c836b73f40f12605ae5555760a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6c9f761c87ebccb4ba99b1c765069b83"><td class="memItemLeft" align="right" valign="top">PyMODINIT_FUNC&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___u3_8cpp.html#a6c9f761c87ebccb4ba99b1c765069b83">PyInit_qgd_U3</a> (void)</td></tr>
 <tr class="memdesc:a6c9f761c87ebccb4ba99b1c765069b83"><td class="mdescLeft">&#160;</td><td class="mdescRight">Method called when the Python module is initialized.  <a href="#a6c9f761c87ebccb4ba99b1c765069b83">More...</a><br /></td></tr>
@@ -110,7 +110,7 @@ Functions</h2></td></tr>
 <tr class="memdesc:a7418f7b2a8a824ee42a4b99cf63b88d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">Method called when a python instance of the class <a class="el" href="structqgd___u3.html" title="Type definition of the qgd_U3 Python class of the qgd_U3 module. ">qgd_U3</a> is allocated.  <a href="#a7418f7b2a8a824ee42a4b99cf63b88d9">More...</a><br /></td></tr>
 <tr class="separator:a7418f7b2a8a824ee42a4b99cf63b88d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:adfedcc61235223d7635178e5b105f8ff"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___u3_8cpp.html#adfedcc61235223d7635178e5b105f8ff">release_U3</a> (<a class="el" href="class_u3.html">U3</a> *instance)</td></tr>
-<tr class="memdesc:adfedcc61235223d7635178e5b105f8ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to deallocate an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class.  <a href="#adfedcc61235223d7635178e5b105f8ff">More...</a><br /></td></tr>
+<tr class="memdesc:adfedcc61235223d7635178e5b105f8ff"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to deallocate an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> class.  <a href="#adfedcc61235223d7635178e5b105f8ff">More...</a><br /></td></tr>
 <tr class="separator:adfedcc61235223d7635178e5b105f8ff"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
@@ -190,7 +190,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> and return with a pointer pointing to the class instance (C++ linking is needed) </p>
+<p>Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> and return with a pointer pointing to the class instance (C++ linking is needed) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">qbit_num</td><td>The number of qubits spanning the operation. </td></tr>
@@ -410,10 +410,10 @@ Here is the call graph for this function:</div>
       </table>
 </div><div class="memdoc">
 
-<p>Call to deallocate an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </p>
+<p>Call to deallocate an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> class. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> class. </td></tr>
   </table>
   </dd>
 </dl>
@@ -538,7 +538,7 @@ Here is the caller graph for this function:</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Feb 5 2021 08:44:52 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Feb 10 2021 14:12:59 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

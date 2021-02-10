@@ -1,4 +1,9 @@
 <map id="Sub_Matrix_Decomposition::set_identical_blocks" name="Sub_Matrix_Decomposition::set_identical_blocks">
-<area shape="rect" id="node2" href="$class_sub___matrix___decomposition.html#ac2e84002b2e43617ca6a57c4ade3bfef" title="Set the number of identical successive blocks during the subdecomposition of the n&#45;th qubit..." alt="" coords="233,5,413,47"/>
-<area shape="rect" id="node3" href="$class_sub___matrix___decomposition.html#ad5498a197a442b5cf878c83fccfe0180" title="Call to create a clone of the present class. " alt="" coords="233,71,413,112"/>
+<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="242,57,405,98"/>
+<area shape="rect" id="node7" href="$class_sub___matrix___decomposition.html#ac2e84002b2e43617ca6a57c4ade3bfef" title="Set the number of identical successive blocks during the subdecomposition of the n&#45;th qubit..." alt="" coords="233,122,413,163"/>
+<area shape="rect" id="node8" href="$class_sub___matrix___decomposition.html#ad5498a197a442b5cf878c83fccfe0180" title="Call to create a clone of the present class. " alt="" coords="233,187,413,229"/>
+<area shape="rect" id="node3" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="517,5,568,32"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="461,57,624,98"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="461,122,624,163"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="672,151,835,193"/>
 </map>

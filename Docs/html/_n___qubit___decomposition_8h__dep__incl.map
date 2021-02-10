@@ -1,6 +1,7 @@
 <map id="N_Qubit_Decomposition.h" name="N_Qubit_Decomposition.h">
-<area shape="rect" id="node2" href="$_n___qubit___decomposition___base_8cpp.html" title="N_Qubit_Decomposition\l_Base.cpp" alt="" coords="5,80,168,121"/>
-<area shape="rect" id="node3" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="193,80,383,121"/>
-<area shape="rect" id="node4" href="$custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="408,80,563,121"/>
-<area shape="rect" id="node5" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="587,87,746,114"/>
+<area shape="rect" id="node2" href="$_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="5,80,163,121"/>
+<area shape="rect" id="node3" href="$_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations..." alt="" coords="187,87,373,114"/>
+<area shape="rect" id="node4" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="398,80,589,121"/>
+<area shape="rect" id="node5" href="$custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="613,80,768,121"/>
+<area shape="rect" id="node6" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="793,87,951,114"/>
 </map>

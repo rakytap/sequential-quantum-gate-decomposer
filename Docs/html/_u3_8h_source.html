@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.4</span>
+   &#160;<span id="projectnumber">v1.5</span>
    </div>
    <div id="projectbrief">Powerful decomposition of almost any unitary into U3 and CNOT gates</div>
   </td>
@@ -74,11 +74,11 @@ $(function() {
 <div class="ttc" id="class_u3_html_a67abb82c8f8d29fe968cb5d8fc37b392"><div class="ttname"><a href="class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392">U3::clone</a></div><div class="ttdeci">U3 * clone()</div><div class="ttdoc">Call to create a clone of the present class. </div><div class="ttdef"><b>Definition:</b> <a href="_u3_8cpp_source.html#l00484">U3.cpp:484</a></div></div>
 <div class="ttc" id="class_u3_html_a4c28767888f67a7ed5ee18ae1bd6cffa"><div class="ttname"><a href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa">U3::composite_u3_Phi_Lambda</a></div><div class="ttdeci">int composite_u3_Phi_Lambda(const double *parameters, Matrix &amp;U3_matrix)</div><div class="ttdoc">Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space...</div><div class="ttdef"><b>Definition:</b> <a href="_u3_8cpp_source.html#l00239">U3.cpp:239</a></div></div>
 <div class="ttc" id="class_u3_html_ad9e004be1003d0286b84d60e582a4472"><div class="ttname"><a href="class_u3.html#ad9e004be1003d0286b84d60e582a4472">U3::composite_u3_Theta</a></div><div class="ttdeci">int composite_u3_Theta(const double *parameters, Matrix &amp;U3_matrix)</div><div class="ttdoc">Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space...</div><div class="ttdef"><b>Definition:</b> <a href="_u3_8cpp_source.html#l00289">U3.cpp:289</a></div></div>
-<div class="ttc" id="matrix_8h_html"><div class="ttname"><a href="matrix_8h.html">matrix.h</a></div><div class="ttdoc">Header file matrix storing complex types. </div></div>
+<div class="ttc" id="matrix_8h_html"><div class="ttname"><a href="matrix_8h.html">matrix.h</a></div><div class="ttdoc">Header file of complex array storage array with automatic and thread safe reference counting...</div></div>
 <div class="ttc" id="class_u3_html_ac705d31d768b918da78d8b058ec6c6c3"><div class="ttname"><a href="class_u3.html#ac705d31d768b918da78d8b058ec6c6c3">U3::phi</a></div><div class="ttdeci">bool phi</div><div class="ttdoc">logical value indicating whether the matrix creation takes an argument phi </div><div class="ttdef"><b>Definition:</b> <a href="_u3_8h_source.html#l00046">U3.h:46</a></div></div>
 <div class="ttc" id="class_u3_html_ac0f99d133fe057b9ef936a9b4ebdf365"><div class="ttname"><a href="class_u3.html#ac0f99d133fe057b9ef936a9b4ebdf365">U3::indexes_target_qubit_1</a></div><div class="ttdeci">int * indexes_target_qubit_1</div><div class="ttdoc">the base indices of the target qubit for state |1&gt; </div><div class="ttdef"><b>Definition:</b> <a href="_u3_8h_source.html#l00042">U3.h:42</a></div></div>
 <div class="ttc" id="class_operation_html_a65614494dab9424bdac15cf936bd5a18"><div class="ttname"><a href="class_operation.html#a65614494dab9424bdac15cf936bd5a18">Operation::get_matrix</a></div><div class="ttdeci">Matrix get_matrix()</div><div class="ttdoc">Call to retrieve the operation matrix. </div><div class="ttdef"><b>Definition:</b> <a href="_operation_8cpp_source.html#l00097">Operation.cpp:97</a></div></div>
-<div class="ttc" id="class_matrix_html"><div class="ttname"><a href="class_matrix.html">Matrix</a></div><div class="ttdoc">Class to store data of complex arrays and its properties. </div><div class="ttdef"><b>Definition:</b> <a href="matrix_8h_source.html#l00014">matrix.h:14</a></div></div>
+<div class="ttc" id="class_matrix_html"><div class="ttname"><a href="class_matrix.html">Matrix</a></div><div class="ttdoc">Class to store data of complex arrays and its properties. </div><div class="ttdef"><b>Definition:</b> <a href="matrix_8h_source.html#l00038">matrix.h:38</a></div></div>
 <div class="ttc" id="class_u3_html_a2e53d6f8d744e64377408866bfa6c473"><div class="ttname"><a href="class_u3.html#a2e53d6f8d744e64377408866bfa6c473">U3::theta</a></div><div class="ttdeci">bool theta</div><div class="ttdoc">logical value indicating whether the matrix creation takes an argument theta </div><div class="ttdef"><b>Definition:</b> <a href="_u3_8h_source.html#l00044">U3.h:44</a></div></div>
 <div class="ttc" id="class_u3_html_a0ce404f4cd63bc845a9379e7fc532c90"><div class="ttname"><a href="class_u3.html#a0ce404f4cd63bc845a9379e7fc532c90">U3::~U3</a></div><div class="ttdeci">~U3()</div><div class="ttdoc">Destructor of the class. </div><div class="ttdef"><b>Definition:</b> <a href="_u3_8cpp_source.html#l00147">U3.cpp:147</a></div></div>
 <div class="ttc" id="class_u3_html_ae2969dab2a542416fba0f26b9a330014"><div class="ttname"><a href="class_u3.html#ae2969dab2a542416fba0f26b9a330014">U3::is_lambda_parameter</a></div><div class="ttdeci">bool is_lambda_parameter()</div><div class="ttdoc">Call to check whether Lambda is a free parameter of the gate. </div><div class="ttdef"><b>Definition:</b> <a href="_u3_8cpp_source.html#l00441">U3.cpp:441</a></div></div>
@@ -91,7 +91,7 @@ $(function() {
 </div><!-- fragment --></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Feb 5 2021 08:44:52 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Feb 10 2021 14:12:59 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

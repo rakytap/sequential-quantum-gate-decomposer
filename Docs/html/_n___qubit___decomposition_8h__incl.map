@@ -1,17 +1,13 @@
 <map id="N_Qubit_Decomposition.h" name="N_Qubit_Decomposition.h">
-<area shape="rect" id="node2" href="$_n___qubit___decomposition___base_8h.html" title="Header file for a base class to determine the decomposition of an N&#45;qubit unitary into a sequence of ..." alt="" coords="885,80,1047,121"/>
-<area shape="rect" id="node3" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="459,266,614,293"/>
-<area shape="rect" id="node34" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="871,177,1061,203"/>
-<area shape="rect" id="node38" href="$_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="1105,169,1267,211"/>
-<area shape="rect" id="node4" href="$_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="793,348,920,375"/>
-<area shape="rect" id="node25" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="626,348,695,375"/>
-<area shape="rect" id="node27" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="720,348,769,375"/>
-<area shape="rect" id="node6" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="1122,512,1205,539"/>
-<area shape="rect" id="node24" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="681,430,769,457"/>
-<area shape="rect" id="node10" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="1073,811,1169,837"/>
-<area shape="rect" id="node14" href="$dot_8h.html" title="Header file to calculate product of two matrices. " alt="" coords="1063,587,1114,613"/>
-<area shape="rect" id="node16" href="$matrix_8h.html" title="Header file matrix storing complex types. " alt="" coords="734,661,801,688"/>
-<area shape="rect" id="node17" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="1240,736,1343,763"/>
-<area shape="rect" id="node35" href="$_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="945,423,1125,464"/>
-<area shape="rect" id="node36" href="$_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="1003,259,1161,300"/>
+<area shape="rect" id="node2" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="983,155,1138,181"/>
+<area shape="rect" id="node35" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="1032,80,1223,107"/>
+<area shape="rect" id="node3" href="$_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="588,229,715,256"/>
+<area shape="rect" id="node25" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="751,229,821,256"/>
+<area shape="rect" id="node27" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="845,229,895,256"/>
+<area shape="rect" id="node5" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="397,379,479,405"/>
+<area shape="rect" id="node24" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="677,304,765,331"/>
+<area shape="rect" id="node7" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="287,677,383,704"/>
+<area shape="rect" id="node11" href="$dot_8h.html" title="Provides multithreaded binding for CBLAS function zgemm to calculate matrix products. " alt="" coords="501,453,551,480"/>
+<area shape="rect" id="node13" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="767,528,834,555"/>
+<area shape="rect" id="node14" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="503,603,605,629"/>
 </map>

@@ -1,10 +1,14 @@
 <map id="Operation_block::get_operations" name="Operation_block::get_operations">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a267addf036c4207905f7f443aea471bb" title="Call to prepare the operations of an operation block to export. " alt="" coords="214,5,359,61"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a23a54ffec2693340bdd1a376db060a8a" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="428,89,619,145"/>
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition___base.html#ad1f069447411c81c1abe5f3826a78757" title="The optimization problem of the final optimization. " alt="" coords="193,137,380,178"/>
-<area shape="rect" id="node5" href="$class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="201,203,372,229"/>
-<area shape="rect" id="node7" href="$class_sub___matrix___decomposition.html#a63938bf57a68b0595711c865053f7871" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="197,254,377,295"/>
-<area shape="rect" id="node9" href="$class_sub___matrix___decomposition.html#a850f0d87ca7132652ad6e973a0ef3816" title="The optimization problem of the final optimization. " alt="" coords="197,319,377,361"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#acc2aed15e5043f47de9077ff95ca0995" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="428,180,619,236"/>
-<area shape="rect" id="node8" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="433,261,613,302"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a267addf036c4207905f7f443aea471bb" title="Call to prepare the operations of an operation block to export. " alt="" coords="211,5,356,61"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="422,71,601,127"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="868,257,1031,298"/>
+<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#a642d37a3b072239af74f507cc8d4914b" title="The optimization problem of the final optimization. " alt="" coords="202,202,365,243"/>
+<area shape="rect" id="node10" href="$class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="649,319,820,345"/>
+<area shape="rect" id="node11" href="$class_sub___matrix___decomposition.html#a63938bf57a68b0595711c865053f7871" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="193,137,373,178"/>
+<area shape="rect" id="node13" href="$class_sub___matrix___decomposition.html#a850f0d87ca7132652ad6e973a0ef3816" title="The optimization problem of the final optimization. " alt="" coords="193,370,373,411"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="653,147,816,189"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="868,89,1031,130"/>
+<area shape="rect" id="node5" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="924,155,975,181"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1079,257,1241,298"/>
+<area shape="rect" id="node12" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="421,151,601,193"/>
 </map>

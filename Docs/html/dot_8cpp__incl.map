@@ -1,6 +1,7 @@
 <map id="dot.cpp" name="dot.cpp">
-<area shape="rect" id="node2" href="$dot_8h.html" title="Header file to calculate product of two matrices. " alt="" coords="231,80,281,107"/>
-<area shape="rect" id="node4" href="$matrix_8h.html" title="Header file matrix storing complex types. " alt="" coords="287,155,353,181"/>
-<area shape="rect" id="node5" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="217,229,319,256"/>
-<area shape="rect" id="node6" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="187,304,283,331"/>
+<area shape="rect" id="node2" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="640,80,723,107"/>
+<area shape="rect" id="node8" href="$dot_8h.html" title="Provides multithreaded binding for CBLAS function zgemm to calculate matrix products. " alt="" coords="296,155,347,181"/>
+<area shape="rect" id="node4" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="633,379,729,405"/>
+<area shape="rect" id="node10" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="309,229,376,256"/>
+<area shape="rect" id="node11" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="519,304,622,331"/>
 </map>

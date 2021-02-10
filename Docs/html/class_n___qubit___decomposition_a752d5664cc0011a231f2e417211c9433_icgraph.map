@@ -1,6 +1,0 @@
-<map id="N_Qubit_Decomposition::start_decomposition" name="N_Qubit_Decomposition::start_decomposition">
-<area shape="rect" id="node2" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="286,5,337,32"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a57b4f96cdb4ba687b4fd9172881805c8" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="216,56,407,112"/>
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#a23a54ffec2693340bdd1a376db060a8a" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="216,136,407,192"/>
-<area shape="rect" id="node5" href="$python__interface_8cpp.html#a1dbc73536ad346a068266b5bd2e7cd55" title="Starts the decomposition of the unitary. " alt="" coords="224,216,399,243"/>
-</map>

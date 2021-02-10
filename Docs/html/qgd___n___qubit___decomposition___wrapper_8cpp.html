@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.4</span>
+   &#160;<span id="projectnumber">v1.5</span>
    </div>
    <div id="projectbrief">Powerful decomposition of almost any unitary into U3 and CNOT gates</div>
   </td>
@@ -66,28 +66,23 @@ $(function() {
 <code>#include &quot;structmember.h&quot;</code><br />
 <code>#include &lt;stdio.h&gt;</code><br />
 <code>#include &quot;<a class="el" href="_n___qubit___decomposition_8h_source.html">N_Qubit_Decomposition.h</a>&quot;</code><br />
-<code>#include &quot;<a class="el" href="_sub___matrix___decomposition_8h_source.html">Sub_Matrix_Decomposition.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for qgd_N_Qubit_Decomposition_Wrapper.cpp:</div>
 <div class="dyncontent">
 <div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp__incl.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp" alt=""/></div>
 <map name="qgd___n___qubit___decomposition___wrapper_8cpp" id="qgd___n___qubit___decomposition___wrapper_8cpp">
-<area shape="rect" id="node6" href="_n___qubit___decomposition_8h.html" title="Header file for a base class to determine the decomposition of an N&#45;qubit unitary into a sequence of ..." alt="" coords="609,95,783,121"/>
-<area shape="rect" id="node38" href="_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="467,266,658,293"/>
-<area shape="rect" id="node7" href="_n___qubit___decomposition___base_8h.html" title="Header file for a base class to determine the decomposition of an N&#45;qubit unitary into a sequence of ..." alt="" coords="648,169,811,211"/>
-<area shape="rect" id="node8" href="_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="1173,355,1328,382"/>
-<area shape="rect" id="node42" href="_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="683,259,845,300"/>
-<area shape="rect" id="node9" href="_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="1187,437,1314,464"/>
-<area shape="rect" id="node29" href="_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="1575,437,1644,464"/>
-<area shape="rect" id="node31" href="_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="1669,437,1718,464"/>
-<area shape="rect" id="node11" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="829,601,912,628"/>
-<area shape="rect" id="node28" href="_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="1299,519,1387,546"/>
-<area shape="rect" id="node15" href="_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="555,900,651,927"/>
-<area shape="rect" id="node19" href="dot_8h.html" title="Header file to calculate product of two matrices. " alt="" coords="1029,676,1080,703"/>
-<area shape="rect" id="node21" href="matrix_8h.html" title="Header file matrix storing complex types. " alt="" coords="1319,751,1385,777"/>
-<area shape="rect" id="node22" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="943,825,1046,852"/>
-<area shape="rect" id="node39" href="_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="451,512,631,553"/>
-<area shape="rect" id="node40" href="_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="561,348,719,389"/>
+<area shape="rect" id="node6" href="_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="583,95,756,121"/>
+<area shape="rect" id="node7" href="_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="725,244,880,271"/>
+<area shape="rect" id="node39" href="_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="707,169,898,196"/>
+<area shape="rect" id="node8" href="_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="1458,319,1585,345"/>
+<area shape="rect" id="node29" href="_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="525,319,595,345"/>
+<area shape="rect" id="node31" href="_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="451,319,501,345"/>
+<area shape="rect" id="node10" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="1047,468,1129,495"/>
+<area shape="rect" id="node28" href="_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="893,393,981,420"/>
+<area shape="rect" id="node12" href="_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="1084,767,1180,793"/>
+<area shape="rect" id="node16" href="dot_8h.html" title="Provides multithreaded binding for CBLAS function zgemm to calculate matrix products. " alt="" coords="779,543,829,569"/>
+<area shape="rect" id="node18" href="matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="673,617,740,644"/>
+<area shape="rect" id="node19" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="986,692,1089,719"/>
 </map>
 </div>
 </div>
@@ -109,12 +104,15 @@ Macros</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:af9b0976a514f87167663db05075837d7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a>&lt; <a class="el" href="class_sub___matrix___decomposition.html">Sub_Matrix_Decomposition</a> &gt; *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#af9b0976a514f87167663db05075837d7">create_N_Qubit_Decomposition</a> (<a class="el" href="class_matrix.html">Matrix</a> &amp;Umtx, int qbit_num, <a class="el" href="classbool.html">bool</a> optimize_layer_num, <a class="el" href="_decomposition___base_8h.html#a0e76cf2e4eb5edbf067ba5014ffa2134">guess_type</a> initial_guess)</td></tr>
-<tr class="memdesc:af9b0976a514f87167663db05075837d7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> and return with a pointer pointing to the class instance (C++ linking is needed)  <a href="#af9b0976a514f87167663db05075837d7">More...</a><br /></td></tr>
-<tr class="separator:af9b0976a514f87167663db05075837d7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acca1f8f2ca528d0e918779e6fe118073"><td class="memItemLeft" align="right" valign="top">static PyObject *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#acca1f8f2ca528d0e918779e6fe118073">get_operation</a> (<a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a>&lt; <a class="el" href="class_sub___matrix___decomposition.html">Sub_Matrix_Decomposition</a> &gt; *decomp, int &amp;idx)</td></tr>
-<tr class="memdesc:acca1f8f2ca528d0e918779e6fe118073"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the metadata organised into Python dictionary of the idx-th operation.  <a href="#acca1f8f2ca528d0e918779e6fe118073">More...</a><br /></td></tr>
-<tr class="separator:acca1f8f2ca528d0e918779e6fe118073"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a7104ebe5986d5f86ebcc9189329b2cd7"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a> *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a7104ebe5986d5f86ebcc9189329b2cd7">create_N_Qubit_Decomposition</a> (<a class="el" href="class_matrix.html">Matrix</a> &amp;Umtx, int qbit_num, <a class="el" href="classbool.html">bool</a> optimize_layer_num, <a class="el" href="_decomposition___base_8h.html#a0e76cf2e4eb5edbf067ba5014ffa2134">guess_type</a> initial_guess)</td></tr>
+<tr class="memdesc:a7104ebe5986d5f86ebcc9189329b2cd7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> and return with a pointer pointing to the class instance (C++ linking is needed)  <a href="#a7104ebe5986d5f86ebcc9189329b2cd7">More...</a><br /></td></tr>
+<tr class="separator:a7104ebe5986d5f86ebcc9189329b2cd7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5c6d5d28dc6ec6466bb4ed6bfb7c3307"><td class="memItemLeft" align="right" valign="top">static PyObject *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a5c6d5d28dc6ec6466bb4ed6bfb7c3307">get_operation</a> (<a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a> *decomp, int &amp;idx)</td></tr>
+<tr class="memdesc:a5c6d5d28dc6ec6466bb4ed6bfb7c3307"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to get the metadata organised into Python dictionary of the idx-th operation.  <a href="#a5c6d5d28dc6ec6466bb4ed6bfb7c3307">More...</a><br /></td></tr>
+<tr class="separator:a5c6d5d28dc6ec6466bb4ed6bfb7c3307"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5e6d8253eb9b283ca42523997e0f0997"><td class="memItemLeft" align="right" valign="top"><a class="el" href="class_matrix.html">Matrix</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a5e6d8253eb9b283ca42523997e0f0997">numpy2matrix</a> (PyObject *arr)</td></tr>
+<tr class="memdesc:a5e6d8253eb9b283ca42523997e0f0997"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to create a PIC matrix representation of a numpy array.  <a href="#a5e6d8253eb9b283ca42523997e0f0997">More...</a><br /></td></tr>
+<tr class="separator:a5e6d8253eb9b283ca42523997e0f0997"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a245c0428748f686af4a45a1ef8af8da1"><td class="memItemLeft" align="right" valign="top">PyMODINIT_FUNC&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a245c0428748f686af4a45a1ef8af8da1">PyInit_qgd_N_Qubit_Decomposition_Wrapper</a> (void)</td></tr>
 <tr class="memdesc:a245c0428748f686af4a45a1ef8af8da1"><td class="mdescLeft">&#160;</td><td class="mdescRight">Method called when the Python module is initialized.  <a href="#a245c0428748f686af4a45a1ef8af8da1">More...</a><br /></td></tr>
 <tr class="separator:a245c0428748f686af4a45a1ef8af8da1"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -158,14 +156,14 @@ Functions</h2></td></tr>
 <tr class="memdesc:acf5be81d3a59c38e9f401dc7b208a1e7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper method to set the optimization tolerance of the optimization process during the decomposition.  <a href="#acf5be81d3a59c38e9f401dc7b208a1e7">More...</a><br /></td></tr>
 <tr class="separator:acf5be81d3a59c38e9f401dc7b208a1e7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a94d04ac2e1c2bc86358c56f35f5c3bcd"><td class="memItemLeft" align="right" valign="top">static PyObject *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a94d04ac2e1c2bc86358c56f35f5c3bcd">qgd_N_Qubit_Decomposition_Wrapper_set_Verbose</a> (<a class="el" href="structqgd___n___qubit___decomposition___wrapper.html">qgd_N_Qubit_Decomposition_Wrapper</a> *self, PyObject *args)</td></tr>
-<tr class="memdesc:a94d04ac2e1c2bc86358c56f35f5c3bcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the verbosity of the <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class.  <a href="#a94d04ac2e1c2bc86358c56f35f5c3bcd">More...</a><br /></td></tr>
+<tr class="memdesc:a94d04ac2e1c2bc86358c56f35f5c3bcd"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the verbosity of the <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> class.  <a href="#a94d04ac2e1c2bc86358c56f35f5c3bcd">More...</a><br /></td></tr>
 <tr class="separator:a94d04ac2e1c2bc86358c56f35f5c3bcd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa6ea75e20298496bf1a0bf4da6893cb4"><td class="memItemLeft" align="right" valign="top">static PyObject *&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#aa6ea75e20298496bf1a0bf4da6893cb4">qgd_N_Qubit_Decomposition_Wrapper_Start_Decomposition</a> (<a class="el" href="structqgd___n___qubit___decomposition___wrapper.html">qgd_N_Qubit_Decomposition_Wrapper</a> *self, PyObject *args, PyObject *kwds)</td></tr>
-<tr class="memdesc:aa6ea75e20298496bf1a0bf4da6893cb4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper function to call the start_decomposition method of C++ class <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a>.  <a href="#aa6ea75e20298496bf1a0bf4da6893cb4">More...</a><br /></td></tr>
+<tr class="memdesc:aa6ea75e20298496bf1a0bf4da6893cb4"><td class="mdescLeft">&#160;</td><td class="mdescRight">Wrapper function to call the start_decomposition method of C++ class <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a>.  <a href="#aa6ea75e20298496bf1a0bf4da6893cb4">More...</a><br /></td></tr>
 <tr class="separator:aa6ea75e20298496bf1a0bf4da6893cb4"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa7b06614f2abc3b73b2b2694e2e12e30"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#aa7b06614f2abc3b73b2b2694e2e12e30">release_N_Qubit_Decomposition</a> (<a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a>&lt; <a class="el" href="class_sub___matrix___decomposition.html">Sub_Matrix_Decomposition</a> &gt; *instance)</td></tr>
-<tr class="memdesc:aa7b06614f2abc3b73b2b2694e2e12e30"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to deallocate an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class.  <a href="#aa7b06614f2abc3b73b2b2694e2e12e30">More...</a><br /></td></tr>
-<tr class="separator:aa7b06614f2abc3b73b2b2694e2e12e30"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aee0c3014eef41f1d2e6c2157f6f9616e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#aee0c3014eef41f1d2e6c2157f6f9616e">release_N_Qubit_Decomposition</a> (<a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a> *instance)</td></tr>
+<tr class="memdesc:aee0c3014eef41f1d2e6c2157f6f9616e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to deallocate an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> class.  <a href="#aee0c3014eef41f1d2e6c2157f6f9616e">More...</a><br /></td></tr>
+<tr class="separator:aee0c3014eef41f1d2e6c2157f6f9616e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -200,14 +198,14 @@ Variables</h2></td></tr>
 </div>
 </div>
 <h2 class="groupheader">Function Documentation</h2>
-<a id="af9b0976a514f87167663db05075837d7"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#af9b0976a514f87167663db05075837d7">&#9670;&nbsp;</a></span>create_N_Qubit_Decomposition()</h2>
+<a id="a7104ebe5986d5f86ebcc9189329b2cd7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7104ebe5986d5f86ebcc9189329b2cd7">&#9670;&nbsp;</a></span>create_N_Qubit_Decomposition()</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname"><a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a>&lt;<a class="el" href="class_sub___matrix___decomposition.html">Sub_Matrix_Decomposition</a>&gt;* create_N_Qubit_Decomposition </td>
+          <td class="memname"><a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a>* create_N_Qubit_Decomposition </td>
           <td>(</td>
           <td class="paramtype"><a class="el" href="class_matrix.html">Matrix</a> &amp;&#160;</td>
           <td class="paramname"><em>Umtx</em>, </td>
@@ -238,7 +236,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p>Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> and return with a pointer pointing to the class instance (C++ linking is needed) </p>
+<p>Creates an instance of class <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> and return with a pointer pointing to the class instance (C++ linking is needed) </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">Umtx</td><td>An instance of class <a class="el" href="class_matrix.html" title="Class to store data of complex arrays and its properties. ">Matrix</a> containing the unitary to be decomposed </td></tr>
@@ -248,22 +246,22 @@ Variables</h2></td></tr>
   </table>
   </dd>
 </dl>
-<dl class="section return"><dt>Returns</dt><dd>Return with a void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </dd></dl>
+<dl class="section return"><dt>Returns</dt><dd>Return with a void pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> class. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00069">69</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00067">67</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_af9b0976a514f87167663db05075837d7_icgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_af9b0976a514f87167663db05075837d7_icgraph" alt=""/></div>
-<map name="qgd___n___qubit___decomposition___wrapper_8cpp_af9b0976a514f87167663db05075837d7_icgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_af9b0976a514f87167663db05075837d7_icgraph">
+<div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_a7104ebe5986d5f86ebcc9189329b2cd7_icgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_a7104ebe5986d5f86ebcc9189329b2cd7_icgraph" alt=""/></div>
+<map name="qgd___n___qubit___decomposition___wrapper_8cpp_a7104ebe5986d5f86ebcc9189329b2cd7_icgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_a7104ebe5986d5f86ebcc9189329b2cd7_icgraph">
 <area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a024f9b81bdfa9de1b20faabfccfbaf3f" title="Method called when a python instance of the class qgd_N_Qubit_Decomposition_Wrapper is initialized..." alt="" coords="260,5,451,47"/>
 </map>
 </div>
 
 </div>
 </div>
-<a id="acca1f8f2ca528d0e918779e6fe118073"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#acca1f8f2ca528d0e918779e6fe118073">&#9670;&nbsp;</a></span>get_operation()</h2>
+<a id="a5c6d5d28dc6ec6466bb4ed6bfb7c3307"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5c6d5d28dc6ec6466bb4ed6bfb7c3307">&#9670;&nbsp;</a></span>get_operation()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -274,7 +272,7 @@ Here is the caller graph for this function:</div>
         <tr>
           <td class="memname">static PyObject* get_operation </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a>&lt; <a class="el" href="class_sub___matrix___decomposition.html">Sub_Matrix_Decomposition</a> &gt; *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a> *&#160;</td>
           <td class="paramname"><em>decomp</em>, </td>
         </tr>
         <tr>
@@ -299,19 +297,19 @@ Here is the caller graph for this function:</div>
 <p>Call to get the metadata organised into Python dictionary of the idx-th operation. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">decomp</td><td>A pointer pointing to an instance of the class <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a>. </td></tr>
+    <tr><td class="paramname">decomp</td><td>A pointer pointing to an instance of the class <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a>. </td></tr>
     <tr><td class="paramname">idx</td><td>Labels the idx-th decomposing operation. </td></tr>
   </table>
   </dd>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with a python dictionary containing the metadata of the idx-th operation </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00271">271</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00305">305</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_acca1f8f2ca528d0e918779e6fe118073_cgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_acca1f8f2ca528d0e918779e6fe118073_cgraph" alt=""/></div>
-<map name="qgd___n___qubit___decomposition___wrapper_8cpp_acca1f8f2ca528d0e918779e6fe118073_cgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_acca1f8f2ca528d0e918779e6fe118073_cgraph">
+<div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_a5c6d5d28dc6ec6466bb4ed6bfb7c3307_cgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_a5c6d5d28dc6ec6466bb4ed6bfb7c3307_cgraph" alt=""/></div>
+<map name="qgd___n___qubit___decomposition___wrapper_8cpp_a5c6d5d28dc6ec6466bb4ed6bfb7c3307_cgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_a5c6d5d28dc6ec6466bb4ed6bfb7c3307_cgraph">
 <area shape="rect" id="node2" href="class_decomposition___base.html#a1b076dd293978004b7636ed8b1d41119" title="Call to prepare the optimized operations to export — OBSOLETE. " alt="" coords="153,93,299,134"/>
 <area shape="rect" id="node3" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="379,5,512,32"/>
 <area shape="rect" id="node4" href="class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="360,85,531,112"/>
@@ -322,10 +320,40 @@ Here is the call graph for this function:</div>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_acca1f8f2ca528d0e918779e6fe118073_icgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_acca1f8f2ca528d0e918779e6fe118073_icgraph" alt=""/></div>
-<map name="qgd___n___qubit___decomposition___wrapper_8cpp_acca1f8f2ca528d0e918779e6fe118073_icgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_acca1f8f2ca528d0e918779e6fe118073_icgraph">
+<div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_a5c6d5d28dc6ec6466bb4ed6bfb7c3307_icgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_a5c6d5d28dc6ec6466bb4ed6bfb7c3307_icgraph" alt=""/></div>
+<map name="qgd___n___qubit___decomposition___wrapper_8cpp_a5c6d5d28dc6ec6466bb4ed6bfb7c3307_icgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_a5c6d5d28dc6ec6466bb4ed6bfb7c3307_icgraph">
 <area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a05ba4746064677c0f65f7d57ed1af3be" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="153,5,344,47"/>
 <area shape="rect" id="node3" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#aa1e7d1c7649bec942c3aeb7c3bb81919" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="153,71,344,112"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a5e6d8253eb9b283ca42523997e0f0997"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5e6d8253eb9b283ca42523997e0f0997">&#9670;&nbsp;</a></span>numpy2matrix()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="class_matrix.html">Matrix</a> numpy2matrix </td>
+          <td>(</td>
+          <td class="paramtype">PyObject *&#160;</td>
+          <td class="paramname"><em>arr</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>Call to create a PIC matrix representation of a numpy array. </p>
+
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00091">91</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_a5e6d8253eb9b283ca42523997e0f0997_icgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_a5e6d8253eb9b283ca42523997e0f0997_icgraph" alt=""/></div>
+<map name="qgd___n___qubit___decomposition___wrapper_8cpp_a5e6d8253eb9b283ca42523997e0f0997_icgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_a5e6d8253eb9b283ca42523997e0f0997_icgraph">
+<area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a024f9b81bdfa9de1b20faabfccfbaf3f" title="Method called when a python instance of the class qgd_N_Qubit_Decomposition_Wrapper is initialized..." alt="" coords="156,5,347,47"/>
 </map>
 </div>
 
@@ -349,7 +377,7 @@ Here is the caller graph for this function:</div>
 
 <p>Method called when the Python module is initialized. </p>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00844">844</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00878">878</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -385,13 +413,13 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00097">97</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00134">134</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_a7eba496794cbcd484744be06f8c208ba_cgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_a7eba496794cbcd484744be06f8c208ba_cgraph" alt=""/></div>
 <map name="qgd___n___qubit___decomposition___wrapper_8cpp_a7eba496794cbcd484744be06f8c208ba_cgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_a7eba496794cbcd484744be06f8c208ba_cgraph">
-<area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#aa7b06614f2abc3b73b2b2694e2e12e30" title="Call to deallocate an instance of N_Qubit_Decomposition class. " alt="" coords="244,13,456,39"/>
+<area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#aee0c3014eef41f1d2e6c2157f6f9616e" title="Call to deallocate an instance of N_Qubit_Decomposition class. " alt="" coords="244,13,456,39"/>
 </map>
 </div>
 
@@ -440,13 +468,13 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00344">344</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00378">378</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_a05ba4746064677c0f65f7d57ed1af3be_cgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_a05ba4746064677c0f65f7d57ed1af3be_cgraph" alt=""/></div>
 <map name="qgd___n___qubit___decomposition___wrapper_8cpp_a05ba4746064677c0f65f7d57ed1af3be_cgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_a05ba4746064677c0f65f7d57ed1af3be_cgraph">
-<area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#acca1f8f2ca528d0e918779e6fe118073" title="Call to get the metadata organised into Python dictionary of the idx&#45;th operation. " alt="" coords="244,100,344,127"/>
+<area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a5c6d5d28dc6ec6466bb4ed6bfb7c3307" title="Call to get the metadata organised into Python dictionary of the idx&#45;th operation. " alt="" coords="244,100,344,127"/>
 <area shape="rect" id="node3" href="class_decomposition___base.html#a1b076dd293978004b7636ed8b1d41119" title="Call to prepare the optimized operations to export — OBSOLETE. " alt="" coords="392,93,537,134"/>
 <area shape="rect" id="node4" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="617,5,751,32"/>
 <area shape="rect" id="node5" href="class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="599,85,769,112"/>
@@ -490,7 +518,7 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the number of operations </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00252">252</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00286">286</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -527,13 +555,13 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00372">372</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00406">406</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_aa1e7d1c7649bec942c3aeb7c3bb81919_cgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_aa1e7d1c7649bec942c3aeb7c3bb81919_cgraph" alt=""/></div>
 <map name="qgd___n___qubit___decomposition___wrapper_8cpp_aa1e7d1c7649bec942c3aeb7c3bb81919_cgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_aa1e7d1c7649bec942c3aeb7c3bb81919_cgraph">
-<area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#acca1f8f2ca528d0e918779e6fe118073" title="Call to get the metadata organised into Python dictionary of the idx&#45;th operation. " alt="" coords="244,100,344,127"/>
+<area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a5c6d5d28dc6ec6466bb4ed6bfb7c3307" title="Call to get the metadata organised into Python dictionary of the idx&#45;th operation. " alt="" coords="244,100,344,127"/>
 <area shape="rect" id="node3" href="class_decomposition___base.html#a1b076dd293978004b7636ed8b1d41119" title="Call to prepare the optimized operations to export — OBSOLETE. " alt="" coords="392,93,537,134"/>
 <area shape="rect" id="node4" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="617,5,751,32"/>
 <area shape="rect" id="node5" href="class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="599,85,769,112"/>
@@ -594,13 +622,14 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00131">131</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00178">178</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_a024f9b81bdfa9de1b20faabfccfbaf3f_cgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_a024f9b81bdfa9de1b20faabfccfbaf3f_cgraph" alt=""/></div>
 <map name="qgd___n___qubit___decomposition___wrapper_8cpp_a024f9b81bdfa9de1b20faabfccfbaf3f_cgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_a024f9b81bdfa9de1b20faabfccfbaf3f_cgraph">
-<area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#af9b0976a514f87167663db05075837d7" title="Creates an instance of class N_Qubit_Decomposition and return with a pointer pointing to the class in..." alt="" coords="244,13,451,39"/>
+<area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a5e6d8253eb9b283ca42523997e0f0997" title="Call to create a PIC matrix representation of a numpy array. " alt="" coords="296,5,399,32"/>
+<area shape="rect" id="node3" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a7104ebe5986d5f86ebcc9189329b2cd7" title="Creates an instance of class N_Qubit_Decomposition and return with a pointer pointing to the class in..." alt="" coords="244,56,451,83"/>
 </map>
 </div>
 
@@ -638,7 +667,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00405">405</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00439">439</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -690,7 +719,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00115">115</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00158">158</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -736,7 +765,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00656">656</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00690">690</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -784,7 +813,7 @@ Here is the call graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with zero on success. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00607">607</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00641">641</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -830,7 +859,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00464">464</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00498">498</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -877,7 +906,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00512">512</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00546">546</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -923,7 +952,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00419">419</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00453">453</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -970,7 +999,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00582">582</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00616">616</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -1008,7 +1037,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Set the verbosity of the <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </p>
+<p>Set the verbosity of the <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> class. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">self</td><td>A pointer pointing to an instance of the class <a class="el" href="structqgd___n___qubit___decomposition___wrapper.html" title="Type definition of the qgd_N_Qubit_Decomposition_Wrapper Python class of the qgd_N_Qubit_Decompositio...">qgd_N_Qubit_Decomposition_Wrapper</a>. </td></tr>
@@ -1017,7 +1046,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00558">558</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00592">592</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -1061,7 +1090,7 @@ Here is the call graph for this function:</div>
 </table>
 </div><div class="memdoc">
 
-<p>Wrapper function to call the start_decomposition method of C++ class <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a>. </p>
+<p>Wrapper function to call the start_decomposition method of C++ class <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a>. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">self</td><td>A pointer pointing to an instance of the class <a class="el" href="structqgd___n___qubit___decomposition___wrapper.html" title="Type definition of the qgd_N_Qubit_Decomposition_Wrapper Python class of the qgd_N_Qubit_Decompositio...">qgd_N_Qubit_Decomposition_Wrapper</a>. </td></tr>
@@ -1071,12 +1100,12 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00218">218</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00252">252</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
-<a id="aa7b06614f2abc3b73b2b2694e2e12e30"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#aa7b06614f2abc3b73b2b2694e2e12e30">&#9670;&nbsp;</a></span>release_N_Qubit_Decomposition()</h2>
+<a id="aee0c3014eef41f1d2e6c2157f6f9616e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aee0c3014eef41f1d2e6c2157f6f9616e">&#9670;&nbsp;</a></span>release_N_Qubit_Decomposition()</h2>
 
 <div class="memitem">
 <div class="memproto">
@@ -1084,27 +1113,27 @@ Here is the call graph for this function:</div>
         <tr>
           <td class="memname">void release_N_Qubit_Decomposition </td>
           <td>(</td>
-          <td class="paramtype"><a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a>&lt; <a class="el" href="class_sub___matrix___decomposition.html">Sub_Matrix_Decomposition</a> &gt; *&#160;</td>
+          <td class="paramtype"><a class="el" href="class_n___qubit___decomposition.html">N_Qubit_Decomposition</a> *&#160;</td>
           <td class="paramname"><em>instance</em></td><td>)</td>
           <td></td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p>Call to deallocate an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </p>
+<p>Call to deallocate an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> class. </p>
 <dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
-    <tr><td class="paramname">ptr</td><td>A pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A class to determine the decomposition of an Nqubit unitary into a sequence of CNOT and U3 operations...">N_Qubit_Decomposition</a> class. </td></tr>
+    <tr><td class="paramname">ptr</td><td>A pointer pointing to an instance of <a class="el" href="class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 oper...">N_Qubit_Decomposition</a> class. </td></tr>
   </table>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00080">80</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00078">78</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
-<div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_aa7b06614f2abc3b73b2b2694e2e12e30_icgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_aa7b06614f2abc3b73b2b2694e2e12e30_icgraph" alt=""/></div>
-<map name="qgd___n___qubit___decomposition___wrapper_8cpp_aa7b06614f2abc3b73b2b2694e2e12e30_icgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_aa7b06614f2abc3b73b2b2694e2e12e30_icgraph">
+<div class="center"><img src="qgd___n___qubit___decomposition___wrapper_8cpp_aee0c3014eef41f1d2e6c2157f6f9616e_icgraph.png" border="0" usemap="#qgd___n___qubit___decomposition___wrapper_8cpp_aee0c3014eef41f1d2e6c2157f6f9616e_icgraph" alt=""/></div>
+<map name="qgd___n___qubit___decomposition___wrapper_8cpp_aee0c3014eef41f1d2e6c2157f6f9616e_icgraph" id="qgd___n___qubit___decomposition___wrapper_8cpp_aee0c3014eef41f1d2e6c2157f6f9616e_icgraph">
 <area shape="rect" id="node2" href="qgd___n___qubit___decomposition___wrapper_8cpp.html#a7eba496794cbcd484744be06f8c208ba" title="Method called when a python instance of the class qgd_N_Qubit_Decomposition_Wrapper is destroyed..." alt="" coords="265,5,456,47"/>
 </map>
 </div>
@@ -1134,7 +1163,7 @@ Here is the caller graph for this function:</div>
 <b>Initial value:</b><div class="fragment"><div class="line">= {</div><div class="line">    {NULL}  </div><div class="line">}</div></div><!-- fragment -->
 <p>Structure containing metadata about the members of class <a class="el" href="structqgd___n___qubit___decomposition___wrapper.html" title="Type definition of the qgd_N_Qubit_Decomposition_Wrapper Python class of the qgd_N_Qubit_Decompositio...">qgd_N_Qubit_Decomposition_Wrapper</a>. </p>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00710">710</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00744">744</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -1160,7 +1189,7 @@ Here is the caller graph for this function:</div>
 
 <p>Structure containing metadata about the methods of class <a class="el" href="structqgd___n___qubit___decomposition___wrapper.html" title="Type definition of the qgd_N_Qubit_Decomposition_Wrapper Python class of the qgd_N_Qubit_Decompositio...">qgd_N_Qubit_Decomposition_Wrapper</a>. </p>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00717">717</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00751">751</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -1186,7 +1215,7 @@ Here is the caller graph for this function:</div>
 <b>Initial value:</b><div class="fragment"><div class="line">= {</div><div class="line">    PyModuleDef_HEAD_INIT,</div><div class="line">    .m_name = <span class="stringliteral">&quot;qgd_N_Qubit_Decomposition_Wrapper&quot;</span>,</div><div class="line">    .m_doc = <span class="stringliteral">&quot;Python binding for QGD N_Qubit_Decomposition class&quot;</span>,</div><div class="line">    .m_size = -1,</div><div class="line">}</div></div><!-- fragment -->
 <p>Structure containing metadata about the module. </p>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00832">832</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00866">866</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
@@ -1212,14 +1241,14 @@ Here is the caller graph for this function:</div>
 
 <p>A structure describing the type of the class <a class="el" href="structqgd___n___qubit___decomposition___wrapper.html" title="Type definition of the qgd_N_Qubit_Decomposition_Wrapper Python class of the qgd_N_Qubit_Decompositio...">qgd_N_Qubit_Decomposition_Wrapper</a>. </p>
 
-<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00760">760</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html#l00794">794</a> of file <a class="el" href="qgd___n___qubit___decomposition___wrapper_8cpp_source.html">qgd_N_Qubit_Decomposition_Wrapper.cpp</a>.</p>
 
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Fri Feb 5 2021 08:44:52 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Wed Feb 10 2021 14:12:59 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>
