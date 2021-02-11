@@ -111,9 +111,14 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
     }
 
     // temporarily turn off OpenMP parallelism
-#if CBLAS==1
+#if BLAS==0 // undefined BLAS
+    num_threads = omp_get_max_threads();
+    omp_set_num_threads(1);
+#elif BLAS==1 // MKL
+    num_threads = mkl_get_max_threads();
     MKL_Set_Num_Threads(1);
-#elif CBLAS==2
+#elif BLAS==2 //OpenBLAS
+    num_threads = openblas_get_num_threads();
     openblas_set_num_threads(1);
 #endif
 
@@ -201,9 +206,11 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 
     }
 
-#if CBLAS==1
+#if BLAS==0 // undefined BLAS
+    omp_set_num_threads(num_threads);
+#elif BLAS==1 //MKL
     MKL_Set_Num_Threads(num_threads);
-#elif CBLAS==2
+#elif BLAS==2 //OpenBLAS
     openblas_set_num_threads(num_threads);
 #endif
 
@@ -405,7 +412,7 @@ void  N_Qubit_Decomposition::final_optimization() {
 
         //# setting the global minimum
         global_target_minimum = 0;
-        solve_optimization_problem( optimized_parameters, parameter_num) ;
+        solve_optimization_problem(optimized_parameters, parameter_num);
 }
 
 
