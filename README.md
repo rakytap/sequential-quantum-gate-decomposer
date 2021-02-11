@@ -150,7 +150,7 @@ Another desired interface functions can be implemented following the sources of 
 
 If you have found our work useful for your research project, please cite us by
 
-Peter Rakyta, Zoltan Zimboras, Sequential Quantum Gate Decomposer (SQUANDER), https://doi.org/10.5281/zenodo.4508680
+Rakyta,Peter, & Zimborás,Zoltán. (2021, February 4). Sequential Quantum Gate Decomposer (SQUANDER) (Version 1.4). Zenodo. http://doi.org/10.5281/zenodo.4508680
 
 
 
