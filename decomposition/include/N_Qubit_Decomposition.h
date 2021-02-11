@@ -19,8 +19,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 /*! \file N_Qubit_Decomposition.h
     \brief Header file for a class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 operations.
-    This class contains the non-template implementation of the decomposition class.
-
 */
 
 #ifndef N_Qubit_Decomposition_H
@@ -80,7 +78,7 @@ N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_
 /**
 @brief Destructor of the class
 */
-~N_Qubit_Decomposition();
+virtual ~N_Qubit_Decomposition();
 
 
 /**
@@ -88,7 +86,7 @@ N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_
 @param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
 @param prepare_export Logical parameter. Set true to prepare the list of operations to be exported, or false otherwise.
 */
-void start_decomposition(bool finalize_decomp=true, bool prepare_export=true);
+virtual void start_decomposition(bool finalize_decomp=true, bool prepare_export=true);
 
 
 

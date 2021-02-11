@@ -171,13 +171,15 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
             // Do the optimization
             if (optimize_layer_num || layer_num >= max_layer_num_loc ) {
 
-                // solve the optzimalization problem to find the correct mninimum
-                if ( optimized_parameters == NULL ) {
-                    solve_optimization_problem( optimized_parameters, 0);
+                // release optimized parameters if necessary
+                if (optimized_parameters != NULL) {
+                    qgd_free(optimized_parameters);
+                    optimized_parameters = NULL;
                 }
-                else {
-                    solve_optimization_problem( optimized_parameters, parameter_num);
-                }
+
+                // solve the optimization problem to find the correct minimum
+                solve_optimization_problem( NULL, 0);
+
 
                 if (check_optimization_solution()) {
                     break;
@@ -452,7 +454,13 @@ double Sub_Matrix_Decomposition::optimization_problem( const double* parameters 
         // get the transformed matrix with the operations in the list
         Matrix matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
 
-        double cost_function = get_submatrix_cost_function(matrix_new); //NEW METHOD
+#ifdef DEBUG
+        if (matrix_new.isnan()) {
+            std::cout << "Sub_Matrix_Decomposition::optimization_problem: matrix_new contains NaN a. Exiting" << std::endl;
+        }
+#endif
+
+        double cost_function = get_submatrix_cost_function(matrix_new);
 
 
         return cost_function;
@@ -477,6 +485,12 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 
     Umtx_loc = instance->get_Umtx();
     matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
+
+#ifdef DEBUG
+        if (matrix_new.isnan()) {
+            std::cout << "Sub_Matrix_Decomposition::optimization_problem matrix_new contains NaN b." << std::endl;
+        }
+#endif
 
 //}
 

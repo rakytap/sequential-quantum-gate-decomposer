@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <cstring>
 #include <iostream>
 #include "tbb/tbb.h"
+#include <math.h>
 
 
 /**
@@ -88,6 +89,25 @@ Matrix::copy() {
   memcpy( ret.data, data, rows*cols*sizeof(QGD_Complex16));
 
   return ret;
+
+}
+
+
+/**
+@brief Call to check the array for NaN entries.
+@return Returns with true if the array has at least one NaN entry.
+*/
+bool
+Matrix::isnan() {
+
+    for (size_t idx=0; idx < rows*cols; idx++) {
+        if ( std::isnan(data[idx].real) || std::isnan(data[idx].imag) ) {
+            return true;
+        }
+    }
+
+    return false;
+
 
 }
 

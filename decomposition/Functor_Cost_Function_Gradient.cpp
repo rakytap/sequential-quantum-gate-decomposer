@@ -119,7 +119,13 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* 
 
 
     for (int idx=0; idx<parameter_num_loc; idx++) {
-        // calculate and set the gradient
+        // set the gradient
+#ifdef DEBUG
+        if (isnan(f->data[idx])) {
+            std::cout << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
+            exit(-1);
+        }
+#endif // DEBUG
         gsl_vector_set(grad, idx, (f->data[idx]-(*f0))/dparam);
     }
 
@@ -159,6 +165,7 @@ functor_grad<decomp_class>::functor_grad( const gsl_vector* parameters_in, decom
 */
 template<typename decomp_class>
 void functor_grad<decomp_class>::operator()( int i ) const {
+
 
     if (i == (int)parameters->size) {
         // calculate function value at x0

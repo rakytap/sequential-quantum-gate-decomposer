@@ -338,7 +338,7 @@ Matrix Decomposition_Base::get_finalizing_operations( Matrix& mtx, Operation_blo
 
 
 /**
-@brief This method can be used to solve the main optimization problem which is devidid into sub-layer optimization processes. (The aim of the optimization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute optimized_parameters.
+@brief This method can be used to solve the main optimization problem which is divided into sub-layer optimization processes. (The aim of the optimization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute optimized_parameters.
 @param solution_guess An array of the guessed parameters
 @param solution_guess_num The number of guessed parameters. (not necessarily equal to the number of free parameters)
 */

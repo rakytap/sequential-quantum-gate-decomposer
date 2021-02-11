@@ -215,6 +215,12 @@ U3::get_matrix( const double* parameters ) {
             composite_u3(0, 0, 0, U3_matrix );
         }
 
+#ifdef DEBUG
+        if (U3_matrix.isnan()) {
+            std::cout << "U3::get_matrix: U3_matrix contains NaN." << std::endl;
+        }
+#endif
+
         return U3_matrix;
 
 }
@@ -306,6 +312,12 @@ int U3::composite_u3(double Theta, double Phi, double Lambda, Matrix& U3_matrix 
 
         // get the U3 operation of one qubit
         Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+
+#ifdef DEBUG
+        if (u3_1qbit.isnan()) {
+            std::cout << "U3::composite_u3: u3_1qbit contains NaN." << std::endl;
+        }
+#endif
 
         // setting the operation elements
         for(int idx = 0; idx < matrix_size/2; ++idx)
@@ -455,8 +467,22 @@ Matrix U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda ) {
 
     Matrix u3_1qbit = Matrix(2,2);
 
+#ifdef DEBUG
+    if (isnan(Theta)) {
+        std::cout << "Matrix U3::calc_one_qubit_u3: Theta is NaN." << std::endl;
+    }
+    if (isnan(Phi)) {
+        std::cout << "Matrix U3::calc_one_qubit_u3: Phi is NaN." << std::endl;
+    }
+    if (isnan(Lambda)) {
+        std::cout << "Matrix U3::calc_one_qubit_u3: Lambda is NaN." << std::endl;
+    }
+#endif // DEBUG
+
+
     double cos_theta = cos(Theta/2);
     double sin_theta = sin(Theta/2);
+
 
     // the 1,1 element
     u3_1qbit[0].real = cos_theta;

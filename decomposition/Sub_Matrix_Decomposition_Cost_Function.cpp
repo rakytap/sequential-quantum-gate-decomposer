@@ -127,6 +127,12 @@ void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) con
 
         }
 
+#ifdef DEBUG
+        if (submatrix.isnan()) {
+            std::cout << "Submatrix contains NaN." << std::endl;
+        }
+#endif
+
     }
 
 }
@@ -169,6 +175,12 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
     tmp.conjugate();
     Matrix submatrix_prod = dot( (*submatrices)[idx], tmp);
 
+#ifdef DEBUG
+    if (submatrix_prod.isnan()) {
+        std::cout << "functor_submtx_cost_fnc::operator: Submatrix product contains NaN. Exiting" << std::endl;
+    }
+#endif
+
 
 
     // number of elements in the matrix of submatrix products
@@ -198,8 +210,7 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
     // checking NaN
     if (std::isnan(prod_cost_functions->local())) {
-        printf("cost function NaN on thread %d: exiting\n", product_idx);
-        exit(-1);
+        std::cout << "cost function NaN on cost function product "<< product_idx << std::endl;
     }
 
 

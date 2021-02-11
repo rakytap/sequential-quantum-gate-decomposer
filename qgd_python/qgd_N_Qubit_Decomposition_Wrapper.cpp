@@ -473,11 +473,11 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Max_Layer_Num(qgd_N_Qubit_Decomposition_Wr
     while (PyDict_Next(max_layer_num, &pos, &key, &value)) {
 
         // convert value fron PyObject to int
-        assert(PyInt_Check(value) == 1);
+        assert(PyLong_Check(value) == 1);
         int value_int = (int) PyLong_AsLong(value);
 
         // convert keylue fron PyObject to int
-        assert(PyInt_Check(key) == 1);
+        assert(PyLong_Check(key) == 1);
         int key_int = (int) PyLong_AsLong(key);
 
         // set maximal layer nums on the C++ side
@@ -518,11 +518,11 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Identical_Blocks(qgd_N_Qubit_Decomposition
     while (PyDict_Next(identical_blocks, &pos, &key, &value)) {
 
         // convert value fron PyObject to int
-        assert(PyInt_Check(value) == 1);
+        assert(PyLong_Check(value) == 1);
         int value_int = (int) PyLong_AsLong(value);
 
         // convert keylue fron PyObject to int
-        assert(PyInt_Check(key) == 1);
+        assert(PyLong_Check(key) == 1);
         int key_int = (int) PyLong_AsLong(key);
 
         // set maximal layer nums on the C++ side
@@ -566,11 +566,11 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Iteration_Loops(qgd_N_Qubit_Decomposition_
     while (PyDict_Next(iteration_loops, &pos, &key, &value)) {
 
         // convert value fron PyObject to int
-        assert(PyInt_Check(value) == 1);
+        assert(PyLong_Check(value) == 1);
         int value_int = (int) PyLong_AsLong(value);
 
         // convert keylue fron PyObject to int
-        assert(PyInt_Check(key) == 1);
+        assert(PyLong_Check(key) == 1);
         int key_int = (int) PyLong_AsLong(key);
 
         // set maximal layer nums on the C++ side
@@ -664,7 +664,7 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decomposition_
     while (PyDict_Next(gate_structure_dict, &pos, &key, &value)) {
 
         // convert keylue from PyObject to int
-        assert(PyInt_Check(key) == 1);
+        assert(PyLong_Check(key) == 1);
         int key_int = (int) PyLong_AsLong(key);
 
         // convert keylue from PyObject to qgd_Operation_Block

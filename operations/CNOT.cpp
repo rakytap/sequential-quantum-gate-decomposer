@@ -179,6 +179,13 @@ Matrix CNOT::composite_cnot() {
 
         }
 
+#ifdef DEBUG
+        if (CNOT_mtx.isnan()) {
+            std::cout << "Matrix CNOT::composite_cnot: CNOT_mtx contains NaN. Exiting" << std::endl;
+            exit(-1);
+        }
+#endif
+
         return CNOT_mtx;
 }
 

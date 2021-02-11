@@ -112,6 +112,12 @@ Operation_block::get_matrix( const double* parameters ) {
     // calculate the product of the matrices
     Matrix block_mtx = reduce_zgemm( operation_mtxs );
 
+#ifdef DEBUG
+    if (block_mtx.isnan()) {
+        std::cout << "Operation_block::get_matrix: block_mtx contains NaN." << std::endl;
+    }
+#endif
+
     return block_mtx;
 
 
@@ -145,6 +151,11 @@ std::vector<Matrix> Operation_block::get_matrices( const double* parameters ) {
                 parameters = parameters + 1;
             }
             else if (u3_operation->get_parameter_num() == 2 ) {
+ #ifdef DEBUG
+                if (isnan(parameters[0]) || isnan(parameters[1]) ) {
+                    std::cout << "Operation_block::get_matrices: parameters contains NaN." << std::endl;
+                }
+#endif
                 operation_mtx = u3_operation->get_matrix( parameters );
                 parameters = parameters + 2;
             }
@@ -162,6 +173,11 @@ std::vector<Matrix> Operation_block::get_matrices( const double* parameters ) {
             operation_mtx = operation->get_matrix();
         }
 
+#ifdef DEBUG
+        if (operation_mtx.isnan()) {
+            std::cout << "Operation_block::get_matrices: operation_mtx contains NaN." << std::endl;
+        }
+#endif
         matrices.push_back(operation_mtx);
 
 
