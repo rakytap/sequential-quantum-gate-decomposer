@@ -326,6 +326,14 @@ void operator= (const matrix_base& mtx ) {
 @return Returns with a reference to the idx-th element.
 */
 scalar& operator[](size_t idx) {
+
+#ifdef DEBUG
+    if ( idx >= rows*cols || idx < 0) {
+        std::cout << "Accessing element out of bonds. Exiting" << std::endl;
+        exit(-1);
+    }
+#endif
+
     return data[idx];
 }
 
