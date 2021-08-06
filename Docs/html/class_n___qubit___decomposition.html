@@ -281,10 +281,10 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a0c2d27b5be0c1eff9748849e4bfb6e36"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36">solve_optimization_problem</a> (double *solution_guess, int solution_guess_num)</td></tr>
 <tr class="memdesc:a0c2d27b5be0c1eff9748849e4bfb6e36"><td class="mdescLeft">&#160;</td><td class="mdescRight">This method can be used to solve the main optimization problem which is devidid into sub-layer optimization processes.  <a href="#a0c2d27b5be0c1eff9748849e4bfb6e36">More...</a><br /></td></tr>
 <tr class="separator:a0c2d27b5be0c1eff9748849e4bfb6e36"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a95c12334d80bb7f2ada67c536f503494"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494">start_decomposition</a> (<a class="el" href="classbool.html">bool</a> finalize_decomp=true, <a class="el" href="classbool.html">bool</a> prepare_export=true)</td></tr>
+<tr class="memitem:a95c12334d80bb7f2ada67c536f503494"><td class="memItemLeft" align="right" valign="top">virtual void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494">start_decomposition</a> (<a class="el" href="classbool.html">bool</a> finalize_decomp=true, <a class="el" href="classbool.html">bool</a> prepare_export=true)</td></tr>
 <tr class="memdesc:a95c12334d80bb7f2ada67c536f503494"><td class="mdescLeft">&#160;</td><td class="mdescRight">Start the disentanglig process of the unitary.  <a href="#a95c12334d80bb7f2ada67c536f503494">More...</a><br /></td></tr>
 <tr class="separator:a95c12334d80bb7f2ada67c536f503494"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a004ce968593854e1a32f61039105d6eb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n___qubit___decomposition.html#a004ce968593854e1a32f61039105d6eb">~N_Qubit_Decomposition</a> ()</td></tr>
+<tr class="memitem:a004ce968593854e1a32f61039105d6eb"><td class="memItemLeft" align="right" valign="top">virtual&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="class_n___qubit___decomposition.html#a004ce968593854e1a32f61039105d6eb">~N_Qubit_Decomposition</a> ()</td></tr>
 <tr class="memdesc:a004ce968593854e1a32f61039105d6eb"><td class="mdescLeft">&#160;</td><td class="mdescRight">Destructor of the class.  <a href="#a004ce968593854e1a32f61039105d6eb">More...</a><br /></td></tr>
 <tr class="separator:a004ce968593854e1a32f61039105d6eb"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
@@ -403,7 +403,7 @@ Protected Attributes</h2></td></tr>
 <div class="textblock"><p>A base class to determine the decomposition of an N-qubit unitary into a sequence of <a class="el" href="class_c_n_o_t.html" title="A class representing a CNOT operation. ">CNOT</a> and <a class="el" href="class_u3.html" title="A class representing a U3 operation. ">U3</a> operations. </p>
 <p>This class contains the non-template implementation of the decomposition class. </p>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8h_source.html#l00040">40</a> of file <a class="el" href="_n___qubit___decomposition_8h_source.html">N_Qubit_Decomposition.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8h_source.html#l00038">38</a> of file <a class="el" href="_n___qubit___decomposition_8h_source.html">N_Qubit_Decomposition.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a6a346911175b25fa4045722300479dad"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a6a346911175b25fa4045722300479dad">&#9670;&nbsp;</a></span>N_Qubit_Decomposition() <span class="overload">[1/2]</span></h2>
@@ -498,6 +498,9 @@ Here is the caller graph for this function:</div>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">N_Qubit_Decomposition::~N_Qubit_Decomposition </td>
@@ -506,6 +509,11 @@ Here is the caller graph for this function:</div>
           <td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Destructor of the class. </p>
@@ -559,7 +567,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00214">214</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00230">230</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -634,7 +642,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00231">231</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00247">247</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -682,7 +690,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00272">272</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00288">288</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -755,7 +763,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00295">295</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00311">311</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -820,7 +828,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00245">245</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00261">261</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -868,7 +876,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00258">258</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00274">274</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -941,7 +949,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00183">183</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00199">199</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1030,7 +1038,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00199">199</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00215">215</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1200,7 +1208,7 @@ Here is the caller graph for this function:</div>
 <p>Create a clone of the present class. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with a pointer pointing to the cloned object. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00615">615</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00631">631</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1279,7 +1287,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00543">543</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00559">559</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1337,65 +1345,65 @@ Here is the caller graph for this function:</div>
 
 <p>Start the decompostion process to recursively decompose the submatrices. </p>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00222">222</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00229">229</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="class_n___qubit___decomposition_a7d01c357e16448fc65f0a4fa77a1d66e_cgraph.png" border="0" usemap="#class_n___qubit___decomposition_a7d01c357e16448fc65f0a4fa77a1d66e_cgraph" alt=""/></div>
 <map name="class_n___qubit___decomposition_a7d01c357e16448fc65f0a4fa77a1d66e_cgraph" id="class_n___qubit___decomposition_a7d01c357e16448fc65f0a4fa77a1d66e_cgraph">
-<area shape="rect" id="node2" href="class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="934,700,1098,741"/>
-<area shape="rect" id="node3" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="706,374,854,400"/>
-<area shape="rect" id="node4" href="classmatrix__base.html#a8b45035198dd164a2c60b75af5613dae" title="Call to transpose (or un&#45;transpose) the matrix for CBLAS functions. " alt="" coords="232,1732,387,1759"/>
-<area shape="rect" id="node5" href="classmatrix__base.html#a5908c0f3c1099343c3994e548125b414" title="Call to conjugate (or un&#45;conjugate) the matrix for CBLAS functions. " alt="" coords="232,1783,387,1810"/>
-<area shape="rect" id="node6" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="289,196,329,223"/>
-<area shape="rect" id="node14" href="class_n___qubit___decomposition.html#a6a346911175b25fa4045722300479dad" title="Nullary constructor of the class. " alt="" coords="225,1834,394,1876"/>
-<area shape="rect" id="node15" href="class_decomposition___base.html#a0a46d0f9ad1cc240256211acc30a9add" title="Call to set the verbose attribute to true or false. " alt="" coords="469,1612,615,1653"/>
-<area shape="rect" id="node16" href="class_decomposition___base.html#abae5d21859730a358c3d10051f957420" title="Call to set the maximal number of the iterations in the optimization process. " alt="" coords="237,1900,382,1941"/>
-<area shape="rect" id="node17" href="class_n___qubit___decomposition.html#a180ca3406189b079fb2defc5054c8700" title="Set the number of identical successive blocks during the subdecomposition of the n&#45;th qubit..." alt="" coords="228,1965,391,2006"/>
-<area shape="rect" id="node18" href="class_decomposition___base.html#a70fd9a8663499f135fe93cdf2ce389c0" title="Set the maximal number of layers used in the subdecomposition of the n&#45;th qubit. " alt="" coords="469,1677,615,1718"/>
-<area shape="rect" id="node19" href="class_decomposition___base.html#a461f735688248c8f04756e4abadb0516" title="Set the number of iteration loops during the subdecomposition of the n&#45;th qubit. " alt="" coords="469,1742,615,1784"/>
-<area shape="rect" id="node20" href="class_decomposition___base.html#af10692ec27c3db9e422d057c5f0347a6" title="Call to set the number of operation blocks to be optimized in one shot. " alt="" coords="226,2030,393,2072"/>
-<area shape="rect" id="node21" href="class_n___qubit___decomposition.html#a616c6b8cf022fd6ffc204068c4ca635c" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="216,2096,403,2137"/>
-<area shape="rect" id="node22" href="class_decomposition___base.html#a871056822bf7cc558ea9a59e22084d5b" title="Call to set the tolerance of the optimization processes. " alt="" coords="451,1808,633,1849"/>
-<area shape="rect" id="node23" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="228,1346,391,1388"/>
-<area shape="rect" id="node40" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="453,1531,631,1587"/>
-<area shape="rect" id="node7" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="465,323,619,350"/>
-<area shape="rect" id="node8" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="465,120,619,147"/>
-<area shape="rect" id="node9" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="485,171,599,198"/>
-<area shape="rect" id="node10" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="927,87,1105,114"/>
-<area shape="rect" id="node11" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="927,180,1105,207"/>
-<area shape="rect" id="node12" href="classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="464,54,620,96"/>
-<area shape="rect" id="node13" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="709,138,851,164"/>
-<area shape="rect" id="node24" href="class_sub___matrix___decomposition.html#a05944754b07d6b5ec16b6febbc79c1a9" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit..." alt="" coords="452,1020,632,1061"/>
-<area shape="rect" id="node25" href="class_sub___matrix___decomposition.html#a0d16a3d20f6261f99c8f1fe1cb43bc34" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="681,1385,879,1426"/>
-<area shape="rect" id="node28" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="452,1085,632,1126"/>
-<area shape="rect" id="node49" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="463,889,621,930"/>
-<area shape="rect" id="node50" href="common_8cpp.html#a0edb99c36d663a8fe718ab7f097c7f96" title="Call to subtract a scalar from the diagonal of a complex matrix. " alt="" coords="730,576,830,603"/>
-<area shape="rect" id="node51" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7" title="Call to get the number of the individual gate types in the list of operations. " alt="" coords="710,1254,850,1296"/>
-<area shape="rect" id="node52" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="461,1254,623,1296"/>
-<area shape="rect" id="node53" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="461,954,623,996"/>
-<area shape="rect" id="node54" href="class_decomposition___base.html#a965838902240670119c0ad68d087c322" title="Call to prepare the optimized operations to export. " alt="" coords="469,1371,615,1427"/>
-<area shape="rect" id="node26" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="939,1539,1093,1566"/>
-<area shape="rect" id="node27" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="1153,1020,1332,1061"/>
-<area shape="rect" id="node29" href="class_sub___matrix___decomposition.html#a56b7a2e77d0426ab2b1283f12d848190" title="The optimization problem of the final optimization. " alt="" coords="690,780,870,821"/>
-<area shape="rect" id="node30" href="class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="943,888,1089,944"/>
-<area shape="rect" id="node31" href="class_sub___matrix___decomposition.html#a63938bf57a68b0595711c865053f7871" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="690,1954,870,1996"/>
-<area shape="rect" id="node37" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="707,947,853,1003"/>
-<area shape="rect" id="node32" href="class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="946,2029,1086,2070"/>
-<area shape="rect" id="node33" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="949,1827,1083,1854"/>
-<area shape="rect" id="node34" href="class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="968,2116,1064,2143"/>
-<area shape="rect" id="node35" href="class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="959,1910,1073,1936"/>
-<area shape="rect" id="node36" href="class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="978,1967,1054,1994"/>
-<area shape="rect" id="node38" href="common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="980,1103,1052,1130"/>
-<area shape="rect" id="node39" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="974,1179,1058,1206"/>
-<area shape="rect" id="node41" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="710,1450,850,1492"/>
-<area shape="rect" id="node42" href="class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="690,1568,870,1609"/>
-<area shape="rect" id="node43" href="class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="710,1320,850,1361"/>
-<area shape="rect" id="node44" href="class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="945,2255,1087,2282"/>
-<area shape="rect" id="node45" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="1161,2255,1324,2282"/>
-<area shape="rect" id="node46" href="class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="709,1736,851,1777"/>
-<area shape="rect" id="node47" href="class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="955,2306,1077,2332"/>
-<area shape="rect" id="node48" href="class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="710,2197,850,2238"/>
+<area shape="rect" id="node2" href="class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="934,580,1098,621"/>
+<area shape="rect" id="node3" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="706,86,854,112"/>
+<area shape="rect" id="node4" href="classmatrix__base.html#a8b45035198dd164a2c60b75af5613dae" title="Call to transpose (or un&#45;transpose) the matrix for CBLAS functions. " alt="" coords="232,1595,387,1622"/>
+<area shape="rect" id="node5" href="classmatrix__base.html#a5908c0f3c1099343c3994e548125b414" title="Call to conjugate (or un&#45;conjugate) the matrix for CBLAS functions. " alt="" coords="232,1646,387,1672"/>
+<area shape="rect" id="node6" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="289,224,329,251"/>
+<area shape="rect" id="node14" href="class_n___qubit___decomposition.html#a6a346911175b25fa4045722300479dad" title="Nullary constructor of the class. " alt="" coords="225,1697,394,1738"/>
+<area shape="rect" id="node15" href="class_decomposition___base.html#a0a46d0f9ad1cc240256211acc30a9add" title="Call to set the verbose attribute to true or false. " alt="" coords="469,1538,615,1580"/>
+<area shape="rect" id="node16" href="class_decomposition___base.html#abae5d21859730a358c3d10051f957420" title="Call to set the maximal number of the iterations in the optimization process. " alt="" coords="237,1762,382,1804"/>
+<area shape="rect" id="node17" href="class_n___qubit___decomposition.html#a180ca3406189b079fb2defc5054c8700" title="Set the number of identical successive blocks during the subdecomposition of the n&#45;th qubit..." alt="" coords="228,1828,391,1869"/>
+<area shape="rect" id="node18" href="class_decomposition___base.html#a70fd9a8663499f135fe93cdf2ce389c0" title="Set the maximal number of layers used in the subdecomposition of the n&#45;th qubit. " alt="" coords="469,1604,615,1645"/>
+<area shape="rect" id="node19" href="class_decomposition___base.html#a461f735688248c8f04756e4abadb0516" title="Set the number of iteration loops during the subdecomposition of the n&#45;th qubit. " alt="" coords="469,1669,615,1710"/>
+<area shape="rect" id="node20" href="class_decomposition___base.html#af10692ec27c3db9e422d057c5f0347a6" title="Call to set the number of operation blocks to be optimized in one shot. " alt="" coords="226,1893,393,1934"/>
+<area shape="rect" id="node21" href="class_n___qubit___decomposition.html#a616c6b8cf022fd6ffc204068c4ca635c" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="216,1958,403,2000"/>
+<area shape="rect" id="node22" href="class_decomposition___base.html#a871056822bf7cc558ea9a59e22084d5b" title="Call to set the tolerance of the optimization processes. " alt="" coords="451,1734,633,1776"/>
+<area shape="rect" id="node23" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="228,1145,391,1186"/>
+<area shape="rect" id="node40" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="453,1458,631,1514"/>
+<area shape="rect" id="node7" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="465,355,619,382"/>
+<area shape="rect" id="node8" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="465,304,619,331"/>
+<area shape="rect" id="node9" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="485,35,599,62"/>
+<area shape="rect" id="node10" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="927,136,1105,163"/>
+<area shape="rect" id="node11" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="927,224,1105,251"/>
+<area shape="rect" id="node12" href="classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="464,188,620,229"/>
+<area shape="rect" id="node13" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="709,195,851,222"/>
+<area shape="rect" id="node24" href="class_sub___matrix___decomposition.html#a05944754b07d6b5ec16b6febbc79c1a9" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit..." alt="" coords="452,977,632,1018"/>
+<area shape="rect" id="node25" href="class_sub___matrix___decomposition.html#a0d16a3d20f6261f99c8f1fe1cb43bc34" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="681,1316,879,1357"/>
+<area shape="rect" id="node28" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="452,834,632,876"/>
+<area shape="rect" id="node49" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="463,744,621,785"/>
+<area shape="rect" id="node50" href="common_8cpp.html#a0edb99c36d663a8fe718ab7f097c7f96" title="Call to subtract a scalar from the diagonal of a complex matrix. " alt="" coords="730,456,830,483"/>
+<area shape="rect" id="node51" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7" title="Call to get the number of the individual gate types in the list of operations. " alt="" coords="710,1185,850,1226"/>
+<area shape="rect" id="node52" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="461,1108,623,1149"/>
+<area shape="rect" id="node53" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="461,1042,623,1084"/>
+<area shape="rect" id="node54" href="class_decomposition___base.html#a965838902240670119c0ad68d087c322" title="Call to prepare the optimized operations to export. " alt="" coords="469,1174,615,1230"/>
+<area shape="rect" id="node26" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="939,1470,1093,1496"/>
+<area shape="rect" id="node27" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="1153,1052,1332,1093"/>
+<area shape="rect" id="node29" href="class_sub___matrix___decomposition.html#a56b7a2e77d0426ab2b1283f12d848190" title="The optimization problem of the final optimization. " alt="" coords="690,660,870,701"/>
+<area shape="rect" id="node30" href="class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="943,794,1089,850"/>
+<area shape="rect" id="node31" href="class_sub___matrix___decomposition.html#a63938bf57a68b0595711c865053f7871" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="690,1834,870,1876"/>
+<area shape="rect" id="node37" href="common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="980,907,1052,934"/>
+<area shape="rect" id="node38" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="707,827,853,883"/>
+<area shape="rect" id="node32" href="class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="946,1962,1086,2004"/>
+<area shape="rect" id="node33" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="949,1758,1083,1784"/>
+<area shape="rect" id="node34" href="class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="968,1852,1064,1879"/>
+<area shape="rect" id="node35" href="class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="959,1908,1073,1935"/>
+<area shape="rect" id="node36" href="class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="978,2050,1054,2076"/>
+<area shape="rect" id="node39" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="974,1110,1058,1136"/>
+<area shape="rect" id="node41" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="710,1381,850,1422"/>
+<area shape="rect" id="node42" href="class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="690,1549,870,1590"/>
+<area shape="rect" id="node43" href="class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="710,1250,850,1292"/>
+<area shape="rect" id="node44" href="class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="945,2186,1087,2212"/>
+<area shape="rect" id="node45" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="1161,2186,1324,2212"/>
+<area shape="rect" id="node46" href="class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="709,1666,851,1708"/>
+<area shape="rect" id="node47" href="class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="955,2236,1077,2263"/>
+<area shape="rect" id="node48" href="class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="710,2128,850,2169"/>
 </map>
 </div>
 <div class="dynheader">
@@ -1445,7 +1453,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Return with 0 on success. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00636">636</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00652">652</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1516,7 +1524,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00337">337</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00344">344</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1583,7 +1591,7 @@ Here is the caller graph for this function:</div>
 
 <p>final optimization procedure improving the accuracy of the decompositin when all the qubits were already disentangled. </p>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00397">397</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00404">404</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -1661,42 +1669,43 @@ Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="class_decomposition___base_a0cdd12741e72e2c074a188fe3867e6d5_cgraph.png" border="0" usemap="#class_decomposition___base_a0cdd12741e72e2c074a188fe3867e6d5_cgraph" alt=""/></div>
 <map name="class_decomposition___base_a0cdd12741e72e2c074a188fe3867e6d5_cgraph" id="class_decomposition___base_a0cdd12741e72e2c074a188fe3867e6d5_cgraph">
-<area shape="rect" id="node2" href="class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="219,419,383,460"/>
-<area shape="rect" id="node3" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="259,485,343,511"/>
-<area shape="rect" id="node4" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="212,536,391,577"/>
-<area shape="rect" id="node5" href="class_decomposition___base.html#ad1502d076d0ec0c5cd8b301340fe8ffe" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="217,601,386,643"/>
-<area shape="rect" id="node9" href="class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="440,719,583,760"/>
-<area shape="rect" id="node16" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="1085,486,1233,513"/>
-<area shape="rect" id="node34" href="common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="265,819,337,846"/>
-<area shape="rect" id="node35" href="class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="231,871,371,912"/>
-<area shape="rect" id="node36" href="common_8cpp.html#a0edb99c36d663a8fe718ab7f097c7f96" title="Call to subtract a scalar from the diagonal of a complex matrix. " alt="" coords="251,937,351,963"/>
-<area shape="rect" id="node37" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7" title="Call to get the number of the individual gate types in the list of operations. " alt="" coords="441,808,581,849"/>
-<area shape="rect" id="node6" href="class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="466,529,557,555"/>
-<area shape="rect" id="node8" href="common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="911,334,1002,361"/>
-<area shape="rect" id="node13" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="459,238,564,265"/>
-<area shape="rect" id="node25" href="class_decomposition___base.html#af9bd082b6c17ecaea5657059dabfe083" title="Apply an operations on the input matrix. " alt="" coords="439,601,584,643"/>
-<area shape="rect" id="node7" href="class_matrix.html#a2dba13c45127354c9f75ef576f49269b" title="Default constructor of the class. " alt="" coords="682,507,781,534"/>
-<area shape="rect" id="node10" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="650,558,813,585"/>
-<area shape="rect" id="node11" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="632,726,831,753"/>
-<area shape="rect" id="node12" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="665,795,798,822"/>
-<area shape="rect" id="node14" href="class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="648,391,815,432"/>
-<area shape="rect" id="node15" href="class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="893,238,1020,265"/>
-<area shape="rect" id="node19" href="class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="648,5,815,47"/>
-<area shape="rect" id="node20" href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="655,71,807,112"/>
-<area shape="rect" id="node21" href="class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="635,137,827,163"/>
-<area shape="rect" id="node22" href="class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="641,187,821,214"/>
-<area shape="rect" id="node23" href="class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="655,238,807,265"/>
-<area shape="rect" id="node24" href="class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="648,289,815,315"/>
-<area shape="rect" id="node17" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="1099,263,1220,290"/>
-<area shape="rect" id="node18" href="class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="1083,213,1236,239"/>
-<area shape="rect" id="node26" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="711,609,751,635"/>
-<area shape="rect" id="node27" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="880,537,1033,563"/>
-<area shape="rect" id="node28" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="879,587,1034,614"/>
-<area shape="rect" id="node29" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="899,435,1014,462"/>
-<area shape="rect" id="node30" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1284,435,1463,462"/>
-<area shape="rect" id="node31" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1284,701,1463,727"/>
-<area shape="rect" id="node32" href="classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="879,639,1035,680"/>
-<area shape="rect" id="node33" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="1088,646,1231,673"/>
+<area shape="rect" id="node2" href="class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="219,304,383,345"/>
+<area shape="rect" id="node3" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="259,370,343,396"/>
+<area shape="rect" id="node4" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="212,421,391,462"/>
+<area shape="rect" id="node5" href="class_decomposition___base.html#ad1502d076d0ec0c5cd8b301340fe8ffe" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="217,622,386,664"/>
+<area shape="rect" id="node9" href="class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="440,1030,583,1072"/>
+<area shape="rect" id="node16" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="1085,351,1233,378"/>
+<area shape="rect" id="node35" href="common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="265,790,337,816"/>
+<area shape="rect" id="node36" href="class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="231,841,371,882"/>
+<area shape="rect" id="node37" href="common_8cpp.html#a0edb99c36d663a8fe718ab7f097c7f96" title="Call to subtract a scalar from the diagonal of a complex matrix. " alt="" coords="251,907,351,934"/>
+<area shape="rect" id="node38" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7" title="Call to get the number of the individual gate types in the list of operations. " alt="" coords="441,1121,581,1162"/>
+<area shape="rect" id="node6" href="class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="466,979,557,1006"/>
+<area shape="rect" id="node8" href="common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="911,991,1002,1018"/>
+<area shape="rect" id="node13" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="459,630,564,656"/>
+<area shape="rect" id="node26" href="class_decomposition___base.html#af9bd082b6c17ecaea5657059dabfe083" title="Apply an operations on the input matrix. " alt="" coords="439,209,584,250"/>
+<area shape="rect" id="node7" href="class_matrix.html#a2dba13c45127354c9f75ef576f49269b" title="Default constructor of the class. " alt="" coords="682,979,781,1006"/>
+<area shape="rect" id="node10" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="650,1030,813,1056"/>
+<area shape="rect" id="node11" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="632,1080,831,1107"/>
+<area shape="rect" id="node12" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="665,1131,798,1158"/>
+<area shape="rect" id="node14" href="class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="648,681,815,722"/>
+<area shape="rect" id="node15" href="class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="893,604,1020,631"/>
+<area shape="rect" id="node19" href="class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="1112,779,1207,806"/>
+<area shape="rect" id="node20" href="class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="648,746,815,788"/>
+<area shape="rect" id="node21" href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="655,812,807,853"/>
+<area shape="rect" id="node22" href="class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="635,427,827,454"/>
+<area shape="rect" id="node23" href="class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="641,478,821,504"/>
+<area shape="rect" id="node24" href="class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="655,528,807,555"/>
+<area shape="rect" id="node25" href="class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="648,579,815,606"/>
+<area shape="rect" id="node17" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="1099,579,1220,606"/>
+<area shape="rect" id="node18" href="class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="1083,630,1236,656"/>
+<area shape="rect" id="node27" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="711,195,751,222"/>
+<area shape="rect" id="node28" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="880,224,1033,251"/>
+<area shape="rect" id="node29" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="879,275,1034,302"/>
+<area shape="rect" id="node30" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="899,174,1014,200"/>
+<area shape="rect" id="node31" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1284,123,1463,150"/>
+<area shape="rect" id="node32" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1284,35,1463,62"/>
+<area shape="rect" id="node33" href="classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="879,57,1035,98"/>
+<area shape="rect" id="node34" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="1088,64,1231,91"/>
 </map>
 </div>
 <div class="dynheader">
@@ -1891,31 +1900,32 @@ Here is the call graph for this function:</div>
 <area shape="rect" id="node2" href="class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="250,5,341,32"/>
 <area shape="rect" id="node4" href="common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="695,81,786,108"/>
 <area shape="rect" id="node5" href="class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="224,150,367,191"/>
-<area shape="rect" id="node9" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="243,448,348,475"/>
-<area shape="rect" id="node21" href="class_decomposition___base.html#af9bd082b6c17ecaea5657059dabfe083" title="Apply an operations on the input matrix. " alt="" coords="223,601,368,642"/>
+<area shape="rect" id="node9" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="243,479,348,505"/>
+<area shape="rect" id="node22" href="class_decomposition___base.html#af9bd082b6c17ecaea5657059dabfe083" title="Apply an operations on the input matrix. " alt="" coords="223,707,368,749"/>
 <area shape="rect" id="node3" href="class_matrix.html#a2dba13c45127354c9f75ef576f49269b" title="Default constructor of the class. " alt="" coords="466,5,565,32"/>
 <area shape="rect" id="node6" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="434,107,597,133"/>
 <area shape="rect" id="node7" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="416,157,615,184"/>
 <area shape="rect" id="node8" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="449,208,582,235"/>
-<area shape="rect" id="node10" href="class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="432,310,599,351"/>
-<area shape="rect" id="node11" href="class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="677,507,804,533"/>
-<area shape="rect" id="node15" href="class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="432,375,599,417"/>
-<area shape="rect" id="node16" href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="439,441,591,482"/>
-<area shape="rect" id="node17" href="class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="419,507,611,533"/>
-<area shape="rect" id="node18" href="class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="425,557,605,584"/>
-<area shape="rect" id="node19" href="class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="439,608,591,635"/>
-<area shape="rect" id="node20" href="class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="432,659,599,685"/>
-<area shape="rect" id="node12" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="869,557,1017,584"/>
-<area shape="rect" id="node13" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="883,456,1004,483"/>
-<area shape="rect" id="node14" href="class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="867,507,1020,533"/>
-<area shape="rect" id="node22" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="495,709,535,736"/>
-<area shape="rect" id="node23" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="664,659,817,685"/>
-<area shape="rect" id="node24" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="663,709,818,736"/>
-<area shape="rect" id="node25" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="683,608,798,635"/>
-<area shape="rect" id="node26" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1068,760,1247,787"/>
-<area shape="rect" id="node27" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1068,848,1247,875"/>
-<area shape="rect" id="node28" href="classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="663,811,819,853"/>
-<area shape="rect" id="node29" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="872,819,1015,845"/>
+<area shape="rect" id="node10" href="class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="432,259,599,301"/>
+<area shape="rect" id="node11" href="class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="677,533,804,560"/>
+<area shape="rect" id="node15" href="class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="896,672,991,699"/>
+<area shape="rect" id="node16" href="class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="432,377,599,418"/>
+<area shape="rect" id="node17" href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="439,442,591,483"/>
+<area shape="rect" id="node18" href="class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="419,508,611,535"/>
+<area shape="rect" id="node19" href="class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="425,559,605,585"/>
+<area shape="rect" id="node20" href="class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="439,609,591,636"/>
+<area shape="rect" id="node21" href="class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="432,660,599,687"/>
+<area shape="rect" id="node12" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="869,761,1017,788"/>
+<area shape="rect" id="node13" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="883,508,1004,535"/>
+<area shape="rect" id="node14" href="class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="867,559,1020,585"/>
+<area shape="rect" id="node23" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="495,888,535,915"/>
+<area shape="rect" id="node24" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="664,812,817,839"/>
+<area shape="rect" id="node25" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="663,863,818,889"/>
+<area shape="rect" id="node26" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="683,913,798,940"/>
+<area shape="rect" id="node27" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1068,964,1247,991"/>
+<area shape="rect" id="node28" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1068,1040,1247,1067"/>
+<area shape="rect" id="node29" href="classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="663,1066,819,1107"/>
+<area shape="rect" id="node30" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="872,1065,1015,1092"/>
 </map>
 </div>
 <div class="dynheader">
@@ -1960,7 +1970,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the number of the individual gate types in the list of operations. </p>
 <dl class="section return"><dt>Returns</dt><dd>Returns with an instance <a class="el" href="structgates__num.html" title="Structure type conatining numbers of gates. ">gates_num</a> describing the number of the individual gate types </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00319">319</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00335">335</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -2011,7 +2021,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the qubits involved in the operations stored in the block of operations. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with a list of the invovled qubits </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00502">502</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00518">518</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -2070,28 +2080,29 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the list of the operations </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00125">125</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00131">131</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="class_operation__block_a9950bdb493faaf4ed050c39b07a4ac02_cgraph.png" border="0" usemap="#class_operation__block_a9950bdb493faaf4ed050c39b07a4ac02_cgraph" alt=""/></div>
 <map name="class_operation__block_a9950bdb493faaf4ed050c39b07a4ac02_cgraph" id="class_operation__block_a9950bdb493faaf4ed050c39b07a4ac02_cgraph">
-<area shape="rect" id="node2" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="226,73,359,99"/>
-<area shape="rect" id="node3" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="230,123,355,150"/>
-<area shape="rect" id="node4" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="193,174,392,201"/>
-<area shape="rect" id="node5" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="240,225,345,251"/>
-<area shape="rect" id="node17" href="class_operation.html#a65614494dab9424bdac15cf936bd5a18" title="Call to retrieve the operation matrix. " alt="" coords="221,275,365,302"/>
+<area shape="rect" id="node2" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="226,153,359,179"/>
+<area shape="rect" id="node3" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="230,203,355,230"/>
+<area shape="rect" id="node4" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="193,254,392,281"/>
+<area shape="rect" id="node5" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="240,305,345,331"/>
+<area shape="rect" id="node11" href="class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="884,457,979,483"/>
+<area shape="rect" id="node18" href="class_operation.html#a65614494dab9424bdac15cf936bd5a18" title="Call to retrieve the operation matrix. " alt="" coords="221,558,365,585"/>
 <area shape="rect" id="node6" href="class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="453,5,619,47"/>
-<area shape="rect" id="node7" href="class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="680,225,807,251"/>
-<area shape="rect" id="node11" href="class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="453,123,619,164"/>
-<area shape="rect" id="node12" href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="460,188,612,229"/>
-<area shape="rect" id="node13" href="class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="440,254,632,281"/>
-<area shape="rect" id="node14" href="class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="446,305,626,331"/>
-<area shape="rect" id="node15" href="class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="460,355,612,382"/>
-<area shape="rect" id="node16" href="class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="453,406,619,433"/>
-<area shape="rect" id="node8" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="857,174,1005,201"/>
-<area shape="rect" id="node9" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="871,225,992,251"/>
-<area shape="rect" id="node10" href="class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="855,275,1008,302"/>
+<area shape="rect" id="node7" href="class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="680,254,807,281"/>
+<area shape="rect" id="node12" href="class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="453,123,619,164"/>
+<area shape="rect" id="node13" href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="460,188,612,229"/>
+<area shape="rect" id="node14" href="class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="440,254,632,281"/>
+<area shape="rect" id="node15" href="class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="446,305,626,331"/>
+<area shape="rect" id="node16" href="class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="460,355,612,382"/>
+<area shape="rect" id="node17" href="class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="453,406,619,433"/>
+<area shape="rect" id="node8" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="857,203,1005,230"/>
+<area shape="rect" id="node9" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="871,254,992,281"/>
+<area shape="rect" id="node10" href="class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="855,305,1008,331"/>
 </map>
 </div>
 <div class="dynheader">
@@ -2151,32 +2162,33 @@ Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="class_operation__block_a2e978e3b5773b7ab03b4f15021207090_cgraph.png" border="0" usemap="#class_operation__block_a2e978e3b5773b7ab03b4f15021207090_cgraph" alt=""/></div>
 <map name="class_operation__block_a2e978e3b5773b7ab03b4f15021207090_cgraph" id="class_operation__block_a2e978e3b5773b7ab03b4f15021207090_cgraph">
-<area shape="rect" id="node2" href="class_operation__block.html#a9950bdb493faaf4ed050c39b07a4ac02" title="Call to get the list of matrix representation of the operations grouped in the block. " alt="" coords="193,218,333,260"/>
-<area shape="rect" id="node19" href="common_8cpp.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="208,306,319,332"/>
-<area shape="rect" id="node3" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="414,99,547,126"/>
-<area shape="rect" id="node4" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="418,150,543,176"/>
-<area shape="rect" id="node5" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="381,200,580,227"/>
-<area shape="rect" id="node6" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="428,251,533,278"/>
-<area shape="rect" id="node18" href="class_operation.html#a65614494dab9424bdac15cf936bd5a18" title="Call to retrieve the operation matrix. " alt="" coords="409,302,553,328"/>
-<area shape="rect" id="node7" href="class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="641,54,807,96"/>
-<area shape="rect" id="node8" href="class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="883,251,1009,278"/>
-<area shape="rect" id="node12" href="class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="641,120,807,161"/>
-<area shape="rect" id="node13" href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="648,185,800,226"/>
-<area shape="rect" id="node14" href="class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="628,251,820,278"/>
-<area shape="rect" id="node15" href="class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="634,302,814,328"/>
-<area shape="rect" id="node16" href="class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="648,352,800,379"/>
-<area shape="rect" id="node17" href="class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="641,403,807,430"/>
-<area shape="rect" id="node9" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="1075,302,1223,328"/>
-<area shape="rect" id="node10" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="1088,200,1209,227"/>
-<area shape="rect" id="node11" href="class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="1072,251,1225,278"/>
-<area shape="rect" id="node20" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="704,454,744,480"/>
-<area shape="rect" id="node21" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="869,403,1023,430"/>
-<area shape="rect" id="node22" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="869,454,1023,480"/>
-<area shape="rect" id="node23" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="889,352,1003,379"/>
-<area shape="rect" id="node24" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1273,504,1452,531"/>
-<area shape="rect" id="node25" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1273,592,1452,619"/>
-<area shape="rect" id="node26" href="classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="868,556,1024,597"/>
-<area shape="rect" id="node27" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="1077,563,1220,590"/>
+<area shape="rect" id="node2" href="class_operation__block.html#a9950bdb493faaf4ed050c39b07a4ac02" title="Call to get the list of matrix representation of the operations grouped in the block. " alt="" coords="193,162,333,203"/>
+<area shape="rect" id="node12" href="class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="1101,271,1196,297"/>
+<area shape="rect" id="node20" href="common_8cpp.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="208,376,319,403"/>
+<area shape="rect" id="node3" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="414,93,547,120"/>
+<area shape="rect" id="node4" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="418,144,543,171"/>
+<area shape="rect" id="node5" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="381,195,580,221"/>
+<area shape="rect" id="node6" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="428,473,533,500"/>
+<area shape="rect" id="node19" href="class_operation.html#a65614494dab9424bdac15cf936bd5a18" title="Call to retrieve the operation matrix. " alt="" coords="409,43,553,69"/>
+<area shape="rect" id="node7" href="class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="641,550,807,591"/>
+<area shape="rect" id="node8" href="class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="883,517,1009,544"/>
+<area shape="rect" id="node13" href="class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="641,667,807,709"/>
+<area shape="rect" id="node14" href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="648,733,800,774"/>
+<area shape="rect" id="node15" href="class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="628,347,820,373"/>
+<area shape="rect" id="node16" href="class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="634,397,814,424"/>
+<area shape="rect" id="node17" href="class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="648,448,800,475"/>
+<area shape="rect" id="node18" href="class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="641,499,807,525"/>
+<area shape="rect" id="node9" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="1075,619,1223,645"/>
+<area shape="rect" id="node10" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="1088,549,1209,576"/>
+<area shape="rect" id="node11" href="class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="1072,499,1225,525"/>
+<area shape="rect" id="node21" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="704,799,744,825"/>
+<area shape="rect" id="node22" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="869,888,1023,915"/>
+<area shape="rect" id="node23" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="869,939,1023,965"/>
+<area shape="rect" id="node24" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="889,669,1003,696"/>
+<area shape="rect" id="node25" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1273,720,1452,747"/>
+<area shape="rect" id="node26" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1273,808,1452,835"/>
+<area shape="rect" id="node27" href="classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="868,771,1024,813"/>
+<area shape="rect" id="node28" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="1077,779,1220,805"/>
 </map>
 </div>
 <div class="dynheader">
@@ -2395,7 +2407,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the number of operations grouped in the class. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with the number of the operations grouped in the operation block. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00368">368</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00384">384</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -2539,7 +2551,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the operations stored in the class. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with a list of the operations. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00534">534</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00550">550</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -2675,7 +2687,7 @@ Here is the caller graph for this function:</div>
 <p>Call to get the number of free parameters. </p>
 <dl class="section return"><dt>Returns</dt><dd>Return with the number of parameters of the operations grouped in the operation block. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00359">359</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00375">375</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -2931,37 +2943,38 @@ Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="class_decomposition___base_a7523e317319932fe86ee5eb5e18b95a0_cgraph.png" border="0" usemap="#class_decomposition___base_a7523e317319932fe86ee5eb5e18b95a0_cgraph" alt=""/></div>
 <map name="class_decomposition___base_a7523e317319932fe86ee5eb5e18b95a0_cgraph" id="class_decomposition___base_a7523e317319932fe86ee5eb5e18b95a0_cgraph">
-<area shape="rect" id="node2" href="class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="242,20,333,47"/>
-<area shape="rect" id="node4" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="631,72,765,99"/>
-<area shape="rect" id="node5" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="635,124,761,151"/>
-<area shape="rect" id="node6" href="class_operation.html#a65614494dab9424bdac15cf936bd5a18" title="Call to retrieve the operation matrix. " alt="" coords="626,176,770,203"/>
-<area shape="rect" id="node7" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="599,231,797,257"/>
-<area shape="rect" id="node8" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="645,281,751,308"/>
-<area shape="rect" id="node20" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="217,375,357,417"/>
-<area shape="rect" id="node21" href="class_operation__block.html#a2e978e3b5773b7ab03b4f15021207090" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="217,258,357,299"/>
-<area shape="rect" id="node24" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="678,559,718,585"/>
-<area shape="rect" id="node32" href="class_decomposition___base.html#af9bd082b6c17ecaea5657059dabfe083" title="Apply an operations on the input matrix. " alt="" coords="405,493,551,534"/>
-<area shape="rect" id="node3" href="class_matrix.html#a2dba13c45127354c9f75ef576f49269b" title="Default constructor of the class. " alt="" coords="429,20,527,47"/>
-<area shape="rect" id="node9" href="class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="858,107,1025,149"/>
-<area shape="rect" id="node10" href="class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="1093,232,1220,259"/>
-<area shape="rect" id="node14" href="class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="858,225,1025,266"/>
-<area shape="rect" id="node15" href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="865,290,1017,331"/>
-<area shape="rect" id="node16" href="class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="845,356,1037,383"/>
-<area shape="rect" id="node17" href="class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="851,407,1031,433"/>
-<area shape="rect" id="node18" href="class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="865,5,1017,32"/>
-<area shape="rect" id="node19" href="class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="858,56,1025,83"/>
-<area shape="rect" id="node11" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="1291,457,1439,484"/>
-<area shape="rect" id="node12" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="1305,257,1426,284"/>
-<area shape="rect" id="node13" href="class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="1289,207,1442,233"/>
-<area shape="rect" id="node22" href="class_operation__block.html#a9950bdb493faaf4ed050c39b07a4ac02" title="Call to get the list of matrix representation of the operations grouped in the block. " alt="" coords="408,223,548,265"/>
-<area shape="rect" id="node23" href="common_8cpp.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="423,289,533,316"/>
-<area shape="rect" id="node25" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="865,676,1018,703"/>
-<area shape="rect" id="node26" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="864,727,1019,753"/>
-<area shape="rect" id="node27" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="1099,508,1214,535"/>
-<area shape="rect" id="node28" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1276,559,1455,585"/>
-<area shape="rect" id="node29" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1276,697,1455,724"/>
-<area shape="rect" id="node30" href="classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="863,610,1019,651"/>
-<area shape="rect" id="node31" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="1085,617,1228,644"/>
+<area shape="rect" id="node2" href="class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="242,99,333,126"/>
+<area shape="rect" id="node4" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="631,150,765,177"/>
+<area shape="rect" id="node5" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="635,201,761,227"/>
+<area shape="rect" id="node6" href="class_operation.html#a65614494dab9424bdac15cf936bd5a18" title="Call to retrieve the operation matrix. " alt="" coords="626,251,770,278"/>
+<area shape="rect" id="node7" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="599,302,797,329"/>
+<area shape="rect" id="node8" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="645,353,751,379"/>
+<area shape="rect" id="node21" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="217,471,357,512"/>
+<area shape="rect" id="node22" href="class_operation__block.html#a2e978e3b5773b7ab03b4f15021207090" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="217,545,357,587"/>
+<area shape="rect" id="node25" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="678,714,718,741"/>
+<area shape="rect" id="node33" href="class_decomposition___base.html#af9bd082b6c17ecaea5657059dabfe083" title="Apply an operations on the input matrix. " alt="" coords="405,711,551,752"/>
+<area shape="rect" id="node3" href="class_matrix.html#a2dba13c45127354c9f75ef576f49269b" title="Default constructor of the class. " alt="" coords="429,99,527,126"/>
+<area shape="rect" id="node9" href="class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="858,340,1025,381"/>
+<area shape="rect" id="node10" href="class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="1093,263,1220,290"/>
+<area shape="rect" id="node14" href="class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="1318,482,1413,509"/>
+<area shape="rect" id="node15" href="class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="858,5,1025,47"/>
+<area shape="rect" id="node16" href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="865,71,1017,112"/>
+<area shape="rect" id="node17" href="class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="845,137,1037,163"/>
+<area shape="rect" id="node18" href="class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="851,187,1031,214"/>
+<area shape="rect" id="node19" href="class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="865,238,1017,265"/>
+<area shape="rect" id="node20" href="class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on the space..." alt="" coords="858,289,1025,315"/>
+<area shape="rect" id="node11" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="1291,659,1439,686"/>
+<area shape="rect" id="node12" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="1305,238,1426,265"/>
+<area shape="rect" id="node13" href="class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="1289,289,1442,315"/>
+<area shape="rect" id="node23" href="class_operation__block.html#a9950bdb493faaf4ed050c39b07a4ac02" title="Call to get the list of matrix representation of the operations grouped in the block. " alt="" coords="408,353,548,395"/>
+<area shape="rect" id="node24" href="common_8cpp.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="423,609,533,635"/>
+<area shape="rect" id="node26" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="865,929,1018,955"/>
+<area shape="rect" id="node27" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="864,609,1019,635"/>
+<area shape="rect" id="node28" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="1099,710,1214,737"/>
+<area shape="rect" id="node29" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1276,761,1455,787"/>
+<area shape="rect" id="node30" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1276,849,1455,875"/>
+<area shape="rect" id="node31" href="classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="863,812,1019,853"/>
+<area shape="rect" id="node32" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="1085,819,1228,846"/>
 </map>
 </div>
 
@@ -3257,7 +3270,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00378">378</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00394">394</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -3321,7 +3334,7 @@ Here is the caller graph for this function:</div>
 
 <p>Reimplemented from <a class="el" href="class_decomposition___base.html#acf35b6a28ce0068ad9011a5d7ee802cd">Decomposition_Base</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00517">517</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00524">524</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -3386,7 +3399,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the cost function. (zero if the qubits are desintangled.) </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00534">534</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00541">541</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -3853,7 +3866,7 @@ Here is the call graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00894">894</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00901">901</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -3905,7 +3918,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with zero in case of success. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00919">919</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00926">926</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -3948,7 +3961,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with zero in case of success. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00940">940</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00947">947</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -4418,7 +4431,7 @@ Here is the caller graph for this function:</div>
 
 <p>Reimplemented from <a class="el" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b">Operation</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00583">583</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_operation__block_8cpp_source.html#l00599">599</a> of file <a class="el" href="_operation__block_8cpp_source.html">Operation_block.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -4570,65 +4583,65 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with 0 if the simplification wa ssuccessful. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00755">755</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00762">762</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="class_n___qubit___decomposition_a0362ed18889e3f9cd0a3803877604704_cgraph.png" border="0" usemap="#class_n___qubit___decomposition_a0362ed18889e3f9cd0a3803877604704_cgraph" alt=""/></div>
 <map name="class_n___qubit___decomposition_a0362ed18889e3f9cd0a3803877604704_cgraph" id="class_n___qubit___decomposition_a0362ed18889e3f9cd0a3803877604704_cgraph">
-<area shape="rect" id="node2" href="class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="936,571,1076,613"/>
-<area shape="rect" id="node3" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="1615,525,1749,552"/>
-<area shape="rect" id="node4" href="class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="219,2296,389,2323"/>
-<area shape="rect" id="node5" href="class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit. " alt="" coords="216,2347,392,2373"/>
-<area shape="rect" id="node6" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="929,637,1083,664"/>
-<area shape="rect" id="node7" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="1144,689,1323,730"/>
-<area shape="rect" id="node16" href="class_operation__block.html#afadad4dd28e881666a46e114eb7958e4" title="Call to reorder the qubits in the matrix of the operations. " alt="" coords="925,241,1087,282"/>
-<area shape="rect" id="node21" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1640,1631,1724,1657"/>
-<area shape="rect" id="node22" href="class_operation__block.html#a2e978e3b5773b7ab03b4f15021207090" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="234,470,374,511"/>
-<area shape="rect" id="node30" href="class_n___qubit___decomposition.html#a6a346911175b25fa4045722300479dad" title="Nullary constructor of the class. " alt="" coords="692,2017,861,2058"/>
-<area shape="rect" id="node31" href="class_decomposition___base.html#a70fd9a8663499f135fe93cdf2ce389c0" title="Set the maximal number of layers used in the subdecomposition of the n&#45;th qubit. " alt="" coords="704,1875,849,1917"/>
-<area shape="rect" id="node32" href="class_decomposition___base.html#a0a46d0f9ad1cc240256211acc30a9add" title="Call to set the verbose attribute to true or false. " alt="" coords="704,1941,849,1982"/>
-<area shape="rect" id="node33" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="223,1438,385,1479"/>
-<area shape="rect" id="node39" href="class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="704,2104,849,2160"/>
-<area shape="rect" id="node42" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="936,942,1076,983"/>
-<area shape="rect" id="node43" href="class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="916,1707,1096,1749"/>
-<area shape="rect" id="node46" href="class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="936,1387,1076,1429"/>
-<area shape="rect" id="node50" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7" title="Call to get the number of the individual gate types in the list of operations. " alt="" coords="707,966,847,1007"/>
-<area shape="rect" id="node52" href="class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="691,469,862,496"/>
-<area shape="rect" id="node8" href="class_operation__block.html#ae1eebd44b1c6fd8d4d379784c5a22887" title="Call to extract the operations stored in the class. " alt="" coords="1153,571,1314,613"/>
-<area shape="rect" id="node9" href="class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce" title="Call to release the stored operations. " alt="" coords="1371,627,1535,669"/>
-<area shape="rect" id="node10" href="class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="1405,576,1501,603"/>
-<area shape="rect" id="node11" href="class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="1381,405,1524,446"/>
-<area shape="rect" id="node14" href="class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="1415,471,1491,497"/>
-<area shape="rect" id="node15" href="class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="1395,693,1510,720"/>
-<area shape="rect" id="node12" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="1601,1336,1763,1363"/>
-<area shape="rect" id="node13" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="1583,285,1781,312"/>
-<area shape="rect" id="node17" href="class_c_n_o_t.html#a3e2d8067000d9b3b905729a1a2bfbf7e" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="1160,216,1307,243"/>
-<area shape="rect" id="node19" href="class_u3.html#a53b0a784fbf2b26a9bcbd2502e849670" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="1170,267,1297,293"/>
-<area shape="rect" id="node18" href="class_operation.html#aa11dab745a5dbca70c3c437f813340fe" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="1391,234,1515,275"/>
-<area shape="rect" id="node20" href="class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="1384,1438,1521,1479"/>
-<area shape="rect" id="node23" href="class_operation__block.html#a9950bdb493faaf4ed050c39b07a4ac02" title="Call to get the list of matrix representation of the operations grouped in the block. " alt="" coords="1383,49,1523,90"/>
-<area shape="rect" id="node27" href="common_8cpp.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="483,1141,594,1168"/>
-<area shape="rect" id="node24" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="1619,56,1745,83"/>
-<area shape="rect" id="node25" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the operation matrix. " alt="" coords="1629,107,1735,133"/>
-<area shape="rect" id="node26" href="class_operation.html#a65614494dab9424bdac15cf936bd5a18" title="Call to retrieve the operation matrix. " alt="" coords="1610,5,1754,32"/>
-<area shape="rect" id="node28" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="757,1285,797,1312"/>
-<area shape="rect" id="node29" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="932,1059,1080,1085"/>
-<area shape="rect" id="node34" href="class_sub___matrix___decomposition.html#a05944754b07d6b5ec16b6febbc79c1a9" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit..." alt="" coords="449,1497,629,1538"/>
-<area shape="rect" id="node35" href="class_decomposition___base.html#a461f735688248c8f04756e4abadb0516" title="Set the number of iteration loops during the subdecomposition of the n&#45;th qubit. " alt="" coords="704,1781,849,1822"/>
-<area shape="rect" id="node36" href="class_sub___matrix___decomposition.html#a0d16a3d20f6261f99c8f1fe1cb43bc34" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="440,765,637,806"/>
-<area shape="rect" id="node37" href="class_decomposition___base.html#a871056822bf7cc558ea9a59e22084d5b" title="Call to set the tolerance of the optimization processes. " alt="" coords="685,1649,868,1690"/>
-<area shape="rect" id="node38" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="449,1774,629,1815"/>
-<area shape="rect" id="node40" href="class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="695,1583,859,1625"/>
-<area shape="rect" id="node41" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="687,1336,866,1392"/>
-<area shape="rect" id="node47" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="457,1562,620,1603"/>
-<area shape="rect" id="node48" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="459,1075,618,1117"/>
-<area shape="rect" id="node49" href="common_8cpp.html#a0edb99c36d663a8fe718ab7f097c7f96" title="Call to subtract a scalar from the diagonal of a complex matrix. " alt="" coords="727,1184,827,1211"/>
-<area shape="rect" id="node51" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="457,857,620,898"/>
-<area shape="rect" id="node53" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="457,1627,620,1669"/>
-<area shape="rect" id="node54" href="class_decomposition___base.html#a965838902240670119c0ad68d087c322" title="Call to prepare the optimized operations to export. " alt="" coords="466,1693,611,1749"/>
-<area shape="rect" id="node44" href="class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="1162,1285,1305,1312"/>
-<area shape="rect" id="node45" href="class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="1172,1420,1295,1447"/>
+<area shape="rect" id="node2" href="class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="936,474,1076,515"/>
+<area shape="rect" id="node3" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="1615,608,1749,635"/>
+<area shape="rect" id="node4" href="class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="219,2149,389,2176"/>
+<area shape="rect" id="node5" href="class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit. " alt="" coords="216,2200,392,2227"/>
+<area shape="rect" id="node6" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="929,540,1083,567"/>
+<area shape="rect" id="node7" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="1144,634,1323,675"/>
+<area shape="rect" id="node16" href="class_operation__block.html#afadad4dd28e881666a46e114eb7958e4" title="Call to reorder the qubits in the matrix of the operations. " alt="" coords="925,1778,1087,1819"/>
+<area shape="rect" id="node21" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1640,1715,1724,1741"/>
+<area shape="rect" id="node22" href="class_operation__block.html#a2e978e3b5773b7ab03b4f15021207090" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="1163,78,1303,119"/>
+<area shape="rect" id="node27" href="class_n___qubit___decomposition.html#a6a346911175b25fa4045722300479dad" title="Nullary constructor of the class. " alt="" coords="692,978,861,1019"/>
+<area shape="rect" id="node28" href="class_decomposition___base.html#a70fd9a8663499f135fe93cdf2ce389c0" title="Set the maximal number of layers used in the subdecomposition of the n&#45;th qubit. " alt="" coords="704,1109,849,1150"/>
+<area shape="rect" id="node29" href="class_decomposition___base.html#a0a46d0f9ad1cc240256211acc30a9add" title="Call to set the verbose attribute to true or false. " alt="" coords="704,1043,849,1085"/>
+<area shape="rect" id="node30" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="223,1275,385,1317"/>
+<area shape="rect" id="node38" href="class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="704,1847,849,1903"/>
+<area shape="rect" id="node41" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="936,693,1076,734"/>
+<area shape="rect" id="node42" href="class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="916,1861,1096,1902"/>
+<area shape="rect" id="node45" href="class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="936,1417,1076,1458"/>
+<area shape="rect" id="node50" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7" title="Call to get the number of the individual gate types in the list of operations. " alt="" coords="707,913,847,954"/>
+<area shape="rect" id="node52" href="class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="691,337,862,364"/>
+<area shape="rect" id="node8" href="class_operation__block.html#ae1eebd44b1c6fd8d4d379784c5a22887" title="Call to extract the operations stored in the class. " alt="" coords="1153,517,1314,558"/>
+<area shape="rect" id="node9" href="class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce" title="Call to release the stored operations. " alt="" coords="1371,601,1535,642"/>
+<area shape="rect" id="node10" href="class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="1405,549,1501,576"/>
+<area shape="rect" id="node11" href="class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="1381,353,1524,394"/>
+<area shape="rect" id="node14" href="class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="1415,419,1491,445"/>
+<area shape="rect" id="node15" href="class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="1395,667,1510,693"/>
+<area shape="rect" id="node12" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="1601,1339,1763,1365"/>
+<area shape="rect" id="node13" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="1583,235,1781,261"/>
+<area shape="rect" id="node17" href="class_c_n_o_t.html#a3e2d8067000d9b3b905729a1a2bfbf7e" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="1160,1809,1307,1836"/>
+<area shape="rect" id="node19" href="class_u3.html#a53b0a784fbf2b26a9bcbd2502e849670" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="1170,1759,1297,1785"/>
+<area shape="rect" id="node18" href="class_operation.html#aa11dab745a5dbca70c3c437f813340fe" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="1391,1802,1515,1843"/>
+<area shape="rect" id="node20" href="class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="1384,1737,1521,1778"/>
+<area shape="rect" id="node23" href="class_operation__block.html#a9950bdb493faaf4ed050c39b07a4ac02" title="Call to get the list of matrix representation of the operations grouped in the block. " alt="" coords="1383,53,1523,94"/>
+<area shape="rect" id="node25" href="class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="1635,5,1729,32"/>
+<area shape="rect" id="node26" href="common_8cpp.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="1397,119,1508,145"/>
+<area shape="rect" id="node24" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="1619,60,1745,87"/>
+<area shape="rect" id="node31" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="462,1509,615,1536"/>
+<area shape="rect" id="node32" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="461,1560,616,1587"/>
+<area shape="rect" id="node33" href="class_sub___matrix___decomposition.html#a05944754b07d6b5ec16b6febbc79c1a9" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit..." alt="" coords="449,1713,629,1754"/>
+<area shape="rect" id="node34" href="class_decomposition___base.html#a461f735688248c8f04756e4abadb0516" title="Set the number of iteration loops during the subdecomposition of the n&#45;th qubit. " alt="" coords="704,1174,849,1215"/>
+<area shape="rect" id="node35" href="class_sub___matrix___decomposition.html#a0d16a3d20f6261f99c8f1fe1cb43bc34" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="440,591,637,633"/>
+<area shape="rect" id="node36" href="class_decomposition___base.html#a871056822bf7cc558ea9a59e22084d5b" title="Call to set the tolerance of the optimization processes. " alt="" coords="685,1239,868,1281"/>
+<area shape="rect" id="node37" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="449,1830,629,1871"/>
+<area shape="rect" id="node39" href="class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="695,1742,859,1783"/>
+<area shape="rect" id="node40" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="687,1457,866,1513"/>
+<area shape="rect" id="node46" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="457,1275,620,1317"/>
+<area shape="rect" id="node47" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="703,1356,851,1383"/>
+<area shape="rect" id="node48" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="459,1443,618,1485"/>
+<area shape="rect" id="node49" href="common_8cpp.html#a0edb99c36d663a8fe718ab7f097c7f96" title="Call to subtract a scalar from the diagonal of a complex matrix. " alt="" coords="727,1305,827,1332"/>
+<area shape="rect" id="node51" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="457,657,620,698"/>
+<area shape="rect" id="node53" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="457,1078,620,1119"/>
+<area shape="rect" id="node54" href="class_decomposition___base.html#a965838902240670119c0ad68d087c322" title="Call to prepare the optimized operations to export. " alt="" coords="466,1144,611,1200"/>
+<area shape="rect" id="node43" href="class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="1162,1325,1305,1352"/>
+<area shape="rect" id="node44" href="class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="1172,1481,1295,1508"/>
 </map>
 </div>
 <div class="dynheader">
@@ -4663,65 +4676,65 @@ Here is the caller graph for this function:</div>
 <p>Call to simplify the gate structure in the layers if possible (i.e. </p>
 <p>tries to reduce the number of <a class="el" href="class_c_n_o_t.html" title="A class representing a CNOT operation. ">CNOT</a> gates) </p>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00556">556</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00563">563</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="class_n___qubit___decomposition_af768a6b3f20e1fd9909271941cf34b6f_cgraph.png" border="0" usemap="#class_n___qubit___decomposition_af768a6b3f20e1fd9909271941cf34b6f_cgraph" alt=""/></div>
 <map name="class_n___qubit___decomposition_af768a6b3f20e1fd9909271941cf34b6f_cgraph" id="class_n___qubit___decomposition_af768a6b3f20e1fd9909271941cf34b6f_cgraph">
-<area shape="rect" id="node2" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="1355,982,1533,1024"/>
-<area shape="rect" id="node3" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="2040,1546,2124,1572"/>
-<area shape="rect" id="node4" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="1826,555,1959,582"/>
-<area shape="rect" id="node5" href="class_operation__block.html#a92e4f0566e4b36830652729377a8e936" title="Call to get the qubits involved in the operations stored in the block of operations. " alt="" coords="227,348,367,389"/>
-<area shape="rect" id="node7" href="common_8cpp.html#aba6badd873191e752e949e21670e67be" title="Add an integer to a vector of integers if the integer is not already an element of the vector..." alt="" coords="439,296,590,323"/>
-<area shape="rect" id="node9" href="class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="1147,1961,1287,2002"/>
-<area shape="rect" id="node10" href="class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="902,640,1073,667"/>
-<area shape="rect" id="node21" href="class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce" title="Call to release the stored operations. " alt="" coords="1581,489,1745,530"/>
-<area shape="rect" id="node25" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="1147,321,1287,362"/>
-<area shape="rect" id="node26" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7" title="Call to get the number of the individual gate types in the list of operations. " alt="" coords="917,574,1057,616"/>
-<area shape="rect" id="node27" href="class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="216,770,379,812"/>
-<area shape="rect" id="node47" href="common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="1181,2027,1253,2054"/>
-<area shape="rect" id="node54" href="common_8cpp.html#abe45e0c72de2b8d2b20dc68ec85581c2" title="custom defined memory reallocation function. " alt="" coords="253,2259,341,2286"/>
-<area shape="rect" id="node6" href="class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="429,398,600,424"/>
-<area shape="rect" id="node8" href="class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit. " alt="" coords="427,347,603,374"/>
-<area shape="rect" id="node11" href="class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="1147,793,1287,834"/>
-<area shape="rect" id="node12" href="class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="1615,672,1711,699"/>
-<area shape="rect" id="node13" href="class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="1592,606,1735,648"/>
-<area shape="rect" id="node16" href="class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="1625,1419,1701,1446"/>
-<area shape="rect" id="node19" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="1140,859,1293,886"/>
-<area shape="rect" id="node22" href="class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="1606,1520,1721,1547"/>
-<area shape="rect" id="node14" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="1811,1596,1974,1623"/>
-<area shape="rect" id="node15" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="1793,391,1992,418"/>
-<area shape="rect" id="node17" href="class_u3.html#a11a8fca65dd56a6bdc42a98927040a05" title="Nullary constructor of the class. " alt="" coords="1861,1394,1924,1420"/>
-<area shape="rect" id="node18" href="class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation. " alt="" coords="1794,1444,1991,1471"/>
-<area shape="rect" id="node20" href="class_operation__block.html#ae1eebd44b1c6fd8d4d379784c5a22887" title="Call to extract the operations stored in the class. " alt="" coords="1363,692,1525,733"/>
-<area shape="rect" id="node23" href="class_operation.html#a55f76bcb8990f4dba577990af0c8399e" title="Default constructor of the class. " alt="" coords="1823,1495,1963,1522"/>
-<area shape="rect" id="node24" href="class_operation.html#a5930c5c4c2e430cdbf03a145a00594d2" title="Call to set the stored matrix in the operation. " alt="" coords="1821,1546,1965,1572"/>
-<area shape="rect" id="node28" href="class_operation__block.html#afadad4dd28e881666a46e114eb7958e4" title="Call to reorder the qubits in the matrix of the operations. " alt="" coords="433,878,596,920"/>
-<area shape="rect" id="node31" href="class_operation__block.html#a2e978e3b5773b7ab03b4f15021207090" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="1374,270,1514,312"/>
-<area shape="rect" id="node34" href="class_n___qubit___decomposition.html#a6a346911175b25fa4045722300479dad" title="Nullary constructor of the class. " alt="" coords="903,1244,1072,1285"/>
-<area shape="rect" id="node35" href="class_decomposition___base.html#a70fd9a8663499f135fe93cdf2ce389c0" title="Set the maximal number of layers used in the subdecomposition of the n&#45;th qubit. " alt="" coords="915,1309,1060,1350"/>
-<area shape="rect" id="node36" href="class_decomposition___base.html#a0a46d0f9ad1cc240256211acc30a9add" title="Call to set the verbose attribute to true or false. " alt="" coords="915,1374,1060,1416"/>
-<area shape="rect" id="node37" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="433,1613,596,1654"/>
-<area shape="rect" id="node43" href="class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="915,1163,1060,1219"/>
-<area shape="rect" id="node46" href="class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="1127,1724,1307,1765"/>
-<area shape="rect" id="node48" href="class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="1374,1497,1514,1538"/>
-<area shape="rect" id="node29" href="class_c_n_o_t.html#a3e2d8067000d9b3b905729a1a2bfbf7e" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="676,843,823,870"/>
-<area shape="rect" id="node30" href="class_u3.html#a53b0a784fbf2b26a9bcbd2502e849670" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="686,894,813,920"/>
-<area shape="rect" id="node32" href="class_operation__block.html#a9950bdb493faaf4ed050c39b07a4ac02" title="Call to get the list of matrix representation of the operations grouped in the block. " alt="" coords="1593,270,1733,312"/>
-<area shape="rect" id="node33" href="common_8cpp.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="1608,336,1719,363"/>
-<area shape="rect" id="node38" href="class_sub___matrix___decomposition.html#a05944754b07d6b5ec16b6febbc79c1a9" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit..." alt="" coords="659,1949,839,1990"/>
-<area shape="rect" id="node39" href="class_decomposition___base.html#a461f735688248c8f04756e4abadb0516" title="Set the number of iteration loops during the subdecomposition of the n&#45;th qubit. " alt="" coords="915,1440,1060,1481"/>
-<area shape="rect" id="node40" href="class_sub___matrix___decomposition.html#a0d16a3d20f6261f99c8f1fe1cb43bc34" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="651,1300,848,1341"/>
-<area shape="rect" id="node41" href="class_decomposition___base.html#a871056822bf7cc558ea9a59e22084d5b" title="Call to set the tolerance of the optimization processes. " alt="" coords="896,1505,1079,1546"/>
-<area shape="rect" id="node42" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="659,1518,839,1560"/>
-<area shape="rect" id="node44" href="class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="905,1570,1069,1612"/>
-<area shape="rect" id="node45" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="898,1687,1077,1743"/>
-<area shape="rect" id="node49" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="668,1584,831,1625"/>
-<area shape="rect" id="node50" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="670,2066,829,2108"/>
-<area shape="rect" id="node51" href="common_8cpp.html#a0edb99c36d663a8fe718ab7f097c7f96" title="Call to subtract a scalar from the diagonal of a complex matrix. " alt="" coords="937,2130,1037,2156"/>
-<area shape="rect" id="node52" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="668,1752,831,1793"/>
-<area shape="rect" id="node53" href="class_decomposition___base.html#a965838902240670119c0ad68d087c322" title="Call to prepare the optimized operations to export. " alt="" coords="677,1818,822,1874"/>
+<area shape="rect" id="node2" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="1355,461,1533,502"/>
+<area shape="rect" id="node3" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="2040,911,2124,937"/>
+<area shape="rect" id="node4" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="1826,1633,1959,1660"/>
+<area shape="rect" id="node5" href="class_operation__block.html#a92e4f0566e4b36830652729377a8e936" title="Call to get the qubits involved in the operations stored in the block of operations. " alt="" coords="227,1887,367,1929"/>
+<area shape="rect" id="node7" href="common_8cpp.html#aba6badd873191e752e949e21670e67be" title="Add an integer to a vector of integers if the integer is not already an element of the vector..." alt="" coords="439,1985,590,2012"/>
+<area shape="rect" id="node9" href="class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="1147,158,1287,199"/>
+<area shape="rect" id="node10" href="class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="902,1439,1073,1465"/>
+<area shape="rect" id="node21" href="class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce" title="Call to release the stored operations. " alt="" coords="1581,1626,1745,1667"/>
+<area shape="rect" id="node25" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="1147,1845,1287,1886"/>
+<area shape="rect" id="node26" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7" title="Call to get the number of the individual gate types in the list of operations. " alt="" coords="1147,1650,1287,1691"/>
+<area shape="rect" id="node27" href="class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="216,1373,379,1414"/>
+<area shape="rect" id="node47" href="common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="1181,443,1253,469"/>
+<area shape="rect" id="node54" href="common_8cpp.html#abe45e0c72de2b8d2b20dc68ec85581c2" title="custom defined memory reallocation function. " alt="" coords="253,2239,341,2265"/>
+<area shape="rect" id="node6" href="class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="429,1884,600,1911"/>
+<area shape="rect" id="node8" href="class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit. " alt="" coords="427,1935,603,1961"/>
+<area shape="rect" id="node11" href="class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="1147,1306,1287,1347"/>
+<area shape="rect" id="node12" href="class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="1615,1403,1711,1429"/>
+<area shape="rect" id="node13" href="class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="1592,1509,1735,1550"/>
+<area shape="rect" id="node16" href="class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="1625,987,1701,1013"/>
+<area shape="rect" id="node19" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="1140,1139,1293,1165"/>
+<area shape="rect" id="node22" href="class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="1606,936,1721,963"/>
+<area shape="rect" id="node14" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="1811,835,1974,861"/>
+<area shape="rect" id="node15" href="class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="1793,1927,1992,1953"/>
+<area shape="rect" id="node17" href="class_u3.html#a11a8fca65dd56a6bdc42a98927040a05" title="Nullary constructor of the class. " alt="" coords="1861,987,1924,1013"/>
+<area shape="rect" id="node18" href="class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation. " alt="" coords="1794,1037,1991,1064"/>
+<area shape="rect" id="node20" href="class_operation__block.html#ae1eebd44b1c6fd8d4d379784c5a22887" title="Call to extract the operations stored in the class. " alt="" coords="1363,1345,1525,1386"/>
+<area shape="rect" id="node23" href="class_operation.html#a55f76bcb8990f4dba577990af0c8399e" title="Default constructor of the class. " alt="" coords="1823,936,1963,963"/>
+<area shape="rect" id="node24" href="class_operation.html#a5930c5c4c2e430cdbf03a145a00594d2" title="Call to set the stored matrix in the operation. " alt="" coords="1821,885,1965,912"/>
+<area shape="rect" id="node28" href="class_operation__block.html#afadad4dd28e881666a46e114eb7958e4" title="Call to reorder the qubits in the matrix of the operations. " alt="" coords="433,1514,596,1555"/>
+<area shape="rect" id="node31" href="class_operation__block.html#a2e978e3b5773b7ab03b4f15021207090" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="1374,1943,1514,1985"/>
+<area shape="rect" id="node35" href="class_n___qubit___decomposition.html#a6a346911175b25fa4045722300479dad" title="Nullary constructor of the class. " alt="" coords="903,1090,1072,1131"/>
+<area shape="rect" id="node36" href="class_decomposition___base.html#a70fd9a8663499f135fe93cdf2ce389c0" title="Set the maximal number of layers used in the subdecomposition of the n&#45;th qubit. " alt="" coords="915,289,1060,330"/>
+<area shape="rect" id="node37" href="class_decomposition___base.html#a0a46d0f9ad1cc240256211acc30a9add" title="Call to set the verbose attribute to true or false. " alt="" coords="915,973,1060,1014"/>
+<area shape="rect" id="node38" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="433,617,596,658"/>
+<area shape="rect" id="node46" href="class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="915,1156,1060,1212"/>
+<area shape="rect" id="node49" href="class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="1127,1241,1307,1282"/>
+<area shape="rect" id="node50" href="class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="1374,1082,1514,1123"/>
+<area shape="rect" id="node29" href="class_c_n_o_t.html#a3e2d8067000d9b3b905729a1a2bfbf7e" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="676,1540,823,1567"/>
+<area shape="rect" id="node30" href="class_u3.html#a53b0a784fbf2b26a9bcbd2502e849670" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="686,1489,813,1516"/>
+<area shape="rect" id="node32" href="class_operation__block.html#a9950bdb493faaf4ed050c39b07a4ac02" title="Call to get the list of matrix representation of the operations grouped in the block. " alt="" coords="1593,1946,1733,1987"/>
+<area shape="rect" id="node33" href="class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="1845,1981,1940,2008"/>
+<area shape="rect" id="node34" href="common_8cpp.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="1608,1895,1719,1921"/>
+<area shape="rect" id="node39" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="673,515,826,541"/>
+<area shape="rect" id="node40" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="672,565,827,592"/>
+<area shape="rect" id="node41" href="class_sub___matrix___decomposition.html#a05944754b07d6b5ec16b6febbc79c1a9" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit..." alt="" coords="659,617,839,658"/>
+<area shape="rect" id="node42" href="class_decomposition___base.html#a461f735688248c8f04756e4abadb0516" title="Set the number of iteration loops during the subdecomposition of the n&#45;th qubit. " alt="" coords="915,361,1060,402"/>
+<area shape="rect" id="node43" href="class_sub___matrix___decomposition.html#a0d16a3d20f6261f99c8f1fe1cb43bc34" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="651,967,848,1009"/>
+<area shape="rect" id="node44" href="class_decomposition___base.html#a871056822bf7cc558ea9a59e22084d5b" title="Call to set the tolerance of the optimization processes. " alt="" coords="896,441,1079,482"/>
+<area shape="rect" id="node45" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="659,799,839,841"/>
+<area shape="rect" id="node48" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="898,892,1077,948"/>
+<area shape="rect" id="node51" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="668,449,831,490"/>
+<area shape="rect" id="node52" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="908,158,1067,199"/>
+<area shape="rect" id="node53" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="668,734,831,775"/>
 </map>
 </div>
 <div class="dynheader">
@@ -4783,7 +4796,7 @@ Here is the caller graph for this function:</div>
 
 <p>Reimplemented from <a class="el" href="class_decomposition___base.html#a5a4fba71fd475a25fd55b1f4f2dc4c86">Decomposition_Base</a>.</p>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00418">418</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8cpp_source.html#l00425">425</a> of file <a class="el" href="_n___qubit___decomposition_8cpp_source.html">N_Qubit_Decomposition.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -4836,6 +4849,7 @@ Here is the call graph for this function:</div>
 </div><div class="memdoc">
 
 <p>This method can be used to solve the main optimization problem which is devidid into sub-layer optimization processes. </p>
+<p>This method can be used to solve the main optimization problem which is divided into sub-layer optimization processes.</p>
 <p>(The aim of the optimization problem is to disentangle one or more qubits) The optimalized parameters are stored in attribute optimized_parameters. </p><dl class="params"><dt>Parameters</dt><dd>
   <table class="params">
     <tr><td class="paramname">solution_guess</td><td>An array of the guessed parameters </td></tr>
@@ -4896,6 +4910,9 @@ Here is the caller graph for this function:</div>
 
 <div class="memitem">
 <div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
       <table class="memname">
         <tr>
           <td class="memname">void N_Qubit_Decomposition::start_decomposition </td>
@@ -4915,6 +4932,11 @@ Here is the caller graph for this function:</div>
           <td></td><td></td>
         </tr>
       </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">virtual</span></span>  </td>
+  </tr>
+</table>
 </div><div class="memdoc">
 
 <p>Start the disentanglig process of the unitary. </p>
@@ -4932,59 +4954,59 @@ Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="class_n___qubit___decomposition_a95c12334d80bb7f2ada67c536f503494_cgraph.png" border="0" usemap="#class_n___qubit___decomposition_a95c12334d80bb7f2ada67c536f503494_cgraph" alt=""/></div>
 <map name="class_n___qubit___decomposition_a95c12334d80bb7f2ada67c536f503494_cgraph" id="class_n___qubit___decomposition_a95c12334d80bb7f2ada67c536f503494_cgraph">
-<area shape="rect" id="node2" href="class_decomposition___base.html#a0a46d0f9ad1cc240256211acc30a9add" title="Call to set the verbose attribute to true or false. " alt="" coords="713,361,859,403"/>
-<area shape="rect" id="node3" href="class_decomposition___base.html#a70fd9a8663499f135fe93cdf2ce389c0" title="Set the maximal number of layers used in the subdecomposition of the n&#45;th qubit. " alt="" coords="713,296,859,337"/>
-<area shape="rect" id="node4" href="class_sub___matrix___decomposition.html#a05944754b07d6b5ec16b6febbc79c1a9" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit..." alt="" coords="225,2745,405,2787"/>
-<area shape="rect" id="node5" href="class_decomposition___base.html#a461f735688248c8f04756e4abadb0516" title="Set the number of iteration loops during the subdecomposition of the n&#45;th qubit. " alt="" coords="482,2563,627,2604"/>
-<area shape="rect" id="node6" href="class_sub___matrix___decomposition.html#a0d16a3d20f6261f99c8f1fe1cb43bc34" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="216,29,413,71"/>
-<area shape="rect" id="node9" href="class_decomposition___base.html#a871056822bf7cc558ea9a59e22084d5b" title="Call to set the tolerance of the optimization processes. " alt="" coords="463,2628,646,2669"/>
-<area shape="rect" id="node10" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="225,457,405,499"/>
-<area shape="rect" id="node12" href="class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="704,99,868,140"/>
-<area shape="rect" id="node23" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="465,1594,644,1650"/>
-<area shape="rect" id="node32" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="233,2155,396,2196"/>
-<area shape="rect" id="node33" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="712,2322,860,2349"/>
-<area shape="rect" id="node42" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="235,1768,394,1809"/>
-<area shape="rect" id="node44" href="common_8cpp.html#a0edb99c36d663a8fe718ab7f097c7f96" title="Call to subtract a scalar from the diagonal of a complex matrix. " alt="" coords="505,1391,605,1418"/>
-<area shape="rect" id="node45" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7" title="Call to get the number of the individual gate types in the list of operations. " alt="" coords="716,1273,856,1315"/>
-<area shape="rect" id="node46" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="233,1103,396,1144"/>
-<area shape="rect" id="node53" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="233,525,396,567"/>
-<area shape="rect" id="node54" href="class_decomposition___base.html#a965838902240670119c0ad68d087c322" title="Call to prepare the optimized operations to export. " alt="" coords="242,2811,387,2867"/>
-<area shape="rect" id="node7" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="924,503,1077,530"/>
-<area shape="rect" id="node8" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="1125,445,1304,487"/>
-<area shape="rect" id="node11" href="class_sub___matrix___decomposition.html#a56b7a2e77d0426ab2b1283f12d848190" title="The optimization problem of the final optimization. " alt="" coords="465,197,645,239"/>
-<area shape="rect" id="node13" href="class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="713,215,859,271"/>
-<area shape="rect" id="node14" href="class_sub___matrix___decomposition.html#a63938bf57a68b0595711c865053f7871" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="696,681,876,723"/>
-<area shape="rect" id="node20" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="482,517,627,573"/>
-<area shape="rect" id="node15" href="class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="931,627,1071,668"/>
-<area shape="rect" id="node16" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="934,1198,1067,1225"/>
-<area shape="rect" id="node17" href="class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="953,697,1049,723"/>
-<area shape="rect" id="node18" href="class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="943,747,1058,774"/>
-<area shape="rect" id="node19" href="class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="963,798,1039,825"/>
-<area shape="rect" id="node21" href="common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="750,1339,822,1366"/>
-<area shape="rect" id="node22" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="959,1529,1043,1555"/>
-<area shape="rect" id="node24" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="716,1067,856,1108"/>
-<area shape="rect" id="node25" href="class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="696,1391,876,1432"/>
-<area shape="rect" id="node26" href="class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="716,1953,856,1995"/>
-<area shape="rect" id="node27" href="class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="929,1843,1072,1870"/>
-<area shape="rect" id="node28" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="1133,1843,1296,1870"/>
-<area shape="rect" id="node29" href="class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="715,2172,857,2213"/>
-<area shape="rect" id="node30" href="class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="939,1793,1062,1819"/>
-<area shape="rect" id="node31" href="class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="716,1735,856,1776"/>
-<area shape="rect" id="node34" href="classmatrix__base.html#a8b45035198dd164a2c60b75af5613dae" title="Call to transpose (or un&#45;transpose) the matrix for CBLAS functions. " alt="" coords="477,2162,632,2189"/>
-<area shape="rect" id="node35" href="classmatrix__base.html#a5908c0f3c1099343c3994e548125b414" title="Call to conjugate (or un&#45;conjugate) the matrix for CBLAS functions. " alt="" coords="477,2213,632,2239"/>
-<area shape="rect" id="node36" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="535,2381,575,2407"/>
-<area shape="rect" id="node37" href="class_n___qubit___decomposition.html#a6a346911175b25fa4045722300479dad" title="Nullary constructor of the class. " alt="" coords="701,1001,871,1043"/>
-<area shape="rect" id="node38" href="class_decomposition___base.html#abae5d21859730a358c3d10051f957420" title="Call to set the maximal number of the iterations in the optimization process. " alt="" coords="482,2315,627,2356"/>
-<area shape="rect" id="node39" href="class_n___qubit___decomposition.html#a180ca3406189b079fb2defc5054c8700" title="Set the number of identical successive blocks during the subdecomposition of the n&#45;th qubit..." alt="" coords="473,2432,636,2473"/>
-<area shape="rect" id="node40" href="class_decomposition___base.html#af10692ec27c3db9e422d057c5f0347a6" title="Call to set the number of operation blocks to be optimized in one shot. " alt="" coords="471,2497,638,2539"/>
-<area shape="rect" id="node41" href="class_n___qubit___decomposition.html#a616c6b8cf022fd6ffc204068c4ca635c" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="461,2096,648,2137"/>
-<area shape="rect" id="node43" href="class_decomposition___base.html#ad1502d076d0ec0c5cd8b301340fe8ffe" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="470,1928,639,1969"/>
-<area shape="rect" id="node47" href="class_operation__block.html#a92e4f0566e4b36830652729377a8e936" title="Call to get the qubits involved in the operations stored in the block of operations. " alt="" coords="485,967,625,1008"/>
-<area shape="rect" id="node48" href="common_8cpp.html#aba6badd873191e752e949e21670e67be" title="Add an integer to a vector of integers if the integer is not already an element of the vector..." alt="" coords="711,950,861,977"/>
-<area shape="rect" id="node49" href="class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="701,747,871,774"/>
-<area shape="rect" id="node50" href="class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="473,901,636,943"/>
-<area shape="rect" id="node51" href="common_8cpp.html#abe45e0c72de2b8d2b20dc68ec85581c2" title="custom defined memory reallocation function. " alt="" coords="511,698,599,725"/>
-<area shape="rect" id="node52" href="class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce" title="Call to release the stored operations. " alt="" coords="704,1132,868,1173"/>
+<area shape="rect" id="node2" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="709,2274,863,2301"/>
+<area shape="rect" id="node3" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="709,2611,863,2638"/>
+<area shape="rect" id="node4" href="class_decomposition___base.html#a0a46d0f9ad1cc240256211acc30a9add" title="Call to set the verbose attribute to true or false. " alt="" coords="713,885,859,927"/>
+<area shape="rect" id="node5" href="class_decomposition___base.html#a70fd9a8663499f135fe93cdf2ce389c0" title="Set the maximal number of layers used in the subdecomposition of the n&#45;th qubit. " alt="" coords="713,1259,859,1300"/>
+<area shape="rect" id="node6" href="class_sub___matrix___decomposition.html#a05944754b07d6b5ec16b6febbc79c1a9" title="Set the number of identical successive blocks during the subdecomposition of the qbit&#45;th qubit..." alt="" coords="225,2780,405,2821"/>
+<area shape="rect" id="node7" href="class_decomposition___base.html#a461f735688248c8f04756e4abadb0516" title="Set the number of iteration loops during the subdecomposition of the n&#45;th qubit. " alt="" coords="482,2547,627,2588"/>
+<area shape="rect" id="node8" href="class_sub___matrix___decomposition.html#a0d16a3d20f6261f99c8f1fe1cb43bc34" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="216,5,413,47"/>
+<area shape="rect" id="node11" href="class_decomposition___base.html#a871056822bf7cc558ea9a59e22084d5b" title="Call to set the tolerance of the optimization processes. " alt="" coords="463,2612,646,2653"/>
+<area shape="rect" id="node12" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="225,283,405,324"/>
+<area shape="rect" id="node14" href="class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="704,165,868,207"/>
+<area shape="rect" id="node25" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="465,1527,644,1583"/>
+<area shape="rect" id="node34" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="233,2139,396,2180"/>
+<area shape="rect" id="node35" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="712,2399,860,2426"/>
+<area shape="rect" id="node44" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="235,1600,394,1641"/>
+<area shape="rect" id="node46" href="common_8cpp.html#a0edb99c36d663a8fe718ab7f097c7f96" title="Call to subtract a scalar from the diagonal of a complex matrix. " alt="" coords="505,1375,605,1402"/>
+<area shape="rect" id="node47" href="class_operation__block.html#ac39ab782da3e34c8ec4acf6181fbc5f7" title="Call to get the number of the individual gate types in the list of operations. " alt="" coords="716,1193,856,1235"/>
+<area shape="rect" id="node48" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="233,856,396,897"/>
+<area shape="rect" id="node53" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="233,620,396,661"/>
+<area shape="rect" id="node54" href="class_decomposition___base.html#a965838902240670119c0ad68d087c322" title="Call to prepare the optimized operations to export. " alt="" coords="242,2846,387,2902"/>
+<area shape="rect" id="node9" href="class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="924,537,1077,563"/>
+<area shape="rect" id="node10" href="class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="1125,737,1304,779"/>
+<area shape="rect" id="node13" href="class_sub___matrix___decomposition.html#a56b7a2e77d0426ab2b1283f12d848190" title="The optimization problem of the final optimization. " alt="" coords="465,173,645,215"/>
+<area shape="rect" id="node15" href="class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="713,231,859,287"/>
+<area shape="rect" id="node16" href="class_sub___matrix___decomposition.html#a63938bf57a68b0595711c865053f7871" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="696,667,876,708"/>
+<area shape="rect" id="node22" href="common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="750,362,822,389"/>
+<area shape="rect" id="node23" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="482,442,627,498"/>
+<area shape="rect" id="node17" href="class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="931,612,1071,653"/>
+<area shape="rect" id="node18" href="class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="934,1101,1067,1127"/>
+<area shape="rect" id="node19" href="class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="953,783,1049,810"/>
+<area shape="rect" id="node20" href="class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="943,733,1058,759"/>
+<area shape="rect" id="node21" href="class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="963,682,1039,709"/>
+<area shape="rect" id="node24" href="common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="959,1514,1043,1541"/>
+<area shape="rect" id="node26" href="class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="716,1104,856,1145"/>
+<area shape="rect" id="node27" href="class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="696,1427,876,1468"/>
+<area shape="rect" id="node28" href="class_operation__block.html#a27592a2d25c7e74416de2b9d7997efca" title="Call to get the number of operations grouped in the class. " alt="" coords="716,1735,856,1776"/>
+<area shape="rect" id="node29" href="class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="929,1801,1072,1827"/>
+<area shape="rect" id="node30" href="class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="1133,1877,1296,1903"/>
+<area shape="rect" id="node31" href="class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="715,2171,857,2212"/>
+<area shape="rect" id="node32" href="class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="939,1877,1062,1903"/>
+<area shape="rect" id="node33" href="class_operation__block.html#acc41ac933723558df3f4e65ae1158091" title="Set the number of qubits spanning the matrix of the operations stored in the block of operations..." alt="" coords="716,1669,856,1711"/>
+<area shape="rect" id="node36" href="classmatrix__base.html#a8b45035198dd164a2c60b75af5613dae" title="Call to transpose (or un&#45;transpose) the matrix for CBLAS functions. " alt="" coords="477,2146,632,2173"/>
+<area shape="rect" id="node37" href="classmatrix__base.html#a5908c0f3c1099343c3994e548125b414" title="Call to conjugate (or un&#45;conjugate) the matrix for CBLAS functions. " alt="" coords="477,2247,632,2274"/>
+<area shape="rect" id="node38" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="535,2495,575,2522"/>
+<area shape="rect" id="node39" href="class_n___qubit___decomposition.html#a6a346911175b25fa4045722300479dad" title="Nullary constructor of the class. " alt="" coords="701,2105,871,2147"/>
+<area shape="rect" id="node40" href="class_decomposition___base.html#abae5d21859730a358c3d10051f957420" title="Call to set the maximal number of the iterations in the optimization process. " alt="" coords="482,2299,627,2340"/>
+<area shape="rect" id="node41" href="class_n___qubit___decomposition.html#a180ca3406189b079fb2defc5054c8700" title="Set the number of identical successive blocks during the subdecomposition of the n&#45;th qubit..." alt="" coords="473,2364,636,2405"/>
+<area shape="rect" id="node42" href="class_decomposition___base.html#af10692ec27c3db9e422d057c5f0347a6" title="Call to set the number of operation blocks to be optimized in one shot. " alt="" coords="471,2429,638,2471"/>
+<area shape="rect" id="node43" href="class_n___qubit___decomposition.html#a616c6b8cf022fd6ffc204068c4ca635c" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="461,2080,648,2121"/>
+<area shape="rect" id="node45" href="class_decomposition___base.html#ad1502d076d0ec0c5cd8b301340fe8ffe" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="470,1861,639,1903"/>
+<area shape="rect" id="node49" href="class_operation__block.html#a92e4f0566e4b36830652729377a8e936" title="Call to get the qubits involved in the operations stored in the block of operations. " alt="" coords="485,725,625,767"/>
+<area shape="rect" id="node50" href="common_8cpp.html#aba6badd873191e752e949e21670e67be" title="Add an integer to a vector of integers if the integer is not already an element of the vector..." alt="" coords="711,413,861,439"/>
+<area shape="rect" id="node51" href="class_operation__block.html#a60062cf6f48ebfdcaae9db3367a66147" title="Call to append the operations of an operation block to the current block. " alt="" coords="701,733,871,759"/>
+<area shape="rect" id="node52" href="class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="473,1045,636,1087"/>
 </map>
 </div>
 <div class="dynheader">
@@ -5180,7 +5202,7 @@ Here is the caller graph for this function:</div>
 
 <p>A map of &lt;int n: Operation_block* block&gt; describing custom gate structure to be used in the decomposition. <a class="el" href="class_operation.html" title="Base class for the representation of one- and two-qubit operations. ">Operation</a> block corresponding to n is used in the subdecomposition of the n-th qubit. The <a class="el" href="class_operation.html" title="Base class for the representation of one- and two-qubit operations. ">Operation</a> block is repeated periodically. </p>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8h_source.html#l00055">55</a> of file <a class="el" href="_n___qubit___decomposition_8h_source.html">N_Qubit_Decomposition.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8h_source.html#l00053">53</a> of file <a class="el" href="_n___qubit___decomposition_8h_source.html">N_Qubit_Decomposition.h</a>.</p>
 
 </div>
 </div>
@@ -5232,7 +5254,7 @@ Here is the caller graph for this function:</div>
 
 <p>A map of &lt;int n: int num&gt; indicating that how many identical successive blocks should be used in the disentanglement of the nth qubit from the others. </p>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8h_source.html#l00052">52</a> of file <a class="el" href="_n___qubit___decomposition_8h_source.html">N_Qubit_Decomposition.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8h_source.html#l00050">50</a> of file <a class="el" href="_n___qubit___decomposition_8h_source.html">N_Qubit_Decomposition.h</a>.</p>
 
 </div>
 </div>
@@ -5570,7 +5592,7 @@ Here is the caller graph for this function:</div>
 
 <p>logical value. Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries). </p>
 
-<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8h_source.html#l00049">49</a> of file <a class="el" href="_n___qubit___decomposition_8h_source.html">N_Qubit_Decomposition.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_n___qubit___decomposition_8h_source.html#l00047">47</a> of file <a class="el" href="_n___qubit___decomposition_8h_source.html">N_Qubit_Decomposition.h</a>.</p>
 
 </div>
 </div>
@@ -5764,7 +5786,7 @@ Here is the caller graph for this function:</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Feb 10 2021 14:12:59 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Aug 6 2021 14:07:08 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

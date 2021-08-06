@@ -2,6 +2,7 @@
 <area shape="rect" id="node2" href="$classmatrix__base.html#a8b45035198dd164a2c60b75af5613dae" title="Call to transpose (or un&#45;transpose) the matrix for CBLAS functions. " alt="" coords="196,56,351,83"/>
 <area shape="rect" id="node3" href="$classmatrix__base.html#a5908c0f3c1099343c3994e548125b414" title="Call to conjugate (or un&#45;conjugate) the matrix for CBLAS functions. " alt="" coords="196,107,351,133"/>
 <area shape="rect" id="node4" href="$dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="253,157,293,184"/>
+<area shape="rect" id="node13" href="$class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="226,208,321,235"/>
 <area shape="rect" id="node5" href="$common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="400,5,553,32"/>
 <area shape="rect" id="node6" href="$common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="399,56,554,83"/>
 <area shape="rect" id="node7" href="$dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="419,208,534,235"/>

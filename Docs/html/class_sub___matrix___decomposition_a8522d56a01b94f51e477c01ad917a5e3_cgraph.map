@@ -1,46 +1,47 @@
 <map id="Sub_Matrix_Decomposition::disentangle_submatrices" name="Sub_Matrix_Decomposition::disentangle_submatrices">
-<area shape="rect" id="node2" href="$class_sub___matrix___decomposition.html#a56b7a2e77d0426ab2b1283f12d848190" title="The optimization problem of the final optimization. " alt="" coords="233,71,413,112"/>
-<area shape="rect" id="node3" href="$class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="477,71,641,112"/>
-<area shape="rect" id="node5" href="$class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="487,638,632,694"/>
-<area shape="rect" id="node6" href="$class_sub___matrix___decomposition.html#a63938bf57a68b0595711c865053f7871" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="233,351,413,392"/>
-<area shape="rect" id="node28" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="251,837,396,893"/>
-<area shape="rect" id="node4" href="$_sub___matrix___decomposition___cost___function_8h.html#a6f8a34a10e6654b40f899ecb8d199776" title="Call to calculate the cost function of a given matrix during the submatrix decomposition process..." alt="" coords="492,5,627,47"/>
-<area shape="rect" id="node7" href="$class_sub___matrix___decomposition.html#af578e73dd71db96b2fe1a1d04383b745" title="Call to add default gate layers to the gate structure used in the subdecomposition. " alt="" coords="461,136,657,177"/>
-<area shape="rect" id="node10" href="$class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="943,216,1085,257"/>
-<area shape="rect" id="node14" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="1177,322,1310,349"/>
-<area shape="rect" id="node16" href="$class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="489,201,629,243"/>
-<area shape="rect" id="node17" href="$class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="966,537,1062,563"/>
-<area shape="rect" id="node18" href="$class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="957,619,1071,646"/>
-<area shape="rect" id="node21" href="$class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="976,486,1052,513"/>
-<area shape="rect" id="node25" href="$class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="483,398,636,425"/>
-<area shape="rect" id="node8" href="$class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="705,355,884,396"/>
-<area shape="rect" id="node9" href="$class_operation__block.html#a3779e559654f12c5544129c46305b6ce" title="Append a CNOT gate operation to the list of operations. " alt="" coords="723,71,866,112"/>
-<area shape="rect" id="node15" href="$class_operation__block.html#a44940209dbc5754b676b5a493bb153f4" title="Append a U3 gate to the list of operations. " alt="" coords="723,136,866,177"/>
-<area shape="rect" id="node11" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="1162,205,1325,231"/>
-<area shape="rect" id="node13" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="1144,255,1343,282"/>
-<area shape="rect" id="node12" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="1419,205,1510,231"/>
-<area shape="rect" id="node19" href="$class_operation.html#a55f76bcb8990f4dba577990af0c8399e" title="Default constructor of the class. " alt="" coords="1173,685,1313,711"/>
-<area shape="rect" id="node20" href="$class_operation.html#a5930c5c4c2e430cdbf03a145a00594d2" title="Call to set the stored matrix in the operation. " alt="" coords="1171,877,1315,903"/>
-<area shape="rect" id="node22" href="$class_u3.html#a11a8fca65dd56a6bdc42a98927040a05" title="Nullary constructor of the class. " alt="" coords="1212,486,1275,513"/>
-<area shape="rect" id="node23" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation. " alt="" coords="1145,537,1342,563"/>
-<area shape="rect" id="node24" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1423,754,1507,781"/>
-<area shape="rect" id="node26" href="$class_operation__block.html#ae1eebd44b1c6fd8d4d379784c5a22887" title="Call to extract the operations stored in the class. " alt="" coords="714,420,875,461"/>
-<area shape="rect" id="node27" href="$class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce" title="Call to release the stored operations. " alt="" coords="932,416,1096,457"/>
-<area shape="rect" id="node29" href="$common_8cpp.html#a478212437ad8647d21171d23c98ae52a" title="Call to create an identity matrix. " alt="" coords="741,1378,848,1405"/>
-<area shape="rect" id="node32" href="$class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="514,769,605,795"/>
-<area shape="rect" id="node34" href="$class_decomposition___base.html#af9bd082b6c17ecaea5657059dabfe083" title="Apply an operations on the input matrix. " alt="" coords="722,1184,867,1225"/>
-<area shape="rect" id="node43" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="523,819,595,846"/>
-<area shape="rect" id="node44" href="$class_decomposition___base.html#aff590cb39666a9b900058ed775c402fb" title="Calculate the list of gate operation matrices such that the i&gt;0&#45;th element in the result list is the ..." alt="" coords="478,1184,641,1225"/>
-<area shape="rect" id="node45" href="$class_decomposition___base.html#a5a4fba71fd475a25fd55b1f4f2dc4c86" title="Abstarct function to be used to solve a single sub&#45;layer optimization problem. " alt="" coords="475,870,644,926"/>
-<area shape="rect" id="node30" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="1391,1363,1539,1390"/>
-<area shape="rect" id="node31" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="953,1465,1075,1491"/>
-<area shape="rect" id="node33" href="$class_matrix.html#a2dba13c45127354c9f75ef576f49269b" title="Default constructor of the class. " alt="" coords="745,769,844,795"/>
-<area shape="rect" id="node35" href="$dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="994,1198,1034,1225"/>
-<area shape="rect" id="node36" href="$common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="1167,1211,1320,1238"/>
-<area shape="rect" id="node37" href="$common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="1166,1262,1321,1289"/>
-<area shape="rect" id="node38" href="$dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="1186,1313,1301,1339"/>
-<area shape="rect" id="node39" href="$classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1587,1161,1765,1187"/>
-<area shape="rect" id="node40" href="$classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1587,1073,1765,1099"/>
-<area shape="rect" id="node41" href="$classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="1165,1095,1321,1136"/>
-<area shape="rect" id="node42" href="$dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="1393,1102,1536,1129"/>
+<area shape="rect" id="node2" href="$class_sub___matrix___decomposition.html#a56b7a2e77d0426ab2b1283f12d848190" title="The optimization problem of the final optimization. " alt="" coords="233,93,413,135"/>
+<area shape="rect" id="node3" href="$class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="477,123,641,164"/>
+<area shape="rect" id="node6" href="$class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="487,645,632,701"/>
+<area shape="rect" id="node7" href="$class_sub___matrix___decomposition.html#a63938bf57a68b0595711c865053f7871" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="233,427,413,468"/>
+<area shape="rect" id="node29" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="523,725,595,751"/>
+<area shape="rect" id="node30" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="251,843,396,899"/>
+<area shape="rect" id="node4" href="$class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="512,71,607,98"/>
+<area shape="rect" id="node5" href="$_sub___matrix___decomposition___cost___function_8h.html#a6f8a34a10e6654b40f899ecb8d199776" title="Call to calculate the cost function of a given matrix during the submatrix decomposition process..." alt="" coords="492,5,627,47"/>
+<area shape="rect" id="node8" href="$class_sub___matrix___decomposition.html#af578e73dd71db96b2fe1a1d04383b745" title="Call to add default gate layers to the gate structure used in the subdecomposition. " alt="" coords="461,188,657,229"/>
+<area shape="rect" id="node11" href="$class_operation__block.html#a0048efcfca374a6b960a1092ab564f03" title="Append a general operation to the list of operations. " alt="" coords="943,221,1085,263"/>
+<area shape="rect" id="node15" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="1177,339,1310,366"/>
+<area shape="rect" id="node17" href="$class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="489,427,629,468"/>
+<area shape="rect" id="node18" href="$class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="966,499,1062,526"/>
+<area shape="rect" id="node19" href="$class_operation.html#a122739dffd4717b337f5e24ac6560f4a" title="Call to create a clone of the present class. " alt="" coords="957,657,1071,683"/>
+<area shape="rect" id="node22" href="$class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="976,550,1052,577"/>
+<area shape="rect" id="node26" href="$class_operation__block.html#a2aa75d20b21c3b5802730c0abe54db5e" title="Create a clone of the present class. " alt="" coords="483,375,636,402"/>
+<area shape="rect" id="node9" href="$class_operation__block.html#a3ee535e12ee1edb3923fc0c6340d7567" title="Default constructor of the class. " alt="" coords="705,297,884,339"/>
+<area shape="rect" id="node10" href="$class_operation__block.html#a3779e559654f12c5544129c46305b6ce" title="Append a CNOT gate operation to the list of operations. " alt="" coords="723,129,866,171"/>
+<area shape="rect" id="node16" href="$class_operation__block.html#a44940209dbc5754b676b5a493bb153f4" title="Append a U3 gate to the list of operations. " alt="" coords="723,64,866,105"/>
+<area shape="rect" id="node12" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="1162,215,1325,242"/>
+<area shape="rect" id="node14" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="1144,266,1343,293"/>
+<area shape="rect" id="node13" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="1419,215,1510,242"/>
+<area shape="rect" id="node20" href="$class_operation.html#a55f76bcb8990f4dba577990af0c8399e" title="Default constructor of the class. " alt="" coords="1173,711,1313,738"/>
+<area shape="rect" id="node21" href="$class_operation.html#a5930c5c4c2e430cdbf03a145a00594d2" title="Call to set the stored matrix in the operation. " alt="" coords="1171,917,1315,943"/>
+<area shape="rect" id="node23" href="$class_u3.html#a11a8fca65dd56a6bdc42a98927040a05" title="Nullary constructor of the class. " alt="" coords="1212,550,1275,577"/>
+<area shape="rect" id="node24" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation. " alt="" coords="1145,621,1342,647"/>
+<area shape="rect" id="node25" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1423,723,1507,750"/>
+<area shape="rect" id="node27" href="$class_operation__block.html#ae1eebd44b1c6fd8d4d379784c5a22887" title="Call to extract the operations stored in the class. " alt="" coords="714,419,875,460"/>
+<area shape="rect" id="node28" href="$class_operation__block.html#a7c3d4eadaef2f21f1c5dd9227faec7ce" title="Call to release the stored operations. " alt="" coords="932,433,1096,475"/>
+<area shape="rect" id="node31" href="$common_8cpp.html#a478212437ad8647d21171d23c98ae52a" title="Call to create an identity matrix. " alt="" coords="741,1033,848,1059"/>
+<area shape="rect" id="node34" href="$class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="514,1178,605,1205"/>
+<area shape="rect" id="node36" href="$class_decomposition___base.html#af9bd082b6c17ecaea5657059dabfe083" title="Apply an operations on the input matrix. " alt="" coords="722,1116,867,1157"/>
+<area shape="rect" id="node45" href="$class_decomposition___base.html#aff590cb39666a9b900058ed775c402fb" title="Calculate the list of gate operation matrices such that the i&gt;0&#45;th element in the result list is the ..." alt="" coords="478,1059,641,1100"/>
+<area shape="rect" id="node46" href="$class_decomposition___base.html#a5a4fba71fd475a25fd55b1f4f2dc4c86" title="Abstarct function to be used to solve a single sub&#45;layer optimization problem. " alt="" coords="475,877,644,933"/>
+<area shape="rect" id="node32" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="1391,1159,1539,1186"/>
+<area shape="rect" id="node33" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="953,1007,1075,1034"/>
+<area shape="rect" id="node35" href="$class_matrix.html#a2dba13c45127354c9f75ef576f49269b" title="Default constructor of the class. " alt="" coords="745,1182,844,1209"/>
+<area shape="rect" id="node37" href="$dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="994,1239,1034,1266"/>
+<area shape="rect" id="node38" href="$common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="1167,1378,1320,1405"/>
+<area shape="rect" id="node39" href="$common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="1166,1429,1321,1455"/>
+<area shape="rect" id="node40" href="$dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="1186,1210,1301,1237"/>
+<area shape="rect" id="node41" href="$classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1587,1210,1765,1237"/>
+<area shape="rect" id="node42" href="$classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1587,1298,1765,1325"/>
+<area shape="rect" id="node43" href="$classzgemm3m___task__serial.html#aecafe639dcd63296e1373d9fbd6fe5b9" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="1165,1261,1321,1303"/>
+<area shape="rect" id="node44" href="$dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="1393,1269,1536,1295"/>
 </map>

@@ -54,7 +54,7 @@ $(function() {
 <div class="contents">
 <h1>Introduction</h1>
 <p>Sequential Quantum Gate Decomposer (SQUANDER) package provides an interface to Python which makes it possible to combine SQUANDER with well known quantum computing back ends, like <a href="https://qiskit.org/">Qiskit</a>. In fact, SQUANDER has already established an interface to export the decomposed quantum circuit in Qiskit format. The Python interface of SQUANDER is developed <a href="https://docs.python.org/3/library/ctypes.html">C++ extensions</a>, while all the massive calculations related to the decomposition run in C++, and only the input and final output parameters are casted between C++ and Python types.</p>
-<p>In the forthcoming sections we provide some tricks and best practices to use the SQUANDER Python interface. The SQUANDER Python interface can be tested by running the test cases in file <b><a class="el" href="test__decomposition_8py.html" title="Functionality test cases for the qgd_N_Qubit_Decomposition class. ">test_decomposition.py</a></b> by pytest utility or by the <b><a class="el" href="example_8py.html" title="Simple example python code demonstrating the basic usage of the Python interface of the Quantum Gate ...">example.py</a></b> script right in the source directory of the SQUANDER package: (To build the SQUANDER package follow the manual at <a href="index.html">Main Page</a>.)</p>
+<p>In the forthcoming sections we provide some tricks and best practices to use the SQUANDER Python interface. The SQUANDER Python interface can be tested by running the test cases in file <b>test_decomposition.py</b> by pytest utility or by the <b><a class="el" href="example_8py.html" title="Simple example python code demonstrating the basic usage of the Python interface of the Quantum Gate ...">example.py</a></b> script right in the source directory of the SQUANDER package: (To build the SQUANDER package follow the manual at <a href="index.html">Main Page</a>.)</p>
 <div class="snippet"> $ cd path/to/qgd &amp;&amp; pytest </div><p>or</p>
 <div class="snippet"> $ cd path/to/qgd &amp;&amp; python3 <a class="el" href="example_8py.html" title="Simple example python code demonstrating the basic usage of the Python interface of the Quantum Gate ...">example.py</a> </div><p>The script <a class="el" href="example_8py.html" title="Simple example python code demonstrating the basic usage of the Python interface of the Quantum Gate ...">example.py</a> solves two problems:</p><ul>
 <li>the decomposition of a general three-qubit unitary</li>
@@ -99,7 +99,7 @@ No repeated successive blocks in the sub-decomposition of the 3rd qubit</div></d
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Wed Feb 10 2021 14:12:59 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Fri Aug 6 2021 14:07:08 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>
