@@ -1,6 +1,6 @@
 <map id="common.h" name="common.h">
 <area shape="rect" id="node2" href="$common_8cpp.html" title="Provides commonly used functions and wrappers to CBLAS functions. " alt="" coords="5,87,101,114"/>
-<area shape="rect" id="node3" href="$dot_8cpp.html" title="Provides multithreaded binding for CBLAS function zgemm to calculate matrix products. " alt="" coords="125,87,189,114"/>
+<area shape="rect" id="node3" href="$dot_8cpp.html" title="dot.cpp" alt="" coords="125,87,189,114"/>
 <area shape="rect" id="node4" href="$_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="83,348,240,389"/>
 <area shape="rect" id="node7" href="$_functor___get___operation___products_8h.html" title="Header file for the parallelized calculation of the vector containing the products of operations (sup..." alt="" coords="716,259,873,300"/>
 <area shape="rect" id="node9" href="$_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="625,80,788,121"/>

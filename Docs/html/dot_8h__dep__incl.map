@@ -1,5 +1,5 @@
 <map id="dot.h" name="dot.h">
-<area shape="rect" id="node2" href="$dot_8cpp.html" title="Provides multithreaded binding for CBLAS function zgemm to calculate matrix products. " alt="" coords="48,162,112,189"/>
+<area shape="rect" id="node2" href="$dot_8cpp.html" title="dot.cpp" alt="" coords="48,162,112,189"/>
 <area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="727,80,809,107"/>
 <area shape="rect" id="node4" href="$common_8cpp.html" title="Provides commonly used functions and wrappers to CBLAS functions. " alt="" coords="1816,162,1912,189"/>
 <area shape="rect" id="node5" href="$_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="5,423,163,464"/>

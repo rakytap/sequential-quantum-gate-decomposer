@@ -2,7 +2,7 @@
 <area shape="rect" id="node2" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="923,304,1006,331"/>
 <area shape="rect" id="node35" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="1073,80,1176,107"/>
 <area shape="rect" id="node3" href="$common_8cpp.html" title="Provides commonly used functions and wrappers to CBLAS functions. " alt="" coords="578,386,674,413"/>
-<area shape="rect" id="node4" href="$dot_8cpp.html" title="Provides multithreaded binding for CBLAS function zgemm to calculate matrix products. " alt="" coords="1053,386,1117,413"/>
+<area shape="rect" id="node4" href="$dot_8cpp.html" title="dot.cpp" alt="" coords="1053,386,1117,413"/>
 <area shape="rect" id="node5" href="$_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="99,647,257,688"/>
 <area shape="rect" id="node8" href="$_functor___get___operation___products_8h.html" title="Header file for the parallelized calculation of the vector containing the products of operations (sup..." alt="" coords="591,557,749,599"/>
 <area shape="rect" id="node10" href="$_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="43,379,206,420"/>
@@ -34,6 +34,6 @@
 <area shape="rect" id="node32" href="$_u3_8cpp.html" title="Class representing a U3 operation. " alt="" coords="1168,565,1231,591"/>
 <area shape="rect" id="node33" href="$qgd___u3_8cpp.html" title="qgd_U3.cpp" alt="" coords="1053,565,1143,591"/>
 <area shape="rect" id="node36" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="1162,155,1229,181"/>
-<area shape="rect" id="node37" href="$dot_8h.html" title="Provides multithreaded binding for CBLAS function zgemm to calculate matrix products. " alt="" coords="1029,229,1079,256"/>
+<area shape="rect" id="node37" href="$dot_8h.html" title="dot.h" alt="" coords="1029,229,1079,256"/>
 <area shape="rect" id="node38" href="$matrix_8cpp.html" title="Implementation of complex array storage array with automatic and thread safe reference counting..." alt="" coords="1155,229,1236,256"/>
 </map>

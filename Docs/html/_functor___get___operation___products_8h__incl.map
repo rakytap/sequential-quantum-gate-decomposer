@@ -5,7 +5,7 @@
 <area shape="rect" id="node25" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="753,95,823,121"/>
 <area shape="rect" id="node27" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="847,95,897,121"/>
 <area shape="rect" id="node5" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="155,543,251,569"/>
-<area shape="rect" id="node9" href="$dot_8h.html" title="Provides multithreaded binding for CBLAS function zgemm to calculate matrix products. " alt="" coords="416,319,467,345"/>
-<area shape="rect" id="node11" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="717,393,784,420"/>
-<area shape="rect" id="node12" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="451,468,554,495"/>
+<area shape="rect" id="node9" href="$dot_8h.html" title="dot.h" alt="" coords="416,319,467,345"/>
+<area shape="rect" id="node10" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="717,393,784,420"/>
+<area shape="rect" id="node11" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="451,468,554,495"/>
 </map>

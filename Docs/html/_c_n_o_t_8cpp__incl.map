@@ -1,9 +1,9 @@
 <map id="CNOT.cpp" name="CNOT.cpp">
-<area shape="rect" id="node2" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="54,80,123,107"/>
-<area shape="rect" id="node3" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="171,379,238,405"/>
-<area shape="rect" id="node13" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="45,155,133,181"/>
-<area shape="rect" id="node4" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="256,453,359,480"/>
-<area shape="rect" id="node5" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="507,528,603,555"/>
-<area shape="rect" id="node15" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="401,229,483,256"/>
-<area shape="rect" id="node17" href="$dot_8h.html" title="Provides multithreaded binding for CBLAS function zgemm to calculate matrix products. " alt="" coords="551,304,602,331"/>
+<area shape="rect" id="node2" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="55,80,125,107"/>
+<area shape="rect" id="node3" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="189,379,255,405"/>
+<area shape="rect" id="node13" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="46,155,134,181"/>
+<area shape="rect" id="node4" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="292,453,395,480"/>
+<area shape="rect" id="node5" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="542,528,638,555"/>
+<area shape="rect" id="node15" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="402,229,485,256"/>
+<area shape="rect" id="node17" href="$dot_8h.html" title="dot.h" alt="" coords="553,304,603,331"/>
 </map>
