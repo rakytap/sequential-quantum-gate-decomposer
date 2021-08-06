@@ -2,24 +2,16 @@
 set(EXT_DIR ${PROJECT_SOURCE_DIR}/qgd_python/gates)
 
 
-add_library( qgd_U3 SHARED
+add_library( qgd_U3 MODULE
     ${EXT_DIR}/qgd_U3.cpp
 )
 
 
 ADD_DEPENDENCIES (qgd_U3 qgd)
 
-set_target_properties(
-    qgd_U3
-    PROPERTIES
-        PREFIX ""
-        SUFFIX ""
-        OUTPUT_NAME "qgd_U3${EXT_SUFFIX}"
-        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
-        LINKER_LANGUAGE C
-    )
+target_link_libraries (qgd_U3 qgd ${PYTHON_LIBRARIES})
 
-
+python_extension_module(qgd_U3)
 
 # adding compile options
 target_compile_options(qgd_U3 PRIVATE
@@ -36,33 +28,29 @@ target_include_directories(qgd_U3 PRIVATE
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
-target_link_libraries (qgd_U3 PRIVATE
-                        qgd                        
-                        ${PYTHON_LIBRARIES})
 
+set_target_properties( qgd_U3 PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
 
+install(TARGETS qgd_U3 LIBRARY 
+         DESTINATION qgd_python/gates)
 
 ###################################################################
 
 
 
-add_library( qgd_CNOT SHARED
+add_library( qgd_CNOT MODULE
     ${EXT_DIR}/qgd_CNOT.cpp
 )
 
 
 ADD_DEPENDENCIES (qgd_CNOT qgd)
 
-set_target_properties(
-    qgd_CNOT
-    PROPERTIES
-        PREFIX ""
-        SUFFIX ""
-        OUTPUT_NAME "qgd_CNOT${EXT_SUFFIX}"
-        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
-        LINKER_LANGUAGE C
-    )
+target_link_libraries (qgd_CNOT qgd ${PYTHON_LIBRARIES})
 
+python_extension_module(qgd_CNOT)
 
 
 # adding compile options
@@ -80,35 +68,29 @@ target_include_directories(qgd_CNOT PRIVATE
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
-target_link_libraries (qgd_CNOT PRIVATE
-                        qgd                        
-                        ${PYTHON_LIBRARIES})
+set_target_properties( qgd_CNOT PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
 
-
-
+install(TARGETS qgd_CNOT LIBRARY 
+         DESTINATION qgd_python/gates)
 
 ###################################################################
 
 
 
-add_library( qgd_Operation_Block SHARED
+add_library( qgd_Operation_Block MODULE
     ${EXT_DIR}/qgd_Operation_Block.cpp
 )
 
 
 ADD_DEPENDENCIES (qgd_Operation_Block qgd)
 
-set_target_properties(
-    qgd_Operation_Block
-    PROPERTIES
-        PREFIX ""
-        SUFFIX ""
-        OUTPUT_NAME "qgd_Operation_Block${EXT_SUFFIX}"
-        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
-        LINKER_LANGUAGE C
-    )
+target_link_libraries (qgd_Operation_Block qgd ${PYTHON_LIBRARIES})
 
 
+python_extension_module(qgd_Operation_Block)
 
 # adding compile options
 target_compile_options(qgd_Operation_Block PRIVATE
@@ -125,6 +107,13 @@ target_include_directories(qgd_Operation_Block PRIVATE
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
-target_link_libraries (qgd_Operation_Block PRIVATE
-                        qgd                        
-                        ${PYTHON_LIBRARIES})
+
+set_target_properties( qgd_Operation_Block PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_Operation_Block LIBRARY 
+         DESTINATION qgd_python/gates)
+

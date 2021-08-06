@@ -2,23 +2,16 @@
 set(EXT_DIR ${PROJECT_SOURCE_DIR}/qgd_python)
 
 
-add_library( qgd_N_Qubit_Decomposition_Wrapper SHARED
+add_library( qgd_N_Qubit_Decomposition_Wrapper MODULE
     ${EXT_DIR}/qgd_N_Qubit_Decomposition_Wrapper.cpp
 )
 
 
 ADD_DEPENDENCIES (qgd_N_Qubit_Decomposition_Wrapper qgd)
 
-set_target_properties(
-    qgd_N_Qubit_Decomposition_Wrapper
-    PROPERTIES
-        PREFIX ""
-        SUFFIX ""
-        OUTPUT_NAME "qgd_N_Qubit_Decomposition_Wrapper${EXT_SUFFIX}"
-        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
-        LINKER_LANGUAGE C
-    )
+target_link_libraries (qgd_N_Qubit_Decomposition_Wrapper qgd  ${PYTHON_LIBRARIES})
 
+python_extension_module(qgd_N_Qubit_Decomposition_Wrapper)
 
 
 # adding compile options
@@ -37,10 +30,17 @@ target_include_directories(qgd_N_Qubit_Decomposition_Wrapper PRIVATE
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
-target_link_libraries (qgd_N_Qubit_Decomposition_Wrapper PRIVATE
-                        qgd                        
-                        ${PYTHON_LIBRARIES})
 
+set_target_properties( qgd_N_Qubit_Decomposition_Wrapper PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+
+
+install(TARGETS qgd_N_Qubit_Decomposition_Wrapper LIBRARY 
+         DESTINATION qgd_python)
 
 
 

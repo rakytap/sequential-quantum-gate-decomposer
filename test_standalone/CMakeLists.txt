@@ -34,12 +34,16 @@ target_include_directories(custom_gate_structure_test PRIVATE
 # decomposition_test
 target_link_libraries (decomposition_test 
                            qgd
-                           ${TBB_LIBS}
+                           ${TBBMALLOC_LIB}
+                           ${TBBMALLOC_PROXY_LIB}
+                           ${TBB_LIB}
                            ${BLAS_LIBRARIES}
                            ${GSL_LIBS})
 target_link_libraries (custom_gate_structure_test
                            qgd
-                           ${TBB_LIBS}
+                           ${TBBMALLOC_LIB}
+                           ${TBBMALLOC_PROXY_LIB}
+                           ${TBB_LIB}
                            ${BLAS_LIBRARIES}
                            ${GSL_LIBS})
 

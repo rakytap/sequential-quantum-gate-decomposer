@@ -5,109 +5,153 @@ cmake_minimum_required(VERSION 3.10.2)
 # set the project name and version
 project(CQGD VERSION 1.4)
 
+# reuse compilation time linking for use runtime linking 
+SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
+
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
-option(USE_OPENBLAS "Use OpenBLAS for CBLAS implementation" ON)
-option(USE_MKL "Use Intel MKL for CBLAS implementation" OFF)
-
 # include CMAKE modules
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
+include(CheckFunctionExists)
 
 # variables for compile and link options
 set(CXX_FLAGS_DEBUG)
 set(CXX_FLAGS_RELEASE)
-set(TBB_LIBS)
-set(GSL_LIBS)
 set(EXTRA_INCLUDES)
-set(CXX_FLAGS_DEBUG)
-set(CXX_FLAGS_RELEASE)
-set(TBB_LIBS)
-set(BLAS_LIBRARIES)
-set(BLAS_LINKER_FLAGS)
-set(NUMPY_BLAS_LIB_DIR)
-set(NUMPY_INC_DIR)
-set(PYTHON_LIB_DIR)
+set(BLAS_DIR)
+set(PYTHON_PLAT_LIB)
 
 
 #enable test target
 enable_testing()
 
 
-#################################################################
-# checking python developer packages
-
-
 # find out python packages
 find_package(PythonInterp)
 find_package(PythonLibs)
+find_package(NumPy REQUIRED)
 
 
-# Determine Numpy input directory
 exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"import numpy; print(numpy.get_include())\""
-             OUTPUT_VARIABLE NUMPY_INC_DIR
-             RETURN_VALUE NUMPY_NOT_FOUND
+             ARGS "-c \"from sysconfig import get_paths; info = get_paths(); platlib=info.get('platlib',' '); print(platlib)\""
+             OUTPUT_VARIABLE PYTHON_PLAT_LIB
+             RETURN_VALUE PLATLIB_NOT_FOUND
             )
-if(NUMPY_NOT_FOUND)
+if(PLATLIB_NOT_FOUND)
+    message(FATAL_ERROR "Python platlib not found")
+endif()
+
+set(ENV{PYTHONPATH} "$ENV{PYTHONPATH};${PYTHON_PLAT_LIB}")
+message("PYTHONPATH is set to "$ENV{PYTHONPATH})
+
+# contruct library directories
+exec_program(${PYTHON_EXECUTABLE}
+             ARGS "-c \"import site; tmp = [s + '/../..' for s in site.getsitepackages()]; ret=';'.join(tmp); print(ret)\""
+             OUTPUT_VARIABLE PYTHON_SYS_PATH
+             RETURN_VALUE SYSPATH_NOT_FOUND
+            )
+if(SYSPATH_NOT_FOUND)
+    message(FATAL_ERROR "Python syspath not found")
+endif()
+
+message("Python syspaths: " ${PYTHON_SYS_PATH})
+
+
+
+
+# contruct include directories
+exec_program(${PYTHON_EXECUTABLE}
+             ARGS "-c \"import site; tmp = [s + '/../../../include' for s in site.getsitepackages()]; ret=';'.join(tmp); print(ret)\""
+             OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
+             RETURN_VALUE SYSPATH_NOT_FOUND
+            )
+if(SYSPATH_NOT_FOUND)
+    message(FATAL_ERROR "Python include path not found")
+endif()
+
+message("Include paths: " ${CMAKE_REQUIRED_INCLUDES})
+
+
+set(NUMPY_INC_DIR ${NumPy_INCLUDE_DIR})
+
+
+if(NOT NumPy_FOUND)
     message(FATAL_ERROR "NumPy headers not found")
 endif()
 
 
-# Determine CBLAS library directory Numpy
-exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"import numpy; blas_info=numpy.__config__.get_info('blas_opt_info'); libs=blas_info.get('library_dirs',' '); print(libs[0])\""
-             OUTPUT_VARIABLE NUMPY_BLAS_LIB_DIR
-             RETURN_VALUE NUMPY_BLAS_NOT_FOUND
-            )
-if(NUMPY_NOT_FOUND)
-    message(FATAL_ERROR "NumPy headers not found")
+# adding BLAS library dir if given by environment variable
+if(DEFINED ENV{BLAS_LIB_DIR})
+
+  set(BLAS_DIR "$ENV{BLAS_LIB_DIR}")
+
+else()
+
+# Determine CBLAS library directory behind Numpy
+exec_program(
+  ${PYTHON_EXECUTABLE}
+  ARGS "-c \"import numpy; blas_info=numpy.__config__.get_info('blas_opt_info'); libs = blas_info.get('library_dirs'); print(libs[0])\""
+  OUTPUT_VARIABLE BLAS_DIR
+  RETURN_VALUE NUMPY_BLAS_NOT_FOUND
+)
+
 endif()
+
+
+
+find_package(PythonExtensions REQUIRED)
+
+
+set(CMAKE_VERBOSE_MAKEFILE ON)
 
 
 
 #################################################################
+# find CBLAS libraries. Hints are given by numpy library directory via variable BLAS_DIR
 
+set(ENV{LD_LIBRARY_PATH} "${BLAS_DIR}:$ENV{LD_LIBRARY_PATH}")
 
+find_package(BLAS REQUIRED)
+find_package(LAPACK REQUIRED)
 
-# If MKL is enabled, ObenBLAS should be disabled
-if(USE_MKL)
-  set(USE_OPENBLAS OFF)
+# make difference between MKL and OPENBLAS by checking specific functions
+set(CMAKE_REQUIRED_LIBRARIES "${BLAS_LIBRARIES}" "-lm")
+check_function_exists(MKL_Set_Num_Threads BLAS_IS_MKL)
+check_function_exists(openblas_set_num_threads BLAS_IS_OPENBLAS)
+
+# check the presence of lapacke library
+check_function_exists(LAPACKE_zgetri LAPACKE_FOUND)
+set(CMAKE_REQUIRED_LIBRARIES "")
+
+# If MKL is enabled
+if(${BLAS_IS_MKL})
   list(APPEND CXX_FLAGS_DEBUG "-DBLAS=1")
   list(APPEND CXX_FLAGS_RELEASE "-DBLAS=1")
-  list(APPEND BLAS_LIBRARIES "-Wl,-rpath=${NUMPY_BLAS_LIB_DIR}" "-L${NUMPY_BLAS_LIB_DIR}" "-lmkl_rt" "-lpthread")
-endif()
 
-# If OpenBlas is enabled, MKL should be disabled
-if(USE_OPENBLAS)
-  set(USE_MKL OFF)
+  # If OpenBlas is enabled
+elseif(${BLAS_IS_OPENBLAS})
   list(APPEND CXX_FLAGS_DEBUG "-DBLAS=2")
   list(APPEND CXX_FLAGS_RELEASE "-DBLAS=2")
-  list(APPEND BLAS_LIBRARIES "-Wl,-rpath=${NUMPY_BLAS_LIB_DIR}" "-L${NUMPY_BLAS_LIB_DIR}" "-lopenblas")
-endif()
+else()
 
-
-
-# If no CLBAS library was given for CMAKE trying to find out the BLAS library
-if((NOT USE_MKL) AND (NOT USE_OPENBLAS))
-  find_package(BLAS)
-
-  if(NOT BLAS_FOUND)
-    message(FATAL_ERROR "BLAS library not found")
-  endif()
-
-  list(APPEND BLAS_LIBRARIES ${BLAS_LIBRARIES})
   list(APPEND CXX_FLAGS_DEBUG "-DBLAS=0")
   list(APPEND CXX_FLAGS_RELEASE "-DBLAS=0")
-
 endif()
 
+
+# if LAPACKE not found try another round
+if(${LAPACKE_FOUND} )
+    set(LAPACKE_LIBRARIES)
+else()
+    find_library(LAPACKE_LIBRARIES lapacke REQUIRED)    
+endif()
 
 # setting basic compile flags
 list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
-list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-msse3" "-mssse3" "-msse4.1" "-mavx2" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
+list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
 
 
 # Identify the compiler type and set compiler specific options
@@ -188,62 +232,67 @@ else()
 endif()
 
 
+
+
 ############################################################xx
 # checking TBB libraries and headers
 
-# adding TBB library dir if given
+# adding TBB library dir if given by environment variable
 if(DEFINED ENV{TBB_LIB_DIR})
-  find_library(TBB_LIB tbb PATH $ENV{TBB_LIB_DIR} )
 
-  if(NOT TBB_LIB)
-    message(FATAL_ERROR "TBB library not found")
-  endif()
+  find_library(TBB_LIB tbb
+               PATHS $ENV{TBB_LIB_DIR}
+               NO_DEFAULT_PATH
+               REQUIRED)
 
-  find_library(TBBMALLOC_PROXY_LIB tbbmalloc_proxy PATH $ENV{TBB_LIB_DIR} )
+  find_library(TBBMALLOC_LIB tbbmalloc
+               PATHS $ENV{TBB_LIB_DIR}
+               NO_DEFAULT_PATH
+               REQUIRED)
 
-  if(NOT TBBMALLOC_PROXY_LIB)
-    message(FATAL_ERROR "TBBMALLOC_PROXY library not found")
-  endif()
-
-  message("-- Adding library directory $ENV{TBB_LIB_DIR}")
-  list(APPEND TBB_LIBS "-Wl,-rpath=$ENV{TBB_LIB_DIR}" "-L$ENV{TBB_LIB_DIR}" "-ltbb" "-ltbbmalloc_proxy" "-ltbbmalloc")
+  find_library(TBBMALLOC_PROXY_LIB tbbmalloc_proxy
+               PATHS $ENV{TBB_LIB_DIR}
+               NO_DEFAULT_PATH
+               REQUIRED)
 
 else()
 
-  find_library(TBB_LIB tbb)
+  find_library(TBB_LIB tbb
+               PATHS ${PYTHON_SYS_PATH}
+               NO_DEFAULT_PATH
+               REQUIRED)
 
-  if(NOT TBB_LIB)
-    message(FATAL_ERROR "TBB library not found")
-  endif()
+  find_library(TBBMALLOC_LIB tbbmalloc
+               PATHS ${PYTHON_SYS_PATH}
+               NO_DEFAULT_PATH
+               REQUIRED)
 
-  find_library(TBBMALLOC_PROXY_LIB tbbmalloc_proxy )
-
-  if(NOT TBBMALLOC_PROXY_LIB)
-    message(FATAL_ERROR "TBBMALLOC_PROXY library not found")
-  endif()
-
-  list(APPEND TBB_LIBS "-ltbb" "-ltbbmalloc_proxy" "-ltbbmalloc")
-
+  find_library(TBBMALLOC_PROXY_LIB tbbmalloc_proxy
+               PATHS ${PYTHON_SYS_PATH}
+               NO_DEFAULT_PATH
+               REQUIRED)
+  
 endif()
-
-#set(CMAKE_REQUIRED_LIBRARIES "tbb")
 
 
 # adding TBB include dir
 if(DEFINED ENV{TBB_INC_DIR})
 
+  set(CMAKE_REQUIRED_FLAGS "-c")
   check_include_file_cxx(tbb/tbb.h TBB_HEADER "-I$ENV{TBB_INC_DIR}")
 
   if(NOT TBB_HEADER)
-    #message(FATAL_ERROR "TBB header tbb.h not found")
+    message(FATAL_ERROR "TBB header tbb.h not found")
   endif()
 
   message("-- Adding include directory $ENV{TBB_INC_DIR}")
   list(APPEND EXTRA_INCLUDES "$ENV{TBB_INC_DIR}")
 
 else()
-
-  check_include_file_cxx(tbb/tbb.h TBB_HEADER)
+ 
+  set(CMAKE_REQUIRED_FLAGS "-c")
+  check_include_file_cxx(tbb/tbb.h TBB_HEADER )
+  list(APPEND EXTRA_INCLUDES "${CMAKE_REQUIRED_INCLUDES}") 
 
   if(NOT TBB_HEADER)
     message(FATAL_ERROR "TBB header tbb.h not found")
@@ -276,9 +325,6 @@ add_library( qgd SHARED
 set_target_properties(
     qgd
     PROPERTIES
-        PREFIX ""
-        SUFFIX ""
-        OUTPUT_NAME "qgd${EXT_SUFFIX}"
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib
     )
 
@@ -292,8 +338,12 @@ target_compile_options(qgd PUBLIC
 
 # adding linking options
 target_link_libraries( qgd PRIVATE
-    ${TBB_LIBS}
     ${BLAS_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+    ${LAPACKE_LIBRARIES}
+    ${TBBMALLOC_LIB}
+    ${TBBMALLOC_PROXY_LIB}
+    ${TBB_LIB}
     ${GSL_LIBS}
 )
 
@@ -341,6 +391,7 @@ add_subdirectory (qgd_python/gates)
 add_subdirectory (test_standalone)
 
 
+install(TARGETS qgd LIBRARY DESTINATION lib)
 
 
 
