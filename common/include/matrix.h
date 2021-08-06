@@ -59,12 +59,34 @@ Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in);
 
 
 /**
+@brief Constructor of the class. By default the created class instance would not be owner of the stored data.
+@param data_in The pointer pointing to the data
+@param rows_in The number of rows in the stored matrix
+@param cols_in The number of columns in the stored matrix
+@param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
+@return Returns with the instance of the class.
+*/
+Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in, size_t stride_in);
+
+
+/**
 @brief Constructor of the class. Allocates data for matrix rows_in times cols_in. By default the created instance would be the owner of the stored data.
 @param rows_in The number of rows in the stored matrix
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
 Matrix( size_t rows_in, size_t cols_in);
+
+
+/**
+@brief Constructor of the class. Allocates data for matrix rows_in times cols_in. By default the created instance would be the owner of the stored data.
+@param rows_in The number of rows in the stored matrix
+@param cols_in The number of columns in the stored matrix
+@param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
+@return Returns with the instance of the class.
+*/
+Matrix( size_t rows_in, size_t cols_in, size_t stride_in);
+
 
 
 /**

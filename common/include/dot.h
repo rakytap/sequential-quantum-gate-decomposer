@@ -1,76 +1,41 @@
-/*
-Created on Fri Jun 26 14:13:26 2020
-Copyright (C) 2020 Peter Rakyta, Ph.D.
-
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
-
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
-
-You should have received a copy of the GNU General Public License
-along with this program.  If not, see http://www.gnu.org/licenses/.
-
-@author: Peter Rakyta, Ph.D.
-*/
-/*! \file dot.h
-    \brief Provides multithreaded binding for CBLAS function zgemm to calculate matrix products
-*/
-
-
-
 #ifndef Dot_H
 #define Dot_H
-
-#ifdef __cplusplus
-extern "C"
-{
-#endif
-#include <gsl/gsl_blas_types.h>
-#ifdef __cplusplus
-}
-#endif
-
-#ifndef CblasConjNoTrans
-#define CblasConjNoTrans 114
-#endif
-
-
 
 
 #include "matrix.h"
 
 #ifndef CPYTHON
-#include <tbb/task.h>
+#include <tbb/tbb.h>
 #endif
 
-#ifdef CBLAS
 #ifdef __cplusplus
 extern "C"
 {
 #endif
 
+#include "gsl/gsl_blas_types.h"
 
-/// Definition of the zgemm3m function from CBLAS
-void cblas_zgemm3m(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA, const enum CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
+/// Definition of the zgemm function from CBLAS
+void cblas_zgemm(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA, const enum CBLAS_TRANSPOSE TransB, const int M, const int N, const int K,
 		 const void *alpha, const void *A, const int lda, const void *B, const int ldb, const void *beta, void *C, const int ldc);
+
+/// Definition of the zgemv function from CBLAS to calculate matrix-vector product
+void cblas_zgemv(const enum CBLAS_ORDER Order, const enum CBLAS_TRANSPOSE TransA, const int M, const int N, const void *alpha, const void *A, const int lda,
+                 const void *X, const int incX, const void *beta, void *Y, const int incY);
 
 
 #if BLAS==1 // MKL
 
 /// Calculate the element-wise complex conjugate of a vector
-void vzConj(int num, pic::Complex16* input, pic::Complex16* output);
+void vzConj(int num, QGD_Complex16* input, QGD_Complex16* output);
 
 #endif
 
 #ifdef __cplusplus
 }
 #endif
-#endif
+
+
 
 
 
@@ -156,32 +121,12 @@ struct col_indices {
 };
 
 
-/**
-@brief Empty task class to utilize task continuation for saving stack space.
-*/
-class Cont_Task_rowsA: public tbb::task {
-
-public:
-
-/**
-@brief Default constructor of the class.
-@return Returns with the instance of the class.
-*/
-Cont_Task_rowsA();
-
-/**
-@brief Overriden execute function of class tbb::task
-@return Returns with a pointer to a tbb::task instance or with a null pointer.
-*/
-tbb::task* execute();
-
-};
 
 
 /**
 @brief Class to calculate a matrix product C=A*B in serial. This class is used to divide the multiplication into chunks for parallel calculations.
 */
-class zgemm3m_Task_serial {
+class zgemm_Task_serial {
 
 public:
     /// The matrix A
@@ -202,13 +147,14 @@ public:
 
 public:
 
+
 /**
 @brief Constructor of the class. (In this case the row/col limits are extracted from matrices A,B,C).
 @param A_in The object representing matrix A.
 @param B_in The object representing matrix B.
 @param C_in The object representing matrix C.
 */
-zgemm3m_Task_serial( Matrix &A_in, Matrix &B_in, Matrix &C_in);
+zgemm_Task_serial( Matrix &A_in, Matrix &B_in, Matrix &C_in);
 
 /**
 @brief Constructor of the class.
@@ -218,40 +164,59 @@ zgemm3m_Task_serial( Matrix &A_in, Matrix &B_in, Matrix &C_in);
 @param rows_in Structure containing row limits for the partitioning of the matrix product calculations.
 @param cols_in Structure containing column limits for the partitioning of the matrix product calculations.
 */
-zgemm3m_Task_serial( Matrix &A_in, Matrix &B_in, Matrix &C_in, row_indices& rows_in, col_indices& cols_in);
+zgemm_Task_serial( Matrix &A_in, Matrix &B_in, Matrix &C_in, row_indices& rows_in, col_indices& cols_in);
 
 /**
 @brief Call to calculate the product of matrix chunks defined by attributes rows, cols. The result is stored in the corresponding chunk of matrix C.
 */
-void zgemm3m_chunk();
+void zgemm_chunk();
 
-}; // zgemm3m_Task_serial
+}; // zgemm_Task_serial
 
 
 
 /**
 @brief Class to calculate a matrix product C=A*B in parallel. The parallelism follow the strategy of divide-and-conquer.
 */
-class zgemm3m_Task: public tbb::task, public zgemm3m_Task_serial {
+class zgemm_Task: public zgemm_Task_serial {
+
 
 
 public:
-    // reuse the constructors of class zgemm3m_Task_serial
-    using zgemm3m_Task_serial::zgemm3m_Task_serial;
+
+
+/**
+@brief Constructor of the class. (In this case the row/col limits are extracted from matrices A,B,C).
+@param A_in The object representing matrix A.
+@param B_in The object representing matrix B.
+@param C_in The object representing matrix C.
+*/
+zgemm_Task( Matrix &A_in, Matrix &B_in, Matrix &C_in);
+
+/**
+@brief Constructor of the class.
+@param A_in The object representing matrix A.
+@param B_in The object representing matrix B.
+@param C_in The object representing matrix C.
+@param rows_in Structure containing row limits for the partitioning of the matrix product calculations.
+@param cols_in Structure containing column limits for the partitioning of the matrix product calculations.
+*/
+zgemm_Task( Matrix &A_in, Matrix &B_in, Matrix &C_in, row_indices& rows_in, col_indices& cols_in);
+
 
 
 /**
 @brief This function is called when a task is spawned. It divides the work into chunks following the strategy of divide-and-conquer until the problem size meets a predefined treshold.
 @return Returns with a pointer to a tbb::task instance or with a null pointer.
 */
-tbb::task* execute();
+void execute(tbb::task_group &g);
 
 
 
 }; // zgemm_Task
 
+
 #endif // CPYTHON
 
 
 #endif //Dot_H
-

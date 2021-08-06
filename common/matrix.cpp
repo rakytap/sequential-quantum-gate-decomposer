@@ -49,6 +49,19 @@ Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in) : matrix
 
 
 /**
+@brief Constructor of the class. By default the created class instance would not be owner of the stored data.
+@param data_in The pointer pointing to the data
+@param rows_in The number of rows in the stored matrix
+@param cols_in The number of columns in the stored matrix
+@param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
+@return Returns with the instance of the class.
+*/
+Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in, size_t stride_in) : matrix_base<QGD_Complex16>(data_in, rows_in, cols_in, stride_in) {
+
+}
+
+
+/**
 @brief Constructor of the class. Allocates data for matrix rows_in times cols_in. By default the created instance would be the owner of the stored data.
 @param rows_in The number of rows in the stored matrix
 @param cols_in The number of columns in the stored matrix
@@ -58,6 +71,19 @@ Matrix::Matrix( size_t rows_in, size_t cols_in) : matrix_base<QGD_Complex16>(row
 
 
 }
+
+
+/**
+@brief Constructor of the class. Allocates data for matrix rows_in times cols_in. By default the created instance would be the owner of the stored data.
+@param rows_in The number of rows in the stored matrix
+@param cols_in The number of columns in the stored matrix
+@param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
+@return Returns with the instance of the class.
+*/
+Matrix::Matrix( size_t rows_in, size_t cols_in, size_t stride_in) : matrix_base<QGD_Complex16>(rows_in, cols_in, stride_in) {
+
+}
+
 
 
 /**
@@ -77,7 +103,7 @@ Matrix::Matrix(const Matrix &in) : matrix_base<QGD_Complex16>(in)  {
 Matrix
 Matrix::copy() {
 
-  Matrix ret = Matrix(rows, cols);
+  Matrix ret = Matrix(rows, cols, stride);
 
   // logical variable indicating whether the matrix needs to be conjugated in CBLAS operations
   ret.conjugated = conjugated;
