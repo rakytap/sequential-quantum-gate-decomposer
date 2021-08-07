@@ -717,6 +717,10 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
             CNOT* cnot_operation = static_cast<CNOT*>( operation );
             operation_mtx = cnot_operation->get_matrix();
         }
+        else if (operation->get_type() == CZ_OPERATION ) {
+            CZ* cz_operation = static_cast<CZ*>( operation );
+            operation_mtx = cz_operation->get_matrix();
+        }
         else if (operation->get_type() == GENERAL_OPERATION ) {
             operation_mtx = operation->get_matrix();
         }
@@ -958,6 +962,9 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::v
         Operation* operation = *it;
 
         if (operation->get_type() == CNOT_OPERATION) {
+            ops_ret.push_back( operation );
+        }
+        else if (operation->get_type() == CZ_OPERATION) {
             ops_ret.push_back( operation );
         }
         else if (operation->get_type() == U3_OPERATION) {

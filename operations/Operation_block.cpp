@@ -18,10 +18,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file Operation_block.cpp
-    \brief Class responsible for grouping CNOT and U3 operations into layers
+    \brief Class responsible for grouping two-qubit (CNOT,CZ) and one-qubit operations into layers
 */
 
-
+#include "CZ.h"
 #include "CNOT.h"
 #include "U3.h"
 #include "Operation_block.h"
@@ -75,6 +75,10 @@ Operation_block::release_operations() {
         if (operation->get_type() == CNOT_OPERATION) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
             delete cnot_operation;
+        }
+        else if (operation->get_type() == CZ_OPERATION) {
+            CZ* cz_operation = static_cast<CZ*>(operation);
+            delete cz_operation;
         }
         else if (operation->get_type() == U3_OPERATION) {
 
@@ -142,6 +146,10 @@ std::vector<Matrix> Operation_block::get_matrices( const double* parameters ) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
             operation_mtx = cnot_operation->get_matrix();
 
+        }
+        else if (operation->get_type() == CZ_OPERATION) {
+            CZ* cz_operation = static_cast<CZ*>(operation);
+            operation_mtx = cz_operation->get_matrix();
         }
         else if (operation->get_type() == U3_OPERATION) {
             U3* u3_operation = static_cast<U3*>(operation);
@@ -254,6 +262,41 @@ void Operation_block::add_cnot_to_front( int control_qbit, int target_qbit) {
 
 }
 
+
+
+
+/**
+@brief Append a CZ gate operation to the list of operations
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Operation_block::add_cz_to_end( int control_qbit, int target_qbit) {
+
+        // new cz operation
+        Operation* operation = static_cast<Operation*>(new CZ(qbit_num, control_qbit, target_qbit ));
+
+        // append the operation to the list
+        add_operation_to_end(operation);
+
+}
+
+
+
+/**
+@brief Add a CZ gate operation to the front of the list of operations
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Operation_block::add_cz_to_front( int control_qbit, int target_qbit) {
+
+        // new cz operation
+        Operation* operation = static_cast<Operation*>(new CZ(qbit_num, control_qbit, target_qbit ));
+
+        // put the operation to tghe front of the list
+        add_operation_to_front(operation);
+
+}
+
 /**
 @brief Append a list of operations to the list of operations
 @param operations_in A list of operation class instances.
@@ -338,6 +381,7 @@ gates_num Operation_block::get_gate_nums() {
 
         gate_nums.u3      = 0;
         gate_nums.cnot    = 0;
+        gate_nums.cz      = 0;
         gate_nums.general = 0;
 
         for(std::vector<Operation*>::iterator it = operations.begin(); it != operations.end(); ++it) {
@@ -349,12 +393,16 @@ gates_num Operation_block::get_gate_nums() {
                 gates_num gate_nums_loc = block_operation->get_gate_nums();
                 gate_nums.u3   = gate_nums.u3 + gate_nums_loc.u3;
                 gate_nums.cnot = gate_nums.cnot + gate_nums_loc.cnot;
+                gate_nums.cz = gate_nums.cz + gate_nums_loc.cz;
             }
             else if (operation->get_type() == U3_OPERATION) {
                 gate_nums.u3   = gate_nums.u3 + 1;
             }
             else if (operation->get_type() == CNOT_OPERATION) {
                 gate_nums.cnot   = gate_nums.cnot + 1;
+            }
+            else if (operation->get_type() == CZ_OPERATION) {
+                gate_nums.cz   = gate_nums.cz + 1;
             }
             else if (operation->get_type() == GENERAL_OPERATION) {
                 gate_nums.general   = gate_nums.general + 1;
@@ -406,6 +454,12 @@ void Operation_block::list_operations( const double* parameters, int start_index
                 CNOT* cnot_operation = static_cast<CNOT*>(operation);
 
                 printf( "%dth operation: CNOT with control qubit: %d and target qubit: %d\n", operation_idx, cnot_operation->get_control_qbit(), cnot_operation->get_target_qbit() );
+                operation_idx = operation_idx + 1;
+            }
+            else if (operation->get_type() == CZ_OPERATION) {
+                CZ* cz_operation = static_cast<CZ*>(operation);
+
+                printf( "%dth operation: CZ with control qubit: %d and target qubit: %d\n", operation_idx, cz_operation->get_control_qbit(), cz_operation->get_target_qbit() );
                 operation_idx = operation_idx + 1;
             }
             else if (operation->get_type() == U3_OPERATION) {
@@ -495,6 +549,10 @@ void Operation_block::reorder_qubits( std::vector<int>  qbit_list) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
             cnot_operation->reorder_qubits( qbit_list );
          }
+         else if (operation->get_type() == CZ_OPERATION) {
+            CZ* cz_operation = static_cast<CZ*>(operation);
+            cz_operation->reorder_qubits( qbit_list );
+         }
          else if (operation->get_type() == U3_OPERATION) {
              U3* u3_operation = static_cast<U3*>(operation);
              u3_operation->reorder_qubits( qbit_list );
@@ -570,6 +628,12 @@ void Operation_block::combine(Operation_block* op_block) {
             Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
             add_operation_to_end(op_cloned);
         }
+        else if (op->get_type() == CZ_OPERATION) {
+            CZ* cz_op = static_cast<CZ*>( op );
+            CZ* cz_op_cloned = cz_op->clone();
+            Operation* op_cloned = static_cast<Operation*>( cz_op_cloned );
+            add_operation_to_end(op_cloned);
+        }
         else if (op->get_type() == U3_OPERATION) {
             U3* u3_op = static_cast<U3*>( op );
             U3* u3_op_cloned = u3_op->clone();
@@ -608,6 +672,10 @@ void Operation_block::set_qbit_num( int qbit_num_in ) {
         if (op->get_type() == CNOT_OPERATION) {
             CNOT* cnot_op = static_cast<CNOT*>( op );
             cnot_op->set_qbit_num( qbit_num_in );
+        }
+        else if (op->get_type() == CZ_OPERATION) {
+            CZ* cz_op = static_cast<CZ*>( op );
+            cz_op->set_qbit_num( qbit_num_in );
         }
         else if (op->get_type() == U3_OPERATION) {
             U3* u3_op = static_cast<U3*>( op );
@@ -660,6 +728,12 @@ int Operation_block::extract_operations( Operation_block* op_block ) {
             CNOT* cnot_op = static_cast<CNOT*>( op );
             CNOT* cnot_op_cloned = cnot_op->clone();
             Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
+            op_block->add_operation_to_end( op_cloned );
+        }
+        else if (op->get_type() == CZ_OPERATION) {
+            CZ* cz_op = static_cast<CZ*>( op );
+            CZ* cz_op_cloned = cz_op->clone();
+            Operation* op_cloned = static_cast<Operation*>( cz_op_cloned );
             op_block->add_operation_to_end( op_cloned );
         }
         else if (op->get_type() == U3_OPERATION) {

@@ -73,6 +73,10 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
                 # adding CNOT operation to the quantum circuit
                 circuit.cx(operation.get("control_qbit"), operation.get("target_qbit"))
 
+            elif operation.get("type") == "CZ":
+                # adding CZ operation to the quantum circuit
+                circuit.cz(operation.get("control_qbit"), operation.get("target_qbit"))
+
             elif operation.get("type") == "U3":
                 # adding U3 operation to the quantum circuit
                 circuit.u(operation.get("Theta"), operation.get("Phi"), operation.get("Lambda"), operation.get("target_qbit"))

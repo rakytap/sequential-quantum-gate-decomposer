@@ -4,7 +4,7 @@
 class Test_operations:
     """This is a test class of the python iterface to the gates of the QGD package"""
 
-    def etest_CNOT_creation(self):
+    def test_CNOT_creation(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of CNOT gate.
@@ -25,6 +25,29 @@ class Test_operations:
 
         # creating an instance of the C++ class
         CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
+
+
+    def test_CZ_creation(self):
+        r"""
+        This method is called by pytest. 
+        Test to create an instance of CZ gate.
+
+        """
+
+        from qgd_python.gates.qgd_CZ import qgd_CZ
+
+
+        # number of qubits
+        qbit_num = 3
+
+        # target qbit
+        target_qbit = 0
+
+        # control_qbit
+        control_qbit = 1        
+
+        # creating an instance of the C++ class
+        CZ = qgd_CZ( qbit_num, target_qbit, control_qbit )
 
 
     def test_U3_creation(self):

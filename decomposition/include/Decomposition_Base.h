@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 #include "Operation_block.h"
+#include "CZ.h"
 #include "CNOT.h"
 #include "U3.h"
 #include <map>

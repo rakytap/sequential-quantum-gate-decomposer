@@ -80,6 +80,46 @@ install(TARGETS qgd_CNOT LIBRARY
 
 
 
+
+add_library( qgd_CZ MODULE
+    ${EXT_DIR}/qgd_CZ.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_CZ qgd)
+
+target_link_libraries (qgd_CZ qgd ${PYTHON_LIBRARIES})
+
+python_extension_module(qgd_CZ)
+
+
+# adding compile options
+target_compile_options(qgd_CZ PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+)
+
+
+target_include_directories(qgd_CZ PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/operations/include
+                            ${PROJECT_SOURCE_DIR}/common/include
+                            ${EXTRA_INCLUDES})
+
+set_target_properties( qgd_CZ PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+install(TARGETS qgd_CZ LIBRARY 
+         DESTINATION qgd_python/gates)
+
+###################################################################
+
+
+
 add_library( qgd_Operation_Block MODULE
     ${EXT_DIR}/qgd_Operation_Block.cpp
 )

@@ -49,6 +49,8 @@ struct gates_num {
   int u3;
   /// The number of CNOT gates
   int cnot;
+  /// The number of CZ gates
+  int cz;
   /// The number of general gates
   int general;
 };

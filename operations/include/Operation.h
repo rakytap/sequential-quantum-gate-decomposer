@@ -30,7 +30,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)
-typedef enum operation_type {GENERAL_OPERATION, CNOT_OPERATION, U3_OPERATION, BLOCK_OPERATION, DECOMPOSITION_BASE_CLASS, SUB_MATRIX_DECOMPOSITION_CLASS, N_QUBIT_DECOMPOSITION_CLASS_BASE, N_QUBIT_DECOMPOSITION_CLASS} operation_type;
+typedef enum operation_type {GENERAL_OPERATION, CZ_OPERATION, CNOT_OPERATION, U3_OPERATION, BLOCK_OPERATION, DECOMPOSITION_BASE_CLASS, SUB_MATRIX_DECOMPOSITION_CLASS, N_QUBIT_DECOMPOSITION_CLASS_BASE, N_QUBIT_DECOMPOSITION_CLASS} operation_type;
 
 
 

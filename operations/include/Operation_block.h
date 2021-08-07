@@ -18,7 +18,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file Operation_block.h
-    \brief Header file for a class responsible for grouping CNOT and U3 operations into layers
+    \brief Header file for a class responsible for grouping two-qubit (CNOT,CZ) and one-qubit operations into layers
 */
 
 #ifndef OPERATION_BLOCK_H
@@ -31,7 +31,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /**
-@brief A class responsible for grouping CNOT and U3 operations into layers
+@brief A class responsible for grouping two-qubit (CNOT,CZ) and one-qubit operations into layers
 */
 class Operation_block :  public Operation {
 
@@ -113,6 +113,23 @@ void add_cnot_to_end( int control_qbit, int target_qbit);
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
 void add_cnot_to_front( int control_qbit, int target_qbit );
+
+
+/**
+@brief Append a CZ gate operation to the list of operations
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cz_to_end( int control_qbit, int target_qbit);
+
+
+
+/**
+@brief Add a CZ gate operation to the front of the list of operations
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cz_to_front( int control_qbit, int target_qbit );
 
 /**
 @brief Append a list of operations to the list of operations

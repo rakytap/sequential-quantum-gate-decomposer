@@ -327,6 +327,23 @@ get_operation( N_Qubit_Decomposition* decomp, int &idx ) {
         Py_XDECREF(control_qbit);
 
     }
+    if (operation->get_type() == CZ_OPERATION) {
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "CZ" );
+        PyObject* target_qbit = Py_BuildValue("i",  operation->get_target_qbit() );
+        PyObject* control_qbit = Py_BuildValue("i",  operation->get_control_qbit() );
+
+
+        PyDict_SetItemString(gate, "type", type );
+        PyDict_SetItemString(gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(gate, "control_qbit", control_qbit );            
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(control_qbit);
+
+    }
     else if (operation->get_type() == U3_OPERATION) {
 
         // get U3 parameters

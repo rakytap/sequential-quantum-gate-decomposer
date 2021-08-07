@@ -245,18 +245,19 @@ void Sub_Matrix_Decomposition::add_operation_layers() {
     // get the list of sub-blocks in the custom gate structure
     std::vector<Operation*> operations = unit_gate_structure->get_operations();
 
-
-
     for (std::vector<Operation*>::iterator operations_it = operations.begin(); operations_it != operations.end(); operations_it++ ) {
 
         // The current operation
         Operation* operation = *operations_it;
 
         for (int idx=0;  idx<identical_blocks_loc; idx++) {
-
             if (operation->get_type() == CNOT_OPERATION ) {
                 CNOT* cnot_operation = static_cast<CNOT*>( operation );
                 add_operation_to_end( (Operation*)cnot_operation->clone() );
+            }
+            else if (operation->get_type() == CZ_OPERATION ) {
+                CZ* cz_operation = static_cast<CZ*>( operation );
+                add_operation_to_end( (Operation*)cz_operation->clone() );
             }
             else if (operation->get_type() == GENERAL_OPERATION ) {
                 add_operation_to_end( operation->clone() );
