@@ -116,6 +116,49 @@ set_target_properties( qgd_CZ PROPERTIES
 install(TARGETS qgd_CZ LIBRARY 
          DESTINATION qgd_python/gates)
 
+
+
+###################################################################
+
+
+
+
+add_library( qgd_CH MODULE
+    ${EXT_DIR}/qgd_CH.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_CH qgd)
+
+target_link_libraries (qgd_CH qgd ${PYTHON_LIBRARIES})
+
+python_extension_module(qgd_CH)
+
+
+# adding compile options
+target_compile_options(qgd_CH PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+)
+
+
+target_include_directories(qgd_CH PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/operations/include
+                            ${PROJECT_SOURCE_DIR}/common/include
+                            ${EXTRA_INCLUDES})
+
+set_target_properties( qgd_CH PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+install(TARGETS qgd_CH LIBRARY 
+         DESTINATION qgd_python/gates)
+
+
 ###################################################################
 
 

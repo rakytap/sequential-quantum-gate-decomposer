@@ -1,0 +1,146 @@
+/*    Quantum Gate Decomposer
+    Copyright (C) 2018 Peter Rakyta, Ph.D.
+
+    This program is free software: you can redistribute it and/or modify
+    it under the terms of the GNU General Public License as published by
+    the Free Software Foundation, either version 3 of the License, or
+    (at your option) any later version.
+
+    This program is distributed in the hope that it will be useful,
+    but WITHOUT ANY WARRANTY; without even the implied warranty of
+    MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+    GNU General Public License for more details.
+
+    You should have received a copy of the GNU General Public License
+    along with this program.  If not, see http://www.gnu.org/licenses/.
+*/
+/*! \addtogroup tutorial Tutorial
+ @{
+
+# Introduction
+
+Sequential Quantum Gate Decomposer (@QGD) package provides an interface to Python which makes it possible to combine @QGD with well known quantum computing back ends, like [Qiskit](https://qiskit.org/).
+In fact, @QGD has already established an interface to export the decomposed quantum circuit in Qiskit format.
+The Python interface of @QGD is developed [C++ extensions](https://docs.python.org/3/library/ctypes.html), while all the massive calculations related to the decomposition run in C++, and only the input and final output parameters are casted between C++ and Python types.
+
+In the forthcoming sections we provide some tricks and best practices to use the @QGD Python interface. 
+The @QGD Python interface can be tested by running the test cases in file **test_decomposition.py** by pytest utility or by the **example.py** script right in the source directory of the @QGD package:
+(To build the @QGD package follow the manual at @index.)
+
+<div class="snippet">
+$ cd path/to/qgd && pytest
+</div>
+
+or
+
+<div class="snippet">
+$ cd path/to/qgd && python3 example.py
+</div>
+
+
+The script example.py solves two problems:
+- the decomposition of a general three-qubit unitary
+- the decomposition of the [4th IBM Challenge problem](https://www.ibm.com/blogs/research/2020/05/quantum-challenge-results/)
+
+The expected outcome of the test script should look as:
+
+@image latex example_result_resized.png
+\htmlonly <style>div.image img[src="example_result.png"]{width:1200px;}</style> \endhtmlonly 
+@image html example_result.png "Expected result for the 4th IBM Challenge problem"
+
+The output informs us that the 4th IBM Challenge problem was solved by using 4 CNOT gates with decomposition error 0.00010325....
+It is evident that the given decomposition can be further simplified by the union of successive U3 operations, however the @QGD package is 
+not equipped yet to do such simplifications.
+(The decomposition result of the general three-qubit matrix can be found above the result of the IBM challenge in the standard output.)
+
+
+# Writing your own scripts
+
+In this example we show how to use the python interface of the @QGD package for our own purposes. 
+To this end we demonstrate the steps in the example.py to solve the 4th problem of the IBM Challenge 2020. 
+The @QGD Python interface is installed into the Python module **qgd_python** located in the installation path of the @QGD package. 
+In order to start using the @QGD Python interface, one need to import the N_Qubit_Decomposition class from this module:
+
+<div class="snippet">
+\snippet example.py import
+</div>
+
+In general, to import the @QGD Python module, the Python interpreter should see it on the module search path (for further details see the [module tutorial](https://docs.python.org/3/tutorial/modules.html)).
+After loading the qgd_python module we need to load the 4-qubit matrix of the problem from a file shipped with the @QGD package:
+
+<div class="snippet">
+\snippet example.py load Umtx
+</div>
+    
+Then we create the class to be used for the decomposition, which tries to bring the given unitary into identity by a sequence of CNOT ans U3 operations:
+
+<div class="snippet">
+\snippet example.py create decomposition class
+</div>
+
+Notice, that we gave the complex transpose of the unitary Umtx as an input for the class qgd_N_Qubit_Decomposition.
+This can be explained by simple linear algebra considerations: since the product of the unitary with it's complex transpose (\f$U U^\dagger=I\f$) gives identity, 
+the sequence of operations bringing a unitary \f$U\f$ into identity would naturally equal to the complex transpose \f$U^\dagger\f$ of the unitary \f$U\f$.
+
+Along with the input unitary we provided two other inputs for the decomposition class.
+- **optimize_layer_num** Set true to try to find the fewest number of CNOT gates necessary for the decomposition (increasing the running time) or false when the predefined maximal number of layer gates is used for the decomposition (which fit better for general unitaries).
+- **initial_guess** String indicating the method to guess initial values for the optimization. Possible values: 
+       - "zeros": the initial guessed values are all zeros,
+       - "random": the initial guessed values are random doubles, 
+       - "close_to_zero": the initial guessed values are random numbers close to zero.
+
+In case we would like to minimize the number of CNOT gates in the decomposition, the best choice for the **initial_guess** values are "zeros" 
+(discussed in more details in the forthcoming sections). However, this kind of the choice might result in unwanted convergence of the optimization to local minimum 
+instead of the global one.
+Thus, the solution of this example might sometimes fail to reach the global minimum. 
+For the same reason, unitaries consisting of much CNOT gates can be well decomposed by initial guess values "random" or "close_to_zero".
+
+Finally, before we start the decomposition, we set some other parameters for the decomposition:
+
+<div class="snippet">
+\snippet example.py set parameters
+</div>
+
+By setting the number of identical blocks in the code snippet we order the code to use two identical successive blocks for the sub-disentanglement of the 4-qubit unitary:
+  @image latex layers_4qubit_resized.png
+  \htmlonly <style>div.image img[src="layers_4qubit.png"]{width:600px;}</style> \endhtmlonly 
+  @image html layers_4qubit.png "Two identical successive block in the sub-decomposition of the 4th qubit"
+and do not use repeated successive blocks in the decomposition of the 3-qubit submatrix:
+  @image latex layers_3qubit_resized.png
+  \htmlonly <style>div.image img[src="layers_3qubit.png"]{width:500px;}</style> \endhtmlonly 
+  @image html layers_3qubit.png "No repeated successive blocks in the sub-decomposition of the 3rd qubit"
+The idea behind setting two identical successive block is very straightforward. 
+In this case the successive CNOT gates might cancel each other resulting in possible simplification of the gate structure in the end of the decomposition process.
+Notice, that setting more the three identical blocks has no sense, since all two-qubit unitaries can be decomposed with at most three CNOT gates.
+
+In the second command of the code snippet above we set the maximal number of operation blocks allowed in the n-qubit sub-decomposition problem.
+The demonstrated choices are very much specific for the given problem. 
+In case of general random unitaries, when the unitary is spanned by four qubits, than 60 operation blocks (layers) are needed to solve the sub-disentanglement problem,
+while for the sub-decomposition of a unitary spanned by three qubits are necessary at most 20 operation blocks.
+(These maximal parameters are in-built in the code, it is not necessary to provide them in the code.)
+
+The third command in the above code snippet is about the setting of the number of iterations in each optimization step used during the sub-decomposition of the nth qubit. 
+By default, the number of iteration loops are set to one, however in case of specific unitaries, such as the matrix of the 4th problem of the IBM challenge, 
+it is advised to increase the number of iteration loops to avoid unwanted convergence to local minima. 
+(On the other hand, the increase of the iteration loops might increase the running time.)
+We notice, that the best choice of the above parameters varies from problem to problem. One should give a try to multiple set of parameters to find the best decomposition 
+of the unitary.
+
+In the last command of the code snippet above one can set the verbosity of the decomposition to on/off by the value True/False.
+After setting the parameters of the decomposition we can start the optimization process by the command:
+
+<div class="snippet">
+\snippet example.py start decomposition
+</div>
+
+The second command in the above code snippet prints the list of decomposing operations on the standard output.
+Finally, we can export a Qiskit compatible quantum circuit via the @QGD Python interface and calculate the final error of the decomposition by the following code snippet:
+
+<div class="snippet">
+\snippet example.py qiskit
+</div>
+
+The documentation of Qiskit, which is needed to fully understand the above code snippet, can be found [here](https://qiskit.org/documentation/).
+ 
+ @} 
+*/

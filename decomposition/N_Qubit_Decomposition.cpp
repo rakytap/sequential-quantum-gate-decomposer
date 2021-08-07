@@ -18,7 +18,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file N_Qubit_Decomposition.cpp
-    \brief Base class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations.
+    \brief Base class to determine the decomposition of a unitary into a sequence of two-qubit and one-qubit gate operations.
     This class contains the non-template implementation of the decomposition class
 */
 
@@ -31,7 +31,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 N_Qubit_Decomposition::N_Qubit_Decomposition() {
 
-    // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
+    // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
     optimize_layer_num  = false;
 
     // A string describing the type of the class
@@ -204,6 +204,7 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
             if ( gates_num.u3>0 ) std::cout << gates_num.u3 << " U3 opeartions," << std::endl;
             if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT opeartions," << std::endl;
             if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ opeartions," << std::endl;
+            if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH opeartions," << std::endl;
             std::cout << std::endl;
             std::cout << "--- In total " << float(time(NULL) - start_time) << " seconds elapsed during the decomposition ---" << std::endl;
         }
@@ -378,11 +379,18 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
                 Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
                 add_operation_to_front( op_cloned );
             }
-            if (op->get_type() == CZ_OPERATION) {
+            else if (op->get_type() == CZ_OPERATION) {
                 CZ* cz_op = static_cast<CZ*>( op );
                 CZ* cz_op_cloned = cz_op->clone();
                 cz_op_cloned->set_qbit_num( qbit_num );
                 Operation* op_cloned = static_cast<Operation*>( cz_op_cloned );
+                add_operation_to_front( op_cloned );
+            }
+            else if (op->get_type() == CH_OPERATION) {
+                CH* ch_op = static_cast<CH*>( op );
+                CH* ch_op_cloned = ch_op->clone();
+                ch_op_cloned->set_qbit_num( qbit_num );
+                Operation* op_cloned = static_cast<Operation*>( ch_op_cloned );
                 add_operation_to_front( op_cloned );
             }
             else if (op->get_type() == U3_OPERATION) {
@@ -644,10 +652,10 @@ N_Qubit_Decomposition::simplify_layers() {
             //number of perations in the block
             unsigned int parameter_num_block = block_to_simplify->get_parameter_num();
 
-            // get the number of CNOT gates and store the block operations if the number of CNOT gates cannot be reduced
+            // get the number of two-qubit gates and store the block operations if the number of CNOT gates cannot be reduced
             gates_num gate_nums = block_to_simplify->get_gate_nums();
 
-            if (gate_nums.cnot + gate_nums.cz < 2) {
+            if (gate_nums.cnot + gate_nums.cz + gate_nums.ch < 2) {
                 operations_loc->combine(blocks_to_save);
                 memcpy(optimized_parameters_loc+parameter_num_loc, optimized_parameters+parameter_idx, parameter_num_block*sizeof(double) );
                 parameter_idx = parameter_idx + parameter_num_block;
@@ -669,7 +677,7 @@ N_Qubit_Decomposition::simplify_layers() {
 
             // simplify the given layer
             std::map<int,int> max_layer_num_loc;
-            max_layer_num_loc.insert( std::pair<int, int>(2,  gate_nums.cnot+gate_nums.cz-1 ) );
+            max_layer_num_loc.insert( std::pair<int, int>(2,  gate_nums.cnot+gate_nums.cz+gate_nums.ch-1 ) );
             Operation_block* simplified_layer = NULL;
             double* simplified_parameters = NULL;
             unsigned int simplified_parameter_num=0;
@@ -727,7 +735,7 @@ N_Qubit_Decomposition::simplify_layers() {
 
         // get the number of CNOT gates in the initial structure
         gates_num gate_num_initial = get_gate_nums();
-        int two_qbit_num_initial = gate_num_initial.cnot + gate_num_initial.cz;
+        int two_qbit_num_initial = gate_num_initial.cnot + gate_num_initial.cz + gate_num_initial.ch;
 
         // clearing the original list of operations and parameters
         release_operations();
@@ -746,7 +754,7 @@ N_Qubit_Decomposition::simplify_layers() {
         parameter_num = parameter_num_loc;
 
         gates_num gate_num_simplified = get_gate_nums();
-        int two_qbit_num_simplified = gate_num_simplified.cnot + gate_num_simplified.cz;
+        int two_qbit_num_simplified = gate_num_simplified.cnot + gate_num_simplified.cz + gate_num_simplified.ch;
 
         if (verbose) {
             printf("\n\n************************************\n");
@@ -759,11 +767,11 @@ N_Qubit_Decomposition::simplify_layers() {
 }
 
 /**
-@brief Call to simplify the gate structure in a block of operations (i.e. tries to reduce the number of CNOT gates)
+@brief Call to simplify the gate structure in a block of operations (i.e. tries to reduce the number of two-qubit gates)
 @param layer An instance of class Operation_block containing the 2-qubit gate structure to be simplified
 @param parameters An array of parameters to calculate the matrix representation of the operations in the block of operations.
 @param parameter_num_block NUmber of parameters in the block of operations to be simplified.
-@param max_layer_num_loc A map of <int n: int num> indicating the maximal number of CNOT operations allowed in the simplification.
+@param max_layer_num_loc A map of <int n: int num> indicating the maximal number of two-qubit operations allowed in the simplification.
 @param simplified_layer An instance of Operation_block containing the simplified structure of operations.
 @param simplified_parameters An array of parameters containing the parameters of the simplified block structure.
 @param simplified_parameter_num The number of parameters in the simplified block structure.
@@ -783,7 +791,7 @@ N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameter
         std::vector<Operation*> layer_operations = layer->get_operations();
         for (std::vector<Operation*>::iterator it = layer_operations.begin(); it!=layer_operations.end(); it++) {
             Operation* op = *it;
-            if (op->get_type() == CNOT_OPERATION) {
+            if (op->get_type() == CNOT_OPERATION || op->get_type() == CZ_OPERATION || op->get_type() == CH_OPERATION) {
                 target_qbit = op->get_target_qbit();
                 control_qbit = op->get_control_qbit();
                 break;
@@ -889,7 +897,7 @@ N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameter
         gates_num gate_nums_layer = layer->get_gate_nums();
         gates_num gate_nums_simplified = simplified_layer->get_gate_nums();
         if (verbose) {
-            printf("%d two-qubit gates successfully simplified to %d CNOT gates\n", gate_nums_layer.cnot+gate_nums_layer.cz, gate_nums_simplified.cnot);
+            printf("%d two-qubit gates successfully simplified to %d CNOT gates\n", gate_nums_layer.cnot+gate_nums_layer.cz+gate_nums_layer.ch, gate_nums_simplified.cnot);
         }
 
 

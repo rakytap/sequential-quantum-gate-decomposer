@@ -308,6 +308,7 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/common/matrix.cpp
     ${PROJECT_SOURCE_DIR}/operations/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/operations/CZ.cpp
+    ${PROJECT_SOURCE_DIR}/operations/CH.cpp
     ${PROJECT_SOURCE_DIR}/operations/Operation.cpp
     ${PROJECT_SOURCE_DIR}/operations/Operation_block.cpp
     ${PROJECT_SOURCE_DIR}/operations/U3.cpp
@@ -366,6 +367,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/QGDTypes.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/CNOT.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/CZ.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/CH.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/Operation.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/Operation_block.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/U3.h

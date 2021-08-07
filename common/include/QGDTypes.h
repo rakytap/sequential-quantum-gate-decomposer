@@ -51,6 +51,8 @@ struct gates_num {
   int cnot;
   /// The number of CZ gates
   int cz;
+  /// The number of CH (i.e. controlled Hadamard) gates
+  int ch;
   /// The number of general gates
   int general;
 };

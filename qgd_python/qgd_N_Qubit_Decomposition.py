@@ -21,7 +21,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 """
 
 ## \file qgd_N_Qubit_Decomposition.py
-##    \brief A QGD Python interface class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
+##    \brief A QGD Python interface class for the decomposition of N-qubit unitaries into a set of two-qubit and one-qubit gates.
 
 
 import numpy as np
@@ -76,6 +76,10 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
             elif operation.get("type") == "CZ":
                 # adding CZ operation to the quantum circuit
                 circuit.cz(operation.get("control_qbit"), operation.get("target_qbit"))
+
+            elif operation.get("type") == "CH":
+                # adding CZ operation to the quantum circuit
+                circuit.ch(operation.get("control_qbit"), operation.get("target_qbit"))
 
             elif operation.get("type") == "U3":
                 # adding U3 operation to the quantum circuit

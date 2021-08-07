@@ -27,6 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Operation_block.h"
 #include "CZ.h"
+#include "CH.h"
 #include "CNOT.h"
 #include "U3.h"
 #include <map>
@@ -316,7 +317,7 @@ void prepare_operations_to_export();
 @brief Call to prepare the optimized operations to export
 @param ops A list of operations
 @param parameters The parameters of the operations
-@return Returns with a list of CNOT and U3 operations.
+@return Returns with a list of gate operations.
 */
 std::vector<Operation*> prepare_operations_to_export( std::vector<Operation*> ops, const double* parameters );
 
@@ -326,7 +327,7 @@ std::vector<Operation*> prepare_operations_to_export( std::vector<Operation*> op
 @brief Call to prepare the operations of an operation block to export
 @param block_op A pointer to a block of operations
 @param parameters The parameters of the operations
-@return Returns with a list of CNOT and U3 operations.
+@return Returns with a list of gate operations.
 */
 std::vector<Operation*> prepare_operations_to_export( Operation_block* block_op, const double* parameters );
 

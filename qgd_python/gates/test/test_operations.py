@@ -50,6 +50,30 @@ class Test_operations:
         CZ = qgd_CZ( qbit_num, target_qbit, control_qbit )
 
 
+
+    def test_CH_creation(self):
+        r"""
+        This method is called by pytest. 
+        Test to create an instance of CH gate.
+
+        """
+
+        from qgd_python.gates.qgd_CH import qgd_CH
+
+
+        # number of qubits
+        qbit_num = 3
+
+        # target qbit
+        target_qbit = 0
+
+        # control_qbit
+        control_qbit = 1        
+
+        # creating an instance of the C++ class
+        CH = qgd_CH( qbit_num, target_qbit, control_qbit )
+
+
     def test_U3_creation(self):
         r"""
         This method is called by pytest. 

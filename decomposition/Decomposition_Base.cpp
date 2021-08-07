@@ -721,6 +721,10 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
             CZ* cz_operation = static_cast<CZ*>( operation );
             operation_mtx = cz_operation->get_matrix();
         }
+        else if (operation->get_type() == CH_OPERATION ) {
+            CH* ch_operation = static_cast<CH*>( operation );
+            operation_mtx = ch_operation->get_matrix();
+        }
         else if (operation->get_type() == GENERAL_OPERATION ) {
             operation_mtx = operation->get_matrix();
         }
@@ -949,7 +953,7 @@ void Decomposition_Base::prepare_operations_to_export() {
 @brief Call to prepare the optimized operations to export
 @param ops A list of operations
 @param parameters The parameters of the operations
-@return Returns with a list of CNOT and U3 operations.
+@return Returns with a list of gate operations.
 */
 std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::vector<Operation*> ops, const double* parameters ) {
 
@@ -965,6 +969,9 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::v
             ops_ret.push_back( operation );
         }
         else if (operation->get_type() == CZ_OPERATION) {
+            ops_ret.push_back( operation );
+        }
+        else if (operation->get_type() == CH_OPERATION) {
             ops_ret.push_back( operation );
         }
         else if (operation->get_type() == U3_OPERATION) {
@@ -1054,7 +1061,7 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::v
 @brief Call to prepare the operations of an operation block to export
 @param block_op A pointer to a block of operations
 @param parameters The parameters of the operations
-@return Returns with a list of CNOT and U3 operations.
+@return Returns with a list of gate operations.
 */
 std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( Operation_block* block_op, const double* parameters ) {
 
@@ -1087,7 +1094,7 @@ int Decomposition_Base::get_operation( unsigned int n, operation_type &type, int
 //printf("operation type: %d\n", operation->get_type());
 
 
-    if (operation->get_type() == CNOT_OPERATION) {
+    if (operation->get_type() == CNOT_OPERATION || operation->get_type() == CZ_OPERATION || operation->get_type() == CH_OPERATION ) {
         type = operation->get_type();
         target_qbit = operation->get_target_qbit();
         control_qbit = operation->get_control_qbit();
