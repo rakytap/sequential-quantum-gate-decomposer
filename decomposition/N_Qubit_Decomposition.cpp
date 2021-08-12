@@ -160,7 +160,7 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
     if ( !cSub_decomposition->subdisentaglement_done) {
         return;
     }
-
+//return;
     // saving the subunitarization operations
     extract_subdecomposition_results( cSub_decomposition );
 
@@ -191,10 +191,8 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 
         // calculating the final error of the decomposition
         Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters, operations.begin(), operations.size(), Umtx );
-
-        subtract_diag( matrix_decomposed, matrix_decomposed[0] );
-
-        decomposition_error = cblas_dznrm2( matrix_size*matrix_size, matrix_decomposed.get_data(), 1 );
+	calc_decomposition_error( matrix_decomposed );
+        
 
         // get the number of gates used in the decomposition
         gates_num gates_num = get_gate_nums();
@@ -223,7 +221,66 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 
 
 
+/**
+@brief Calculate the error of the decomposition according to the spectral norm of \f$ U-U_{approx} \f$, where \f$ U_{approx} \f$ is the unitary produced by the decomposing quantum cirquit.
+@param decomposed_matrix The decomposed matrix, i.e. the result of the decomposing gate structure applied on the initial unitary.
+@return Returns with the calculated spectral norm.
+*/
+void
+N_Qubit_Decomposition::calc_decomposition_error(Matrix& decomposed_matrix ) {
 
+	// (U-U_{approx}) (U-U_{approx})^\dagger = 2*I - U*U_{approx}^\dagger - U_{approx}*U^\dagger
+	// U*U_{approx}^\dagger = decomposed_matrix_copy
+	
+ 	Matrix A(matrix_size, matrix_size);
+	QGD_Complex16* A_data = A.get_data();
+	QGD_Complex16* decomposed_data = decomposed_matrix.get_data();
+	QGD_Complex16 phase;
+	phase.real = decomposed_matrix[0].real/(std::sqrt(decomposed_matrix[0].real*decomposed_matrix[0].real + decomposed_matrix[0].imag*decomposed_matrix[0].imag));
+	phase.imag = -decomposed_matrix[0].imag/(std::sqrt(decomposed_matrix[0].real*decomposed_matrix[0].real + decomposed_matrix[0].imag*decomposed_matrix[0].imag));
+
+	for (int idx=0; idx<matrix_size; idx++ ) {
+		for (int jdx=0; jdx<matrix_size; jdx++ ) {
+			
+			if (idx==jdx) {
+				QGD_Complex16 mtx_val = mult(phase, decomposed_data[idx*matrix_size+jdx]);
+				A_data[idx*matrix_size+jdx].real = 2.0 - 2*mtx_val.real;
+				A_data[idx*matrix_size+jdx].imag = 0;
+			}
+			else {
+				QGD_Complex16 mtx_val_ij = mult(phase, decomposed_data[idx*matrix_size+jdx]);
+				QGD_Complex16 mtx_val_ji = mult(phase, decomposed_data[jdx*matrix_size+idx]);
+				A_data[idx*matrix_size+jdx].real = - mtx_val_ij.real - mtx_val_ji.real;
+				A_data[idx*matrix_size+jdx].imag = - mtx_val_ij.imag + mtx_val_ji.imag;
+			}
+
+		}
+	}
+
+
+	Matrix alpha(matrix_size, 1);
+	Matrix beta(matrix_size, 1);
+	Matrix B = create_identity(matrix_size);
+
+	// solve the generalized eigenvalue problem of I- 1/2
+	LAPACKE_zggev( CblasRowMajor, 'N', 'N',
+                          matrix_size, A.get_data(), matrix_size, B.get_data(),
+                          matrix_size, alpha.get_data(),
+                          beta.get_data(), NULL, matrix_size, NULL,
+                          matrix_size );
+
+	// determine the largest eigenvalue
+	double eigval_max = 0;
+	for (int idx=0; idx<matrix_size; idx++) {
+		double eigval_abs = std::sqrt((alpha[idx].real*alpha[idx].real + alpha[idx].imag*alpha[idx].imag) / (beta[idx].real*beta[idx].real + beta[idx].imag*beta[idx].imag));
+		if ( eigval_max < eigval_abs ) eigval_max = eigval_abs;		
+	}
+
+	// the norm is the square root of the largest einegvalue.
+	decomposition_error = std::sqrt(eigval_max);
+
+
+}
 
 
 

@@ -27,8 +27,31 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Decomposition_Base.h"
 #include "Sub_Matrix_Decomposition.h"
 
+#ifdef __cplusplus
+extern "C" 
+{
+#endif
 
+/// Definition of the zggev function from Lapacke to calculate the eigenvalues of a complex matrix
+int LAPACKE_zggev 	( 	int  	matrix_layout,
+		char  	jobvl,
+		char  	jobvr,
+		int  	n,
+		QGD_Complex16 *  	a,
+		int  	lda,
+		QGD_Complex16 *  	b,
+		int  	ldb,
+		QGD_Complex16 *  	alpha,
+		QGD_Complex16 *  	beta,
+		QGD_Complex16 *  	vl,
+		int  	ldvl,
+		QGD_Complex16 *  	vr,
+		int  	ldvr 
+	); 	
 
+#ifdef __cplusplus
+}
+#endif
 
 
 /**
@@ -87,6 +110,14 @@ virtual ~N_Qubit_Decomposition();
 @param prepare_export Logical parameter. Set true to prepare the list of operations to be exported, or false otherwise.
 */
 virtual void start_decomposition(bool finalize_decomp=true, bool prepare_export=true);
+
+
+/**
+@brief Calculate the error of the decomposition according to the spectral norm of \f$ U-U_{approx} \f$, where \f$ U_{approx} \f$ is the unitary produced by the decomposing quantum cirquit. The calculated error is stored in the attribute decomposition_error.
+@param decomposed_matrix The decomposed matrix, i.e. the result of the decomposing gate structure applied on the initial unitary.
+@return Returns with the calculated spectral norm.
+*/
+void calc_decomposition_error(Matrix& decomposed_matrix );
 
 
 
