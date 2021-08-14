@@ -123,7 +123,7 @@ check_function_exists(MKL_Set_Num_Threads BLAS_IS_MKL)
 check_function_exists(openblas_set_num_threads BLAS_IS_OPENBLAS)
 
 # check the presence of lapacke library
-check_function_exists(LAPACKE_zgetri LAPACKE_FOUND)
+check_function_exists(LAPACKE_zggev LAPACKE_FOUND)
 set(CMAKE_REQUIRED_LIBRARIES "")
 
 # If MKL is enabled

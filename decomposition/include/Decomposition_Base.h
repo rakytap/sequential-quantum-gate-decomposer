@@ -80,7 +80,7 @@ protected:
     /// logical value describing whether the decomposition was finalized or not (i.e. whether the decomposed qubits were rotated into the state |0> or not)
     bool decomposition_finalized;
 
-    /// error of the unitarity of the final decomposition
+    /// error of the final decomposition
     double decomposition_error;
 
     /// number of finalizing (deterministic) opertaions rotating the disentangled qubits into state |0>.
