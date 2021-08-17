@@ -352,30 +352,30 @@ class Test_Decomposition:
 
             if target_qbit == 1:
 
-                # add CNOT gate to the block
-                Operation_Block_inner.add_CNOT_To_End( 0, 1)
-
                 # add U3 fate to the block
                 Theta = True
                 Phi = False
                 Lambda = True      
-                Operation_Block_inner.add_U3_To_End( 0, Theta, Phi, Lambda )                 
-                Operation_Block_inner.add_U3_To_End( 1, Theta, Phi, Lambda ) 
+                Operation_Block_inner.add_U3( 0, Theta, Phi, Lambda )                 
+                Operation_Block_inner.add_U3( 1, Theta, Phi, Lambda ) 
+
+                # add CNOT gate to the block
+                Operation_Block_inner.add_CNOT( 0, 1)
 
             else:
 
-                # add CNOT gate to the block
-                Operation_Block_inner.add_CNOT_To_End( control_qbit, target_qbit )
-
                 # add U3 fate to the block
                 Theta = True
                 Phi = False
                 Lambda = True      
-                Operation_Block_inner.add_U3_To_End( target_qbit, Theta, Phi, Lambda )    
-                Operation_Block_inner.add_U3_To_End( control_qbit, Theta, Phi, Lambda )  
+                Operation_Block_inner.add_U3( target_qbit, Theta, Phi, Lambda )    
+                Operation_Block_inner.add_U3( control_qbit, Theta, Phi, Lambda )  
+
+                # add CNOT gate to the block
+                Operation_Block_inner.add_CNOT( control_qbit, target_qbit )
 
 
-            Operation_Block_ret.add_Operation_Block_To_End( Operation_Block_inner )
+            Operation_Block_ret.add_Operation_Block( Operation_Block_inner )
 
         return Operation_Block_ret
     

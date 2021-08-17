@@ -144,7 +144,7 @@ class Test_operations:
 
 
         # add U3 gate to the block
-        Operation_Block.add_U3_To_End( target_qbit, Theta, Phi, Lambda )
+        Operation_Block.add_U3( target_qbit, Theta, Phi, Lambda )
 
 
         # target qbit
@@ -154,7 +154,7 @@ class Test_operations:
         control_qbit = 1  
 
         # add CNOT gate to the block
-        Operation_Block.add_CNOT_To_End( target_qbit, control_qbit )
+        Operation_Block.add_CNOT( target_qbit, control_qbit )
 
 
 
@@ -186,7 +186,7 @@ class Test_operations:
 
 
         # add U3 gate to the block
-        Operation_Block_inner.add_U3_To_End( target_qbit, Theta, Phi, Lambda )
+        Operation_Block_inner.add_U3( target_qbit, Theta, Phi, Lambda )
 
 
         # target qbit
@@ -196,14 +196,14 @@ class Test_operations:
         control_qbit = 1  
 
         # add CNOT gate to the block
-        Operation_Block_inner.add_CNOT_To_End( control_qbit, target_qbit )
+        Operation_Block_inner.add_CNOT( control_qbit, target_qbit )
 
 
         # creating an instance of the C++ class
         Operation_Block_outher = qgd_Operation_Block( qbit_num )   
 
         # add inner operation block to the outher operation block
-        Operation_Block_outher.add_Operation_Block_To_End( Operation_Block_inner )
+        Operation_Block_outher.add_Operation_Block( Operation_Block_inner )
 
 
 

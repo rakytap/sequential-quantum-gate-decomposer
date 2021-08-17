@@ -306,18 +306,19 @@ void Sub_Matrix_Decomposition::add_default_operation_layers() {
             // creating block of operations
             Operation_block* block = new Operation_block( qbit_num );
 
-            // add CNOT gate to the block
-            block->add_cnot_to_end(control_qbit_loc, target_qbit_loc);
-
             // adding U3 operation to the block
             bool Theta = true;
             bool Phi = false;
             bool Lambda = true;
-            block->add_u3_to_end(target_qbit_loc, Theta, Phi, Lambda);
-            block->add_u3_to_end(control_qbit_loc, Theta, Phi, Lambda);
+            block->add_u3(target_qbit_loc, Theta, Phi, Lambda);
+            block->add_u3(control_qbit_loc, Theta, Phi, Lambda);
+
+
+            // add CNOT gate to the block
+            block->add_cnot(control_qbit_loc, target_qbit_loc);
 
             // adding the opeartion block to the operations
-            add_operation_to_end( block );
+            add_operation( block );
 
         }
     }

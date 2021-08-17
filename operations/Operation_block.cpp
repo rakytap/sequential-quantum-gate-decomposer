@@ -229,13 +229,13 @@ void Operation_block::add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool 
 @param Phi The Phi parameter of the U3 operation
 @param Lambda The Lambda parameter of the U3 operation
 */
-void Operation_block::add_u3_to_front(int target_qbit, bool Theta, bool Phi, bool Lambda) {
+void Operation_block::add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda) {
 
         // create the operation
         Operation* operation = static_cast<Operation*>(new U3( qbit_num, target_qbit, Theta, Phi, Lambda ));
 
         // adding the operation to the front of the list of operations
-        add_operation_to_front( operation );
+        add_operation( operation );
 
 }
 
@@ -261,13 +261,13 @@ void Operation_block::add_cnot_to_end( int control_qbit, int target_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Operation_block::add_cnot_to_front( int control_qbit, int target_qbit) {
+void Operation_block::add_cnot( int control_qbit, int target_qbit) {
 
         // new cnot operation
         Operation* operation = static_cast<Operation*>(new CNOT(qbit_num, control_qbit, target_qbit ));
 
         // put the operation to tghe front of the list
-        add_operation_to_front(operation);
+        add_operation(operation);
 
 }
 
@@ -296,13 +296,13 @@ void Operation_block::add_cz_to_end( int control_qbit, int target_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Operation_block::add_cz_to_front( int control_qbit, int target_qbit) {
+void Operation_block::add_cz( int control_qbit, int target_qbit) {
 
         // new cz operation
         Operation* operation = static_cast<Operation*>(new CZ(qbit_num, control_qbit, target_qbit ));
 
         // put the operation to tghe front of the list
-        add_operation_to_front(operation);
+        add_operation(operation);
 
 }
 
@@ -331,13 +331,13 @@ void Operation_block::add_ch_to_end( int control_qbit, int target_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Operation_block::add_ch_to_front( int control_qbit, int target_qbit) {
+void Operation_block::add_ch( int control_qbit, int target_qbit) {
 
         // new cz operation
         Operation* operation = static_cast<Operation*>(new CH(qbit_num, control_qbit, target_qbit ));
 
         // put the operation to tghe front of the list
-        add_operation_to_front(operation);
+        add_operation(operation);
 
 }
 
@@ -358,11 +358,11 @@ void Operation_block::add_operations_to_end( std::vector<Operation*> operations_
 @brief Add an array of operations to the front of the list of operations
 @param operations_in A list of operation class instances.
 */
-void Operation_block::add_operations_to_front( std::vector<Operation*>  operations_in) {
+void Operation_block::add_operations( std::vector<Operation*>  operations_in) {
 
         // adding operations in reversed order!!
         for(std::vector<Operation*>::iterator it = operations_in.end(); it != operations_in.begin(); --it) {
-            add_operation_to_front( *it );
+            add_operation( *it );
         }
 
 }
@@ -395,7 +395,7 @@ void Operation_block::add_operation_to_end( Operation* operation ) {
 @brief Add an operation to the front of the list of operations
 @param operation A pointer to a class Operation describing an operation.
 */
- void Operation_block::add_operation_to_front( Operation* operation) {
+ void Operation_block::add_operation( Operation* operation) {
 
 
         // set the number of qubit in the operation
