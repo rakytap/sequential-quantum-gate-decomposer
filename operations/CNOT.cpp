@@ -57,7 +57,7 @@ CNOT::CNOT() {
 @param target_qbit_in The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit_in The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-CNOT::CNOT(int qbit_num_in, int target_qbit_in,  int control_qbit_in) {
+CNOT::CNOT(int qbit_num_in,  int control_qbit_in, int target_qbit_in) {
 
         // number of qubits spanning the matrix of the operation
         qbit_num = qbit_num_in;
@@ -220,7 +220,7 @@ void CNOT::reorder_qubits( vector<int> qbit_list) {
 */
 CNOT* CNOT::clone() {
 
-    CNOT* ret = new CNOT( qbit_num, target_qbit, control_qbit );
+    CNOT* ret = new CNOT( qbit_num, control_qbit, target_qbit );
 
     return ret;
 

@@ -96,7 +96,7 @@ void add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool Lambda);
 @param Phi The Phi parameter of the U3 operation
 @param Lambda The Lambda parameter of the U3 operation
 */
-void add_u3_to_front(int target_qbit, bool Theta, bool Phi, bool Lambda);
+void add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda);
 
 /**
 @brief Append a CNOT gate operation to the list of operations
@@ -112,7 +112,7 @@ void add_cnot_to_end( int control_qbit, int target_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cnot_to_front( int control_qbit, int target_qbit );
+void add_cnot( int control_qbit, int target_qbit );
 
 
 /**
@@ -129,7 +129,7 @@ void add_cz_to_end( int control_qbit, int target_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cz_to_front( int control_qbit, int target_qbit );
+void add_cz( int control_qbit, int target_qbit );
 
 
 /**
@@ -146,7 +146,7 @@ void add_ch_to_end( int control_qbit, int target_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_ch_to_front( int control_qbit, int target_qbit );
+void add_ch( int control_qbit, int target_qbit );
 
 /**
 @brief Append a list of operations to the list of operations
@@ -159,7 +159,7 @@ void add_operations_to_end( std::vector<Operation*> operations_in );
 @brief Add an array of operations to the front of the list of operations
 @param operations_in A list of operation class instances.
 */
-void add_operations_to_front( std::vector<Operation*> operations_in );
+void add_operations( std::vector<Operation*> operations_in );
 
 
 /**
@@ -172,7 +172,7 @@ void add_operation_to_end( Operation* operation );
 @brief Add an operation to the front of the list of operations
 @param operation A pointer to a class Operation describing an operation.
 */
-void add_operation_to_front( Operation* operation );
+void add_operation( Operation* operation );
 
 
 

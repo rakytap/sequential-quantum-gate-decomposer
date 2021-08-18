@@ -206,7 +206,7 @@ void Decomposition_Base::finalize_decomposition() {
 
         // adding the finalizing operations to the list of operations
         // adding the opeartion block to the operations
-        add_operation_to_front( finalizing_operations );
+        add_operation( finalizing_operations );
 // TODO: use memcpy
         double* optimized_parameters_tmp = (double*)qgd_calloc( (parameter_num),sizeof(double), 64 );
         for (int idx=0; idx < finalizing_parameter_num; idx++) {
@@ -317,7 +317,7 @@ Matrix Decomposition_Base::get_finalizing_operations( Matrix& mtx, Operation_blo
             finalizing_parameters[parameter_idx] = Theta; //np.concatenate((parameters_loc, finalizing_parameters))
             parameter_idx--;
 
-            finalizing_operations->add_operation_to_front( u3_loc );
+            finalizing_operations->add_operation( u3_loc );
             // get the new matrix
 
 
@@ -486,7 +486,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             }
 
             // create a list of operations for the optimization process
-            operations.push_back( fixed_operation_post );
+            operations.push_back( fixed_operation_post ); 
             for ( unsigned int idx=block_idx_end; idx<block_idx_start; idx++ ) {
                 operations.push_back( operations_loc[idx] );
             }
@@ -924,7 +924,7 @@ void Decomposition_Base::Init_max_layer_num() {
 
     // default layer numbers
     max_layer_num_def[2] = 3;
-    max_layer_num_def[3] = 16;
+    max_layer_num_def[3] = 14;
     max_layer_num_def[4] = 60;
     max_layer_num_def[5] = 240;
     max_layer_num_def[6] = 1350;

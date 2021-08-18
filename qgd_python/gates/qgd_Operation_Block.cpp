@@ -134,13 +134,13 @@ static PyMemberDef qgd_Operation_Block_Members[] = {
 
 
 /**
-@brief Wrapper function to add a U3 gate to the end of the gate structure.
+@brief Wrapper function to add a U3 gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Operation_Block.
 @param args A tuple of the input arguments: target_qbit (int), Theta (bool), Phi (bool), Lambda (bool)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Operation_Block_add_U3_To_End(qgd_Operation_Block *self, PyObject *args, PyObject *kwds)
+qgd_Operation_Block_add_U3(qgd_Operation_Block *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -159,7 +159,7 @@ qgd_Operation_Block_add_U3_To_End(qgd_Operation_Block *self, PyObject *args, PyO
 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_u3_to_end(target_qbit, Theta, Phi, Lambda);
+        self->gate->add_u3(target_qbit, Theta, Phi, Lambda);
     }
 
     return Py_BuildValue("i", 0);
@@ -167,13 +167,13 @@ qgd_Operation_Block_add_U3_To_End(qgd_Operation_Block *self, PyObject *args, PyO
 }
 
 /**
-@brief Wrapper function to add a CNOT gate to the end of the gate structure.
+@brief Wrapper function to add a CNOT gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Operation_Block.
 @param args A tuple of the input arguments: control_qbit (int), target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Operation_Block_add_CNOT_To_End(qgd_Operation_Block *self, PyObject *args, PyObject *kwds)
+qgd_Operation_Block_add_CNOT(qgd_Operation_Block *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -191,7 +191,7 @@ qgd_Operation_Block_add_CNOT_To_End(qgd_Operation_Block *self, PyObject *args, P
 
     // adding CNOT gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_cnot_to_end(target_qbit, control_qbit);
+        self->gate->add_cnot(target_qbit, control_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -201,13 +201,13 @@ qgd_Operation_Block_add_CNOT_To_End(qgd_Operation_Block *self, PyObject *args, P
 
 
 /**
-@brief Wrapper function to add a CZ gate to the end of the gate structure.
+@brief Wrapper function to add a CZ gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Operation_Block.
 @param args A tuple of the input arguments: control_qbit (int), target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Operation_Block_add_CZ_To_End(qgd_Operation_Block *self, PyObject *args, PyObject *kwds)
+qgd_Operation_Block_add_CZ(qgd_Operation_Block *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -225,7 +225,7 @@ qgd_Operation_Block_add_CZ_To_End(qgd_Operation_Block *self, PyObject *args, PyO
 
     // adding CZ gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_cz_to_end(target_qbit, control_qbit);
+        self->gate->add_cz(target_qbit, control_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -236,13 +236,13 @@ qgd_Operation_Block_add_CZ_To_End(qgd_Operation_Block *self, PyObject *args, PyO
 
 
 /**
-@brief Wrapper function to add a CH gate to the end of the gate structure.
+@brief Wrapper function to add a CH gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Operation_Block.
 @param args A tuple of the input arguments: control_qbit (int), target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Operation_Block_add_CH_To_End(qgd_Operation_Block *self, PyObject *args, PyObject *kwds)
+qgd_Operation_Block_add_CH(qgd_Operation_Block *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -260,7 +260,7 @@ qgd_Operation_Block_add_CH_To_End(qgd_Operation_Block *self, PyObject *args, PyO
 
     // adding CZ gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_ch_to_end(target_qbit, control_qbit);
+        self->gate->add_ch(target_qbit, control_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -270,13 +270,13 @@ qgd_Operation_Block_add_CH_To_End(qgd_Operation_Block *self, PyObject *args, PyO
 
 
 /**
-@brief Wrapper function to add a block of operations to the end of the gate structure.
+@brief Wrapper function to add a block of operations to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Operation_Block.
 @param args A tuple of the input arguments: Py_qgd_Operation_Block (PyObject)
 Py_qgd_Operation_Block: an instance of qgd_Operation_Block containing the custom gate structure
 */
 static PyObject *
-qgd_Operation_Block_add_Operation_Block_To_End(qgd_Operation_Block *self, PyObject *args)
+qgd_Operation_Block_add_Operation_Block(qgd_Operation_Block *self, PyObject *args)
 {
 
     // initiate variables for input arguments
@@ -292,27 +292,27 @@ qgd_Operation_Block_add_Operation_Block_To_End(qgd_Operation_Block *self, PyObje
 
 
     // adding general gate to the end of the gate structure
-    self->gate->add_operation_to_end( static_cast<Operation*>( qgd_op_block->gate->clone() ) );
+    self->gate->add_operation( static_cast<Operation*>( qgd_op_block->gate->clone() ) );
 
     return Py_BuildValue("i", 0);
 
 }
 
 static PyMethodDef qgd_Operation_Block_Methods[] = {
-    {"add_U3_To_End", (PyCFunction) qgd_Operation_Block_add_U3_To_End, METH_VARARGS | METH_KEYWORDS,
-     "Call to add a U3 gate to the end of the gate structure"
+    {"add_U3", (PyCFunction) qgd_Operation_Block_add_U3, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a U3 gate to the front of the gate structure"
     },
-    {"add_CNOT_To_End", (PyCFunction) qgd_Operation_Block_add_CNOT_To_End, METH_VARARGS | METH_KEYWORDS,
-     "Call to add a CNOT gate to the end of the gate structure"
+    {"add_CNOT", (PyCFunction) qgd_Operation_Block_add_CNOT, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CNOT gate to the front of the gate structure"
     },
-    {"add_CZ_To_End", (PyCFunction) qgd_Operation_Block_add_CZ_To_End, METH_VARARGS | METH_KEYWORDS,
-     "Call to add a CZ gate to the end of the gate structure"
+    {"add_CZ", (PyCFunction) qgd_Operation_Block_add_CZ, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CZ gate to the front of the gate structure"
     },
-    {"add_CH_To_End", (PyCFunction) qgd_Operation_Block_add_CH_To_End, METH_VARARGS | METH_KEYWORDS,
-     "Call to add a CH gate to the end of the gate structure"
+    {"add_CH", (PyCFunction) qgd_Operation_Block_add_CH, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CH gate to the front of the gate structure"
     },
-    {"add_Operation_Block_To_End", (PyCFunction) qgd_Operation_Block_add_Operation_Block_To_End, METH_VARARGS,
-     "Call to add a block of operations to the end of the gate structure."
+    {"add_Operation_Block", (PyCFunction) qgd_Operation_Block_add_Operation_Block, METH_VARARGS,
+     "Call to add a block of operations to the front of the gate structure."
     },
     {NULL}  /* Sentinel */
 };

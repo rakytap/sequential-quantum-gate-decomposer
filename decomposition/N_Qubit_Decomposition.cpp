@@ -434,40 +434,40 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
                 CNOT* cnot_op_cloned = cnot_op->clone();
                 cnot_op_cloned->set_qbit_num( qbit_num );
                 Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
-                add_operation_to_front( op_cloned );
+                add_operation( op_cloned );
             }
             else if (op->get_type() == CZ_OPERATION) {
                 CZ* cz_op = static_cast<CZ*>( op );
                 CZ* cz_op_cloned = cz_op->clone();
                 cz_op_cloned->set_qbit_num( qbit_num );
                 Operation* op_cloned = static_cast<Operation*>( cz_op_cloned );
-                add_operation_to_front( op_cloned );
+                add_operation( op_cloned );
             }
             else if (op->get_type() == CH_OPERATION) {
                 CH* ch_op = static_cast<CH*>( op );
                 CH* ch_op_cloned = ch_op->clone();
                 ch_op_cloned->set_qbit_num( qbit_num );
                 Operation* op_cloned = static_cast<Operation*>( ch_op_cloned );
-                add_operation_to_front( op_cloned );
+                add_operation( op_cloned );
             }
             else if (op->get_type() == U3_OPERATION) {
                 U3* u3_op = static_cast<U3*>( op );
                 U3* u3_op_cloned = u3_op->clone();
                 u3_op_cloned->set_qbit_num( qbit_num );
                 Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
-                add_operation_to_front( op_cloned );
+                add_operation( op_cloned );
             }
             else if (op->get_type() == BLOCK_OPERATION) {
                 Operation_block* block_op = static_cast<Operation_block*>( op );
                 Operation_block* block_op_cloned = block_op->clone();
                 block_op_cloned->set_qbit_num( qbit_num );
                 Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
-                add_operation_to_front( op_cloned );
+                add_operation( op_cloned );
             }
             else if (op->get_type() == GENERAL_OPERATION) {
                 Operation* op_cloned = op->clone();
                 op_cloned->set_qbit_num( qbit_num );
-                add_operation_to_front( op_cloned );
+                add_operation( op_cloned );
             }
         }
 
@@ -872,6 +872,7 @@ N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameter
 
         qbits_reordered.push_back(control_qbit);
         qbits_reordered.push_back(target_qbit);
+
 
         // construct abstarct operations correspond to the reordeerd qubits
         Operation_block* reordered_layer = layer->clone();
