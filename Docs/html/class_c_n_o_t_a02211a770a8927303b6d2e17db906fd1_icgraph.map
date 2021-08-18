@@ -1,6 +1,6 @@
 <map id="CNOT::get_matrix" name="CNOT::get_matrix">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a7523e317319932fe86ee5eb5e18b95a0" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="555,5,719,47"/>
-<area shape="rect" id="node3" href="$classfunctor__get__operation__matrices.html#a13a446a1da6ee8ed165801ad66b49784" title="Operator to calculate th ematrix representation of operation labeled by i. " alt="" coords="563,136,710,177"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a542d64209fd50c43bf30401b5f6fcf03" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="555,5,719,47"/>
+<area shape="rect" id="node3" href="$classfunctor__get__operation__matrices.html#a805f115648a071662183cbee70c67676" title="Operator to calculate th ematrix representation of operation labeled by i. " alt="" coords="563,136,710,177"/>
 <area shape="rect" id="node4" href="$class_operation__block.html#a9950bdb493faaf4ed050c39b07a4ac02" title="Call to get the list of matrix representation of the operations grouped in the block. " alt="" coords="179,71,319,112"/>
 <area shape="rect" id="node11" href="$_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="183,187,315,214"/>
 <area shape="rect" id="node5" href="$class_operation__block.html#a2e978e3b5773b7ab03b4f15021207090" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="367,71,507,112"/>

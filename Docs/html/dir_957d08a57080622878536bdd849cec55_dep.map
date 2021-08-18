@@ -1,0 +1,19 @@
+<map id="sequential&#45;quantum&#45;gate&#45;decomposer" name="sequential&#45;quantum&#45;gate&#45;decomposer">
+<area shape="rect" id="node2" href="dir_a1dcc3f9cc085a6628348bc1c65e339a.html" title="common" alt="" coords="92,315,164,363"/>
+<area shape="rect" id="node3" href="dir_7a654b08d322653d6f2669f0b947e116.html" title="decomposition" alt="" coords="189,123,296,171"/>
+<area shape="rect" id="edge8-headlabel" href="dir_000006_000003.html" title="4" alt="" coords="147,294,155,308"/>
+<area shape="rect" id="node4" href="dir_0474def650633b4d6fede40b00b50cd7.html" title="operations" alt="" coords="196,219,279,267"/>
+<area shape="rect" id="edge7-headlabel" href="dir_000006_000001.html" title="9" alt="" coords="244,194,252,208"/>
+<area shape="rect" id="edge1-headlabel" href="dir_000001_000003.html" title="7" alt="" coords="170,302,178,317"/>
+<area shape="rect" id="node5" href="dir_f0bf151c3271993886dfadc8feae63df.html" title="qgd_python" alt="" coords="165,27,253,75"/>
+<area shape="rect" id="edge10-headlabel" href="dir_000008_000006.html" title="1" alt="" coords="232,95,240,110"/>
+<area shape="rect" id="edge9-headlabel" href="dir_000008_000001.html" title="5" alt="" coords="285,205,293,220"/>
+<area shape="rect" id="node6" href="dir_6d38cf0562eec6661349b78ef2b3473e.html" title="random_unitary" alt="" coords="54,123,165,171"/>
+<area shape="rect" id="edge3-headlabel" href="dir_000010_000003.html" title="2" alt="" coords="128,288,136,303"/>
+<area shape="rect" id="edge2-headlabel" href="dir_000010_000001.html" title="2" alt="" coords="192,194,200,208"/>
+<area shape="rect" id="node7" href="dir_77331c53b82476fc3b549f90d1d1d1a4.html" title="test_standalone" alt="" coords="27,27,141,75"/>
+<area shape="rect" id="edge5-headlabel" href="dir_000005_000003.html" title="2" alt="" coords="104,287,112,302"/>
+<area shape="rect" id="edge6-headlabel" href="dir_000005_000006.html" title="2" alt="" coords="188,99,196,113"/>
+<area shape="rect" id="edge4-headlabel" href="dir_000005_000010.html" title="2" alt="" coords="103,95,111,110"/>
+<area shape="rect" id="clust1" href="dir_957d08a57080622878536bdd849cec55.html" alt="" coords="16,16,528,373"/>
+</map>

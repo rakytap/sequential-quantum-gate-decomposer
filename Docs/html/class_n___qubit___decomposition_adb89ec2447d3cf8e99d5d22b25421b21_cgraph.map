@@ -2,11 +2,11 @@
 <area shape="rect" id="node2" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="216,276,361,332"/>
 <area shape="rect" id="node3" href="$class_operation.html#a55f76bcb8990f4dba577990af0c8399e" title="Default constructor of the class. " alt="" coords="424,5,564,32"/>
 <area shape="rect" id="node4" href="$common_8cpp.html#a478212437ad8647d21171d23c98ae52a" title="Call to create an identity matrix. " alt="" coords="646,56,753,83"/>
-<area shape="rect" id="node7" href="$class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="412,225,576,266"/>
+<area shape="rect" id="node7" href="$class_decomposition___base.html#a88bfddd83a85d1d0322304815216bf4d" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="412,225,576,266"/>
 <area shape="rect" id="node8" href="$class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="449,291,539,317"/>
 <area shape="rect" id="node10" href="$class_decomposition___base.html#af9bd082b6c17ecaea5657059dabfe083" title="Apply an operations on the input matrix. " alt="" coords="627,166,772,207"/>
 <area shape="rect" id="node22" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="458,341,530,368"/>
-<area shape="rect" id="node23" href="$class_decomposition___base.html#aff590cb39666a9b900058ed775c402fb" title="Calculate the list of gate operation matrices such that the i&gt;0&#45;th element in the result list is the ..." alt="" coords="413,107,575,149"/>
+<area shape="rect" id="node23" href="$class_decomposition___base.html#adf9819a43b68c73dbcd16b72e35240e7" title="Calculate the list of gate operation matrices such that the i&gt;0&#45;th element in the result list is the ..." alt="" coords="413,107,575,149"/>
 <area shape="rect" id="node24" href="$class_operation.html#a5930c5c4c2e430cdbf03a145a00594d2" title="Call to set the stored matrix in the operation. " alt="" coords="422,392,566,419"/>
 <area shape="rect" id="node25" href="$class_decomposition___base.html#a5a4fba71fd475a25fd55b1f4f2dc4c86" title="Abstarct function to be used to solve a single sub&#45;layer optimization problem. " alt="" coords="409,443,579,499"/>
 <area shape="rect" id="node26" href="$class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="421,523,567,579"/>

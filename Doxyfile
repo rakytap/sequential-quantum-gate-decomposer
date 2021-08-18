@@ -856,13 +856,13 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = /python_interface.h \
-                         /qgd_python/__init__.py \
-                         /build \
-                         /common/include/Config.h \
-                         /qgd_python/gates/__init__.py \
-                         /qgd_python/gates/test/__init__.py \
-                         /qgd_python/test/__init__.py
+EXCLUDE                = python_interface.h \
+                         qgd_python/__init__.py \
+                         build \
+                         common/include/Config.h \
+                         qgd_python/gates/__init__.py \
+                         qgd_python/gates/test/__init__.py \
+                         qgd_python/test/__init__.py
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded

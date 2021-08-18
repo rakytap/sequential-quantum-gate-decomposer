@@ -1,8 +1,8 @@
 <map id="Matrix::Matrix" name="Matrix::Matrix">
-<area shape="rect" id="node2" href="$class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="152,86,243,113"/>
+<area shape="rect" id="node2" href="$class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="152,85,243,111"/>
 <area shape="rect" id="node3" href="$class_decomposition___base.html#ad1502d076d0ec0c5cd8b301340fe8ffe" title="This method determine the operations needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="291,5,460,47"/>
-<area shape="rect" id="node10" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="303,71,448,127"/>
-<area shape="rect" id="node13" href="$class_decomposition___base.html#a7523e317319932fe86ee5eb5e18b95a0" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="293,152,457,193"/>
+<area shape="rect" id="node10" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="303,70,448,126"/>
+<area shape="rect" id="node13" href="$class_decomposition___base.html#a542d64209fd50c43bf30401b5f6fcf03" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="293,149,457,191"/>
 <area shape="rect" id="node4" href="$class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="519,5,677,47"/>
 <area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="736,71,899,112"/>
 <area shape="rect" id="node6" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1003,19,1053,46"/>

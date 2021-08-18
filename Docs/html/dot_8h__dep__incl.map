@@ -1,35 +1,41 @@
 <map id="dot.h" name="dot.h">
-<area shape="rect" id="node2" href="$dot_8cpp.html" title="dot.cpp" alt="" coords="48,162,112,189"/>
-<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="727,80,809,107"/>
-<area shape="rect" id="node4" href="$common_8cpp.html" title="Provides commonly used functions and wrappers to CBLAS functions. " alt="" coords="1816,162,1912,189"/>
-<area shape="rect" id="node5" href="$_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="5,423,163,464"/>
-<area shape="rect" id="node8" href="$_functor___get___operation___products_8h.html" title="Header file for the parallelized calculation of the vector containing the products of operations (sup..." alt="" coords="397,333,555,375"/>
-<area shape="rect" id="node10" href="$_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="612,155,775,196"/>
-<area shape="rect" id="node13" href="$_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="238,155,418,196"/>
-<area shape="rect" id="node15" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="829,162,917,189"/>
-<area shape="rect" id="node21" href="$custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="1651,587,1805,628"/>
-<area shape="rect" id="node22" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="1250,594,1409,621"/>
-<area shape="rect" id="node27" href="$_random___unitary_8h.html" title="Random_Unitary.h" alt="" coords="1320,341,1448,367"/>
-<area shape="rect" id="node29" href="$_operation__block_8h.html" title="Header file for a class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="982,251,1109,278"/>
-<area shape="rect" id="node6" href="$_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="261,587,419,628"/>
-<area shape="rect" id="node7" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="98,512,302,539"/>
-<area shape="rect" id="node9" href="$_functor___get___operation___products_8cpp.html" title="Methods and classes for the parallelized calculation of the vector containing the products of operati..." alt="" coords="397,423,555,464"/>
-<area shape="rect" id="node11" href="$_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations..." alt="" coords="507,594,693,621"/>
-<area shape="rect" id="node12" href="$_n___qubit___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the final optimization problem (supporting parallel computa..." alt="" coords="493,244,656,285"/>
-<area shape="rect" id="node14" href="$_sub___matrix___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the sub&#45;disantenglement problem with TBB parallelization..." alt="" coords="238,244,418,285"/>
-<area shape="rect" id="node16" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="1191,251,1260,278"/>
-<area shape="rect" id="node31" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="782,251,831,278"/>
-<area shape="rect" id="node34" href="$_operation_8cpp.html" title="Class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="855,251,958,278"/>
-<area shape="rect" id="node17" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="781,341,936,367"/>
-<area shape="rect" id="node24" href="$_c_n_o_t_8cpp.html" title="Class representing a CNOT operation. " alt="" coords="1472,341,1555,367"/>
-<area shape="rect" id="node25" href="$_operation__block_8cpp.html" title="Class responsible for grouping CNOT and U3 operations into layers. " alt="" coords="1155,341,1295,367"/>
-<area shape="rect" id="node26" href="$qgd___c_n_o_t_8cpp.html" title="qgd_CNOT.cpp" alt="" coords="1579,341,1690,367"/>
-<area shape="rect" id="node18" href="$_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process. " alt="" coords="794,430,963,457"/>
-<area shape="rect" id="node19" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="789,512,963,539"/>
-<area shape="rect" id="node23" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="579,430,770,457"/>
-<area shape="rect" id="node20" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="781,587,971,628"/>
-<area shape="rect" id="node28" href="$_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="1367,430,1510,457"/>
-<area shape="rect" id="node30" href="$qgd___operation___block_8cpp.html" title="qgd_Operation_Block.cpp" alt="" coords="960,341,1131,367"/>
-<area shape="rect" id="node32" href="$_u3_8cpp.html" title="Class representing a U3 operation. " alt="" coords="694,341,757,367"/>
-<area shape="rect" id="node33" href="$qgd___u3_8cpp.html" title="qgd_U3.cpp" alt="" coords="579,341,669,367"/>
+<area shape="rect" id="node2" href="$dot_8cpp.html" title="dot.cpp" alt="" coords="5,162,69,189"/>
+<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="1253,80,1336,107"/>
+<area shape="rect" id="node4" href="$common_8cpp.html" title="Provides commonly used functions and wrappers to CBLAS functions. " alt="" coords="2259,162,2355,189"/>
+<area shape="rect" id="node5" href="$_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="149,423,307,464"/>
+<area shape="rect" id="node8" href="$_functor___get___operation___products_8h.html" title="Header file for the parallelized calculation of the vector containing the products of operations (sup..." alt="" coords="1531,333,1688,375"/>
+<area shape="rect" id="node10" href="$_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="93,155,256,196"/>
+<area shape="rect" id="node13" href="$_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="474,155,654,196"/>
+<area shape="rect" id="node15" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="1203,162,1291,189"/>
+<area shape="rect" id="node21" href="$custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="1824,587,1979,628"/>
+<area shape="rect" id="node22" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="2091,594,2250,621"/>
+<area shape="rect" id="node30" href="$_random___unitary_8h.html" title="Random_Unitary.h" alt="" coords="1955,341,2083,367"/>
+<area shape="rect" id="node35" href="$_operation__block_8h.html" title="Header file for a class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit operations into..." alt="" coords="1294,251,1421,278"/>
+<area shape="rect" id="node6" href="$_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="524,587,681,628"/>
+<area shape="rect" id="node7" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="266,512,470,539"/>
+<area shape="rect" id="node9" href="$_functor___get___operation___products_8cpp.html" title="Methods and classes for the parallelized calculation of the vector containing the products of operati..." alt="" coords="1249,423,1407,464"/>
+<area shape="rect" id="node11" href="$_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="139,594,325,621"/>
+<area shape="rect" id="node12" href="$_n___qubit___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the final optimization problem (supporting parallel computa..." alt="" coords="93,244,256,285"/>
+<area shape="rect" id="node14" href="$_sub___matrix___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the sub&#45;disantenglement problem with TBB parallelization..." alt="" coords="474,244,654,285"/>
+<area shape="rect" id="node16" href="$_c_h_8h.html" title="Header file for a class representing a CH operation. " alt="" coords="880,251,931,278"/>
+<area shape="rect" id="node27" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="1503,251,1572,278"/>
+<area shape="rect" id="node32" href="$_c_z_8h.html" title="Header file for a class representing a CZ operation. " alt="" coords="806,251,855,278"/>
+<area shape="rect" id="node37" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="1094,251,1143,278"/>
+<area shape="rect" id="node40" href="$_operation_8cpp.html" title="Class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="1167,251,1270,278"/>
+<area shape="rect" id="node17" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="791,341,945,367"/>
+<area shape="rect" id="node24" href="$_c_h_8cpp.html" title="Class representing a CH operation. " alt="" coords="702,341,767,367"/>
+<area shape="rect" id="node25" href="$_operation__block_8cpp.html" title="Class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit operations into layers..." alt="" coords="1171,341,1311,367"/>
+<area shape="rect" id="node26" href="$qgd___c_h_8cpp.html" title="qgd_CH.cpp" alt="" coords="584,341,677,367"/>
+<area shape="rect" id="node18" href="$_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process. " alt="" coords="722,430,891,457"/>
+<area shape="rect" id="node19" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="779,512,952,539"/>
+<area shape="rect" id="node23" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="507,430,698,457"/>
+<area shape="rect" id="node20" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="770,587,961,628"/>
+<area shape="rect" id="node28" href="$_c_n_o_t_8cpp.html" title="Class representing a CNOT operation. " alt="" coords="1848,341,1931,367"/>
+<area shape="rect" id="node29" href="$qgd___c_n_o_t_8cpp.html" title="qgd_CNOT.cpp" alt="" coords="1713,341,1823,367"/>
+<area shape="rect" id="node31" href="$_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="1939,430,2082,457"/>
+<area shape="rect" id="node33" href="$_c_z_8cpp.html" title="Class representing a CZ operation. " alt="" coords="382,341,445,367"/>
+<area shape="rect" id="node34" href="$qgd___c_z_8cpp.html" title="qgd_CZ.cpp" alt="" coords="469,341,560,367"/>
+<area shape="rect" id="node36" href="$qgd___operation___block_8cpp.html" title="qgd_Operation_Block.cpp" alt="" coords="1336,341,1507,367"/>
+<area shape="rect" id="node38" href="$_u3_8cpp.html" title="Class representing a U3 operation. " alt="" coords="1085,341,1147,367"/>
+<area shape="rect" id="node39" href="$qgd___u3_8cpp.html" title="qgd_U3.cpp" alt="" coords="969,341,1060,367"/>
 </map>

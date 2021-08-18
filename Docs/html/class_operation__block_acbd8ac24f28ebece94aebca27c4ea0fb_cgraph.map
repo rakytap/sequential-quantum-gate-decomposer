@@ -1,0 +1,7 @@
+<map id="Operation_block::add_ch_to_front" name="Operation_block::add_ch_to_front">
+<area shape="rect" id="node2" href="$class_operation__block.html#a1db22aed1f33a97bcaa2fad8c321a243" title="Add an operation to the front of the list of operations. " alt="" coords="196,73,339,114"/>
+<area shape="rect" id="node3" href="$class_operation.html#ac107f65f10f3064e64372d4d17f2ff9b" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="405,29,567,56"/>
+<area shape="rect" id="node5" href="$class_operation.html#a5e5179f88c49f30428fd994913299a46" title="Call to get the number of free parameters. " alt="" coords="387,80,585,107"/>
+<area shape="rect" id="node6" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="419,131,553,157"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="633,29,724,56"/>
+</map>

@@ -1,10 +1,10 @@
 <map id="Random_Unitary.h" name="Random_Unitary.h">
-<area shape="rect" id="node6" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="353,229,435,256"/>
-<area shape="rect" id="node13" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="702,379,769,405"/>
-<area shape="rect" id="node26" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="643,80,692,107"/>
-<area shape="rect" id="node29" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="742,80,811,107"/>
-<area shape="rect" id="node8" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="433,528,529,555"/>
-<area shape="rect" id="node12" href="$dot_8h.html" title="dot.h" alt="" coords="409,304,459,331"/>
-<area shape="rect" id="node14" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="565,453,668,480"/>
-<area shape="rect" id="node27" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="658,155,746,181"/>
+<area shape="rect" id="node6" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="393,229,475,256"/>
+<area shape="rect" id="node13" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="806,379,873,405"/>
+<area shape="rect" id="node26" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="623,80,672,107"/>
+<area shape="rect" id="node29" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="739,80,809,107"/>
+<area shape="rect" id="node8" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="565,528,661,555"/>
+<area shape="rect" id="node12" href="$dot_8h.html" title="dot.h" alt="" coords="510,304,561,331"/>
+<area shape="rect" id="node14" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="783,453,885,480"/>
+<area shape="rect" id="node27" href="$_operation_8h.html" title="Header file for a class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="638,155,726,181"/>
 </map>

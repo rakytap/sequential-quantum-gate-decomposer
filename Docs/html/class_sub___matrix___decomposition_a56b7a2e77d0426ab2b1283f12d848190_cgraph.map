@@ -1,5 +1,5 @@
 <map id="Sub_Matrix_Decomposition::optimization_problem" name="Sub_Matrix_Decomposition::optimization_problem">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a3e1c9c7d8252d13658bbc6df05f592d9" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="233,5,397,47"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a88bfddd83a85d1d0322304815216bf4d" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="233,5,397,47"/>
 <area shape="rect" id="node3" href="$class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="268,71,363,98"/>
 <area shape="rect" id="node4" href="$_sub___matrix___decomposition___cost___function_8h.html#a6f8a34a10e6654b40f899ecb8d199776" title="Call to calculate the cost function of a given matrix during the submatrix decomposition process..." alt="" coords="248,123,383,164"/>
 </map>
