@@ -1,4 +1,4 @@
-# Doxyfile 1.8.13
+# Doxyfile 1.8.11
 
 # This file describes the settings to be used by the documentation system
 # doxygen (www.doxygen.org) for a project.
@@ -44,7 +44,7 @@ PROJECT_NUMBER         = v1.5
 # for a project that appears at the top of each page and should give viewer a
 # quick idea about the purpose of the project. Keep the description short.
 
-PROJECT_BRIEF          = "Powerful decomposition of almost any unitary into U3 and CNOT gates"
+PROJECT_BRIEF          = "Powerful decomposition of general unitarias into one- and two-qubit gates gates"
 
 # With the PROJECT_LOGO tag one can specify a logo or an icon that is included
 # in the documentation. The maximum height of the logo should not exceed 55
@@ -58,7 +58,7 @@ PROJECT_LOGO           =
 # entered, it will be relative to the location where doxygen was started. If
 # left blank the current directory will be used.
 
-OUTPUT_DIRECTORY       = ../Docs
+OUTPUT_DIRECTORY       = Docs
 
 # If the CREATE_SUBDIRS tag is set to YES then doxygen will create 4096 sub-
 # directories (in 2 levels) under the output directory of each output format and
@@ -239,7 +239,7 @@ TAB_SIZE               = 5
 # newlines.
 
 ALIASES                = QGD=SQUANDER \
-                         version=v1.4 \
+                         version=v1.5 \
                          "index=<a href=\"index.html\">Main Page</a>" \
                          "python_iface=<a href=\"group__python.html\">QGD Python Interface</a>" \
                          "example=<a href=\"group__examples.html\">Examples</a>"
@@ -306,15 +306,6 @@ EXTENSION_MAPPING      =
 # The default value is: YES.
 
 MARKDOWN_SUPPORT       = YES
-
-# When the TOC_INCLUDE_HEADINGS tag is set to a non-zero value, all headings up
-# to that level are automatically included in the table of contents, even if
-# they do not have an id attribute.
-# Note: This feature currently applies only to Markdown headings.
-# Minimum value: 0, maximum value: 99, default value: 0.
-# This tag requires that the tag MARKDOWN_SUPPORT is set to YES.
-
-TOC_INCLUDE_HEADINGS   = 0
 
 # When enabled doxygen tries to link words that correspond to documented
 # classes, or namespaces to their corresponding documentation. Such a link can
@@ -707,7 +698,7 @@ FILE_VERSION_FILTER    =
 # DoxygenLayout.xml, doxygen will parse it automatically even if the LAYOUT_FILE
 # tag is left empty.
 
-LAYOUT_FILE            = DoxygenLayout.xml
+LAYOUT_FILE            = Doxygen/DoxygenLayout.xml
 
 # The CITE_BIB_FILES tag can be used to specify one or more bib files containing
 # the reference definitions. This must be a list of .bib files. The .bib
@@ -794,7 +785,7 @@ WARN_LOGFILE           =
 # spaces. See also FILE_PATTERNS and EXTENSION_MAPPING
 # Note: If this tag is empty the current directory is searched.
 
-INPUT                  = ../
+INPUT                  = .
 
 # This tag can be used to specify the character encoding of the source files
 # that doxygen parses. Internally doxygen uses the UTF-8 encoding. Doxygen uses
@@ -816,8 +807,8 @@ INPUT_ENCODING         = ISO-8859-1
 # If left blank the following patterns are tested:*.c, *.cc, *.cxx, *.cpp,
 # *.c++, *.java, *.ii, *.ixx, *.ipp, *.i++, *.inl, *.idl, *.ddl, *.odl, *.h,
 # *.hh, *.hxx, *.hpp, *.h++, *.cs, *.d, *.php, *.php4, *.php5, *.phtml, *.inc,
-# *.m, *.markdown, *.md, *.mm, *.dox, *.py, *.pyw, *.f90, *.f95, *.f03, *.f08,
-# *.f, *.for, *.tcl, *.vhd, *.vhdl, *.ucf and *.qsf.
+# *.m, *.markdown, *.md, *.mm, *.dox, *.py, *.pyw, *.f90, *.f, *.for, *.tcl,
+# *.vhd, *.vhdl, *.ucf, *.qsf, *.as and *.js.
 
 FILE_PATTERNS          = *.c \
                          *.cc \
@@ -865,13 +856,13 @@ RECURSIVE              = YES
 # Note that relative paths are relative to the directory from which doxygen is
 # run.
 
-EXCLUDE                = ../python_interface.h \
-                         ../qgd_python/__init__.py \
-                         ../build \
-                         ../common/include/Config.h \
-                         ../qgd_python/gates/__init__.py \
-                         ../qgd_python/gates/test/__init__.py \
-                         ../qgd_python/test/__init__.py
+EXCLUDE                = /python_interface.h \
+                         /qgd_python/__init__.py \
+                         /build \
+                         /common/include/Config.h \
+                         /qgd_python/gates/__init__.py \
+                         /qgd_python/gates/test/__init__.py \
+                         /qgd_python/test/__init__.py
 
 # The EXCLUDE_SYMLINKS tag can be used to select whether or not files or
 # directories that are symbolic links (a Unix file system feature) are excluded
@@ -904,8 +895,8 @@ EXCLUDE_SYMBOLS        =
 # that contain example code fragments that are included (see the \include
 # command).
 
-EXAMPLE_PATH           = ../example.py \
-                         ../test_standalone/decomposition_test.cpp
+EXAMPLE_PATH           = example.py \
+                         test_standalone/decomposition_test.cpp
 
 # If the value of the EXAMPLE_PATH tag contains directories, you can use the
 # EXAMPLE_PATTERNS tag to specify one or more wildcard pattern (like *.cpp and
@@ -1178,7 +1169,7 @@ HTML_FOOTER            =
 # obsolete.
 # This tag requires that the tag GENERATE_HTML is set to YES.
 
-HTML_STYLESHEET        = QGD_customdoxygen.css
+HTML_STYLESHEET        = Doxygen/QGD_customdoxygen.css
 
 # The HTML_EXTRA_STYLESHEET tag can be used to specify additional user-defined
 # cascading style sheets that are included after the standard style sheets
@@ -1736,7 +1727,7 @@ EXTRA_PACKAGES         = times
 # to HTML_HEADER.
 # This tag requires that the tag GENERATE_LATEX is set to YES.
 
-LATEX_HEADER           = header.tex
+LATEX_HEADER           = Doxygen/header.tex
 
 # The LATEX_FOOTER tag can be used to specify a personal LaTeX footer for the
 # generated LaTeX document. The footer should contain everything after the last
@@ -2421,11 +2412,6 @@ DIAFILE_DIRS           =
 # will not generate output for the diagram.
 
 PLANTUML_JAR_PATH      = 
-
-# When using plantuml, the PLANTUML_CFG_FILE tag can be used to specify a
-# configuration file for plantuml.
-
-PLANTUML_CFG_FILE      = 
 
 # When using plantuml, the specified paths are searched for files specified by
 # the !include statement in a plantuml block.
