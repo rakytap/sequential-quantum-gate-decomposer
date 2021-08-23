@@ -128,30 +128,30 @@ $ python3 setup.py bdist_wheel
 in the root directory of the SQUADER package.
 The created Piquasso Boost wheel can be installed on the local machine by issuing the command from the directory **path/to/SQUANDER/package/dist**
 
-$ pip3 install piquassoboost-*.whl
+$ pip3 install qgd-*.whl
 
 We notice, that the created wheel is not portable, since it contains hard coded link to external libraries (TBB and CBLAS).
 
 
 ### Source distribution
 
-A portable source distribution of the Piquasso Boost library can be created by a command launched from the root directory of the Piquasso Boost package:
+A portable source distribution of the SQUANDER package can be created by a command launched from the root directory of the SQUANDER package:
 
 $ python3 setup.py sdist
 
-In order to create a source distribution it is not necessary to set the environment variables, since this script only collects the necessary files and pack them into a tar ball located in the directory **path/to/piquasso_boost/library/dist**. 
-In order to install the Piquasso Boost package from source tar ball, see the previous section discussing the initialization of the environment variables.
+In order to create a source distribution it is not necessary to set the environment variables, since this script only collects the necessary files and pack them into a tar ball located in the directory **path/to/SQUANDER/package/dist**. 
+In order to install the SQUANDER package from source tar ball, see the previous section discussing the initialization of the environment variables.
 The package can be compiled and installed by the command
 
-$ pip3 install piquassoboost-*.tar.gz
+$ pip3 install qgd-*.tar.gz
 
-issued from directory **path/to/piquasso_boost/library/dist**
+issued from directory **path/to/SQUANDER/package/dist**
 (It is optional to install the ninja package which speeds up the building process by parallel compilation.)
 
 
 ### How to use
 
-The algorithm implemented in the SQUANDER package intends to transform the given unitary into an identity matrix via a sequence of CNOT and U3 operations applied on the unitary. 
+The algorithm implemented in the SQUANDER package intends to transform the given unitary into an identity matrix via a sequence of two-qubit and one-qubit gate operations applied on the unitary. 
 Thus, in order to get the decomposition of a unitary, one should rather provide the complex transpose of this unitary as the input for the SQUANDER decomposing process, as can be seen in the examples.
 
 ## Standalone executable

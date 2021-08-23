@@ -394,8 +394,10 @@ add_subdirectory (qgd_python/decomposition)
 add_subdirectory (qgd_python/gates)
 
 
-# adding CMAKE files for executables
-add_subdirectory (test_standalone)
+if(DEFINED ENV{QGD_CTEST})
+    # adding CMAKE files for executables
+    add_subdirectory (test_standalone)
+endif()
 
 
 install(TARGETS qgd LIBRARY DESTINATION qgd_python)

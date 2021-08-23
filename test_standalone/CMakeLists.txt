@@ -48,6 +48,3 @@ target_link_libraries (custom_gate_structure_test
                            ${GSL_LIBS})
 
 
-
-
-
