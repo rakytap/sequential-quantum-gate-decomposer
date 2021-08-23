@@ -1,0 +1,11 @@
+<map id="Gate::get_matrix" name="Gate::get_matrix">
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a9ddb4adf4b04cc6cd51a27da9bd6ec83" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="603,5,767,47"/>
+<area shape="rect" id="node3" href="$classfunctor__get__operation__matrices.html#a13a446a1da6ee8ed165801ad66b49784" title="Operator to calculate th ematrix representation of operation labeled by i. " alt="" coords="611,136,758,177"/>
+<area shape="rect" id="node4" href="$class_gates__block.html#a4038023d10997edd9c9e0f1fcf9898a4" title="Call to get the list of matrix representation of the gates grouped in the block. " alt="" coords="169,78,345,105"/>
+<area shape="rect" id="node5" href="$class_gates__block.html#ad1840c6b3072f1853c7f91eccc5e777b" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="393,78,555,105"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="603,71,766,112"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="815,41,977,83"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1025,71,1188,112"/>
+<area shape="rect" id="node9" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1292,19,1343,46"/>
+<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1236,71,1399,112"/>
+</map>

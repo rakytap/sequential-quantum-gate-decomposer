@@ -1,0 +1,3 @@
+include pyproject.toml
+global-include *.h *h.in *.c *.cpp *.hpp CMakeLists.txt README.md setup.py
+prune _skbuild

@@ -41,17 +41,17 @@ using namespace std;
 @param qbit_num The number of qubits for which the gate structure is constructed.
 @return Returns with a gate structure to be used in the decomposition.
 */
-Operation_block* create_custom_gate_structure( int qbit_num ) {
+Gates_block* create_custom_gate_structure( int qbit_num ) {
 
         // creating an instance of the wrapper class qgd_Operation_Block
-        Operation_block* Operation_Block_ret = new Operation_block( qbit_num );
+        Gates_block* Operation_Block_ret = new Gates_block( qbit_num );
 
         int control_qbit = qbit_num - 1;
 
         for ( int target_qbit=0;  target_qbit< control_qbit; target_qbit++ ) {
 
             // creating an instance of the wrapper class qgd_Operation_Block
-            Operation_block* Operation_Block_inner = new Operation_block( qbit_num );
+            Gates_block* Operation_Block_inner = new Gates_block( qbit_num );
 
             if (target_qbit == 1) {
 
@@ -79,7 +79,7 @@ Operation_block* create_custom_gate_structure( int qbit_num ) {
                 Operation_Block_inner->add_u3_to_end( control_qbit, Theta, Phi, Lambda );
             }
 
-            Operation_Block_ret->add_operation_to_end( (Operation*)Operation_Block_inner );
+            Operation_Block_ret->add_gate_to_end( (Gate*)Operation_Block_inner );
 
         }
 
@@ -136,9 +136,9 @@ int main() {
 
 //! [creating custom gate structure]
     // creating custom gate structure for the decomposition
-    std::map<int, Operation_block*> gate_structure;
-    gate_structure.insert( pair<int, Operation_block*>(qbit_num, create_custom_gate_structure( qbit_num ) ) );
-    gate_structure.insert( pair<int, Operation_block*>(qbit_num-1, create_custom_gate_structure( qbit_num-1 ) ) );
+    std::map<int, Gates_block*> gate_structure;
+    gate_structure.insert( pair<int, Gates_block*>(qbit_num, create_custom_gate_structure( qbit_num ) ) );
+    gate_structure.insert( pair<int, Gates_block*>(qbit_num-1, create_custom_gate_structure( qbit_num-1 ) ) );
 
     // setting the custom gate structure in the decomposition class
     cDecomposition.set_custom_gate_structure( gate_structure);
@@ -154,7 +154,7 @@ int main() {
     // starting the decomposition
     cDecomposition.start_decomposition(/* finalize_decomposition = */ true, /* prepare_export= */ true);
 
-    cDecomposition.list_operations(1);
+    cDecomposition.list_gates(1);
 //! [performing decomposition]
 
 

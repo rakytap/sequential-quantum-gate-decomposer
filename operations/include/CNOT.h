@@ -25,7 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define CNOT_H
 
 #include "matrix.h"
-#include "Operation.h"
+#include "Gate.h"
 #include <math.h>
 
 
@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief A class representing a CNOT operation.
 */
-class CNOT: public Operation {
+class CNOT: public Gate {
 
 protected:
 

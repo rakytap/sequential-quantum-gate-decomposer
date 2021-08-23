@@ -25,7 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define CH_H
 
 #include "matrix.h"
-#include "Operation.h"
+#include "Gate.h"
 #include <math.h>
 
 
@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief A class representing a CH operation.
 */
-class CH: public Operation {
+class CH: public Gate {
 
 protected:
 

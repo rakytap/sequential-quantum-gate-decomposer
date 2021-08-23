@@ -25,7 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define DECOMPOSITION_BASE_H
 
 
-#include "Operation_block.h"
+#include "Gates_block.h"
 #include "CZ.h"
 #include "CH.h"
 #include "CNOT.h"
@@ -47,14 +47,14 @@ typedef enum guess_type {ZEROS, RANDOM, CLOSE_TO_ZERO} guess_type;
 /**
 @brief A class containing basic methods for the decomposition process.
 */
-class Decomposition_Base : public Operation_block {
+class Decomposition_Base : public Gates_block {
 
 
 public:
     /// Logical variable. Set true for verbose mode, or to false to suppress output messages.
     bool verbose;
 
-    /// number of operation blocks used in one shot of the optimization process
+    /// number of gate blocks used in one shot of the optimization process
     int optimization_block;
 
     /// A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process by default for the subdecomposing of the nth qubits.
@@ -74,7 +74,7 @@ protected:
     /// The unitary to be decomposed
     Matrix Umtx;
 
-    /// The optimized parameters for the operations
+    /// The optimized parameters for the gates
     double* optimized_parameters;
 
     /// logical value describing whether the decomposition was finalized or not (i.e. whether the decomposed qubits were rotated into the state |0> or not)
@@ -84,9 +84,9 @@ protected:
     double decomposition_error;
 
     /// number of finalizing (deterministic) opertaions rotating the disentangled qubits into state |0>.
-    int finalizing_operations_num;
+    int finalizing_gates_num;
 
-    /// the number of the finalizing (deterministic) parameters of operations rotating the disentangled qubits into state |0>.
+    /// the number of the finalizing (deterministic) parameters of gates rotating the disentangled qubits into state |0>.
     int finalizing_parameter_num;
 
     /// The current minimum of the optimization problem
@@ -130,8 +130,8 @@ virtual ~Decomposition_Base();
 
 
 /**
-@brief Call to set the number of operation blocks to be optimized in one shot
-@param optimization_block_in The number of operation blocks to be optimized in one shot
+@brief Call to set the number of gate blocks to be optimized in one shot
+@param optimization_block_in The number of gate blocks to be optimized in one shot
 */
 void set_optimization_blocks( int optimization_block_in );
 
@@ -143,25 +143,25 @@ void set_max_iteration( int max_iterations_in);
 
 
 /**
-@brief After the main optimization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
+@brief After the main optimization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed gates are added to the array of gates needed to the decomposition of the input unitary.
 */
 void finalize_decomposition();
 
 
 /**
-@brief Call to print the operations decomposing the initial unitary. These operations brings the intial matrix into unity.
-@param start_index The index of the first operation
+@brief Call to print the gates decomposing the initial unitary. These gates brings the intial matrix into unity.
+@param start_index The index of the first gate
 */
-void list_operations( int start_index );
+void list_gates( int start_index );
 
 /**
-@brief This method determine the operations needed to rotate the indepent qubits into the state |0>
+@brief This method determine the gates needed to rotate the indepent qubits into the state |0>
 @param mtx The unitary describing indepent qubits. The resulting matrix is returned by this pointer
-@param finalizing_operations Pointer pointig to a block of operations containing the final operations.
-@param finalizing_parameters Parameters corresponding to the finalizing operations.
+@param finalizing_gates Pointer pointig to a block of gates containing the final gates.
+@param finalizing_parameters Parameters corresponding to the finalizing gates.
 @return Returns with the finalized matrix
 */
-Matrix get_finalizing_operations( Matrix& mtx, Operation_block* finalizing_operations, double* finalizing_parameters);
+Matrix get_finalizing_gates( Matrix& mtx, Gates_block* finalizing_gates, double* finalizing_parameters);
 
 
 /**
@@ -194,13 +194,13 @@ bool check_optimization_solution();
 
 
 /**
-@brief Calculate the list of gate operation matrices such that the i>0-th element in the result list is the product of the operations of all 0<=n<i operations from the input list and the 0th element in the result list is the identity.
-@param parameters An array containing the parameters of the U3 operations.
-@param operations_it An iterator pointing to the forst operation.
-@param num_of_operations The number of operations involved in the calculations
+@brief Calculate the list of gate gate matrices such that the i>0-th element in the result list is the product of the gates of all 0<=n<i gates from the input list and the 0th element in the result list is the identity.
+@param parameters An array containing the parameters of the U3 gates.
+@param gates_it An iterator pointing to the forst gate.
+@param num_of_gates The number of gates involved in the calculations
 @return Returns with a vector of the product matrices.
 */
-std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> get_operation_products(double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations);
+std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> get_gate_products(double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates);
 
 
 /**
@@ -228,44 +228,44 @@ double* get_optimized_parameters();
 void get_optimized_parameters( double* ret );
 
 /**
-@brief Calculate the transformed matrix resulting by an array of operations on the matrix Umtx
-@param parameters An array containing the parameters of the U3 operations.
-@param operations_it An iterator pointing to the first operation to be applied on the initial matrix.
-@param num_of_operations The number of operations to be applied on the initial matrix
+@brief Calculate the transformed matrix resulting by an array of gates on the matrix Umtx
+@param parameters An array containing the parameters of the U3 gates.
+@param gates_it An iterator pointing to the first gate to be applied on the initial matrix.
+@param num_of_gates The number of gates to be applied on the initial matrix
 @return Returns with the transformed matrix.
 */
-Matrix get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations );
+Matrix get_transformed_matrix( const double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates );
 
 
 
 /**
-@brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
-@param parameters An array containing the parameters of the U3 operations.
-@param operations_it An iterator pointing to the first operation to be applied on the initial matrix.
-@param num_of_operations The number of operations to be applied on the initial matrix
-@param initial_matrix The initial matrix wich is transformed by the given operations.
+@brief Calculate the transformed matrix resulting by an array of gates on a given initial matrix.
+@param parameters An array containing the parameters of the U3 gates.
+@param gates_it An iterator pointing to the first gate to be applied on the initial matrix.
+@param num_of_gates The number of gates to be applied on the initial matrix
+@param initial_matrix The initial matrix wich is transformed by the given gates.
 @return Returns with the transformed matrix.
 */
-Matrix get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations, Matrix& initial_matrix );
+Matrix get_transformed_matrix( const double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix );
 
 
 /**
-@brief Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx
+@brief Calculate the decomposed matrix resulted by the effect of the optimized gates on the unitary Umtx
 @return Returns with the decomposed matrix.
 */
 Matrix get_decomposed_matrix();
 
 
 /**
-@brief Apply an operations on the input matrix
-@param operation_mtx The matrix of the operation.
+@brief Apply an gates on the input matrix
+@param gate_mtx The matrix of the gate.
 @param input_matrix The input matrix to be transformed.
 @return Returns with the transformed matrix
 */
-Matrix apply_operation( Matrix& operation_mtx, Matrix& input_matrix );
+Matrix apply_gate( Matrix& gate_mtx, Matrix& input_matrix );
 
 /**
-@brief Call to reorder the qubits in the matrix of the operation
+@brief Call to reorder the qubits in the matrix of the gate
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void reorder_qubits( std::vector<int> qbit_list);
@@ -273,14 +273,14 @@ void reorder_qubits( std::vector<int> qbit_list);
 /**
 @brief Set the maximal number of layers used in the subdecomposition of the n-th qubit.
 @param n The number of qubits for which the maximal number of layers should be used in the subdecomposition.
-@param max_layer_num_in The maximal number of the operation layers used in the subdecomposition.
+@param max_layer_num_in The maximal number of the gate layers used in the subdecomposition.
 @return Returns with 0 if succeded.
 */
 int set_max_layer_num( int n, int max_layer_num_in );
 
 /**
 @brief Set the maximal number of layers used in the subdecomposition of the n-th qubit.
-@param max_layer_num_in An <int,int> map containing the maximal number of the operation layers used in the subdecomposition.
+@param max_layer_num_in An <int,int> map containing the maximal number of the gate layers used in the subdecomposition.
 @return Returns with 0 if succeded.
 */
 int set_max_layer_num( std::map<int, int> max_layer_num_in );
@@ -309,46 +309,46 @@ static void Init_max_layer_num();
 
 
 /**
-@brief Call to prepare the optimized operations to export. The operations are stored in the attribute operations
+@brief Call to prepare the optimized gates to export. The gates are stored in the attribute gates
 */
-void prepare_operations_to_export();
+void prepare_gates_to_export();
 
 /**
-@brief Call to prepare the optimized operations to export
-@param ops A list of operations
-@param parameters The parameters of the operations
-@return Returns with a list of gate operations.
+@brief Call to prepare the optimized gates to export
+@param ops A list of gates
+@param parameters The parameters of the gates
+@return Returns with a list of gate gates.
 */
-std::vector<Operation*> prepare_operations_to_export( std::vector<Operation*> ops, const double* parameters );
+std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, const double* parameters );
 
 
 
 /**
-@brief Call to prepare the operations of an operation block to export
-@param block_op A pointer to a block of operations
-@param parameters The parameters of the operations
-@return Returns with a list of gate operations.
+@brief Call to prepare the gates of an gate block to export
+@param block_op A pointer to a block of gates
+@param parameters The parameters of the gates
+@return Returns with a list of gate gates.
 */
-std::vector<Operation*> prepare_operations_to_export( Operation_block* block_op, const double* parameters );
+std::vector<Gate*> prepare_gates_to_export( Gates_block* block_op, const double* parameters );
 
 /**
-@brief Call to prepare the optimized operations to export --- OBSOLETE
+@brief Call to prepare the optimized gates to export --- OBSOLETE
 @param n Integer labeling the n-th oepration  (n>=0).
-@param type The type of the operation from enumeration operation_type is returned via this parameter.
+@param type The type of the gate from enumeration gate_type is returned via this parameter.
 @param target_qbit The ID of the target qubit is returned via this input parameter.
 @param control_qbit The ID of the control qubit is returned via this input parameter.
-@param parameters The parameters of the operations
-@return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
+@param parameters The parameters of the gates
+@return Returns with 0 if the export of the n-th gate was successful. If the n-th gate does not exists, -1 is returned. If the gate is not allowed to be exported, i.e. it is not a CNOT or U3 gate, then -2 is returned.
 */
-int get_operation( unsigned int n, operation_type &type, int &target_qbit, int &control_qbit, double* parameters );
+int get_gate( unsigned int n, gate_type &type, int &target_qbit, int &control_qbit, double* parameters );
 
 
 /**
-@brief Call to prepare the optimized operations to export
+@brief Call to prepare the optimized gates to export
 @param n Integer labeling the n-th oepration  (n>=0).
-@return Returns with a pointer to the n-th Operation, or with MULL if the n-th operation cant be retrived.
+@return Returns with a pointer to the n-th Gate, or with MULL if the n-th gate cant be retrived.
 */
-Operation* get_operation( int n );
+Gate* get_gate( int n );
 
 
 /**

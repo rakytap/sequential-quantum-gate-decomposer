@@ -1,0 +1,22 @@
+<map id="Gates_block::add_gate_to_end" name="Gates_block::add_gate_to_end">
+<area shape="rect" id="node2" href="$custom__gate__structure__test_8cpp.html#acc6adab67517358320294cfc3947e793" title="Function to create custom gate structure for the decomposition. " alt="" coords="437,42,577,83"/>
+<area shape="rect" id="node4" href="$class_gates__block.html#aa00632c15ef88fdd564aac2c4b5d8851" title="Append a U3 gate to the list of gates. " alt="" coords="217,42,360,83"/>
+<area shape="rect" id="node5" href="$class_gates__block.html#a836b07775e6af191060bb4b274205961" title="Append a CNOT gate gate to the list of gates. " alt="" coords="211,107,366,149"/>
+<area shape="rect" id="node6" href="$class_gates__block.html#a9c9b9a6c395c87e0e5bd1625698c5248" title="Append a CZ gate gate to the list of gates. " alt="" coords="217,365,360,406"/>
+<area shape="rect" id="node7" href="$class_gates__block.html#a9656b8f615f7c51b6023c2f7afc58f01" title="Append a CH gate (i.e. " alt="" coords="217,430,360,471"/>
+<area shape="rect" id="node8" href="$class_gates__block.html#a8f62a9d7e1898affcdd5ba6fffaeffcc" title="Append a list of gates to the list of gates. " alt="" coords="208,495,369,537"/>
+<area shape="rect" id="node9" href="$class_gates__block.html#ab542463604ce9ae205e8569accebc721" title="Call to append the gates of an gate block to the current block. " alt="" coords="660,387,811,413"/>
+<area shape="rect" id="node14" href="$class_gates__block.html#a20b7625d8dcc9d5838981ee1bfb740a9" title="Call to extract the gates stored in the class. " alt="" coords="219,247,359,289"/>
+<area shape="rect" id="node18" href="$class_sub___matrix___decomposition.html#aad17c8f1ecdacb3fe6716fa9bd4dd292" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="645,101,825,142"/>
+<area shape="rect" id="node3" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1368,105,1419,132"/>
+<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="882,383,1045,425"/>
+<area shape="rect" id="node13" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="1312,351,1475,393"/>
+<area shape="rect" id="node11" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1101,197,1264,238"/>
+<area shape="rect" id="node12" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1312,197,1475,238"/>
+<area shape="rect" id="node15" href="$class_gates__block.html#a08b3c3cc1e02557e985b9d2e9f993b9a" title="Create a clone of the present class. " alt="" coords="441,263,573,289"/>
+<area shape="rect" id="node21" href="$class_sub___matrix___decomposition.html#ad5498a197a442b5cf878c83fccfe0180" title="Call to create a clone of the present class. " alt="" coords="417,197,597,238"/>
+<area shape="rect" id="node16" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="874,248,1053,304"/>
+<area shape="rect" id="node17" href="$qgd___gates___block_8cpp.html#a08fcfb446bb08e15ffcc791c2f903c20" title="Wrapper function to add a block of operations to the front of the gate structure. ..." alt="" coords="659,218,812,259"/>
+<area shape="rect" id="node20" href="$class_sub___matrix___decomposition.html#a0276c1ffbcac11533015acb70dea319d" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="873,173,1053,214"/>
+<area shape="rect" id="node19" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="873,103,1053,145"/>
+</map>

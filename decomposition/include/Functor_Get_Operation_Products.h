@@ -27,8 +27,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include <tbb/blocked_range.h>
 #include "common.h"
-#include "Operation.h"
-#include "Operation_block.h"
+#include "Gate.h"
+#include "Gates_block.h"
 #include "CNOT.h"
 #include "U3.h"
 
@@ -41,11 +41,11 @@ protected:
     /// An array containing the parameters of the operations.
     double* parameters;
     /// An iterator pointing to the first operation.
-    std::vector<Operation*>::iterator operations_it;
+    std::vector<Gate*>::iterator gates_it;
     /// pointer to a vector containing the matrix representation of the operations/operation blocks.
-    std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* operation_mtxs;
+    std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* gate_mtxs;
     ///  The number of operations in the vector
-    int num_of_operations;
+    int num_of_gates;
 
 public:
 
@@ -57,7 +57,7 @@ public:
 @param num_of_operations_in The number of operations in the vector
 @return Returns with the instance of the class.
 */
-functor_get_operation_matrices( double* parameters_in, std::vector<Operation*>::iterator operations_it_in, std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* operation_mtxs_in, int num_of_operations_in );
+functor_get_operation_matrices( double* parameters_in, std::vector<Gate*>::iterator operations_it_in, std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* operation_mtxs_in, int num_of_operations_in );
 
 /**
 @brief Operator to calculate th ematrix representation of operation labeled by i.

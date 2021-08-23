@@ -1,0 +1,37 @@
+<map id="Gate::set_qbit_num" name="Gate::set_qbit_num">
+<area shape="rect" id="node2" href="$class_c_h.html#ac12907bcfa44a8b3891c0dfbfcff280c" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="409,130,534,157"/>
+<area shape="rect" id="node3" href="$class_gates__block.html#ad1d8c9cd483808309155b0fa34de3d35" title="Set the number of qubits spanning the matrix of the gates stored in the block of gates. " alt="" coords="601,205,779,232"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="829,216,1007,272"/>
+<area shape="rect" id="node10" href="$class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="400,232,543,258"/>
+<area shape="rect" id="node11" href="$class_c_z.html#af057fd5dc3440bd26648be56cac55c11" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="410,29,533,56"/>
+<area shape="rect" id="node12" href="$class_gates__block.html#a5f537a7bf9992665762bd7593faaa96f" title="Append a general gate to the list of gates. " alt="" coords="188,1032,343,1074"/>
+<area shape="rect" id="node27" href="$class_gates__block.html#a10f7fd8b457b825449c16231b414258c" title="Add an gate to the front of the list of gates. " alt="" coords="188,568,343,594"/>
+<area shape="rect" id="node36" href="$class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="410,80,533,106"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="1495,540,1657,582"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1284,384,1447,426"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1495,384,1657,426"/>
+<area shape="rect" id="node6" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1551,953,1601,980"/>
+<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1705,540,1868,582"/>
+<area shape="rect" id="node13" href="$custom__gate__structure__test_8cpp.html#acc6adab67517358320294cfc3947e793" title="Function to create custom gate structure for the decomposition. " alt="" coords="620,1196,760,1238"/>
+<area shape="rect" id="node14" href="$class_gates__block.html#aa00632c15ef88fdd564aac2c4b5d8851" title="Append a U3 gate to the list of gates. " alt="" coords="400,1287,543,1328"/>
+<area shape="rect" id="node15" href="$class_gates__block.html#a836b07775e6af191060bb4b274205961" title="Append a CNOT gate gate to the list of gates. " alt="" coords="394,1222,549,1263"/>
+<area shape="rect" id="node16" href="$class_gates__block.html#a9c9b9a6c395c87e0e5bd1625698c5248" title="Append a CZ gate gate to the list of gates. " alt="" coords="400,938,543,979"/>
+<area shape="rect" id="node17" href="$class_gates__block.html#a9656b8f615f7c51b6023c2f7afc58f01" title="Append a CH gate (i.e. " alt="" coords="400,1003,543,1044"/>
+<area shape="rect" id="node18" href="$class_gates__block.html#a8f62a9d7e1898affcdd5ba6fffaeffcc" title="Append a list of gates to the list of gates. " alt="" coords="391,872,552,914"/>
+<area shape="rect" id="node19" href="$class_gates__block.html#ab542463604ce9ae205e8569accebc721" title="Call to append the gates of an gate block to the current block. " alt="" coords="1071,677,1221,704"/>
+<area shape="rect" id="node20" href="$class_gates__block.html#a20b7625d8dcc9d5838981ee1bfb740a9" title="Call to extract the gates stored in the class. " alt="" coords="401,502,541,543"/>
+<area shape="rect" id="node23" href="$class_sub___matrix___decomposition.html#aad17c8f1ecdacb3fe6716fa9bd4dd292" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="828,738,1008,779"/>
+<area shape="rect" id="node21" href="$class_gates__block.html#a08b3c3cc1e02557e985b9d2e9f993b9a" title="Create a clone of the present class. " alt="" coords="624,509,756,536"/>
+<area shape="rect" id="node26" href="$class_sub___matrix___decomposition.html#ad5498a197a442b5cf878c83fccfe0180" title="Call to create a clone of the present class. " alt="" coords="600,560,780,602"/>
+<area shape="rect" id="node22" href="$qgd___gates___block_8cpp.html#a08fcfb446bb08e15ffcc791c2f903c20" title="Wrapper function to add a block of operations to the front of the gate structure. ..." alt="" coords="841,443,995,484"/>
+<area shape="rect" id="node25" href="$class_sub___matrix___decomposition.html#a0276c1ffbcac11533015acb70dea319d" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="1056,494,1236,535"/>
+<area shape="rect" id="node24" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="1056,611,1236,652"/>
+<area shape="rect" id="node28" href="$class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="611,384,769,426"/>
+<area shape="rect" id="node29" href="$class_decomposition___base.html#ac2db1c9b9c723053e78f44255b61c428" title="This method determine the gates needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="399,334,544,375"/>
+<area shape="rect" id="node30" href="$class_gates__block.html#aab1d786fdac42f2d290cc4888a3bcb81" title="Add a U3 gate to the front of the list of gates. " alt="" coords="400,568,543,594"/>
+<area shape="rect" id="node31" href="$class_sub___matrix___decomposition.html#a528b6ef4c6997243683aaf0450c5fe52" title="Call to add default gate layers to the gate structure used in the subdecomposition. " alt="" coords="600,751,780,792"/>
+<area shape="rect" id="node32" href="$class_gates__block.html#a883b95fa12fe9e221921323d1afb0fd0" title="Add a C_NOT gate gate to the front of the list of gates. " alt="" coords="394,821,549,848"/>
+<area shape="rect" id="node33" href="$class_gates__block.html#ace24c7ec1e2ed4f8d5882c2113cd6d85" title="Add a CZ gate gate to the front of the list of gates. " alt="" coords="400,720,543,746"/>
+<area shape="rect" id="node34" href="$class_gates__block.html#af17cdf5d20fe8a5e186d62d1f705d115" title="Add a CH gate (i.e. " alt="" coords="400,618,543,645"/>
+<area shape="rect" id="node35" href="$class_gates__block.html#a47db252969fcdb7ea90c40a929ab9908" title="Add an array of gates to the front of the list of gates. " alt="" coords="391,669,552,696"/>
+</map>

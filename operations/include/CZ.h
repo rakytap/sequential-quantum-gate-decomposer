@@ -25,7 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define CZ_H
 
 #include "matrix.h"
-#include "Operation.h"
+#include "Gate.h"
 #include <math.h>
 
 
@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief A class representing a CZ operation.
 */
-class CZ: public Operation {
+class CZ: public Gate {
 
 protected:
 

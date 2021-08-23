@@ -9,7 +9,7 @@ add_library( qgd_U3 MODULE
 
 ADD_DEPENDENCIES (qgd_U3 qgd)
 
-target_link_libraries (qgd_U3 qgd ${PYTHON_LIBRARIES})
+target_link_libraries (qgd_U3 qgd ${BLAS_LIBRARIES})
 
 python_extension_module(qgd_U3)
 
@@ -18,6 +18,7 @@ target_compile_options(qgd_U3 PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
 )
 
 
@@ -48,7 +49,7 @@ add_library( qgd_CNOT MODULE
 
 ADD_DEPENDENCIES (qgd_CNOT qgd)
 
-target_link_libraries (qgd_CNOT qgd ${PYTHON_LIBRARIES})
+target_link_libraries (qgd_CNOT qgd ${BLAS_LIBRARIES})
 
 python_extension_module(qgd_CNOT)
 
@@ -58,6 +59,7 @@ target_compile_options(qgd_CNOT PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
 )
 
 
@@ -88,7 +90,7 @@ add_library( qgd_CZ MODULE
 
 ADD_DEPENDENCIES (qgd_CZ qgd)
 
-target_link_libraries (qgd_CZ qgd ${PYTHON_LIBRARIES})
+target_link_libraries (qgd_CZ qgd ${BLAS_LIBRARIES})
 
 python_extension_module(qgd_CZ)
 
@@ -98,6 +100,7 @@ target_compile_options(qgd_CZ PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
 )
 
 
@@ -130,7 +133,7 @@ add_library( qgd_CH MODULE
 
 ADD_DEPENDENCIES (qgd_CH qgd)
 
-target_link_libraries (qgd_CH qgd ${PYTHON_LIBRARIES})
+target_link_libraries (qgd_CH qgd ${BLAS_LIBRARIES})
 
 python_extension_module(qgd_CH)
 
@@ -140,6 +143,7 @@ target_compile_options(qgd_CH PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
 )
 
 
@@ -163,27 +167,28 @@ install(TARGETS qgd_CH LIBRARY
 
 
 
-add_library( qgd_Operation_Block MODULE
-    ${EXT_DIR}/qgd_Operation_Block.cpp
+add_library( qgd_Gates_Block MODULE
+    ${EXT_DIR}/qgd_Gates_Block.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_Operation_Block qgd)
+ADD_DEPENDENCIES (qgd_Gates_Block qgd)
 
-target_link_libraries (qgd_Operation_Block qgd ${PYTHON_LIBRARIES})
+target_link_libraries (qgd_Gates_Block qgd ${BLAS_LIBRARIES})
 
 
-python_extension_module(qgd_Operation_Block)
+python_extension_module(qgd_Gates_Block)
 
 # adding compile options
-target_compile_options(qgd_Operation_Block PRIVATE
+target_compile_options(qgd_Gates_Block PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
 )
 
 
-target_include_directories(qgd_Operation_Block PRIVATE
+target_include_directories(qgd_Gates_Block PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/operations/include
@@ -191,12 +196,12 @@ target_include_directories(qgd_Operation_Block PRIVATE
                             ${EXTRA_INCLUDES})
 
 
-set_target_properties( qgd_Operation_Block PROPERTIES
+set_target_properties( qgd_Gates_Block PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
 
-install(TARGETS qgd_Operation_Block LIBRARY 
+install(TARGETS qgd_Gates_Block LIBRARY 
          DESTINATION qgd_python/gates)
 

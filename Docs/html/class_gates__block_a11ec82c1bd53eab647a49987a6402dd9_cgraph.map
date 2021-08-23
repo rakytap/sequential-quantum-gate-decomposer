@@ -1,0 +1,4 @@
+<map id="Gates_block::~Gates_block" name="Gates_block::~Gates_block">
+<area shape="rect" id="node2" href="$class_gates__block.html#a11ee1387e5ec4d3c3d8a3eb6e625b3ab" title="Call to release the stored gates. " alt="" coords="196,5,339,47"/>
+<area shape="rect" id="node3" href="$class_gate.html#a5498d67b28027022c72b8b15d47d55cc" title="Call to get the type of the operation. " alt="" coords="387,13,492,39"/>
+</map>
