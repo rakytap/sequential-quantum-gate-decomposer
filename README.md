@@ -39,7 +39,7 @@ The dependencies necessary to compile and build the SQUANDER package are the fol
 * C++/C [Intel](https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html) (>=14.0.1) or [GNU](https://gcc.gnu.org/) (>=v4.8.1) compiler
 * [TBB](https://github.com/oneapi-src/oneTBB) library
 * [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html) (optional)
-* [OpenBlas](https://www.openblas.net/) (optional)
+* [OpenBlas](https://www.openblas.net/) (optional, recommended)
 * [LAPACKE](https://www.netlib.org/lapack/lapacke.html)
 * [Doxygen](https://www.doxygen.nl/index.html) (optional)
 

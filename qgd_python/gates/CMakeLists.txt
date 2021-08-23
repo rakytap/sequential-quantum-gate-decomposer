@@ -9,7 +9,7 @@ add_library( qgd_U3 MODULE
 
 ADD_DEPENDENCIES (qgd_U3 qgd)
 
-target_link_libraries (qgd_U3 qgd ${PYTHON_LIBRARIES})
+target_link_libraries (qgd_U3 qgd ${BLAS_LIBRARIES})
 
 python_extension_module(qgd_U3)
 
@@ -49,7 +49,7 @@ add_library( qgd_CNOT MODULE
 
 ADD_DEPENDENCIES (qgd_CNOT qgd)
 
-target_link_libraries (qgd_CNOT qgd ${PYTHON_LIBRARIES})
+target_link_libraries (qgd_CNOT qgd ${BLAS_LIBRARIES})
 
 python_extension_module(qgd_CNOT)
 
@@ -90,7 +90,7 @@ add_library( qgd_CZ MODULE
 
 ADD_DEPENDENCIES (qgd_CZ qgd)
 
-target_link_libraries (qgd_CZ qgd ${PYTHON_LIBRARIES})
+target_link_libraries (qgd_CZ qgd ${BLAS_LIBRARIES})
 
 python_extension_module(qgd_CZ)
 
@@ -133,7 +133,7 @@ add_library( qgd_CH MODULE
 
 ADD_DEPENDENCIES (qgd_CH qgd)
 
-target_link_libraries (qgd_CH qgd ${PYTHON_LIBRARIES})
+target_link_libraries (qgd_CH qgd ${BLAS_LIBRARIES})
 
 python_extension_module(qgd_CH)
 
@@ -174,7 +174,7 @@ add_library( qgd_Gates_Block MODULE
 
 ADD_DEPENDENCIES (qgd_Gates_Block qgd)
 
-target_link_libraries (qgd_Gates_Block qgd ${PYTHON_LIBRARIES})
+target_link_libraries (qgd_Gates_Block qgd ${BLAS_LIBRARIES})
 
 
 python_extension_module(qgd_Gates_Block)
