@@ -42,14 +42,14 @@ public:
     /// The subdecomposed matrix
     Matrix subdecomposed_mtx;
 
-    /// logical value. Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
+    /// logical value. Set true to optimize the minimum number of gate layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
     bool optimize_layer_num;
 
     /// A map of <int n: int num> indicating that how many identical succesive blocks should be used in the disentanglement of the nth qubit from the others
     std::map<int,int> identical_blocks;
 
     /// Custom gate structure describing the gate structure used in the decomposition. The gate structure is repeated periodically in the decomposing gate structure
-    Operation_block* unit_gate_structure;
+    Gates_block* unit_gate_structure;
 
 
 public:
@@ -77,27 +77,27 @@ Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_n
 
 
 /**
-@brief Start the optimization process to disentangle the most significant qubit from the others. The optimized parameters and operations are stored in the attributes optimized_parameters and operations.
+@brief Start the optimization process to disentangle the most significant qubit from the others. The optimized parameters and gates are stored in the attributes optimized_parameters and gates.
 */
 void disentangle_submatrices();
 
 /**
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
-virtual void add_operation_layers();
+virtual void add_gate_layers();
 
 
 /**
 @brief Call to add default gate layers to the gate structure used in the subdecomposition.
 */
-void add_default_operation_layers();
+void add_default_gate_layers();
 
 
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
-@param block_in A pointer to the block of operations to be used in the decomposition
+@param block_in A pointer to the block of gates to be used in the decomposition
 */
-void set_custom_operation_layers( Operation_block* block_in);
+void set_custom_gate_layers( Gates_block* block_in);
 
 
 

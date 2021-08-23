@@ -34,14 +34,15 @@ setup(
             "test_standalone", "test_standalone.*",
         )
     ),
-    version='0.1',
+    version='1.5',
     url="https://github.com/rakytap/sequential-quantum-gate-decomposer", 
     maintainer="Peter Rakyta",
     maintainer_email="peter.rakyta@ttk.elte.hu",
     include_package_data=True,
     install_requires=[
         "numpy>=1.19.4",
-	"tbb-dvel",
+	"tbb-devel",
+	"qiskit",
     ],
     tests_require=["pytest"],
     description='The C++ binding for the SQUANDER package',

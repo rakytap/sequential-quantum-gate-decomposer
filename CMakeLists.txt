@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10.2)
 # CMAKE to create the shared library of the quantum gate decomposition project
 
 # set the project name and version
-project(CQGD VERSION 1.4)
+project(CQGD VERSION 1.5)
 
 # reuse compilation time linking for use runtime linking 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -309,8 +309,8 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/operations/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/operations/CZ.cpp
     ${PROJECT_SOURCE_DIR}/operations/CH.cpp
-    ${PROJECT_SOURCE_DIR}/operations/Operation.cpp
-    ${PROJECT_SOURCE_DIR}/operations/Operation_block.cpp
+    ${PROJECT_SOURCE_DIR}/operations/Gate.cpp
+    ${PROJECT_SOURCE_DIR}/operations/Gates_block.cpp
     ${PROJECT_SOURCE_DIR}/operations/U3.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Functor_Cost_Function_Gradient.cpp
@@ -324,11 +324,6 @@ add_library( qgd SHARED
 
 
 
-set_target_properties(
-    qgd
-    PROPERTIES
-        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/lib
-    )
 
 
 # adding compile options
@@ -368,8 +363,8 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/CNOT.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/CZ.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/CH.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/Operation.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/Operation_block.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/Gate.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/Gates_block.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/U3.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Decomposition_Base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Functor_Cost_Function_Gradient.h
@@ -386,8 +381,16 @@ configure_file(${PROJECT_SOURCE_DIR}/common/include/Config.h.in
                ${PROJECT_SOURCE_DIR}/common/include/Config.h)
 
 
+set_target_properties(
+    qgd
+    PROPERTIES
+        LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/qgd_python
+    )
+
+
+
 # adding CMAKE files for Python extensions
-add_subdirectory (qgd_python)
+add_subdirectory (qgd_python/decomposition)
 add_subdirectory (qgd_python/gates)
 
 
@@ -395,7 +398,7 @@ add_subdirectory (qgd_python/gates)
 add_subdirectory (test_standalone)
 
 
-install(TARGETS qgd LIBRARY DESTINATION lib)
+install(TARGETS qgd LIBRARY DESTINATION qgd_python)
 
 
 

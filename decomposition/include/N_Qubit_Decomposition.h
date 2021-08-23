@@ -18,7 +18,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file N_Qubit_Decomposition.h
-    \brief Header file for a class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 operations.
+    \brief Header file for a class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 */
 
 #ifndef N_Qubit_Decomposition_H
@@ -55,7 +55,7 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 
 
 /**
-@brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 operations.
+@brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 This class contains the non-template implementation of the decomposition class.
 */
 class N_Qubit_Decomposition : public Decomposition_Base {
@@ -66,14 +66,14 @@ public:
 protected:
 
 
-    /// logical value. Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
+    /// logical value. Set true to optimize the minimum number of gate layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
     bool optimize_layer_num;
 
     /// A map of <int n: int num> indicating that how many identical successive blocks should be used in the disentanglement of the nth qubit from the others
     std::map<int,int> identical_blocks;
 
-    /// A map of <int n: Operation_block* block> describing custom gate structure to be used in the decomposition. Operation block corresponding to n is used in the subdecomposition of the n-th qubit. The Operation block is repeated periodically.
-    std::map<int, Operation_block*> gate_structure;
+    /// A map of <int n: Gates_block* block> describing custom gate structure to be used in the decomposition. Gate block corresponding to n is used in the subdecomposition of the n-th qubit. The Gate block is repeated periodically.
+    std::map<int, Gates_block*> gate_structure;
 
 
 public:
@@ -107,7 +107,7 @@ virtual ~N_Qubit_Decomposition();
 /**
 @brief Start the disentanglig process of the unitary
 @param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
-@param prepare_export Logical parameter. Set true to prepare the list of operations to be exported, or false otherwise.
+@param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
 */
 virtual void start_decomposition(bool finalize_decomp=true, bool prepare_export=true);
 
@@ -128,7 +128,7 @@ void  decompose_submatrix();
 
 
 /**
-@brief Call to extract and store the calculated parameters and operations of the sub-decomposition processes
+@brief Call to extract and store the calculated parameters and gates of the sub-decomposition processes
 @param cSub_decomposition An instance of class Sub_Matrix_Decomposition used to disentangle the n-th qubit from the others.
 */
 void  extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposition );
@@ -189,24 +189,24 @@ static void optimization_problem_combined( const gsl_vector* parameters, void* v
 void simplify_layers();
 
 /**
-@brief Call to simplify the gate structure in a block of operations (i.e. tries to reduce the number of CNOT gates)
-@param layer An instance of class Operation_block containing the 2-qubit gate structure to be simplified
-@param parameters An array of parameters to calculate the matrix representation of the operations in the block of operations.
-@param parameter_num_block NUmber of parameters in the block of operations to be simplified.
-@param max_layer_num_loc A map of <int n: int num> indicating the maximal number of CNOT operations allowed in the simplification.
-@param simplified_layer An instance of Operation_block containing the simplified structure of operations.
+@brief Call to simplify the gate structure in a block of gates (i.e. tries to reduce the number of CNOT gates)
+@param layer An instance of class Gates_block containing the 2-qubit gate structure to be simplified
+@param parameters An array of parameters to calculate the matrix representation of the gates in the block of gates.
+@param parameter_num_block NUmber of parameters in the block of gates to be simplified.
+@param max_layer_num_loc A map of <int n: int num> indicating the maximal number of CNOT gates allowed in the simplification.
+@param simplified_layer An instance of Gates_block containing the simplified structure of gates.
 @param simplified_parameters An array of parameters containing the parameters of the simplified block structure.
 @param simplified_parameter_num The number of parameters in the simplified block structure.
 @return Returns with 0 if the simplification wa ssuccessful.
 */
-int simplify_layer( Operation_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Operation_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num);
+int simplify_layer( Gates_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Gates_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num);
 
 
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
-@param gate_structure An <int, Operation_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
+@param gate_structure An <int, Gates_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
 */
-void set_custom_gate_structure( std::map<int, Operation_block*> gate_structure_in );
+void set_custom_gate_structure( std::map<int, Gates_block*> gate_structure_in );
 
 /**
 @brief Set the number of identical successive blocks during the subdecomposition of the n-th qubit.

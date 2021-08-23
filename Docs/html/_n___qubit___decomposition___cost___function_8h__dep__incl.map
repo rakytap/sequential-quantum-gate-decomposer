@@ -1,4 +1,4 @@
 <map id="N_Qubit_Decomposition_Cost_Function.h" name="N_Qubit_Decomposition_Cost_Function.h">
-<area shape="rect" id="node2" href="$_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of CNOT and U3 operations..." alt="" coords="5,102,192,129"/>
+<area shape="rect" id="node2" href="$_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="5,102,192,129"/>
 <area shape="rect" id="node3" href="$_n___qubit___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the final optimization problem (supporting parallel computa..." alt="" coords="216,95,379,136"/>
 </map>

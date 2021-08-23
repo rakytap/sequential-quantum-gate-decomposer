@@ -18,7 +18,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file CH.cpp
-    \brief Class representing a CH operation.
+    \brief Class representing a CH gate.
 */
 
 #include "CH.h"
@@ -32,19 +32,19 @@ using namespace std;
 */
 CH::CH() {
 
-        // number of qubits spanning the matrix of the operation
+        // number of qubits spanning the matrix of the gate
         qbit_num = -1;
         // the size of the matrix
         matrix_size = -1;
-        // A string describing the type of the operation
+        // A string describing the type of the gate
         type = CH_OPERATION;
         // The number of free parameters
         parameter_num = 0;
 
-        // The index of the qubit on which the operation acts (target_qbit >= 0)
+        // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = -1;
 
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
+        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
         control_qbit = -1;
 
 
@@ -59,11 +59,11 @@ CH::CH() {
 */
 CH::CH(int qbit_num_in,  int control_qbit_in, int target_qbit_in) {
 
-        // number of qubits spanning the matrix of the operation
+        // number of qubits spanning the matrix of the gate
         qbit_num = qbit_num_in;
         // the size of the matrix
         matrix_size = Power_of_2(qbit_num);
-        // A string describing the type of the operation
+        // A string describing the type of the gate
         type = CH_OPERATION;
         // The number of free parameters
         parameter_num = 0;
@@ -72,7 +72,7 @@ CH::CH(int qbit_num_in,  int control_qbit_in, int target_qbit_in) {
             printf("The index of the target qubit is larger than the number of qubits");
             throw "The index of the target qubit is larger than the number of qubits";
         }
-        // The index of the qubit on which the operation acts (target_qbit >= 0)
+        // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = target_qbit_in;
 
 
@@ -80,7 +80,7 @@ CH::CH(int qbit_num_in,  int control_qbit_in, int target_qbit_in) {
             printf("The index of the control qubit is larger than the number of qubits");
             throw "The index of the control qubit is larger than the number of qubits";
         }
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
+        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
         control_qbit = control_qbit_in;
 
 
@@ -94,8 +94,8 @@ CH::~CH() {
 
 
 /**
-@brief Call to retrieve the operation matrix
-@return Returns with the matrix of the operation
+@brief Call to retrieve the gate matrix
+@return Returns with the matrix of the gate
 */
 Matrix
 CH::get_matrix() {
@@ -103,13 +103,13 @@ CH::get_matrix() {
 }
 
 /**
-@brief Calculate the matrix of a CH gate operation acting on the space of qbit_num qubits.
-@return Returns with the operation matrix
+@brief Calculate the matrix of a CH gate gate acting on the space of qbit_num qubits.
+@return Returns with the gate matrix
 */
 Matrix CH::composite_CH() {
 
 
-        // preallocate array for the composite u3 operation
+        // preallocate array for the composite u3 gate
         Matrix CH_mtx = Matrix(matrix_size, matrix_size);
         QGD_Complex16* CH_mtx_data = CH_mtx.get_data();
 
@@ -121,7 +121,7 @@ Matrix CH::composite_CH() {
         int control_qbit_power = Power_of_2(control_qbit);
 
 
-        // setting the operation elements
+        // setting the gate elements
         for(int idx = 0; idx < matrix_size*matrix_size; ++idx)
         {
 
@@ -196,24 +196,24 @@ Matrix CH::composite_CH() {
 
 
 /**
-@brief Call to set the number of qubits spanning the matrix of the operation
+@brief Call to set the number of qubits spanning the matrix of the gate
 @param qbit_num The number of qubits
 */
 void CH::set_qbit_num(int qbit_num) {
         // setting the number of qubits
-        Operation::set_qbit_num(qbit_num);
+        Gate::set_qbit_num(qbit_num);
 
 }
 
 
 
 /**
-@brief Call to reorder the qubits in the matrix of the operation
+@brief Call to reorder the qubits in the matrix of the gate
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void CH::reorder_qubits( vector<int> qbit_list) {
 
-        Operation::reorder_qubits(qbit_list);
+        Gate::reorder_qubits(qbit_list);
 
 }
 

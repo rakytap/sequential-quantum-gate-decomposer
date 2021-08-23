@@ -17,8 +17,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file Functor_Get_Operation_Products.cpp
-    \brief Methods and classes for the parallelized calculation of the vector containing the products of operations (supporting TBB and OpenMP).
+/*! \file Functor_Get_Gate_Products.cpp
+    \brief Methods and classes for the parallelized calculation of the vector containing the products of gates (supporting TBB and OpenMP).
 */
 
 #include "Decomposition_Base.h"
@@ -27,36 +27,36 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /**
-@brief Calculate the list of gate operation matrices such that the i>0-th element in the result list is the product of the operations of all 0<=n<i operations from the input list and the 0th element in the result list is the identity.
-@param parameters An array containing the parameters of the operations.
-@param operations_it An iterator pointing to the first operation.
-@param num_of_operations The number of operations involved in the calculations
+@brief Calculate the list of gate gate matrices such that the i>0-th element in the result list is the product of the gates of all 0<=n<i gates from the input list and the 0th element in the result list is the identity.
+@param parameters An array containing the parameters of the gates.
+@param gates_it An iterator pointing to the first gate.
+@param num_of_gates The number of gates involved in the calculations
 @return Returns with a vector of the product matrices.
 */
-std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> Decomposition_Base::get_operation_products(double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations) {
+std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates) {
 
 
     // construct the vector of matrix representation of the gates
-    std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> operation_mtxs(num_of_operations);
+    std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> gate_mtxs(num_of_gates);
 
-    // creating identity operation if no operations were involved in the calculations
-    if (num_of_operations==0) {
-        operation_mtxs.push_back( create_identity(matrix_size) );
-        return operation_mtxs;
+    // creating identity gate if no gates were involved in the calculations
+    if (num_of_gates==0) {
+        gate_mtxs.push_back( create_identity(matrix_size) );
+        return gate_mtxs;
     }
 
-    // calculate the matrices of the individual block operations
-    tbb::parallel_for(tbb::blocked_range<size_t>(0, num_of_operations, 1), functor_get_operation_matrices( parameters, operations_it, &operation_mtxs, num_of_operations ));
+    // calculate the matrices of the individual block gates
+    tbb::parallel_for(tbb::blocked_range<size_t>(0, num_of_gates, 1), functor_get_operation_matrices( parameters, gates_it, &gate_mtxs, num_of_gates ));
 
-    // calculate the operations products
-    Matrix operation_product_mtx = Matrix(matrix_size, matrix_size);
-    for (int idx=1; idx<num_of_operations; idx++) {
-        operation_product_mtx = apply_operation(operation_mtxs[idx-1], operation_mtxs[idx] );
-        operation_mtxs[idx] = operation_product_mtx;
-        operations_it++;
+    // calculate the gates products
+    Matrix gate_product_mtx = Matrix(matrix_size, matrix_size);
+    for (int idx=1; idx<num_of_gates; idx++) {
+        gate_product_mtx = apply_gate(gate_mtxs[idx-1], gate_mtxs[idx] );
+        gate_mtxs[idx] = gate_product_mtx;
+        gates_it++;
     }
 
-    return operation_mtxs;
+    return gate_mtxs;
 
 }
 
@@ -64,24 +64,24 @@ std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> Decomposition_Base::ge
 
 /**
 @brief Constructor of the class.
-@param parameters_in An array containing the parameters of the operations.
-@param operations_it_in An iterator pointing to the first operation.
-@param operation_mtxs_in Pointer to a vector containing the matrix representation of the operations/operation blocks.
-@param num_of_operations_in The number of operations in the vector
+@param parameters_in An array containing the parameters of the gates.
+@param gates_it_in An iterator pointing to the first gate.
+@param gate_mtxs_in Pointer to a vector containing the matrix representation of the gates/gate blocks.
+@param num_of_gates_in The number of gates in the vector
 @return Returns with the instance of the class.
 */
-functor_get_operation_matrices::functor_get_operation_matrices( double* parameters_in, std::vector<Operation*>::iterator operations_it_in, std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* operation_mtxs_in, int num_of_operations_in ) {
+functor_get_operation_matrices::functor_get_operation_matrices( double* parameters_in, std::vector<Gate*>::iterator gates_it_in, std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>>* gate_mtxs_in, int num_of_gates_in ) {
 
     parameters = parameters_in;
-    operations_it = operations_it_in;
-    operation_mtxs = operation_mtxs_in;
-    num_of_operations = num_of_operations_in;
+    gates_it = gates_it_in;
+    gate_mtxs = gate_mtxs_in;
+    num_of_gates = num_of_gates_in;
 
 }
 
 /**
-@brief Operator to calculate the matrix representation of operation labeled by i.
-@param r Range of indexes labeling the operation in the vector of operations iterated by operations_it.
+@brief Operator to calculate the matrix representation of gate labeled by i.
+@param r Range of indexes labeling the gate in the vector of gates iterated by gates_it.
 */
 void functor_get_operation_matrices::operator()( const tbb::blocked_range<size_t> r ) const {
 
@@ -90,27 +90,27 @@ void functor_get_operation_matrices::operator()( const tbb::blocked_range<size_t
         // determine the range parameters
         double* parameters_loc = parameters;
         for (size_t idx=0; idx<i; idx++) {
-            Operation* operation = *(operations_it+idx);
-            parameters_loc = parameters_loc + operation->get_parameter_num();
+            Gate* gate = *(gates_it+idx);
+            parameters_loc = parameters_loc + gate->get_parameter_num();
         }
 
-        // get the matrix representation of th eoperation
-        Operation* operation = *(operations_it+i);
+        // get the matrix representation of th egate
+        Gate* gate = *(gates_it+i);
 
-        if (operation->get_type() == CNOT_OPERATION ) {
-            CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            (*operation_mtxs)[i] = cnot_operation->get_matrix();
+        if (gate->get_type() == CNOT_OPERATION ) {
+            CNOT* cnot_gate = static_cast<CNOT*>(gate);
+            (*gate_mtxs)[i] = cnot_gate->get_matrix();
         }
-        else if (operation->get_type() == GENERAL_OPERATION ) {
-            (*operation_mtxs)[i] = operation->get_matrix();
+        else if (gate->get_type() == GENERAL_OPERATION ) {
+            (*gate_mtxs)[i] = gate->get_matrix();
         }
-            else if (operation->get_type() == U3_OPERATION ) {
-            U3* u3_operation = static_cast<U3*>(operation);
-            (*operation_mtxs)[i] = u3_operation->get_matrix(parameters_loc);
+            else if (gate->get_type() == U3_OPERATION ) {
+            U3* u3_gate = static_cast<U3*>(gate);
+            (*gate_mtxs)[i] = u3_gate->get_matrix(parameters_loc);
         }
-        else if (operation->get_type() == BLOCK_OPERATION ) {
-            Operation_block* block_operation = static_cast<Operation_block*>(operation);
-            (*operation_mtxs)[i] = block_operation->get_matrix(parameters_loc);
+        else if (gate->get_type() == BLOCK_OPERATION ) {
+            Gates_block* block_gate = static_cast<Gates_block*>(gate);
+            (*gate_mtxs)[i] = block_gate->get_matrix(parameters_loc);
         }
 
     }

@@ -1,0 +1,17 @@
+<map id="Decomposition_Base::get_operation_products" name="Decomposition_Base::get_operation_products">
+<area shape="rect" id="node2" href="$common_8cpp.html#a478212437ad8647d21171d23c98ae52a" title="Call to create an identity matrix. " alt="" coords="235,56,342,83"/>
+<area shape="rect" id="node5" href="$class_decomposition___base.html#af9bd082b6c17ecaea5657059dabfe083" title="Apply an gates on the input matrix. " alt="" coords="216,179,361,221"/>
+<area shape="rect" id="node3" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="1013,157,1161,184"/>
+<area shape="rect" id="node4" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="409,5,531,32"/>
+<area shape="rect" id="node6" href="$dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="450,259,490,285"/>
+<area shape="rect" id="node7" href="$common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="579,384,733,411"/>
+<area shape="rect" id="node8" href="$common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="579,435,733,461"/>
+<area shape="rect" id="node9" href="$dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="816,208,931,235"/>
+<area shape="rect" id="node10" href="$classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1209,360,1388,387"/>
+<area shape="rect" id="node11" href="$classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1209,208,1388,235"/>
+<area shape="rect" id="node12" href="$classzgemm___task__serial.html#ae59c7b6a25caef08555a40838161e586" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="801,263,945,305"/>
+<area shape="rect" id="node15" href="$classzgemm___task.html#ad309f35b650f53647ab14451fc2a2e85" title="This function is called when a task is spawned. " alt="" coords="581,333,731,360"/>
+<area shape="rect" id="node13" href="$dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="1016,309,1159,336"/>
+<area shape="rect" id="node14" href="$dot_8h.html#a4e33f93b23914217bea67e9d3d9b08fe" title="Definition of the zgemm function from CBLAS. " alt="" coords="1036,259,1139,285"/>
+<area shape="rect" id="node16" href="$classzgemm___task.html#a5d0029f2c2229df642373573f6f9d46c" title="Constructor of the class. " alt="" coords="781,333,965,360"/>
+</map>

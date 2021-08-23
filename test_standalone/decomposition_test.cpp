@@ -120,7 +120,7 @@ int main() {
     // starting the decomposition
     cDecomposition.start_decomposition(/* finalize_decomposition = */ true, /* prepare_export= */ true);
 
-    cDecomposition.list_operations(1);
+    cDecomposition.list_gates(1);
 //! [performing decomposition]
 
 

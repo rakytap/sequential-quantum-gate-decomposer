@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( ) {
 
-    // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
+    // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = false;
 
     // A string describing the type of the class
@@ -63,7 +63,7 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( ) {
 */
 Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in=false, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
 
-    // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
+    // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
 
     // A string describing the type of the class
@@ -114,7 +114,7 @@ Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
 
 
 /**
-@brief Start the optimization process to disentangle the most significant qubit from the others. The optimized parameters and operations are stored in the attributes optimized_parameters and operations.
+@brief Start the optimization process to disentangle the most significant qubit from the others. The optimized parameters and gates are stored in the attributes optimized_parameters and gates.
 */
 void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
@@ -146,7 +146,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
 
     if ( !check_optimization_solution() ) {
-        // Adding the operations of the successive layers
+        // Adding the gates of the successive layers
 
         //measure the time for the decompositin
         clock_t start_time = time(NULL);
@@ -162,11 +162,11 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
         while ( layer_num < max_layer_num_loc ) {
 
-            // add another operation layers to the gate structure used in the decomposition
-            add_operation_layers();
+            // add another gate layers to the gate structure used in the decomposition
+            add_gate_layers();
 
             // get the number of blocks
-            layer_num = operations.size();
+            layer_num = gates.size();
 
             // Do the optimization
             if (optimize_layer_num || layer_num >= max_layer_num_loc ) {
@@ -213,17 +213,17 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     subdisentaglement_done = true;
 
     // The subunitarized matrix
-    subdecomposed_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+    subdecomposed_mtx = get_transformed_matrix( optimized_parameters, gates.begin(), gates.size(), Umtx );
 }
 
 /**
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
-void Sub_Matrix_Decomposition::add_operation_layers() {
+void Sub_Matrix_Decomposition::add_gate_layers() {
 
     if ( unit_gate_structure == NULL ) {
         // add default gate structure if custom is not given
-        add_default_operation_layers();
+        add_default_gate_layers();
         return;
     }
 
@@ -243,32 +243,32 @@ void Sub_Matrix_Decomposition::add_operation_layers() {
     }
 
     // get the list of sub-blocks in the custom gate structure
-    std::vector<Operation*> operations = unit_gate_structure->get_operations();
+    std::vector<Gate*> gates = unit_gate_structure->get_gates();
 
-    for (std::vector<Operation*>::iterator operations_it = operations.begin(); operations_it != operations.end(); operations_it++ ) {
+    for (std::vector<Gate*>::iterator gates_it = gates.begin(); gates_it != gates.end(); gates_it++ ) {
 
-        // The current operation
-        Operation* operation = *operations_it;
+        // The current gate
+        Gate* gate = *gates_it;
 
         for (int idx=0;  idx<identical_blocks_loc; idx++) {
-            if (operation->get_type() == CNOT_OPERATION ) {
-                CNOT* cnot_operation = static_cast<CNOT*>( operation );
-                add_operation_to_end( (Operation*)cnot_operation->clone() );
+            if (gate->get_type() == CNOT_OPERATION ) {
+                CNOT* cnot_gate = static_cast<CNOT*>( gate );
+                add_gate_to_end( (Gate*)cnot_gate->clone() );
             }
-            else if (operation->get_type() == CZ_OPERATION ) {
-                CZ* cz_operation = static_cast<CZ*>( operation );
-                add_operation_to_end( (Operation*)cz_operation->clone() );
+            else if (gate->get_type() == CZ_OPERATION ) {
+                CZ* cz_gate = static_cast<CZ*>( gate );
+                add_gate_to_end( (Gate*)cz_gate->clone() );
             }
-            else if (operation->get_type() == GENERAL_OPERATION ) {
-                add_operation_to_end( operation->clone() );
+            else if (gate->get_type() == GENERAL_OPERATION ) {
+                add_gate_to_end( gate->clone() );
             }
-            else if (operation->get_type() == U3_OPERATION ) {
-                U3* u3_operation = static_cast<U3*>( operation );
-                add_operation_to_end( (Operation*)u3_operation->clone() );
+            else if (gate->get_type() == U3_OPERATION ) {
+                U3* u3_gate = static_cast<U3*>( gate );
+                add_gate_to_end( (Gate*)u3_gate->clone() );
             }
-            else if (operation->get_type() == BLOCK_OPERATION ) {
-                Operation_block* block_operation = static_cast<Operation_block*>( operation );
-                add_operation_to_end( (Operation*)block_operation->clone() );
+            else if (gate->get_type() == BLOCK_OPERATION ) {
+                Gates_block* block_gate = static_cast<Gates_block*>( gate );
+                add_gate_to_end( (Gate*)block_gate->clone() );
             }
 
         }
@@ -282,7 +282,7 @@ void Sub_Matrix_Decomposition::add_operation_layers() {
 /**
 @brief Call to add default gate layers to the gate structure used in the subdecomposition.
 */
-void Sub_Matrix_Decomposition::add_default_operation_layers() {
+void Sub_Matrix_Decomposition::add_default_gate_layers() {
 
     int control_qbit_loc = qbit_num-1;
 
@@ -303,10 +303,10 @@ void Sub_Matrix_Decomposition::add_default_operation_layers() {
 
         for (int idx=0;  idx<identical_blocks_loc; idx++) {
 
-            // creating block of operations
-            Operation_block* block = new Operation_block( qbit_num );
+            // creating block of gates
+            Gates_block* block = new Gates_block( qbit_num );
 
-            // adding U3 operation to the block
+            // adding U3 gate to the block
             bool Theta = true;
             bool Phi = false;
             bool Lambda = true;
@@ -317,8 +317,8 @@ void Sub_Matrix_Decomposition::add_default_operation_layers() {
             // add CNOT gate to the block
             block->add_cnot(control_qbit_loc, target_qbit_loc);
 
-            // adding the opeartion block to the operations
-            add_operation( block );
+            // adding the opeartion block to the gates
+            add_gate( block );
 
         }
     }
@@ -330,9 +330,9 @@ void Sub_Matrix_Decomposition::add_default_operation_layers() {
 
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
-@param block_in A pointer to the block of operations to be used in the decomposition
+@param block_in A pointer to the block of gates to be used in the decomposition
 */
-void Sub_Matrix_Decomposition::set_custom_operation_layers( Operation_block* block_in) {
+void Sub_Matrix_Decomposition::set_custom_gate_layers( Gates_block* block_in) {
 
     unit_gate_structure = block_in->clone();
 
@@ -350,7 +350,7 @@ void Sub_Matrix_Decomposition::set_custom_operation_layers( Operation_block* blo
 void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
 
-        if (operations.size() == 0 ) {
+        if (gates.size() == 0 ) {
             return;
         }
 
@@ -453,8 +453,8 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
 */
 double Sub_Matrix_Decomposition::optimization_problem( const double* parameters ) {
 
-        // get the transformed matrix with the operations in the list
-        Matrix matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
+        // get the transformed matrix with the gates in the list
+        Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
@@ -478,7 +478,7 @@ double Sub_Matrix_Decomposition::optimization_problem( const double* parameters 
 double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* parameters, void* void_instance ) {
 
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
-    std::vector<Operation*> operations_loc = instance->get_operations();
+    std::vector<Gate*> gates_loc = instance->get_gates();
 
     Matrix Umtx_loc, matrix_new;
 
@@ -486,7 +486,7 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 //tbb::spin_mutex::scoped_lock my_lock{my_mutex};
 
     Umtx_loc = instance->get_Umtx();
-    matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
+    matrix_new = instance->get_transformed_matrix( parameters->data, gates_loc.begin(), gates_loc.size(), Umtx_loc );
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
@@ -560,8 +560,8 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
     ret->set_max_layer_num( max_layer_num );
     ret->set_iteration_loops( iteration_loops );
 
-    if ( extract_operations(static_cast<Operation_block*>(ret)) != 0 ) {
-        printf("Sub_Matrix_Decomposition::clone(): extracting operations was not succesfull\n");
+    if ( extract_gates(static_cast<Gates_block*>(ret)) != 0 ) {
+        printf("Sub_Matrix_Decomposition::clone(): extracting gates was not succesfull\n");
         exit(-1);
     }
 

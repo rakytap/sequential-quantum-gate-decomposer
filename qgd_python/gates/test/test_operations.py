@@ -105,14 +105,14 @@ class Test_operations:
 
         """
 
-        from qgd_python.gates.qgd_Operation_Block import qgd_Operation_Block        
+        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block        
 
         # number of qubits
         qbit_num = 3
      
 
         # creating an instance of the C++ class
-        Operation_Block = qgd_Operation_Block( qbit_num )
+        cGates_Block = qgd_Gates_Block( qbit_num )
 
 
 
@@ -123,14 +123,14 @@ class Test_operations:
 
         """
 
-        from qgd_python.gates.qgd_Operation_Block import qgd_Operation_Block        
+        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block        
 
         # number of qubits
         qbit_num = 3
      
 
         # creating an instance of the C++ class
-        Operation_Block = qgd_Operation_Block( qbit_num )
+        cGates_Block = qgd_Gates_Block( qbit_num )
 
 
 
@@ -144,7 +144,7 @@ class Test_operations:
 
 
         # add U3 gate to the block
-        Operation_Block.add_U3( target_qbit, Theta, Phi, Lambda )
+        cGates_Block.add_U3( target_qbit, Theta, Phi, Lambda )
 
 
         # target qbit
@@ -154,7 +154,7 @@ class Test_operations:
         control_qbit = 1  
 
         # add CNOT gate to the block
-        Operation_Block.add_CNOT( target_qbit, control_qbit )
+        cGates_Block.add_CNOT( target_qbit, control_qbit )
 
 
 
@@ -167,14 +167,14 @@ class Test_operations:
 
         """
 
-        from qgd_python.gates.qgd_Operation_Block import qgd_Operation_Block        
+        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block        
 
         # number of qubits
         qbit_num = 3
      
 
         # creating an instance of the C++ class
-        Operation_Block_inner = qgd_Operation_Block( qbit_num )
+        layer = qgd_Gates_Block( qbit_num )
 
         # target qbit
         target_qbit = 0
@@ -186,7 +186,7 @@ class Test_operations:
 
 
         # add U3 gate to the block
-        Operation_Block_inner.add_U3( target_qbit, Theta, Phi, Lambda )
+        layer.add_U3( target_qbit, Theta, Phi, Lambda )
 
 
         # target qbit
@@ -196,14 +196,14 @@ class Test_operations:
         control_qbit = 1  
 
         # add CNOT gate to the block
-        Operation_Block_inner.add_CNOT( control_qbit, target_qbit )
+        layer.add_CNOT( control_qbit, target_qbit )
 
 
         # creating an instance of the C++ class
-        Operation_Block_outher = qgd_Operation_Block( qbit_num )   
+        cGates_Block = qgd_Gates_Block( qbit_num )   
 
         # add inner operation block to the outher operation block
-        Operation_Block_outher.add_Operation_Block( Operation_Block_inner )
+        cGates_Block.add_Gates_Block( layer )
 
 
 

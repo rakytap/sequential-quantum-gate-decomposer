@@ -18,7 +18,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file N_Qubit_Decomposition.cpp
-    \brief Base class to determine the decomposition of a unitary into a sequence of two-qubit and one-qubit gate operations.
+    \brief Base class to determine the decomposition of a unitary into a sequence of two-qubit and one-qubit gate gates.
     This class contains the non-template implementation of the decomposition class
 */
 
@@ -31,7 +31,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 N_Qubit_Decomposition::N_Qubit_Decomposition() {
 
-    // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
+    // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
     optimize_layer_num  = false;
 
     // A string describing the type of the class
@@ -55,7 +55,7 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() {
 */
 N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
 
-    // logical value. Set true if finding the minimum number of operation layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
+    // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
 
     // A string describing the type of the class
@@ -85,7 +85,7 @@ N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, b
 N_Qubit_Decomposition::~N_Qubit_Decomposition() {
 
     // release custom gate structure
-    for ( std::map<int,Operation_block*>::iterator it=gate_structure.begin(); it!= gate_structure.end(); it++ ) {
+    for ( std::map<int,Gates_block*>::iterator it=gate_structure.begin(); it!= gate_structure.end(); it++ ) {
         delete it->second;
         it->second = NULL;
     }
@@ -97,7 +97,7 @@ N_Qubit_Decomposition::~N_Qubit_Decomposition() {
 /**
 @brief Start the disentanglig process of the unitary
 @param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
-@param prepare_export Logical parameter. Set true to prepare the list of operations to be exported, or false otherwise.
+@param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
 */
 void
 N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_export) {
@@ -141,9 +141,9 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
     cSub_decomposition->set_iteration_loops( iteration_loops );
 
     // set custom gate structure if given
-    std::map<int,Operation_block*>::iterator key_it = gate_structure.find( qbit_num );
+    std::map<int,Gates_block*>::iterator key_it = gate_structure.find( qbit_num );
     if ( key_it != gate_structure.end() ) {
-        cSub_decomposition->set_custom_operation_layers( gate_structure[qbit_num] );
+        cSub_decomposition->set_custom_gate_layers( gate_structure[qbit_num] );
     }
 
     // The maximal error of the optimization problem
@@ -161,7 +161,7 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
         return;
     }
 //return;
-    // saving the subunitarization operations
+    // saving the subunitarization gates
     extract_subdecomposition_results( cSub_decomposition );
 
     delete cSub_decomposition;
@@ -184,13 +184,13 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
         // final tuning of the decomposition parameters
         final_optimization();
 
-        // prepare operations to export
+        // prepare gates to export
         if (prepare_export) {
-            prepare_operations_to_export();
+            prepare_gates_to_export();
         }
 
         // calculating the final error of the decomposition
-        Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters, operations.begin(), operations.size(), Umtx );
+        Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters, gates.begin(), gates.size(), Umtx );
 	calc_decomposition_error( matrix_decomposed );
         
 
@@ -302,7 +302,7 @@ N_Qubit_Decomposition::decompose_submatrix() {
         }
 
         // obtaining the subdecomposed submatrices
-        Matrix subdecomposed_matrix_mtx = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+        Matrix subdecomposed_matrix_mtx = get_transformed_matrix( optimized_parameters, gates.begin(), gates.size(), Umtx );
         QGD_Complex16* subdecomposed_matrix = subdecomposed_matrix_mtx.get_data();
 
         // get the most unitary submatrix
@@ -375,7 +375,7 @@ N_Qubit_Decomposition::decompose_submatrix() {
         // setting the iteration loops in each step of the optimization process
         cdecomposition->set_iteration_loops( iteration_loops );
 
-        // setting operation layer
+        // setting gate layer
         cdecomposition->set_optimization_blocks( optimization_block );
 
         // set custom gate structure if given
@@ -388,7 +388,7 @@ N_Qubit_Decomposition::decompose_submatrix() {
         cdecomposition->start_decomposition(false, false);
 
 
-        // saving the decomposition operations
+        // saving the decomposition gates
         extract_subdecomposition_results( reinterpret_cast<Sub_Matrix_Decomposition*>(cdecomposition) );
 
         delete cdecomposition;
@@ -399,7 +399,7 @@ N_Qubit_Decomposition::decompose_submatrix() {
 
 
 /**
-@brief Call to extract and store the calculated parameters and operations of the sub-decomposition processes
+@brief Call to extract and store the calculated parameters and gates of the sub-decomposition processes
 @param cSub_decomposition An instance of class Sub_Matrix_Decomposition used to disentangle the n-th qubit from the others.
 */
 void
@@ -422,52 +422,52 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
         optimized_parameters_tmp = NULL;
 
 
-        // cloning the operation list obtained during the subdecomposition
-        std::vector<Operation*> sub_decomp_ops = cSub_decomposition->get_operations();
-        int operation_num = cSub_decomposition->get_operation_num();
+        // cloning the gate list obtained during the subdecomposition
+        std::vector<Gate*> sub_decomp_ops = cSub_decomposition->get_gates();
+        int gate_num = cSub_decomposition->get_gate_num();
 
-        for ( int idx = operation_num-1; idx >=0; idx--) {
-            Operation* op = sub_decomp_ops[idx];
+        for ( int idx = gate_num-1; idx >=0; idx--) {
+            Gate* op = sub_decomp_ops[idx];
 
             if (op->get_type() == CNOT_OPERATION) {
                 CNOT* cnot_op = static_cast<CNOT*>( op );
                 CNOT* cnot_op_cloned = cnot_op->clone();
                 cnot_op_cloned->set_qbit_num( qbit_num );
-                Operation* op_cloned = static_cast<Operation*>( cnot_op_cloned );
-                add_operation( op_cloned );
+                Gate* op_cloned = static_cast<Gate*>( cnot_op_cloned );
+                add_gate( op_cloned );
             }
             else if (op->get_type() == CZ_OPERATION) {
                 CZ* cz_op = static_cast<CZ*>( op );
                 CZ* cz_op_cloned = cz_op->clone();
                 cz_op_cloned->set_qbit_num( qbit_num );
-                Operation* op_cloned = static_cast<Operation*>( cz_op_cloned );
-                add_operation( op_cloned );
+                Gate* op_cloned = static_cast<Gate*>( cz_op_cloned );
+                add_gate( op_cloned );
             }
             else if (op->get_type() == CH_OPERATION) {
                 CH* ch_op = static_cast<CH*>( op );
                 CH* ch_op_cloned = ch_op->clone();
                 ch_op_cloned->set_qbit_num( qbit_num );
-                Operation* op_cloned = static_cast<Operation*>( ch_op_cloned );
-                add_operation( op_cloned );
+                Gate* op_cloned = static_cast<Gate*>( ch_op_cloned );
+                add_gate( op_cloned );
             }
             else if (op->get_type() == U3_OPERATION) {
                 U3* u3_op = static_cast<U3*>( op );
                 U3* u3_op_cloned = u3_op->clone();
                 u3_op_cloned->set_qbit_num( qbit_num );
-                Operation* op_cloned = static_cast<Operation*>( u3_op_cloned );
-                add_operation( op_cloned );
+                Gate* op_cloned = static_cast<Gate*>( u3_op_cloned );
+                add_gate( op_cloned );
             }
             else if (op->get_type() == BLOCK_OPERATION) {
-                Operation_block* block_op = static_cast<Operation_block*>( op );
-                Operation_block* block_op_cloned = block_op->clone();
+                Gates_block* block_op = static_cast<Gates_block*>( op );
+                Gates_block* block_op_cloned = block_op->clone();
                 block_op_cloned->set_qbit_num( qbit_num );
-                Operation* op_cloned = static_cast<Operation*>( block_op_cloned );
-                add_operation( op_cloned );
+                Gate* op_cloned = static_cast<Gate*>( block_op_cloned );
+                add_gate( op_cloned );
             }
             else if (op->get_type() == GENERAL_OPERATION) {
-                Operation* op_cloned = op->clone();
+                Gate* op_cloned = op->clone();
                 op_cloned->set_qbit_num( qbit_num );
-                add_operation( op_cloned );
+                add_gate( op_cloned );
             }
         }
 
@@ -500,7 +500,7 @@ void  N_Qubit_Decomposition::final_optimization() {
 */
 void N_Qubit_Decomposition::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
-        if (operations.size() == 0 ) {
+        if (gates.size() == 0 ) {
             return;
         }
 
@@ -599,8 +599,8 @@ void N_Qubit_Decomposition::solve_layer_optimization_problem( int num_of_paramet
 */
 double N_Qubit_Decomposition::optimization_problem( const double* parameters ) {
 
-        // get the transformed matrix with the operations in the list
-        Matrix matrix_new = get_transformed_matrix( parameters, operations.begin(), operations.size(), Umtx );
+        // get the transformed matrix with the gates in the list
+        Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
 
         double cost_function = get_cost_function(matrix_new);
 
@@ -617,11 +617,11 @@ double N_Qubit_Decomposition::optimization_problem( const double* parameters ) {
 double N_Qubit_Decomposition::optimization_problem( const gsl_vector* parameters, void* void_instance ) {
 
     N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(void_instance);
-    std::vector<Operation*> operations_loc = instance->get_operations();
+    std::vector<Gate*> gates_loc = instance->get_gates();
 
-    // get the transformed matrix with the operations in the list
+    // get the transformed matrix with the gates in the list
     Matrix Umtx_loc = instance->get_Umtx();
-    Matrix matrix_new = instance->get_transformed_matrix( parameters->data, operations_loc.begin(), operations_loc.size(), Umtx_loc );
+    Matrix matrix_new = instance->get_transformed_matrix( parameters->data, gates_loc.begin(), gates_loc.size(), Umtx_loc );
 
     double cost_function = get_cost_function(matrix_new);
 
@@ -647,36 +647,36 @@ N_Qubit_Decomposition::simplify_layers() {
         // current starting index of the optimized parameters
         int parameter_idx = 0;
 
-        Operation_block* operations_loc = new Operation_block( qbit_num );
+        Gates_block* gates_loc = new Gates_block( qbit_num );
         double* optimized_parameters_loc = (double*)qgd_calloc(parameter_num, sizeof(double), 64);
         unsigned int parameter_num_loc = 0;
 
         unsigned int layer_idx = 0;
 
-        while (layer_idx < operations.size()) {
+        while (layer_idx < gates.size()) {
 
-            // generate a block of operations to be simplified
-            // (containg only successive two-qubit operations)
-            Operation_block* block_to_simplify = new Operation_block( qbit_num );
+            // generate a block of gates to be simplified
+            // (containg only successive two-qubit gates)
+            Gates_block* block_to_simplify = new Gates_block( qbit_num );
 
             std::vector<int> involved_qbits;
             // layers in the block to be simplified
-            Operation_block* blocks_to_save = new Operation_block( qbit_num );
+            Gates_block* blocks_to_save = new Gates_block( qbit_num );
 
-            // get the successive operations involving the same qubits
+            // get the successive gates involving the same qubits
             while (true) {
 
-                if (layer_idx >= operations.size() ) {
+                if (layer_idx >= gates.size() ) {
                     break;
                 }
 
-                // get the current layer of operations
-                Operation* operation = operations[layer_idx];
+                // get the current layer of gates
+                Gate* gate = gates[layer_idx];
                 layer_idx = layer_idx + 1;
 
-                Operation_block* block_operation;
-                if (operation->get_type() == BLOCK_OPERATION) {
-                    block_operation = static_cast<Operation_block*>(operation);
+                Gates_block* block_gate;
+                if (gate->get_type() == BLOCK_OPERATION) {
+                    block_gate = static_cast<Gates_block*>(gate);
                 }
                 else {
                     layer_idx = layer_idx + 1;
@@ -685,23 +685,23 @@ N_Qubit_Decomposition::simplify_layers() {
 
 
                 //get the involved qubits
-                std::vector<int> involved_qbits_op = block_operation->get_involved_qubits();
+                std::vector<int> involved_qbits_op = block_gate->get_involved_qubits();
 
-                // add involved qubits of the operation to the list of involved qubits in the layer
+                // add involved qubits of the gate to the list of involved qubits in the layer
                 for (std::vector<int>::iterator it=involved_qbits_op.begin(); it!=involved_qbits_op.end(); it++) {
                     add_unique_elelement( involved_qbits, *it );
                 }
 
-                if ( (involved_qbits.size())> 2 && blocks_to_save->get_operation_num() > 0 ) {
+                if ( (involved_qbits.size())> 2 && blocks_to_save->get_gate_num() > 0 ) {
                     layer_idx = layer_idx -1;
                     involved_qbits.clear();
                     break;
                 }
 
-                blocks_to_save->combine(block_operation);
+                blocks_to_save->combine(block_gate);
 
-                // adding the operations to teh block if they act on the same qubits
-                block_to_simplify->combine(block_operation);
+                // adding the gates to teh block if they act on the same qubits
+                block_to_simplify->combine(block_gate);
 
 
             }
@@ -709,11 +709,11 @@ N_Qubit_Decomposition::simplify_layers() {
             //number of perations in the block
             unsigned int parameter_num_block = block_to_simplify->get_parameter_num();
 
-            // get the number of two-qubit gates and store the block operations if the number of CNOT gates cannot be reduced
+            // get the number of two-qubit gates and store the block gates if the number of CNOT gates cannot be reduced
             gates_num gate_nums = block_to_simplify->get_gate_nums();
 
             if (gate_nums.cnot + gate_nums.cz + gate_nums.ch < 2) {
-                operations_loc->combine(blocks_to_save);
+                gates_loc->combine(blocks_to_save);
                 memcpy(optimized_parameters_loc+parameter_num_loc, optimized_parameters+parameter_idx, parameter_num_block*sizeof(double) );
                 parameter_idx = parameter_idx + parameter_num_block;
                 parameter_num_loc = parameter_num_loc + parameter_num_block;
@@ -735,18 +735,18 @@ N_Qubit_Decomposition::simplify_layers() {
             // simplify the given layer
             std::map<int,int> max_layer_num_loc;
             max_layer_num_loc.insert( std::pair<int, int>(2,  gate_nums.cnot+gate_nums.cz+gate_nums.ch-1 ) );
-            Operation_block* simplified_layer = NULL;
+            Gates_block* simplified_layer = NULL;
             double* simplified_parameters = NULL;
             unsigned int simplified_parameter_num=0;
 
-            // Try to simplify the sequence of 2-qubit operations
+            // Try to simplify the sequence of 2-qubit gates
             int simplification_status = simplify_layer( block_to_simplify, optimized_parameters+parameter_idx, parameter_num_block, max_layer_num_loc, simplified_layer, simplified_parameters, simplified_parameter_num );
 
 
 
-            // adding the simplified operations (or the non-simplified if the simplification was not successfull)
+            // adding the simplified gates (or the non-simplified if the simplification was not successfull)
             if (simplification_status == 0) {
-                operations_loc->combine( simplified_layer );
+                gates_loc->combine( simplified_layer );
 
                 if (parameter_num < parameter_num_loc + simplified_parameter_num ) {
                     optimized_parameters_loc = (double*)qgd_realloc( optimized_parameters_loc, parameter_num_loc + simplified_parameter_num, sizeof(double), 64 );
@@ -755,8 +755,8 @@ N_Qubit_Decomposition::simplify_layers() {
                 parameter_num_loc = parameter_num_loc + simplified_parameter_num;
             }
             else {
-                // addign the stacked operation to the list, sice the simplification was unsuccessful
-                operations_loc->combine( blocks_to_save );
+                // addign the stacked gate to the list, sice the simplification was unsuccessful
+                gates_loc->combine( blocks_to_save );
 
                 if (parameter_num < parameter_num_loc + parameter_num_block ) {
                     optimized_parameters_loc = (double*)qgd_realloc( optimized_parameters_loc, parameter_num_loc + parameter_num_block, sizeof(double), 64 );
@@ -794,16 +794,16 @@ N_Qubit_Decomposition::simplify_layers() {
         gates_num gate_num_initial = get_gate_nums();
         int two_qbit_num_initial = gate_num_initial.cnot + gate_num_initial.cz + gate_num_initial.ch;
 
-        // clearing the original list of operations and parameters
-        release_operations();
+        // clearing the original list of gates and parameters
+        release_gates();
         qgd_free( optimized_parameters );
         optimized_parameters = NULL;
 
-        // store the modified list of operations and parameters
-        combine( operations_loc );
-        delete operations_loc;
-        operations_loc = NULL;
-        layer_num = operations.size();
+        // store the modified list of gates and parameters
+        combine( gates_loc );
+        delete gates_loc;
+        gates_loc = NULL;
+        layer_num = gates.size();
 
 
         optimized_parameters = optimized_parameters_loc;
@@ -824,18 +824,18 @@ N_Qubit_Decomposition::simplify_layers() {
 }
 
 /**
-@brief Call to simplify the gate structure in a block of operations (i.e. tries to reduce the number of two-qubit gates)
-@param layer An instance of class Operation_block containing the 2-qubit gate structure to be simplified
-@param parameters An array of parameters to calculate the matrix representation of the operations in the block of operations.
-@param parameter_num_block NUmber of parameters in the block of operations to be simplified.
-@param max_layer_num_loc A map of <int n: int num> indicating the maximal number of two-qubit operations allowed in the simplification.
-@param simplified_layer An instance of Operation_block containing the simplified structure of operations.
+@brief Call to simplify the gate structure in a block of gates (i.e. tries to reduce the number of two-qubit gates)
+@param layer An instance of class Gates_block containing the 2-qubit gate structure to be simplified
+@param parameters An array of parameters to calculate the matrix representation of the gates in the block of gates.
+@param parameter_num_block NUmber of parameters in the block of gates to be simplified.
+@param max_layer_num_loc A map of <int n: int num> indicating the maximal number of two-qubit gates allowed in the simplification.
+@param simplified_layer An instance of Gates_block containing the simplified structure of gates.
 @param simplified_parameters An array of parameters containing the parameters of the simplified block structure.
 @param simplified_parameter_num The number of parameters in the simplified block structure.
 @return Returns with 0 if the simplification wa ssuccessful.
 */
 int
-N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Operation_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num) {
+N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Gates_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num) {
 
         if (verbose) {
             printf("Try to simplify sub-structure \n");
@@ -845,9 +845,9 @@ N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameter
         int target_qbit = -1;
         int control_qbit = -1;
 
-        std::vector<Operation*> layer_operations = layer->get_operations();
-        for (std::vector<Operation*>::iterator it = layer_operations.begin(); it!=layer_operations.end(); it++) {
-            Operation* op = *it;
+        std::vector<Gate*> layer_gates = layer->get_gates();
+        for (std::vector<Gate*>::iterator it = layer_gates.begin(); it!=layer_gates.end(); it++) {
+            Gate* op = *it;
             if (op->get_type() == CNOT_OPERATION || op->get_type() == CZ_OPERATION || op->get_type() == CH_OPERATION) {
                 target_qbit = op->get_target_qbit();
                 control_qbit = op->get_control_qbit();
@@ -874,8 +874,8 @@ N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameter
         qbits_reordered.push_back(target_qbit);
 
 
-        // construct abstarct operations correspond to the reordeerd qubits
-        Operation_block* reordered_layer = layer->clone();
+        // construct abstarct gates correspond to the reordeerd qubits
+        Gates_block* reordered_layer = layer->clone();
         reordered_layer->reorder_qubits( qbits_reordered );
 
         //  get the reordered N-qubit matrix of the layer
@@ -922,7 +922,7 @@ N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameter
 
 
 
-        // contruct the layer containing the simplified operations in the N-qubit space
+        // contruct the layer containing the simplified gates in the N-qubit space
         // but first get the inverse reordered qubit list
         std::vector<int> qbits_inverse_reordered;
         for (int idx=0; idx<qbit_num; idx++) {
@@ -933,13 +933,13 @@ N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameter
             qbits_inverse_reordered[qbit_num-1-qbits_reordered[qbit_num-1-qbit_idx]] =  qbit_idx;
         }
 
-        simplified_layer = new Operation_block(qbit_num);
+        simplified_layer = new Gates_block(qbit_num);
 
-        std::vector<Operation*> simplifying_operations = cdecomposition->get_operations();
-        for ( std::vector<Operation*>::iterator it=simplifying_operations.begin(); it!=simplifying_operations.end(); it++) { //int operation_block_idx=0 in range(0,len(cdecomposition.operations)):
-            Operation* op = *it;
+        std::vector<Gate*> simplifying_gates = cdecomposition->get_gates();
+        for ( std::vector<Gate*>::iterator it=simplifying_gates.begin(); it!=simplifying_gates.end(); it++) { //int gate_block_idx=0 in range(0,len(cdecomposition.gates)):
+            Gate* op = *it;
 
-            Operation_block* block_op = static_cast<Operation_block*>( op );
+            Gates_block* block_op = static_cast<Gates_block*>( op );
             block_op->set_qbit_num( qbit_num );
             block_op->reorder_qubits( qbits_inverse_reordered );
             simplified_layer->combine( block_op );
@@ -973,21 +973,21 @@ N_Qubit_Decomposition::simplify_layer( Operation_block* layer, double* parameter
 
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
-@param gate_structure An <int, Operation_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
+@param gate_structure An <int, Gates_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
 */
-void N_Qubit_Decomposition::set_custom_gate_structure( std::map<int, Operation_block*> gate_structure_in ) {
+void N_Qubit_Decomposition::set_custom_gate_structure( std::map<int, Gates_block*> gate_structure_in ) {
 
 
-    for ( std::map<int,Operation_block*>::iterator it=gate_structure_in.begin(); it!= gate_structure_in.end(); it++ ) {
+    for ( std::map<int,Gates_block*>::iterator it=gate_structure_in.begin(); it!= gate_structure_in.end(); it++ ) {
         int key = it->first;
 
-        std::map<int,Operation_block*>::iterator key_it = gate_structure.find( key );
+        std::map<int,Gates_block*>::iterator key_it = gate_structure.find( key );
 
         if ( key_it != gate_structure.end() ) {
             gate_structure.erase( key_it );
         }
 
-        gate_structure.insert( std::pair<int,Operation_block*>(key, it->second->clone()));
+        gate_structure.insert( std::pair<int,Gates_block*>(key, it->second->clone()));
 
     }
 

@@ -47,8 +47,8 @@ Decomposition_Base::Decomposition_Base() {
     // error of the unitarity of the final decomposition
     decomposition_error = -1;
 
-    // number of finalizing (deterministic) opertaions counted from the top of the array of operations
-    finalizing_operations_num = 0;
+    // number of finalizing (deterministic) opertaions counted from the top of the array of gates
+    finalizing_gates_num = 0;
 
     // the number of the finalizing (deterministic) parameters counted from the top of the optimized_parameters list
     finalizing_parameter_num = 0;
@@ -97,7 +97,7 @@ Decomposition_Base::Decomposition_Base() {
 @param initial_guess_in Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return An instance of the class
 */
-Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Operation_block(qbit_num_in) {
+Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Gates_block(qbit_num_in) {
 
     Init_max_layer_num();
 
@@ -116,8 +116,8 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
     // error of the unitarity of the final decomposition
     decomposition_error = -1;
 
-    // number of finalizing (deterministic) opertaions counted from the top of the array of operations
-    finalizing_operations_num = 0;
+    // number of finalizing (deterministic) opertaions counted from the top of the array of gates
+    finalizing_gates_num = 0;
 
     // the number of the finalizing (deterministic) parameters counted from the top of the optimized_parameters list
     finalizing_parameter_num = 0;
@@ -172,8 +172,8 @@ Decomposition_Base::~Decomposition_Base() {
 
 
 /**
-@brief Call to set the number of operation blocks to be optimized in one shot
-@param optimization_block_in The number of operation blocks to be optimized in one shot
+@brief Call to set the number of gate blocks to be optimized in one shot
+@param optimization_block_in The number of gate blocks to be optimized in one shot
 */
 void Decomposition_Base::set_optimization_blocks( int optimization_block_in) {
     optimization_block = optimization_block_in;
@@ -189,24 +189,24 @@ void Decomposition_Base::set_max_iteration( int max_iterations_in) {
 
 
 /**
-@brief After the main optimization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed operations are added to the array of operations needed to the decomposition of the input unitary.
+@brief After the main optimization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed gates are added to the array of gates needed to the decomposition of the input unitary.
 */
 void Decomposition_Base::finalize_decomposition() {
 
-        // get the transformed matrix resulted by the operations in the list
-        Matrix transformed_matrix = get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+        // get the transformed matrix resulted by the gates in the list
+        Matrix transformed_matrix = get_transformed_matrix( optimized_parameters, gates.begin(), gates.size(), Umtx );
 
         // preallocate the storage for the finalizing parameters
         finalizing_parameter_num = 3*qbit_num;
         double* finalizing_parameters = (double*)qgd_calloc(finalizing_parameter_num,sizeof(double), 64);
 
-        // obtaining the final operations of the decomposition
-        Operation_block* finalizing_operations = new Operation_block( qbit_num );;
-        Matrix final_matrix = get_finalizing_operations( transformed_matrix, finalizing_operations, finalizing_parameters );
+        // obtaining the final gates of the decomposition
+        Gates_block* finalizing_gates = new Gates_block( qbit_num );;
+        Matrix final_matrix = get_finalizing_gates( transformed_matrix, finalizing_gates, finalizing_parameters );
 
-        // adding the finalizing operations to the list of operations
-        // adding the opeartion block to the operations
-        add_operation( finalizing_operations );
+        // adding the finalizing gates to the list of gates
+        // adding the opeartion block to the gates
+        add_gate( finalizing_gates );
 // TODO: use memcpy
         double* optimized_parameters_tmp = (double*)qgd_calloc( (parameter_num),sizeof(double), 64 );
         for (int idx=0; idx < finalizing_parameter_num; idx++) {
@@ -222,7 +222,7 @@ void Decomposition_Base::finalize_decomposition() {
         optimized_parameters = optimized_parameters_tmp;
         optimized_parameters_tmp = NULL;
 
-        finalizing_operations_num = finalizing_operations->get_operation_num();
+        finalizing_gates_num = finalizing_gates->get_gate_num();
 
 
         // indicate that the decomposition was finalized
@@ -237,32 +237,32 @@ void Decomposition_Base::finalize_decomposition() {
 
 
         if (verbose) {
-            printf( "The error of the decomposition after finalyzing operations is %f with %d layers containing %d U3 operations and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
+            printf( "The error of the decomposition after finalyzing gates is %f with %d layers containing %d U3 gates and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
         }
 
 }
 
 
 /**
-@brief Call to print the operations decomposing the initial unitary. These operations brings the intial matrix into unity.
-@param start_index The index of the first operation
+@brief Call to print the gates decomposing the initial unitary. These gates brings the intial matrix into unity.
+@param start_index The index of the first gate
 */
-void Decomposition_Base::list_operations( int start_index ) {
+void Decomposition_Base::list_gates( int start_index ) {
 
-        Operation_block::list_operations( optimized_parameters, start_index );
+        Gates_block::list_gates( optimized_parameters, start_index );
 
 }
 
 
 
 /**
-@brief This method determine the operations needed to rotate the indepent qubits into the state |0>
+@brief This method determine the gates needed to rotate the indepent qubits into the state |0>
 @param mtx The unitary describing indepent qubits.  The resulting matrix is returned by this pointer
-@param finalizing_operations Pointer pointig to a block of operations containing the final operations.
-@param finalizing_parameters Parameters corresponding to the finalizing operations.
+@param finalizing_gates Pointer pointig to a block of gates containing the final gates.
+@param finalizing_parameters Parameters corresponding to the finalizing gates.
 @return Returns with the finalized matrix
 */
-Matrix Decomposition_Base::get_finalizing_operations( Matrix& mtx, Operation_block* finalizing_operations, double* finalizing_parameters  ) {
+Matrix Decomposition_Base::get_finalizing_gates( Matrix& mtx, Gates_block* finalizing_gates, double* finalizing_parameters  ) {
 
 
         int parameter_idx = finalizing_parameter_num-1;
@@ -309,7 +309,7 @@ Matrix Decomposition_Base::get_finalizing_operations( Matrix& mtx, Operation_blo
 
             U3* u3_loc = new U3( qbit_num, target_qbit, true, true, true);
 
-            // adding the new operation to the list of finalizing operations
+            // adding the new gate to the list of finalizing gates
             finalizing_parameters[parameter_idx] = M_PI-Phi; //np.concatenate((parameters_loc, finalizing_parameters))
             parameter_idx--;
             finalizing_parameters[parameter_idx] = M_PI-Lambda; //np.concatenate((parameters_loc, finalizing_parameters))
@@ -317,13 +317,13 @@ Matrix Decomposition_Base::get_finalizing_operations( Matrix& mtx, Operation_blo
             finalizing_parameters[parameter_idx] = Theta; //np.concatenate((parameters_loc, finalizing_parameters))
             parameter_idx--;
 
-            finalizing_operations->add_operation( u3_loc );
+            finalizing_gates->add_gate( u3_loc );
             // get the new matrix
 
 
             Matrix u3_mtx = u3_loc->get_matrix(parameters_loc);
 
-            Matrix tmp2 = apply_operation( u3_mtx, mtx_tmp);
+            Matrix tmp2 = apply_gate( u3_mtx, mtx_tmp);
             mtx_tmp = tmp2;
 
         }
@@ -345,7 +345,7 @@ Matrix Decomposition_Base::get_finalizing_operations( Matrix& mtx, Operation_blo
 void  Decomposition_Base::solve_optimization_problem( double* solution_guess, int solution_guess_num ) {
 
 
-        if ( operations.size() == 0 ) {
+        if ( gates.size() == 0 ) {
             return;
         }
 
@@ -359,8 +359,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         // setting the initial value for the current minimum
         current_minimum = 1e8;
 
-        // store the operations
-        std::vector<Operation*> operations_loc = operations;
+        // store the gates
+        std::vector<Gate*> gates_loc = gates;
 
 
 
@@ -404,17 +404,17 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             memcpy(optimized_parameters_gsl->data + parameter_num-solution_guess_num, solution_guess, solution_guess_num*sizeof(double));
         }
 
-        // starting number of operation block applied prior to the optimalized operation blocks
-        int pre_operation_parameter_num = 0;
+        // starting number of gate block applied prior to the optimalized gate blocks
+        int pre_gate_parameter_num = 0;
 
         // defining temporary variables for iteration cycles
         int block_idx_end;
-        unsigned int block_idx_start = operations.size();
-        operations.clear();
+        unsigned int block_idx_start = gates.size();
+        gates.clear();
         int block_parameter_num;
-        Matrix operations_mtx_pre;
-        Operation* fixed_operation_post = new Operation( qbit_num );
-        std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> operations_mtxs_post;
+        Matrix gates_mtx_pre;
+        Gate* fixed_gate_post = new Gate( qbit_num );
+        std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> gates_mtxs_post;
 
         // the identity matrix used in the calculations
         Matrix Identity =  create_identity( matrix_size );
@@ -440,24 +440,24 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // determine the number of free parameters to be optimized
             block_parameter_num = 0;
             for ( int block_idx=block_idx_start-1; block_idx>=block_idx_end; block_idx--) {
-                block_parameter_num = block_parameter_num + operations_loc[block_idx]->get_parameter_num();
+                block_parameter_num = block_parameter_num + gates_loc[block_idx]->get_parameter_num();
             }
 
-            // ***** get the fixed operations applied before the optimized operations *****
-            if (block_idx_start < operations_loc.size() ) {
-                std::vector<Operation*>::iterator fixed_operations_pre_it = operations.begin() + 1;
-                Matrix tmp = get_transformed_matrix(optimized_parameters, fixed_operations_pre_it, operations.size()-1, operations_mtx_pre);
-                operations_mtx_pre = tmp; // copy?
+            // ***** get the fixed gates applied before the optimized gates *****
+            if (block_idx_start < gates_loc.size() ) {
+                std::vector<Gate*>::iterator fixed_gates_pre_it = gates.begin() + 1;
+                Matrix tmp = get_transformed_matrix(optimized_parameters, fixed_gates_pre_it, gates.size()-1, gates_mtx_pre);
+                gates_mtx_pre = tmp; // copy?
             }
             else {
-                operations_mtx_pre = Identity.copy();
+                gates_mtx_pre = Identity.copy();
             }
 
-            // Transform the initial unitary upon the fixed pre-optimization operations
-            Umtx = apply_operation(operations_mtx_pre, Umtx_loc);
+            // Transform the initial unitary upon the fixed pre-optimization gates
+            Umtx = apply_gate(gates_mtx_pre, Umtx_loc);
 
-            // clear the operation list used in the previous iterations
-            operations.clear();
+            // clear the gate list used in the previous iterations
+            gates.clear();
 
             if (optimized_parameters != NULL ) {
                 qgd_free( optimized_parameters );
@@ -465,30 +465,30 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             }
 
 
-            // ***** get the fixed operations applied after the optimized operations *****
-            // create a list of post operations matrices
-            if (block_idx_start == operations_loc.size() ) {
-                // matrix of the fixed operations aplied after the operations to be varied
+            // ***** get the fixed gates applied after the optimized gates *****
+            // create a list of post gates matrices
+            if (block_idx_start == gates_loc.size() ) {
+                // matrix of the fixed gates aplied after the gates to be varied
                 double* fixed_parameters_post = optimized_parameters_gsl->data;
-                std::vector<Operation*>::iterator fixed_operations_post_it = operations_loc.begin();
+                std::vector<Gate*>::iterator fixed_gates_post_it = gates_loc.begin();
 
-                operations_mtxs_post = get_operation_products(fixed_parameters_post, fixed_operations_post_it, block_idx_end);
+                gates_mtxs_post = get_gate_products(fixed_parameters_post, fixed_gates_post_it, block_idx_end);
             }
 
-            // Create a general operation describing the cumulative effect of gates following the optimized operations
+            // Create a general gate describing the cumulative effect of gates following the optimized gates
             if (block_idx_end > 0) {
-                fixed_operation_post->set_matrix( operations_mtxs_post[block_idx_end-1] );
+                fixed_gate_post->set_matrix( gates_mtxs_post[block_idx_end-1] );
             }
             else {
-                // release operation products
-                operations_mtxs_post.clear();
-                fixed_operation_post->set_matrix( Identity );
+                // release gate products
+                gates_mtxs_post.clear();
+                fixed_gate_post->set_matrix( Identity );
             }
 
-            // create a list of operations for the optimization process
-            operations.push_back( fixed_operation_post ); 
+            // create a list of gates for the optimization process
+            gates.push_back( fixed_gate_post ); 
             for ( unsigned int idx=block_idx_end; idx<block_idx_start; idx++ ) {
-                operations.push_back( operations_loc[idx] );
+                gates.push_back( gates_loc[idx] );
             }
 
 
@@ -501,7 +501,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 gsl_vector_free(solution_guess_gsl);
                 solution_guess_gsl = gsl_vector_alloc (parameter_num);
             }
-            memcpy( solution_guess_gsl->data, optimized_parameters_gsl->data+parameter_num_loc - pre_operation_parameter_num - block_parameter_num, parameter_num*sizeof(double) );
+            memcpy( solution_guess_gsl->data, optimized_parameters_gsl->data+parameter_num_loc - pre_gate_parameter_num - block_parameter_num, parameter_num*sizeof(double) );
 
             // solve the optimization problem of the block
             solve_layer_optimization_problem( parameter_num, solution_guess_gsl  );
@@ -517,15 +517,15 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             minvec_mean = minvec_mean/min_vec_num;
 
             // store the obtained optimalized parameters for the block
-            memcpy( optimized_parameters_gsl->data+parameter_num_loc - pre_operation_parameter_num-block_parameter_num, optimized_parameters, parameter_num*sizeof(double) );
+            memcpy( optimized_parameters_gsl->data+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters, parameter_num*sizeof(double) );
 
             if (block_idx_end == 0) {
-                block_idx_start = operations_loc.size();
-                pre_operation_parameter_num = 0;
+                block_idx_start = gates_loc.size();
+                pre_gate_parameter_num = 0;
             }
             else {
                 block_idx_start = block_idx_start - optimization_block;
-                pre_operation_parameter_num = pre_operation_parameter_num + block_parameter_num;
+                pre_gate_parameter_num = pre_gate_parameter_num + block_parameter_num;
             }
 
 
@@ -571,8 +571,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         optimization_block = optimization_block_loc;
 
         // store the result of the optimization
-        operations.clear();
-        operations = operations_loc;
+        gates.clear();
+        gates = gates_loc;
 
         parameter_num = parameter_num_loc;
         if (optimized_parameters != NULL ) {
@@ -589,7 +589,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         optimized_parameters_gsl = NULL;
         solution_guess_gsl = NULL;
 
-        delete(fixed_operation_post);
+        delete(fixed_gate_post);
 
         // restore the original unitary
         Umtx = Umtx_loc; // copy?
@@ -671,89 +671,89 @@ void Decomposition_Base::get_optimized_parameters( double* ret ) {
 }
 
 /**
-@brief Calculate the transformed matrix resulting by an array of operations on the matrix Umtx
-@param parameters An array containing the parameters of the U3 operations.
-@param operations_it An iterator pointing to the first operation to be applied on the initial matrix.
-@param num_of_operations The number of operations to be applied on the initial matrix
+@brief Calculate the transformed matrix resulting by an array of gates on the matrix Umtx
+@param parameters An array containing the parameters of the U3 gates.
+@param gates_it An iterator pointing to the first gate to be applied on the initial matrix.
+@param num_of_gates The number of gates to be applied on the initial matrix
 @return Returns with the transformed matrix.
 */
 Matrix
-Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations ) {
+Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates ) {
 
-    return get_transformed_matrix( parameters, operations_it, num_of_operations, Umtx );
+    return get_transformed_matrix( parameters, gates_it, num_of_gates, Umtx );
 }
 
 
 /**
-@brief Calculate the transformed matrix resulting by an array of operations on a given initial matrix.
-@param parameters An array containing the parameters of the U3 operations.
-@param operations_it An iterator pointing to the first operation to be applied on the initial matrix.
-@param num_of_operations The number of operations to be applied on the initial matrix
-@param initial_matrix The initial matrix wich is transformed by the given operations. (by deafult it is set to the attribute Umtx)
+@brief Calculate the transformed matrix resulting by an array of gates on a given initial matrix.
+@param parameters An array containing the parameters of the U3 gates.
+@param gates_it An iterator pointing to the first gate to be applied on the initial matrix.
+@param num_of_gates The number of gates to be applied on the initial matrix
+@param initial_matrix The initial matrix wich is transformed by the given gates. (by deafult it is set to the attribute Umtx)
 @return Returns with the transformed matrix.
 */
 Matrix
-Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Operation*>::iterator operations_it, int num_of_operations, Matrix& initial_matrix ) {
+Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix ) {
 
-    if (num_of_operations==0) {
+    if (num_of_gates==0) {
         return initial_matrix.copy();
     }
 
     // The matrix of the transformed matrix
-    Matrix Operation_product;
+    Matrix Gate_product;
 
     // The matrix to be returned
     Matrix ret_matrix;
 
-    for (int idx=0; idx<num_of_operations; idx++) {
+    for (int idx=0; idx<num_of_gates; idx++) {
 
-        // The current operation
-        Operation* operation = *operations_it;
+        // The current gate
+        Gate* gate = *gates_it;
 
-        // The matrix of the current operation
-        Matrix operation_mtx;
+        // The matrix of the current gate
+        Matrix gate_mtx;
 
-        if (operation->get_type() == CNOT_OPERATION ) {
-            CNOT* cnot_operation = static_cast<CNOT*>( operation );
-            operation_mtx = cnot_operation->get_matrix();
+        if (gate->get_type() == CNOT_OPERATION ) {
+            CNOT* cnot_gate = static_cast<CNOT*>( gate );
+            gate_mtx = cnot_gate->get_matrix();
         }
-        else if (operation->get_type() == CZ_OPERATION ) {
-            CZ* cz_operation = static_cast<CZ*>( operation );
-            operation_mtx = cz_operation->get_matrix();
+        else if (gate->get_type() == CZ_OPERATION ) {
+            CZ* cz_gate = static_cast<CZ*>( gate );
+            gate_mtx = cz_gate->get_matrix();
         }
-        else if (operation->get_type() == CH_OPERATION ) {
-            CH* ch_operation = static_cast<CH*>( operation );
-            operation_mtx = ch_operation->get_matrix();
+        else if (gate->get_type() == CH_OPERATION ) {
+            CH* ch_gate = static_cast<CH*>( gate );
+            gate_mtx = ch_gate->get_matrix();
         }
-        else if (operation->get_type() == GENERAL_OPERATION ) {
-            operation_mtx = operation->get_matrix();
+        else if (gate->get_type() == GENERAL_OPERATION ) {
+            gate_mtx = gate->get_matrix();
         }
-        else if (operation->get_type() == U3_OPERATION ) {
-            U3* u3_operation = static_cast<U3*>( operation );
-            int parameters_num = u3_operation->get_parameter_num();
-            operation_mtx = u3_operation->get_matrix( parameters );
+        else if (gate->get_type() == U3_OPERATION ) {
+            U3* u3_gate = static_cast<U3*>( gate );
+            int parameters_num = u3_gate->get_parameter_num();
+            gate_mtx = u3_gate->get_matrix( parameters );
             parameters = parameters + parameters_num;
         }
-        else if (operation->get_type() == BLOCK_OPERATION ) {
-            Operation_block* block_operation = static_cast<Operation_block*>( operation );
-            int parameters_num = block_operation->get_parameter_num();
-            operation_mtx = block_operation->get_matrix( parameters );
+        else if (gate->get_type() == BLOCK_OPERATION ) {
+            Gates_block* block_gate = static_cast<Gates_block*>( gate );
+            int parameters_num = block_gate->get_parameter_num();
+            gate_mtx = block_gate->get_matrix( parameters );
             parameters = parameters + parameters_num;
         }
 
         if ( idx == 0 ) {
-            Operation_product = operation_mtx; //copy?
+            Gate_product = gate_mtx; //copy?
         }
         else {
-            ret_matrix = dot( Operation_product, operation_mtx );
-            Operation_product = ret_matrix; // copy?
+            ret_matrix = dot( Gate_product, gate_mtx );
+            Gate_product = ret_matrix; // copy?
 
         }
 
-        operations_it++;
+        gates_it++;
     }
 
-    ret_matrix = apply_operation( Operation_product, initial_matrix );
+    ret_matrix = apply_gate( Gate_product, initial_matrix );
 
     return ret_matrix;
 
@@ -762,32 +762,32 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
 }
 
 /**
-@brief Calculate the decomposed matrix resulted by the effect of the optimized operations on the unitary Umtx
+@brief Calculate the decomposed matrix resulted by the effect of the optimized gates on the unitary Umtx
 @return Returns with the decomposed matrix.
 */
 Matrix Decomposition_Base::get_decomposed_matrix() {
 
-        return get_transformed_matrix( optimized_parameters, operations.begin(), operations.size(), Umtx );
+        return get_transformed_matrix( optimized_parameters, gates.begin(), gates.size(), Umtx );
 }
 
 /**
-@brief Apply an operations on the input matrix
-@param operation_mtx The matrix of the operation.
+@brief Apply an gates on the input matrix
+@param gate_mtx The matrix of the gate.
 @param input_matrix The input matrix to be transformed.
 @return Returns with the transformed matrix
 */
 Matrix
-Decomposition_Base::apply_operation( Matrix& operation_mtx, Matrix& input_matrix ) {
+Decomposition_Base::apply_gate( Matrix& gate_mtx, Matrix& input_matrix ) {
 
-    // Getting the transformed state upon the transformation given by operation
-    return dot( operation_mtx, input_matrix );
+    // Getting the transformed state upon the transformation given by gate
+    return dot( gate_mtx, input_matrix );
 
 }
 
 /**
 @brief Set the maximal number of layers used in the subdecomposition of the n-th qubit.
 @param n The number of qubits for which the maximal number of layers should be used in the subdecomposition.
-@param max_layer_num_in The maximal number of the operation layers used in the subdecomposition.
+@param max_layer_num_in The maximal number of the gate layers used in the subdecomposition.
 @return Returns with 0 if succeded.
 */
 int Decomposition_Base::set_max_layer_num( int n, int max_layer_num_in ) {
@@ -807,7 +807,7 @@ int Decomposition_Base::set_max_layer_num( int n, int max_layer_num_in ) {
 
 /**
 @brief Set the maximal number of layers used in the subdecomposition of the n-th qubit.
-@param max_layer_num_in An <int,int> map containing the maximal number of the operation layers used in the subdecomposition.
+@param max_layer_num_in An <int,int> map containing the maximal number of the gate layers used in the subdecomposition.
 @return Returns with 0 if succeded.
 */
 int Decomposition_Base::set_max_layer_num( std::map<int, int> max_layer_num_in ) {
@@ -823,12 +823,12 @@ int Decomposition_Base::set_max_layer_num( std::map<int, int> max_layer_num_in )
 
 
 /**
-@brief Call to reorder the qubits in the matrix of the operation
+@brief Call to reorder the qubits in the matrix of the gate
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void Decomposition_Base::reorder_qubits( std::vector<int>  qbit_list) {
 
-    Operation_block::reorder_qubits( qbit_list );
+    Gates_block::reorder_qubits( qbit_list );
 
     // now reorder the unitary to be decomposed
 
@@ -935,46 +935,46 @@ void Decomposition_Base::Init_max_layer_num() {
 
 
 /**
-@brief Call to prepare the optimized operations to export. The operations are stored in the attribute operations
+@brief Call to prepare the optimized gates to export. The gates are stored in the attribute gates
 */
-void Decomposition_Base::prepare_operations_to_export() {
+void Decomposition_Base::prepare_gates_to_export() {
 
-    std::vector<Operation*> operations_tmp = prepare_operations_to_export( operations, optimized_parameters );
+    std::vector<Gate*> gates_tmp = prepare_gates_to_export( gates, optimized_parameters );
 
-    // release the operations and replace them with the ones prepared to export
-    operations.clear();
-    operations = operations_tmp;
+    // release the gates and replace them with the ones prepared to export
+    gates.clear();
+    gates = gates_tmp;
 
 }
 
 
 
 /**
-@brief Call to prepare the optimized operations to export
-@param ops A list of operations
-@param parameters The parameters of the operations
-@return Returns with a list of gate operations.
+@brief Call to prepare the optimized gates to export
+@param ops A list of gates
+@param parameters The parameters of the gates
+@return Returns with a list of gate gates.
 */
-std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::vector<Operation*> ops, const double* parameters ) {
+std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate*> ops, const double* parameters ) {
 
-    std::vector<Operation*> ops_ret;
+    std::vector<Gate*> ops_ret;
     int parameter_idx = 0;
 
 
-    for(std::vector<Operation*>::iterator it = ops.begin(); it != ops.end(); it++) {
+    for(std::vector<Gate*>::iterator it = ops.begin(); it != ops.end(); it++) {
 
-        Operation* operation = *it;
+        Gate* gate = *it;
 
-        if (operation->get_type() == CNOT_OPERATION) {
-            ops_ret.push_back( operation );
+        if (gate->get_type() == CNOT_OPERATION) {
+            ops_ret.push_back( gate );
         }
-        else if (operation->get_type() == CZ_OPERATION) {
-            ops_ret.push_back( operation );
+        else if (gate->get_type() == CZ_OPERATION) {
+            ops_ret.push_back( gate );
         }
-        else if (operation->get_type() == CH_OPERATION) {
-            ops_ret.push_back( operation );
+        else if (gate->get_type() == CH_OPERATION) {
+            ops_ret.push_back( gate );
         }
-        else if (operation->get_type() == U3_OPERATION) {
+        else if (gate->get_type() == U3_OPERATION) {
 
             // definig the U3 parameters
             double vartheta;
@@ -983,46 +983,46 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::v
 
             // get the inverse parameters of the U3 rotation
 
-            U3* u3_operation = static_cast<U3*>(operation);
+            U3* u3_gate = static_cast<U3*>(gate);
 
-            if ((u3_operation->get_parameter_num() == 1) && u3_operation->is_theta_parameter()) {
+            if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
                 vartheta = std::fmod( parameters[parameter_idx], 4*M_PI);
                 varphi = 0;
                 varlambda =0;
                 parameter_idx = parameter_idx + 1;
 
             }
-            else if ((u3_operation->get_parameter_num() == 1) && u3_operation->is_phi_parameter()) {
+            else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_phi_parameter()) {
                 vartheta = 0;
                 varphi = std::fmod( parameters[ parameter_idx ], 2*M_PI);
                 varlambda =0;
                 parameter_idx = parameter_idx + 1;
             }
-            else if ((u3_operation->get_parameter_num() == 1) && u3_operation->is_lambda_parameter()) {
+            else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_lambda_parameter()) {
                 vartheta = 0;
                 varphi =  0;
                 varlambda = std::fmod( parameters[ parameter_idx ], 2*M_PI);
                 parameter_idx = parameter_idx + 1;
             }
-            else if ((u3_operation->get_parameter_num() == 2) && u3_operation->is_theta_parameter() && u3_operation->is_phi_parameter() ) {
+            else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_phi_parameter() ) {
                 vartheta = std::fmod( parameters[ parameter_idx ], 4*M_PI);
                 varphi = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);
                 varlambda = 0;
                 parameter_idx = parameter_idx + 2;
             }
-            else if ((u3_operation->get_parameter_num() == 2) && u3_operation->is_theta_parameter() && u3_operation->is_lambda_parameter() ) {
+            else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_lambda_parameter() ) {
                 vartheta = std::fmod( parameters[ parameter_idx ], 4*M_PI);
                 varphi = 0;
                 varlambda = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);
                 parameter_idx = parameter_idx + 2;
             }
-            else if ((u3_operation->get_parameter_num() == 2) && u3_operation->is_phi_parameter() && u3_operation->is_lambda_parameter() ) {
+            else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
                 vartheta = 0;
                 varphi = std::fmod( parameters[ parameter_idx], 2*M_PI);
                 varlambda = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);
                 parameter_idx = parameter_idx + 2;
             }
-            else if ((u3_operation->get_parameter_num() == 3)) {
+            else if ((u3_gate->get_parameter_num() == 3)) {
                 vartheta = std::fmod( parameters[ parameter_idx ], 4*M_PI);
                 varphi = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);
                 varlambda = std::fmod( parameters[ parameter_idx+2 ], 2*M_PI);
@@ -1033,17 +1033,17 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::v
                 exit(-1);
             }
 
-            u3_operation->set_optimized_parameters( vartheta, varphi, varlambda );
-            ops_ret.push_back( static_cast<Operation*>(u3_operation) );
+            u3_gate->set_optimized_parameters( vartheta, varphi, varlambda );
+            ops_ret.push_back( static_cast<Gate*>(u3_gate) );
 
 
         }
-        else if (operation->get_type() == BLOCK_OPERATION) {
-            Operation_block* block_operation = static_cast<Operation_block*>(operation);
+        else if (gate->get_type() == BLOCK_OPERATION) {
+            Gates_block* block_gate = static_cast<Gates_block*>(gate);
             const double* parameters_layer = parameters + parameter_idx;
 
-            std::vector<Operation*> ops_loc = prepare_operations_to_export(block_operation, parameters_layer);
-            parameter_idx = parameter_idx + block_operation->get_parameter_num();
+            std::vector<Gate*> ops_loc = prepare_gates_to_export(block_gate, parameters_layer);
+            parameter_idx = parameter_idx + block_gate->get_parameter_num();
 
             ops_ret.insert( ops_ret.end(), ops_loc.begin(), ops_loc.end() );
         }
@@ -1058,15 +1058,15 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( std::v
 
 
 /**
-@brief Call to prepare the operations of an operation block to export
-@param block_op A pointer to a block of operations
-@param parameters The parameters of the operations
-@return Returns with a list of gate operations.
+@brief Call to prepare the gates of an gate block to export
+@param block_op A pointer to a block of gates
+@param parameters The parameters of the gates
+@return Returns with a list of gate gates.
 */
-std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( Operation_block* block_op, const double* parameters ) {
+std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( Gates_block* block_op, const double* parameters ) {
 
-    std::vector<Operation*> ops_tmp = block_op->get_operations();
-    std::vector<Operation*> ops_ret = prepare_operations_to_export( ops_tmp, parameters );
+    std::vector<Gate*> ops_tmp = block_op->get_gates();
+    std::vector<Gate*> ops_ret = prepare_gates_to_export( ops_tmp, parameters );
 
     return ops_ret;
 
@@ -1074,39 +1074,39 @@ std::vector<Operation*> Decomposition_Base::prepare_operations_to_export( Operat
 
 
 /**
-@brief Call to prepare the optimized operations to export --- OBSOLETE
+@brief Call to prepare the optimized gates to export --- OBSOLETE
 @param n Integer labeling the n-th oepration  (n>=0).
-@param type The type of the operation from enumeration operation_type is returned via this parameter.
+@param type The type of the gate from enumeration gate_type is returned via this parameter.
 @param target_qbit The ID of the target qubit is returned via this input parameter.
 @param control_qbit The ID of the control qubit is returned via this input parameter.
-@param parameters The parameters of the operations
-@return Returns with 0 if the export of the n-th operation was successful. If the n-th operation does not exists, -1 is returned. If the operation is not allowed to be exported, i.e. it is not a CNOT or U3 operation, then -2 is returned.
+@param parameters The parameters of the gates
+@return Returns with 0 if the export of the n-th gate was successful. If the n-th gate does not exists, -1 is returned. If the gate is not allowed to be exported, i.e. it is not a CNOT or U3 gate, then -2 is returned.
 */
-int Decomposition_Base::get_operation( unsigned int n, operation_type &type, int &target_qbit, int &control_qbit, double* parameters ) {
+int Decomposition_Base::get_gate( unsigned int n, gate_type &type, int &target_qbit, int &control_qbit, double* parameters ) {
 
 //printf("n: %d\n", n);
-    // get the n-th operation if exists
-    if ( n >= operations.size() ) {
+    // get the n-th gate if exists
+    if ( n >= gates.size() ) {
         return -1;
     }
 
-    Operation* operation = operations[n];
-//printf("operation type: %d\n", operation->get_type());
+    Gate* gate = gates[n];
+//printf("gate type: %d\n", gate->get_type());
 
 
-    if (operation->get_type() == CNOT_OPERATION || operation->get_type() == CZ_OPERATION || operation->get_type() == CH_OPERATION ) {
-        type = operation->get_type();
-        target_qbit = operation->get_target_qbit();
-        control_qbit = operation->get_control_qbit();
+    if (gate->get_type() == CNOT_OPERATION || gate->get_type() == CZ_OPERATION || gate->get_type() == CH_OPERATION ) {
+        type = gate->get_type();
+        target_qbit = gate->get_target_qbit();
+        control_qbit = gate->get_control_qbit();
         memset( parameters, 0, 3*sizeof(double) );
         return 0;
     }
-    else if (operation->get_type() == U3_OPERATION) {
-        U3* u3_operation = static_cast<U3*>(operation);
-        type = u3_operation->get_type();
-        target_qbit = u3_operation->get_target_qbit();
-        control_qbit = operation->get_control_qbit();
-        u3_operation->get_optimized_parameters(parameters);
+    else if (gate->get_type() == U3_OPERATION) {
+        U3* u3_gate = static_cast<U3*>(gate);
+        type = u3_gate->get_type();
+        target_qbit = u3_gate->get_target_qbit();
+        control_qbit = gate->get_control_qbit();
+        u3_gate->get_optimized_parameters(parameters);
 //printf("c %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
         return 0;
     }
@@ -1119,18 +1119,18 @@ int Decomposition_Base::get_operation( unsigned int n, operation_type &type, int
 
 
 /**
-@brief Call to prepare the optimized operations to export
+@brief Call to prepare the optimized gates to export
 @param n Integer labeling the n-th oepration  (n>=0).
-@return Returns with a pointer to the n-th Operation, or with MULL if the n-th operation cant be retrived.
+@return Returns with a pointer to the n-th Gate, or with MULL if the n-th gate cant be retrived.
 */
-Operation* Decomposition_Base::get_operation( int n ) {
+Gate* Decomposition_Base::get_gate( int n ) {
 
-    // get the n-th operation if exists
-    if ( (unsigned int) n >= operations.size() ) {
+    // get the n-th gate if exists
+    if ( (unsigned int) n >= gates.size() ) {
         return NULL;
     }
 
-    return operations[n];
+    return gates[n];
 
 }
 
