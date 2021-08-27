@@ -220,7 +220,7 @@ void CZ::reorder_qubits( vector<int> qbit_list) {
 */
 CZ* CZ::clone() {
 
-    CZ* ret = new CZ( qbit_num, control_qbit, target_qbit );
+    CZ* ret = new CZ( qbit_num, target_qbit, control_qbit );
 
     return ret;
 

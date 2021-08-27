@@ -101,6 +101,14 @@ void functor_get_operation_matrices::operator()( const tbb::blocked_range<size_t
             CNOT* cnot_gate = static_cast<CNOT*>(gate);
             (*gate_mtxs)[i] = cnot_gate->get_matrix();
         }
+        if (gate->get_type() == CZ_OPERATION ) {
+            CZ* cz_gate = static_cast<CZ*>(gate);
+            (*gate_mtxs)[i] = cz_gate->get_matrix();
+        }
+        if (gate->get_type() == CH_OPERATION ) {
+            CH* ch_gate = static_cast<CH*>(gate);
+            (*gate_mtxs)[i] = ch_gate->get_matrix();
+        }
         else if (gate->get_type() == GENERAL_OPERATION ) {
             (*gate_mtxs)[i] = gate->get_matrix();
         }

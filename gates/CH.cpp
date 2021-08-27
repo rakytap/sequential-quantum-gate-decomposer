@@ -225,7 +225,7 @@ void CH::reorder_qubits( vector<int> qbit_list) {
 */
 CH* CH::clone() {
 
-    CH* ret = new CH( qbit_num, control_qbit, target_qbit );
+    CH* ret = new CH( qbit_num, target_qbit, control_qbit );
 
     return ret;
 

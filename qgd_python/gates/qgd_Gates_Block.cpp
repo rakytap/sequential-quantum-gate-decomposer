@@ -177,7 +177,7 @@ qgd_Gates_Block_add_CNOT(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"control_qbit", (char*)"target_qbit",  NULL};
+    static char *kwlist[] = {(char*)"target_qbit",  (char*)"control_qbit", NULL};
 
     // initiate variables for input arguments
     int  target_qbit = -1; 
@@ -211,7 +211,7 @@ qgd_Gates_Block_add_CZ(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"control_qbit", (char*)"target_qbit",  NULL};
+    static char *kwlist[] = {(char*)"target_qbit",  (char*)"control_qbit", NULL};
 
     // initiate variables for input arguments
     int  target_qbit = -1; 
@@ -246,7 +246,7 @@ qgd_Gates_Block_add_CH(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"control_qbit", (char*)"target_qbit",  NULL};
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit",  NULL};
 
     // initiate variables for input arguments
     int  target_qbit = -1; 
