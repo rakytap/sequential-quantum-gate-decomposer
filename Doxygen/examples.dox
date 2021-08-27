@@ -17,18 +17,16 @@
 
 /*! \addtogroup examples Examples
 
-Sequential Quantum Gate Decomposer (@QGD) package provides static and shared libraries (located in the directory **path/to/qgd/lib(64)**) that can be linked againts our own C++ code. 
-(Alternatively, the C functions defined in python_interface.h can be used to link against C code as well.)
-The header files of the package are located in the directory **path/to/qgd/include**
+Sequential Quantum Gate Decomposer (@QGD) package provides static and shared libraries (located in the directory **path/to/installed/qgd_python**) that can be linked againts our own C++ code. 
 In the forthcoming sections we provide some tricks and best practices to use the @QGD API.
 Also, the @QGD API is supprted by a Doxygen documentation, which can be accessed trough the file **path/to/qgd/Docs/html/index.html**.
 (To build the Doxygen documentation follow the manual at @index.)
 
 
-The @QGD Python interface can be tested by running the **decomposition_test** executable in the directory **path/to/qgd/bin**.
-(To install the @QGD package follow the manual at @index). 
+A succesful build of the @QGD library can be tested by running the test cases in the **path/to/qgd/test_standalone** directory.
+(To build and install the @QGD package follow the manual at @index). 
 
-The expected outcome of the test script should look as:
+The expected outcome of the test program **decomposition_test.cpp** should look as:
 
 @image latex example_result_resized.png
 \htmlonly <style>div.image img[src="decomposition_test_result.png"]{width:1000px;}</style> \endhtmlonly 
@@ -134,9 +132,68 @@ After setting the parameters of the decomposition we can start the optimization 
 The last command in the above code snippet prints the decomposing operations into the standard output. 
 For further programming usage the list of decomposed operations can be retrieved via the method N_Qubit_Decomposition.get_operations of the class N_Qubit_Decomposition.
 
-## Compiling and linking against @QGD libraries
 
-To successfully compile a software using the @QGD package, one need to provide the include path of the header files for the compiler. 
+# Defining custom gate structure for the decomposition
+
+The @QGD package is not limited to specific choice of the gates used in the decomposition. 
+The decomposition can be executed with arbitrary, but parameter-less two-qubit controlled gates, and with a self-designed gate staructure adopted to the underlaying hardware design as well.
+Here we provide a simple guide on how to define custom gate structure. 
+A working example is provided in example file custom_gate_structure_test.cpp.
+
+First we create a class that will hold the design of one period of the decomposing gate strusture. 
+(This period is then repeated in the quantum circuit.)
+<div class="snippet">
+\snippet custom_gate_structure_test.cpp gates block
+</div>
+Then we can initialize the label of the qubit we need to disentangle. 
+(@QGD always disentagles the qubit with the highes label.)
+<div class="snippet">
+\snippet custom_gate_structure_test.cpp disentangle qubit
+</div>
+Then we define the custom gate structure using a for loop:
+<div class="snippet">
+\snippet custom_gate_structure_test.cpp custom structure
+</div>
+In the individual layers (defined again by an instance of class Gates_block) we can choose qubits to play the role of the control and the target qubit on demand.
+Whatever is our choice, we should add U3 gates to the qubits in front of the chosen two-qubit controlled gate.
+The U3 gates should have two free parameters, lets say variable Theta and Lambda, while parameter Phi is kept constant zero during the decompsition.
+(Parameters set to True are free parameters, while parameters set to False are kept constant.)
+In the first "if" body a connection between qubits 0 and 1 is created via a CNOT gate. 
+In particular, qubit 0 is chosen as the target qubit, and qubit 1 is chosen to be the target qubit.
+(The oriantation of the two-qubit controllod gates can be reversed, so the specific choice of the roles of the target and control qubits is not important in principle.)
+
+The second "if" body controls the gate structure between any other qubit pairs.
+The created layers are added to the gates_block which can be used to decompose a quantum program.
+The figure below shows the period of the constructed gate structure in case of three qubits
+
+@image latex custom_structure.png
+\htmlonly <style>div.image img[src="custom_structure.png"]{width:600px;}</style> \endhtmlonly 
+@image html custom_structure.png "A period of a custom three-qubit gate structure"
+
+We continue by creating a random 3-qubit unitary (and its transpose conjugate) by code snippet:
+<div class="snippet">
+\snippet custom_gate_structure_test.cpp general random
+</div>
+Then, we create an instance of a class to decompose the unitary
+<div class="snippet">
+\snippet custom_gate_structure_test.cpp creating decomp class
+</div>
+and we set the constructed gate structure to be used in the decomposition
+<div class="snippet">
+\snippet custom_gate_structure_test.cpp creating custom gate structure
+</div>
+In order to disentangle the 5-th, 4-th, 3-rd or the n-th qubit we may use different gate structure, each of them should be defined as a pair element in a C++ map gate_structure.
+Finally, we start to decompose the unitary and show the results.
+<div class="snippet">
+\snippet custom_gate_structure_test.cpp performing decomposition
+</div>
+
+
+
+
+# Compiling and linking against the@QGD libraries
+
+To successfuly compile a software using the @QGD package, one need to provide the include path of the header files for the compiler. 
 This can be done by providing the compiler flag **-Ipath/to/qgd/include** at compilation time.
 After a successful installation described at @index the header files are copied in to the **include** directory in the @QGD installation location.
 

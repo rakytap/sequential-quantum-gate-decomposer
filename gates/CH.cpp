@@ -57,7 +57,7 @@ CH::CH() {
 @param target_qbit_in The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit_in The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-CH::CH(int qbit_num_in,  int control_qbit_in, int target_qbit_in) {
+CH::CH(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
 
         // number of qubits spanning the matrix of the gate
         qbit_num = qbit_num_in;

@@ -43,47 +43,61 @@ using namespace std;
 */
 Gates_block* create_custom_gate_structure( int qbit_num ) {
 
-        // creating an instance of the wrapper class qgd_Operation_Block
-        Gates_block* Operation_Block_ret = new Gates_block( qbit_num );
+//! [gates block]
+        // creating an instance of the wrapper class Gates_block
+        Gates_block* gates_block = new Gates_block( qbit_num );
+//! [gates block]
 
-        int control_qbit = qbit_num - 1;
+//! [disentangle qubit]
+        int disentangle_qubit = qbit_num - 1;
+//! [disentangle qubit]
 
-        for ( int target_qbit=0;  target_qbit< control_qbit; target_qbit++ ) {
 
-            // creating an instance of the wrapper class qgd_Operation_Block
-            Gates_block* Operation_Block_inner = new Gates_block( qbit_num );
+//! [custom structure]
+        for ( int qbit=0;  qbit< disentangle_qubit; qbit++ ) {
 
-            if (target_qbit == 1) {
+            // creating an instance of the wrapper class Gates_block
+            Gates_block* layer = new Gates_block( qbit_num );
 
-                // add CNOT gate to the block
-                Operation_Block_inner->add_cnot_to_end( 0, 1);
+            if (qbit == 1) {
 
-                // add U3 fate to the block
+                int target_qbit = 0;
+		int control_qbit = 1;
+
+                // add U3 gate to the block
                 bool Theta = true;
                 bool Phi = false;
                 bool Lambda = true;
-                Operation_Block_inner->add_u3_to_end( 0, Theta, Phi, Lambda );
-                Operation_Block_inner->add_u3_to_end( 1, Theta, Phi, Lambda );
+                layer->add_u3( 0, Theta, Phi, Lambda );
+                layer->add_u3( 1, Theta, Phi, Lambda );
+
+                // add CNOT gate to the block		
+                layer->add_cnot( target_qbit, control_qbit );
+
 
             }
             else {
 
-                // add CNOT gate to the block
-                Operation_Block_inner->add_cnot_to_end( control_qbit, target_qbit );
+                int target_qbit = qbit;
+		int control_qbit = disentangle_qubit;
 
-                // add U3 fate to the block
+                // add U3 gate to the block
                 bool Theta = true;
                 bool Phi = false;
                 bool Lambda = true;
-                Operation_Block_inner->add_u3_to_end( target_qbit, Theta, Phi, Lambda );
-                Operation_Block_inner->add_u3_to_end( control_qbit, Theta, Phi, Lambda );
+                layer->add_u3( qbit, Theta, Phi, Lambda );
+                layer->add_u3( disentangle_qubit, Theta, Phi, Lambda );
+
+                // add CNOT gate to the block
+                layer->add_cnot( target_qbit, control_qbit );
             }
 
-            Operation_Block_ret->add_gate_to_end( (Gate*)Operation_Block_inner );
+            gates_block->add_gate( (Gate*)layer );
 
         }
+//! [custom structure]
 
-        return Operation_Block_ret;
+        return gates_block;
 
 
 }
@@ -109,7 +123,7 @@ int main() {
     Random_Unitary ru = Random_Unitary(matrix_size);
     // create general random unitary
     Matrix Umtx = ru.Construct_Unitary_Matrix();
-//! [general random]
+
 
 
 
@@ -125,6 +139,7 @@ int main() {
         Umtx_adj[element_idx].real = element.real;
         Umtx_adj[element_idx].imag = -element.imag;
     }
+//! [general random]
 
 //! [creating decomp class]
     // creating the class for the decomposition. Here Umtx_adj is the complex transposition of unitary Umtx

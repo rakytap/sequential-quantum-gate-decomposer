@@ -315,7 +315,7 @@ void Sub_Matrix_Decomposition::add_default_gate_layers() {
 
 
             // add CNOT gate to the block
-            block->add_cnot(control_qbit_loc, target_qbit_loc);
+            block->add_cnot(target_qbit_loc, control_qbit_loc);
 
             // adding the opeartion block to the gates
             add_gate( block );

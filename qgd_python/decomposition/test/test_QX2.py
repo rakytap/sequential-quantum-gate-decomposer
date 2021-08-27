@@ -128,29 +128,29 @@ class Test_Decomposition:
         # creating an instance of the wrapper class qgd_Gates_Block
         Gates_Block_ret = qgd_Gates_Block( qbit_num )
 
-        control_qbit = qbit_num - 1 
+        disentangle_qbit = qbit_num - 1 
 
         
 
-        for target_qbit in range(0, control_qbit ):
+        for qbit in range(0, disentangle_qbit ):
 
             # creating an instance of the wrapper class qgd_Gates_Block
             Layer = qgd_Gates_Block( qbit_num )
 
 
-            if target_qbit == 0:
+            if qbit == 0:
 
                 # add U3 fate to the block
                 Theta = True
                 Phi = False
                 Lambda = True      
                 Layer.add_U3( 0, Theta, Phi, Lambda )                 
-                Layer.add_U3( control_qbit, Theta, Phi, Lambda ) 
+                Layer.add_U3( disentangle_qbit, Theta, Phi, Lambda ) 
 
                 # add CNOT gate to the block
-                Layer.add_CNOT( 0, control_qbit)
+                Layer.add_CNOT( 0, disentangle_qbit)
 
-            elif target_qbit == 1:
+            elif qbit == 1:
 
                 # add U3 fate to the block
                 Theta = True
@@ -164,17 +164,17 @@ class Test_Decomposition:
 
 
 
-            elif target_qbit == 2:
+            elif qbit == 2:
 
                 # add U3 fate to the block
                 Theta = True
                 Phi = False
                 Lambda = True      
                 Layer.add_U3( 2, Theta, Phi, Lambda )                 
-                Layer.add_U3( control_qbit, Theta, Phi, Lambda ) 
+                Layer.add_U3( disentangle_qbit, Theta, Phi, Lambda ) 
 
                 # add CNOT gate to the block
-                Layer.add_CNOT( 2, control_qbit )
+                Layer.add_CNOT( 2, disentangle_qbit )
 
          
 
