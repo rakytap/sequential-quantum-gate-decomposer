@@ -25,7 +25,7 @@ target_compile_options(qgd_U3 PRIVATE
 target_include_directories(qgd_U3 PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/operations/include
+                            ${PROJECT_SOURCE_DIR}/gates/include
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
@@ -66,7 +66,7 @@ target_compile_options(qgd_CNOT PRIVATE
 target_include_directories(qgd_CNOT PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/operations/include
+                            ${PROJECT_SOURCE_DIR}/gates/include
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
@@ -107,7 +107,7 @@ target_compile_options(qgd_CZ PRIVATE
 target_include_directories(qgd_CZ PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/operations/include
+                            ${PROJECT_SOURCE_DIR}/gates/include
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
@@ -150,7 +150,7 @@ target_compile_options(qgd_CH PRIVATE
 target_include_directories(qgd_CH PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/operations/include
+                            ${PROJECT_SOURCE_DIR}/gates/include
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
@@ -191,7 +191,7 @@ target_compile_options(qgd_Gates_Block PRIVATE
 target_include_directories(qgd_Gates_Block PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/operations/include
+                            ${PROJECT_SOURCE_DIR}/gates/include
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 

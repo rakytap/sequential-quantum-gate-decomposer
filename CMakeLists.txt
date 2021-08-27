@@ -306,12 +306,12 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/common/common.cpp
     ${PROJECT_SOURCE_DIR}/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix.cpp
-    ${PROJECT_SOURCE_DIR}/operations/CNOT.cpp
-    ${PROJECT_SOURCE_DIR}/operations/CZ.cpp
-    ${PROJECT_SOURCE_DIR}/operations/CH.cpp
-    ${PROJECT_SOURCE_DIR}/operations/Gate.cpp
-    ${PROJECT_SOURCE_DIR}/operations/Gates_block.cpp
-    ${PROJECT_SOURCE_DIR}/operations/U3.cpp
+    ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
+    ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
+    ${PROJECT_SOURCE_DIR}/gates/CH.cpp
+    ${PROJECT_SOURCE_DIR}/gates/Gate.cpp
+    ${PROJECT_SOURCE_DIR}/gates/Gates_block.cpp
+    ${PROJECT_SOURCE_DIR}/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Functor_Cost_Function_Gradient.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Functor_Get_Operation_Products.cpp
@@ -347,7 +347,7 @@ target_link_libraries( qgd PRIVATE
 target_include_directories(qgd PRIVATE
                             .
                             ./common/include
-                            ./operations/include
+                            ./gates/include
                             ./decomposition/include
                             ./random_unitary/include
                             ${EXTRA_INCLUDES})
@@ -360,12 +360,12 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix_base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/QGDTypes.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/CNOT.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/CZ.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/CH.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/Gate.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/Gates_block.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/operations/include/U3.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CNOT.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CZ.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CH.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Gate.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Gates_block.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/U3.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Decomposition_Base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Functor_Cost_Function_Gradient.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Functor_Get_Operation_Products.h
