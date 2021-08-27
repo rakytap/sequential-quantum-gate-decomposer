@@ -1,7 +1,7 @@
 <map id="create_custom_gate_structure" name="create_custom_gate_structure">
-<area shape="rect" id="node2" href="$class_gates__block.html#a836b07775e6af191060bb4b274205961" title="Append a CNOT gate gate to the list of gates. " alt="" coords="193,14,348,55"/>
-<area shape="rect" id="node3" href="$class_gates__block.html#a5f537a7bf9992665762bd7593faaa96f" title="Append a general gate to the list of gates. " alt="" coords="396,73,551,114"/>
-<area shape="rect" id="node8" href="$class_gates__block.html#aa00632c15ef88fdd564aac2c4b5d8851" title="Append a U3 gate to the list of gates. " alt="" coords="199,131,342,173"/>
+<area shape="rect" id="node2" href="$class_gates__block.html#aab1d786fdac42f2d290cc4888a3bcb81" title="Add a U3 gate to the front of the list of gates. " alt="" coords="199,29,342,56"/>
+<area shape="rect" id="node3" href="$class_gates__block.html#a10f7fd8b457b825449c16231b414258c" title="Add an gate to the front of the list of gates. " alt="" coords="396,80,551,107"/>
+<area shape="rect" id="node8" href="$class_gates__block.html#a7ad45122ea87eec9c83f29b58d76f021" title="Add a C_NOT gate gate to the front of the list of gates. " alt="" coords="193,131,348,157"/>
 <area shape="rect" id="node4" href="$class_gate.html#a9626b4134a82cbb7d62770393e5a6568" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="617,29,751,56"/>
 <area shape="rect" id="node6" href="$class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce" title="Call to get the number of free parameters. " alt="" coords="599,80,769,107"/>
 <area shape="rect" id="node7" href="$class_gate.html#a5498d67b28027022c72b8b15d47d55cc" title="Call to get the type of the operation. " alt="" coords="631,131,737,157"/>

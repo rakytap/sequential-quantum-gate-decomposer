@@ -1,7 +1,7 @@
 <map id="Sub_Matrix_Decomposition::optimization_problem" name="Sub_Matrix_Decomposition::optimization_problem">
-<area shape="rect" id="node2" href="$class_operation__block.html#aecb9b674dfd43456605a6c13dfba3afb" title="Call to get the operations stored in the class. " alt="" coords="245,5,385,47"/>
-<area shape="rect" id="node3" href="$class_decomposition___base.html#a5ad6641386b1eea4dd1244599660c462" title="Call to retrive a pointer to the unitary to be transformed. " alt="" coords="243,71,388,112"/>
-<area shape="rect" id="node4" href="$class_decomposition___base.html#a88bfddd83a85d1d0322304815216bf4d" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="233,136,397,177"/>
-<area shape="rect" id="node5" href="$class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="268,202,363,229"/>
-<area shape="rect" id="node6" href="$_sub___matrix___decomposition___cost___function_8h.html#a6f8a34a10e6654b40f899ecb8d199776" title="Call to calculate the cost function of a given matrix during the submatrix decomposition process..." alt="" coords="248,253,383,295"/>
+<area shape="rect" id="node2" href="$class_gates__block.html#aa3f7bcf66f2e16fdaeb6ad7db4d9c775" title="Call to get the gates stored in the class. " alt="" coords="236,5,395,32"/>
+<area shape="rect" id="node3" href="$class_decomposition___base.html#a5ad6641386b1eea4dd1244599660c462" title="Call to retrive a pointer to the unitary to be transformed. " alt="" coords="243,57,388,98"/>
+<area shape="rect" id="node4" href="$class_decomposition___base.html#a9f0f0dd8c94cb84fc2dbce4d785dddbb" title="Calculate the transformed matrix resulting by an array of gates on the matrix Umtx. " alt="" coords="233,122,397,163"/>
+<area shape="rect" id="node5" href="$class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="268,188,363,215"/>
+<area shape="rect" id="node6" href="$_sub___matrix___decomposition___cost___function_8h.html#a6f8a34a10e6654b40f899ecb8d199776" title="Call to calculate the cost function of a given matrix during the submatrix decomposition process..." alt="" coords="248,239,383,281"/>
 </map>

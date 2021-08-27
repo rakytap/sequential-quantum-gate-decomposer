@@ -2,10 +2,10 @@
 <area shape="rect" id="node2" href="$class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="246,99,405,141"/>
 <area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="884,121,1047,162"/>
 <area shape="rect" id="node8" href="$class_gates__block.html#adeb104a0985789e3bea3dc53d3545349" title="Call to print the list of gates stored in the block of gates for a specific set of parameters..." alt="" coords="247,29,404,56"/>
-<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="236,165,415,221"/>
+<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and gates of the sub&#45;decomposition processes..." alt="" coords="236,165,415,221"/>
 <area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="463,121,625,162"/>
 <area shape="rect" id="node4" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="729,11,780,37"/>
 <area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="673,179,836,221"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="673,62,836,103"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="673,62,836,103"/>
 <area shape="rect" id="node9" href="$class_decomposition___base.html#ad897530a73bb05de35e86bf28fe40fd5" title="Call to print the gates decomposing the initial unitary. " alt="" coords="471,13,617,54"/>
 </map>

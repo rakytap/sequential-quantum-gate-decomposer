@@ -15,7 +15,7 @@
 <area shape="rect" id="node15" href="$class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="614,413,690,440"/>
 <area shape="rect" id="node19" href="$class_gate.html#ad0230d8d0dbe898f89232e3fd50dc3d3" title="Call to create a clone of the present class. " alt="" coords="609,464,695,491"/>
 <area shape="rect" id="node16" href="$class_u3.html#a11a8fca65dd56a6bdc42a98927040a05" title="Nullary constructor of the class. " alt="" coords="845,363,907,389"/>
-<area shape="rect" id="node17" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation. " alt="" coords="777,413,975,440"/>
+<area shape="rect" id="node17" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the gate. " alt="" coords="777,413,975,440"/>
 <area shape="rect" id="node18" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1026,413,1110,440"/>
 <area shape="rect" id="node20" href="$class_gate.html#a4fc24ecebc0ca8252bf7ab96a705e58a" title="Default constructor of the class. " alt="" coords="834,464,918,491"/>
 <area shape="rect" id="node21" href="$class_gate.html#acd16cb1e6703717479558bcadbc26a2e" title="Call to set the stored matrix in the operation. " alt="" coords="818,515,934,541"/>

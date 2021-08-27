@@ -2,7 +2,7 @@
 <area shape="rect" id="node2" href="$_c_z_8h.html" title="Header file for a class representing a CZ operation. " alt="" coords="249,80,298,107"/>
 <area shape="rect" id="node25" href="$_c_h_8h.html" title="Header file for a class representing a CH operation. " alt="" coords="5,80,56,107"/>
 <area shape="rect" id="node26" href="$_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="155,80,224,107"/>
-<area shape="rect" id="node27" href="$_u3_8h.html" title="Header file for a class representing a U3 operation. " alt="" coords="81,80,130,107"/>
+<area shape="rect" id="node27" href="$_u3_8h.html" title="Header file for a class representing a U3 gate. " alt="" coords="81,80,130,107"/>
 <area shape="rect" id="node28" href="$_gates__block_8h.html" title="Header file for a class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into laye..." alt="" coords="322,80,427,107"/>
 <area shape="rect" id="node3" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="140,379,207,405"/>
 <area shape="rect" id="node14" href="$_gate_8h.html" title="Gate.h" alt="" coords="211,155,271,181"/>

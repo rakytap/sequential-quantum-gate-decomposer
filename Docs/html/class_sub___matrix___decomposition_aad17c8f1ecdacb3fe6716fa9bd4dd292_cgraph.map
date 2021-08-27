@@ -11,14 +11,14 @@
 <area shape="rect" id="node3" href="$class_gates__block.html#aeb0c08045470d7ecab12a33ce95d0292" title="Default constructor of the class. " alt="" coords="471,131,607,172"/>
 <area shape="rect" id="node4" href="$class_gates__block.html#aab1d786fdac42f2d290cc4888a3bcb81" title="Add a U3 gate to the front of the list of gates. " alt="" coords="467,29,610,56"/>
 <area shape="rect" id="node5" href="$class_gates__block.html#a10f7fd8b457b825449c16231b414258c" title="Add an gate to the front of the list of gates. " alt="" coords="664,54,819,81"/>
-<area shape="rect" id="node10" href="$class_gates__block.html#a883b95fa12fe9e221921323d1afb0fd0" title="Add a C_NOT gate gate to the front of the list of gates. " alt="" coords="461,80,616,106"/>
+<area shape="rect" id="node10" href="$class_gates__block.html#a7ad45122ea87eec9c83f29b58d76f021" title="Add a C_NOT gate gate to the front of the list of gates. " alt="" coords="461,80,616,106"/>
 <area shape="rect" id="node6" href="$class_gate.html#a9626b4134a82cbb7d62770393e5a6568" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="898,112,1033,138"/>
 <area shape="rect" id="node8" href="$class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce" title="Call to get the number of free parameters. " alt="" coords="880,57,1051,84"/>
 <area shape="rect" id="node7" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="1112,112,1203,138"/>
 <area shape="rect" id="node16" href="$class_gate.html#a4fc24ecebc0ca8252bf7ab96a705e58a" title="Default constructor of the class. " alt="" coords="923,492,1007,518"/>
 <area shape="rect" id="node17" href="$class_gate.html#acd16cb1e6703717479558bcadbc26a2e" title="Call to set the stored matrix in the operation. " alt="" coords="907,441,1023,468"/>
 <area shape="rect" id="node19" href="$class_u3.html#a11a8fca65dd56a6bdc42a98927040a05" title="Nullary constructor of the class. " alt="" coords="934,593,997,620"/>
-<area shape="rect" id="node20" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation. " alt="" coords="867,542,1064,569"/>
+<area shape="rect" id="node20" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the gate. " alt="" coords="867,542,1064,569"/>
 <area shape="rect" id="node21" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1115,542,1199,569"/>
 <area shape="rect" id="node23" href="$class_gates__block.html#a20b7625d8dcc9d5838981ee1bfb740a9" title="Call to extract the gates stored in the class. " alt="" coords="469,324,609,366"/>
 <area shape="rect" id="node24" href="$class_gates__block.html#a11ee1387e5ec4d3c3d8a3eb6e625b3ab" title="Call to release the stored gates. " alt="" coords="670,223,813,264"/>

@@ -1,6 +1,6 @@
 <map id="Decomposition_Base" name="Decomposition_Base">
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT and U3 oper..." alt="" coords="5,229,168,256"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT and U3 gate..." alt="" coords="5,229,168,256"/>
 <area shape="rect" id="node5" href="$class_sub___matrix___decomposition.html" title="A class responsible for the disentanglement of one qubit from the others. " alt="" coords="193,229,373,256"/>
-<area shape="rect" id="node2" href="$class_operation__block.html" title="A class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit operations into layers..." alt="" coords="126,80,242,107"/>
-<area shape="rect" id="node3" href="$class_operation.html" title="Base class for the representation of one&#45; and two&#45;qubit operations. " alt="" coords="145,5,223,32"/>
+<area shape="rect" id="node2" href="$class_gates__block.html" title="A class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="137,80,231,107"/>
+<area shape="rect" id="node3" href="$class_gate.html" title="Base class for the representation of general gate operations. " alt="" coords="159,5,209,32"/>
 </map>

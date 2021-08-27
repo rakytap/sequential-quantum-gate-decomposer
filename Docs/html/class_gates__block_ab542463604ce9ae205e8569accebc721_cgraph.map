@@ -12,7 +12,7 @@
 <area shape="rect" id="node8" href="$class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce" title="Call to get the number of free parameters. " alt="" coords="815,24,985,51"/>
 <area shape="rect" id="node7" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="1047,75,1137,101"/>
 <area shape="rect" id="node12" href="$class_u3.html#a11a8fca65dd56a6bdc42a98927040a05" title="Nullary constructor of the class. " alt="" coords="869,435,931,461"/>
-<area shape="rect" id="node13" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the operation. " alt="" coords="801,384,999,411"/>
+<area shape="rect" id="node13" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the gate. " alt="" coords="801,384,999,411"/>
 <area shape="rect" id="node14" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="1050,384,1134,411"/>
 <area shape="rect" id="node16" href="$class_gates__block.html#aeb0c08045470d7ecab12a33ce95d0292" title="Default constructor of the class. " alt="" coords="413,209,549,250"/>
 <area shape="rect" id="node17" href="$class_gates__block.html#a20b7625d8dcc9d5838981ee1bfb740a9" title="Call to extract the gates stored in the class. " alt="" coords="411,274,551,315"/>

@@ -1,7 +1,7 @@
 <map id="U3::composite_u3_Phi" name="U3::composite_u3_Phi">
-<area shape="rect" id="node2" href="$class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate operation corresponding corresponding to the given parameters actin..." alt="" coords="205,81,332,108"/>
+<area shape="rect" id="node2" href="$class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate gate corresponding corresponding to the given parameters acting on ..." alt="" coords="205,81,332,108"/>
 <area shape="rect" id="node3" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="383,5,531,32"/>
 <area shape="rect" id="node4" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="396,56,517,83"/>
-<area shape="rect" id="node5" href="$class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate operation corresponding to the given parameters acting on a single ..." alt="" coords="380,107,533,133"/>
+<area shape="rect" id="node5" href="$class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit ..." alt="" coords="380,107,533,133"/>
 <area shape="rect" id="node6" href="$class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="409,157,504,184"/>
 </map>
