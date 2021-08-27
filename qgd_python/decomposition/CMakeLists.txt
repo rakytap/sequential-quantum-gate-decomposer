@@ -27,7 +27,7 @@ target_include_directories(qgd_N_Qubit_Decomposition_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/decomposition/include
-                            ${PROJECT_SOURCE_DIR}/operations/include
+                            ${PROJECT_SOURCE_DIR}/gates/include
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
