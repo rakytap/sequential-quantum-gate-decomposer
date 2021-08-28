@@ -15,7 +15,7 @@ In the following we briefly summarize the steps to build, install and use the SQ
 The project was supported by grant OTKA PD123927 and by the Ministry of Innovation and Technology and the National Research, Development and Innovation
 Office within the Quantum Information National Laboratory of Hungary.
 
-
+Find the documantation of the SQUANDER package at [CodeDocs[xyz]](https://codedocs.xyz/rakytap/sequential-quantum-gate-decomposer/)
 
 
 
@@ -159,8 +159,8 @@ Thus, in order to get the decomposition of a unitary, one should rather provide 
 
 The SQUANDER package contains a Python interface allowing the access of the functionalities of the SQUANDER package from Python. 
 The usage of the SQUANDER Python interface is demonstrated in the example files in the directory **examples** located in the directory **path/to/SQUANDER/package**, or in test files located in sub-directories of **path/to/SQUANDER/package/qgd_python/*/test**. 
-The example files import the necessary **qgd_python** modules containing the wrapper classes to interface with the C++ @QGD library. 
-(So the $QGD package need to be installed or the compiled package needs to be added to the Python search path.)
+The example files import the necessary **qgd_python** modules containing the wrapper classes to interface with the C++ SQUANDER library. 
+(So the SQUANDER package need to be installed or the compiled package needs to be added to the Python search path.)
 
 
 ### How to cite us
