@@ -168,7 +168,7 @@ The figure below shows the period of the constructed gate structure in case of t
 
 @image latex custom_structure.png
 \htmlonly <style>div.image img[src="custom_structure.png"]{width:600px;}</style> \endhtmlonly 
-@image html custom_structure.png "A period of a custom three-qubit gate structure"
+@image html custom_structure.png "A custom three-qubit gate structure"
 
 We continue by creating a random 3-qubit unitary (and its transpose conjugate) by code snippet:
 <div class="snippet">

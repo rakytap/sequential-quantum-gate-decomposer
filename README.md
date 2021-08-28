@@ -3,7 +3,7 @@
 # Sequential Quantum Gate Decomposer (SQUANDER)
 
 
-The Sequential Quantum Gate Decomposer (SQUANDER) package provides a novel solution to decompose any n-qubit unitary into a sequence of one-qubit rotations and two-qubit controlled gates (such as controlled NOT or controlled phase gate). SQUANDER utilizes a new gate synthesis technique that applies periodic layers of two-qubit and parametric one-qubit gates to an n-qubit unitary such that the resulting unitary is 1-qubit decoupled, i.e., is a tensor product of an (n-1)-qubit and a 1-qubit unitary. Continuing the decoupling procedure sequentially one arrives at the end to a full decomposition of the original unitary into 1- and 2-qubit gates. SQUANDER provides lower CNOT counts for generic n-qubit unitaries (up to n=6)  than the previously provided upper bounds.
+The Sequential Quantum Gate Decomposer (SQUANDER) package provides a novel solution to decompose any n-qubit unitary into a sequence of one-qubit rotations and two-qubit controlled gates (such as controlled NOT or controlled phase gate). SQUANDER utilizes a new gate synthesis technique that applies periodic layers of two-qubit and parametric one-qubit gates to an n-qubit unitary such that the resulting unitary is 1-qubit decoupled, i.e., is a tensor product of an (n-1)-qubit and a 1-qubit unitary. Continuing the decoupling procedure sequentially one arrives at the end to a full decomposition of the original unitary into 1- and 2-qubit gates. SQUANDER provides lower CNOT counts for generic n-qubit unitaries (up to n=6)  than the previously provided lower bounds.
 
 The SQUANDER library is written in C/C++ providing a Python interface via [C++ extensions](https://docs.python.org/3/library/ctypes.html).
 The present package is supplied with Python building script and CMake tools to ease its deployment.
@@ -54,13 +54,13 @@ The SQUANDER Python interface needs the following packages to be installed on th
 
 
 
-### How to install GNU Scientific Library
+### How to build GNU Scientific Library
 
 If the GNU Scientific Library is not installed on the system, it can be easily easily downloaded and deployed from source by the end user even without administrative privileges.
 The GNU Scientific Library can be downloaded from the site [https://www.gnu.org/software/gsl/](https://www.gnu.org/software/gsl/).
-After the downloaded package is extracted somewhere in the home directory of the user (**path/to/gslsource**), one should configure the building environment using the **configure** tool.
+After the downloaded package is extracted somewhere in the home directory of the user (**path/to/gsl/source**), one should configure the building environment using the **configure** tool.
 Depending on the individual settings the default compiler to be invoked might be different from HPC to HPC. 
-To ensure the usage of the GNU compiler, the following shell command should be executed inside the directory **path/to/gslsource**:
+To ensure the usage of the GNU compiler, the following shell command should be executed inside the directory **path/to/gsl/source**:
 
 $ ./configure --prefix=path/to/gsl FC=gfortran CC=gcc CXX=g++
 
@@ -76,12 +76,12 @@ The compilation of the GNU Scientific Library takes some time. When the compilat
 
 $ make install
 
-### Download the Quantum Gate Decomposer package
+### Download the SQUANDER package
 
 The developer version of the Quantum Gate Decomposer package can be downloaded from github repository [https://github.com/rakytap/quantum-gate-decomposer/tree/master](https://github.com/rakytap/quantum-gate-decomposer/tree/master).
-After the downloaded package is extracted into the directory **path/to/SQUANDER/package** (which would be the path to the source code of the SQUANDER package), one can proceed to the compilation steps described in the next section.
+After the package is downloaded into the directory **path/to/SQUANDER/package** (which would be the path to the source code of the SQUANDER package), one can proceed to the compilation steps described in the next section.
 
-### How to build the Quantum Gate Decomposer package
+### How to build the SQUANDER package
 
 The SQUANDER package is equipped with a Python build script and CMake tools to ease the compilation and the deployment of the package.
 To ensure that SQUANDER package would find the necessary libraries and header files during compilation time it is advised to define the following environment variables:

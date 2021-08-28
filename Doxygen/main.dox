@@ -18,11 +18,13 @@
   
 
  
-Sequential Quantum Gate Decomposer (@QGD) @version is a free software distributed under the <a href="http://www.gnu.org/licenses/">GNU General Public License</a>.
+Sequential Quantum Gate Decomposer (@QGD) @version is an open source software distributed under the <a href="http://www.gnu.org/licenses/">GNU General Public License</a>.
 The project was supported by OTKA PD123927 grant and by the Ministry of Innovation and Technology and the National Research, Development and Innovation
 Office within the Quantum Information National Laboratory of Hungary.
 
-@QGD (QGD) is an optimization method to decompose an arbitrary NxN Unitary matrix into a sequence of U3 and CNOT gates. 
+The @QGD package provides a novel solution to decompose any n-qubit unitary into a sequence of one-qubit rotations and two-qubit controlled gates (such as controlled NOT or controlled phase gate). @QGD utilizes a new gate synthesis technique that applies periodic layers of two-qubit and parametric one-qubit gates to an n-qubit unitary such that the resulting unitary is 1-qubit decoupled, i.e., is a tensor product of an (n-1)-qubit and a 1-qubit unitary. Continuing the decoupling procedure sequentially one arrives at the end to a full decomposition of the original unitary into 1- and 2-qubit gates. SQUANDER provides lower CNOT counts for generic n-qubit unitaries (up to n=6)  than the previously provided lower bounds.
+
+
 The @QGD library is written in C/C++ providing a Python interface via [C++ extensions](https://docs.python.org/3/library/ctypes.html).
 The present package is supplied with Python building script and CMake tools to ease its deployment.
 The @QGD package can be built with both Intel and GNU compilers, and can be link against various CBLAS libraries installed on the system.
@@ -43,7 +45,7 @@ The dependencies necessary to compile and build the @QGD package are the followi
 - C++/C [Intel](https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html) (>=14.0.1) or [GNU](https://gcc.gnu.org/) (>=v4.8.1) compiler
 - [TBB](https://github.com/oneapi-src/oneTBB) library
 - [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html) (optional)
-- [OpenBlas](https://www.openblas.net/) (optional)
+- [OpenBlas](https://www.openblas.net/) (optional, recommended)
 - [Doxygen](https://www.doxygen.nl/index.html) (optional)
 
 The Python interface of @QGD was developed and tested with Python 3.6 and 3.7.
@@ -52,6 +54,8 @@ The @QGD Python interface needs the following packages to be installed on the sy
 - [Qiskit](https://qiskit.org/documentation/install.html)
 - [Numpy](https://numpy.org/install/)
 - [scipy](https://www.scipy.org/install.html)
+- [scikit-build](https://scikit-build.readthedocs.io/en/latest/)
+- [tbb-devel](https://pypi.org/project/tbb-devel/)
 
 
 
@@ -59,9 +63,9 @@ The @QGD Python interface needs the following packages to be installed on the sy
 
 If the GNU Scientific Library is not installed on the system, it can be easily easily downloaded and deployed from source by the end user even without administrative privileges.
 The GNU Scientific Library can be downloaded from the site [https://www.gnu.org/software/gsl/](https://www.gnu.org/software/gsl/).
-After the downloaded package is extracted somewhere in the home directory of the user (**path/to/gslsource**), one should configure the compiling environment using the **configure** tool.
+After the downloaded package is extracted somewhere in the home directory of the user (**path/to/gsl/source**), one should configure the compiling environment using the **configure** tool.
 Depending on the individual settings the default compiler to be invoked might be different from HPC to HPC. 
-To ensure the usage of the GNU compiler, the following shell command should be executed inside the directory **path/to/gslsource**:
+To ensure the usage of the GNU compiler, the following shell command should be executed inside the directory **path/to/gsl/source**:
 
 <div class="snippet">
 $ ./configure --prefix=path/to/gsl FC=gfortran CC=gcc CXX=g++
@@ -83,12 +87,12 @@ The compilation of the GNU Scientific Library takes some time. When the compilat
 $ make install
 </div>
 
-# Download the Quantum Gate Decomposer package
+# Download the @QGD package
 
 The developer version of the @QGD package can be downloaded from github repository [https://github.com/rakytap/quantum-gate-decomposer/tree/master](https://github.com/rakytap/quantum-gate-decomposer/tree/master).
-After the downloaded package is extracted into the directory **path/to/QGD/package** (which would be the path to the source code of the @QGD package), one can proceed to the compilation steps described in the next section.
+After the package is downloaded into the directory **path/to/QGD/package** (which would be the path to the source code of the @QGD package), one can proceed to the compilation steps described in the next section.
 
-# How to build the Quantum Gate Decomposer package
+# How to build the @QGD package
 
 The @QGD package is equipped with a Python build script and CMake tools to ease the compilation and the deployment of the package.
 To ensure that @QGD package would find the necessary libraries and header files during compilation time it is advised to define the following environment variables:
