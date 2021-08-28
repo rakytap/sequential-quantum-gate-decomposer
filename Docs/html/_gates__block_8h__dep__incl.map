@@ -2,10 +2,10 @@
 <area shape="rect" id="node2" href="$_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="541,87,696,114"/>
 <area shape="rect" id="node13" href="$_functor___get___operation___products_8h.html" title="Header file for the parallelized calculation of the vector containing the products of operations (sup..." alt="" coords="360,80,517,121"/>
 <area shape="rect" id="node14" href="$_gates__block_8cpp.html" title="Class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="721,87,839,114"/>
-<area shape="rect" id="node15" href="$_operation__block_8cpp.html" title="Operation_block.cpp" alt="" coords="863,87,1003,114"/>
-<area shape="rect" id="node16" href="$qgd___gates___block_8cpp.html" title="qgd_Gates_Block.cpp" alt="" coords="1028,87,1177,114"/>
+<area shape="rect" id="node15" href="$qgd___gates___block_8cpp.html" title="qgd_Gates_Block.cpp" alt="" coords="863,87,1012,114"/>
+<area shape="rect" id="node16" href="$qgd___operation___block_8cpp.html" title="qgd_Operation_Block.cpp" alt="" coords="1036,87,1207,114"/>
 <area shape="rect" id="node3" href="$_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process. " alt="" coords="807,177,977,203"/>
-<area shape="rect" id="node4" href="$_functor___get___operation___products_8cpp.html" title="Methods and classes for the parallelized calculation of the vector containing the products of operati..." alt="" coords="360,169,517,211"/>
+<area shape="rect" id="node4" href="$_functor___get___operation___products_8cpp.html" title="Functor_Get_Operation\l_Products.cpp" alt="" coords="360,169,517,211"/>
 <area shape="rect" id="node5" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="428,259,601,285"/>
 <area shape="rect" id="node11" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="593,177,783,203"/>
 <area shape="rect" id="node6" href="$_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="795,333,952,375"/>

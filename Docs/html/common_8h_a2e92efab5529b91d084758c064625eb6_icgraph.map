@@ -1,10 +1,10 @@
 <map id="reduce_zgemm" name="reduce_zgemm">
-<area shape="rect" id="node2" href="$class_operation__block.html#a2e978e3b5773b7ab03b4f15021207090" title="Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in t..." alt="" coords="164,71,304,112"/>
-<area shape="rect" id="node3" href="$class_decomposition___base.html#a542d64209fd50c43bf30401b5f6fcf03" title="Calculate the transformed matrix resulting by an array of operations on a given initial matrix..." alt="" coords="352,5,516,47"/>
-<area shape="rect" id="node4" href="$classfunctor__get__operation__matrices.html#a805f115648a071662183cbee70c67676" title="Operator to calculate th ematrix representation of operation labeled by i. " alt="" coords="361,71,507,112"/>
-<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a0362ed18889e3f9cd0a3803877604704" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="353,136,515,177"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="564,107,727,148"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="775,136,937,177"/>
-<area shape="rect" id="node8" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1041,85,1092,111"/>
-<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="985,136,1148,177"/>
+<area shape="rect" id="node2" href="$class_gates__block.html#ad1840c6b3072f1853c7f91eccc5e777b" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="164,78,325,105"/>
+<area shape="rect" id="node3" href="$class_decomposition___base.html#a9ddb4adf4b04cc6cd51a27da9bd6ec83" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="373,5,537,47"/>
+<area shape="rect" id="node4" href="$classfunctor__get__operation__matrices.html#a13a446a1da6ee8ed165801ad66b49784" title="Operator to calculate th ematrix representation of operation labeled by i. " alt="" coords="382,71,529,112"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="374,136,537,177"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="585,107,748,148"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="796,136,959,177"/>
+<area shape="rect" id="node8" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1063,85,1113,111"/>
+<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1007,136,1169,177"/>
 </map>

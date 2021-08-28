@@ -2,10 +2,10 @@
 <area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="283,71,367,98"/>
 <area shape="rect" id="node3" href="$class_sub___matrix___decomposition.html#a56b7a2e77d0426ab2b1283f12d848190" title="The optimization problem of the final optimization. " alt="" coords="235,123,415,164"/>
 <area shape="rect" id="node7" href="$class_sub___matrix___decomposition.html#abf7481db498d40aaf53935513e8c4447" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="233,188,416,229"/>
-<area shape="rect" id="node10" href="$class_sub___matrix___decomposition.html#aae3fe5273a4259ee2028fbf2e4fde8d7" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="235,253,415,309"/>
-<area shape="rect" id="node4" href="$class_decomposition___base.html#a88bfddd83a85d1d0322304815216bf4d" title="Calculate the transformed matrix resulting by an array of operations on the matrix Umtx..." alt="" coords="464,5,628,47"/>
+<area shape="rect" id="node10" href="$class_sub___matrix___decomposition.html#aae3fe5273a4259ee2028fbf2e4fde8d7" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="235,254,415,310"/>
+<area shape="rect" id="node4" href="$class_decomposition___base.html#a9f0f0dd8c94cb84fc2dbce4d785dddbb" title="Calculate the transformed matrix resulting by an array of gates on the matrix Umtx. " alt="" coords="464,5,628,47"/>
 <area shape="rect" id="node5" href="$class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="499,71,593,98"/>
 <area shape="rect" id="node6" href="$_sub___matrix___decomposition___cost___function_8h.html#a6f8a34a10e6654b40f899ecb8d199776" title="Call to calculate the cost function of a given matrix during the submatrix decomposition process..." alt="" coords="479,123,613,164"/>
-<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#adf6b02469b89a561d0c53b08f1f8ceb3" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="465,187,627,243"/>
-<area shape="rect" id="node9" href="$class_operation__block.html#af7ff4a8876a7b1c062ea2f35efac18b0" title="Call to get the number of free parameters. " alt="" coords="676,228,816,269"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#adf6b02469b89a561d0c53b08f1f8ceb3" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="465,189,627,245"/>
+<area shape="rect" id="node9" href="$class_gates__block.html#ac021a051f25e4112f355aef65bad2612" title="Call to get the number of free parameters. " alt="" coords="676,237,892,263"/>
 </map>

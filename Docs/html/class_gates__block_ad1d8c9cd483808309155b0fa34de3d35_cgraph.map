@@ -4,7 +4,7 @@
 <area shape="rect" id="node5" href="$class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="232,86,375,113"/>
 <area shape="rect" id="node6" href="$class_c_z.html#af057fd5dc3440bd26648be56cac55c11" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="242,137,365,163"/>
 <area shape="rect" id="node7" href="$class_c_h.html#ac12907bcfa44a8b3891c0dfbfcff280c" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="241,187,366,214"/>
-<area shape="rect" id="node8" href="$class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="242,238,365,265"/>
+<area shape="rect" id="node8" href="$class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the gate. " alt="" coords="242,238,365,265"/>
 <area shape="rect" id="node3" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="608,154,699,181"/>
 <area shape="rect" id="node9" href="$class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="423,209,560,251"/>
 <area shape="rect" id="node10" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="617,209,689,235"/>

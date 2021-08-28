@@ -9,7 +9,6 @@
       <tab type="namespacemembers" visible="yes" title="" intro=""/>
     </tab>
     <tab type="user" url="group__python.html" title="Python Interface"/>
-    <tab type="user" url="group__tutorial.html" title="Tutorial"/>
     <tab type="user" url="group__examples.html" title="C++ Examples"/>
 	<tab type="classes" visible="yes" title="Classes">
       <tab type="classlist" visible="yes" title="" intro=""/>

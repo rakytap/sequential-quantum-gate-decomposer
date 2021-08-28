@@ -14,7 +14,7 @@ add_executable (custom_gate_structure_test custom_gate_structure_test.cpp)
 
 target_include_directories(decomposition_test PRIVATE
                             ${PROJECT_SOURCE_DIR}/decomposition/include
-                            ${PROJECT_SOURCE_DIR}/operations/include
+                            ${PROJECT_SOURCE_DIR}/gates/include
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${PROJECT_SOURCE_DIR}/random_unitary/include
                             ${EXTRA_INCLUDES})
@@ -23,7 +23,7 @@ target_include_directories(decomposition_test PRIVATE
 
 target_include_directories(custom_gate_structure_test PRIVATE
                             ${PROJECT_SOURCE_DIR}/decomposition/include
-                            ${PROJECT_SOURCE_DIR}/operations/include
+                            ${PROJECT_SOURCE_DIR}/gates/include
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${PROJECT_SOURCE_DIR}/random_unitary/include
                             ${EXTRA_INCLUDES})

@@ -1,8 +1,8 @@
 <map id="Gates_block::get_gates" name="Gates_block::get_gates">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a3c7f2c81ace34f8186690d9fd2460217" title="Call to prepare the gates of an operation block to export. " alt="" coords="217,5,387,47"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a3c7f2c81ace34f8186690d9fd2460217" title="Call to prepare the gates of an gate block to export. " alt="" coords="217,5,387,47"/>
 <area shape="rect" id="node3" href="$class_gates__block.html#ab542463604ce9ae205e8569accebc721" title="Call to append the gates of an gate block to the current block. " alt="" coords="227,130,377,157"/>
-<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of operations (i.e. " alt="" coords="879,143,1041,184"/>
-<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and operations of the sub&#45;decomposition processes..." alt="" coords="441,305,619,361"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="879,143,1041,184"/>
+<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and gates of the sub&#45;decomposition processes..." alt="" coords="441,305,619,361"/>
 <area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#a642d37a3b072239af74f507cc8d4914b" title="The optimization problem of the final optimization. " alt="" coords="221,247,383,288"/>
 <area shape="rect" id="node11" href="$class_sub___matrix___decomposition.html#aad17c8f1ecdacb3fe6716fa9bd4dd292" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="212,181,392,223"/>
 <area shape="rect" id="node13" href="$class_sub___matrix___decomposition.html#a850f0d87ca7132652ad6e973a0ef3816" title="The optimization problem of the final optimization. " alt="" coords="212,364,392,405"/>

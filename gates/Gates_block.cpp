@@ -244,10 +244,10 @@ void Gates_block::add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cnot_to_end( int control_qbit, int target_qbit) {
+void Gates_block::add_cnot_to_end(  int target_qbit, int control_qbit) {
 
         // new cnot operation
-        Gate* gate = static_cast<Gate*>(new CNOT(qbit_num, control_qbit, target_qbit ));
+        Gate* gate = static_cast<Gate*>(new CNOT(qbit_num, target_qbit, control_qbit ));
 
         // append the operation to the list
         add_gate_to_end(gate);
@@ -261,10 +261,10 @@ void Gates_block::add_cnot_to_end( int control_qbit, int target_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cnot( int control_qbit, int target_qbit) {
+void Gates_block::add_cnot( int target_qbit, int control_qbit) {
 
         // new cnot operation
-        Gate* gate = static_cast<Gate*>(new CNOT(qbit_num, control_qbit, target_qbit ));
+        Gate* gate = static_cast<Gate*>(new CNOT(qbit_num, target_qbit, control_qbit ));
 
         // put the operation to tghe front of the list
         add_gate(gate);
@@ -279,10 +279,10 @@ void Gates_block::add_cnot( int control_qbit, int target_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cz_to_end( int control_qbit, int target_qbit) {
+void Gates_block::add_cz_to_end(  int target_qbit, int control_qbit) {
 
         // new cz operation
-        Gate* gate = static_cast<Gate*>(new CZ(qbit_num, control_qbit, target_qbit ));
+        Gate* gate = static_cast<Gate*>(new CZ(qbit_num, target_qbit, control_qbit ));
 
         // append the operation to the list
         add_gate_to_end(gate);
@@ -296,10 +296,10 @@ void Gates_block::add_cz_to_end( int control_qbit, int target_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cz( int control_qbit, int target_qbit) {
+void Gates_block::add_cz(  int target_qbit, int control_qbit) {
 
         // new cz operation
-        Gate* gate = static_cast<Gate*>(new CZ(qbit_num, control_qbit, target_qbit ));
+        Gate* gate = static_cast<Gate*>(new CZ(qbit_num, target_qbit, control_qbit ));
 
         // put the operation to tghe front of the list
         add_gate(gate);
@@ -314,10 +314,10 @@ void Gates_block::add_cz( int control_qbit, int target_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_ch_to_end( int control_qbit, int target_qbit) {
+void Gates_block::add_ch_to_end(  int target_qbit, int control_qbit) {
 
         // new cz operation
-        Gate* gate = static_cast<Gate*>(new CH(qbit_num, control_qbit, target_qbit ));
+        Gate* gate = static_cast<Gate*>(new CH(qbit_num, target_qbit, control_qbit ));
 
         // append the operation to the list
         add_gate_to_end(gate);
@@ -331,10 +331,10 @@ void Gates_block::add_ch_to_end( int control_qbit, int target_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_ch( int control_qbit, int target_qbit) {
+void Gates_block::add_ch(  int target_qbit, int control_qbit) {
 
         // new cz operation
-        Gate* gate = static_cast<Gate*>(new CH(qbit_num, control_qbit, target_qbit ));
+        Gate* gate = static_cast<Gate*>(new CH(qbit_num, target_qbit, control_qbit ));
 
         // put the operation to tghe front of the list
         add_gate(gate);

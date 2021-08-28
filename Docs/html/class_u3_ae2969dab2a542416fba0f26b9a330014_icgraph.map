@@ -1,6 +1,6 @@
 <map id="U3::is_lambda_parameter" name="U3::is_lambda_parameter">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a68dcc2cdfa644cf8043021367cc07d28" title="Call to prepare the optimized operations to export. " alt="" coords="223,5,368,61"/>
-<area shape="rect" id="node3" href="$class_operation__block.html#a29e2c74d7fa7344193a17e39248eb803" title="Call to print the list of operations stored in the block of operations for a specific set of paramete..." alt="" coords="226,110,365,151"/>
-<area shape="rect" id="node4" href="$class_decomposition___base.html#a4c6c81d70f49ee249aa455a4f2718ee2" title="Call to print the operations decomposing the initial unitary. " alt="" coords="416,110,561,151"/>
-<area shape="rect" id="node5" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="609,117,660,144"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a190fcc3b3f28783ec893be8a58da1bd5" title="Call to prepare the optimized gates to export. " alt="" coords="223,5,393,47"/>
+<area shape="rect" id="node3" href="$class_gates__block.html#adeb104a0985789e3bea3dc53d3545349" title="Call to print the list of gates stored in the block of gates for a specific set of parameters..." alt="" coords="229,95,387,122"/>
+<area shape="rect" id="node4" href="$class_decomposition___base.html#ad897530a73bb05de35e86bf28fe40fd5" title="Call to print the gates decomposing the initial unitary. " alt="" coords="441,88,587,129"/>
+<area shape="rect" id="node5" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="635,95,685,122"/>
 </map>

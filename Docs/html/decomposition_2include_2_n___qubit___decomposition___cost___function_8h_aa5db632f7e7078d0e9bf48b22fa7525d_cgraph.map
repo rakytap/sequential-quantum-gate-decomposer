@@ -1,0 +1,5 @@
+<map id="get_cost_function" name="get_cost_function">
+<area shape="rect" id="node2" href="$classfunctor__cost__fnc.html#a17fb679232161c3f3fa5630c44dbe993" title="Constructor of the class. " alt="" coords="186,5,351,47"/>
+<area shape="rect" id="node3" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="407,42,555,69"/>
+<area shape="rect" id="node4" href="$classfunctor__cost__fnc.html#a43bc69357682013223a400ff0764c573" title="Operator to calculate the partial cost function derived from the row of the matrix labeled by row_idx..." alt="" coords="179,122,359,149"/>
+</map>

@@ -103,7 +103,7 @@ void add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cnot_to_end( int control_qbit, int target_qbit);
+void add_cnot_to_end( int target_qbit, int control_qbit);
 
 
 
@@ -112,7 +112,7 @@ void add_cnot_to_end( int control_qbit, int target_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cnot( int control_qbit, int target_qbit );
+void add_cnot( int target_qbit, int control_qbit );
 
 
 /**
@@ -120,7 +120,7 @@ void add_cnot( int control_qbit, int target_qbit );
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cz_to_end( int control_qbit, int target_qbit);
+void add_cz_to_end( int target_qbit, int control_qbit);
 
 
 
@@ -129,7 +129,7 @@ void add_cz_to_end( int control_qbit, int target_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cz( int control_qbit, int target_qbit );
+void add_cz( int target_qbit, int control_qbit );
 
 
 /**
@@ -137,7 +137,7 @@ void add_cz( int control_qbit, int target_qbit );
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_ch_to_end( int control_qbit, int target_qbit);
+void add_ch_to_end( int target_qbit, int control_qbit);
 
 
 
@@ -146,7 +146,7 @@ void add_ch_to_end( int control_qbit, int target_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_ch( int control_qbit, int target_qbit );
+void add_ch( int target_qbit, int control_qbit );
 
 /**
 @brief Append a list of gates to the list of gates

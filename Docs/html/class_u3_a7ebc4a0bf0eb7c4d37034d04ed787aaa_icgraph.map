@@ -1,6 +1,6 @@
 <map id="U3::get_optimized_parameters" name="U3::get_optimized_parameters">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a1b076dd293978004b7636ed8b1d41119" title="Call to prepare the optimized operations to export — OBSOLETE. " alt="" coords="251,9,396,51"/>
-<area shape="rect" id="node3" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#a5c6d5d28dc6ec6466bb4ed6bfb7c3307" title="Call to get the metadata organised into Python dictionary of the idx&#45;th operation. " alt="" coords="444,46,544,73"/>
-<area shape="rect" id="node4" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#a05ba4746064677c0f65f7d57ed1af3be" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="592,5,783,47"/>
-<area shape="rect" id="node5" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#aa1e7d1c7649bec942c3aeb7c3bb81919" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="592,71,783,112"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#ae2324cca8c2d924f95a1b32d32bb3ded" title="Call to prepare the optimized gates to export — OBSOLETE. " alt="" coords="251,9,396,51"/>
+<area shape="rect" id="node3" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#a3f1dba2f62694199f5ea3b0bb688b6d0" title="Call to get the metadata organised into Python dictionary of the idx&#45;th gate. " alt="" coords="444,46,516,73"/>
+<area shape="rect" id="node4" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#afab9eeaa3bc07ab2768fd75ee2a2d5e4" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="564,5,755,47"/>
+<area shape="rect" id="node5" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#a4b2637941702e1029550dfe7d13e6d10" title="Wrapper function to set the number of identical successive blocks during the subdecomposition of the ..." alt="" coords="564,71,755,112"/>
 </map>
