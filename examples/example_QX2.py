@@ -18,8 +18,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 """
-## \file test_decomposition.py
-## \brief Functionality test cases for the qgd_N_Qubit_Decomposition class.
+## \file example_QX2.py
+## \brief Example to decompose on the QX2 architecture
 
 
 
@@ -34,25 +34,30 @@ def create_custom_gate_structure_QX2(qbit_num):
     This method is called to create custom gate structure for the decomposition on IBM QX2
 
     """
-
+## [import gates block]
     from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
+
 
     # creating an instance of the wrapper class qgd_Gates_Block
     Gates_Block_ret = qgd_Gates_Block( qbit_num )
+## [import gates block]
 
+## [disentangle_qbit]
     disentangle_qbit = qbit_num - 1 
+## [disentangle_qbit]
 
         
 
     for qbit in range(0, disentangle_qbit ):
 
+## [create layer]
         # creating an instance of the wrapper class qgd_Gates_Block
         Layer = qgd_Gates_Block( qbit_num )
-
+## [create layer]
 
         if qbit == 0:
 
-            # add U3 fate to the block
+            # add U3 gate to the block
             Theta = True
             Phi = False
             Lambda = True      
@@ -64,7 +69,8 @@ def create_custom_gate_structure_QX2(qbit_num):
 
         elif qbit == 1:
 
-            # add U3 fate to the block
+## [create gate struct]
+            # add U3 gate to the block
             Theta = True
             Phi = False
             Lambda = True      
@@ -74,11 +80,11 @@ def create_custom_gate_structure_QX2(qbit_num):
             # add CNOT gate to the block
             Layer.add_CNOT( 0, 1)
 
-
+## [create gate struct]
 
         elif qbit == 2:
 
-            # add U3 fate to the block
+            # add U3 gate to the block
             Theta = True
             Phi = False
             Lambda = True      
@@ -89,8 +95,10 @@ def create_custom_gate_structure_QX2(qbit_num):
             Layer.add_CNOT( 2, disentangle_qbit )
 
          
-
+## [add layer]
         Gates_Block_ret.add_Gates_Block( Layer )
+## [add layer]
+
 
     return Gates_Block_ret
 

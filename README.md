@@ -126,7 +126,7 @@ The binary wheel can be constructed by command
 $ python3 setup.py bdist_wheel
 
 in the root directory of the SQUADER package.
-The created Piquasso Boost wheel can be installed on the local machine by issuing the command from the directory **path/to/SQUANDER/package/dist**
+The created SQUANDER wheel can be installed on the local machine by issuing the command from the directory **path/to/SQUANDER/package/dist**
 
 $ pip3 install qgd-*.whl
 
@@ -154,35 +154,14 @@ issued from directory **path/to/SQUANDER/package/dist**
 The algorithm implemented in the SQUANDER package intends to transform the given unitary into an identity matrix via a sequence of two-qubit and one-qubit gate operations applied on the unitary. 
 Thus, in order to get the decomposition of a unitary, one should rather provide the complex transpose of this unitary as the input for the SQUANDER decomposing process, as can be seen in the examples.
 
-## Standalone executable
-
-During the compilation processes of the SQUANDER package standalone test executable are also built. 
-These executable can be launched from directory **/path/to/SQUANDER/package/build/lib*/test_standalone** by command:
-
-$ ./decomposition_test
-
-and
-
-$ ./custom_gate_structure_test
-
-The standalone test programs starts the decomposition of general unitaries.
-Alternatively the test programs can be run by the command
-
-$ ctest
-
-from directory **/path/to/SQUANDER/package/build**. 
-The sources of these examples are located in **path/to/SQUANDER/package/test_standalone/** and show simple test cases of the usage of the SQUANDER package. 
 
 ## Python Interface
 
 The SQUANDER package contains a Python interface allowing the access of the functionalities of the SQUANDER package from Python. 
-The usage of the SQUANDER Python interface is demonstrated in the example file **example.py** located in the directory **path/to/SQUANDER/package**, or in test files located in sub-directories of **path/to/SQUANDER/package/qgd_python/*/test**. 
-The **example.py** script can be run similarly to any python scripts, while the test files can be invoked by the **pytest** utility.
-The example files import the necessary **qgd_python** modules containing the wrapper classes to interface with the C++ SQUANDER library.
+The usage of the SQUANDER Python interface is demonstrated in the example files in the directory **examples** located in the directory **path/to/SQUANDER/package**, or in test files located in sub-directories of **path/to/SQUANDER/package/qgd_python/*/test**. 
+The example files import the necessary **qgd_python** modules containing the wrapper classes to interface with the C++ @QGD library. 
+(So the $QGD package need to be installed or the compiled package needs to be added to the Python search path.)
 
-It should be noted, however, that the python interface functions are implemented only for few functionalities of the whole SQUANDER API. 
-Another desired interface functions can be implemented following the sources of already implemented interface functions in *.cpp source files located in directory
-**path/to/SQUANDER/package/qgd_python**
 
 ### How to cite us
 

@@ -140,7 +140,7 @@ The decomposition can be executed with arbitrary, but parameter-less two-qubit c
 Here we provide a simple guide on how to define custom gate structure. 
 A working example is provided in example file custom_gate_structure_test.cpp.
 
-First we create a class that will hold the design of one period of the decomposing gate strusture. 
+First we create a class that will hold the design of one period of the decomposing gate structure. 
 (This period is then repeated in the quantum circuit.)
 <div class="snippet">
 \snippet custom_gate_structure_test.cpp gates block
@@ -150,12 +150,12 @@ Then we can initialize the label of the qubit we need to disentangle.
 <div class="snippet">
 \snippet custom_gate_structure_test.cpp disentangle qubit
 </div>
-Then we define the custom gate structure using a for loop:
+The custom gate structure can be constructed using a for loop:
 <div class="snippet">
 \snippet custom_gate_structure_test.cpp custom structure
 </div>
-In the individual layers (defined again by an instance of class Gates_block) we can choose qubits to play the role of the control and the target qubit on demand.
-Whatever is our choice, we should add U3 gates to the qubits in front of the chosen two-qubit controlled gate.
+In the individual layers (defined again by an instance of class Gates_block) we can choose between qubits to play the role of the control and the target qubit on demand.
+Whatever is our choice, we should apply U3 gates to the qubits in front of the chosen two-qubit controlled gate.
 The U3 gates should have two free parameters, lets say variable Theta and Lambda, while parameter Phi is kept constant zero during the decompsition.
 (Parameters set to True are free parameters, while parameters set to False are kept constant.)
 In the first "if" body a connection between qubits 0 and 1 is created via a CNOT gate. 

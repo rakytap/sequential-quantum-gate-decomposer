@@ -18,8 +18,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 """
-## \file test_decomposition.py
-## \brief Functionality test cases for the qgd_N_Qubit_Decomposition class.
+## \file example_heavy_hex.py
+## \brief Example to decompose on heavy hexagonal lattice
 
 
 

@@ -157,13 +157,53 @@ Using these instructions we revert the labels of the qubits indicated by red num
 (See figure above showing the "Decomposing gate structure for the QX2 architecture".)
 
 
+Finally, we show the way to define custom gate structures for the decomposition.
+First we import and create a class that will hold the design of one period of the decomposing gate structure. 
+(This period of gates is then repeated in the quantum circuit.)
 
+<div class="snippet">
+\snippet example_QX2.py import gates block
+</div>
 
+Then we can initialize the label of the qubit we need to disentangle. 
+(@QGD always disentagles the qubit with the highes label.)
+<div class="snippet">
+\snippet example_QX2.py disentangle_qbit
+</div>
+
+The custom gate structure can be constructed by the creation of a layers and appending gates into it.
+The layer is defined again by an instance of class qgd_Gates_block:
+
+<div class="snippet">
+\snippet example_QX2.py create layer
+</div>
+
+In the created layer we can choose between the qubits to play the role of the control and the target qubit on demand.
+Whatever is our choice, we should apply U3 gates to the qubits in front of the two-qubit controlled gate.
+
+<div class="snippet">
+\snippet example_QX2.py create gate struct
+</div>
+
+The U3 gates should have two free parameters, lets say variable Theta and Lambda, while parameter Phi is kept constant zero during the decompsition.
+(Parameters set to True are free parameters, while parameters set to False are kept constant.)
+In the code snippet above a connection between qubits 0 and 1 is created via a CNOT gate. 
+In particular, qubit 1 is chosen as the target qubit, and qubit 0 is chosen to be the target qubit.
+Finally, the created layer should be added to the class instance holding the gate design to be used in the decomposiotion
+
+<div class="snippet">
+\snippet example_QX2.py add layer
+</div>
+
+Here we constructed only a single layer, other layers can be constructed following the same logic. 
+The whole, functioning code of the example can be found in example file example_QX2.py.
 
 
 ## Solution of the 4th problem of the IBM Challenge 2020
 
-
+Now we turn our attention to solve the 4th problem of the IBM Challenge 2020.
+Here we demonstrate that advanced tuning of parameters can help to decompose special unitaries into quantum circuits wirh few CNOT gates.
+We show haw the @QGD package can be used to decompose the unitary of the 4th problem of the IBM Challenge 2020 using 4 CNOT gates.
 
 After loading the qgd_python module we need to load the 4-qubit matrix of the problem from a file shipped with the @QGD package:
 

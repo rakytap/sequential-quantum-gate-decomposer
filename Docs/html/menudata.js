@@ -1,7 +1,6 @@
 var menudata={children:[
 {text:"Main Page",url:"index.html"},
 {text:"Python Interface",url:"group__python.html"},
-{text:"Tutorial",url:"group__tutorial.html"},
 {text:"C++ Examples",url:"group__examples.html"},
 {text:"Classes",url:"annotated.html",children:[
 {text:"Class List",url:"annotated.html"},
