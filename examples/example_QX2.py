@@ -184,16 +184,15 @@ result = job.result()
     
 # the unitary matrix from the result object
 decomposed_matrix = result.get_unitary(quantum_circuit)
+product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
+phase = np.angle(product_matrix[0,0])
+product_matrix = product_matrix*np.exp(-1j*phase)
     
-# the Umtx*Umtx' matrix
-product_matrix = np.dot(Umtx, decomposed_matrix.conj().T)
-
+product_matrix = np.eye(matrix_size)*2 - product_matrix - product_matrix.conj().T
 # the error of the decomposition
-decomposition_error =  LA.norm(product_matrix - np.identity(int(2**qbit_num))*product_matrix[0,0], 2)
-
+decomposition_error =  np.sqrt(LA.norm(product_matrix, 2))
+       
 print('The error of the decomposition is ' + str(decomposition_error))
-
-assert( decomposition_error < 1e-3 )
 ## [qiskit]
 
     
