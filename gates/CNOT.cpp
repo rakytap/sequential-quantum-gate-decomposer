@@ -116,25 +116,27 @@ void
 CNOT::apply_to( Matrix input ) {
 
     int index_step_target = Power_of_2(target_qbit);
-    int current_idx_target = 0;
-    int current_idx_target_pair = current_idx_target+index_step_target;
+    int current_idx = 0;
+    int current_idx_pair = current_idx+index_step_target;
 
     int index_step_control = Power_of_2(control_qbit);
 
 //std::cout << "target qbit: " << target_qbit << std::endl;
 
-    while ( current_idx_target_pair < matrix_size ) {
+    while ( current_idx_pair < matrix_size ) {
 
+        tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
 
-        for (int idx=0; idx<index_step_target; idx++) {  
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
 
-            int row_offset = current_idx_target*input.stride;
-            int row_offset_pair = current_idx_target_pair*input.stride;
+            int row_offset = current_idx_loc*input.stride;
+            int row_offset_pair = current_idx_pair_loc*input.stride;
 
             // determine the action according to the state of the control qubit
-            if ( (current_idx_target/index_step_control) % 2 == 0) {
+            if ( (current_idx_loc/index_step_control) % 2 == 0) {
                 // leave the state as it is
-                continue;
+                return;
             }
             else {
                 for ( int col_idx=0; col_idx<matrix_size; col_idx++) {
@@ -152,18 +154,14 @@ CNOT::apply_to( Matrix input ) {
             }
 
 
-
-
 //std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
 
 
-            current_idx_target++;
-            current_idx_target_pair++;
-        }
+        });
 
 
-        current_idx_target = current_idx_target_pair;
-        current_idx_target_pair = current_idx_target + index_step_target;
+        current_idx = current_idx + 2*index_step_target;
+        current_idx_pair = current_idx_pair + 2*index_step_target;
 
 
     }

@@ -313,10 +313,13 @@ U3::apply_to( const double* parameters, Matrix input ) {
     while ( current_idx_pair < matrix_size ) {
 
 
-        for (int idx=0; idx<index_step; idx++) {  
+        tbb::parallel_for(0, index_step, 1, [&](int idx) {  
 
-            int row_offset = current_idx*input.stride;
-            int row_offset_pair = current_idx_pair*input.stride;
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            int row_offset = current_idx_loc*input.stride;
+            int row_offset_pair = current_idx_pair_loc*input.stride;
 
             for ( int col_idx=0; col_idx<matrix_size; col_idx++) {
                 int index      = row_offset+col_idx;
@@ -335,18 +338,15 @@ U3::apply_to( const double* parameters, Matrix input ) {
                 input[index_pair].real = tmp1.real + tmp2.real;
                 input[index_pair].imag = tmp1.imag + tmp2.imag;
 
-            }         
+            };         
 
 //std::cout << current_idx << " " << current_idx_pair << std::endl;
 
-
-            current_idx++;
-            current_idx_pair++;
-        }
+        });
 
 
-        current_idx = current_idx_pair;
-        current_idx_pair = current_idx + index_step;
+        current_idx = current_idx + 2*index_step;
+        current_idx_pair = current_idx_pair + 2*index_step;
 
 
     }
