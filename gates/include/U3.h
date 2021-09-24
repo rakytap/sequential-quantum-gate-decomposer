@@ -81,6 +81,14 @@ U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lambda_
 */
 Matrix get_matrix( const double* parameters );
 
+
+/**
+@brief Call to apply the gate on the input array/matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void apply_to( const double* parameters, Matrix input );
+
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of qbit_num qubits.
 @param parameters An array containing the parameters of the U3 gate.

@@ -22,7 +22,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "U3.h"
-//tbb::spin_mutex my_mutex2;
+static tbb::spin_mutex my_mutex;
 /**
 @brief Nullary constructor of the class.
 */
@@ -172,7 +172,7 @@ U3::~U3() {
 */
 Matrix
 U3::get_matrix( const double* parameters ) {
-
+/*
         // preallocate array for the composite u3 gate
         Matrix U3_matrix = Matrix(matrix_size, matrix_size);
 
@@ -214,6 +214,11 @@ U3::get_matrix( const double* parameters ) {
         else {
             composite_u3(0, 0, 0, U3_matrix );
         }
+*/
+
+
+        Matrix U3_matrix = create_identity(matrix_size);
+        apply_to(parameters, U3_matrix);
 
 #ifdef DEBUG
         if (U3_matrix.isnan()) {
@@ -221,10 +226,136 @@ U3::get_matrix( const double* parameters ) {
         }
 #endif
 
+
+
+
+
+
         return U3_matrix;
 
 }
 
+
+/**
+@brief Call to apply the gate on the input array/matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void 
+U3::apply_to( const double* parameters, Matrix input ) {
+
+    if (input.rows != matrix_size ) {
+        std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
+        exit(-1);
+    }
+
+
+    double Theta, Phi, Lambda;
+
+    if (theta && !phi && lambda) {
+        Theta = parameters[0];
+        Phi = 0.0;
+        Lambda = parameters[1];
+    }
+
+    else if (theta && phi && lambda) {
+        Theta = parameters[0];
+        Phi = parameters[1];
+        Lambda = parameters[2];
+    }
+
+    else if (!theta && phi && lambda) {
+        Theta = 0.0;
+        Phi = parameters[0];
+        Lambda = parameters[1];
+    }
+
+    else if (theta && phi && !lambda) {
+        Theta = parameters[0];
+        Phi = parameters[1];
+        Lambda = 0.0;
+    }
+
+    else if (!theta && !phi && lambda) {
+        Theta = 0.0;
+        Phi = 0.0;
+        Lambda = parameters[0];
+    }
+
+    else if (!theta && phi && !lambda) {
+        Theta = 0.0;
+        Phi = parameters[0];
+        Lambda = 0.0;
+    }
+
+    else if (theta && !phi && !lambda) {
+        Theta = parameters[0];
+        Phi = 0.0;
+        Lambda = 0.0;
+    }
+
+    else {
+        Theta = 0.0;
+        Phi = 0.0;
+        Lambda = 0.0;
+    }
+
+    // get the U3 gate of one qubit
+    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+
+
+    int index_step = Power_of_2(target_qbit);
+    int current_idx = 0;
+    int current_idx_pair = current_idx+index_step;
+
+//std::cout << "target qbit: " << target_qbit << std::endl;
+
+    while ( current_idx_pair < matrix_size ) {
+
+
+        for (int idx=0; idx<index_step; idx++) {  
+
+            int row_offset = current_idx*input.stride;
+            int row_offset_pair = current_idx_pair*input.stride;
+
+            for ( int col_idx=0; col_idx<matrix_size; col_idx++) {
+                int index      = row_offset+col_idx;
+                int index_pair = row_offset_pair+col_idx;
+
+                QGD_Complex16 element      = input[index];
+                QGD_Complex16 element_pair = input[index_pair];
+
+                QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
+                QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
+                input[index].real = tmp1.real + tmp2.real;
+                input[index].imag = tmp1.imag + tmp2.imag;
+
+                tmp1 = mult(u3_1qbit[2], element);
+                tmp2 = mult(u3_1qbit[3], element_pair);
+                input[index_pair].real = tmp1.real + tmp2.real;
+                input[index_pair].imag = tmp1.imag + tmp2.imag;
+
+            }         
+
+//std::cout << current_idx << " " << current_idx_pair << std::endl;
+
+
+            current_idx++;
+            current_idx_pair++;
+        }
+
+
+        current_idx = current_idx_pair;
+        current_idx_pair = current_idx + index_step;
+
+
+    }
+
+
+ 
+
+
+}
 
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of qbit_num qubits.
