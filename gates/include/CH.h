@@ -66,6 +66,12 @@ CH(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 Matrix get_matrix();
 
 /**
+@brief Call to apply the gate on the input array/matrix
+@param input The input array on which the gate is applied
+*/
+void apply_to( Matrix input );
+
+/**
 @brief Call to set the number of qubits spanning the matrix of the operation
 @param qbit_num The number of qubits
 */

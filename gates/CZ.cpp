@@ -99,7 +99,70 @@ CZ::~CZ() {
 */
 Matrix
 CZ::get_matrix() {
-    return composite_cz();
+
+    Matrix CZ_matrix = create_identity(matrix_size);
+    apply_to(CZ_matrix);
+
+    return CZ_matrix;
+}
+
+
+
+
+/**
+@brief Call to apply the gate on the input array/matrix
+@param input The input array on which the gate is applied
+*/
+void 
+CZ::apply_to( Matrix input ) {
+
+    int index_step_target = Power_of_2(target_qbit);
+    int current_idx = 0;
+    int current_idx_pair = current_idx+index_step_target;
+
+    int index_step_control = Power_of_2(control_qbit);
+
+//std::cout << "target qbit: " << target_qbit << std::endl;
+
+    while ( current_idx_pair < matrix_size ) {
+
+        tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            int row_offset_pair = current_idx_pair_loc*input.stride;
+
+            // determine the action according to the state of the control qubit
+            if ( (current_idx_pair_loc/index_step_control) % 2 == 0) {
+                // leave the state as it is
+                return;
+            }
+            else {
+                for ( int col_idx=0; col_idx<matrix_size; col_idx++) {
+                    int index_pair = row_offset_pair+col_idx;                
+
+                    QGD_Complex16 element_pair = input[index_pair];              
+
+                    input[index_pair].real = -element_pair.real;
+                    input[index_pair].imag = -element_pair.imag;
+
+                }                     
+
+            }
+
+
+//std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
+
+
+        });
+
+
+        current_idx_pair = current_idx_pair + 2*index_step_target;
+
+
+    }
+
+
 }
 
 /**

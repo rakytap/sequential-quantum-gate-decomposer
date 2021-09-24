@@ -74,6 +74,13 @@ void release_gates();
 Matrix get_matrix( const double* parameters );
 
 /**
+@brief Call to apply the gate on the input array/matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void apply_to( const double* parameters, Matrix input );
+
+/**
 @brief Call to get the list of matrix representation of the gates grouped in the block.
 @param parameters Array of parameters to calculate the matrix of the gate block
 @return Returns with the list of the gates
