@@ -368,7 +368,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         int parameter_num_loc = parameter_num;
 
         // store the initial unitary to be decomposed
-        Matrix Umtx_loc = Umtx; // copy??
+        Matrix Umtx_loc = Umtx;
 
         // storing the initial computational parameters
         int optimization_block_loc = optimization_block;
@@ -412,7 +412,6 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         unsigned int block_idx_start = gates.size();
         gates.clear();
         int block_parameter_num;
-        Matrix gates_mtx_pre;
         Gate* fixed_gate_post = new Gate( qbit_num );
         std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> gates_mtxs_post;
 
@@ -443,18 +442,17 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 block_parameter_num = block_parameter_num + gates_loc[block_idx]->get_parameter_num();
             }
 
-            // ***** get the fixed gates applied before the optimized gates *****
+            
+
+            // ***** get applied the fixed gates applied before the optimized gates *****
             if (block_idx_start < gates_loc.size() ) {
                 std::vector<Gate*>::iterator fixed_gates_pre_it = gates.begin() + 1;
-                Matrix tmp = get_transformed_matrix(optimized_parameters, fixed_gates_pre_it, gates.size()-1, gates_mtx_pre);
-                gates_mtx_pre = tmp; // copy?
+                Umtx = get_transformed_matrix(optimized_parameters, fixed_gates_pre_it, gates.size()-1, Umtx);
             }
             else {
-                gates_mtx_pre = Identity.copy();
+                Umtx = Umtx_loc.copy();
             }
 
-            // Transform the initial unitary upon the fixed pre-optimization gates
-            Umtx = apply_gate(gates_mtx_pre, Umtx_loc);
 
             // clear the gate list used in the previous iterations
             gates.clear();
@@ -695,67 +693,69 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
 Matrix
 Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix ) {
 
+    // The matrix to be returned
+    Matrix ret_matrix = initial_matrix.copy();
     if (num_of_gates==0) {
-        return initial_matrix.copy();
+        return ret_matrix;
     }
 
-    // The matrix of the transformed matrix
-    Matrix Gate_product;
 
-    // The matrix to be returned
-    Matrix ret_matrix;
-
+    // determine the number of parameters
+    int parameters_num_total = 0;
     for (int idx=0; idx<num_of_gates; idx++) {
 
         // The current gate
-        Gate* gate = *gates_it;
+        Gate* gate = *(gates_it++);
 
-        // The matrix of the current gate
-        Matrix gate_mtx;
-
-        if (gate->get_type() == CNOT_OPERATION ) {
-            CNOT* cnot_gate = static_cast<CNOT*>( gate );
-            gate_mtx = cnot_gate->get_matrix();
-        }
-        else if (gate->get_type() == CZ_OPERATION ) {
-            CZ* cz_gate = static_cast<CZ*>( gate );
-            gate_mtx = cz_gate->get_matrix();
-        }
-        else if (gate->get_type() == CH_OPERATION ) {
-            CH* ch_gate = static_cast<CH*>( gate );
-            gate_mtx = ch_gate->get_matrix();
-        }
-        else if (gate->get_type() == GENERAL_OPERATION ) {
-            gate_mtx = gate->get_matrix();
-        }
-        else if (gate->get_type() == U3_OPERATION ) {
+        if (gate->get_type() == U3_OPERATION ) {
             U3* u3_gate = static_cast<U3*>( gate );
-            int parameters_num = u3_gate->get_parameter_num();
-            gate_mtx = u3_gate->get_matrix( parameters );
-            parameters = parameters + parameters_num;
+            parameters_num_total = parameters_num_total + u3_gate->get_parameter_num();
         }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
-            int parameters_num = block_gate->get_parameter_num();
-            gate_mtx = block_gate->get_matrix( parameters );
-            parameters = parameters + parameters_num;
+            parameters_num_total = parameters_num_total + block_gate->get_parameter_num();
         }
-
-        if ( idx == 0 ) {
-            Gate_product = gate_mtx; //copy?
-        }
-        else {
-            ret_matrix = dot( Gate_product, gate_mtx );
-            Gate_product = ret_matrix; // copy?
-
-        }
-
-        gates_it++;
     }
 
-    ret_matrix = apply_gate( Gate_product, initial_matrix );
+
+    // apply the gate operations on the inital matrix
+    for (int idx=num_of_gates-0; idx>0; idx--) {
+
+        // The current gate
+        Gate* gate = *(--gates_it);
+
+        if (gate->get_type() == CNOT_OPERATION ) {
+            CNOT* cnot_gate = static_cast<CNOT*>( gate );
+            cnot_gate->apply_to(ret_matrix);
+        }
+        else if (gate->get_type() == CZ_OPERATION ) {
+            CZ* cz_gate = static_cast<CZ*>( gate );
+            cz_gate->apply_to(ret_matrix);
+        }
+        else if (gate->get_type() == CH_OPERATION ) {
+            CH* ch_gate = static_cast<CH*>( gate );
+            ch_gate->apply_to(ret_matrix);
+        }
+        else if (gate->get_type() == GENERAL_OPERATION ) {
+            gate->apply_to(ret_matrix);
+
+        }
+        else if (gate->get_type() == U3_OPERATION ) {
+            U3* u3_gate = static_cast<U3*>( gate );
+            parameters_num_total = parameters_num_total - u3_gate->get_parameter_num();
+            u3_gate->apply_to( parameters+parameters_num_total, ret_matrix);            
+        }
+        else if (gate->get_type() == BLOCK_OPERATION ) {
+            Gates_block* block_gate = static_cast<Gates_block*>( gate );
+            parameters_num_total = parameters_num_total - block_gate->get_parameter_num();
+            block_gate->apply_to(parameters+parameters_num_total, ret_matrix);            
+        }
+
+    }
 
     return ret_matrix;
+
+
 
 
 
