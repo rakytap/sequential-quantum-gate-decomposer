@@ -66,10 +66,17 @@ CNOT(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 Matrix get_matrix();
 
 /**
-@brief Call to apply the gate on the input array/matrix
+@brief Call to apply the gate on the input array/matrix by CNOT*input
 @param input The input array on which the gate is applied
 */
 void apply_to( Matrix& input );
+
+
+/**
+@brief Call to apply the gate on the input array/matrix by input*CNOT
+@param input The input array on which the gate is applied
+*/
+void apply_from_right( Matrix& input );
 
 
 /**
@@ -77,12 +84,6 @@ void apply_to( Matrix& input );
 @param qbit_num The number of qubits
 */
 void set_qbit_num(int qbit_num);
-
-/**
-@brief Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits.
-@return Returns with the operation matrix
-*/
-Matrix composite_cnot();
 
 /**
 @brief Call to reorder the qubits in the matrix of the operation

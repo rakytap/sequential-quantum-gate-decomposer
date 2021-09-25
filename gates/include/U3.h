@@ -36,10 +36,6 @@ class U3: public Gate {
 
 protected:
 
-   /// the base indices of the target qubit for state |0>
-   int* indexes_target_qubit_0;
-   /// the base indices of the target qubit for state |1>
-   int* indexes_target_qubit_1;
    /// logical value indicating whether the matrix creation takes an argument theta
    bool theta;
    /// logical value indicating whether the matrix creation takes an argument phi
@@ -83,83 +79,20 @@ Matrix get_matrix( const double* parameters );
 
 
 /**
-@brief Call to apply the gate on the input array/matrix
+@brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
 void apply_to( const double* parameters, Matrix& input );
 
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of qbit_num qubits.
-@param parameters An array containing the parameters of the U3 gate.
-@param U3_matrix A pointer to the preallocated array of the gate matrix.
-@return Returns with 0 on success.
-*/
-int composite_u3_Theta_Phi_Lambda(const double* parameters, Matrix& U3_matrix);
 
 /**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of qbit_num qubits.
-@param parameters An array containing the parameters of the U3 gate.
-@param U3_matrix A pointer to the preallocated array of the gate matrix.
-@return Returns with 0 on success.
+@brief Call to apply the gate on the input array/matrix by input*U3
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
 */
-int composite_u3_Phi_Lambda(const double* parameters, Matrix& U3_matrix);
+void apply_from_right( const double* parameters, Matrix& input );
 
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of qbit_num qubits.
-@param parameters An array containing the parameters of the U3 gate.
-@param U3_matrix A pointer to the preallocated array of the gate matrix.
-@return Returns with 0 on success.
-*/
-int composite_u3_Theta_Lambda(const double* parameters, Matrix& U3_matrix);
-
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of qbit_num qubits.
-@param parameters An array containing the parameters of the U3 gate.
-@param U3_matrix A pointer to the preallocated array of the gate matrix.
-@return Returns with 0 on success.
-*/
-int composite_u3_Theta_Phi(const double* parameters, Matrix& U3_matrix);
-
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of qbit_num qubits.
-@param parameters An array containing the parameters of the U3 gate.
-@param U3_matrix A pointer to the preallocated array of the gate matrix.
-@return Returns with 0 on success.
-*/
-int composite_u3_Lambda(const double* parameters, Matrix& U3_matrix);
-
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of qbit_num qubits.
-@param parameters An array containing the parameters of the U3 gate.
-@param U3_matrix A pointer to the preallocated array of the gate matrix.
-@return Returns with 0 on success.
-*/
-int composite_u3_Phi(const double* parameters, Matrix& U3_matrix);
-
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of qbit_num qubits.
-@param parameters An array containing the parameters of the U3 gate.
-@param U3_matrix A pointer to the preallocated array of the gate matrix.
-@return Returns with 0 on success.
-*/
-int composite_u3_Theta(const double* parameters, Matrix& U3_matrix );
-
-
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding corresponding to the given parameters acting on the space of qbit_num qubits.
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@param U3_matrix A pointer to the preallocated array of the gate matrix.
-@return Returns with 0 on success.
-*/
-int composite_u3(double Theta, double Phi, double Lambda, Matrix& U3_matrix );
-
-/**
-@brief Determine the base indices corresponding to the target qubit states |0> and |1>
-*/
-void determine_base_indices();
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the gate

@@ -56,6 +56,7 @@ std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> Decomposition_Base::ge
         gates_it++;
     }
 
+
     return gate_mtxs;
 
 }
@@ -97,29 +98,36 @@ void functor_get_operation_matrices::operator()( const tbb::blocked_range<size_t
         // get the matrix representation of th egate
         Gate* gate = *(gates_it+i);
 
+        int qbit_num =  gate->get_qbit_num();
+        Matrix mtx = create_identity(Power_of_2(qbit_num));
+
         if (gate->get_type() == CNOT_OPERATION ) {
             CNOT* cnot_gate = static_cast<CNOT*>(gate);
-            (*gate_mtxs)[i] = cnot_gate->get_matrix();
+            cnot_gate->apply_from_right(mtx);
         }
-        if (gate->get_type() == CZ_OPERATION ) {
+        else if (gate->get_type() == CZ_OPERATION ) {
             CZ* cz_gate = static_cast<CZ*>(gate);
-            (*gate_mtxs)[i] = cz_gate->get_matrix();
+            cz_gate->apply_from_right(mtx);
         }
-        if (gate->get_type() == CH_OPERATION ) {
+        else if (gate->get_type() == CH_OPERATION ) {
             CH* ch_gate = static_cast<CH*>(gate);
-            (*gate_mtxs)[i] = ch_gate->get_matrix();
+            ch_gate->apply_from_right(mtx);
+
         }
         else if (gate->get_type() == GENERAL_OPERATION ) {
-            (*gate_mtxs)[i] = gate->get_matrix();
+            gate->apply_from_right(mtx);
         }
             else if (gate->get_type() == U3_OPERATION ) {
             U3* u3_gate = static_cast<U3*>(gate);
-            (*gate_mtxs)[i] = u3_gate->get_matrix(parameters_loc);
+            u3_gate->apply_from_right(parameters_loc, mtx);
         }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>(gate);
-            (*gate_mtxs)[i] = block_gate->get_matrix(parameters_loc);
+            block_gate->apply_from_right(parameters_loc, mtx);
+
         }
+
+        (*gate_mtxs)[i] = mtx;        
 
     }
 }

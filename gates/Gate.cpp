@@ -109,10 +109,22 @@ void
 Gate::apply_to( Matrix& input ) {
 
     Matrix ret = dot(matrix_alloc, input);
-    input = ret;
-
+    memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
+    //input = ret;
 }
 
+
+/**
+@brief Call to apply the gate on the input array/matrix by input*Gate
+@param input The input array on which the gate is applied
+*/
+void 
+Gate::apply_from_right( Matrix& input ) {
+
+    Matrix ret = dot(input, matrix_alloc);
+    memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
+
+}
 
 
 /**

@@ -109,7 +109,7 @@ CH::get_matrix() {
 
 
 /**
-@brief Call to apply the gate on the input array/matrix
+@brief Call to apply the gate on the input array/matrix CH*input
 @param input The input array on which the gate is applied
 */
 void 
@@ -174,96 +174,80 @@ CH::apply_to( Matrix& input ) {
 
 }
 
+
+
 /**
-@brief Calculate the matrix of a CH gate gate acting on the space of qbit_num qubits.
-@return Returns with the gate matrix
+@brief Call to apply the gate on the input array/matrix by input*CH
+@param input The input array on which the gate is applied
 */
-Matrix CH::composite_CH() {
-
-
-        // preallocate array for the composite u3 gate
-        Matrix CH_mtx = Matrix(matrix_size, matrix_size);
-        QGD_Complex16* CH_mtx_data = CH_mtx.get_data();
-
-        // set to zero all the elements of the matrix
-        memset(CH_mtx_data, 0, matrix_size*matrix_size*sizeof(QGD_Complex16) );
-
-
-        int target_qbit_power = Power_of_2(target_qbit);
-        int control_qbit_power = Power_of_2(control_qbit);
-
-
-        // setting the gate elements
-        for(int idx = 0; idx < matrix_size*matrix_size; ++idx)
-        {
-
-            int col_idx = idx % matrix_size;
-            int row_idx = (idx-col_idx)/matrix_size;
+void 
+CH::apply_from_right( Matrix& input ) {
 
 
 
-            // determine the row state of the control and target qubits corresponding to the given thread
-            int target_qubit_state_row = int(row_idx / target_qbit_power) % 2;
-            int control_qubit_state_row = int(row_idx / control_qbit_power) % 2;
-            int state_row_remaining = row_idx;
-            if (target_qubit_state_row == 1) {
-                state_row_remaining = state_row_remaining - target_qbit_power;
+    int index_step_target = Power_of_2(target_qbit);
+    int current_idx = 0;
+    int current_idx_pair = current_idx+index_step_target;
+
+    int index_step_control = Power_of_2(control_qbit);
+
+//std::cout << "target qbit: " << target_qbit << std::endl;
+
+    while ( current_idx_pair < matrix_size ) {
+
+        tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            // determine the action according to the state of the control qubit
+            if ( (current_idx_loc/index_step_control) % 2 == 0) {
+                // leave the state as it is
+                return;
             }
-            if (control_qubit_state_row == 1) {
-                state_row_remaining = state_row_remaining - control_qbit_power;
+            else {
+
+                double sqrt2 = sqrt(2.0);
+
+                for ( int row_idx=0; row_idx<matrix_size; row_idx++) {
+
+                    int row_offset = row_idx*input.stride;
+
+                    int index      = row_offset+current_idx_loc;
+                    int index_pair = row_offset+current_idx_pair_loc;                
+
+                    QGD_Complex16 element      = input[index];
+                    QGD_Complex16 element_pair = input[index_pair];   
+
+                    input[index].real = (element.real + element_pair.real)/sqrt2;
+                    input[index].imag = (element.imag + element_pair.imag)/sqrt2;
+                    input[index_pair].real = (element.real - element_pair.real)/sqrt2;
+                    input[index_pair].imag = (element.imag - element_pair.imag)/sqrt2;
+           
+                }                     
+
             }
 
 
-            // determine the col state of the control and target qubits corresponding to the given thread
-            int target_qubit_state_col = int(col_idx / target_qbit_power) % 2;
-            int control_qubit_state_col = int(col_idx / control_qbit_power) % 2;
-            int state_col_remaining = col_idx;
-            if (target_qubit_state_col == 1) {
-                state_col_remaining = state_col_remaining - target_qbit_power;
-            }
-            if (control_qubit_state_col == 1) {
-                state_col_remaining = state_col_remaining - control_qbit_power;
-            }
+//std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
 
 
-            // setting the col_idx-th element in the row
-            if (control_qubit_state_row == 0 && control_qubit_state_col == 0 && target_qubit_state_row == target_qubit_state_col && state_row_remaining == state_col_remaining) {
-                CH_mtx[idx].real = 1;
-                //CH_mtx[idx].imag = 0;
-            }
-            /*else if (control_qubit_state_row == 0 && control_qubit_state_col == 0 && target_qubit_state_row != target_qubit_state_col && state_row_remaining == state_col_remaining) {
-                CH_mtx[idx].real = 0;
-                CH_mtx[idx].imag = 0;
-            }
-            else if (control_qubit_state_row == 1 && control_qubit_state_col == 1 && target_qubit_state_row == target_qubit_state_col && state_row_remaining == state_col_remaining) {
-                CH_mtx[idx].real = 0;
-                CH_mtx[idx].imag = 0;
-            }*/
-            else if (control_qubit_state_row == 1 && control_qubit_state_col == 1 && state_row_remaining == state_col_remaining) {
-		if ( target_qubit_state_row == 1 && target_qubit_state_col == 1 ) {
-	            CH_mtx[idx].real = -1/sqrt(2);
-		}
-		else {
-	            CH_mtx[idx].real = 1/sqrt(2);
-		}
-                //CH_mtx[idx].imag = 0;
-            }
-            /*else {
-                 CH_mtx[idx].real = 0;
-                 CH_mtx[idx].imag = 0;
-            }*/
+        });
 
 
-        }
+        current_idx = current_idx + 2*index_step_target;
+        current_idx_pair = current_idx_pair + 2*index_step_target;
 
-#ifdef DEBUG
-        if (CH_mtx.isnan()) {
-            std::cout << "Matrix CH::composite_cnot: CH_mtx contains NaN. Exiting" << std::endl;
-            exit(-1);
-        }
-#endif
 
-        return CH_mtx;
+    }
+
+
+
+
+
+
+
+
 }
 
 

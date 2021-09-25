@@ -66,22 +66,22 @@ CZ(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 Matrix get_matrix();
 
 /**
-@brief Call to apply the gate on the input array/matrix
+@brief Call to apply the gate on the input array/matrix CZ*input
 @param input The input array on which the gate is applied
 */
 void apply_to( Matrix& input );
+
+/**
+@brief Call to apply the gate on the input array/matrix by input*CZ
+@param input The input array on which the gate is applied
+*/
+void apply_from_right( Matrix& input );
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the operation
 @param qbit_num The number of qubits
 */
 void set_qbit_num(int qbit_num);
-
-/**
-@brief Calculate the matrix of a CZ gate operation acting on the space of qbit_num qubits.
-@return Returns with the operation matrix
-*/
-Matrix composite_cz();
 
 /**
 @brief Call to reorder the qubits in the matrix of the operation

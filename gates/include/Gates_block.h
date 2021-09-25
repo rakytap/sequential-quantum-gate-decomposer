@@ -74,18 +74,19 @@ void release_gates();
 Matrix get_matrix( const double* parameters );
 
 /**
-@brief Call to apply the gate on the input array/matrix
+@brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
 void apply_to( const double* parameters, Matrix& input );
 
+
 /**
-@brief Call to get the list of matrix representation of the gates grouped in the block.
-@param parameters Array of parameters to calculate the matrix of the gate block
-@return Returns with the list of the gates
+@brief Call to apply the gate on the input array/matrix by input*CNOT
+@param input The input array on which the gate is applied
 */
-std::vector<Matrix> get_matrices(const double* parameters );
+void apply_from_right( const double* parameters, Matrix& input );
+
 
 /**
 @brief Append a U3 gate to the list of gates

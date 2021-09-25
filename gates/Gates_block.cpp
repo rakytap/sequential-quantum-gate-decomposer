@@ -133,7 +133,7 @@ Gates_block::get_matrix( const double* parameters ) {
 
 
 /**
-@brief Call to apply the gate on the input array/matrix
+@brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
@@ -203,38 +203,34 @@ Gates_block::apply_to( const double* parameters, Matrix& input ) {
 
 
 /**
-@brief Call to get the list of matrix representation of the gates grouped in the block.
-@param parameters Array of parameters to calculate the matrix of the operation block
-@return Returns with the list of the gates
+@brief Call to apply the gate on the input array/matrix by input*Gate_block
+@param input The input array on which the gate is applied
 */
-std::vector<Matrix> Gates_block::get_matrices( const double* parameters ) {
+void 
+Gates_block::apply_from_right( const double* parameters, Matrix& input ) {
 
-    std::vector<Matrix> matrices;
 
+    for( int idx=0; idx<gates.size(); idx++) {
 
-    for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
-
-        Gate* operation = *it;
-        Matrix operation_mtx;
+        Gate* operation = gates[idx];
 
         if (operation->get_type() == CNOT_OPERATION) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            operation_mtx = cnot_operation->get_matrix();
-
+            cnot_operation->apply_from_right(input);
         }
         else if (operation->get_type() == CZ_OPERATION) {
             CZ* cz_operation = static_cast<CZ*>(operation);
-            operation_mtx = cz_operation->get_matrix();
+            cz_operation->apply_from_right(input);
         }
         else if (operation->get_type() == CH_OPERATION) {
             CH* ch_operation = static_cast<CH*>(operation);
-            operation_mtx = ch_operation->get_matrix();
+            ch_operation->apply_from_right(input);
         }
         else if (operation->get_type() == U3_OPERATION) {
             U3* u3_operation = static_cast<U3*>(operation);
 
             if (u3_operation->get_parameter_num() == 1 ) {
-                operation_mtx = u3_operation->get_matrix( parameters );
+                u3_operation->apply_from_right( parameters, input );                
                 parameters = parameters + 1;
             }
             else if (u3_operation->get_parameter_num() == 2 ) {
@@ -243,11 +239,11 @@ std::vector<Matrix> Gates_block::get_matrices( const double* parameters ) {
                     std::cout << "Gates_block::get_matrices: parameters contains NaN." << std::endl;
                 }
 #endif
-                operation_mtx = u3_operation->get_matrix( parameters );
+                u3_operation->apply_from_right( parameters, input );                
                 parameters = parameters + 2;
             }
             else if (u3_operation->get_parameter_num() == 3 ) {
-                operation_mtx = u3_operation->get_matrix( parameters );
+                u3_operation->apply_from_right( parameters, input );                
                 parameters = parameters + 3;
             }
             else {
@@ -257,25 +253,20 @@ std::vector<Matrix> Gates_block::get_matrices( const double* parameters ) {
 
         }
         else if (operation->get_type() == GENERAL_OPERATION) {
-            operation_mtx = operation->get_matrix();
+            operation->apply_from_right(input);
         }
 
 #ifdef DEBUG
-        if (operation_mtx.isnan()) {
-            std::cout << "Gates_block::get_matrices: operation_mtx contains NaN." << std::endl;
+        if (input.isnan()) {
+            std::cout << "Gates_block::apply_from_right: transformed matrix contains NaN." << std::endl;
         }
 #endif
-        matrices.push_back(operation_mtx);
 
 
     }
 
-    return matrices;
 
 }
-
-
-
 
 
 

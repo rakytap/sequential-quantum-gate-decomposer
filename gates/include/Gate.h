@@ -94,6 +94,13 @@ Matrix get_matrix();
 */
 void apply_to( Matrix& input );
 
+
+/**
+@brief Call to apply the gate on the input array/matrix by input*Gate
+@param input The input array on which the gate is applied
+*/
+void apply_from_right( Matrix& input );
+
 /**
 @brief Call to set the stored matrix in the operation.
 @param input The operation matrix to be stored. The matrix is stored by attribute matrix_alloc.
