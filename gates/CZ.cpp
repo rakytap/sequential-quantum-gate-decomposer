@@ -114,7 +114,7 @@ CZ::get_matrix() {
 @param input The input array on which the gate is applied
 */
 void 
-CZ::apply_to( Matrix input ) {
+CZ::apply_to( Matrix& input ) {
 
     int index_step_target = Power_of_2(target_qbit);
     int current_idx = 0;

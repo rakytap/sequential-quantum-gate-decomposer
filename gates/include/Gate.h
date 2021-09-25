@@ -87,6 +87,13 @@ Gate(int qbit_num_in);
 */
 Matrix get_matrix();
 
+
+/**
+@brief Call to apply the gate on the input array/matrix
+@param input The input array on which the gate is applied
+*/
+void apply_to( Matrix& input );
+
 /**
 @brief Call to set the stored matrix in the operation.
 @param input The operation matrix to be stored. The matrix is stored by attribute matrix_alloc.

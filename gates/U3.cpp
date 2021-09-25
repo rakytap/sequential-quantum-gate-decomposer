@@ -22,7 +22,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "U3.h"
-static tbb::spin_mutex my_mutex;
+//static tbb::spin_mutex my_mutex;
 /**
 @brief Nullary constructor of the class.
 */
@@ -242,7 +242,7 @@ U3::get_matrix( const double* parameters ) {
 @param input The input array on which the gate is applied
 */
 void 
-U3::apply_to( const double* parameters, Matrix input ) {
+U3::apply_to( const double* parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
         std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;

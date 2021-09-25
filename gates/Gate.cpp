@@ -23,6 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 #include "Gate.h"
+#include "common.h"
 
 
 /**
@@ -98,6 +99,20 @@ Gate::get_matrix() {
 
     return matrix_alloc;
 }
+
+
+/**
+@brief Call to apply the gate on the input array/matrix
+@param input The input array on which the gate is applied
+*/
+void 
+Gate::apply_to( Matrix& input ) {
+
+    Matrix ret = dot(matrix_alloc, input);
+    input = ret;
+
+}
+
 
 
 /**

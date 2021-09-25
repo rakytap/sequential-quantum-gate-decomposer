@@ -27,7 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "U3.h"
 #include "Gates_block.h"
 
-
+static tbb::spin_mutex my_mutex;
 /**
 @brief Default constructor of the class.
 */
@@ -115,11 +115,9 @@ Gates_block::release_gates() {
 Matrix
 Gates_block::get_matrix( const double* parameters ) {
 
-    // get the matrices of the gates grouped in the block
-    std::vector<Matrix> operation_mtxs = get_matrices( parameters );
-
-    // calculate the product of the matrices
-    Matrix block_mtx = reduce_zgemm( operation_mtxs );
+    // create matrix representation of the gate operations
+    Matrix block_mtx = create_identity(matrix_size);
+    apply_to(parameters, block_mtx);
 
 #ifdef DEBUG
     if (block_mtx.isnan()) {
@@ -131,6 +129,78 @@ Gates_block::get_matrix( const double* parameters ) {
 
 
 }
+
+
+
+/**
+@brief Call to apply the gate on the input array/matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void 
+Gates_block::apply_to( const double* parameters, Matrix& input ) {
+
+    parameters = parameters + parameter_num;
+
+    for( int idx=gates.size()-1; idx>=0; idx--) {
+
+        Gate* operation = gates[idx];
+
+        if (operation->get_type() == CNOT_OPERATION) {
+            CNOT* cnot_operation = static_cast<CNOT*>(operation);
+            cnot_operation->apply_to(input);
+        }
+        else if (operation->get_type() == CZ_OPERATION) {
+            CZ* cz_operation = static_cast<CZ*>(operation);
+            cz_operation->apply_to(input);
+        }
+        else if (operation->get_type() == CH_OPERATION) {
+            CH* ch_operation = static_cast<CH*>(operation);
+            ch_operation->apply_to(input);
+        }
+        else if (operation->get_type() == U3_OPERATION) {
+            U3* u3_operation = static_cast<U3*>(operation);
+
+            if (u3_operation->get_parameter_num() == 1 ) {
+                parameters = parameters - 1;
+                u3_operation->apply_to( parameters, input );                
+            }
+            else if (u3_operation->get_parameter_num() == 2 ) {
+ #ifdef DEBUG
+                if (isnan(parameters[0]) || isnan(parameters[1]) ) {
+                    std::cout << "Gates_block::get_matrices: parameters contains NaN." << std::endl;
+                }
+#endif
+                parameters = parameters - 2;
+                u3_operation->apply_to( parameters, input );                
+            }
+            else if (u3_operation->get_parameter_num() == 3 ) {
+                parameters = parameters - 3;
+                u3_operation->apply_to( parameters, input );                
+            }
+            else {
+                printf("The U3 operation has wrong number of parameters");
+                throw "The U3 operation has wrong number of parameters";
+            }
+
+        }
+        else if (operation->get_type() == GENERAL_OPERATION) {
+            operation->apply_to(input);
+        }
+
+#ifdef DEBUG
+        if (input.isnan()) {
+            std::cout << "Gates_block::apply_to: transformed matrix contains NaN." << std::endl;
+        }
+#endif
+
+
+    }
+
+
+
+}
+
 
 /**
 @brief Call to get the list of matrix representation of the gates grouped in the block.
@@ -203,6 +273,9 @@ std::vector<Matrix> Gates_block::get_matrices( const double* parameters ) {
     return matrices;
 
 }
+
+
+
 
 
 

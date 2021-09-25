@@ -69,7 +69,7 @@ Matrix get_matrix();
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
 */
-void apply_to( Matrix input );
+void apply_to( Matrix& input );
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the operation
