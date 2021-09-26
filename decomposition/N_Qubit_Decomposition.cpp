@@ -123,7 +123,7 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 #endif
 
     //measure the time for the decompositin
-    clock_t start_time = time(NULL);
+    tbb::tick_count start_time = tbb::tick_count::now();
 
     // create an instance of class to disentangle the given qubit pair
     Sub_Matrix_Decomposition* cSub_decomposition = new Sub_Matrix_Decomposition(Umtx, qbit_num, optimize_layer_num, initial_guess);
@@ -204,7 +204,8 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
             if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ opeartions," << std::endl;
             if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH opeartions," << std::endl;
             std::cout << std::endl;
-            std::cout << "--- In total " << float(time(NULL) - start_time) << " seconds elapsed during the decomposition ---" << std::endl;
+            tbb::tick_count current_time = tbb::tick_count::now();
+            std::cout << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
         }
 
     }

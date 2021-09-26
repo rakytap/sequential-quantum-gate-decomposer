@@ -149,7 +149,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         // Adding the gates of the successive layers
 
         //measure the time for the decompositin
-        clock_t start_time = time(NULL);
+        tbb::tick_count start_time = tbb::tick_count::now();
 
         // the maximal number of layers in the subdeconposition
         int max_layer_num_loc;
@@ -189,7 +189,8 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
         }
 
         if (verbose) {
-            printf("--- %f seconds elapsed during the decomposition ---\n\n", float(time(NULL) - start_time));
+            tbb::tick_count current_time = tbb::tick_count::now();
+            printf("--- %f seconds elapsed during the decomposition ---\n\n", (current_time - start_time).seconds());
         }
 
 
