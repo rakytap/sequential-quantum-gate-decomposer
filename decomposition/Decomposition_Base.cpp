@@ -770,6 +770,73 @@ Matrix Decomposition_Base::get_decomposed_matrix() {
         return get_transformed_matrix( optimized_parameters, gates.begin(), gates.size(), Umtx );
 }
 
+
+
+/**
+@brief Calculate the list of gate gate matrices such that the i>0-th element in the result list is the product of the gates of all 0<=n<i gates from the input list and the 0th element in the result list is the identity.
+@param parameters An array containing the parameters of the gates.
+@param gates_it An iterator pointing to the first gate.
+@param num_of_gates The number of gates involved in the calculations
+@return Returns with a vector of the product matrices.
+*/
+std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> 
+Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates) {
+
+
+    // construct the vector of matrix representation of the gates
+    std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> gate_mtxs(num_of_gates);
+
+    // creating identity gate if no gates were involved in the calculations
+    if (num_of_gates==0) {
+        gate_mtxs.push_back( create_identity(matrix_size) );
+        return gate_mtxs;
+    }
+
+
+    double* parameters_loc = parameters;
+    Matrix mtx = create_identity(matrix_size);
+
+    for (int idx=0; idx<num_of_gates; idx++) {
+       
+
+        // get the matrix representation of th egate
+        Gate* gate = *gates_it;        
+
+        if (gate->get_type() == CNOT_OPERATION ) {
+            CNOT* cnot_gate = static_cast<CNOT*>(gate);
+            cnot_gate->apply_from_right(mtx);
+        }
+        else if (gate->get_type() == CZ_OPERATION ) {
+            CZ* cz_gate = static_cast<CZ*>(gate);
+            cz_gate->apply_from_right(mtx);
+        }
+        else if (gate->get_type() == CH_OPERATION ) {
+            CH* ch_gate = static_cast<CH*>(gate);
+            ch_gate->apply_from_right(mtx);
+        }
+        else if (gate->get_type() == GENERAL_OPERATION ) {
+            gate->apply_from_right(mtx);
+        }
+        else if (gate->get_type() == U3_OPERATION ) {
+            U3* u3_gate = static_cast<U3*>(gate);
+            u3_gate->apply_from_right(parameters_loc, mtx);
+            parameters_loc = parameters_loc + u3_gate->get_parameter_num();
+        }
+        else if (gate->get_type() == BLOCK_OPERATION ) {
+            Gates_block* block_gate = static_cast<Gates_block*>(gate);
+            block_gate->apply_from_right(parameters_loc, mtx);
+            parameters_loc = parameters_loc + block_gate->get_parameter_num();
+        }
+
+        gate_mtxs[idx] = mtx.copy();     
+        gates_it++;   
+
+    }
+
+    return gate_mtxs;
+
+}
+
 /**
 @brief Apply an gates on the input matrix
 @param gate_mtx The matrix of the gate.
