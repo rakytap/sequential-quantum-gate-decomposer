@@ -205,3 +205,48 @@ set_target_properties( qgd_Gates_Block PROPERTIES
 install(TARGETS qgd_Gates_Block LIBRARY 
          DESTINATION qgd_python/gates)
 
+
+
+
+###################################################################
+
+
+
+add_library( qgd_SYC MODULE
+    ${EXT_DIR}/qgd_SYC.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_SYC qgd)
+
+target_link_libraries (qgd_SYC qgd ${BLAS_LIBRARIES})
+
+
+python_extension_module(qgd_SYC)
+
+# adding compile options
+target_compile_options(qgd_SYC PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
+)
+
+
+target_include_directories(qgd_SYC PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/gates/include
+                            ${PROJECT_SOURCE_DIR}/common/include
+                            ${EXTRA_INCLUDES})
+
+
+set_target_properties( qgd_SYC PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_SYC LIBRARY 
+         DESTINATION qgd_python/gates)
+

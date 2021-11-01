@@ -307,6 +307,7 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
+    ${PROJECT_SOURCE_DIR}/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
     ${PROJECT_SOURCE_DIR}/gates/CH.cpp
     ${PROJECT_SOURCE_DIR}/gates/Gate.cpp
@@ -360,6 +361,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/QGDTypes.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CNOT.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/SYC.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CZ.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CH.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Gate.h

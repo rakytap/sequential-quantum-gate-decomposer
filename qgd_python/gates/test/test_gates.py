@@ -98,6 +98,30 @@ class Test_operations:
         U3 = qgd_U3( qbit_num, target_qbit, Theta, Phi, Lambda )
 
 
+
+    def test_SYC_creation(self):
+        r"""
+        This method is called by pytest. 
+        Test to create an instance of CH gate.
+
+        """
+
+        from qgd_python.gates.qgd_SYC import qgd_SYC
+
+
+        # number of qubits
+        qbit_num = 3
+
+        # target qbit
+        target_qbit = 0
+
+        # control_qbit
+        control_qbit = 1        
+
+        # creating an instance of the C++ class
+        SYC = qgd_SYC( qbit_num, target_qbit, control_qbit )
+
+
     def test_Operation_Block_creation(self):
         r"""
         This method is called by pytest. 
