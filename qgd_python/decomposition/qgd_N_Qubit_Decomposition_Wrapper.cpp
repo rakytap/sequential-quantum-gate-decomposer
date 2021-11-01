@@ -253,20 +253,19 @@ qgd_N_Qubit_Decomposition_Wrapper_Start_Decomposition(qgd_N_Qubit_Decomposition_
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"finalize_decomp", (char*)"prepare_export", NULL};
+    static char *kwlist[] = {(char*)"prepare_export", NULL};
 
     // initiate variables for input arguments
-    bool  finalize_decomp = true; 
     bool  prepare_export = true; 
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|bb", kwlist,
-                                     &finalize_decomp, &prepare_export))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|b", kwlist,
+                                     &prepare_export))
         return Py_BuildValue("i", -1);
 
 
     // starting the decomposition
-    self->decomp->start_decomposition(finalize_decomp, prepare_export);
+    self->decomp->start_decomposition(prepare_export);
 
 
     return Py_BuildValue("i", 0);
@@ -698,41 +697,17 @@ gate_structure_dict: ?????????????????????????????
 static PyObject *
 qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
 
-
     // initiate variables for input arguments
-    PyObject* gate_structure_dict; 
+    PyObject* gate_structure_py; 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &gate_structure_dict )) return Py_BuildValue("i", -1);
-
-    // Check whether input is dictionary
-    if (!PyDict_Check(gate_structure_dict)) {
-        printf("Input must be dictionary!\n");
-        return Py_BuildValue("i", -1);
-    }
+    if (!PyArg_ParseTuple(args, "|O", &gate_structure_py )) return Py_BuildValue("i", -1);
 
 
-    PyObject* key = NULL;
-    PyObject* value = NULL;
-    Py_ssize_t pos = 0;
+    // convert gate structure from PyObject to qgd_Gates_Block
+    qgd_Gates_Block* qgd_op_block = (qgd_Gates_Block*) gate_structure_py;
 
-    std::map< int, Gates_block* > gate_structure;
-
-
-    while (PyDict_Next(gate_structure_dict, &pos, &key, &value)) {
-
-        // convert keylue from PyObject to int
-        assert(PyLong_Check(key) == 1);
-        int key_int = (int) PyLong_AsLong(key);
-
-        // convert keylue from PyObject to qgd_Gates_Block
-        qgd_Gates_Block* qgd_op_block = (qgd_Gates_Block*) value;
-
-        gate_structure.insert( std::pair<int, Gates_block*>( key_int, qgd_op_block->gate ));
-
-    }
-
-    self->decomp->set_custom_gate_structure( gate_structure );
+    self->decomp->set_custom_gate_structure( qgd_op_block->gate );
 
     return Py_BuildValue("i", 0);
 
