@@ -269,6 +269,42 @@ qgd_Gates_Block_add_CH(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 
 
+
+
+/**
+@brief Wrapper function to add a Sycamore gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param args A tuple of the input arguments: control_qbit (int), target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Gates_Block_add_SYC(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit",  NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+    int  control_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
+                                     &target_qbit, &control_qbit))
+        return Py_BuildValue("i", -1);
+
+
+    // adding Sycamore gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->gate->add_syc(target_qbit, control_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
 /**
 @brief Wrapper function to add a block of operations to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Gates_Block.
@@ -310,6 +346,9 @@ static PyMethodDef qgd_Gates_Block_Methods[] = {
     },
     {"add_CH", (PyCFunction) qgd_Gates_Block_add_CH, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CH gate to the front of the gate structure"
+    },
+    {"add_SYC", (PyCFunction) qgd_Gates_Block_add_SYC, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a Sycamore gate to the front of the gate structure"
     },
     {"add_Gates_Block", (PyCFunction) qgd_Gates_Block_add_Gates_Block, METH_VARARGS,
      "Call to add a block of operations to the front of the gate structure."

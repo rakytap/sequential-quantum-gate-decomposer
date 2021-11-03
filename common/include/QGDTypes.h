@@ -53,6 +53,8 @@ struct gates_num {
   int cz;
   /// The number of CH (i.e. controlled Hadamard) gates
   int ch;
+  /// The number of Sycamore (i.e. controlled Hadamard) gates
+  int syc;
   /// The number of general gates
   int general;
 };

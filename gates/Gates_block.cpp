@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CH.h"
 #include "CNOT.h"
 #include "U3.h"
+#include "SYC.h"
 #include "Gates_block.h"
 
 static tbb::spin_mutex my_mutex;
@@ -84,6 +85,10 @@ Gates_block::release_gates() {
         else if (operation->get_type() == CH_OPERATION) {
             CH* ch_operation = static_cast<CH*>(operation);
             delete ch_operation;
+        }
+        else if (operation->get_type() == SYC_OPERATION) {
+            SYC* syc_operation = static_cast<SYC*>(operation);
+            delete syc_operation;
         }
         else if (operation->get_type() == U3_OPERATION) {
 
@@ -158,6 +163,10 @@ Gates_block::apply_to( const double* parameters, Matrix& input ) {
             CH* ch_operation = static_cast<CH*>(operation);
             ch_operation->apply_to(input);
         }
+        else if (operation->get_type() == SYC_OPERATION) {
+            SYC* syc_operation = static_cast<SYC*>(operation);
+            syc_operation->apply_to(input);
+        }
         else if (operation->get_type() == U3_OPERATION) {
             U3* u3_operation = static_cast<U3*>(operation);
 
@@ -225,6 +234,10 @@ Gates_block::apply_from_right( const double* parameters, Matrix& input ) {
         else if (operation->get_type() == CH_OPERATION) {
             CH* ch_operation = static_cast<CH*>(operation);
             ch_operation->apply_from_right(input);
+        }
+        else if (operation->get_type() == SYC_OPERATION) {
+            SYC* syc_operation = static_cast<SYC*>(operation);
+            syc_operation->apply_from_right(input);
         }
         else if (operation->get_type() == U3_OPERATION) {
             U3* u3_operation = static_cast<U3*>(operation);
@@ -364,6 +377,42 @@ void Gates_block::add_cz(  int target_qbit, int control_qbit) {
 
         // new cz operation
         Gate* gate = static_cast<Gate*>(new CZ(qbit_num, target_qbit, control_qbit ));
+
+        // put the operation to tghe front of the list
+        add_gate(gate);
+
+}
+
+
+
+
+
+/**
+@brief Append a Sycamore gate operation to the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_syc_to_end(  int target_qbit, int control_qbit) {
+
+        // new cz operation
+        Gate* gate = static_cast<Gate*>(new SYC(qbit_num, target_qbit, control_qbit ));
+
+        // append the operation to the list
+        add_gate_to_end(gate);
+
+}
+
+
+
+/**
+@brief Add a Sycamore gate operation to the front of the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_syc(  int target_qbit, int control_qbit) {
+
+        // new cz operation
+        Gate* gate = static_cast<Gate*>(new SYC(qbit_num, target_qbit, control_qbit ));
 
         // put the operation to tghe front of the list
         add_gate(gate);
@@ -517,6 +566,9 @@ gates_num Gates_block::get_gate_nums() {
             else if (gate->get_type() == CH_OPERATION) {
                 gate_nums.ch   = gate_nums.ch + 1;
             }
+            else if (gate->get_type() == SYC_OPERATION) {
+                gate_nums.syc   = gate_nums.syc + 1;
+            }
             else if (gate->get_type() == GENERAL_OPERATION) {
                 gate_nums.general   = gate_nums.general + 1;
             }
@@ -579,6 +631,12 @@ void Gates_block::list_gates( const double* parameters, int start_index ) {
                 CH* ch_gate = static_cast<CH*>(gate);
 
                 printf( "%dth gate: CH with control qubit: %d and target qubit: %d\n", gate_idx, ch_gate->get_control_qbit(), ch_gate->get_target_qbit() );
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == SYC_OPERATION) {
+                SYC* syc_gate = static_cast<SYC*>(gate);
+
+                printf( "%dth gate: Sycamore gate with control qubit: %d and target qubit: %d\n", gate_idx, syc_gate->get_control_qbit(), syc_gate->get_target_qbit() );
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == U3_OPERATION) {
@@ -676,6 +734,10 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
             CH* ch_gate = static_cast<CH*>(gate);
             ch_gate->reorder_qubits( qbit_list );
          }
+         else if (gate->get_type() == SYC_OPERATION) {
+            SYC* syc_gate = static_cast<SYC*>(gate);
+            syc_gate->reorder_qubits( qbit_list );
+         }
          else if (gate->get_type() == U3_OPERATION) {
              U3* u3_gate = static_cast<U3*>(gate);
              u3_gate->reorder_qubits( qbit_list );
@@ -763,6 +825,12 @@ void Gates_block::combine(Gates_block* op_block) {
             Gate* op_cloned = static_cast<Gate*>( ch_op_cloned );
             add_gate_to_end(op_cloned);
         }
+        else if (op->get_type() == SYC_OPERATION) {
+            SYC* syc_op = static_cast<SYC*>( op );
+            SYC* syc_op_cloned = syc_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( syc_op_cloned );
+            add_gate_to_end(op_cloned);
+        }
         else if (op->get_type() == U3_OPERATION) {
             U3* u3_op = static_cast<U3*>( op );
             U3* u3_op_cloned = u3_op->clone();
@@ -809,6 +877,10 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         else if (op->get_type() == CH_OPERATION) {
             CH* ch_op = static_cast<CH*>( op );
             ch_op->set_qbit_num( qbit_num_in );
+        }
+        else if (op->get_type() == SYC_OPERATION) {
+            SYC* syc_op = static_cast<SYC*>( op );
+            syc_op->set_qbit_num( qbit_num_in );
         }
         else if (op->get_type() == U3_OPERATION) {
             U3* u3_op = static_cast<U3*>( op );
@@ -873,6 +945,12 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
             CH* ch_op = static_cast<CH*>( op );
             CH* ch_op_cloned = ch_op->clone();
             Gate* op_cloned = static_cast<Gate*>( ch_op_cloned );
+            op_block->add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == SYC_OPERATION) {
+            SYC* syc_op = static_cast<SYC*>( op );
+            SYC* syc_op_cloned = syc_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( syc_op_cloned );
             op_block->add_gate_to_end( op_cloned );
         }
         else if (op->get_type() == U3_OPERATION) {

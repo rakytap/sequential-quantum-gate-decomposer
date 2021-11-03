@@ -737,6 +737,10 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
             CH* ch_gate = static_cast<CH*>( gate );
             ch_gate->apply_to(ret_matrix);
         }
+        else if (gate->get_type() == SYC_OPERATION ) {
+            SYC* syc_gate = static_cast<SYC*>( gate );
+            syc_gate->apply_to(ret_matrix);
+        }
         else if (gate->get_type() == GENERAL_OPERATION ) {
             gate->apply_to(ret_matrix);
 
@@ -814,6 +818,10 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         else if (gate->get_type() == CH_OPERATION ) {
             CH* ch_gate = static_cast<CH*>(gate);
             ch_gate->apply_from_right(mtx);
+        }
+        else if (gate->get_type() == SYC_OPERATION ) {
+            SYC* syc_gate = static_cast<SYC*>(gate);
+            syc_gate->apply_from_right(mtx);
         }
         else if (gate->get_type() == GENERAL_OPERATION ) {
             gate->apply_from_right(mtx);
@@ -1042,6 +1050,9 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         else if (gate->get_type() == CH_OPERATION) {
             ops_ret.push_back( gate );
         }
+        else if (gate->get_type() == SYC_OPERATION) {
+            ops_ret.push_back( gate );
+        }
         else if (gate->get_type() == U3_OPERATION) {
 
             // definig the U3 parameters
@@ -1162,7 +1173,7 @@ int Decomposition_Base::get_gate( unsigned int n, gate_type &type, int &target_q
 //printf("gate type: %d\n", gate->get_type());
 
 
-    if (gate->get_type() == CNOT_OPERATION || gate->get_type() == CZ_OPERATION || gate->get_type() == CH_OPERATION ) {
+    if (gate->get_type() == CNOT_OPERATION || gate->get_type() == CZ_OPERATION || gate->get_type() == CH_OPERATION || gate->get_type() == SYC_OPERATION ) {
         type = gate->get_type();
         target_qbit = gate->get_target_qbit();
         control_qbit = gate->get_control_qbit();

@@ -30,6 +30,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CH.h"
 #include "CNOT.h"
 #include "U3.h"
+#include "SYC.h"
 #include <map>
 #include <cstdlib>
 #include <time.h>

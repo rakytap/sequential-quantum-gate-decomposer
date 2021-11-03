@@ -156,6 +156,24 @@ void add_ch_to_end( int target_qbit, int control_qbit);
 */
 void add_ch( int target_qbit, int control_qbit );
 
+
+
+/**
+@brief Append a Sycamore gate (i.e. controlled Hadamard gate) gate to the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_syc_to_end( int target_qbit, int control_qbit);
+
+
+
+/**
+@brief Add a Sycamore gate (i.e. controlled Hadamard gate) gate to the front of the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_syc( int target_qbit, int control_qbit );
+
 /**
 @brief Append a list of gates to the list of gates
 @param gates_in A list of gate class instances.

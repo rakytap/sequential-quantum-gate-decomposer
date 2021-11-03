@@ -113,10 +113,10 @@ class Test_operations:
         qbit_num = 3
 
         # target qbit
-        target_qbit = 0
+        target_qbit = 2
 
         # control_qbit
-        control_qbit = 1        
+        control_qbit = 1       
 
         # creating an instance of the C++ class
         SYC = qgd_SYC( qbit_num, target_qbit, control_qbit )

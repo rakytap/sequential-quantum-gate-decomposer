@@ -151,6 +151,7 @@ ta.execute([&]() {
         if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT opeartions," << std::endl;
         if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ opeartions," << std::endl;
         if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH opeartions," << std::endl;
+        if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore opeartions," << std::endl;
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
         std::cout << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
@@ -205,6 +206,14 @@ N_Qubit_Decomposition::add_gate_layers() {
             else if (gate->get_type() == CZ_OPERATION ) {
                 CZ* cz_gate = static_cast<CZ*>( gate );
                 add_gate_to_end( (Gate*)cz_gate->clone() );
+            }
+            else if (gate->get_type() == CH_OPERATION ) {
+                CH* ch_gate = static_cast<CH*>( gate );
+                add_gate_to_end( (Gate*)ch_gate->clone() );
+            }
+            else if (gate->get_type() == SYC_OPERATION ) {
+                SYC* syc_gate = static_cast<SYC*>( gate );
+                add_gate_to_end( (Gate*)syc_gate->clone() );
             }
             else if (gate->get_type() == GENERAL_OPERATION ) {
                 add_gate_to_end( gate->clone() );
