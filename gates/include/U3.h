@@ -42,6 +42,12 @@ protected:
    bool phi;
    /// logical value indicating whether the matrix creation takes an argument lambda
    bool lambda;
+   /// value applied for theta if it is not varied during the gate decomposition
+   double theta0;
+   /// value applied for phi if it is not varied during the gate decomposition
+   double phi0;
+   /// value applied for lambda if it is not varied during the gate decomposition
+   double lambda0;
    /// Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
    double* parameters;
 
@@ -83,7 +89,7 @@ Matrix get_matrix( const double* parameters );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_to( const double* parameters, Matrix& input );
+virtual void apply_to( const double* parameters, Matrix& input );
 
 
 /**
@@ -91,7 +97,7 @@ void apply_to( const double* parameters, Matrix& input );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_from_right( const double* parameters, Matrix& input );
+virtual void apply_from_right( const double* parameters, Matrix& input );
 
 
 /**
@@ -158,6 +164,26 @@ void set_optimized_parameters(double Theta, double Phi, double Lambda );
 @param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
 */
 void get_optimized_parameters(double *parameters_in );
+
+
+/**
+@brief Call to set the parameter theta0
+@param theta_in The value for the parameter theta0
+*/
+void set_theta(double theta_in );
+
+/**
+@brief Call to set the parameter phi0
+@param theta_in The value for the parameter theta0
+*/
+void set_phi(double phi_in );
+
+
+/**
+@brief Call to set the parameter lambda0
+@param theta_in The value for the parameter theta0
+*/
+void set_lambda(double lambda_in );
 
 };
 

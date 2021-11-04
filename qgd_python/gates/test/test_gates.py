@@ -99,6 +99,69 @@ class Test_operations:
 
 
 
+    def test_RY_creation(self):
+        r"""
+        This method is called by pytest. 
+        Test to create an instance of U3 gate.
+
+        """
+
+        from qgd_python.gates.qgd_RY import qgd_RY
+
+        # number of qubits
+        qbit_num = 3
+
+        # target qbit
+        target_qbit = 0
+    
+
+        # creating an instance of the C++ class
+        RY = qgd_RY( qbit_num, target_qbit )
+
+
+
+    def test_RX_creation(self):
+        r"""
+        This method is called by pytest. 
+        Test to create an instance of U3 gate.
+
+        """
+
+        from qgd_python.gates.qgd_RX import qgd_RX
+
+        # number of qubits
+        qbit_num = 3
+
+        # target qbit
+        target_qbit = 0
+    
+
+        # creating an instance of the C++ class
+        RX = qgd_RX( qbit_num, target_qbit )
+
+
+
+    def test_RZ_creation(self):
+        r"""
+        This method is called by pytest. 
+        Test to create an instance of U3 gate.
+
+        """
+
+        from qgd_python.gates.qgd_RZ import qgd_RZ
+
+        # number of qubits
+        qbit_num = 3
+
+        # target qbit
+        target_qbit = 0
+    
+
+        # creating an instance of the C++ class
+        RZ = qgd_RZ( qbit_num, target_qbit )
+
+
+
     def test_SYC_creation(self):
         r"""
         This method is called by pytest. 
@@ -213,6 +276,7 @@ class Test_operations:
         layer.add_U3( target_qbit, Theta, Phi, Lambda )
 
 
+
         # target qbit
         target_qbit = 0
 
@@ -222,6 +286,9 @@ class Test_operations:
         # add CNOT gate to the block
         layer.add_CNOT( control_qbit, target_qbit )
 
+
+        # add RX gate to the block
+        layer.add_RX( target_qbit )
 
         # creating an instance of the C++ class
         cGates_Block = qgd_Gates_Block( qbit_num )   

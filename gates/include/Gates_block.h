@@ -106,6 +106,45 @@ void add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool Lambda);
 */
 void add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda);
 
+
+/**
+@brief Append a RX gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_rx_to_end(int target_qbit);
+
+/**
+@brief Add a RX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_rx(int target_qbit);
+
+
+/**
+@brief Append a RY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_ry_to_end(int target_qbit);
+
+/**
+@brief Add a RY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_ry(int target_qbit);
+
+
+/**
+@brief Append a RZ gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_rz_to_end(int target_qbit);
+
+/**
+@brief Add a RZ gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_rz(int target_qbit);
+
 /**
 @brief Append a CNOT gate gate to the list of gates
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)

@@ -250,3 +250,141 @@ set_target_properties( qgd_SYC PROPERTIES
 install(TARGETS qgd_SYC LIBRARY 
          DESTINATION qgd_python/gates)
 
+
+
+
+###################################################################
+
+
+
+add_library( qgd_RY MODULE
+    ${EXT_DIR}/qgd_RY.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_RY qgd)
+
+target_link_libraries (qgd_RY qgd ${BLAS_LIBRARIES})
+
+
+python_extension_module(qgd_RY)
+
+# adding compile options
+target_compile_options(qgd_RY PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
+)
+
+
+target_include_directories(qgd_RY PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/gates/include
+                            ${PROJECT_SOURCE_DIR}/common/include
+                            ${EXTRA_INCLUDES})
+
+
+set_target_properties( qgd_RY PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_RY LIBRARY 
+         DESTINATION qgd_python/gates)
+
+
+
+
+
+###################################################################
+
+
+
+add_library( qgd_RZ MODULE
+    ${EXT_DIR}/qgd_RZ.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_RZ qgd)
+
+target_link_libraries (qgd_RZ qgd ${BLAS_LIBRARIES})
+
+
+python_extension_module(qgd_RZ)
+
+# adding compile options
+target_compile_options(qgd_RZ PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
+)
+
+
+target_include_directories(qgd_RZ PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/gates/include
+                            ${PROJECT_SOURCE_DIR}/common/include
+                            ${EXTRA_INCLUDES})
+
+
+set_target_properties( qgd_RZ PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_RZ LIBRARY 
+         DESTINATION qgd_python/gates)
+
+
+
+
+
+###################################################################
+
+
+
+add_library( qgd_RX MODULE
+    ${EXT_DIR}/qgd_RX.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_RX qgd)
+
+target_link_libraries (qgd_RX qgd ${BLAS_LIBRARIES})
+
+
+python_extension_module(qgd_RX)
+
+# adding compile options
+target_compile_options(qgd_RX PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
+)
+
+
+target_include_directories(qgd_RX PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/gates/include
+                            ${PROJECT_SOURCE_DIR}/common/include
+                            ${EXTRA_INCLUDES})
+
+
+set_target_properties( qgd_RX PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_RX LIBRARY 
+         DESTINATION qgd_python/gates)
+
+

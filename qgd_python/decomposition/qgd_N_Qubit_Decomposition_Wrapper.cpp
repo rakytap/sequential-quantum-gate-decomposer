@@ -360,6 +360,23 @@ get_gate( N_Qubit_Decomposition* decomp, int &idx ) {
         Py_XDECREF(control_qbit);
 
     }
+    else if (gate->get_type() == SYC_OPERATION) {
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "SYC" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
+
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "control_qbit", control_qbit );            
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(control_qbit);
+
+    }
     else if (gate->get_type() == U3_OPERATION) {
 
         // get U3 parameters
@@ -387,6 +404,81 @@ get_gate( N_Qubit_Decomposition* decomp, int &idx ) {
         Py_XDECREF(Theta);
         Py_XDECREF(Phi);
         Py_XDECREF(Lambda);
+
+
+        free( parameters);
+    }
+    else if (gate->get_type() == RX_OPERATION) {
+
+        // get U3 parameters
+        RX* rx_gate = static_cast<RX*>(gate);
+        double* parameters = (double*)malloc(sizeof(double));
+        rx_gate->get_optimized_parameters(parameters);
+ 
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "RX" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* Theta = Py_BuildValue("f",  parameters[0] );
+
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "Theta", Theta );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(Theta);
+
+
+        free( parameters);
+    }
+    else if (gate->get_type() == RY_OPERATION) {
+
+        // get U3 parameters
+        RY* ry_gate = static_cast<RY*>(gate);
+        double* parameters = (double*)malloc(sizeof(double));
+        ry_gate->get_optimized_parameters(parameters);
+ 
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "RY" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* Theta = Py_BuildValue("f",  parameters[0] );
+
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "Theta", Theta );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(Theta);
+
+
+        free( parameters);
+    }
+    else if (gate->get_type() == RZ_OPERATION) {
+
+        // get U3 parameters
+        RZ* rz_gate = static_cast<RZ*>(gate);
+        double* parameters = (double*)malloc(sizeof(double));
+        rz_gate->get_optimized_parameters(parameters);
+ 
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "RZ" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* Phi = Py_BuildValue("f",  parameters[0] );
+
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "Phi", Phi );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(Phi);
 
 
         free( parameters);

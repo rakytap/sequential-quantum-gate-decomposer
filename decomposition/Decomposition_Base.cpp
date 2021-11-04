@@ -712,6 +712,18 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
             U3* u3_gate = static_cast<U3*>( gate );
             parameters_num_total = parameters_num_total + u3_gate->get_parameter_num();
         }
+        if (gate->get_type() == RX_OPERATION ) {
+            RX* rx_gate = static_cast<RX*>( gate );
+            parameters_num_total = parameters_num_total + rx_gate->get_parameter_num();
+        }
+        if (gate->get_type() == RY_OPERATION ) {
+            RY* ry_gate = static_cast<RY*>( gate );
+            parameters_num_total = parameters_num_total + ry_gate->get_parameter_num();
+        }
+        if (gate->get_type() == RZ_OPERATION ) {
+            RZ* rz_gate = static_cast<RZ*>( gate );
+            parameters_num_total = parameters_num_total + rz_gate->get_parameter_num();
+        }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
             parameters_num_total = parameters_num_total + block_gate->get_parameter_num();
@@ -749,6 +761,21 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
             U3* u3_gate = static_cast<U3*>( gate );
             parameters_num_total = parameters_num_total - u3_gate->get_parameter_num();
             u3_gate->apply_to( parameters+parameters_num_total, ret_matrix);            
+        }
+        else if (gate->get_type() == RX_OPERATION ) {
+            RX* rx_gate = static_cast<RX*>( gate );
+            parameters_num_total = parameters_num_total - rx_gate->get_parameter_num();
+            rx_gate->apply_to( parameters+parameters_num_total, ret_matrix);            
+        }
+        else if (gate->get_type() == RY_OPERATION ) {
+            RY* ry_gate = static_cast<RY*>( gate );
+            parameters_num_total = parameters_num_total - ry_gate->get_parameter_num();
+            ry_gate->apply_to( parameters+parameters_num_total, ret_matrix);            
+        }
+        else if (gate->get_type() == RZ_OPERATION ) {
+            RZ* rz_gate = static_cast<RZ*>( gate );
+            parameters_num_total = parameters_num_total - rz_gate->get_parameter_num();
+            rz_gate->apply_to( parameters+parameters_num_total, ret_matrix);            
         }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
@@ -830,6 +857,21 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
             U3* u3_gate = static_cast<U3*>(gate);
             u3_gate->apply_from_right(parameters_loc, mtx);
             parameters_loc = parameters_loc + u3_gate->get_parameter_num();
+        }
+        else if (gate->get_type() == RX_OPERATION ) {
+            RX* rx_gate = static_cast<RX*>(gate);
+            rx_gate->apply_from_right(parameters_loc, mtx);
+            parameters_loc = parameters_loc + rx_gate->get_parameter_num();
+        }
+        else if (gate->get_type() == RY_OPERATION ) {
+            RY* ry_gate = static_cast<RY*>(gate);
+            ry_gate->apply_from_right(parameters_loc, mtx);
+            parameters_loc = parameters_loc + ry_gate->get_parameter_num();
+        }
+        else if (gate->get_type() == RZ_OPERATION ) {
+            RZ* rz_gate = static_cast<RZ*>(gate);
+            rz_gate->apply_from_right(parameters_loc, mtx);
+            parameters_loc = parameters_loc + rz_gate->get_parameter_num();
         }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>(gate);
@@ -1117,6 +1159,60 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
 
         }
+        else if (gate->get_type() == RX_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double vartheta;
+
+            // get the inverse parameters of the U3 rotation
+
+            RX* rx_gate = static_cast<RX*>(gate);
+
+            vartheta = std::fmod( parameters[parameter_idx], 4*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            rx_gate->set_optimized_parameters( vartheta );
+            ops_ret.push_back( static_cast<Gate*>(rx_gate) );
+
+
+        }
+        else if (gate->get_type() == RY_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double vartheta;
+
+            // get the inverse parameters of the U3 rotation
+
+            RY* ry_gate = static_cast<RY*>(gate);
+
+            vartheta = std::fmod( parameters[parameter_idx], 4*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            ry_gate->set_optimized_parameters( vartheta );
+            ops_ret.push_back( static_cast<Gate*>(ry_gate) );
+
+
+        }
+        else if (gate->get_type() == RZ_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double varphi;
+
+            // get the inverse parameters of the U3 rotation
+
+            RZ* rz_gate = static_cast<RZ*>(gate);
+
+            varphi = std::fmod( parameters[parameter_idx], 2*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            rz_gate->set_optimized_parameters( varphi );
+            ops_ret.push_back( static_cast<Gate*>(rz_gate) );
+
+
+        }
         else if (gate->get_type() == BLOCK_OPERATION) {
             Gates_block* block_gate = static_cast<Gates_block*>(gate);
             const double* parameters_layer = parameters + parameter_idx;
@@ -1186,6 +1282,33 @@ int Decomposition_Base::get_gate( unsigned int n, gate_type &type, int &target_q
         target_qbit = u3_gate->get_target_qbit();
         control_qbit = gate->get_control_qbit();
         u3_gate->get_optimized_parameters(parameters);
+//printf("c %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
+        return 0;
+    }
+    else if (gate->get_type() == RX_OPERATION) {
+        RX* rx_gate = static_cast<RX*>(gate);
+        type = rx_gate->get_type();
+        target_qbit = rx_gate->get_target_qbit();
+        control_qbit = gate->get_control_qbit();
+        rx_gate->get_optimized_parameters(parameters);
+//printf("c %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
+        return 0;
+    }
+    else if (gate->get_type() == RY_OPERATION) {
+        RY* ry_gate = static_cast<RY*>(gate);
+        type = ry_gate->get_type();
+        target_qbit = ry_gate->get_target_qbit();
+        control_qbit = gate->get_control_qbit();
+        ry_gate->get_optimized_parameters(parameters);
+//printf("c %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
+        return 0;
+    }
+    else if (gate->get_type() == RZ_OPERATION) {
+        RZ* rz_gate = static_cast<RZ*>(gate);
+        type = rz_gate->get_type();
+        target_qbit = rz_gate->get_target_qbit();
+        control_qbit = gate->get_control_qbit();
+        rz_gate->get_optimized_parameters(parameters);
 //printf("c %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
         return 0;
     }

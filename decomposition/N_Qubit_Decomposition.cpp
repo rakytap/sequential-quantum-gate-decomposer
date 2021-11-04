@@ -140,7 +140,7 @@ ta.execute([&]() {
     // calculating the final error of the decomposition
     Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters, gates.begin(), gates.size(), Umtx );
     calc_decomposition_error( matrix_decomposed );
-        
+
 
     // get the number of gates used in the decomposition
     gates_num gates_num = get_gate_nums();
@@ -148,6 +148,9 @@ ta.execute([&]() {
     if (verbose) {
         std::cout << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
         if ( gates_num.u3>0 ) std::cout << gates_num.u3 << " U3 opeartions," << std::endl;
+        if ( gates_num.rx>0 ) std::cout << gates_num.rx << " RX opeartions," << std::endl;
+        if ( gates_num.ry>0 ) std::cout << gates_num.ry << " RY opeartions," << std::endl;
+        if ( gates_num.rz>0 ) std::cout << gates_num.rz << " RZ opeartions," << std::endl;
         if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT opeartions," << std::endl;
         if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ opeartions," << std::endl;
         if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH opeartions," << std::endl;
@@ -221,6 +224,18 @@ N_Qubit_Decomposition::add_gate_layers() {
             else if (gate->get_type() == U3_OPERATION ) {
                 U3* u3_gate = static_cast<U3*>( gate );
                 add_gate_to_end( (Gate*)u3_gate->clone() );
+            }
+            else if (gate->get_type() == RX_OPERATION ) {
+                RX* rx_gate = static_cast<RX*>( gate );
+                add_gate_to_end( (Gate*)rx_gate->clone() );
+            }
+            else if (gate->get_type() == RY_OPERATION ) {
+                RY* ry_gate = static_cast<RY*>( gate );
+                add_gate_to_end( (Gate*)ry_gate->clone() );
+            }
+            else if (gate->get_type() == RZ_OPERATION ) {
+                RZ* rz_gate = static_cast<RZ*>( gate );
+                add_gate_to_end( (Gate*)rz_gate->clone() );
             }
             else if (gate->get_type() == BLOCK_OPERATION ) {
                 Gates_block* block_gate = static_cast<Gates_block*>( gate );

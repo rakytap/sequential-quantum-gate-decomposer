@@ -30,6 +30,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CH.h"
 #include "CNOT.h"
 #include "U3.h"
+#include "RX.h"
+#include "RY.h"
+#include "RZ.h"
 #include "SYC.h"
 #include <map>
 #include <cstdlib>

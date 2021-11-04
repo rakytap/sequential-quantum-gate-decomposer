@@ -27,7 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from os import path
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition_Wrapper import qgd_N_Qubit_Decomposition_Wrapper
-from qiskit import QuantumCircuit
+
 
 
 ##
@@ -56,7 +56,7 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
 # @return Return with a Qiskit compatible quantum circuit.
     def get_Quantum_Circuit( self ):
 
-        
+        from qiskit import QuantumCircuit
 
         # creating Qiskit quantum circuit
         circuit = QuantumCircuit(self.qbit_num)
@@ -81,9 +81,86 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
                 # adding CZ gate to the quantum circuit
                 circuit.ch(gate.get("control_qbit"), gate.get("target_qbit"))
 
+            elif gate.get("type") == "SYC":
+                # Sycamore gate
+                print("Unsupported gate in the circuit export: Sycamore gate")
+                return None;
+
             elif gate.get("type") == "U3":
                 # adding U3 gate to the quantum circuit
                 circuit.u(gate.get("Theta"), gate.get("Phi"), gate.get("Lambda"), gate.get("target_qbit"))
+
+            elif gate.get("type") == "RX":
+                # RX gate
+                circuit.rx(gate.get("Theta"), gate.get("target_qbit"))
+
+            elif gate.get("type") == "RY":
+                # RY gate
+                circuit.ry(gate.get("Theta"), gate.get("target_qbit"))
+
+            elif gate.get("type") == "RZ":
+                # RZ gate
+                circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
+
+
+        return circuit
+
+
+
+
+##
+# @brief Export the unitary decomposition into Qiskit format.
+# @return Return with a Qiskit compatible quantum circuit.
+    def get_Cirq_Circuit( self ):
+
+        import cirq
+
+
+        # creating Cirq quantum circuit
+        circuit = cirq.Circuit()
+
+        # creating qubit register
+        q = cirq.LineQubit.range(self.qbit_num)
+
+        # retrive the list of decomposing gate structure
+        gates = self.get_Gates()
+
+        # constructing quantum circuit
+        for idx in range(len(gates)-1, -1, -1):
+
+            gate = gates[idx]
+
+            if gate.get("type") == "CNOT":
+                # adding CNOT gate to the quantum circuit
+                circuit.append(cirq.CNOT(q[self.qbit_num-1-gate.get("control_qbit")], q[self.qbit_num-1-gate.get("target_qbit")]))
+
+            elif gate.get("type") == "CZ":
+                # adding CZ gate to the quantum circuit
+                circuit.append(cirq.CZ(q[self.qbit_num-1-gate.get("control_qbit")], q[self.qbit_num-1-gate.get("target_qbit")]))
+
+            elif gate.get("type") == "CH":
+                # adding CZ gate to the quantum circuit
+                circuit.append(cirq.CH(q[self.qbit_num-1-gate.get("control_qbit")], q[self.qbit_num-1-gate.get("target_qbit")]))
+
+            elif gate.get("type") == "SYC":
+                # Sycamore gate
+                circuit.append(cirq.google.SYC(q[self.qbit_num-1-gate.get("control_qbit")], q[self.qbit_num-1-gate.get("target_qbit")]))
+
+            elif gate.get("type") == "U3":
+                print("Unsupported gate in the Cirq export: U3 gate")
+                return None;
+
+            elif gate.get("type") == "RX":
+                # RX gate
+                circuit.append(cirq.rx(gate.get("Theta")).on(q[self.qbit_num-1-gate.get("target_qbit")]))
+
+            elif gate.get("type") == "RY":
+                # RY gate
+                circuit.append(cirq.ry(gate.get("Theta")).on(q[self.qbit_num-1-gate.get("target_qbit")]))
+
+            elif gate.get("type") == "RZ":
+                # RZ gate
+                circuit.append(cirq.rz(gate.get("Phi")).on(q[self.qbit_num-1-gate.get("target_qbit")]))
 
 
         return circuit

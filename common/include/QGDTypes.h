@@ -47,6 +47,12 @@ struct QGD_Complex16 {
 struct gates_num {
   /// The number of U3 gates
   int u3;
+  /// The number of RX gates
+  int rx;
+  /// The number of RY gates
+  int ry;
+  /// The number of RZ gates
+  int rz;
   /// The number of CNOT gates
   int cnot;
   /// The number of CZ gates
