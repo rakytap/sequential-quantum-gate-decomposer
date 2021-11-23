@@ -695,7 +695,6 @@ N_Qubit_Decomposition::simplify_layers() {
 
                 if ( (involved_qbits.size())> 2 && blocks_to_save->get_gate_num() > 0 ) {
                     layer_idx = layer_idx -1;
-                    involved_qbits.clear();
                     break;
                 }
 
@@ -713,7 +712,7 @@ N_Qubit_Decomposition::simplify_layers() {
             // get the number of two-qubit gates and store the block gates if the number of CNOT gates cannot be reduced
             gates_num gate_nums = block_to_simplify->get_gate_nums();
 
-            if (gate_nums.cnot + gate_nums.cz + gate_nums.ch < 2) {
+            if (gate_nums.cnot + gate_nums.cz + gate_nums.ch < 2 || involved_qbits.size()> 2) {
                 gates_loc->combine(blocks_to_save);
                 memcpy(optimized_parameters_loc+parameter_num_loc, optimized_parameters+parameter_idx, parameter_num_block*sizeof(double) );
                 parameter_idx = parameter_idx + parameter_num_block;
@@ -729,9 +728,13 @@ N_Qubit_Decomposition::simplify_layers() {
                     blocks_to_save = NULL;
                 }
 
+                involved_qbits.clear();
+
                 continue;
             }
 
+
+            involved_qbits.clear();
 
             // simplify the given layer
             std::map<int,int> max_layer_num_loc;
