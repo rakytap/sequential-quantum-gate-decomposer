@@ -231,6 +231,13 @@ double* get_optimized_parameters();
 */
 void get_optimized_parameters( double* ret );
 
+
+/**
+@brief Call to set the optimized parameters for initial optimization.
+@param ret Preallocated array to store the optimized parameters.
+*/
+void set_optimized_parameters( double* parameters, int num_of_parameters );
+
 /**
 @brief Calculate the transformed matrix resulting by an array of gates on the matrix Umtx
 @param parameters An array containing the parameters of the U3 gates.

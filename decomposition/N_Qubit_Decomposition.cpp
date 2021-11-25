@@ -160,7 +160,6 @@ ta.execute([&]() {
         std::cout << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
     }
 
-
 #if BLAS==0 // undefined BLAS
     omp_set_num_threads(num_threads);
 #elif BLAS==1 //MKL
@@ -325,7 +324,13 @@ void  N_Qubit_Decomposition::final_optimization() {
 
         //# setting the global minimum
         global_target_minimum = 0;
-        solve_optimization_problem(NULL, 0);
+
+        if ( optimized_parameters == NULL ) {
+            solve_optimization_problem(NULL, 0);
+        }
+        else {
+            solve_optimization_problem(optimized_parameters, parameter_num);
+        }
 }
 
 

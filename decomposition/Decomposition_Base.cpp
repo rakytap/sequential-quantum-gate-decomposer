@@ -669,6 +669,23 @@ void Decomposition_Base::get_optimized_parameters( double* ret ) {
     return;
 }
 
+
+/**
+@brief Call to set the optimized parameters for initial optimization.
+@param ret Preallocated array to store the optimized parameters.
+*/
+void Decomposition_Base::set_optimized_parameters( double* parameters, int num_of_parameters ) {
+
+    if (optimized_parameters != NULL ) {
+        qgd_free( optimized_parameters );
+    }
+
+    optimized_parameters = (double*)qgd_calloc(num_of_parameters, sizeof(double), CACHELINE);
+    memcpy( optimized_parameters, parameters, num_of_parameters*sizeof(double) );
+
+    return;
+}
+
 /**
 @brief Calculate the transformed matrix resulting by an array of gates on the matrix Umtx
 @param parameters An array containing the parameters of the U3 gates.

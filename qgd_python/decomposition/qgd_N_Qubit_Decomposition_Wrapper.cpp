@@ -31,6 +31,75 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <stdio.h>
 #include "N_Qubit_Decomposition.h"
 
+#include <numpy/arrayobject.h>
+#include "matrix.h"
+
+
+/**
+@brief Method to cleanup the memory when the python object becomes released
+@param capsule Pointer to the memory capsule
+*/
+void capsule_cleanup(PyObject* capsule) {
+
+    void *memory = PyCapsule_GetPointer(capsule, NULL);
+    // I'm going to assume your memory needs to be freed with free().
+    // If it needs different cleanup, perform whatever that cleanup is
+    // instead of calling free().
+    scalable_aligned_free(memory);
+
+
+}
+
+
+
+
+/**
+@brief Call to make a numpy array from data stored via void pointer.
+@param ptr pointer pointing to the data
+@param dim The number of dimensions
+@param shape array containing the dimensions.
+@param np_type The data type stored in the numpy array (see possible values at https://numpy.org/doc/1.17/reference/c-api.dtype.html)
+*/
+PyObject* array_from_ptr(void * ptr, int dim, npy_intp* shape, int np_type) {
+
+        if (PyArray_API == NULL) {
+            import_array();
+        }
+
+
+        // create numpy array
+        PyObject* arr = PyArray_SimpleNewFromData(dim, shape, np_type, ptr);
+
+        // set memory keeper for the numpy array
+        PyObject *capsule = PyCapsule_New(ptr, NULL, capsule_cleanup);
+        PyArray_SetBaseObject((PyArrayObject *) arr, capsule);
+
+        return arr;
+
+}
+
+
+
+/**
+@brief Call to make a numpy array from an instance of matrix class.
+@param mtx a matrix instance
+*/
+PyObject* matrix_to_numpy( matrix_base<double> &mtx ) {
+        // initialize Numpy API
+        import_array();
+
+
+        npy_intp shape[1];
+        shape[0] = (npy_intp) mtx.rows;
+        shape[1] = (npy_intp) mtx.cols;
+
+        double* data = mtx.get_data();
+        return array_from_ptr( (void*) data, 2, shape, NPY_DOUBLE);
+
+
+}
+
+
 
 /**
 @brief Type definition of the qgd_gates_Block Python class of the qgd_Gates_Block module
@@ -570,6 +639,88 @@ qgd_N_Qubit_Decomposition_Wrapper_List_Gates( qgd_N_Qubit_Decomposition_Wrapper 
 
 
 
+
+/**
+@brief Extract the optimized parameters
+@param start_index The index of the first inverse gate
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters( qgd_N_Qubit_Decomposition_Wrapper *self ) {
+
+    int parameter_num = self->decomp->get_parameter_num();
+
+    matrix_base<double> parameters_mtx(1, parameter_num);
+    double* parameters = parameters_mtx.get_data();
+    self->decomp->get_optimized_parameters(parameters);
+
+    // reversing the order
+    matrix_base<double> parameters_mtx_reversed(1, parameter_num);
+    double* parameters_reversed = parameters_mtx_reversed.get_data();
+    for (int idx=0; idx<parameter_num; idx++ ) {
+        parameters_reversed[idx] = parameters[parameter_num-1-idx];
+    }
+
+    // convert to numpy array
+    parameters_mtx_reversed.set_owner(false);
+    PyObject * parameter_arr = matrix_to_numpy( parameters_mtx_reversed );
+
+    return parameter_arr;
+}
+
+
+
+
+
+/**
+@brief Extract the optimized parameters
+@param start_index The index of the first inverse gate
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_set_Optimized_Parameters( qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
+
+    PyObject * parameters_arr = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+
+    // get the pointer to the data stored in the input matrices
+    double* parameters = (double*)PyArray_DATA(parameters_arr);
+
+
+    npy_intp param_num = PyArray_Size( parameters_arr );
+
+    // reversing the order
+    matrix_base<double> parameters_mtx_reversed(param_num, 1);
+    double* parameters_reversed = parameters_mtx_reversed.get_data();
+    for (int idx=0; idx<param_num; idx++ ) {
+        parameters_reversed[idx] = parameters[param_num-1-idx];
+    }
+
+
+
+    self->decomp->set_optimized_parameters(parameters_reversed, param_num);
+
+
+    Py_DECREF(parameters_arr);
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+
+
 /**
 @brief Set the maximal number of layers used in the subdecomposition of the qbit-th qubit.
 @param max_layer_num A dictionary {'n': max_layer_num} labeling the maximal number of the gate layers used in the subdecomposition.
@@ -879,6 +1030,12 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Wrapper_methods[] = {
     },
     {"get_Gate_Num", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_gate_num, METH_NOARGS,
      "Method to get the number of decomposing gates."
+    },
+    {"get_Optimized_Parameters", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters, METH_NOARGS,
+     "Method to get the array of optimized parameters."
+    },
+    {"set_Optimized_Parameters", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Optimized_Parameters, METH_VARARGS,
+     "Method to set the initial array of optimized parameters."
     },
     {"get_Gate", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_gate, METH_VARARGS,
      "Method to get the i-th decomposing gates."

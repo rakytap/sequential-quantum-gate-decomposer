@@ -71,15 +71,15 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
 
             if gate.get("type") == "CNOT":
                 # adding CNOT gate to the quantum circuit
-                circuit.cx(gate.get("control_qbit"), gate.get("target_qbit"))
+                circuit.cx(self.qbit_num-1-gate.get("control_qbit"), self.qbit_num-1-gate.get("target_qbit"))
 
             elif gate.get("type") == "CZ":
                 # adding CZ gate to the quantum circuit
-                circuit.cz(gate.get("control_qbit"), gate.get("target_qbit"))
+                circuit.cz(self.qbit_num-1-gate.get("control_qbit"), self.qbit_num-1-gate.get("target_qbit"))
 
             elif gate.get("type") == "CH":
                 # adding CZ gate to the quantum circuit
-                circuit.ch(gate.get("control_qbit"), gate.get("target_qbit"))
+                circuit.ch(self.qbit_num-1-gate.get("control_qbit"), self.qbit_num-1-gate.get("target_qbit"))
 
             elif gate.get("type") == "SYC":
                 # Sycamore gate
@@ -88,19 +88,19 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
 
             elif gate.get("type") == "U3":
                 # adding U3 gate to the quantum circuit
-                circuit.u(gate.get("Theta"), gate.get("Phi"), gate.get("Lambda"), gate.get("target_qbit"))
+                circuit.u(gate.get("Theta"), gate.get("Phi"), gate.get("Lambda"), self.qbit_num-1-gate.get("target_qbit"))
 
             elif gate.get("type") == "RX":
                 # RX gate
-                circuit.rx(gate.get("Theta"), gate.get("target_qbit"))
+                circuit.rx(gate.get("Theta"), self.qbit_num-1-gate.get("target_qbit"))
 
             elif gate.get("type") == "RY":
                 # RY gate
-                circuit.ry(gate.get("Theta"), gate.get("target_qbit"))
+                circuit.ry(gate.get("Theta"), self.qbit_num-1-gate.get("target_qbit"))
 
             elif gate.get("type") == "RZ":
                 # RZ gate
-                circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
+                circuit.rz(gate.get("Phi"), self.qbit_num-1-gate.get("target_qbit"))
 
 
         return circuit
