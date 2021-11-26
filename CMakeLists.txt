@@ -312,6 +312,8 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/gates/CH.cpp
     ${PROJECT_SOURCE_DIR}/gates/Gate.cpp
     ${PROJECT_SOURCE_DIR}/gates/Gates_block.cpp
+    ${PROJECT_SOURCE_DIR}/gates/X.cpp
+    ${PROJECT_SOURCE_DIR}/gates/SX.cpp
     ${PROJECT_SOURCE_DIR}/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/gates/RY.cpp
     ${PROJECT_SOURCE_DIR}/gates/RX.cpp
@@ -372,6 +374,8 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CH.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Gate.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Gates_block.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/X.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/SX.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/U3.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/RX.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/RY.h

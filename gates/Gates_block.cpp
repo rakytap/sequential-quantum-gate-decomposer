@@ -28,6 +28,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "RX.h"
 #include "RY.h"
 #include "RZ.h"
+#include "X.h"
+#include "SX.h"
 #include "SYC.h"
 #include "Gates_block.h"
 
@@ -115,6 +117,18 @@ Gates_block::release_gates() {
 
             RZ* rz_operation = static_cast<RZ*>(operation);
             delete rz_operation;
+
+        }
+        else if (operation->get_type() == X_OPERATION) {
+
+            X* x_operation = static_cast<X*>(operation);
+            delete x_operation;
+
+        }
+        else if (operation->get_type() == SX_OPERATION) {
+
+            SX* sx_operation = static_cast<SX*>(operation);
+            delete sx_operation;
 
         }
         else if (operation->get_type() == BLOCK_OPERATION) {
@@ -230,6 +244,14 @@ Gates_block::apply_to( const double* parameters, Matrix& input ) {
             parameters = parameters - 1;
             rz_operation->apply_to( parameters, input );                    
         }
+        else if (operation->get_type() == X_OPERATION) {
+            X* x_operation = static_cast<X*>(operation);
+            x_operation->apply_to( input ); 
+        }
+        else if (operation->get_type() == SX_OPERATION) {
+            SX* sx_operation = static_cast<SX*>(operation);
+            sx_operation->apply_to( input ); 
+        }
         else if (operation->get_type() == GENERAL_OPERATION) {
             operation->apply_to(input);
         }
@@ -316,6 +338,14 @@ Gates_block::apply_from_right( const double* parameters, Matrix& input ) {
             RZ* rz_operation = static_cast<RZ*>(operation);
             rz_operation->apply_from_right( parameters, input ); 
             parameters = parameters + 1;            
+        }
+        else if (operation->get_type() == X_OPERATION) {
+            X* x_operation = static_cast<X*>(operation);
+            x_operation->apply_from_right( input ); 
+        }
+        else if (operation->get_type() == SX_OPERATION) {
+            SX* sx_operation = static_cast<SX*>(operation);
+            sx_operation->apply_from_right( input ); 
         }
         else if (operation->get_type() == GENERAL_OPERATION) {
             operation->apply_from_right(input);
@@ -524,6 +554,63 @@ void Gates_block::add_cz(  int target_qbit, int control_qbit) {
 }
 
 
+/**
+@brief Append a X gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_x_to_end(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new X( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate_to_end( operation );
+}
+
+/**
+@brief Add a X gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_x(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new X( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
+
+
+/**
+@brief Append a SX gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_sx_to_end(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new SX( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate_to_end( operation );
+}
+
+/**
+@brief Add a SX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_sx(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new SX( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
+
 
 
 
@@ -682,6 +769,8 @@ gates_num Gates_block::get_gate_nums() {
         gate_nums.cnot    = 0;
         gate_nums.cz      = 0;
         gate_nums.ch      = 0;
+        gate_nums.x       = 0;
+        gate_nums.sx      = 0;
         gate_nums.syc     = 0;
         gate_nums.general = 0;
 
@@ -699,6 +788,8 @@ gates_num Gates_block::get_gate_nums() {
                 gate_nums.cnot = gate_nums.cnot + gate_nums_loc.cnot;
                 gate_nums.cz = gate_nums.cz + gate_nums_loc.cz;
                 gate_nums.ch = gate_nums.ch + gate_nums_loc.ch;
+                gate_nums.x  = gate_nums.x + gate_nums_loc.x;
+                gate_nums.sx = gate_nums.sx + gate_nums_loc.sx;
                 gate_nums.syc   = gate_nums.u3 + gate_nums_loc.syc;
             }
             else if (gate->get_type() == U3_OPERATION) {
@@ -721,6 +812,12 @@ gates_num Gates_block::get_gate_nums() {
             }
             else if (gate->get_type() == CH_OPERATION) {
                 gate_nums.ch   = gate_nums.ch + 1;
+            }
+            else if (gate->get_type() == X_OPERATION) {
+                gate_nums.x   = gate_nums.x + 1;
+            }
+            else if (gate->get_type() == SX_OPERATION) {
+                gate_nums.sx   = gate_nums.sx + 1;
             }
             else if (gate->get_type() == SYC_OPERATION) {
                 gate_nums.syc   = gate_nums.syc + 1;
@@ -903,6 +1000,26 @@ void Gates_block::list_gates( const double* parameters, int start_index ) {
                 gate_idx = gate_idx + 1;
 
             }
+            else if (gate->get_type() == X_OPERATION) {
+
+                // get the inverse parameters of the U3 rotation
+
+                X* x_gate = static_cast<X*>(gate);
+
+                printf("%dth gate: X on target qubit: %d ", gate_idx, x_gate->get_target_qbit() );
+                gate_idx = gate_idx + 1;
+
+            }
+            else if (gate->get_type() == SX_OPERATION) {
+
+                // get the inverse parameters of the U3 rotation
+
+                SX* sx_gate = static_cast<SX*>(gate);
+
+                printf("%dth gate: SX on target qubit: %d ", gate_idx, sx_gate->get_target_qbit() );
+                gate_idx = gate_idx + 1;
+
+            }
             else if (gate->get_type() == BLOCK_OPERATION) {
                 Gates_block* block_gate = static_cast<Gates_block*>(gate);
                 const double* parameters_layer = parameters + parameter_idx - gate->get_parameter_num();
@@ -957,6 +1074,14 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
          else if (gate->get_type() == RZ_OPERATION) {
              RZ* rz_gate = static_cast<RZ*>(gate);
              rz_gate->reorder_qubits( qbit_list );
+         }
+         else if (gate->get_type() == X_OPERATION) {
+             X* x_gate = static_cast<X*>(gate);
+             x_gate->reorder_qubits( qbit_list );
+         }
+         else if (gate->get_type() == SX_OPERATION) {
+             SX* sx_gate = static_cast<SX*>(gate);
+             sx_gate->reorder_qubits( qbit_list );
          }
          else if (gate->get_type() == BLOCK_OPERATION) {
              Gates_block* block_gate = static_cast<Gates_block*>(gate);
@@ -1071,6 +1196,18 @@ void Gates_block::combine(Gates_block* op_block) {
             Gate* op_cloned = static_cast<Gate*>( rz_op_cloned );
             add_gate_to_end( op_cloned );
         }
+        else if (op->get_type() == X_OPERATION) {
+            X* x_op = static_cast<X*>( op );
+            X* x_op_cloned = x_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( x_op_cloned );
+            add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == SX_OPERATION) {
+            SX* sx_op = static_cast<SX*>( op );
+            SX* sx_op_cloned = sx_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( sx_op_cloned );
+            add_gate_to_end( op_cloned );
+        }
         else if (op->get_type() == BLOCK_OPERATION) {
             Gates_block* block_op = static_cast<Gates_block*>( op );
             Gates_block* block_op_cloned = block_op->clone();
@@ -1131,6 +1268,14 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         else if (op->get_type() == RZ_OPERATION) {
             RZ* rz_op = static_cast<RZ*>( op );
             rz_op->set_qbit_num( qbit_num_in );
+        }
+        else if (op->get_type() == X_OPERATION) {
+            X* x_op = static_cast<X*>( op );
+            x_op->set_qbit_num( qbit_num_in );
+        }
+        else if (op->get_type() == SX_OPERATION) {
+            SX* sx_op = static_cast<SX*>( op );
+            sx_op->set_qbit_num( qbit_num_in );
         }
         else if (op->get_type() == BLOCK_OPERATION) {
             Gates_block* block_op = static_cast<Gates_block*>( op );
@@ -1206,7 +1351,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
             op_block->add_gate_to_end( op_cloned );
         }
         else if (op->get_type() == RX_OPERATION) {
-            RX* rx_op = static_cast<U3*>( op );
+            RX* rx_op = static_cast<RX*>( op );
             RX* rx_op_cloned = rx_op->clone();
             Gate* op_cloned = static_cast<Gate*>( rx_op_cloned );
             op_block->add_gate_to_end( op_cloned );
@@ -1221,6 +1366,18 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
             RZ* rz_op = static_cast<RZ*>( op );
             RZ* rz_op_cloned = rz_op->clone();
             Gate* op_cloned = static_cast<Gate*>( rz_op_cloned );
+            op_block->add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == X_OPERATION) {
+            X* x_op = static_cast<X*>( op );
+            X* x_op_cloned = x_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( x_op_cloned );
+            op_block->add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == SX_OPERATION) {
+            SX* sx_op = static_cast<SX*>( op );
+            SX* sx_op_cloned = sx_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( sx_op_cloned );
             op_block->add_gate_to_end( op_cloned );
         }
         else if (op->get_type() == BLOCK_OPERATION) {

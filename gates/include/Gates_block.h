@@ -196,6 +196,30 @@ void add_ch_to_end( int target_qbit, int control_qbit);
 void add_ch( int target_qbit, int control_qbit );
 
 
+/**
+@brief Append a X gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_x_to_end(int target_qbit);
+
+/**
+@brief Add a X gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_x(int target_qbit);
+
+
+/**
+@brief Append a SX gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_sx_to_end(int target_qbit);
+
+/**
+@brief Add a SX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_sx(int target_qbit);
 
 /**
 @brief Append a Sycamore gate (i.e. controlled Hadamard gate) gate to the list of gates

@@ -161,6 +161,46 @@ class Test_operations:
         RZ = qgd_RZ( qbit_num, target_qbit )
 
 
+    def test_X_creation(self):
+        r"""
+        This method is called by pytest. 
+        Test to create an instance of U3 gate.
+
+        """
+
+        from qgd_python.gates.qgd_X import qgd_X
+
+        # number of qubits
+        qbit_num = 3
+
+        # target qbit
+        target_qbit = 0
+    
+
+        # creating an instance of the C++ class
+        X = qgd_X( qbit_num, target_qbit )
+
+
+
+    def test_SX_creation(self):
+        r"""
+        This method is called by pytest. 
+        Test to create an instance of U3 gate.
+
+        """
+
+        from qgd_python.gates.qgd_SX import qgd_SX
+
+        # number of qubits
+        qbit_num = 3
+
+        # target qbit
+        target_qbit = 0
+    
+
+        # creating an instance of the C++ class
+        SX = qgd_SX( qbit_num, target_qbit )
+
 
     def test_SYC_creation(self):
         r"""

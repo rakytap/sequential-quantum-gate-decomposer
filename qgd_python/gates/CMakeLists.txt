@@ -388,3 +388,95 @@ install(TARGETS qgd_RX LIBRARY
          DESTINATION qgd_python/gates)
 
 
+
+
+
+###################################################################
+
+
+
+add_library( qgd_X MODULE
+    ${EXT_DIR}/qgd_X.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_X qgd)
+
+target_link_libraries (qgd_X qgd ${BLAS_LIBRARIES})
+
+
+python_extension_module(qgd_X)
+
+# adding compile options
+target_compile_options(qgd_X PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
+)
+
+
+target_include_directories(qgd_X PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/gates/include
+                            ${PROJECT_SOURCE_DIR}/common/include
+                            ${EXTRA_INCLUDES})
+
+
+set_target_properties( qgd_X PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_X LIBRARY 
+         DESTINATION qgd_python/gates)
+
+
+
+
+
+###################################################################
+
+
+
+add_library( qgd_SX MODULE
+    ${EXT_DIR}/qgd_SX.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_SX qgd)
+
+target_link_libraries (qgd_SX qgd ${BLAS_LIBRARIES})
+
+
+python_extension_module(qgd_SX)
+
+# adding compile options
+target_compile_options(qgd_SX PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
+)
+
+
+target_include_directories(qgd_SX PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/gates/include
+                            ${PROJECT_SOURCE_DIR}/common/include
+                            ${EXTRA_INCLUDES})
+
+
+set_target_properties( qgd_SX PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_SX LIBRARY 
+         DESTINATION qgd_python/gates)
+
+
