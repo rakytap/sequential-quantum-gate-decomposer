@@ -145,6 +145,7 @@ create_N_Qubit_Decomposition( Matrix& Umtx, int qbit_num, bool optimize_layer_nu
 */
 void
 release_N_Qubit_Decomposition( N_Qubit_Decomposition*  instance ) {
+
     if (instance != NULL ) {
         delete instance;
     }
@@ -293,7 +294,7 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
         std::cout << "Wrong initial guess format. Using default ZEROS." << std::endl; 
         qgd_initial_guess = ZEROS;     
     }
-  
+
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
         self->decomp =  create_N_Qubit_Decomposition( Umtx_mtx, qbit_num, optimize_layer_num, qgd_initial_guess);

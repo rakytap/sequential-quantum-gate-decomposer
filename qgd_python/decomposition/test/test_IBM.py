@@ -66,7 +66,7 @@ class Test_Decomposition:
         cDecompose.set_Verbose( True )
 
         # starting the decomposition
-        cDecompose.Start_Decomposition(finalize_decomp=True, prepare_export=True)
+        cDecompose.Start_Decomposition(prepare_export=True)
 
         # list the decomposing operations
         cDecompose.List_Gates()

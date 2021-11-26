@@ -129,6 +129,7 @@ Gates_block::release_gates() {
     }
 
     gates.clear();
+    layer_num = 0;
 
 }
 

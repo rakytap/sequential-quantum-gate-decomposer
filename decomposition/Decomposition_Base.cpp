@@ -528,7 +528,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
             // optimization result is displayed in each 500th iteration
-            if (iter_idx % 500 == 0) {
+            if (iter_idx % 5000 == 0) {
                 if (verbose) {
                     tbb::tick_count current_time = tbb::tick_count::now();
                     printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, (current_time - start_time).seconds());

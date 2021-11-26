@@ -40,6 +40,9 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() {
     // The global minimum of the optimization problem
     global_target_minimum = 0;
 
+    
+    // initialize custom gate structure
+    gate_structure = NULL;
 
 
 
@@ -75,6 +78,10 @@ N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, b
     }
 
 
+    // initialize custom gate structure
+    gate_structure = NULL;
+
+
 }
 
 
@@ -84,8 +91,12 @@ N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, b
 */
 N_Qubit_Decomposition::~N_Qubit_Decomposition() {
 
-    // release custom gate structure
-    delete gate_structure;
+    if ( gate_structure != NULL ) {
+        // release custom gate structure
+        delete gate_structure;
+    }
+
+
 }
 
 
@@ -121,15 +132,125 @@ N_Qubit_Decomposition::start_decomposition(bool prepare_export) {
     //measure the time for the decompositin
     tbb::tick_count start_time = tbb::tick_count::now();
 
+
+/*
+/// @brief ??????????????????????
+struct decomposition_tree_node {
+  /// The strored decomposition layer
+  Gates_block* layer;
+  /// the obtained cost function
+  double cost_func_val;
+  /// the children nodes in the decomposition tree
+  std::vector<decomposition_tree_node*> children;
+  /// the child node in the decomposition tree with the minimal cost function
+  decomposition_tree_node* minimal_child;
+  /// The parent node in the decomposition tree
+  decomposition_tree_node* parent;
+};
+*/
+
+    decomposition_tree_node* parent_node = NULL;
+    decomposition_tree_node* minimal_root_node = NULL;
+    std::vector<decomposition_tree_node*> children_nodes;
+
+
+while ( current_minimum > optimization_tolerance ) {
+
+
+    decomposition_tree_node* minimal_node = NULL;
+    children_nodes.clear();
+
+
     // setting the gate structure for optimization
-    add_gate_layers();
+    for ( int target_qbit_loc=0; target_qbit_loc<qbit_num; target_qbit_loc++ ) {
+            for ( int control_qbit_loc=target_qbit_loc+1; control_qbit_loc<qbit_num; control_qbit_loc++ ) {
 
-tbb::task_arena ta(16);
-ta.execute([&]() {
-    // final tuning of the decomposition parameters
-    final_optimization();
-});   
+                if ( target_qbit_loc == control_qbit_loc ) continue;
 
+                // reset optimization data
+                release_gates();
+
+                if (optimized_parameters != NULL ) {
+                    qgd_free( optimized_parameters );
+                    parameter_num = 0;
+                    optimized_parameters = NULL;
+                }
+
+                current_minimum = 1e8;
+
+
+                if ( parent_node != NULL ) {
+                    // contruct the new gate structure to be optimized
+                    add_layers_from_decomposition_tree( minimal_root_node );
+                }
+
+
+                // create the new decomposing layer
+                Gates_block* layer = construct_gate_layer(target_qbit_loc, control_qbit_loc);
+                add_gate( layer );
+
+                // prepare node to be stored in the decomposition tree
+                decomposition_tree_node* current_node = new decomposition_tree_node;
+                current_node->layer = layer->clone();
+
+                //add_gate_layers(target_qbit_loc, control_qbit_loc);
+                //add_gate_layers(target_qbit_loc, control_qbit_loc);
+                //add_gate_layers(target_qbit_loc, control_qbit_loc);
+
+                // add the last layer to rotate all of the qubits into the |0> state
+                add_finalyzing_layer();
+
+                tbb::task_arena ta(32);
+                ta.execute([&]() {
+                    // final tuning of the decomposition parameters
+                    final_optimization();
+
+                });   
+
+                // save the current minimum to the current node of the decomposition tree
+                current_node->cost_func_val = current_minimum;
+
+
+                if (minimal_node == NULL) {
+                    minimal_node = current_node;
+                }
+                else {
+                    if ( current_node->cost_func_val < minimal_node->cost_func_val ) {
+                        minimal_node = current_node;
+                    }
+                }
+
+                // store the decomposition tree node
+                if (parent_node == NULL) {
+                    current_node->parent = NULL;
+                    root_nodes.push_back(current_node);
+                    minimal_root_node = minimal_node;
+                }
+                else {
+                    current_node->parent = parent_node;
+                    children_nodes.push_back(current_node);
+                }
+
+
+                if (current_minimum < optimization_tolerance) break;
+
+
+        }
+
+        if (current_minimum < optimization_tolerance) break;
+
+
+    }
+
+    if (parent_node != NULL) {
+        parent_node->minimal_child =  minimal_node;
+        parent_node->children = children_nodes;
+    }
+
+    parent_node = minimal_node;
+    current_minimum = minimal_node->cost_func_val;
+
+}
 
 
     // prepare gates to export
@@ -175,75 +296,107 @@ ta.execute([&]() {
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
 void 
-N_Qubit_Decomposition::add_gate_layers() {
+N_Qubit_Decomposition::add_layers_from_decomposition_tree( const decomposition_tree_node* minimal_root_node ) {
 
-    //////////////////////////////////////
-    // add custom gate structure
 
-    // the  number of succeeding identical layers in the subdecomposition
-    int identical_blocks_loc;
-    try {
-        identical_blocks_loc = identical_blocks[qbit_num];
-        if (identical_blocks_loc==0) {
-            identical_blocks_loc = 1;
+    const decomposition_tree_node* current_node = minimal_root_node;
+    while ( current_node != NULL ) {
+
+        Gates_block* layer = current_node->layer->clone();
+
+        // adding the opeartion block to the gates
+        add_gate( layer );
+
+std::cout << "another level" << std::endl;    
+
+        if ( current_node->children.size() > 0 ) {
+            current_node = current_node->minimal_child;
         }
-    }
-    catch (...) {
-        identical_blocks_loc=1;
-    }
-
-    // get the list of sub-blocks in the custom gate structure
-    std::vector<Gate*> gates = gate_structure->get_gates();
-
-    for (std::vector<Gate*>::iterator gates_it = gates.begin(); gates_it != gates.end(); gates_it++ ) {
-
-        // The current gate
-        Gate* gate = *gates_it;
-
-        for (int idx=0;  idx<identical_blocks_loc; idx++) {
-            if (gate->get_type() == CNOT_OPERATION ) {
-                CNOT* cnot_gate = static_cast<CNOT*>( gate );
-                add_gate_to_end( (Gate*)cnot_gate->clone() );
-            }
-            else if (gate->get_type() == CZ_OPERATION ) {
-                CZ* cz_gate = static_cast<CZ*>( gate );
-                add_gate_to_end( (Gate*)cz_gate->clone() );
-            }
-            else if (gate->get_type() == CH_OPERATION ) {
-                CH* ch_gate = static_cast<CH*>( gate );
-                add_gate_to_end( (Gate*)ch_gate->clone() );
-            }
-            else if (gate->get_type() == SYC_OPERATION ) {
-                SYC* syc_gate = static_cast<SYC*>( gate );
-                add_gate_to_end( (Gate*)syc_gate->clone() );
-            }
-            else if (gate->get_type() == GENERAL_OPERATION ) {
-                add_gate_to_end( gate->clone() );
-            }
-            else if (gate->get_type() == U3_OPERATION ) {
-                U3* u3_gate = static_cast<U3*>( gate );
-                add_gate_to_end( (Gate*)u3_gate->clone() );
-            }
-            else if (gate->get_type() == RX_OPERATION ) {
-                RX* rx_gate = static_cast<RX*>( gate );
-                add_gate_to_end( (Gate*)rx_gate->clone() );
-            }
-            else if (gate->get_type() == RY_OPERATION ) {
-                RY* ry_gate = static_cast<RY*>( gate );
-                add_gate_to_end( (Gate*)ry_gate->clone() );
-            }
-            else if (gate->get_type() == RZ_OPERATION ) {
-                RZ* rz_gate = static_cast<RZ*>( gate );
-                add_gate_to_end( (Gate*)rz_gate->clone() );
-            }
-            else if (gate->get_type() == BLOCK_OPERATION ) {
-                Gates_block* block_gate = static_cast<Gates_block*>( gate );
-                add_gate_to_end( (Gate*)block_gate->clone() );
-            }
-
+        else {
+            return;
         }
+
     }
 
+
+
+}
+
+
+/**
+@brief Call to add further layer to the gate structure used in the subdecomposition.
+*/
+Gates_block* 
+N_Qubit_Decomposition::construct_gate_layer( const int& _target_qbit, const int& _control_qbit) {
+
+
+    // creating block of gates
+    Gates_block* block = new Gates_block( qbit_num );
+
+    // adding U3 gate to the block
+    bool Theta = true;
+    bool Phi = false;
+    bool Lambda = true;
+    block->add_u3(_target_qbit, Theta, Phi, Lambda);
+    block->add_u3(_control_qbit, Theta, Phi, Lambda);
+
+
+    // add CNOT gate to the block
+    block->add_cnot(_target_qbit, _control_qbit);
+
+    return block;
+
+}
+
+
+/**
+@brief Call to add further layer to the gate structure used in the subdecomposition.
+*/
+void 
+N_Qubit_Decomposition::add_gate_layers( const int& _target_qbit, const int& _control_qbit) {
+
+
+    // creating block of gates
+    Gates_block* block = new Gates_block( qbit_num );
+
+    // adding U3 gate to the block
+    bool Theta = true;
+    bool Phi = false;
+    bool Lambda = true;
+    block->add_u3(_target_qbit, Theta, Phi, Lambda);
+    block->add_u3(_control_qbit, Theta, Phi, Lambda);
+
+
+    // add CNOT gate to the block
+    block->add_cnot(_target_qbit, _control_qbit);
+
+    // adding the opeartion block to the gates
+    add_gate( block );
+
+}
+
+
+/**
+@brief Call to add further layer to the gate structure used in the subdecomposition.
+*/
+void 
+N_Qubit_Decomposition::add_finalyzing_layer() {
+
+
+    // creating block of gates
+    Gates_block* block = new Gates_block( qbit_num );
+
+    // adding U3 gate to the block
+    bool Theta = true;
+    bool Phi = false;
+    bool Lambda = true;
+
+    for (int qbit=0; qbit<qbit_num; qbit++) {
+        block->add_u3(qbit, Theta, Phi, Lambda);
+    }
+
+    // adding the opeartion block to the gates
+    add_gate( block );
 
 }
 
@@ -326,6 +479,7 @@ void  N_Qubit_Decomposition::final_optimization() {
         global_target_minimum = 0;
 
         if ( optimized_parameters == NULL ) {
+std::cout << "iiiiiiiiiiiiiiiiiiiI" << std::endl;
             solve_optimization_problem(NULL, 0);
         }
         else {

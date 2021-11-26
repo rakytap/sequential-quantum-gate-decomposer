@@ -75,6 +75,9 @@ protected:
     Gates_block* gate_structure;
 
 
+    std::vector<decomposition_tree_node*> root_nodes;
+
+
 public:
 
 /**
@@ -119,11 +122,29 @@ virtual void start_decomposition(bool prepare_export=true);
 void calc_decomposition_error(Matrix& decomposed_matrix );
 
 
+/**
+@brief Call to add further layer to the gate structure used in the subdecomposition.
+*/
+void add_layers_from_decomposition_tree( const decomposition_tree_node* minimal_root_node );
+
+
 
 /**
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
-virtual void add_gate_layers();
+Gates_block* construct_gate_layer( const int& _target_qbit, const int& _control_qbit);
+
+
+/**
+@brief Call to add further layer to the gate structure used in the subdecomposition.
+*/
+virtual void add_gate_layers(const int& _target_qbit, const int& _control_qbit);
+
+
+/**
+@brief Call to add further layer to the gate structure used in the subdecomposition.
+*/
+virtual void add_finalyzing_layer();
 
 
 /**

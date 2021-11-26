@@ -46,7 +46,7 @@ int main() {
 
 //! [few CNOT]
     // The number of qubits spanning the random unitary
-    int qbit_num = 3;
+    int qbit_num = 2;
 
     // the number of rows of the random unitary
     int matrix_size = Power_of_2(qbit_num);
@@ -118,7 +118,7 @@ int main() {
     printf("Starting the decompsition\n");
 //! [performing decomposition]
     // starting the decomposition
-    cDecomposition.start_decomposition(/* finalize_decomposition = */ true, /* prepare_export= */ true);
+    cDecomposition.start_decomposition(/* prepare_export= */ true);
 
     cDecomposition.list_gates(1);
 //! [performing decomposition]
