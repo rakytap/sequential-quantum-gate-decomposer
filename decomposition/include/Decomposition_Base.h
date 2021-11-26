@@ -41,6 +41,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "gsl/gsl_multimin.h"
 #include "gsl/gsl_statistics.h"
 #include <tbb/cache_aligned_allocator.h>
+#include <tbb/concurrent_vector.h>
 
 
 /// @brief Type definition of the types of the initial guess
@@ -54,7 +55,7 @@ struct decomposition_tree_node {
   /// the obtained cost function
   double cost_func_val;
   /// the children nodes in the decomposition tree
-  std::vector<decomposition_tree_node*> children;
+  tbb::concurrent_vector<decomposition_tree_node*> children;
   /// the child node in the decomposition tree with the minimal cost function
   decomposition_tree_node* minimal_child;
   /// The parent node in the decomposition tree

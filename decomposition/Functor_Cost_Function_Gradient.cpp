@@ -1,6 +1,9 @@
 #include "Functor_Cost_Function_Gradient.h"
 #include "Sub_Matrix_Decomposition.h"
+#include "N_Qubit_Decomposition_Base.h"
 #include "N_Qubit_Decomposition.h"
+#include "N_Qubit_Decomposition_adaptive.h"
+#include "N_Qubit_Decomposition_custom.h"
 #include <tbb/parallel_for.h>
 
 
@@ -15,7 +18,8 @@
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-void N_Qubit_Decomposition::optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad ) {
+
+void N_Qubit_Decomposition_Base::optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad ) {
 
     // The function value at x0
     double f0;
@@ -33,9 +37,10 @@ void N_Qubit_Decomposition::optimization_problem_grad( const gsl_vector* paramet
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-void N_Qubit_Decomposition::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
 
-    N_Qubit_Decomposition* instance = reinterpret_cast<N_Qubit_Decomposition*>(void_instance);
+void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+
+    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
 
     int parameter_num_loc = instance->get_parameter_num();
 
@@ -46,15 +51,8 @@ void N_Qubit_Decomposition::optimization_problem_combined( const gsl_vector* par
     double dparam = 1e-8;
 
     // calculate the function values at displaced x and the central x0 points through TBB parallel for
-    tbb::parallel_for(0, parameter_num_loc+1, 1, functor_grad<N_Qubit_Decomposition>( parameters, instance, f, f0, dparam ));
+    tbb::parallel_for(0, parameter_num_loc+1, 1, functor_grad<N_Qubit_Decomposition_Base>( parameters, instance, f, f0, dparam ));
 
-/*
-    // sequential version
-    functor_sub_optimization_grad<N_Qubit_Decomposition> tmp = functor_grad<N_Qubit_Decomposition>( parameters, instance, f, f0, dparam );
-    for (int idx=0; idx<parameter_num_loc+1; idx++) {
-        tmp(idx);
-    }
-*/
 
     for (int idx=0; idx<parameter_num_loc; idx++) {
         // calculate and set the gradient
