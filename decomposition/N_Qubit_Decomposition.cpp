@@ -171,6 +171,8 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
         if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT opeartions," << std::endl;
         if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ opeartions," << std::endl;
         if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH opeartions," << std::endl;
+        if ( gates_num.x>0 ) std::cout << gates_num.x << " X opeartions," << std::endl;
+        if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX opeartions," << std::endl;
         if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore opeartions," << std::endl;
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
@@ -388,6 +390,20 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
                 RZ* rz_op_cloned = rz_op->clone();
                 rz_op_cloned->set_qbit_num( qbit_num );
                 Gate* op_cloned = static_cast<Gate*>( rz_op_cloned );
+                add_gate( op_cloned );
+            }
+            else if (op->get_type() == X_OPERATION) {
+                X* x_op = static_cast<X*>( op );
+                X* x_op_cloned = x_op->clone();
+                x_op_cloned->set_qbit_num( qbit_num );
+                Gate* op_cloned = static_cast<Gate*>( x_op_cloned );
+                add_gate( op_cloned );
+            }
+            else if (op->get_type() == SX_OPERATION) {
+                SX* sx_op = static_cast<SX*>( op );
+                SX* sx_op_cloned = sx_op->clone();
+                sx_op_cloned->set_qbit_num( qbit_num );
+                Gate* op_cloned = static_cast<Gate*>( sx_op_cloned );
                 add_gate( op_cloned );
             }
             else if (op->get_type() == BLOCK_OPERATION) {

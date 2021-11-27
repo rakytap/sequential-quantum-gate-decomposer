@@ -131,6 +131,8 @@ ta.execute([&]() {
         if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT opeartions," << std::endl;
         if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ opeartions," << std::endl;
         if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH opeartions," << std::endl;
+        if ( gates_num.x>0 ) std::cout << gates_num.x << " X opeartions," << std::endl;
+        if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX opeartions," << std::endl;
         if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore opeartions," << std::endl;
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
@@ -212,6 +214,14 @@ N_Qubit_Decomposition_custom::add_gate_layers() {
             else if (gate->get_type() == RZ_OPERATION ) {
                 RZ* rz_gate = static_cast<RZ*>( gate );
                 add_gate_to_end( (Gate*)rz_gate->clone() );
+            }
+            else if (gate->get_type() == X_OPERATION ) {
+                X* x_gate = static_cast<X*>( gate );
+                add_gate_to_end( (Gate*)x_gate->clone() );
+            }
+            else if (gate->get_type() == SX_OPERATION ) {
+                SX* sx_gate = static_cast<SX*>( gate );
+                add_gate_to_end( (Gate*)sx_gate->clone() );
             }
             else if (gate->get_type() == BLOCK_OPERATION ) {
                 Gates_block* block_gate = static_cast<Gates_block*>( gate );

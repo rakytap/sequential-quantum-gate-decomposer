@@ -794,6 +794,14 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
             parameters_num_total = parameters_num_total - rz_gate->get_parameter_num();
             rz_gate->apply_to( parameters+parameters_num_total, ret_matrix);            
         }
+        else if (gate->get_type() == X_OPERATION ) {
+            X* x_gate = static_cast<X*>( gate );
+            x_gate->apply_to( ret_matrix );            
+        }
+        else if (gate->get_type() == SX_OPERATION ) {
+            SX* sx_gate = static_cast<SX*>( gate );
+            sx_gate->apply_to( ret_matrix );            
+        }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
             parameters_num_total = parameters_num_total - block_gate->get_parameter_num();
@@ -889,6 +897,14 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
             RZ* rz_gate = static_cast<RZ*>(gate);
             rz_gate->apply_from_right(parameters_loc, mtx);
             parameters_loc = parameters_loc + rz_gate->get_parameter_num();
+        }
+        else if (gate->get_type() == X_OPERATION ) {
+            X* x_gate = static_cast<X*>(gate);
+            x_gate->apply_from_right(mtx);
+        }
+        else if (gate->get_type() == SX_OPERATION ) {
+            SX* sx_gate = static_cast<SX*>(gate);
+            sx_gate->apply_from_right(mtx);
         }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>(gate);
@@ -1112,6 +1128,12 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         else if (gate->get_type() == SYC_OPERATION) {
             ops_ret.push_back( gate );
         }
+        else if (gate->get_type() == X_OPERATION) {
+            ops_ret.push_back( gate );
+        }
+        else if (gate->get_type() == SX_OPERATION) {
+            ops_ret.push_back( gate );
+        }
         else if (gate->get_type() == U3_OPERATION) {
 
             // definig the U3 parameters
@@ -1286,7 +1308,7 @@ int Decomposition_Base::get_gate( unsigned int n, gate_type &type, int &target_q
 //printf("gate type: %d\n", gate->get_type());
 
 
-    if (gate->get_type() == CNOT_OPERATION || gate->get_type() == CZ_OPERATION || gate->get_type() == CH_OPERATION || gate->get_type() == SYC_OPERATION ) {
+    if (gate->get_type() == CNOT_OPERATION || gate->get_type() == CZ_OPERATION || gate->get_type() == CH_OPERATION || gate->get_type() == SYC_OPERATION || gate->get_type() == X_OPERATION || gate->get_type() == SX_OPERATION ) {
         type = gate->get_type();
         target_qbit = gate->get_target_qbit();
         control_qbit = gate->get_control_qbit();

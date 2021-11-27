@@ -31,6 +31,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CNOT.h"
 #include "U3.h"
 #include "RX.h"
+#include "X.h"
+#include "SX.h"
 #include "RY.h"
 #include "RZ.h"
 #include "SYC.h"

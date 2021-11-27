@@ -102,6 +102,14 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
                 # RZ gate
                 circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
 
+            elif gate.get("type") == "X":
+                # RZ gate
+                circuit.x(gate.get("target_qbit"))
+
+            elif gate.get("type") == "SX":
+                # RZ gate
+                circuit.sx(gate.get("target_qbit"))
+
 
         return circuit
 
@@ -161,6 +169,14 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
             elif gate.get("type") == "RZ":
                 # RZ gate
                 circuit.append(cirq.rz(gate.get("Phi")).on(q[self.qbit_num-1-gate.get("target_qbit")]))
+
+            elif gate.get("type") == "X":
+                # RZ gate
+                circuit.append(cirq.x(q[self.qbit_num-1-gate.get("target_qbit")]))
+
+            elif gate.get("type") == "SX":
+                # RZ gate
+                circuit.append(cirq.sx(q[self.qbit_num-1-gate.get("target_qbit")]))
 
 
         return circuit

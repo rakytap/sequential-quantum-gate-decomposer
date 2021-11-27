@@ -554,6 +554,32 @@ get_gate( N_Qubit_Decomposition* decomp, int &idx ) {
 
         free( parameters);
     }
+    else if (gate->get_type() == X_OPERATION) {
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "X" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+
+    }
+    else if (gate->get_type() == SX_OPERATION) {
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "SX" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+
+    }
     else {
   
     }

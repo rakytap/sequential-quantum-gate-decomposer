@@ -260,12 +260,41 @@ void Sub_Matrix_Decomposition::add_gate_layers() {
                 CZ* cz_gate = static_cast<CZ*>( gate );
                 add_gate_to_end( (Gate*)cz_gate->clone() );
             }
+            else if (gate->get_type() == CH_OPERATION ) {
+                CH* ch_gate = static_cast<CH*>( gate );
+                add_gate_to_end( (Gate*)ch_gate->clone() );
+            }
+            else if (gate->get_type() == SYC_OPERATION ) {
+                SYC* syc_gate = static_cast<SYC*>( gate );
+                add_gate_to_end( (Gate*)syc_gate->clone() );
+            }
             else if (gate->get_type() == GENERAL_OPERATION ) {
                 add_gate_to_end( gate->clone() );
             }
             else if (gate->get_type() == U3_OPERATION ) {
                 U3* u3_gate = static_cast<U3*>( gate );
                 add_gate_to_end( (Gate*)u3_gate->clone() );
+            }
+            else if (gate->get_type() == RX_OPERATION ) {
+                RX* rx_gate = static_cast<RX*>( gate );
+                add_gate_to_end( (Gate*)rx_gate->clone() );
+            }
+            else if (gate->get_type() == RY_OPERATION ) {
+                RY* ry_gate = static_cast<RY*>( gate );
+                add_gate_to_end( (Gate*)ry_gate->clone() );
+            }
+            else if (gate->get_type() == RZ_OPERATION ) {
+                RZ* rz_gate = static_cast<RZ*>( gate );
+                add_gate_to_end( (Gate*)rz_gate->clone() );
+            }
+            else if (gate->get_type() == X_OPERATION ) {
+                X* x_gate = static_cast<X*>( gate );
+                add_gate_to_end( (Gate*)x_gate->clone() );
+            }
+            else if (gate->get_type() == SX_OPERATION ) {
+std::cout << "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj" << std::endl;
+                SX* sx_gate = static_cast<SX*>( gate );
+                add_gate_to_end( (Gate*)sx_gate->clone() );
             }
             else if (gate->get_type() == BLOCK_OPERATION ) {
                 Gates_block* block_gate = static_cast<Gates_block*>( gate );

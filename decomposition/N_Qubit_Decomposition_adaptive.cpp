@@ -227,6 +227,8 @@ if ( current_minimum < minimal_node->cost_func_val ) std::cout << "lllllllllllll
         if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT opeartions," << std::endl;
         if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ opeartions," << std::endl;
         if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH opeartions," << std::endl;
+        if ( gates_num.x>0 ) std::cout << gates_num.x << " X opeartions," << std::endl;
+        if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX opeartions," << std::endl;
         if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore opeartions," << std::endl;
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
