@@ -33,7 +33,7 @@ SX::SX() {
         // the size of the matrix
         matrix_size = -1;
         // A string describing the type of the gate
-        type = X_OPERATION;
+        type = SX_OPERATION;
 
         // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = -1;
@@ -63,7 +63,7 @@ SX::SX(int qbit_num_in, int target_qbit_in) {
         // the size of the matrix
         matrix_size = Power_of_2(qbit_num);
         // A string describing the type of the gate
-        type = X_OPERATION;
+        type = SX_OPERATION;
 
 
         if (target_qbit_in >= qbit_num) {
