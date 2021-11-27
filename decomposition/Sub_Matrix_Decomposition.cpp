@@ -292,7 +292,6 @@ void Sub_Matrix_Decomposition::add_gate_layers() {
                 add_gate_to_end( (Gate*)x_gate->clone() );
             }
             else if (gate->get_type() == SX_OPERATION ) {
-std::cout << "jjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjjj" << std::endl;
                 SX* sx_gate = static_cast<SX*>( gate );
                 add_gate_to_end( (Gate*)sx_gate->clone() );
             }

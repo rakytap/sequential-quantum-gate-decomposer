@@ -1006,7 +1006,7 @@ void Gates_block::list_gates( const double* parameters, int start_index ) {
 
                 X* x_gate = static_cast<X*>(gate);
 
-                printf("%dth gate: X on target qubit: %d ", gate_idx, x_gate->get_target_qbit() );
+                printf("%dth gate: X on target qubit: %d\n", gate_idx, x_gate->get_target_qbit() );
                 gate_idx = gate_idx + 1;
 
             }
@@ -1016,7 +1016,7 @@ void Gates_block::list_gates( const double* parameters, int start_index ) {
 
                 SX* sx_gate = static_cast<SX*>(gate);
 
-                printf("%dth gate: SX on target qubit: %d ", gate_idx, sx_gate->get_target_qbit() );
+                printf("%dth gate: SX on target qubit: %d\n", gate_idx, sx_gate->get_target_qbit() );
                 gate_idx = gate_idx + 1;
 
             }
