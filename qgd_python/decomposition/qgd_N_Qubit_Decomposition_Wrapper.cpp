@@ -84,12 +84,12 @@ PyObject* array_from_ptr(void * ptr, int dim, npy_intp* shape, int np_type) {
 @brief Call to make a numpy array from an instance of matrix class.
 @param mtx a matrix instance
 */
-PyObject* matrix_to_numpy( matrix_base<double> &mtx ) {
+PyObject* matrix_real_to_numpy( matrix_base<double> &mtx ) {
         // initialize Numpy API
         import_array();
 
 
-        npy_intp shape[1];
+        npy_intp shape[2];
         shape[0] = (npy_intp) mtx.rows;
         shape[1] = (npy_intp) mtx.cols;
 
@@ -690,7 +690,7 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters( qgd_N_Qubit_Decompos
 
     // convert to numpy array
     parameters_mtx_reversed.set_owner(false);
-    PyObject * parameter_arr = matrix_to_numpy( parameters_mtx_reversed );
+    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx_reversed );
 
     return parameter_arr;
 }
