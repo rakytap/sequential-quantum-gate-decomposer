@@ -53,8 +53,6 @@ RY::RY() {
 
         parameter_num = 0;
 
-        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
-        parameters = NULL;
 
 
 }
@@ -102,7 +100,7 @@ RY::RY(int qbit_num_in, int target_qbit_in) {
         parameter_num = 1;
 
         // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
-        parameters = NULL;
+        parameters = Matrix_real(1, parameter_num);
 
 }
 
@@ -111,11 +109,6 @@ RY::RY(int qbit_num_in, int target_qbit_in) {
 @brief Destructor of the class
 */
 RY::~RY() {
-
-    if ( parameters != NULL ) {
-        qgd_free(parameters);
-        parameters = NULL;
-    }
 
 }
 
@@ -289,11 +282,7 @@ RY::apply_from_right( const double* parameters, Matrix& input ) {
 */
 void RY::set_optimized_parameters(double Theta ) {
 
-    if ( parameters == NULL ) {
-        parameters = (double*)qgd_calloc( 1, sizeof(double), 16 );
-    }
-
-    memset( parameters, 0, sizeof(double) );
+    parameters = Matrix_real(1, parameter_num);
 
     parameters[0] = Theta;
 
@@ -306,7 +295,7 @@ void RY::set_optimized_parameters(double Theta ) {
 */
 void RY::get_optimized_parameters(double *parameters_in ) {
 
-    memcpy( parameters_in, parameters, sizeof(double) );
+    memcpy( parameters_in, parameters.get_data(), sizeof(double) );
 
 }
 
@@ -320,7 +309,7 @@ RY* RY::clone() {
 
     RY* ret = new RY(qbit_num, target_qbit);
 
-    if ( parameters != NULL ) {
+    if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters(parameters[0]);
     }
 

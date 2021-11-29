@@ -49,8 +49,6 @@ U3::U3() {
 
         parameter_num = 0;
 
-        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
-        parameters = NULL;
 
 
 }
@@ -126,7 +124,7 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
         }
 
         // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
-        parameters = NULL;
+        parameters = Matrix_real(1, parameter_num);
 
 }
 
@@ -135,11 +133,6 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
 @brief Destructor of the class
 */
 U3::~U3() {
-
-    if ( parameters != NULL ) {
-        qgd_free(parameters);
-        parameters = NULL;
-    }
 
 }
 
@@ -516,7 +509,7 @@ U3* U3::clone() {
 
     U3* ret = new U3(qbit_num, target_qbit, theta, phi, lambda);
 
-    if ( parameters != NULL ) {
+    if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters(parameters[0], parameters[1], parameters[2]);
     }
 
@@ -535,11 +528,7 @@ U3* U3::clone() {
 */
 void U3::set_optimized_parameters(double Theta, double Phi, double Lambda ) {
 
-    if ( parameters == NULL ) {
-        parameters = (double*)qgd_calloc( 3, sizeof(double), 16 );
-    }
-
-    memset( parameters, 0, 3*sizeof(double) );
+    parameters = Matrix_real(1, parameter_num);
 
     parameters[0] = Theta;
     parameters[1] = Phi;
@@ -554,7 +543,7 @@ void U3::set_optimized_parameters(double Theta, double Phi, double Lambda ) {
 */
 void U3::get_optimized_parameters(double *parameters_in ) {
 
-    memcpy( parameters_in, parameters, 3*sizeof(double) );
+    memcpy( parameters_in, parameters.get_data(), 3*sizeof(double) );
 
 }
 

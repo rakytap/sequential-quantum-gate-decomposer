@@ -54,8 +54,6 @@ RZ::RZ() {
 
         parameter_num = 0;
 
-        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitaRZ is done
-        parameters = NULL;
 
 
 }
@@ -103,7 +101,7 @@ RZ::RZ(int qbit_num_in, int target_qbit_in) {
         parameter_num = 1;
 
         // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitaRZ is done
-        parameters = NULL;
+        parameters = Matrix_real(1, parameter_num);
 
 }
 
@@ -113,10 +111,6 @@ RZ::RZ(int qbit_num_in, int target_qbit_in) {
 */
 RZ::~RZ() {
 
-    if ( parameters != NULL ) {
-        qgd_free(parameters);
-        parameters = NULL;
-    }
 
 }
 
@@ -290,11 +284,7 @@ RZ::apply_from_right( const double* parameters, Matrix& input ) {
 */
 void RZ::set_optimized_parameters(double Phi ) {
 
-    if ( parameters == NULL ) {
-        parameters = (double*)qgd_calloc( 1, sizeof(double), 16 );
-    }
-
-    memset( parameters, 0, sizeof(double) );
+    parameters = Matrix_real(1, parameter_num);
 
     parameters[0] = Phi;
 
@@ -307,7 +297,7 @@ void RZ::set_optimized_parameters(double Phi ) {
 */
 void RZ::get_optimized_parameters(double *parameters_in ) {
 
-    memcpy( parameters_in, parameters, sizeof(double) );
+    memcpy( parameters_in, parameters.get_data(), sizeof(double) );
 
 }
 
@@ -320,7 +310,7 @@ RZ* RZ::clone() {
 
     RZ* ret = new RZ(qbit_num, target_qbit);
 
-    if ( parameters != NULL ) {
+    if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters(parameters[0]);
     }
 

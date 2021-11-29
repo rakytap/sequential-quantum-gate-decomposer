@@ -53,8 +53,6 @@ RX::RX() {
 
         parameter_num = 0;
 
-        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitaRX is done
-        parameters = NULL;
 
 
 }
@@ -102,7 +100,7 @@ RX::RX(int qbit_num_in, int target_qbit_in) {
         parameter_num = 1;
 
         // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitaRX is done
-        parameters = NULL;
+        parameters = Matrix_real(1, parameter_num);
 
 }
 
@@ -111,11 +109,6 @@ RX::RX(int qbit_num_in, int target_qbit_in) {
 @brief Destructor of the class
 */
 RX::~RX() {
-
-    if ( parameters != NULL ) {
-        qgd_free(parameters);
-        parameters = NULL;
-    }
 
 }
 
@@ -288,11 +281,8 @@ RX::apply_from_right( const double* parameters, Matrix& input ) {
 */
 void RX::set_optimized_parameters(double Theta ) {
 
-    if ( parameters == NULL ) {
-        parameters = (double*)qgd_calloc( 1, sizeof(double), 16 );
-    }
+    parameters = Matrix_real(1, parameter_num);
 
-    memset( parameters, 0, sizeof(double) );
 
     parameters[0] = Theta;
 
@@ -305,7 +295,7 @@ void RX::set_optimized_parameters(double Theta ) {
 */
 void RX::get_optimized_parameters(double *parameters_in ) {
 
-    memcpy( parameters_in, parameters, sizeof(double) );
+    memcpy( parameters_in, parameters.get_data(), sizeof(double) );
 
 }
 
@@ -319,7 +309,7 @@ RX* RX::clone() {
 
     RX* ret = new RX(qbit_num, target_qbit);
 
-    if ( parameters != NULL ) {
+    if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters(parameters[0]);
     }
 

@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Gate.h"
 #include "matrix.h"
+#include "matrix_real.h"
 #include <math.h>
 
 
@@ -49,7 +50,7 @@ protected:
    /// value applied for lambda if it is not varied during the gate decomposition
    double lambda0;
    /// Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
-   double* parameters;
+   Matrix_real parameters;
 
 
 

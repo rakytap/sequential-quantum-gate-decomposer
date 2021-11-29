@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "U3.h"
 #include "matrix.h"
+#include "matrix_real.h"
 #include <math.h>
 
 
