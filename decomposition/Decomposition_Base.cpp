@@ -302,7 +302,7 @@ Matrix Decomposition_Base::get_finalizing_gates( Matrix& mtx, Gates_block* final
                 Lambda = atan2(-element01.imag*element00.real + element01.real*element00.imag, -element01.real*element00.real - element01.imag*element00.imag); //np.angle( -element01*np.conj(element00))
             }
 
-            double parameters_loc[3];
+            Matrix_real parameters_loc(1,3);
             parameters_loc[0] = Theta;
             parameters_loc[1] = M_PI-Lambda;
             parameters_loc[2] = M_PI-Phi;
@@ -694,7 +694,7 @@ void Decomposition_Base::set_optimized_parameters( double* parameters, int num_o
 @return Returns with the transformed matrix.
 */
 Matrix
-Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates ) {
+Decomposition_Base::get_transformed_matrix( double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates ) {
 
     return get_transformed_matrix( parameters, gates_it, num_of_gates, Umtx );
 }
@@ -709,7 +709,7 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
 @return Returns with the transformed matrix.
 */
 Matrix
-Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix ) {
+Decomposition_Base::get_transformed_matrix( double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix ) {
 
     // The matrix to be returned
     Matrix ret_matrix = initial_matrix.copy();
@@ -777,7 +777,8 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
         else if (gate->get_type() == U3_OPERATION ) {
             U3* u3_gate = static_cast<U3*>( gate );
             parameters_num_total = parameters_num_total - u3_gate->get_parameter_num();
-            u3_gate->apply_to( parameters+parameters_num_total, ret_matrix);            
+            Matrix_real parameters_mtx( parameters+parameters_num_total, 1, u3_gate->get_parameter_num() );
+            u3_gate->apply_to( parameters_mtx, ret_matrix);            
         }
         else if (gate->get_type() == RX_OPERATION ) {
             RX* rx_gate = static_cast<RX*>( gate );
@@ -805,7 +806,8 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
             parameters_num_total = parameters_num_total - block_gate->get_parameter_num();
-            block_gate->apply_to(parameters+parameters_num_total, ret_matrix);            
+            Matrix_real parameters_mtx(parameters+parameters_num_total, 1, parameters_num_total );
+            block_gate->apply_to(parameters_mtx, ret_matrix);            
         }
 
     }
@@ -880,7 +882,8 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         }
         else if (gate->get_type() == U3_OPERATION ) {
             U3* u3_gate = static_cast<U3*>(gate);
-            u3_gate->apply_from_right(parameters_loc, mtx);
+            Matrix_real parameters_loc_mtx( parameters_loc, 1, u3_gate->get_parameter_num() );
+            u3_gate->apply_from_right(parameters_loc_mtx, mtx);
             parameters_loc = parameters_loc + u3_gate->get_parameter_num();
         }
         else if (gate->get_type() == RX_OPERATION ) {
@@ -908,7 +911,8 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>(gate);
-            block_gate->apply_from_right(parameters_loc, mtx);
+            Matrix_real parameters_loc_mtx(parameters_loc, 1, block_gate->get_parameter_num());
+            block_gate->apply_from_right(parameters_loc_mtx, mtx);
             parameters_loc = parameters_loc + block_gate->get_parameter_num();
         }
 
@@ -1320,8 +1324,10 @@ int Decomposition_Base::get_gate( unsigned int n, gate_type &type, int &target_q
         type = u3_gate->get_type();
         target_qbit = u3_gate->get_target_qbit();
         control_qbit = gate->get_control_qbit();
-        u3_gate->get_optimized_parameters(parameters);
-//printf("c %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
+
+        Matrix_real&& parameters_mtx = u3_gate->get_optimized_parameters();
+        memcpy( parameters, parameters_mtx.get_data(), parameters_mtx.size()*sizeof(double) ); //!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!!
+printf("cccccccccccccccccccccccccccccccccccccccc %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
         return 0;
     }
     else if (gate->get_type() == RX_OPERATION) {

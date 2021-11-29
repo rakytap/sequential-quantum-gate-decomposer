@@ -674,7 +674,8 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
         reordered_layer->reorder_qubits( qbits_reordered );
 
         //  get the reordered N-qubit matrix of the layer
-        Matrix full_matrix_reordered = reordered_layer->get_matrix( parameters );
+        Matrix_real parameters_mtx( parameters, 1, parameter_num );
+        Matrix full_matrix_reordered = reordered_layer->get_matrix( parameters_mtx );
         delete reordered_layer;
 
 

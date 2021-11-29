@@ -33,6 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include <numpy/arrayobject.h>
 #include "matrix.h"
+#include "matrix_real.h"
 
 
 /**
@@ -452,8 +453,7 @@ get_gate( N_Qubit_Decomposition* decomp, int &idx ) {
 
         // get U3 parameters
         U3* u3_gate = static_cast<U3*>(gate);
-        double* parameters = (double*)malloc(3*sizeof(double));
-        u3_gate->get_optimized_parameters(parameters);
+        Matrix_real&& parameters = u3_gate->get_optimized_parameters();
  
 
         // create gate parameters
@@ -477,7 +477,6 @@ get_gate( N_Qubit_Decomposition* decomp, int &idx ) {
         Py_XDECREF(Lambda);
 
 
-        free( parameters);
     }
     else if (gate->get_type() == RX_OPERATION) {
 

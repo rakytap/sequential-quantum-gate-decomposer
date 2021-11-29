@@ -121,7 +121,7 @@ RX::~RX() {
 @param input The input array on which the gate is applied
 */
 void 
-RX::apply_to( const double* parameters, Matrix& input ) {
+RX::apply_to( double* parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
         std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
@@ -198,7 +198,7 @@ RX::apply_to( const double* parameters, Matrix& input ) {
 @param input The input array on which the gate is applied
 */
 void 
-RX::apply_from_right( const double* parameters, Matrix& input ) {
+RX::apply_from_right( double* parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {

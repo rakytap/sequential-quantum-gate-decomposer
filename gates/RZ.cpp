@@ -123,7 +123,7 @@ RZ::~RZ() {
 @param input The input array on which the gate is applied
 */
 void 
-RZ::apply_to( const double* parameters, Matrix& input ) {
+RZ::apply_to( double* parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
         std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
@@ -200,7 +200,7 @@ RZ::apply_to( const double* parameters, Matrix& input ) {
 @param input The input array on which the gate is applied
 */
 void 
-RZ::apply_from_right( const double* parameters, Matrix& input ) {
+RZ::apply_from_right( double* parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {

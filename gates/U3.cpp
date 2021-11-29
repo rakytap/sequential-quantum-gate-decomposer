@@ -144,7 +144,7 @@ U3::~U3() {
 @return Returns with a matrix of the gate
 */
 Matrix
-U3::get_matrix( const double* parameters ) {
+U3::get_matrix( Matrix_real& parameters ) {
 
         Matrix U3_matrix = create_identity(matrix_size);
         apply_to(parameters, U3_matrix);
@@ -166,13 +166,14 @@ U3::get_matrix( const double* parameters ) {
 @param input The input array on which the gate is applied
 */
 void 
-U3::apply_to( const double* parameters, Matrix& input ) {
+U3::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
         std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
         exit(-1);
     }
 
+    double* parameters = parameters_mtx.get_data();
 
     double Theta, Phi, Lambda;
 
@@ -286,7 +287,7 @@ U3::apply_to( const double* parameters, Matrix& input ) {
 @param input The input array on which the gate is applied
 */
 void 
-U3::apply_from_right( const double* parameters, Matrix& input ) {
+U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
@@ -294,6 +295,7 @@ U3::apply_from_right( const double* parameters, Matrix& input ) {
         exit(-1);
     }
 
+    double* parameters = parameters_mtx.get_data();
 
     double Theta, Phi, Lambda;
 
@@ -528,7 +530,7 @@ U3* U3::clone() {
 */
 void U3::set_optimized_parameters(double Theta, double Phi, double Lambda ) {
 
-    parameters = Matrix_real(1, parameter_num);
+    parameters = Matrix_real(1, 3);
 
     parameters[0] = Theta;
     parameters[1] = Phi;
@@ -541,9 +543,9 @@ void U3::set_optimized_parameters(double Theta, double Phi, double Lambda ) {
 @brief Call to get the final optimized parameters of the gate.
 @param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
 */
-void U3::get_optimized_parameters(double *parameters_in ) {
+Matrix_real U3::get_optimized_parameters() {
 
-    memcpy( parameters_in, parameters.get_data(), 3*sizeof(double) );
+    return parameters.copy();
 
 }
 

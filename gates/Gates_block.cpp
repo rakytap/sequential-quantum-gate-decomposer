@@ -154,7 +154,7 @@ Gates_block::release_gates() {
 @return Returns with the operation matrix
 */
 Matrix
-Gates_block::get_matrix( const double* parameters ) {
+Gates_block::get_matrix( const Matrix_real& parameters ) {
 
     // create matrix representation of the gate operations
     Matrix block_mtx = create_identity(matrix_size);
@@ -179,7 +179,9 @@ Gates_block::get_matrix( const double* parameters ) {
 @param input The input array on which the gate is applied
 */
 void 
-Gates_block::apply_to( const double* parameters, Matrix& input ) {
+Gates_block::apply_to( const Matrix_real& parameters_mtx, Matrix& input ) {
+
+    double* parameters = parameters_mtx.get_data();
 
     parameters = parameters + parameter_num;
 
@@ -205,29 +207,9 @@ Gates_block::apply_to( const double* parameters, Matrix& input ) {
         }
         else if (operation->get_type() == U3_OPERATION) {
             U3* u3_operation = static_cast<U3*>(operation);
-
-            if (u3_operation->get_parameter_num() == 1 ) {
-                parameters = parameters - 1;
-                u3_operation->apply_to( parameters, input );                
-            }
-            else if (u3_operation->get_parameter_num() == 2 ) {
- #ifdef DEBUG
-                if (isnan(parameters[0]) || isnan(parameters[1]) ) {
-                    std::cout << "Gates_block::get_matrices: parameters contains NaN." << std::endl;
-                }
-#endif
-                parameters = parameters - 2;
-                u3_operation->apply_to( parameters, input );                
-            }
-            else if (u3_operation->get_parameter_num() == 3 ) {
-                parameters = parameters - 3;
-                u3_operation->apply_to( parameters, input );                
-            }
-            else {
-                printf("The U3 operation has wrong number of parameters");
-                throw "The U3 operation has wrong number of parameters";
-            }
-
+            parameters = parameters - u3_operation->get_parameter_num();
+            Matrix_real parameters_mtx(parameters, 1, u3_operation->get_parameter_num());
+            u3_operation->apply_to( parameters_mtx, input );    
         }
         else if (operation->get_type() == RX_OPERATION) {
             RX* rx_operation = static_cast<RX*>(operation);
@@ -275,8 +257,9 @@ Gates_block::apply_to( const double* parameters, Matrix& input ) {
 @param input The input array on which the gate is applied
 */
 void 
-Gates_block::apply_from_right( const double* parameters, Matrix& input ) {
+Gates_block::apply_from_right( const Matrix_real& parameters_mtx, Matrix& input ) {
 
+    double* parameters = parameters_mtx.get_data();
 
     for( int idx=0; idx<gates.size(); idx++) {
 
@@ -300,42 +283,25 @@ Gates_block::apply_from_right( const double* parameters, Matrix& input ) {
         }
         else if (operation->get_type() == U3_OPERATION) {
             U3* u3_operation = static_cast<U3*>(operation);
-
-            if (u3_operation->get_parameter_num() == 1 ) {
-                u3_operation->apply_from_right( parameters, input );                
-                parameters = parameters + 1;
-            }
-            else if (u3_operation->get_parameter_num() == 2 ) {
- #ifdef DEBUG
-                if (isnan(parameters[0]) || isnan(parameters[1]) ) {
-                    std::cout << "Gates_block::get_matrices: parameters contains NaN." << std::endl;
-                }
-#endif
-                u3_operation->apply_from_right( parameters, input );                
-                parameters = parameters + 2;
-            }
-            else if (u3_operation->get_parameter_num() == 3 ) {
-                u3_operation->apply_from_right( parameters, input );                
-                parameters = parameters + 3;
-            }
-            else {
-                printf("The U3 operation has wrong number of parameters");
-                throw "The U3 operation has wrong number of parameters";
-            }
-
+            Matrix_real parameters_mtx(parameters, 1, u3_operation->get_parameter_num());
+            u3_operation->apply_from_right( parameters_mtx, input ); 
+            parameters = parameters + u3_operation->get_parameter_num();
         }
         else if (operation->get_type() == RX_OPERATION) {
             RX* rx_operation = static_cast<RX*>(operation);
+            Matrix_real parameters_mtx(parameters, 1, 1);
             rx_operation->apply_from_right( parameters, input ); 
             parameters = parameters + 1;
         }
         else if (operation->get_type() == RY_OPERATION) {
             RY* ry_operation = static_cast<RY*>(operation);
+            Matrix_real parameters_mtx(parameters, 1, 1);
             ry_operation->apply_from_right( parameters, input ); 
             parameters = parameters + 1;
         }
         else if (operation->get_type() == RZ_OPERATION) {
             RZ* rz_operation = static_cast<RZ*>(operation);
+            Matrix_real parameters_mtx(parameters, 1, 1);
             rz_operation->apply_from_right( parameters, input ); 
             parameters = parameters + 1;            
         }

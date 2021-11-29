@@ -72,7 +72,7 @@ RY(int qbit_num_in, int target_qbit_in);
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_to( const double* parameters, Matrix& input );
+void apply_to( double* parameters, Matrix& input );
 
 
 /**
@@ -80,7 +80,7 @@ void apply_to( const double* parameters, Matrix& input );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-//void apply_from_right( const double* parameters, Matrix& input );
+void apply_from_right( double* parameters, Matrix& input );
 
 
 /**

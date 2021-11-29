@@ -122,7 +122,7 @@ RY::~RY() {
 */
 
 void 
-RY::apply_to( const double* parameters, Matrix& input ) {
+RY::apply_to( double* parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
         std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
@@ -198,9 +198,8 @@ RY::apply_to( const double* parameters, Matrix& input ) {
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-/*
 void 
-RY::apply_from_right( const double* parameters, Matrix& input ) {
+RY::apply_from_right( double* parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
@@ -271,7 +270,7 @@ RY::apply_from_right( const double* parameters, Matrix& input ) {
 
 
 }
-*/
+
 
 
 /**
