@@ -17,24 +17,37 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file matrix.cpp
-    \brief Implementation of complex array storage array with automatic and thread safe reference counting.
+/*! \file matrix.h
+    \brief Header file of complex array storage array with automatic and thread safe reference counting.
 */
 
-#include "matrix.h"
-#include <cstring>
-#include <iostream>
-#include "tbb/tbb.h"
-#include <math.h>
 
+#ifndef matrix_real_H
+#define matrix_real_H
+
+#include "matrix_base.h"
+#include <cmath>
+
+
+/*! \file matrix.h
+    \brief Header file matrix storing complex types.
+*/
+
+/**
+@brief Class to store data of complex arrays and its properties. Compatible with the Picasso numpy interface.
+*/
+class Matrix_real : public matrix_base<double> {
+
+    /// padding class object to cache line borders
+    char padding[CACHELINE-48];
+
+public:
 
 /**
 @brief Default constructor of the class.
 @return Returns with the instance of the class.
 */
-Matrix::Matrix() : matrix_base<QGD_Complex16>() {
-
-}
+Matrix_real();
 
 /**
 @brief Constructor of the class. By default the created class instance would not be owner of the stored data.
@@ -43,9 +56,7 @@ Matrix::Matrix() : matrix_base<QGD_Complex16>() {
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
-Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in) : matrix_base<QGD_Complex16>(data_in, rows_in, cols_in) {
-
-}
+Matrix_real( double* data_in, size_t rows_in, size_t cols_in);
 
 
 /**
@@ -56,9 +67,7 @@ Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in) : matrix
 @param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
 @return Returns with the instance of the class.
 */
-Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in, size_t stride_in) : matrix_base<QGD_Complex16>(data_in, rows_in, cols_in, stride_in) {
-
-}
+Matrix_real( double* data_in, size_t rows_in, size_t cols_in, size_t stride_in);
 
 
 /**
@@ -67,10 +76,7 @@ Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in, size_t s
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
-Matrix::Matrix( size_t rows_in, size_t cols_in) : matrix_base<QGD_Complex16>(rows_in, cols_in) {
-
-
-}
+Matrix_real( size_t rows_in, size_t cols_in);
 
 
 /**
@@ -80,9 +86,7 @@ Matrix::Matrix( size_t rows_in, size_t cols_in) : matrix_base<QGD_Complex16>(row
 @param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
 @return Returns with the instance of the class.
 */
-Matrix::Matrix( size_t rows_in, size_t cols_in, size_t stride_in) : matrix_base<QGD_Complex16>(rows_in, cols_in, stride_in) {
-
-}
+Matrix_real( size_t rows_in, size_t cols_in, size_t stride_in);
 
 
 
@@ -90,73 +94,28 @@ Matrix::Matrix( size_t rows_in, size_t cols_in, size_t stride_in) : matrix_base<
 @brief Copy constructor of the class. The new instance shares the stored memory with the input matrix. (Needed for TBB calls)
 @param An instance of class matrix to be copied.
 */
-Matrix::Matrix(const Matrix &in) : matrix_base<QGD_Complex16>(in)  {
-
-}
-
+Matrix_real(const Matrix_real &in);
 
 
 /**
 @brief Call to create a copy of the matrix
 @return Returns with the instance of the class.
 */
-Matrix
-Matrix::copy() {
-
-  Matrix ret = Matrix(rows, cols, stride);
-
-  // logical variable indicating whether the matrix needs to be conjugated in CBLAS operations
-  ret.conjugated = conjugated;
-  // logical variable indicating whether the matrix needs to be transposed in CBLAS operations
-  ret.transposed = transposed;
-  // logical value indicating whether the class instance is the owner of the stored data or not. (If true, the data array is released in the destructor)
-  ret.owner = true;
-
-  memcpy( ret.data, data, rows*cols*sizeof(QGD_Complex16));
-
-  return ret;
-
-}
+Matrix_real copy();
 
 
 /**
 @brief Call to check the array for NaN entries.
 @return Returns with true if the array has at least one NaN entry.
 */
-bool
-Matrix::isnan() {
-
-    for (size_t idx=0; idx < rows*cols; idx++) {
-        if ( std::isnan(data[idx].real) || std::isnan(data[idx].imag) ) {
-            return true;
-        }
-    }
-
-    return false;
+bool isnan();
 
 
-}
+}; //matrix
 
 
 
 
-/**
-@brief Call to prints the stored matrix on the standard output
-*/
-void 
-Matrix::print_matrix() {
-    std::cout << std::endl << "The stored matrix:" << std::endl;
-    for ( size_t row_idx=0; row_idx < rows; row_idx++ ) {
-        for ( size_t col_idx=0; col_idx < cols; col_idx++ ) {
-            size_t element_idx = row_idx*stride + col_idx;
-              std::cout << " (" << data[element_idx].real << ", " << data[element_idx].imag << "*i)";
-        }
-        std::cout << std::endl;
-    }
-    std::cout << std::endl << std::endl << std::endl;
-
-}
 
 
-
-
+#endif
