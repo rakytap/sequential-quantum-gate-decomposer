@@ -779,18 +779,19 @@ gates_num Gates_block::get_gate_nums() {
             Gate* gate = *it;
 
             if (gate->get_type() == BLOCK_OPERATION) {
+
                 Gates_block* block_gate = static_cast<Gates_block*>(gate);
                 gates_num gate_nums_loc = block_gate->get_gate_nums();
                 gate_nums.u3   = gate_nums.u3 + gate_nums_loc.u3;
-                gate_nums.rx   = gate_nums.u3 + gate_nums_loc.rx;
-                gate_nums.ry   = gate_nums.u3 + gate_nums_loc.ry;
-                gate_nums.rz   = gate_nums.u3 + gate_nums_loc.rz;
+                gate_nums.rx   = gate_nums.rx + gate_nums_loc.rx;
+                gate_nums.ry   = gate_nums.ry + gate_nums_loc.ry;
+                gate_nums.rz   = gate_nums.rz + gate_nums_loc.rz;
                 gate_nums.cnot = gate_nums.cnot + gate_nums_loc.cnot;
                 gate_nums.cz = gate_nums.cz + gate_nums_loc.cz;
                 gate_nums.ch = gate_nums.ch + gate_nums_loc.ch;
                 gate_nums.x  = gate_nums.x + gate_nums_loc.x;
                 gate_nums.sx = gate_nums.sx + gate_nums_loc.sx;
-                gate_nums.syc   = gate_nums.u3 + gate_nums_loc.syc;
+                gate_nums.syc   = gate_nums.syc + gate_nums_loc.syc;
             }
             else if (gate->get_type() == U3_OPERATION) {
                 gate_nums.u3   = gate_nums.u3 + 1;

@@ -79,7 +79,7 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
     if (verbose) {
         printf("***************************************************************\n");
-        printf("Starting to disentangle %d-qubit matrix\n", qbit_num);
+        printf("Starting to disentangle %d-qubit matrix via custom gate structure\n", qbit_num);
         printf("***************************************************************\n\n\n");
     }
 

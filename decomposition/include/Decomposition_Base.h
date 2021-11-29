@@ -401,6 +401,12 @@ void set_optimization_tolerance( double tolerance_in );
 double get_decomposition_error( );
 
 
+/**
+@brief Call to get the obtained minimum of the cost function
+@return Returns with the minimum of the cost function
+*/
+double get_current_minimum( );
+
 
 };
 

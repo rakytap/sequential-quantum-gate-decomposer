@@ -1411,3 +1411,16 @@ double Decomposition_Base::get_decomposition_error( ) {
 
 
 
+/**
+@brief Call to get the obtained minimum of the cost function
+@return Returns with the minimum of the cost function
+*/
+double Decomposition_Base::get_current_minimum( ) {
+
+    return current_minimum;
+
+}
+
+
+
+

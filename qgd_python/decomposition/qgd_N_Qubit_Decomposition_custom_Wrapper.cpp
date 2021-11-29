@@ -94,7 +94,6 @@ PyObject* matrix_real_to_numpy( matrix_base<double> &mtx ) {
         shape[1] = (npy_intp) mtx.cols;
 
         double* data = mtx.get_data();
-std::cout << "matrix_real_to_numpy" << std::endl;
         return array_from_ptr( (void*) data, 2, shape, NPY_DOUBLE);
 
 

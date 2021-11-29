@@ -74,7 +74,7 @@ protected:
 
 
 
-    std::vector<decomposition_tree_node*> root_nodes;
+
 
 
 public:

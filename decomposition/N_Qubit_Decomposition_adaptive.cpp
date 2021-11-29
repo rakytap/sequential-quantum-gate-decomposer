@@ -23,6 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "N_Qubit_Decomposition_adaptive.h"
+#include "N_Qubit_Decomposition_custom.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
 
@@ -105,14 +106,15 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     decomposition_tree_node* parent_node = NULL;
     decomposition_tree_node* minimal_root_node = NULL;
     //std::vector<decomposition_tree_node*> children_nodes;
-    tbb::concurrent_vector<decomposition_tree_node*> children_nodes;
+    tbb::concurrent_vector<decomposition_tree_node*> children;
+    tbb::concurrent_vector<matrix_base<double>> optmized_parameters_loc;
 
 
 while ( current_minimum > optimization_tolerance ) {
 
 
     decomposition_tree_node* minimal_node = NULL;
-    children_nodes.clear();
+    children.clear();
 
 
     // setting the gate structure for optimization
@@ -132,16 +134,20 @@ while ( current_minimum > optimization_tolerance ) {
 
                 current_minimum = 1e8;
 
-
+                Gates_block* gate_structure;
                 if ( parent_node != NULL ) {
                     // contruct the new gate structure to be optimized
-                    add_layers_from_decomposition_tree( minimal_root_node );
+                    gate_structure = create_layers_from_decomposition_tree( minimal_root_node );
+                }
+                else {
+                    gate_structure = new Gates_block(qbit_num);
                 }
 
 
                 // create the new decomposing layer
                 Gates_block* layer = construct_gate_layer(target_qbit_loc, control_qbit_loc);
-                add_gate( layer );
+                gate_structure->add_gate( layer );
+
 
                 // prepare node to be stored in the decomposition tree
                 decomposition_tree_node* current_node = new decomposition_tree_node;
@@ -149,41 +155,55 @@ while ( current_minimum > optimization_tolerance ) {
 
 
                 // add the last layer to rotate all of the qubits into the |0> state
-                add_finalyzing_layer();
+                add_finalyzing_layer( gate_structure );
 
+                //combine( gate_structure );
+
+                // solve the optimization problem in isolated optimization process
+                N_Qubit_Decomposition_custom cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, initial_guess);
+                cDecomp_custom.set_custom_gate_structure( gate_structure );
+                cDecomp_custom.start_decomposition(false);
+//cDecomp_custom.list_gates(0);
+
+//exit(-1);
+/*
                 tbb::task_arena ta(32);
                 ta.execute([&]() {
                     // final tuning of the decomposition parameters
                     final_optimization();
 
                 });   
-
+ */
                 // save the current minimum to the current node of the decomposition tree
-                current_node->cost_func_val = current_minimum;
-
-
-                if (minimal_node == NULL) {
-                    minimal_node = current_node;
-                }
-                else {
-                    if ( current_node->cost_func_val < minimal_node->cost_func_val ) {
-                        minimal_node = current_node;
-                    }
-                }
+                current_node->cost_func_val = cDecomp_custom.get_current_minimum();
+current_minimum = cDecomp_custom.get_current_minimum();
 
                 // store the decomposition tree node
                 if (parent_node == NULL) {
                     current_node->parent = NULL;
                     root_nodes.push_back(current_node);
-                    minimal_root_node = minimal_node;
                 }
                 else {
                     current_node->parent = parent_node;
-                    children_nodes.push_back(current_node);
+                    children.push_back(current_node);
                 }
 
 
-                if (current_minimum < optimization_tolerance) break;
+
+
+                if (current_minimum < optimization_tolerance) {
+                    combine( gate_structure );
+ 
+                    if ( optimized_parameters != NULL ) {
+                        qgd_free(optimized_parameters);
+                    }
+
+                    optimized_parameters = cDecomp_custom.get_optimized_parameters();
+delete(gate_structure);
+                    break;
+                }
+
+delete(gate_structure);
 
 
         }
@@ -193,10 +213,21 @@ while ( current_minimum > optimization_tolerance ) {
 
     }
 
+
+
     if (parent_node != NULL) {
+        // find the minimal node for the next iteration
+        minimal_node = find_minimal_child_node( children );
         parent_node->minimal_child =  minimal_node;
-        parent_node->children = children_nodes;
+        parent_node->children = children;
     }
+    else {
+        // find the minimal node for the next iteration
+        minimal_node = find_minimal_child_node( root_nodes );
+        minimal_root_node = minimal_node;
+    }
+
+
 
     parent_node = minimal_node;
 if ( current_minimum < minimal_node->cost_func_val ) std::cout << "llllllllllllllllllllllllllllllllllllllllllll" << std::endl;
@@ -246,32 +277,67 @@ if ( current_minimum < minimal_node->cost_func_val ) std::cout << "lllllllllllll
 }
 
 
+
 /**
-@brief Call to add further layer to the gate structure used in the subdecomposition.
+@brief ??????????????????
 */
-void 
-N_Qubit_Decomposition_adaptive::add_layers_from_decomposition_tree( const decomposition_tree_node* minimal_root_node ) {
+decomposition_tree_node* 
+N_Qubit_Decomposition_adaptive::find_minimal_child_node( tbb::concurrent_vector<decomposition_tree_node*> &children ) {
+
+    decomposition_tree_node* minimal_node = NULL;
 
 
+    double cost_func_val = 1e8;
+    for ( tbb::concurrent_vector<decomposition_tree_node*>::iterator it = children.begin(); it != children.end(); it++ ) {
+        double cost_func_val_tmp = (*it)->cost_func_val;
+
+        if (cost_func_val_tmp < cost_func_val) {
+            cost_func_val = cost_func_val_tmp;
+            minimal_node = *it;
+        }
+
+
+
+    }
+std::cout << "ppppppppppppppppppp " << minimal_node->cost_func_val << std::endl;
+    return minimal_node;
+
+
+
+}
+
+
+
+
+
+
+/**
+@brief ???????????????
+*/
+Gates_block*
+N_Qubit_Decomposition_adaptive::create_layers_from_decomposition_tree( const decomposition_tree_node* minimal_root_node ) {
+
+    Gates_block* gate_structure = new Gates_block(qbit_num);
+//std::cout << "N_Qubit_Decomposition_adaptive::create_layers_from_decomposition_tree 0" << std::endl;
     const decomposition_tree_node* current_node = minimal_root_node;
     while ( current_node != NULL ) {
 
         Gates_block* layer = current_node->layer->clone();
 
         // adding the opeartion block to the gates
-        add_gate( layer );
+        gate_structure->add_gate( layer );
    
 
         if ( current_node->children.size() > 0 ) {
             current_node = current_node->minimal_child;
         }
         else {
-            return;
+            return gate_structure;
         }
 
     }
-
-
+//std::cout << "N_Qubit_Decomposition_adaptive::create_layers_from_decomposition_tree 1" << std::endl;
+    return gate_structure;
 
 }
 
@@ -300,6 +366,36 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
     return block;
 
 }
+
+
+
+/**
+@brief ??????????????????
+*/
+void 
+N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structure ) {
+
+
+    // creating block of gates
+    Gates_block* block = new Gates_block( qbit_num );
+
+    // adding U3 gate to the block
+    bool Theta = true;
+    bool Phi = false;
+    bool Lambda = true;
+
+    for (int qbit=0; qbit<qbit_num; qbit++) {
+        block->add_u3(qbit, Theta, Phi, Lambda);
+    }
+
+    // adding the opeartion block to the gates
+    gate_structure->add_gate( block );
+
+}
+
+
+
+
 
 
 
