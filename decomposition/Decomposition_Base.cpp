@@ -77,8 +77,6 @@ Decomposition_Base::Decomposition_Base() {
     // method to guess initial values for the optimization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
     initial_guess = ZEROS;
 
-    // optimized parameters
-    optimized_parameters = NULL;
 
 
 #if CBLAS==1
@@ -146,8 +144,6 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
     // method to guess initial values for the optimization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
     initial_guess = initial_guess_in;
 
-    // optimized parameters
-    optimized_parameters = NULL;
 
 
 #if CBLAS==1
@@ -194,8 +190,7 @@ void Decomposition_Base::set_max_iteration( int max_iterations_in) {
 void Decomposition_Base::finalize_decomposition() {
 
         // get the transformed matrix resulted by the gates in the list
-        Matrix_real optimized_parameters_mtx_tmp(optimized_parameters, 1, parameter_num );
-        Matrix transformed_matrix = get_transformed_matrix( optimized_parameters_mtx_tmp, gates.begin(), gates.size(), Umtx );
+        Matrix transformed_matrix = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 
         // preallocate the storage for the finalizing parameters
         finalizing_parameter_num = 3*qbit_num;
@@ -214,12 +209,11 @@ void Decomposition_Base::finalize_decomposition() {
             optimized_parameters_tmp[idx] = finalizing_parameters[idx];
         }
         for (unsigned int idx=0; idx < parameter_num-finalizing_parameter_num; idx++) {
-            optimized_parameters_tmp[idx+finalizing_parameter_num] = optimized_parameters[idx];
+            optimized_parameters_tmp[idx+finalizing_parameter_num] = optimized_parameters_mtx[idx];
         }
         qgd_free( finalizing_parameters);
         finalizing_parameters = NULL;
         optimized_parameters_mtx = optimized_parameters_tmp;
-        optimized_parameters = optimized_parameters_mtx.get_data();
 
         finalizing_gates_num = finalizing_gates->get_gate_num();
 
@@ -248,7 +242,6 @@ void Decomposition_Base::finalize_decomposition() {
 */
 void Decomposition_Base::list_gates( int start_index ) {
 
-        Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
         Gates_block::list_gates( optimized_parameters_mtx, start_index );
 
 }
@@ -462,7 +455,6 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 //                qgd_free( optimized_parameters );
 //                optimized_parameters = NULL;
                   optimized_parameters_mtx = Matrix_real(0,0);
-                  optimized_parameters = optimized_parameters_mtx.get_data(); 
             }
 
 
@@ -518,7 +510,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             minvec_mean = minvec_mean/min_vec_num;
 
             // store the obtained optimalized parameters for the block
-            memcpy( optimized_parameters_gsl->data+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters, parameter_num*sizeof(double) );
+            memcpy( optimized_parameters_gsl->data+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );
 
             if (block_idx_end == 0) {
                 block_idx_start = gates_loc.size();
@@ -585,8 +577,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
         optimized_parameters_mtx = Matrix_real( 1, parameter_num );
-        optimized_parameters = optimized_parameters_mtx.get_data();//(double*)qgd_calloc(parameter_num,sizeof(double), CACHELINE);
-        memcpy( optimized_parameters, optimized_parameters_gsl->data, parameter_num*sizeof(double) );
+        memcpy( optimized_parameters_mtx.get_data(), optimized_parameters_gsl->data, parameter_num*sizeof(double) );
 
 
         // free unnecessary resources
@@ -672,7 +663,7 @@ double* Decomposition_Base::get_optimized_parameters() {
 @param ret Preallocated array to store the optimized parameters.
 */
 void Decomposition_Base::get_optimized_parameters( double* ret ) {
-    memcpy(ret, optimized_parameters, parameter_num*sizeof(double));
+    memcpy(ret, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double));
     return;
 }
 
@@ -683,12 +674,8 @@ void Decomposition_Base::get_optimized_parameters( double* ret ) {
 */
 void Decomposition_Base::set_optimized_parameters( double* parameters, int num_of_parameters ) {
 
-    if (optimized_parameters != NULL ) {
-        qgd_free( optimized_parameters );
-    }
-
-    optimized_parameters = (double*)qgd_calloc(num_of_parameters, sizeof(double), CACHELINE);
-    memcpy( optimized_parameters, parameters, num_of_parameters*sizeof(double) );
+    optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+    memcpy( optimized_parameters_mtx.get_data(), parameters, num_of_parameters*sizeof(double) );
 
     return;
 }
@@ -808,7 +795,6 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
 */
 Matrix Decomposition_Base::get_decomposed_matrix() {
         
-        Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
         return get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 }
 
@@ -1073,7 +1059,7 @@ void Decomposition_Base::Init_max_layer_num() {
 */
 void Decomposition_Base::prepare_gates_to_export() {
 
-    std::vector<Gate*> gates_tmp = prepare_gates_to_export( gates, optimized_parameters );
+    std::vector<Gate*> gates_tmp = prepare_gates_to_export( gates, optimized_parameters_mtx.get_data() );
 
     // release the gates and replace them with the ones prepared to export
     gates.clear();

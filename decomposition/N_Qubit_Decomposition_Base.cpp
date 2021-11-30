@@ -191,11 +191,11 @@ void  N_Qubit_Decomposition_Base::final_optimization() {
         //# setting the global minimum
         global_target_minimum = 0;
 
-        if ( optimized_parameters == NULL ) {
+        if ( optimized_parameters_mtx.size() == 0 ) {
             solve_optimization_problem(NULL, 0);
         }
         else {
-            solve_optimization_problem(optimized_parameters, parameter_num);
+            solve_optimization_problem(optimized_parameters_mtx.get_data(), parameter_num);
         }
 }
 
@@ -224,8 +224,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 */
         if (optimized_parameters_mtx.size() == 0) {
             optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
-            optimized_parameters = optimized_parameters_mtx.get_data();
-            memcpy(optimized_parameters, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
         }
 
         // maximal number of iteration loops
@@ -280,7 +279,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 
             if (current_minimum > s->f) {
                 current_minimum = s->f;
-                memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
+                memcpy( optimized_parameters_mtx.get_data(), s->x->data, num_of_parameters*sizeof(double) );
                 gsl_multimin_fdfminimizer_free (s);
 
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
@@ -309,10 +308,10 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 // @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 
-double N_Qubit_Decomposition_Base::optimization_problem( const double* parameters ) {
+double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
 
         // get the transformed matrix with the gates in the list
-Matrix_real parameters_mtx(optimized_parameters, 1, parameter_num );
+Matrix_real parameters_mtx(parameters, 1, parameter_num );
         Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
 
         double cost_function = get_cost_function(matrix_new);

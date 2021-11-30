@@ -322,13 +322,12 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
         cSub_decomposition->get_optimized_parameters(optimized_parameters_tmp.get_data());
 
         if ( optimized_parameters_mtx.size() > 0 ) {
-            memcpy(optimized_parameters_tmp.get_data()+parameter_num_sub_decomp, optimized_parameters, parameter_num*sizeof(double));
+            memcpy(optimized_parameters_tmp.get_data()+parameter_num_sub_decomp, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double));
             //qgd_free( optimized_parameters );
             //optimized_parameters = NULL;
         }
 
         optimized_parameters_mtx = optimized_parameters_tmp;
-        optimized_parameters = optimized_parameters_mtx.get_data();
 
         // cloning the gate list obtained during the subdecomposition
         std::vector<Gate*> sub_decomp_ops = cSub_decomposition->get_gates();
@@ -441,7 +440,8 @@ N_Qubit_Decomposition::simplify_layers() {
         int parameter_idx = 0;
 
         Gates_block* gates_loc = new Gates_block( qbit_num );
-        double* optimized_parameters_loc = (double*)qgd_calloc(parameter_num, sizeof(double), 64);
+        Matrix_real optimized_parameters_loc_mtx(1, parameter_num);
+        double* optimized_parameters_loc = optimized_parameters_loc_mtx.get_data();
         unsigned int parameter_num_loc = 0;
 
         unsigned int layer_idx = 0;
@@ -506,7 +506,7 @@ N_Qubit_Decomposition::simplify_layers() {
 
             if (gate_nums.cnot + gate_nums.cz + gate_nums.ch < 2 || involved_qbits.size()> 2) {
                 gates_loc->combine(blocks_to_save);
-                memcpy(optimized_parameters_loc+parameter_num_loc, optimized_parameters+parameter_idx, parameter_num_block*sizeof(double) );
+                memcpy(optimized_parameters_loc+parameter_num_loc, optimized_parameters_mtx.get_data()+parameter_idx, parameter_num_block*sizeof(double) );
                 parameter_idx = parameter_idx + parameter_num_block;
                 parameter_num_loc = parameter_num_loc + parameter_num_block;
 
@@ -536,7 +536,7 @@ N_Qubit_Decomposition::simplify_layers() {
             unsigned int simplified_parameter_num=0;
 
             // Try to simplify the sequence of 2-qubit gates
-            int simplification_status = simplify_layer( block_to_simplify, optimized_parameters+parameter_idx, parameter_num_block, max_layer_num_loc, simplified_layer, simplified_parameters, simplified_parameter_num );
+            int simplification_status = simplify_layer( block_to_simplify, optimized_parameters_mtx.get_data()+parameter_idx, parameter_num_block, max_layer_num_loc, simplified_layer, simplified_parameters, simplified_parameter_num );
 
 
 
@@ -545,7 +545,9 @@ N_Qubit_Decomposition::simplify_layers() {
                 gates_loc->combine( simplified_layer );
 
                 if (parameter_num < parameter_num_loc + simplified_parameter_num ) {
-                    optimized_parameters_loc = (double*)qgd_realloc( optimized_parameters_loc, parameter_num_loc + simplified_parameter_num, sizeof(double), 64 );
+                    //optimized_parameters_loc = (double*)qgd_realloc( optimized_parameters_loc, parameter_num_loc + simplified_parameter_num, sizeof(double), 64 );
+                    optimized_parameters_loc_mtx = Matrix_real(1, parameter_num_loc + simplified_parameter_num);
+                    optimized_parameters_loc = optimized_parameters_loc_mtx.get_data();
                 }
                 memcpy(optimized_parameters_loc+parameter_num_loc, simplified_parameters, simplified_parameter_num*sizeof(double) );
                 parameter_num_loc = parameter_num_loc + simplified_parameter_num;
@@ -555,9 +557,11 @@ N_Qubit_Decomposition::simplify_layers() {
                 gates_loc->combine( blocks_to_save );
 
                 if (parameter_num < parameter_num_loc + parameter_num_block ) {
-                    optimized_parameters_loc = (double*)qgd_realloc( optimized_parameters_loc, parameter_num_loc + parameter_num_block, sizeof(double), 64 );
+                    //optimized_parameters_loc = (double*)qgd_realloc( optimized_parameters_loc, parameter_num_loc + parameter_num_block, sizeof(double), 64 );
+                    optimized_parameters_loc_mtx = Matrix_real(1, parameter_num_loc + parameter_num_block);
+                    optimized_parameters_loc = optimized_parameters_loc_mtx.get_data();
                 }
-                memcpy(optimized_parameters_loc+parameter_num_loc, optimized_parameters+parameter_idx, parameter_num_block*sizeof(double) );
+                memcpy(optimized_parameters_loc+parameter_num_loc, optimized_parameters_mtx.get_data()+parameter_idx, parameter_num_block*sizeof(double) );
                 parameter_num_loc = parameter_num_loc + parameter_num_block;
             }
 
@@ -592,8 +596,7 @@ N_Qubit_Decomposition::simplify_layers() {
 
         // clearing the original list of gates and parameters
         release_gates();
-        qgd_free( optimized_parameters );
-        optimized_parameters = NULL;
+        optimized_parameters_mtx = Matrix_real(0,0);
 
         // store the modified list of gates and parameters
         combine( gates_loc );
@@ -602,7 +605,7 @@ N_Qubit_Decomposition::simplify_layers() {
         layer_num = gates.size();
 
 
-        optimized_parameters = optimized_parameters_loc;
+        optimized_parameters_mtx = optimized_parameters_loc_mtx;
 
         parameter_num = parameter_num_loc;
 

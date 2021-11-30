@@ -126,10 +126,9 @@ while ( current_minimum > optimization_tolerance ) {
                 // reset optimization data
                 release_gates();
 
-                if (optimized_parameters != NULL ) {
-                    qgd_free( optimized_parameters );
+                if (optimized_parameters_mtx.size() > 0 ) {
+                    optimized_parameters_mtx = Matrix_real(0,0);
                     parameter_num = 0;
-                    optimized_parameters = NULL;
                 }
 
                 current_minimum = 1e8;
@@ -194,11 +193,13 @@ current_minimum = cDecomp_custom.get_current_minimum();
                 if (current_minimum < optimization_tolerance) {
                     combine( gate_structure );
  
-                    if ( optimized_parameters != NULL ) {
-                        qgd_free(optimized_parameters);
+                    if ( optimized_parameters_mtx.size() > 0 ) {
+                        optimized_parameters_mtx = Matrix_real(0,0);
                     }
 
-                    optimized_parameters = cDecomp_custom.get_optimized_parameters();
+                    double *optimized_parameters = cDecomp_custom.get_optimized_parameters();
+                    optimized_parameters_mtx = Matrix_real( optimized_parameters, 1, cDecomp_custom.get_parameter_num() );
+                    optimized_parameters_mtx.set_owner(true);
 delete(gate_structure);
                     break;
                 }
@@ -242,7 +243,6 @@ if ( current_minimum < minimal_node->cost_func_val ) std::cout << "lllllllllllll
     }
 
     // calculating the final error of the decomposition
-Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
     Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
     calc_decomposition_error( matrix_decomposed );
 

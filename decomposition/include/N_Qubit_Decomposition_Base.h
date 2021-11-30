@@ -137,7 +137,7 @@ void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *soluti
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double optimization_problem( const double* parameters);
+double optimization_problem( double* parameters);
 
 
 
