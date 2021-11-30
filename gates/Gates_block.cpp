@@ -154,7 +154,7 @@ Gates_block::release_gates() {
 @return Returns with the operation matrix
 */
 Matrix
-Gates_block::get_matrix( const Matrix_real& parameters ) {
+Gates_block::get_matrix( Matrix_real& parameters ) {
 
     // create matrix representation of the gate operations
     Matrix block_mtx = create_identity(matrix_size);
@@ -179,7 +179,7 @@ Gates_block::get_matrix( const Matrix_real& parameters ) {
 @param input The input array on which the gate is applied
 */
 void 
-Gates_block::apply_to( const Matrix_real& parameters_mtx, Matrix& input ) {
+Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     double* parameters = parameters_mtx.get_data();
 
@@ -213,18 +213,21 @@ Gates_block::apply_to( const Matrix_real& parameters_mtx, Matrix& input ) {
         }
         else if (operation->get_type() == RX_OPERATION) {
             RX* rx_operation = static_cast<RX*>(operation);
-            parameters = parameters - 1;
-            rx_operation->apply_to( parameters, input ); 
+            parameters = parameters - rx_operation->get_parameter_num();
+            Matrix_real parameters_mtx(parameters, 1, rx_operation->get_parameter_num());
+            rx_operation->apply_to( parameters_mtx, input ); 
         }
         else if (operation->get_type() == RY_OPERATION) {
             RY* ry_operation = static_cast<RY*>(operation);
-            parameters = parameters - 1;
-            ry_operation->apply_to( parameters, input ); 
+            parameters = parameters - ry_operation->get_parameter_num();
+            Matrix_real parameters_mtx(parameters, 1, ry_operation->get_parameter_num());
+            ry_operation->apply_to( parameters_mtx, input ); 
         }
         else if (operation->get_type() == RZ_OPERATION) {
             RZ* rz_operation = static_cast<RZ*>(operation);
-            parameters = parameters - 1;
-            rz_operation->apply_to( parameters, input );                    
+            parameters = parameters - rz_operation->get_parameter_num();
+            Matrix_real parameters_mtx(parameters, 1, rz_operation->get_parameter_num());
+            rz_operation->apply_to( parameters_mtx, input ); 
         }
         else if (operation->get_type() == X_OPERATION) {
             X* x_operation = static_cast<X*>(operation);
@@ -257,7 +260,7 @@ Gates_block::apply_to( const Matrix_real& parameters_mtx, Matrix& input ) {
 @param input The input array on which the gate is applied
 */
 void 
-Gates_block::apply_from_right( const Matrix_real& parameters_mtx, Matrix& input ) {
+Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
     double* parameters = parameters_mtx.get_data();
 
@@ -289,21 +292,21 @@ Gates_block::apply_from_right( const Matrix_real& parameters_mtx, Matrix& input 
         }
         else if (operation->get_type() == RX_OPERATION) {
             RX* rx_operation = static_cast<RX*>(operation);
-            Matrix_real parameters_mtx(parameters, 1, 1);
-            rx_operation->apply_from_right( parameters, input ); 
-            parameters = parameters + 1;
+            Matrix_real parameters_mtx(parameters, 1, rx_operation->get_parameter_num());
+            rx_operation->apply_from_right( parameters_mtx, input ); 
+            parameters = parameters + rx_operation->get_parameter_num();
         }
         else if (operation->get_type() == RY_OPERATION) {
             RY* ry_operation = static_cast<RY*>(operation);
-            Matrix_real parameters_mtx(parameters, 1, 1);
-            ry_operation->apply_from_right( parameters, input ); 
-            parameters = parameters + 1;
+            Matrix_real parameters_mtx(parameters, 1, ry_operation->get_parameter_num());
+            ry_operation->apply_from_right( parameters_mtx, input ); 
+            parameters = parameters + ry_operation->get_parameter_num();
         }
         else if (operation->get_type() == RZ_OPERATION) {
             RZ* rz_operation = static_cast<RZ*>(operation);
-            Matrix_real parameters_mtx(parameters, 1, 1);
-            rz_operation->apply_from_right( parameters, input ); 
-            parameters = parameters + 1;            
+            Matrix_real parameters_mtx(parameters, 1, rz_operation->get_parameter_num());
+            rz_operation->apply_from_right( parameters_mtx, input ); 
+            parameters = parameters + rz_operation->get_parameter_num();          
         }
         else if (operation->get_type() == X_OPERATION) {
             X* x_operation = static_cast<X*>(operation);

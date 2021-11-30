@@ -361,18 +361,6 @@ std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, const double
 std::vector<Gate*> prepare_gates_to_export( Gates_block* block_op, const double* parameters );
 
 /**
-@brief Call to prepare the optimized gates to export --- OBSOLETE
-@param n Integer labeling the n-th oepration  (n>=0).
-@param type The type of the gate from enumeration gate_type is returned via this parameter.
-@param target_qbit The ID of the target qubit is returned via this input parameter.
-@param control_qbit The ID of the control qubit is returned via this input parameter.
-@param parameters The parameters of the gates
-@return Returns with 0 if the export of the n-th gate was successful. If the n-th gate does not exists, -1 is returned. If the gate is not allowed to be exported, i.e. it is not a CNOT or U3 gate, then -2 is returned.
-*/
-int get_gate( unsigned int n, gate_type &type, int &target_qbit, int &control_qbit, double* parameters );
-
-
-/**
 @brief Call to prepare the optimized gates to export
 @param n Integer labeling the n-th oepration  (n>=0).
 @return Returns with a pointer to the n-th Gate, or with MULL if the n-th gate cant be retrived.

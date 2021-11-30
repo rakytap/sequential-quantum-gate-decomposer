@@ -479,8 +479,7 @@ get_gate( N_Qubit_Decomposition_custom* decomp, int &idx ) {
 
         // get U3 parameters
         RX* rx_gate = static_cast<RX*>(gate);
-        double* parameters = (double*)malloc(sizeof(double));
-        rx_gate->get_optimized_parameters(parameters);
+        Matrix_real&& parameters = rx_gate->get_optimized_parameters();
  
 
         // create gate parameters
@@ -497,15 +496,12 @@ get_gate( N_Qubit_Decomposition_custom* decomp, int &idx ) {
         Py_XDECREF(target_qbit);
         Py_XDECREF(Theta);
 
-
-        free( parameters);
     }
     else if (gate->get_type() == RY_OPERATION) {
 
         // get U3 parameters
         RY* ry_gate = static_cast<RY*>(gate);
-        double* parameters = (double*)malloc(sizeof(double));
-        ry_gate->get_optimized_parameters(parameters);
+        Matrix_real&& parameters = ry_gate->get_optimized_parameters();
  
 
         // create gate parameters
@@ -523,14 +519,12 @@ get_gate( N_Qubit_Decomposition_custom* decomp, int &idx ) {
         Py_XDECREF(Theta);
 
 
-        free( parameters);
     }
     else if (gate->get_type() == RZ_OPERATION) {
 
         // get U3 parameters
         RZ* rz_gate = static_cast<RZ*>(gate);
-        double* parameters = (double*)malloc(sizeof(double));
-        rz_gate->get_optimized_parameters(parameters);
+        Matrix_real&& parameters = rz_gate->get_optimized_parameters();
  
 
         // create gate parameters
@@ -548,7 +542,6 @@ get_gate( N_Qubit_Decomposition_custom* decomp, int &idx ) {
         Py_XDECREF(Phi);
 
 
-        free( parameters);
     }
     else if (gate->get_type() == X_OPERATION) {
 

@@ -72,7 +72,7 @@ RY(int qbit_num_in, int target_qbit_in);
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_to( double* parameters, Matrix& input );
+void apply_to( Matrix_real& parameters, Matrix& input );
 
 
 /**
@@ -80,7 +80,7 @@ void apply_to( double* parameters, Matrix& input );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_from_right( double* parameters, Matrix& input );
+void apply_from_right( Matrix_real& parameters, Matrix& input );
 
 
 /**
@@ -93,7 +93,7 @@ void set_optimized_parameters(double Theta );
 @brief Call to get the final optimized parameters of the gate.
 @param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
 */
-void get_optimized_parameters(double *parameters_in );
+Matrix_real get_optimized_parameters();
 
 /**
 @brief Call to create a clone of the present class

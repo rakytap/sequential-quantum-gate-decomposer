@@ -121,7 +121,7 @@ RX::~RX() {
 @param input The input array on which the gate is applied
 */
 void 
-RX::apply_to( double* parameters, Matrix& input ) {
+RX::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
         std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
@@ -198,7 +198,7 @@ RX::apply_to( double* parameters, Matrix& input ) {
 @param input The input array on which the gate is applied
 */
 void 
-RX::apply_from_right( double* parameters, Matrix& input ) {
+RX::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
@@ -293,9 +293,9 @@ void RX::set_optimized_parameters(double Theta ) {
 @brief Call to get the final optimized parameters of the gate.
 @param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
 */
-void RX::get_optimized_parameters(double *parameters_in ) {
+Matrix_real RX::get_optimized_parameters() {
 
-    memcpy( parameters_in, parameters.get_data(), sizeof(double) );
+    return parameters.copy();
 
 }
 

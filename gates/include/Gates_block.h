@@ -72,21 +72,21 @@ void release_gates();
 @param parameters An array pointing to the parameters of the gates
 @return Returns with the gate matrix
 */
-Matrix get_matrix( const Matrix_real& parameters );
+Matrix get_matrix( Matrix_real& parameters );
 
 /**
 @brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_to( const Matrix_real& parameters_mtx, Matrix& input );
+void apply_to( Matrix_real& parameters_mtx, Matrix& input );
 
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*CNOT
 @param input The input array on which the gate is applied
 */
-void apply_from_right( const Matrix_real& parameters_mtx, Matrix& input );
+void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
 
 
 /**
