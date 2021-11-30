@@ -155,7 +155,8 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
         }
 
         // calculating the final error of the decomposition
-        Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters, gates.begin(), gates.size(), Umtx );
+Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
+        Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 	calc_decomposition_error( matrix_decomposed );
         
 
@@ -212,7 +213,8 @@ N_Qubit_Decomposition::decompose_submatrix() {
         }
 
         // obtaining the subdecomposed submatrices
-        Matrix subdecomposed_matrix_mtx = get_transformed_matrix( optimized_parameters, gates.begin(), gates.size(), Umtx );
+Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
+        Matrix subdecomposed_matrix_mtx = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
         QGD_Complex16* subdecomposed_matrix = subdecomposed_matrix_mtx.get_data();
 
         // get the most unitary submatrix

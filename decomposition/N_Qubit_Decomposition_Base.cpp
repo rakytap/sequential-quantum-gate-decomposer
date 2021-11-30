@@ -306,7 +306,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 double N_Qubit_Decomposition_Base::optimization_problem( const double* parameters ) {
 
         // get the transformed matrix with the gates in the list
-        Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
+Matrix_real parameters_mtx(optimized_parameters, 1, parameter_num );
+        Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
 
         double cost_function = get_cost_function(matrix_new);
 
@@ -327,7 +328,8 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
 
     // get the transformed matrix with the gates in the list
     Matrix Umtx_loc = instance->get_Umtx();
-    Matrix matrix_new = instance->get_transformed_matrix( parameters->data, gates_loc.begin(), gates_loc.size(), Umtx_loc );
+Matrix_real parameters_mtx(parameters->data, 1, instance->parameter_num );
+    Matrix matrix_new = instance->get_transformed_matrix( parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx_loc );
 
     double cost_function = get_cost_function(matrix_new);
 

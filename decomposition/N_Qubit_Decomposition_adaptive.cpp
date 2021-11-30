@@ -242,7 +242,8 @@ if ( current_minimum < minimal_node->cost_func_val ) std::cout << "lllllllllllll
     }
 
     // calculating the final error of the decomposition
-    Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters, gates.begin(), gates.size(), Umtx );
+Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
+    Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
     calc_decomposition_error( matrix_decomposed );
 
 

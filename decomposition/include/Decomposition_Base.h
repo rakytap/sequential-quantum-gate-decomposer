@@ -263,7 +263,7 @@ void set_optimized_parameters( double* parameters, int num_of_parameters );
 @param num_of_gates The number of gates to be applied on the initial matrix
 @return Returns with the transformed matrix.
 */
-Matrix get_transformed_matrix( double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates );
+Matrix get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates );
 
 
 
@@ -275,7 +275,7 @@ Matrix get_transformed_matrix( double* parameters, std::vector<Gate*>::iterator 
 @param initial_matrix The initial matrix wich is transformed by the given gates.
 @return Returns with the transformed matrix.
 */
-Matrix get_transformed_matrix( double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix );
+Matrix get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix );
 
 
 /**
