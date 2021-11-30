@@ -170,13 +170,13 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
             // Do the optimization
             if (optimize_layer_num || layer_num >= max_layer_num_loc ) {
-
+/*
                 // release optimized parameters if necessary
                 if (optimized_parameters != NULL) {
                     qgd_free(optimized_parameters);
                     optimized_parameters = NULL;
                 }
-
+*/
                 // solve the optimization problem to find the correct minimum
                 solve_optimization_problem( NULL, 0);
 
@@ -214,8 +214,9 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     subdisentaglement_done = true;
 
     // The subunitarized matrix
-Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
+//Matrix_real optimized_parameters_mtx_tmp(optimized_parameters, 1, parameter_num );
     subdecomposed_mtx = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+
 }
 
 /**
@@ -388,11 +389,18 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
         if (solution_guess_gsl == NULL) {
             solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
         }
-
+/*
         if (optimized_parameters == NULL) {
             optimized_parameters = (double*)qgd_calloc(num_of_parameters,sizeof(double), 64);
             memcpy(optimized_parameters, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
         }
+*/
+        if (optimized_parameters_mtx.size() == 0) {
+            optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+            optimized_parameters = optimized_parameters_mtx.get_data();
+            memcpy(optimized_parameters, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+        }
+
 
         // maximal number of iteration loops
         int iteration_loops_max;
@@ -470,7 +478,6 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
         }
 
 
-
 }
 
 
@@ -484,8 +491,8 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
 double Sub_Matrix_Decomposition::optimization_problem( const double* parameters ) {
 
         // get the transformed matrix with the gates in the list
-Matrix_real parameters_mtx(optimized_parameters, 1, parameter_num );
-        Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
+Matrix_real parameters_mtx_tmp(optimized_parameters, 1, parameter_num );
+        Matrix matrix_new = get_transformed_matrix( parameters_mtx_tmp, gates.begin(), gates.size(), Umtx );
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
@@ -517,7 +524,7 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 //tbb::spin_mutex::scoped_lock my_lock{my_mutex};
 
     Umtx_loc = instance->get_Umtx();
-Matrix_real parameters_mtx(parameters->data, 1, instance->parameter_num );
+Matrix_real parameters_mtx(parameters->data, 1, instance->get_parameter_num() );
     matrix_new = instance->get_transformed_matrix( parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx_loc );
 
 #ifdef DEBUG

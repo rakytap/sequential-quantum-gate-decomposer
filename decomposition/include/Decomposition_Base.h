@@ -97,6 +97,9 @@ protected:
     Matrix Umtx;
 
     /// The optimized parameters for the gates
+    Matrix_real optimized_parameters_mtx;
+
+    /// The optimized parameters for the gates
     double* optimized_parameters;
 
     /// logical value describing whether the decomposition was finalized or not (i.e. whether the decomposed qubits were rotated into the state |0> or not)

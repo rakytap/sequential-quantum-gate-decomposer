@@ -143,7 +143,7 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 
         // simplify layers
         if (qbit_num>2) {
-            simplify_layers();
+            //simplify_layers();
         }
 
         // final tuning of the decomposition parameters
@@ -155,7 +155,6 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
         }
 
         // calculating the final error of the decomposition
-Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
         Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 	calc_decomposition_error( matrix_decomposed );
         
@@ -213,7 +212,7 @@ N_Qubit_Decomposition::decompose_submatrix() {
         }
 
         // obtaining the subdecomposed submatrices
-Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
+//Matrix_real optimized_parameters_mtx_tmp(optimized_parameters, 1, parameter_num );
         Matrix subdecomposed_matrix_mtx = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
         QGD_Complex16* subdecomposed_matrix = subdecomposed_matrix_mtx.get_data();
 
@@ -265,7 +264,6 @@ Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
             }
         }
 
-
         // if the qubit number in the submatirx is greater than 2 new N-qubit decomposition is started
 
         // create class tp decompose submatrices
@@ -315,21 +313,22 @@ Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
 void
 N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposition ) {
 
+
         // get the unitarization parameters
         int parameter_num_sub_decomp = cSub_decomposition->get_parameter_num();
 
         // adding the unitarization parameters to the ones stored in the class
-        double* optimized_parameters_tmp = (double*)qgd_calloc( (parameter_num_sub_decomp+parameter_num),sizeof(double), 64 );
-        cSub_decomposition->get_optimized_parameters(optimized_parameters_tmp);
+        Matrix_real optimized_parameters_tmp(1, parameter_num_sub_decomp+parameter_num);
+        cSub_decomposition->get_optimized_parameters(optimized_parameters_tmp.get_data());
 
-        if ( optimized_parameters != NULL ) {
-            memcpy(optimized_parameters_tmp+parameter_num_sub_decomp, optimized_parameters, parameter_num*sizeof(double));
-            qgd_free( optimized_parameters );
-            optimized_parameters = NULL;
+        if ( optimized_parameters_mtx.size() > 0 ) {
+            memcpy(optimized_parameters_tmp.get_data()+parameter_num_sub_decomp, optimized_parameters, parameter_num*sizeof(double));
+            //qgd_free( optimized_parameters );
+            //optimized_parameters = NULL;
         }
 
-        optimized_parameters = optimized_parameters_tmp;
-        optimized_parameters_tmp = NULL;
+        optimized_parameters_mtx = optimized_parameters_tmp;
+        optimized_parameters = optimized_parameters_mtx.get_data();
 
         // cloning the gate list obtained during the subdecomposition
         std::vector<Gate*> sub_decomp_ops = cSub_decomposition->get_gates();

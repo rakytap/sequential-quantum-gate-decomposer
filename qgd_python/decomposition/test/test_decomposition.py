@@ -79,7 +79,7 @@ class Test_Decomposition:
 
         decomp.List_Gates()
 
-    def ctest_N_Qubit_Decomposition_Qiskit_export(self):
+    def test_N_Qubit_Decomposition_Qiskit_export(self):
         r"""
         This method is called by pytest. 
         Test to decompose a 2-qubit unitary and retrive the corresponding Qiskit circuit

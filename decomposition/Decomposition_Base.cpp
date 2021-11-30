@@ -162,12 +162,12 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
 @brief Destructor of the class
 */
 Decomposition_Base::~Decomposition_Base() {
-
+/*
     if (optimized_parameters != NULL ) {
         qgd_free( optimized_parameters );
         optimized_parameters = NULL;
     }
-
+*/
 }
 
 
@@ -194,8 +194,8 @@ void Decomposition_Base::set_max_iteration( int max_iterations_in) {
 void Decomposition_Base::finalize_decomposition() {
 
         // get the transformed matrix resulted by the gates in the list
-        Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
-        Matrix transformed_matrix = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+        Matrix_real optimized_parameters_mtx_tmp(optimized_parameters, 1, parameter_num );
+        Matrix transformed_matrix = get_transformed_matrix( optimized_parameters_mtx_tmp, gates.begin(), gates.size(), Umtx );
 
         // preallocate the storage for the finalizing parameters
         finalizing_parameter_num = 3*qbit_num;
@@ -209,19 +209,17 @@ void Decomposition_Base::finalize_decomposition() {
         // adding the opeartion block to the gates
         add_gate( finalizing_gates );
 // TODO: use memcpy
-        double* optimized_parameters_tmp = (double*)qgd_calloc( (parameter_num),sizeof(double), 64 );
+        Matrix_real optimized_parameters_tmp(1, parameter_num);
         for (int idx=0; idx < finalizing_parameter_num; idx++) {
             optimized_parameters_tmp[idx] = finalizing_parameters[idx];
         }
         for (unsigned int idx=0; idx < parameter_num-finalizing_parameter_num; idx++) {
             optimized_parameters_tmp[idx+finalizing_parameter_num] = optimized_parameters[idx];
         }
-        qgd_free( optimized_parameters );
         qgd_free( finalizing_parameters);
-        optimized_parameters = NULL;
         finalizing_parameters = NULL;
-        optimized_parameters = optimized_parameters_tmp;
-        optimized_parameters_tmp = NULL;
+        optimized_parameters_mtx = optimized_parameters_tmp;
+        optimized_parameters = optimized_parameters_mtx.get_data();
 
         finalizing_gates_num = finalizing_gates->get_gate_num();
 
@@ -449,7 +447,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // ***** get applied the fixed gates applied before the optimized gates *****
             if (block_idx_start < gates_loc.size() ) {
                 std::vector<Gate*>::iterator fixed_gates_pre_it = gates.begin() + 1;
-                Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
+                //Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
                 Umtx = get_transformed_matrix(optimized_parameters_mtx, fixed_gates_pre_it, gates.size()-1, Umtx);
             }
             else {
@@ -460,9 +458,11 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // clear the gate list used in the previous iterations
             gates.clear();
 
-            if (optimized_parameters != NULL ) {
-                qgd_free( optimized_parameters );
-                optimized_parameters = NULL;
+            if (optimized_parameters_mtx.size() > 0 ) {
+//                qgd_free( optimized_parameters );
+//                optimized_parameters = NULL;
+                  optimized_parameters_mtx = Matrix_real(0,0);
+                  optimized_parameters = optimized_parameters_mtx.get_data(); 
             }
 
 
@@ -577,11 +577,15 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         gates = gates_loc;
 
         parameter_num = parameter_num_loc;
+/*
         if (optimized_parameters != NULL ) {
             qgd_free( optimized_parameters );
         }
+*/
 
-        optimized_parameters = (double*)qgd_calloc(parameter_num,sizeof(double), CACHELINE);
+
+        optimized_parameters_mtx = Matrix_real( 1, parameter_num );
+        optimized_parameters = optimized_parameters_mtx.get_data();//(double*)qgd_calloc(parameter_num,sizeof(double), CACHELINE);
         memcpy( optimized_parameters, optimized_parameters_gsl->data, parameter_num*sizeof(double) );
 
 
