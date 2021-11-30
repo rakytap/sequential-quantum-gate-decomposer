@@ -292,7 +292,7 @@ int get_gate_num();
 @param parameters The parameters of the gates that should be printed.
 @param start_index The ordinal number of the first gate.
 */
-void list_gates( const double* parameters, int start_index );
+void list_gates( const Matrix_real &parameters, int start_index );
 
 
 /**

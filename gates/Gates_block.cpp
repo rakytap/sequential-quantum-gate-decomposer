@@ -188,6 +188,8 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
     for( int idx=gates.size()-1; idx>=0; idx--) {
 
         Gate* operation = gates[idx];
+        parameters = parameters - operation->get_parameter_num();
+        Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
 
         if (operation->get_type() == CNOT_OPERATION) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
@@ -207,26 +209,18 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
         }
         else if (operation->get_type() == U3_OPERATION) {
             U3* u3_operation = static_cast<U3*>(operation);
-            parameters = parameters - u3_operation->get_parameter_num();
-            Matrix_real parameters_mtx(parameters, 1, u3_operation->get_parameter_num());
             u3_operation->apply_to( parameters_mtx, input );    
         }
         else if (operation->get_type() == RX_OPERATION) {
             RX* rx_operation = static_cast<RX*>(operation);
-            parameters = parameters - rx_operation->get_parameter_num();
-            Matrix_real parameters_mtx(parameters, 1, rx_operation->get_parameter_num());
             rx_operation->apply_to( parameters_mtx, input ); 
         }
         else if (operation->get_type() == RY_OPERATION) {
             RY* ry_operation = static_cast<RY*>(operation);
-            parameters = parameters - ry_operation->get_parameter_num();
-            Matrix_real parameters_mtx(parameters, 1, ry_operation->get_parameter_num());
             ry_operation->apply_to( parameters_mtx, input ); 
         }
         else if (operation->get_type() == RZ_OPERATION) {
             RZ* rz_operation = static_cast<RZ*>(operation);
-            parameters = parameters - rz_operation->get_parameter_num();
-            Matrix_real parameters_mtx(parameters, 1, rz_operation->get_parameter_num());
             rz_operation->apply_to( parameters_mtx, input ); 
         }
         else if (operation->get_type() == X_OPERATION) {
@@ -267,6 +261,7 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     for( int idx=0; idx<gates.size(); idx++) {
 
         Gate* operation = gates[idx];
+        Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
 
         if (operation->get_type() == CNOT_OPERATION) {
             CNOT* cnot_operation = static_cast<CNOT*>(operation);
@@ -286,27 +281,19 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         }
         else if (operation->get_type() == U3_OPERATION) {
             U3* u3_operation = static_cast<U3*>(operation);
-            Matrix_real parameters_mtx(parameters, 1, u3_operation->get_parameter_num());
             u3_operation->apply_from_right( parameters_mtx, input ); 
-            parameters = parameters + u3_operation->get_parameter_num();
         }
         else if (operation->get_type() == RX_OPERATION) {
             RX* rx_operation = static_cast<RX*>(operation);
-            Matrix_real parameters_mtx(parameters, 1, rx_operation->get_parameter_num());
             rx_operation->apply_from_right( parameters_mtx, input ); 
-            parameters = parameters + rx_operation->get_parameter_num();
         }
         else if (operation->get_type() == RY_OPERATION) {
             RY* ry_operation = static_cast<RY*>(operation);
-            Matrix_real parameters_mtx(parameters, 1, ry_operation->get_parameter_num());
             ry_operation->apply_from_right( parameters_mtx, input ); 
-            parameters = parameters + ry_operation->get_parameter_num();
         }
         else if (operation->get_type() == RZ_OPERATION) {
             RZ* rz_operation = static_cast<RZ*>(operation);
-            Matrix_real parameters_mtx(parameters, 1, rz_operation->get_parameter_num());
-            rz_operation->apply_from_right( parameters_mtx, input ); 
-            parameters = parameters + rz_operation->get_parameter_num();          
+            rz_operation->apply_from_right( parameters_mtx, input );         
         }
         else if (operation->get_type() == X_OPERATION) {
             X* x_operation = static_cast<X*>(operation);
@@ -319,6 +306,8 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         else if (operation->get_type() == GENERAL_OPERATION) {
             operation->apply_from_right(input);
         }
+
+        parameters = parameters + operation->get_parameter_num();
 
 #ifdef DEBUG
         if (input.isnan()) {
@@ -827,7 +816,7 @@ int Gates_block::get_gate_num() {
 @param parameters The parameters of the gates that should be printed.
 @param start_index The ordinal number of the first gate.
 */
-void Gates_block::list_gates( const double* parameters, int start_index ) {
+void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
         printf( "\nThe gates in the list of gates:\n" );
 
@@ -992,7 +981,7 @@ void Gates_block::list_gates( const double* parameters, int start_index ) {
             }
             else if (gate->get_type() == BLOCK_OPERATION) {
                 Gates_block* block_gate = static_cast<Gates_block*>(gate);
-                const double* parameters_layer = parameters + parameter_idx - gate->get_parameter_num();
+                const Matrix_real parameters_layer(parameters.get_data() + parameter_idx - gate->get_parameter_num(), 1, gate->get_parameter_num() );
                 block_gate->list_gates( parameters_layer, gate_idx );
                 parameter_idx = parameter_idx - block_gate->get_parameter_num();
                 gate_idx = gate_idx + block_gate->get_gate_num();
@@ -1155,7 +1144,7 @@ void Gates_block::combine(Gates_block* op_block) {
             add_gate_to_end( op_cloned );
         }
         else if (op->get_type() == RY_OPERATION) {
-            RY* ry_op = static_cast<U3*>( op );
+            RY* ry_op = static_cast<RY*>( op );
             RY* ry_op_cloned = ry_op->clone();
             Gate* op_cloned = static_cast<Gate*>( ry_op_cloned );
             add_gate_to_end( op_cloned );

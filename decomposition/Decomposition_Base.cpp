@@ -249,7 +249,8 @@ void Decomposition_Base::finalize_decomposition() {
 */
 void Decomposition_Base::list_gates( int start_index ) {
 
-        Gates_block::list_gates( optimized_parameters, start_index );
+        Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
+        Gates_block::list_gates( optimized_parameters_mtx, start_index );
 
 }
 
@@ -724,27 +725,8 @@ Decomposition_Base::get_transformed_matrix( double* parameters, std::vector<Gate
 
         // The current gate
         Gate* gate = *(gates_it++);
+        parameters_num_total = parameters_num_total + gate->get_parameter_num();
 
-        if (gate->get_type() == U3_OPERATION ) {
-            U3* u3_gate = static_cast<U3*>( gate );
-            parameters_num_total = parameters_num_total + u3_gate->get_parameter_num();
-        }
-        if (gate->get_type() == RX_OPERATION ) {
-            RX* rx_gate = static_cast<RX*>( gate );
-            parameters_num_total = parameters_num_total + rx_gate->get_parameter_num();
-        }
-        if (gate->get_type() == RY_OPERATION ) {
-            RY* ry_gate = static_cast<RY*>( gate );
-            parameters_num_total = parameters_num_total + ry_gate->get_parameter_num();
-        }
-        if (gate->get_type() == RZ_OPERATION ) {
-            RZ* rz_gate = static_cast<RZ*>( gate );
-            parameters_num_total = parameters_num_total + rz_gate->get_parameter_num();
-        }
-        else if (gate->get_type() == BLOCK_OPERATION ) {
-            Gates_block* block_gate = static_cast<Gates_block*>( gate );
-            parameters_num_total = parameters_num_total + block_gate->get_parameter_num();
-        }
     }
 
 
@@ -753,6 +735,8 @@ Decomposition_Base::get_transformed_matrix( double* parameters, std::vector<Gate
 
         // The current gate
         Gate* gate = *(--gates_it);
+        parameters_num_total = parameters_num_total - gate->get_parameter_num();
+        Matrix_real parameters_mtx( parameters+parameters_num_total, 1, gate->get_parameter_num() );
 
         if (gate->get_type() == CNOT_OPERATION ) {
             CNOT* cnot_gate = static_cast<CNOT*>( gate );
@@ -772,30 +756,21 @@ Decomposition_Base::get_transformed_matrix( double* parameters, std::vector<Gate
         }
         else if (gate->get_type() == GENERAL_OPERATION ) {
             gate->apply_to(ret_matrix);
-
         }
         else if (gate->get_type() == U3_OPERATION ) {
             U3* u3_gate = static_cast<U3*>( gate );
-            parameters_num_total = parameters_num_total - u3_gate->get_parameter_num();
-            Matrix_real parameters_mtx( parameters+parameters_num_total, 1, u3_gate->get_parameter_num() );
             u3_gate->apply_to( parameters_mtx, ret_matrix);            
         }
         else if (gate->get_type() == RX_OPERATION ) {
             RX* rx_gate = static_cast<RX*>( gate );
-            parameters_num_total = parameters_num_total - rx_gate->get_parameter_num();
-            Matrix_real parameters_mtx( parameters+parameters_num_total, 1, rx_gate->get_parameter_num() );
             rx_gate->apply_to( parameters_mtx, ret_matrix);            
         }
         else if (gate->get_type() == RY_OPERATION ) {
             RY* ry_gate = static_cast<RY*>( gate );
-            parameters_num_total = parameters_num_total - ry_gate->get_parameter_num();
-            Matrix_real parameters_mtx( parameters+parameters_num_total, 1, ry_gate->get_parameter_num() );
             ry_gate->apply_to( parameters_mtx, ret_matrix);            
         }
         else if (gate->get_type() == RZ_OPERATION ) {
             RZ* rz_gate = static_cast<RZ*>( gate );
-            parameters_num_total = parameters_num_total - rz_gate->get_parameter_num();
-            Matrix_real parameters_mtx( parameters+parameters_num_total, 1, rz_gate->get_parameter_num() );
             rz_gate->apply_to( parameters_mtx, ret_matrix);            
         }
         else if (gate->get_type() == X_OPERATION ) {
@@ -808,8 +783,6 @@ Decomposition_Base::get_transformed_matrix( double* parameters, std::vector<Gate
         }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
-            parameters_num_total = parameters_num_total - block_gate->get_parameter_num();
-            Matrix_real parameters_mtx(parameters+parameters_num_total, 1, parameters_num_total );
             block_gate->apply_to(parameters_mtx, ret_matrix);            
         }
 
@@ -861,8 +834,9 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
     for (int idx=0; idx<num_of_gates; idx++) {
        
 
-        // get the matrix representation of th egate
+        // get the matrix representation of the gate
         Gate* gate = *gates_it;        
+        Matrix_real parameters_loc_mtx( parameters_loc, 1, gate->get_parameter_num() );
 
         if (gate->get_type() == CNOT_OPERATION ) {
             CNOT* cnot_gate = static_cast<CNOT*>(gate);
@@ -885,27 +859,19 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         }
         else if (gate->get_type() == U3_OPERATION ) {
             U3* u3_gate = static_cast<U3*>(gate);
-            Matrix_real parameters_loc_mtx( parameters_loc, 1, u3_gate->get_parameter_num() );
             u3_gate->apply_from_right(parameters_loc_mtx, mtx);
-            parameters_loc = parameters_loc + u3_gate->get_parameter_num();
         }
         else if (gate->get_type() == RX_OPERATION ) {
             RX* rx_gate = static_cast<RX*>(gate);
-            Matrix_real parameters_loc_mtx( parameters_loc, 1, rx_gate->get_parameter_num() );
             rx_gate->apply_from_right(parameters_loc_mtx, mtx);
-            parameters_loc = parameters_loc + rx_gate->get_parameter_num();
         }
         else if (gate->get_type() == RY_OPERATION ) {
             RY* ry_gate = static_cast<RY*>(gate);
-            Matrix_real parameters_loc_mtx( parameters_loc, 1, ry_gate->get_parameter_num() );
             ry_gate->apply_from_right(parameters_loc_mtx, mtx);
-            parameters_loc = parameters_loc + ry_gate->get_parameter_num();
         }
         else if (gate->get_type() == RZ_OPERATION ) {
             RZ* rz_gate = static_cast<RZ*>(gate);
-            Matrix_real parameters_loc_mtx( parameters_loc, 1, rz_gate->get_parameter_num() );
             rz_gate->apply_from_right(parameters_loc_mtx, mtx);
-            parameters_loc = parameters_loc + rz_gate->get_parameter_num();
         }
         else if (gate->get_type() == X_OPERATION ) {
             X* x_gate = static_cast<X*>(gate);
@@ -917,10 +883,10 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>(gate);
-            Matrix_real parameters_loc_mtx(parameters_loc, 1, block_gate->get_parameter_num());
             block_gate->apply_from_right(parameters_loc_mtx, mtx);
-            parameters_loc = parameters_loc + block_gate->get_parameter_num();
         }
+
+        parameters_loc = parameters_loc + gate->get_parameter_num();
 
         gate_mtxs[idx] = mtx.copy();     
         gates_it++;   
