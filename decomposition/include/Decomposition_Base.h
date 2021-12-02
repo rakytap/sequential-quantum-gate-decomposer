@@ -43,27 +43,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "gsl/gsl_multimin.h"
 #include "gsl/gsl_statistics.h"
 #include <tbb/cache_aligned_allocator.h>
-#include <tbb/concurrent_vector.h>
+#include "Decomposition_Tree.h"
 
 
 /// @brief Type definition of the types of the initial guess
 typedef enum guess_type {ZEROS, RANDOM, CLOSE_TO_ZERO} guess_type;
-
-
-/// @brief ??????????????????????
-struct decomposition_tree_node {
-  /// The strored decomposition layer
-  Gates_block* layer;
-  /// the obtained cost function
-  double cost_func_val;
-  /// the children nodes in the decomposition tree
-  tbb::concurrent_vector<decomposition_tree_node*> children;
-  /// the child node in the decomposition tree with the minimal cost function
-  decomposition_tree_node* minimal_child;
-  /// The parent node in the decomposition tree
-  decomposition_tree_node* parent;
-};
-
 
 
 /**
@@ -244,7 +228,7 @@ int get_Umtx_size();
 @brief Call to get the optimized parameters.
 @return Return with the pointer pointing to the array storing the optimized parameters
 */
-double* get_optimized_parameters();
+Matrix_real get_optimized_parameters();
 
 /**
 @brief Call to get the optimized parameters.

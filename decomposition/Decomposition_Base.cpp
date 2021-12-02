@@ -652,10 +652,10 @@ int Decomposition_Base::get_Umtx_size() {
 @brief Call to get the optimized parameters.
 @return Return with the pointer pointing to the array storing the optimized parameters
 */
-double* Decomposition_Base::get_optimized_parameters() {
-    double *ret = (double*)qgd_calloc( parameter_num,sizeof(double), 64);
-    get_optimized_parameters( ret );
-    return ret;
+Matrix_real Decomposition_Base::get_optimized_parameters() {    
+    
+    return optimized_parameters_mtx.copy();
+
 }
 
 /**

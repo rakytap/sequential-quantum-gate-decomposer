@@ -75,13 +75,13 @@ protected:
     Gates_block* gate_structure;
 
 
-    std::vector<decomposition_tree_node*> root_nodes;
+    std::vector<Decomposition_Tree_Node*> root_nodes;
 */
 
     /// A map of <int n: Gates_block* block> describing custom gate structure to be used in the decomposition. Gate block corresponding to n is used in the subdecomposition of the n-th qubit. The Gate block is repeated periodically.
     Gates_block* gate_structure;
 
-    tbb::concurrent_vector<decomposition_tree_node*> root_nodes;
+    std::vector<Decomposition_Tree_Node*> root_nodes;
 
 public:
 
@@ -122,7 +122,7 @@ virtual void start_decomposition(bool prepare_export=true);
 /**
 @brief ????????????????
 */
-Gates_block* create_layers_from_decomposition_tree( const decomposition_tree_node* minimal_root_node );
+Gates_block* create_layers_from_decomposition_tree( const Decomposition_Tree_Node* minimal_root_node, int max_level );
 
 
 
@@ -140,7 +140,13 @@ void add_finalyzing_layer( Gates_block* gate_structure );
 /**
 @brief ??????????????????
 */
-decomposition_tree_node* find_minimal_child_node( tbb::concurrent_vector<decomposition_tree_node*> &children );
+Decomposition_Tree_Node* find_minimal_child_node( std::vector<Decomposition_Tree_Node*> &children );
+
+
+/**
+@brief ??????????????????
+*/
+void delete_root_node( Decomposition_Tree_Node* root_node );
 
 
 };
