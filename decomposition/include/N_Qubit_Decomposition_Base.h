@@ -61,6 +61,7 @@ class N_Qubit_Decomposition_Base : public Decomposition_Base {
 
 
 public:
+int opt_method;
 
 protected:
 

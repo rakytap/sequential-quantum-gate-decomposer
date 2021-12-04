@@ -24,6 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "N_Qubit_Decomposition_Base.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
+#include "N_Qubit_Decomposition_adaptive_Cost_Function.h"
 
 /**
 @brief Nullary constructor of the class.
@@ -40,7 +41,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     // The global minimum of the optimization problem
     global_target_minimum = 0;
 
-
+opt_method = 0;
 }
 
 /**
@@ -72,7 +73,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
         }
     }
 
-
+opt_method = 0;
 }
 
 
@@ -310,12 +311,17 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 
 double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
 
-        // get the transformed matrix with the gates in the list
-Matrix_real parameters_mtx(parameters, 1, parameter_num );
-        Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
+    // get the transformed matrix with the gates in the list
+    Matrix_real parameters_mtx(parameters, 1, parameter_num );
+    Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
 
-        double cost_function = get_cost_function(matrix_new);
-
+    double cost_function;    
+if ( opt_method == 0 ) {
+    cost_function = get_cost_function(matrix_new);
+}
+else{
+    cost_function = get_adaptive_cost_function(matrix_new);
+}
         return cost_function;
 }
 
@@ -336,8 +342,13 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
     Matrix_real parameters_mtx(parameters->data, 1, instance->get_parameter_num() );
     Matrix matrix_new = instance->get_transformed_matrix( parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx_loc );
 
-    double cost_function = get_cost_function(matrix_new);
-
+    double cost_function;    
+if ( instance->opt_method == 0 ) {
+    cost_function = get_cost_function(matrix_new);
+}
+else{
+    cost_function = get_adaptive_cost_function(matrix_new);
+}
     return cost_function;
 }
 

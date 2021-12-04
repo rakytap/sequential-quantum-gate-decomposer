@@ -115,6 +115,9 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     // mutual exclusion to help modification of vector containers
     tbb::spin_mutex vector_mutex;
 
+//opt_method = 1;
+//std::cout << optimization_problem(NULL) << std::endl;
+//exit(-1);
     current_minimum = std::numeric_limits<double>::max();
     while ( current_minimum > optimization_tolerance ) {
 
@@ -151,13 +154,14 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
 
                     // add the last layer to rotate all of the qubits into the |0> state
-                    add_finalyzing_layer( gate_structure );
+                    //add_finalyzing_layer( gate_structure );
 
 
                     // solve the optimization problem in isolated optimization process
                     N_Qubit_Decomposition_custom cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, initial_guess);
                     cDecomp_custom.set_custom_gate_structure( gate_structure );
                     cDecomp_custom.set_verbose(false);
+                    cDecomp_custom.opt_method = 1;
                     cDecomp_custom.start_decomposition(false);
 //cDecomp_custom.list_gates(0);
 
@@ -216,11 +220,13 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
             minimal_root_node->minimal_child = NULL;
         }
 
+        current_level++;
+
         if ( minimal_node != NULL ) {
             current_minimum = minimal_node->cost_func_val;
-            std::cout << "Decomposing the unitary with " << current_level << "+1 layers found minimum " << current_minimum << std::endl;
+            std::cout << "Decomposing the unitary with " << current_level << " layers found minimum " << current_minimum << std::endl;
         }
-        current_level++;
+
 
 
 
@@ -238,11 +244,13 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
             Decomposition_Tree_Node* grand_parent_node = parent_node->parent;
 
             if ( grand_parent_node == NULL ) {
-std::cout << "Find new root node" << std::endl;
+
                 // need to chose another root node
                 delete_root_node( minimal_root_node );
 
                 minimal_node = find_minimal_child_node( root_nodes );
+std::cout << "Find new root node . Remaining root nodes: " << root_nodes.size() << std::endl;
+
                 if ( minimal_node == NULL ) break;
 
                 minimal_root_node = minimal_node;
@@ -271,7 +279,7 @@ std::cout << "Find new root node" << std::endl;
                             minimal_root_node = minimal_node;
                             current_level = 1;
                             current_minimum = minimal_root_node->cost_func_val;
-std::cout << "Find new root node2" << std::endl;
+std::cout << "Find new root node (b). Remaining root nodes: " << root_nodes.size() << std::endl;
                             break;
                         }
                         else {
@@ -307,8 +315,8 @@ std::cout << "Find new root node2" << std::endl;
     }
 
 
-    optimized_parameters_mtx = minimal_node->optimized_parameters;
-
+    //optimized_parameters_mtx = minimal_node->optimized_parameters;
+opt_method = 0;
     release_gates();
 
     // constructing the decomposing gate structure from decomposition tree
@@ -320,6 +328,9 @@ std::cout << "Find new root node2" << std::endl;
     // store the decomposing gate structure
     
     combine( gate_structure );
+
+    // final tuning of the decomposition parameters
+    final_optimization();
 
 
     // prepare gates to export

@@ -101,11 +101,11 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     // setting the gate structure for optimization
     add_gate_layers();
 
-tbb::task_arena ta(16);
-ta.execute([&]() {
+//tbb::task_arena ta(16);
+//ta.execute([&]() {
     // final tuning of the decomposition parameters
     final_optimization();
-});   
+//});   
 
 
 

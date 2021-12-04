@@ -329,6 +329,7 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition.cpp  
+    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Unitary.cpp
 )
 
