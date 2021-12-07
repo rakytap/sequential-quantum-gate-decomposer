@@ -312,6 +312,7 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
     ${PROJECT_SOURCE_DIR}/gates/CH.cpp
     ${PROJECT_SOURCE_DIR}/gates/Gate.cpp
+    ${PROJECT_SOURCE_DIR}/gates/UN.cpp
     ${PROJECT_SOURCE_DIR}/gates/Gates_block.cpp
     ${PROJECT_SOURCE_DIR}/gates/X.cpp
     ${PROJECT_SOURCE_DIR}/gates/SX.cpp
@@ -331,6 +332,7 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition.cpp  
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Unitary.cpp
+    ${PROJECT_SOURCE_DIR}/random_unitary/Random_Orthogonal.cpp
 )
 
 
@@ -377,6 +379,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CZ.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CH.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Gate.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/UN.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Gates_block.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/X.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/SX.h
@@ -396,6 +399,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Sub_Matrix_Decomposition_Cost_Function.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Sub_Matrix_Decomposition.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Unitary.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Orthogonal.h
 )
 
 configure_file(${PROJECT_SOURCE_DIR}/common/include/Config.h.in
