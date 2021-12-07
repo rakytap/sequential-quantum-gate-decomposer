@@ -1,10 +1,10 @@
 /*
-Created on Fri Jun 26 14:13:26 2020
+Created on Fri JON 26 14:13:26 2020
 Copyright (C) 2020 Peter Rakyta, Ph.D.
 
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
+it ONder the terms of the GNU General Public License as published by
+the Free Software FoONdation, either version 3 of the License, or
 (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -17,14 +17,14 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file UN.cpp
-    \brief Class for the representation of general unitary operation on the first qbit_num-1 qubits.
+/*! \file ON.cpp
+    \brief Class for the representation of general ONitary operation on the first qbit_num-1 qubits.
 */
 
 
-#include "UN.h"
+#include "ON.h"
 #include "common.h"
-#include "Random_Unitary.h"
+#include "Random_Orthogonal.h"
 #include "dot.h"
 
 
@@ -32,14 +32,14 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @brief Deafult constructor of the class.
 @return An instance of the class
 */
-UN::UN() {
+ON::ON() {
 
     // number of qubits spanning the matrix of the operation
     qbit_num = -1;
     // The size N of the NxN matrix associated with the operations.
     matrix_size = -1;
     // The type of the operation (see enumeration gate_type)
-    type = UN_OPERATION;
+    type = ON_OPERATION;
     // The index of the qubit on which the operation acts (target_qbit >= 0)
     target_qbit = -1;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
@@ -52,17 +52,17 @@ UN::UN() {
 
 /**
 @brief Constructor of the class.
-@param qbit_num_in The number of qubits spanning the unitaries
+@param qbit_num_in The number of qubits spanning the ONitaries
 @return An instance of the class
 */
-UN::UN(int qbit_num_in) {
+ON::ON(int qbit_num_in) {
 
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix
     matrix_size = Power_of_2(qbit_num);
     // A string describing the type of the operation
-    type = UN_OPERATION;
+    type = ON_OPERATION;
     // The index of the qubit on which the operation acts (target_qbit >= 0)
     target_qbit = -1;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
@@ -75,14 +75,14 @@ UN::UN(int qbit_num_in) {
 /**
 @brief Destructor of the class
 */
-UN::~UN() {
+ON::~ON() {
 }
 
 /**
 @brief Set the number of qubits spanning the matrix of the operation
 @param qbit_num_in The number of qubits spanning the matrix
 */
-void UN::set_qbit_num( int qbit_num_in ) {
+void ON::set_qbit_num( int qbit_num_in ) {
     // setting the number of qubits
     qbit_num = qbit_num_in;
 
@@ -90,7 +90,7 @@ void UN::set_qbit_num( int qbit_num_in ) {
     matrix_size = Power_of_2(qbit_num);
 
     // Update the number of the parameters
-    parameter_num = (matrix_size/2)*(matrix_size/2-1)+(matrix_size/2-1);
+    parameter_num = (matrix_size/2)*(matrix_size/2-1)/2;
 
 
 }
@@ -101,18 +101,18 @@ void UN::set_qbit_num( int qbit_num_in ) {
 @return Returns with a matrix of the operation
 */
 Matrix
-UN::get_matrix( Matrix_real& parameters ) {
+ON::get_matrix( Matrix_real& parameters ) {
 
-        Matrix UN_matrix = create_identity(matrix_size);
-        apply_to(parameters, UN_matrix);
+        Matrix ON_matrix = create_identity(matrix_size);
+        apply_to(parameters, ON_matrix);
 
 #ifdef DEBUG
-        if (UN_matrix.isnan()) {
-            std::cout << "U3::get_matrix: UN_matrix contains NaN." << std::endl;
+        if (ON_matrix.isnan()) {
+            std::cout << "U3::get_matrix: ON_matrix contains NaN." << std::endl;
         }
 #endif
 
-        return UN_matrix;
+        return ON_matrix;
 }
 
 
@@ -121,15 +121,15 @@ UN::get_matrix( Matrix_real& parameters ) {
 @param input The input array on which the gate is applied
 */
 void 
-UN::apply_to( Matrix_real& parameters, Matrix& input ) {
+ON::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in UN gate apply" << std::endl;
+        std::cout<< "Wrong matrix size in ON gate apply" << std::endl;
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-        std::cout << "Not enough parameters given for the UN gate" << std::endl;
+        std::cout << "Not enough parameters given for the ON gate" << std::endl;
         exit(-1);
     }
 
@@ -157,16 +157,16 @@ UN::apply_to( Matrix_real& parameters, Matrix& input ) {
 @param input The input array on which the gate is applied
 */
 void 
-UN::apply_from_right( Matrix_real& parameters, Matrix& input ) {
+ON::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in UN gate apply" << std::endl;
+        std::cout<< "Wrong matrix size in ON gate apply" << std::endl;
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-        std::cout << "Not enough parameters given for the UN gate" << std::endl;
+        std::cout << "Not enough parameters given for the ON gate" << std::endl;
         exit(-1);
     }
 
@@ -194,16 +194,13 @@ UN::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 @brief ?????
 */
 Matrix
-UN::get_submatrix( Matrix_real& parameters ) {
+ON::get_submatrix( Matrix_real& parameters ) {
 
-    // create array of random parameters to construct random unitary
+    // create array of random parameters to construct random ONitary
     size_t matrix_size_loc = matrix_size/2;
-    double* vartheta = parameters.get_data();     
-    double* varphi = parameters.get_data() + matrix_size_loc*(matrix_size_loc-1)/2;
-    double* varkappa = parameters.get_data() + matrix_size_loc*(matrix_size_loc-1);
 
-    Random_Unitary ru( matrix_size_loc );
-    Matrix Umtx = ru.Construct_Unitary_Matrix( vartheta, varphi, varkappa );
+    Random_Orthogonal ro( matrix_size_loc );
+    Matrix Umtx = ro.Construct_Orthogonal_Matrix( parameters );
 
     return Umtx;
 
@@ -214,7 +211,7 @@ UN::get_submatrix( Matrix_real& parameters ) {
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void UN::reorder_qubits( std::vector<int> qbit_list ) {
+void ON::reorder_qubits( std::vector<int> qbit_list ) {
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
@@ -245,7 +242,7 @@ void UN::reorder_qubits( std::vector<int> qbit_list ) {
 @param parameters_ Real array of the optimized parameters
 */
 void 
-UN::set_optimized_parameters( Matrix_real parameters_ ) {
+ON::set_optimized_parameters( Matrix_real parameters_ ) {
 
     parameters = parameters_.copy();
 
@@ -255,7 +252,7 @@ UN::set_optimized_parameters( Matrix_real parameters_ ) {
 /**
 @brief Call to get the final optimized parameters of the gate.
 */
-Matrix_real UN::get_optimized_parameters() {
+Matrix_real ON::get_optimized_parameters() {
 
     return parameters.copy();
 
@@ -266,7 +263,7 @@ Matrix_real UN::get_optimized_parameters() {
 @return Return with the number of the free parameters
 */
 unsigned int 
-UN::get_parameter_num() {
+ON::get_parameter_num() {
     return parameter_num;
 }
 
@@ -275,16 +272,16 @@ UN::get_parameter_num() {
 @brief Call to get the type of the operation
 @return Return with the type of the operation (see gate_type for details)
 */
-gate_type UN::get_type() {
+gate_type ON::get_type() {
     return type;
 }
 
 
 /**
-@brief Call to get the number of qubits composing the unitary
-@return Return with the number of qubits composing the unitary
+@brief Call to get the number of qubits composing the ONitary
+@return Return with the number of qubits composing the ONitary
 */
-int UN::get_qbit_num() {
+int ON::get_qbit_num() {
     return qbit_num;
 }
 
@@ -293,9 +290,9 @@ int UN::get_qbit_num() {
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-UN* UN::clone() {
+ON* ON::clone() {
 
-    UN* ret = new UN( qbit_num );
+    ON* ret = new ON( qbit_num );
 
     if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters( parameters );

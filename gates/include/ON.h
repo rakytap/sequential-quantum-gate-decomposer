@@ -1,10 +1,10 @@
 /*
-Created on Fri Jun 26 14:13:26 2020
+Created on Fri JON 26 14:13:26 2020
 Copyright (C) 2020 Peter Rakyta, Ph.D.
 
 This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
+it ONder the terms of the GNU General Public License as published by
+the Free Software FoONdation, either version 3 of the License, or
 (at your option) any later version.
 
 This program is distributed in the hope that it will be useful,
@@ -17,12 +17,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file UN.h
+/*! \file ON.h
     \brief Header file for a class for the representation of general gate operations on the first qbit_num-1 qubits.
 */
 
-#ifndef UN_H
-#define UN_H
+#ifndef ON_H
+#define ON_H
 
 #include <vector>
 #include "common.h"
@@ -33,12 +33,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief Base class for the representation of general gate operations.
 */
-class UN : public Gate {
+class ON : public Gate {
 
 
 protected:
 
-   /// Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
+   /// Parameters theta, phi, lambda of the U3 gate after the decomposition of the ONitary is done
    Matrix_real parameters;
 
 public:
@@ -47,20 +47,20 @@ public:
 @brief Default constructor of the class.
 @return An instance of the class
 */
-UN();
+ON();
 
 /**
 @brief Destructor of the class
 */
-virtual ~UN();
+virtual ~ON();
 
 
 /**
 @brief Constructor of the class.
-@param qbit_num_in The number of qubits spanning the unitaries
+@param qbit_num_in The number of qubits spanning the ONitaries
 @return An instance of the class
 */
-UN(int qbit_num_in);
+ON(int qbit_num_in);
 
 /**
 @brief Call to retrieve the operation matrix
@@ -127,8 +127,8 @@ unsigned int get_parameter_num();
 gate_type get_type();
 
 /**
-@brief Call to get the number of qubits composing the unitary
-@return Return with the number of qubits composing the unitary
+@brief Call to get the number of qubits composing the ONitary
+@return Return with the number of qubits composing the ONitary
 */
 int get_qbit_num();
 
@@ -136,7 +136,7 @@ int get_qbit_num();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-UN* clone();
+ON* clone();
 
 };
 

@@ -67,6 +67,12 @@ struct gates_num {
   int syc;
   /// The number of general gates
   int general;
+  /// The number of general UN gates
+  int un;
+  /// The number of general ON gates
+  int on;
+  /// The number of composite gates
+  int com;
 };
 
 

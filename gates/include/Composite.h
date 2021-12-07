@@ -17,23 +17,23 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file UN.h
+/*! \file Composite.h
     \brief Header file for a class for the representation of general gate operations on the first qbit_num-1 qubits.
 */
 
-#ifndef UN_H
-#define UN_H
+#ifndef COM_H
+#define COM_H
 
 #include <vector>
 #include "common.h"
 #include "matrix.h"
 #include "matrix_real.h"
-#include "Gate.h"
+#include "Gates_block.h"
 
 /**
 @brief Base class for the representation of general gate operations.
 */
-class UN : public Gate {
+class Composite : public Gates_block {
 
 
 protected:
@@ -47,12 +47,12 @@ public:
 @brief Default constructor of the class.
 @return An instance of the class
 */
-UN();
+Composite();
 
 /**
 @brief Destructor of the class
 */
-virtual ~UN();
+virtual ~Composite();
 
 
 /**
@@ -60,7 +60,7 @@ virtual ~UN();
 @param qbit_num_in The number of qubits spanning the unitaries
 @return An instance of the class
 */
-UN(int qbit_num_in);
+Composite(int qbit_num_in);
 
 /**
 @brief Call to retrieve the operation matrix
@@ -75,11 +75,6 @@ Matrix get_matrix(Matrix_real& parameters);
 */
 void apply_to( Matrix_real& parameters, Matrix& input );
 
-
-/**
-@brief ?????
-*/
-Matrix get_submatrix( Matrix_real& parameters );
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*Gate
@@ -136,7 +131,7 @@ int get_qbit_num();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-UN* clone();
+Composite* clone();
 
 };
 

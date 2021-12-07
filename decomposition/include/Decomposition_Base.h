@@ -36,6 +36,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "RY.h"
 #include "RZ.h"
 #include "SYC.h"
+#include "UN.h"
+#include "ON.h"
+#include "Composite.h"
 #include <map>
 #include <cstdlib>
 #include <time.h>
@@ -335,7 +338,7 @@ void prepare_gates_to_export();
 @param parameters The parameters of the gates
 @return Returns with a list of gate gates.
 */
-std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, const double* parameters );
+std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, double* parameters );
 
 
 
@@ -345,7 +348,7 @@ std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, const double
 @param parameters The parameters of the gates
 @return Returns with a list of gate gates.
 */
-std::vector<Gate*> prepare_gates_to_export( Gates_block* block_op, const double* parameters );
+std::vector<Gate*> prepare_gates_to_export( Gates_block* block_op, double* parameters );
 
 /**
 @brief Call to prepare the optimized gates to export

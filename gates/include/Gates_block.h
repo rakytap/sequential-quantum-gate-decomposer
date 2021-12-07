@@ -238,6 +238,42 @@ void add_syc_to_end( int target_qbit, int control_qbit);
 */
 void add_syc( int target_qbit, int control_qbit );
 
+
+
+
+/**
+@brief Append a UN gate to the list of gates
+*/
+void add_un_to_end();
+
+/**
+@brief Add a UN gate to the front of the list of gates
+*/
+void add_un();
+
+
+/**
+@brief Append a ON gate to the list of gates
+*/
+void add_on_to_end();
+
+/**
+@brief Add a OUN gate to the front of the list of gates
+*/
+void add_on();
+
+
+/**
+@brief Append a Composite gate to the list of gates
+*/
+void add_composite_to_end();
+
+/**
+@brief Add a Composite gate to the front of the list of gates
+*/
+void add_composite();
+
+
 /**
 @brief Append a list of gates to the list of gates
 @param gates_in A list of gate class instances.

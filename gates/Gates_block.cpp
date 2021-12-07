@@ -31,6 +31,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "X.h"
 #include "SX.h"
 #include "SYC.h"
+#include "UN.h"
+#include "ON.h"
+#include "Composite.h"
 #include "Gates_block.h"
 
 static tbb::spin_mutex my_mutex;
@@ -127,7 +130,7 @@ Gates_block::release_gates() {
         }
         else if (operation->get_type() == SX_OPERATION) {
 
-            SX* sx_operation = static_cast<SX*>(operation);
+            SX* sx_operation = static_cast<SX*>(operation);            
             delete sx_operation;
 
         }
@@ -139,6 +142,18 @@ Gates_block::release_gates() {
         }
         else if (operation->get_type() == GENERAL_OPERATION) {
             delete operation;
+        }
+        else if (operation->get_type() == UN_OPERATION) {
+            UN* un_operation = static_cast<UN*>(operation);
+            delete un_operation;
+        }
+        else if (operation->get_type() == ON_OPERATION) {
+            ON* on_operation = static_cast<ON*>(operation);
+            delete on_operation;
+        }
+        else if (operation->get_type() == COMPOSITE_OPERATION) {
+            Composite* com_operation = static_cast<Composite*>(operation);
+            delete com_operation;
         }
     }
 
@@ -234,6 +249,18 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
         else if (operation->get_type() == GENERAL_OPERATION) {
             operation->apply_to(input);
         }
+        else if (operation->get_type() == UN_OPERATION) {
+            UN* un_operation = static_cast<UN*>(operation);
+            un_operation->apply_to(parameters_mtx, input);
+        }
+        else if (operation->get_type() == ON_OPERATION) {
+            ON* on_operation = static_cast<ON*>(operation);
+            on_operation->apply_to(parameters_mtx, input);
+        }
+        else if (operation->get_type() == COMPOSITE_OPERATION) {
+            Composite* com_operation = static_cast<Composite*>(operation);
+            com_operation->apply_to(parameters_mtx, input);
+        }
 
 #ifdef DEBUG
         if (input.isnan()) {
@@ -305,6 +332,18 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         }
         else if (operation->get_type() == GENERAL_OPERATION) {
             operation->apply_from_right(input);
+        }
+        else if (operation->get_type() == UN_OPERATION) {
+            UN* un_operation = static_cast<UN*>(operation);
+            un_operation->apply_from_right( parameters_mtx, input ); 
+        }
+        else if (operation->get_type() == ON_OPERATION) {
+            ON* on_operation = static_cast<ON*>(operation);
+            on_operation->apply_from_right( parameters_mtx, input ); 
+        }
+        else if (operation->get_type() == COMPOSITE_OPERATION) {
+            Composite* com_operation = static_cast<Composite*>(operation);
+            com_operation->apply_from_right( parameters_mtx, input ); 
         }
 
         parameters = parameters + operation->get_parameter_num();
@@ -666,6 +705,85 @@ void Gates_block::add_gates( std::vector<Gate*>  gates_in) {
 }
 
 
+
+/**
+@brief Append a UN gate to the list of gates
+*/
+void Gates_block::add_un_to_end() {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new UN( qbit_num ));
+
+        // adding the operation to the end of the list of gates
+        add_gate_to_end( operation );
+}
+
+/**
+@brief Add a UN gate to the front of the list of gates
+*/
+void Gates_block::add_un() {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new UN( qbit_num ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
+
+/**
+@brief Append a ON gate to the list of gates
+*/
+void Gates_block::add_on_to_end() {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new ON( qbit_num ));
+
+        // adding the operation to the end of the list of gates
+        add_gate_to_end( operation );
+}
+
+/**
+@brief Add a ON gate to the front of the list of gates
+*/
+void Gates_block::add_on() {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new ON( qbit_num ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
+
+/**
+@brief Append a Composite gate to the list of gates
+*/
+void Gates_block::add_composite_to_end()  {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new Composite( qbit_num ));
+
+        // adding the operation to the end of the list of gates
+        add_gate_to_end( operation );
+}
+
+/**
+@brief Add a Composite gate to the front of the list of gates
+*/
+void Gates_block::add_composite()  {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new ON( qbit_num ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
+
 /**
 @brief Append a general gate to the list of gates
 @param gate A pointer to a class Gate describing a gate operation.
@@ -730,6 +848,9 @@ gates_num Gates_block::get_gate_nums() {
         gate_nums.x       = 0;
         gate_nums.sx      = 0;
         gate_nums.syc     = 0;
+        gate_nums.un     = 0;
+        gate_nums.on     = 0;
+        gate_nums.com     = 0;
         gate_nums.general = 0;
 
         for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
@@ -750,6 +871,9 @@ gates_num Gates_block::get_gate_nums() {
                 gate_nums.x  = gate_nums.x + gate_nums_loc.x;
                 gate_nums.sx = gate_nums.sx + gate_nums_loc.sx;
                 gate_nums.syc   = gate_nums.syc + gate_nums_loc.syc;
+                gate_nums.un   = gate_nums.un + gate_nums_loc.un;
+                gate_nums.on   = gate_nums.on + gate_nums_loc.on;
+                gate_nums.com  = gate_nums.com + gate_nums_loc.com;
             }
             else if (gate->get_type() == U3_OPERATION) {
                 gate_nums.u3   = gate_nums.u3 + 1;
@@ -783,6 +907,15 @@ gates_num Gates_block::get_gate_nums() {
             }
             else if (gate->get_type() == GENERAL_OPERATION) {
                 gate_nums.general   = gate_nums.general + 1;
+            }
+            else if (gate->get_type() == UN_OPERATION) {
+                gate_nums.un   = gate_nums.un + 1;
+            }
+            else if (gate->get_type() == ON_OPERATION) {
+                gate_nums.on   = gate_nums.on + 1;
+            }
+            else if (gate->get_type() == COMPOSITE_OPERATION) {
+                gate_nums.com   = gate_nums.com + 1;
             }
 
         }
@@ -986,6 +1119,30 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 parameter_idx = parameter_idx - block_gate->get_parameter_num();
                 gate_idx = gate_idx + block_gate->get_gate_num();
             }
+            else if (gate->get_type() == UN_OPERATION) {
+
+                parameter_idx = parameter_idx - gate->get_parameter_num();
+
+                printf("%dth gate: UN %d parameters\n", gate_idx, gate->get_parameter_num() );
+                gate_idx = gate_idx + 1;
+
+            }
+            else if (gate->get_type() == ON_OPERATION) {
+
+                parameter_idx = parameter_idx - gate->get_parameter_num();
+
+                printf("%dth gate: ON %d parameters\n", gate_idx, gate->get_parameter_num() );
+                gate_idx = gate_idx + 1;
+
+            }
+            else if (gate->get_type() == COMPOSITE_OPERATION) {
+
+                parameter_idx = parameter_idx - gate->get_parameter_num();
+
+                printf("%dth gate: Composite %d parameters\n", gate_idx, gate->get_parameter_num() );
+                gate_idx = gate_idx + 1;
+
+            }
 
         }
 
@@ -1045,6 +1202,18 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
          else if (gate->get_type() == BLOCK_OPERATION) {
              Gates_block* block_gate = static_cast<Gates_block*>(gate);
              block_gate->reorder_qubits( qbit_list );
+         }
+         else if (gate->get_type() == UN_OPERATION) {
+             UN* un_gate = static_cast<UN*>(gate);
+             un_gate->reorder_qubits( qbit_list );
+         }
+         else if (gate->get_type() == ON_OPERATION) {
+             ON* on_gate = static_cast<ON*>(gate);
+             on_gate->reorder_qubits( qbit_list );
+         }
+         else if (gate->get_type() == COMPOSITE_OPERATION) {
+             Composite* com_gate = static_cast<Composite*>(gate);
+             com_gate->reorder_qubits( qbit_list );
          }
 
 
@@ -1177,6 +1346,24 @@ void Gates_block::combine(Gates_block* op_block) {
             Gate* op_cloned = op->clone();
             add_gate_to_end( op_cloned );
         }
+        else if (op->get_type() == UN_OPERATION) {
+            UN* un_op = static_cast<UN*>( op );
+            UN* un_op_cloned = un_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( un_op_cloned );
+            add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == ON_OPERATION) {
+            ON* on_op = static_cast<ON*>( op );
+            ON* on_op_cloned = on_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( on_op_cloned );
+            add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == COMPOSITE_OPERATION) {
+            Composite* com_op = static_cast<Composite*>( op );
+            Composite* com_op_cloned = com_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( com_op_cloned );
+            add_gate_to_end( op_cloned );
+        }
 
     }
 
@@ -1239,6 +1426,18 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         else if (op->get_type() == BLOCK_OPERATION) {
             Gates_block* block_op = static_cast<Gates_block*>( op );
             block_op->set_qbit_num( qbit_num_in );
+        }
+        else if (op->get_type() == UN_OPERATION) {
+            UN* un_op = static_cast<UN*>( op );
+            un_op->set_qbit_num( qbit_num_in );
+        }
+        else if (op->get_type() == ON_OPERATION) {
+            ON* on_op = static_cast<ON*>( op );
+            on_op->set_qbit_num( qbit_num_in );
+        }
+        else if (op->get_type() == COMPOSITE_OPERATION) {
+            Composite* com_op = static_cast<Composite*>( op );
+            com_op->set_qbit_num( qbit_num_in );
         }
         else if (op->get_type() == GENERAL_OPERATION) {
             op->set_qbit_num( qbit_num_in );
@@ -1343,6 +1542,24 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
             Gates_block* block_op = static_cast<Gates_block*>( op );
             Gates_block* block_op_cloned = block_op->clone();
             Gate* op_cloned = static_cast<Gate*>( block_op_cloned );
+            op_block->add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == UN_OPERATION) {
+            UN* un_op = static_cast<UN*>( op );
+            UN* un_op_cloned = un_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( un_op_cloned );
+            op_block->add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == ON_OPERATION) {
+            ON* on_op = static_cast<ON*>( op );
+            ON* on_op_cloned = on_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( on_op_cloned );
+            op_block->add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == COMPOSITE_OPERATION) {
+            Composite* com_op = static_cast<Composite*>( op );
+            Composite* com_op_cloned = com_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( com_op_cloned );
             op_block->add_gate_to_end( op_cloned );
         }
         else if (op->get_type() == GENERAL_OPERATION) {

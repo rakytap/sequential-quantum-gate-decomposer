@@ -17,14 +17,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file UN.cpp
+/*! \file Composite.cpp
     \brief Class for the representation of general unitary operation on the first qbit_num-1 qubits.
 */
 
 
-#include "UN.h"
+#include "Composite.h"
 #include "common.h"
-#include "Random_Unitary.h"
 #include "dot.h"
 
 
@@ -32,14 +31,14 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @brief Deafult constructor of the class.
 @return An instance of the class
 */
-UN::UN() {
+Composite::Composite() {
 
     // number of qubits spanning the matrix of the operation
     qbit_num = -1;
     // The size N of the NxN matrix associated with the operations.
     matrix_size = -1;
     // The type of the operation (see enumeration gate_type)
-    type = UN_OPERATION;
+    type = COMPOSITE_OPERATION;
     // The index of the qubit on which the operation acts (target_qbit >= 0)
     target_qbit = -1;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
@@ -55,14 +54,14 @@ UN::UN() {
 @param qbit_num_in The number of qubits spanning the unitaries
 @return An instance of the class
 */
-UN::UN(int qbit_num_in) {
+Composite::Composite(int qbit_num_in) {
 
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix
     matrix_size = Power_of_2(qbit_num);
     // A string describing the type of the operation
-    type = UN_OPERATION;
+    type = COMPOSITE_OPERATION;
     // The index of the qubit on which the operation acts (target_qbit >= 0)
     target_qbit = -1;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
@@ -75,14 +74,14 @@ UN::UN(int qbit_num_in) {
 /**
 @brief Destructor of the class
 */
-UN::~UN() {
+Composite::~Composite() {
 }
 
 /**
 @brief Set the number of qubits spanning the matrix of the operation
 @param qbit_num_in The number of qubits spanning the matrix
 */
-void UN::set_qbit_num( int qbit_num_in ) {
+void Composite::set_qbit_num( int qbit_num_in ) {
     // setting the number of qubits
     qbit_num = qbit_num_in;
 
@@ -90,7 +89,8 @@ void UN::set_qbit_num( int qbit_num_in ) {
     matrix_size = Power_of_2(qbit_num);
 
     // Update the number of the parameters
-    parameter_num = (matrix_size/2)*(matrix_size/2-1)+(matrix_size/2-1);
+//    parameter_num = (matrix_size/2)*(matrix_size/2-1)+(matrix_size/2-1);
+    parameter_num = (matrix_size/2)*(matrix_size/2-1)/2;
 
 
 }
@@ -101,7 +101,7 @@ void UN::set_qbit_num( int qbit_num_in ) {
 @return Returns with a matrix of the operation
 */
 Matrix
-UN::get_matrix( Matrix_real& parameters ) {
+Composite::get_matrix( Matrix_real& parameters ) {
 
         Matrix UN_matrix = create_identity(matrix_size);
         apply_to(parameters, UN_matrix);
@@ -121,7 +121,7 @@ UN::get_matrix( Matrix_real& parameters ) {
 @param input The input array on which the gate is applied
 */
 void 
-UN::apply_to( Matrix_real& parameters, Matrix& input ) {
+Composite::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
         std::cout<< "Wrong matrix size in UN gate apply" << std::endl;
@@ -134,20 +134,6 @@ UN::apply_to( Matrix_real& parameters, Matrix& input ) {
     }
 
 
-    Matrix &&Umtx = get_submatrix( parameters );
-     
-    // get horizontal strided blocks of the input matrix
-    Matrix Block0 = Matrix( input.get_data(), input.rows/2, input.cols, input.stride );
-    Matrix Block1 = Matrix( input.get_data()+input.rows/2*input.stride, input.rows/2, input.cols, input.stride );
-
-    // get the transformation of the blocks
-    Matrix Transformed_Block0 = dot( Umtx, Block0 );
-    Matrix Transformed_Block1 = dot( Umtx, Block1 );
-
-    // put back the transformed data into input
-    memcpy( input.get_data(), Transformed_Block0.get_data(), Transformed_Block0.size()*sizeof(QGD_Complex16) );
-    memcpy( input.get_data()+input.rows/2*input.stride, Transformed_Block1.get_data(), Transformed_Block0.size()*sizeof(QGD_Complex16) );
-    
 
 }
 
@@ -157,7 +143,7 @@ UN::apply_to( Matrix_real& parameters, Matrix& input ) {
 @param input The input array on which the gate is applied
 */
 void 
-UN::apply_from_right( Matrix_real& parameters, Matrix& input ) {
+Composite::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.rows != matrix_size ) {
@@ -170,51 +156,16 @@ UN::apply_from_right( Matrix_real& parameters, Matrix& input ) {
         exit(-1);
     }
 
-    Matrix &&Umtx = get_submatrix( parameters );
-
-     
-    // get vertical strided blocks of the input matrix
-    Matrix Block0 = Matrix( input.get_data(), input.rows, input.cols/2, input.stride );
-    Matrix Block1 = Matrix( input.get_data()+input.cols/2, input.rows, input.cols/2, input.stride );
-
-    // get the transformation of the blocks
-    Matrix Transformed_Block0 = dot( Block0, Umtx );
-    Matrix Transformed_Block1 = dot( Block1, Umtx );
-
-    // put back the transformed data into input
-    for (size_t row_idx=0; row_idx<input.rows; row_idx++) {
-        memcpy( input.get_data()+row_idx*input.stride, Transformed_Block0.get_data() + row_idx*Transformed_Block0.stride, Transformed_Block0.cols*sizeof(QGD_Complex16) );
-        memcpy( input.get_data()+row_idx*input.stride + input.cols/2, Transformed_Block1.get_data() + row_idx*Transformed_Block1.stride, Transformed_Block1.cols*sizeof(QGD_Complex16) );
-    }
 }
 
 
-
-/**
-@brief ?????
-*/
-Matrix
-UN::get_submatrix( Matrix_real& parameters ) {
-
-    // create array of random parameters to construct random unitary
-    size_t matrix_size_loc = matrix_size/2;
-    double* vartheta = parameters.get_data();     
-    double* varphi = parameters.get_data() + matrix_size_loc*(matrix_size_loc-1)/2;
-    double* varkappa = parameters.get_data() + matrix_size_loc*(matrix_size_loc-1);
-
-    Random_Unitary ru( matrix_size_loc );
-    Matrix Umtx = ru.Construct_Unitary_Matrix( vartheta, varphi, varkappa );
-
-    return Umtx;
-
-}
 
 
 /**
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void UN::reorder_qubits( std::vector<int> qbit_list ) {
+void Composite::reorder_qubits( std::vector<int> qbit_list ) {
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
@@ -245,7 +196,7 @@ void UN::reorder_qubits( std::vector<int> qbit_list ) {
 @param parameters_ Real array of the optimized parameters
 */
 void 
-UN::set_optimized_parameters( Matrix_real parameters_ ) {
+Composite::set_optimized_parameters( Matrix_real parameters_ ) {
 
     parameters = parameters_.copy();
 
@@ -255,7 +206,8 @@ UN::set_optimized_parameters( Matrix_real parameters_ ) {
 /**
 @brief Call to get the final optimized parameters of the gate.
 */
-Matrix_real UN::get_optimized_parameters() {
+Matrix_real 
+Composite::get_optimized_parameters() {
 
     return parameters.copy();
 
@@ -266,7 +218,7 @@ Matrix_real UN::get_optimized_parameters() {
 @return Return with the number of the free parameters
 */
 unsigned int 
-UN::get_parameter_num() {
+Composite::get_parameter_num() {
     return parameter_num;
 }
 
@@ -275,7 +227,8 @@ UN::get_parameter_num() {
 @brief Call to get the type of the operation
 @return Return with the type of the operation (see gate_type for details)
 */
-gate_type UN::get_type() {
+gate_type 
+Composite::get_type() {
     return type;
 }
 
@@ -284,7 +237,8 @@ gate_type UN::get_type() {
 @brief Call to get the number of qubits composing the unitary
 @return Return with the number of qubits composing the unitary
 */
-int UN::get_qbit_num() {
+int 
+Composite::get_qbit_num() {
     return qbit_num;
 }
 
@@ -293,9 +247,9 @@ int UN::get_qbit_num() {
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-UN* UN::clone() {
+Composite* Composite::clone() {
 
-    UN* ret = new UN( qbit_num );
+    Composite* ret = new Composite( qbit_num );
 
     if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters( parameters );
