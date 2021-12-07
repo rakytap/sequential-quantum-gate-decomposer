@@ -96,22 +96,52 @@ Random_Orthogonal::Construct_Orthogonal_Matrix( Matrix_real &vargamma ) {
             vargamma_mtx[idx*vargamma_mtx.stride + jdx] = vargamma[gamma_index];
             gamma_index++;
         }
-        vargamma_mtx[ idx*dim + idx ] = 3.14159265359/2;
+        //vargamma_mtx[ idx*dim + idx ] = 3.14159265358979323846/2;
     }
+/*
+//vargamma_mtx[0*vargamma_mtx.stride + dim-7] = 0.0;
+//vargamma_mtx[0*vargamma_mtx.stride + dim-6] = 0.0;
+//vargamma_mtx[0*vargamma_mtx.stride + dim-5] = 0.0;
+vargamma_mtx[0*vargamma_mtx.stride + dim-4] = 0.0;
+vargamma_mtx[0*vargamma_mtx.stride + dim-3] = 0.0;
+vargamma_mtx[0*vargamma_mtx.stride + dim-2] = 0.0;
+vargamma_mtx[0*vargamma_mtx.stride + dim-1] = 0.0;
+
+//vargamma_mtx[1*vargamma_mtx.stride + dim-6] = 0.0;
+//vargamma_mtx[1*vargamma_mtx.stride + dim-5] = 0.0;
+vargamma_mtx[1*vargamma_mtx.stride + dim-4] = 0.0;
+vargamma_mtx[1*vargamma_mtx.stride + dim-3] = 0.0;
+vargamma_mtx[1*vargamma_mtx.stride + dim-2] = 0.0;
+vargamma_mtx[1*vargamma_mtx.stride + dim-1] = 0.0;
 
 
- 
-    // construct T2 (two-dimensional orthogonal matrix as a startingpoint of  the iterations)
-    Matrix_real T2(2,2);
-    T2[0] = cos(vargamma[0]);
-    T2[1] = sin(vargamma[0]);
-    T2[2] = -sin(vargamma[0]);
-    T2[3] = cos(vargamma[0]);
+//vargamma_mtx[2*vargamma_mtx.stride + dim-5] = 0.0;
+vargamma_mtx[2*vargamma_mtx.stride + dim-4] = 0.0;
+vargamma_mtx[2*vargamma_mtx.stride + dim-3] = 0.0;
+vargamma_mtx[2*vargamma_mtx.stride + dim-2] = 0.0;
+vargamma_mtx[2*vargamma_mtx.stride + dim-1] = 0.0;
 
+vargamma_mtx[3*vargamma_mtx.stride + dim-4] = 0.0;
+vargamma_mtx[3*vargamma_mtx.stride + dim-3] = 0.0;
+vargamma_mtx[3*vargamma_mtx.stride + dim-2] = 0.0;
+vargamma_mtx[3*vargamma_mtx.stride + dim-1] = 0.0;
 
+//vargamma_mtx[4*vargamma_mtx.stride + dim-3] = 0.0;
+//vargamma_mtx[4*vargamma_mtx.stride + dim-2] = 0.0;
+//vargamma_mtx[4*vargamma_mtx.stride + dim-1] = 0.0;
+
+//vargamma_mtx[5*vargamma_mtx.stride + dim-2] = 0.0;
+//vargamma_mtx[5*vargamma_mtx.stride + dim-1] = 0.0;
+
+//vargamma_mtx[6*vargamma_mtx.stride + dim-1] = 0.0;
+*/
+
+    Matrix_real T2(1,1);
+    T2[0] = 1.0;
+    
     // spawn iterations to construct dim x dim orthogonal matrix
     Matrix_real Tn = T2;
-    for (int ndx=3; ndx<=dim; ndx++) {
+    for (int ndx=2; ndx<=dim; ndx++) {
 
         // preallocate matrix for the new T
         Matrix_real Tn_new(ndx, ndx);
@@ -142,7 +172,12 @@ Random_Orthogonal::Construct_Orthogonal_Matrix( Matrix_real &vargamma ) {
                 int kdx = row_idx-1;
                 sl[row_idx] = tn[kdx*tn.stride+col_idx] * sin(vargamma_mtx[kdx*dim+ndx-1]) + sl[kdx] * cos(vargamma_mtx[kdx*dim+ndx-1]);
 
-                Tn_new[row_idx*Tn_new.stride + col_idx] = tn[row_idx*tn.stride + col_idx] * cos(vargamma_mtx[row_idx*dim+ndx-1]) - sl[row_idx] * sin(vargamma_mtx[row_idx*dim+ndx-1]);
+                if ( row_idx == ndx-1 ) {
+                    Tn_new[row_idx*Tn_new.stride + col_idx] = - sl[row_idx];
+                }
+                else {
+                    Tn_new[row_idx*Tn_new.stride + col_idx] = tn[row_idx*tn.stride + col_idx] * cos(vargamma_mtx[row_idx*dim+ndx-1]) - sl[row_idx] * sin(vargamma_mtx[row_idx*dim+ndx-1]);
+                }
             
             }
 /*
@@ -155,7 +190,7 @@ sl.print_matrix();
 
     }
 
-
+Tn.print_matrix();
     Matrix ret(Tn.rows, Tn.cols);
     for ( size_t idx=0; idx<ret.size(); idx++) {
         ret[idx].real = Tn[idx];
