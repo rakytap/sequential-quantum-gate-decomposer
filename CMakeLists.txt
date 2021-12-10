@@ -319,6 +319,7 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/gates/SX.cpp
     ${PROJECT_SOURCE_DIR}/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/gates/RY.cpp
+    ${PROJECT_SOURCE_DIR}/gates/CRY.cpp
     ${PROJECT_SOURCE_DIR}/gates/RX.cpp
     ${PROJECT_SOURCE_DIR}/gates/RZ.cpp
     ${PROJECT_SOURCE_DIR}/gates/Composite.cpp
@@ -389,6 +390,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/U3.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/RX.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/RY.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CRY.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/RZ.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Composite.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Decomposition_Base.h

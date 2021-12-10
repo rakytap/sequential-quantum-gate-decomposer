@@ -51,6 +51,8 @@ struct gates_num {
   int rx;
   /// The number of RY gates
   int ry;
+  /// The number of CRY gates
+  int cry;
   /// The number of RZ gates
   int rz;
   /// The number of CNOT gates

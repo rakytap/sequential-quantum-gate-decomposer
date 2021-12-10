@@ -34,6 +34,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "X.h"
 #include "SX.h"
 #include "RY.h"
+#include "CRY.h"
 #include "RZ.h"
 #include "SYC.h"
 #include "UN.h"

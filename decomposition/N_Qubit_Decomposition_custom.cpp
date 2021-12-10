@@ -134,6 +134,7 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
         if ( gates_num.x>0 ) std::cout << gates_num.x << " X opeartions," << std::endl;
         if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX opeartions," << std::endl;
         if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore opeartions," << std::endl;
+        if ( gates_num.un>0 ) std::cout << gates_num.un << " UN opeartions," << std::endl;
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
         std::cout << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
@@ -211,6 +212,10 @@ N_Qubit_Decomposition_custom::add_gate_layers() {
                 RY* ry_gate = static_cast<RY*>( gate );
                 add_gate_to_end( (Gate*)ry_gate->clone() );
             }
+            else if (gate->get_type() == CRY_OPERATION ) {
+                CRY* cry_gate = static_cast<CRY*>( gate );
+                add_gate_to_end( (Gate*)cry_gate->clone() );
+            }
             else if (gate->get_type() == RZ_OPERATION ) {
                 RZ* rz_gate = static_cast<RZ*>( gate );
                 add_gate_to_end( (Gate*)rz_gate->clone() );
@@ -222,6 +227,18 @@ N_Qubit_Decomposition_custom::add_gate_layers() {
             else if (gate->get_type() == SX_OPERATION ) {
                 SX* sx_gate = static_cast<SX*>( gate );
                 add_gate_to_end( (Gate*)sx_gate->clone() );
+            }
+            else if (gate->get_type() == UN_OPERATION ) {
+                UN* un_gate = static_cast<UN*>( gate );
+                add_gate_to_end( (Gate*)un_gate->clone() );
+            }
+            else if (gate->get_type() == ON_OPERATION ) {
+                ON* on_gate = static_cast<ON*>( gate );
+                add_gate_to_end( (Gate*)on_gate->clone() );
+            }
+            else if (gate->get_type() == COMPOSITE_OPERATION ) {
+                Composite* com_gate = static_cast<Composite*>( gate );
+                add_gate_to_end( (Gate*)com_gate->clone() );
             }
             else if (gate->get_type() == BLOCK_OPERATION ) {
                 Gates_block* block_gate = static_cast<Gates_block*>( gate );

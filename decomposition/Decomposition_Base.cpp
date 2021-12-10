@@ -760,6 +760,10 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
             RY* ry_gate = static_cast<RY*>( gate );
             ry_gate->apply_to( parameters_mtx, ret_matrix);            
         }
+        else if (gate->get_type() == CRY_OPERATION ) {
+            CRY* cry_gate = static_cast<CRY*>( gate );
+            cry_gate->apply_to( parameters_mtx, ret_matrix);            
+        }
         else if (gate->get_type() == RZ_OPERATION ) {
             RZ* rz_gate = static_cast<RZ*>( gate );
             rz_gate->apply_to( parameters_mtx, ret_matrix);            
@@ -871,6 +875,10 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         else if (gate->get_type() == RY_OPERATION ) {
             RY* ry_gate = static_cast<RY*>(gate);
             ry_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else if (gate->get_type() == CRY_OPERATION ) {
+            CRY* cry_gate = static_cast<CRY*>(gate);
+            cry_gate->apply_from_right(parameters_loc_mtx, mtx);
         }
         else if (gate->get_type() == RZ_OPERATION ) {
             RZ* rz_gate = static_cast<RZ*>(gate);
@@ -1222,6 +1230,24 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
             ry_gate->set_optimized_parameters( vartheta );
             ops_ret.push_back( static_cast<Gate*>(ry_gate) );
+
+
+        }
+        else if (gate->get_type() == CRY_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double vartheta;
+
+            // get the inverse parameters of the RY rotation
+
+            CRY* cry_gate = static_cast<CRY*>(gate);
+
+            vartheta = std::fmod( parameters[parameter_idx], 4*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            cry_gate->set_optimized_parameters( vartheta );
+            ops_ret.push_back( static_cast<Gate*>(cry_gate) );
 
 
         }
