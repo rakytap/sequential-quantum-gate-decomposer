@@ -59,13 +59,6 @@ RZ(int qbit_num_in, int target_qbit_in);
 */
 ~RZ();
 
-/**
-@brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@return Returns with a matrix of the gate
-*/
-Matrix get_matrix( Matrix_real& parameters );
-
 
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input

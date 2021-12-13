@@ -190,7 +190,7 @@ sl.print_matrix();
 
     }
 
-Tn.print_matrix();
+//Tn.print_matrix();
     Matrix ret(Tn.rows, Tn.cols);
     for ( size_t idx=0; idx<ret.size(); idx++) {
         ret[idx].real = Tn[idx];

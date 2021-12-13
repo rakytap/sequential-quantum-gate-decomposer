@@ -80,8 +80,14 @@ protected:
 
     /// A map of <int n: Gates_block* block> describing custom gate structure to be used in the decomposition. Gate block corresponding to n is used in the subdecomposition of the n-th qubit. The Gate block is repeated periodically.
     Gates_block* gate_structure;
-
+    ///
     std::vector<Decomposition_Tree_Node*> root_nodes;
+    ///
+    int level_limit;
+    ///
+    int decomposition_iterations;
+
+    
 
 public:
 
@@ -101,7 +107,7 @@ N_Qubit_Decomposition_adaptive();
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
+N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, guess_type initial_guess_in );
 
 
 
@@ -119,10 +125,37 @@ virtual ~N_Qubit_Decomposition_adaptive();
 virtual void start_decomposition(bool prepare_export=true);
 
 
+
+/**
+@brief ???????????????
+*/
+Gates_block* compress_gate_structure( Gates_block* gate_structure );
+
+/**
+@brief ???????????????
+*/
+Gates_block* compress_gate_structure( Gates_block* gate_structure, Matrix_real& optimized_parameters, int layer_idx, double& current_minimum );
+
+/**
+@brief ???????????????
+*/
+Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& current_minimum );
+
+/**
+@brief ???????????????
+*/
+Matrix_real create_reduced_parameters( Gates_block* gate_structure, Matrix_real& optimized_parameters, int layer_idx );
+
+
+/**
+@brief ???????????????
+*/
+void decompose_UN_gates();
+
 /**
 @brief ????????????????
 */
-Gates_block* create_layers_from_decomposition_tree( const Decomposition_Tree_Node* minimal_root_node, int max_level );
+void create_layers_from_decomposition_tree( const Decomposition_Tree_Node* minimal_root_node, int max_level, Gates_block* gate_structure );
 
 
 
@@ -130,6 +163,19 @@ Gates_block* create_layers_from_decomposition_tree( const Decomposition_Tree_Nod
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
 Gates_block* construct_gate_layer( const int& _target_qbit, const int& _control_qbit);
+
+
+/**
+@brief Call to add static gate components in front of the adaptively optimized gate structure.
+*/
+void add_static_gate_layers_1( Gates_block* gate_structure );
+
+
+/**
+@brief Call to add static gate components following the the adaptively optimized gate structure.
+*/
+void add_static_gate_layers_2( Gates_block* gate_structure );
+
 
 /**
 @brief ??????????????????

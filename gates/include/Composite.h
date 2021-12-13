@@ -29,6 +29,18 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "matrix.h"
 #include "matrix_real.h"
 #include "Gates_block.h"
+#include "CZ.h"
+#include "CH.h"
+#include "CNOT.h"
+#include "U3.h"
+#include "RX.h"
+#include "RY.h"
+#include "RZ.h"
+#include "X.h"
+#include "SX.h"
+#include "SYC.h"
+#include "UN.h"
+#include "ON.h"
 
 /**
 @brief Base class for the representation of general gate operations.

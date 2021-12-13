@@ -67,7 +67,7 @@ Composite::Composite(int qbit_num_in) {
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     control_qbit = -1;
     // The number of parameters
-    parameter_num = 0;
+    parameter_num = (matrix_size/2)*(matrix_size/2-1)/2 - 5;
 }
 
 
@@ -89,8 +89,7 @@ void Composite::set_qbit_num( int qbit_num_in ) {
     matrix_size = Power_of_2(qbit_num);
 
     // Update the number of the parameters
-//    parameter_num = (matrix_size/2)*(matrix_size/2-1)+(matrix_size/2-1);
-    parameter_num = (matrix_size/2)*(matrix_size/2-1)/2;
+    parameter_num = (matrix_size/2)*(matrix_size/2-1)/2 - 5;
 
 
 }
@@ -103,16 +102,18 @@ void Composite::set_qbit_num( int qbit_num_in ) {
 Matrix
 Composite::get_matrix( Matrix_real& parameters ) {
 
-        Matrix UN_matrix = create_identity(matrix_size);
-        apply_to(parameters, UN_matrix);
+    
+        
+Matrix com_matrix;
 
+//com_matrix.print_matrix();
 #ifdef DEBUG
-        if (UN_matrix.isnan()) {
-            std::cout << "U3::get_matrix: UN_matrix contains NaN." << std::endl;
+        if (com_matrix.isnan()) {
+            std::cout << "Composite::get_matrix: UN_matrix contains NaN." << std::endl;
         }
 #endif
 
-        return UN_matrix;
+        return com_matrix;
 }
 
 
@@ -134,7 +135,12 @@ Composite::apply_to( Matrix_real& parameters, Matrix& input ) {
     }
 
 
+    Matrix com_matrix = get_matrix( parameters );
+    Matrix transformed = dot( com_matrix, input );
+    memcpy( input.get_data(), transformed.get_data(), input.size()*sizeof(QGD_Complex16) );
 
+//std::cout << "Composite::apply_to" << std::endl;
+//exit(-1);
 }
 
 
@@ -155,6 +161,13 @@ Composite::apply_from_right( Matrix_real& parameters, Matrix& input ) {
         std::cout << "Not enough parameters given for the UN gate" << std::endl;
         exit(-1);
     }
+
+    Matrix com_matrix = get_matrix( parameters );
+    Matrix transformed = dot( input, com_matrix );
+    memcpy( input.get_data(), transformed.get_data(), input.size()*sizeof(QGD_Complex16) );
+
+//std::cout << "Composite::apply_to" << std::endl;
+//exit(-1);
 
 }
 

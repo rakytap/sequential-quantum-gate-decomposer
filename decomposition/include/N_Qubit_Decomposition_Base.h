@@ -169,6 +169,14 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
 
 
+/**
+// @brief The optimization problem of the final optimization
+@param parameters A GNU Scientific Library containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double optimization_problem_panelty( double* parameters, Gates_block* gates_block );
+
 
 };
 

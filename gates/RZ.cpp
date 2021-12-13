@@ -126,7 +126,7 @@ void
 RZ::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
+        std::cout<< "Wrong matrix size in RZ gate apply" << std::endl;
         exit(-1);
     }
 

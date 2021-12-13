@@ -51,7 +51,7 @@ double get_adaptive_cost_function(Matrix& matrix) {
 
     // thread local storage for cost functions
     tbb::combinable<double> priv_addend{[](){return 0.0;}};
-/*
+
     // determine the partial cost functions
 //    for (int qbit=0; qbit<qbit_num; qbit++) {
     tbb::parallel_for(0, qbit_num, 1, [&](int qbit) {
@@ -93,9 +93,9 @@ double get_adaptive_cost_function(Matrix& matrix) {
     priv_addend.combine_each([&](double &a) {
         cost_function = cost_function + a;
     });
-*/
 
-double cost_function = get_submatrix_cost_function(matrix);
+
+//double cost_function = get_submatrix_cost_function(matrix);
 //std::cout << "qbit: " << qbit_num-1 << " cost function: " << cost_function << std::endl;
 
     return cost_function;

@@ -225,6 +225,7 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
         Lambda = 0.0;
     }
 
+
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
 

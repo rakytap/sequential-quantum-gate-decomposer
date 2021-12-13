@@ -21,10 +21,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class representing a rotation gate around the Y axis.
 */
 
-#ifndef CRY_H
-#define CRY_H
+#ifndef CRZ_H
+#define CRZ_H
 
-#include "RY.h"
+#include "RZ.h"
 #include "matrix.h"
 #include "matrix_real.h"
 #include <math.h>
@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief A class representing a U3 gate.
 */
-class CRY: public RY {
+class CRY: public RZ {
 
 
 public:

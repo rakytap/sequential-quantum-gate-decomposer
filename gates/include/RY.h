@@ -57,7 +57,7 @@ RY(int qbit_num_in, int target_qbit_in);
 /**
 @brief Destructor of the class
 */
-~RY();
+virtual ~RY();
 
 /**
 @brief Call to retrieve the gate matrix

@@ -129,14 +129,14 @@ typedef struct qgd_N_Qubit_Decomposition_adaptive_Wrapper {
 @brief Creates an instance of class N_Qubit_Decomposition and return with a pointer pointing to the class instance (C++ linking is needed)
 @param Umtx An instance of class Matrix containing the unitary to be decomposed
 @param qbit_num Number of qubits spanning the unitary
-@param optimize_layer_num Logical value. Set true to optimize the number of decomposing layers during the decomposition procedure, or false otherwise.
+@param level_limit The maximal number of layers used in the decomposition
 @param initial_guess Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition_adaptive* 
-create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, bool optimize_layer_num, guess_type initial_guess ) {
+create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_limit, guess_type initial_guess ) {
 
-    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, optimize_layer_num, initial_guess );
+    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, level_limit, initial_guess );
 }
 
 
@@ -249,17 +249,17 @@ static int
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"optimize_layer_num", (char*)"initial_guess", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit", (char*)"initial_guess", NULL};
  
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
     int  qbit_num = -1; 
-    bool optimize_layer_num = false;
+    int level_limit = 0;
     PyObject *initial_guess = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OibO", kwlist,
-                                     &Umtx_arg, &qbit_num, &optimize_layer_num, &initial_guess))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiO", kwlist,
+                                     &Umtx_arg, &qbit_num, &level_limit, &initial_guess))
         return -1;
 
     // convert python object array to numpy C API array
@@ -298,7 +298,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
 
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
-        self->decomp =  create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, optimize_layer_num, qgd_initial_guess);
+        self->decomp =  create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, qgd_initial_guess);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;

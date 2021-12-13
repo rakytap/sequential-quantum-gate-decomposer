@@ -68,6 +68,11 @@ virtual ~Gates_block();
 void release_gates();
 
 /**
+@brief Call to release one gate in the list
+*/
+void release_gate( int idx);
+
+/**
 @brief Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate block)
 @param parameters An array pointing to the parameters of the gates
 @return Returns with the gate matrix
@@ -132,6 +137,23 @@ void add_ry_to_end(int target_qbit);
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
 void add_ry(int target_qbit);
+
+
+
+
+/**
+@brief Append a CRY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cry_to_end(int target_qbit, int control_qbit);
+
+/**
+@brief Add a CRY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cry(int target_qbit, int control_qbit);
 
 
 /**
@@ -350,6 +372,13 @@ std::vector<int> get_involved_qubits();
 */
 std::vector<Gate*> get_gates();
 
+
+/**
+@brief Call to get the gates stored in the class.
+@return Return with a list of the gates.
+*/
+Gate* get_gate(int idx);
+
 /**
 @brief Call to append the gates of an gate block to the current block
 @param op_block A pointer to an instance of class Gate_block
@@ -377,6 +406,19 @@ Gates_block* clone();
 */
 int extract_gates( Gates_block* op_block );
 
+
+
+/**
+@brief ?????????
+@return Return with ?????????
+*/
+bool contains_adaptive_gate();
+
+/**
+@brief ?????????
+@return Return with ?????????
+*/
+bool contains_adaptive_gate(int idx);
 
 };
 

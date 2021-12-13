@@ -27,6 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "U3.h"
 #include "RX.h"
 #include "RY.h"
+#include "CRY.h"
 #include "RZ.h"
 #include "X.h"
 #include "SX.h"
@@ -110,6 +111,12 @@ Gates_block::release_gates() {
             delete ry_operation;
 
         }
+        else if (operation->get_type() == CRY_OPERATION) {
+
+            CRY* cry_operation = static_cast<CRY*>(operation);
+            delete cry_operation;
+
+        }
         else if (operation->get_type() == RX_OPERATION) {
 
             RX* rx_operation = static_cast<RX*>(operation);
@@ -162,6 +169,22 @@ Gates_block::release_gates() {
 
 }
 
+
+/**
+@brief Call to release one gate in the list
+*/
+void
+Gates_block::release_gate( int idx) {
+
+    if ( idx>= gates.size() ) return;
+
+    // fist decrese the number of parameters
+    Gate* gate = gates[idx];
+    parameter_num -= gate->get_parameter_num();
+
+    gates.erase( gates.begin() + idx );
+
+}
 
 /**
 @brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)
@@ -233,6 +256,10 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
         else if (operation->get_type() == RY_OPERATION) {
             RY* ry_operation = static_cast<RY*>(operation);
             ry_operation->apply_to( parameters_mtx, input ); 
+        }
+        else if (operation->get_type() == CRY_OPERATION) {
+            CRY* cry_operation = static_cast<CRY*>(operation);
+            cry_operation->apply_to( parameters_mtx, input ); 
         }
         else if (operation->get_type() == RZ_OPERATION) {
             RZ* rz_operation = static_cast<RZ*>(operation);
@@ -317,6 +344,10 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         else if (operation->get_type() == RY_OPERATION) {
             RY* ry_operation = static_cast<RY*>(operation);
             ry_operation->apply_from_right( parameters_mtx, input ); 
+        }
+        else if (operation->get_type() == CRY_OPERATION) {
+            CRY* cry_operation = static_cast<CRY*>(operation);
+            cry_operation->apply_from_right( parameters_mtx, input ); 
         }
         else if (operation->get_type() == RZ_OPERATION) {
             RZ* rz_operation = static_cast<RZ*>(operation);
@@ -439,6 +470,7 @@ void Gates_block::add_ry_to_end(int target_qbit) {
         add_gate_to_end( operation );
 }
 
+
 /**
 @brief Add a RY gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
@@ -453,6 +485,39 @@ void Gates_block::add_ry(int target_qbit ) {
 
 }
 
+
+
+
+/**
+@brief Append a RY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cry_to_end(int target_qbit, int control_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new CRY( qbit_num, target_qbit, control_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate_to_end( operation );
+}
+
+
+
+/**
+@brief Add a RY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cry(int target_qbit, int control_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new CRY( qbit_num, target_qbit, control_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
 
 
 
@@ -776,7 +841,7 @@ void Gates_block::add_composite_to_end()  {
 void Gates_block::add_composite()  {
 
         // create the operation
-        Gate* gate = static_cast<Gate*>(new ON( qbit_num ));
+        Gate* gate = static_cast<Gate*>(new Composite( qbit_num ));
 
         // adding the operation to the front of the list of gates
         add_gate( gate );
@@ -841,6 +906,7 @@ gates_num Gates_block::get_gate_nums() {
         gate_nums.u3      = 0;
         gate_nums.rx      = 0;
         gate_nums.ry      = 0;
+        gate_nums.cry      = 0;
         gate_nums.rz      = 0;
         gate_nums.cnot    = 0;
         gate_nums.cz      = 0;
@@ -864,6 +930,7 @@ gates_num Gates_block::get_gate_nums() {
                 gate_nums.u3   = gate_nums.u3 + gate_nums_loc.u3;
                 gate_nums.rx   = gate_nums.rx + gate_nums_loc.rx;
                 gate_nums.ry   = gate_nums.ry + gate_nums_loc.ry;
+                gate_nums.cry   = gate_nums.cry + gate_nums_loc.cry;
                 gate_nums.rz   = gate_nums.rz + gate_nums_loc.rz;
                 gate_nums.cnot = gate_nums.cnot + gate_nums_loc.cnot;
                 gate_nums.cz = gate_nums.cz + gate_nums_loc.cz;
@@ -883,6 +950,9 @@ gates_num Gates_block::get_gate_nums() {
             }
             else if (gate->get_type() == RY_OPERATION) {
                 gate_nums.ry   = gate_nums.ry + 1;
+            }
+            else if (gate->get_type() == CRY_OPERATION) {
+                gate_nums.cry   = gate_nums.cry + 1;
             }
             else if (gate->get_type() == RZ_OPERATION) {
                 gate_nums.rz   = gate_nums.rz + 1;
@@ -1076,6 +1146,22 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 gate_idx = gate_idx + 1;
 
             }
+            else if (gate->get_type() == CRY_OPERATION) {
+
+                // definig the rotation parameter
+                double vartheta;
+
+                // get the inverse parameters of the U3 rotation
+
+                CRY* cry_gate = static_cast<CRY*>(gate);
+
+                vartheta = std::fmod( parameters[parameter_idx-1], 4*M_PI);
+                parameter_idx = parameter_idx - 1;
+
+                printf("%dth gate: CRY on target qubit: %d, control qubit %d and with parameters theta = %f\n", gate_idx, cry_gate->get_target_qbit(), cry_gate->get_control_qbit(), vartheta );
+                gate_idx = gate_idx + 1;
+
+            }
             else if (gate->get_type() == RZ_OPERATION) {
 
                 // definig the rotation parameter
@@ -1187,6 +1273,10 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
              RY* ry_gate = static_cast<RY*>(gate);
              ry_gate->reorder_qubits( qbit_list );
          }
+         else if (gate->get_type() == CRY_OPERATION) {
+             CRY* cry_gate = static_cast<CRY*>(gate);
+             cry_gate->reorder_qubits( qbit_list );
+         }
          else if (gate->get_type() == RZ_OPERATION) {
              RZ* rz_gate = static_cast<RZ*>(gate);
              rz_gate->reorder_qubits( qbit_list );
@@ -1265,6 +1355,20 @@ std::vector<Gate*> Gates_block::get_gates() {
 
 
 /**
+@brief Call to get the gates stored in the class.
+@return Return with a list of the gates.
+*/
+Gate* Gates_block::get_gate(int idx) {
+
+    if (idx > gates.size() ) {
+        return NULL;
+    }
+
+    return gates[idx];
+}
+
+
+/**
 @brief Call to append the gates of a gate block to the current block
 @param op_block A pointer to an instance of class Gates_block
 */
@@ -1316,6 +1420,12 @@ void Gates_block::combine(Gates_block* op_block) {
             RY* ry_op = static_cast<RY*>( op );
             RY* ry_op_cloned = ry_op->clone();
             Gate* op_cloned = static_cast<Gate*>( ry_op_cloned );
+            add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == CRY_OPERATION) {
+            CRY* cry_op = static_cast<CRY*>( op );
+            CRY* cry_op_cloned = cry_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( cry_op_cloned );
             add_gate_to_end( op_cloned );
         }
         else if (op->get_type() == RZ_OPERATION) {
@@ -1410,6 +1520,10 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         else if (op->get_type() == RY_OPERATION) {
             RY* ry_op = static_cast<RY*>( op );
             ry_op->set_qbit_num( qbit_num_in );
+        }
+        else if (op->get_type() == CRY_OPERATION) {
+            CRY* cry_op = static_cast<CRY*>( op );
+            cry_op->set_qbit_num( qbit_num_in );
         }
         else if (op->get_type() == RZ_OPERATION) {
             RZ* rz_op = static_cast<RZ*>( op );
@@ -1520,6 +1634,12 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
             Gate* op_cloned = static_cast<Gate*>( ry_op_cloned );
             op_block->add_gate_to_end( op_cloned );
         }
+        else if (op->get_type() == CRY_OPERATION) {
+            CRY* cry_op = static_cast<CRY*>( op );
+            CRY* cry_op_cloned = cry_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( cry_op_cloned );
+            op_block->add_gate_to_end( op_cloned );
+        }
         else if (op->get_type() == RZ_OPERATION) {
             RZ* rz_op = static_cast<RZ*>( op );
             RZ* rz_op_cloned = rz_op->clone();
@@ -1574,5 +1694,52 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
 }
 
 
+
+/**
+@brief ?????????
+@return Return with ?????????
+*/
+bool Gates_block::contains_adaptive_gate() {
+
+    for ( std::vector<Gate*>::iterator it=gates.begin(); it != gates.end(); ++it ) {
+        Gate* op = *it;
+
+        if (op->get_type() == CRY_OPERATION) {
+            return true;
+        }
+        else if (op->get_type() == BLOCK_OPERATION) {
+            Gates_block* block_op = static_cast<Gates_block*>( op );
+            bool ret = block_op->contains_adaptive_gate();
+            if ( ret ) return true;
+        }
+    }
+
+    return false;
+
+}
+
+
+
+
+/**
+@brief ?????????
+@return Return with ?????????
+*/
+bool Gates_block::contains_adaptive_gate(int idx) {
+
+    
+    Gate* op = gates[idx];
+
+    if (op->get_type() == CRY_OPERATION) {
+        return true;
+    }
+    else if (op->get_type() == BLOCK_OPERATION) {
+        Gates_block* block_op = static_cast<Gates_block*>( op );
+        return block_op->contains_adaptive_gate();
+    }
+
+    return false;
+
+}
 
 

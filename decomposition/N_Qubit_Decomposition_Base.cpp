@@ -348,8 +348,80 @@ if ( instance->opt_method == 0 ) {
 }
 else{
     cost_function = get_adaptive_cost_function(matrix_new);
+/*
+    // add extra panelties to force the parameters of the controlled rotations to be 0 or -pi
+    double panelty = 0;
+    bool first = false;
+    std::vector<Gate*> gates_loc = instance->get_gates();
+
+    // iterate over the gates and identify controlled rotations
+    int parameter_num_loc = 0;
+    for ( std::vector<Gate*>::iterator it=gates_loc.begin(); it!=gates_loc.end(); it++) {
+    
+        Gate* gate = *it;
+    
+        if ( gate->get_type() == CRY_OPERATION ) {
+            double param_val = parameters->data[parameter_num_loc];//std::fmod( parameters->data[parameter_num_loc], 2*M_PI);
+            double partial_panelty = ( param_val*(param_val-M_PI) );
+            panelty += partial_panelty*partial_panelty;
+        }
+        else if ( gate->get_type() == BLOCK_OPERATION ) {
+//std::cout << "block " << gate->get_parameter_num() <<  std::endl;
+            Gates_block* block = static_cast<Gates_block*>( gate );
+            panelty += instance->optimization_problem_panelty(parameters->data+parameter_num_loc, block); 
+            break;
+        }
+        
+        parameter_num_loc += gate->get_parameter_num();
+        
+
+    }
+
+    cost_function = cost_function * (1 + 0.01*panelty);
+*/
+
 }
     return cost_function;
+}
+
+
+/**
+// @brief The optimization problem of the final optimization
+@param parameters A GNU Scientific Library containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double N_Qubit_Decomposition_Base::optimization_problem_panelty( double* parameters, Gates_block* gates_block ) {
+
+    double panelty = 0;
+    std::vector<Gate*> gates_loc = gates_block->get_gates();
+
+
+    // iterate over the gates and identify controlled rotations
+    int parameter_num_loc = 0;
+    for ( std::vector<Gate*>::iterator it=gates_loc.begin(); it!=gates_loc.end(); it++) {
+    
+        Gate* gate = *it;
+
+    
+        if ( gate->get_type() == CRY_OPERATION ) {
+            double param_val = parameters[parameter_num_loc];//std::fmod( parameters[parameter_num_loc], 2*M_PI);
+//std::cout << parameter_num_loc << std::endl;
+            double partial_panelty = ( param_val*(param_val-M_PI) );
+            panelty += partial_panelty*partial_panelty;
+        }
+        else if ( gate->get_type() == BLOCK_OPERATION ) {
+//std::cout << "block 2" << std::endl;
+            Gates_block* block = static_cast<Gates_block*>( gate );
+            panelty += optimization_problem_panelty(parameters+parameter_num_loc, block); 
+        }
+        
+
+        parameter_num_loc += gate->get_parameter_num();
+
+    }
+
+    return panelty;
 }
 
 

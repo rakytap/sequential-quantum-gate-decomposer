@@ -26,7 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief Nullary constructor of the class.
 */
-CRY::CRY() : RY() {
+CRY::CRY() : RZ() {
 
         // A string describing the type of the gate
         type = CRY_OPERATION;
@@ -43,7 +43,7 @@ CRY::CRY() : RY() {
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-CRY::CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RY(qbit_num_in, target_qbit_in) {
+CRY::CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RZ(qbit_num_in, target_qbit_in) {
 
         // A string describing the type of the gate
         type = CRY_OPERATION;
@@ -80,17 +80,18 @@ void
 CRY::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
+        std::cout<< "Wrong matrix size in CRY gate apply" << std::endl;
         exit(-1);
     }
 
 
     double Theta, Phi, Lambda;
 
-    Theta = parameters[0];
-    Phi = phi0;
+    Theta = theta0;
+    Phi = parameters[0];
     Lambda = lambda0;
     
+Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
 
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
@@ -169,16 +170,18 @@ CRY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 apply_from_right" << std::endl;
+        std::cout<< "Wrong matrix size in CRY apply_from_right" << std::endl;
         exit(-1);
     }
 
     double Theta, Phi, Lambda;
 
-    Theta = parameters[0];
-    Phi = phi0;
+    Theta = theta0;
+    Phi = parameters[0];
     Lambda = lambda0;
-    
+
+Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
+
 
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
