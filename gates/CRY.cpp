@@ -86,12 +86,20 @@ CRY::apply_to( Matrix_real& parameters, Matrix& input ) {
 
 
     double Theta, Phi, Lambda;
-
+/*
+    Theta = parameters[0];
+    Phi = phi0;
+    Lambda = lambda0;
+*/
     Theta = theta0;
     Phi = parameters[0];
     Lambda = lambda0;
-    
-Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
+/*  
+Phi = Phi + M_PI;
+Phi = (1.0-std::cos(Phi/2))*M_PI;
+Phi = Phi - M_PI;
+*/
+//Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
 
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
@@ -108,7 +116,8 @@ Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
     while ( current_idx_pair < matrix_size ) {
 
 
-        tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+        //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+        for( int idx=0; idx<index_step_target; idx++ )  {
 
             int current_idx_loc = current_idx + idx;
             int current_idx_pair_loc = current_idx_pair + idx;
@@ -119,7 +128,7 @@ Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
             // determine the action according to the state of the control qubit
             if ( (current_idx_loc/index_step_control) % 2 == 0) {
                 // leave the state as it is
-                return;
+                continue;
             }
             else {          
 
@@ -145,8 +154,8 @@ Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
 
 
 //std::cout << current_idx << " " << current_idx_pair << std::endl;
-
-        });
+        }
+        //});
 
 
         current_idx = current_idx + 2*index_step_target;
@@ -175,12 +184,20 @@ CRY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     }
 
     double Theta, Phi, Lambda;
-
+/*
+    Theta = parameters[0];
+    Phi = phi0;
+    Lambda = lambda0;
+*/
     Theta = theta0;
     Phi = parameters[0];
     Lambda = lambda0;
-
-Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
+/*
+Phi = Phi + M_PI;
+Phi = (1.0-std::cos(Phi/2))*M_PI;
+Phi = Phi - M_PI;
+*/
+//Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
 
 
     // get the U3 gate of one qubit
@@ -195,10 +212,13 @@ Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
 
 //std::cout << "target qbit: " << target_qbit << std::endl;
 
+tbb::task_arena ta(1);
+ta.execute([&](){
+
     while ( current_idx_pair < matrix_size ) {
 
-
-        tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+        //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+        for( int idx=0; idx<index_step_target; idx++ )  {
 
             int current_idx_loc = current_idx + idx;
             int current_idx_pair_loc = current_idx_pair + idx;
@@ -207,7 +227,7 @@ Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
             // determine the action according to the state of the control qubit
             if ( (current_idx_loc/index_step_control) % 2 == 0) {
                 // leave the state as it is
-                return;
+                continue;
             }
             else {
 
@@ -240,8 +260,8 @@ Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
 
 
 //std::cout << current_idx << " " << current_idx_pair << std::endl;
-
-        });
+        }
+        //});
 
 
         current_idx = current_idx + 2*index_step_target;
@@ -250,7 +270,7 @@ Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
 
     }
 
-
+}); // task arena
 
 }
 

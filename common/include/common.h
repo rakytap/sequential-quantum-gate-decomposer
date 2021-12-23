@@ -64,8 +64,10 @@ extern "C"
 }
 #endif
 
-
-
+/**
+@brief ?????
+*/
+double activation_function( double Phi );
 
 
 /**

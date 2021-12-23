@@ -17,14 +17,14 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file RY.h
-    \brief Header file for a class representing a rotation gate around the Y axis.
+/*! \file Adaptive.h
+    \brief Header file for a class representing a gate used in adaptive decomposition.
 */
 
-#ifndef CRZ_H
-#define CRZ_H
+#ifndef ADAPTIVE_H
+#define ADAPTIVE_H
 
-#include "RZ.h"
+#include "CRY.h"
 #include "matrix.h"
 #include "matrix_real.h"
 #include <math.h>
@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief A class representing a CRY gate.
 */
-class CRY: public RZ {
+class Adaptive: public CRY {
 
 
 public:
@@ -41,7 +41,7 @@ public:
 /**
 @brief Nullary constructor of the class.
 */
-CRY();
+Adaptive();
 
 
 /**
@@ -52,12 +52,12 @@ CRY();
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in);
+Adaptive(int qbit_num_in, int target_qbit_in, int control_qbit_in);
 
 /**
 @brief Destructor of the class
 */
-~CRY();
+~Adaptive();
 
 /**
 @brief Call to retrieve the gate matrix
@@ -84,25 +84,13 @@ void apply_from_right( Matrix_real& parameters, Matrix& input );
 
 
 /**
-@brief Call to set the final optimized parameters of the gate.
-@param Theta Real parameter standing for the parameter theta.
-*/
-void set_optimized_parameters(double Theta );
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
-*/
-Matrix_real get_optimized_parameters();
-
-/**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-CRY* clone();
+Adaptive* clone();
 
 };
 
 
-#endif //CRY
+#endif //Adaptive
 

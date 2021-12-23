@@ -75,6 +75,8 @@ struct gates_num {
   int on;
   /// The number of composite gates
   int com;
+  /// The number of adaptive gates
+  int adap;
 };
 
 

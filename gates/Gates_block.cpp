@@ -34,10 +34,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "SYC.h"
 #include "UN.h"
 #include "ON.h"
+#include "Adaptive.h"
 #include "Composite.h"
 #include "Gates_block.h"
 
-static tbb::spin_mutex my_mutex;
+//static tbb::spin_mutex my_mutex;
 /**
 @brief Default constructor of the class.
 */
@@ -162,10 +163,17 @@ Gates_block::release_gates() {
             Composite* com_operation = static_cast<Composite*>(operation);
             delete com_operation;
         }
-    }
+        else if (operation->get_type() == ADAPTIVE_OPERATION) {
 
+            Adaptive* ad_operation = static_cast<Adaptive*>(operation);
+            delete ad_operation;
+
+        }
+    }
+    
     gates.clear();
     layer_num = 0;
+    parameter_num = 0;
 
 }
 
@@ -284,9 +292,17 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
             ON* on_operation = static_cast<ON*>(operation);
             on_operation->apply_to(parameters_mtx, input);
         }
+        else if (operation->get_type() == BLOCK_OPERATION) {
+            Gates_block* block_operation = static_cast<Gates_block*>(operation);
+            block_operation->apply_to(parameters_mtx, input);
+        }
         else if (operation->get_type() == COMPOSITE_OPERATION) {
             Composite* com_operation = static_cast<Composite*>(operation);
             com_operation->apply_to(parameters_mtx, input);
+        }
+        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+            Adaptive* ad_operation = static_cast<Adaptive*>(operation);
+            ad_operation->apply_to( parameters_mtx, input ); 
         }
 
 #ifdef DEBUG
@@ -372,9 +388,17 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
             ON* on_operation = static_cast<ON*>(operation);
             on_operation->apply_from_right( parameters_mtx, input ); 
         }
+        else if (operation->get_type() == BLOCK_OPERATION) {
+            Gates_block* block_operation = static_cast<Gates_block*>(operation);
+            block_operation->apply_from_right(parameters_mtx, input);
+        }
         else if (operation->get_type() == COMPOSITE_OPERATION) {
             Composite* com_operation = static_cast<Composite*>(operation);
             com_operation->apply_from_right( parameters_mtx, input ); 
+        }
+        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+            Adaptive* ad_operation = static_cast<Adaptive*>(operation);
+            ad_operation->apply_from_right( parameters_mtx, input ); 
         }
 
         parameters = parameters + operation->get_parameter_num();
@@ -849,6 +873,39 @@ void Gates_block::add_composite()  {
 }
 
 
+
+/**
+@brief Append a Adaptive gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_adaptive_to_end(int target_qbit, int control_qbit)  {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new Adaptive( qbit_num, target_qbit, control_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate_to_end( operation );
+}
+
+
+/**
+@brief Add a Adaptive gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_adaptive(int target_qbit, int control_qbit)  {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new Adaptive( qbit_num, target_qbit, control_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
+
+
 /**
 @brief Append a general gate to the list of gates
 @param gate A pointer to a class Gate describing a gate operation.
@@ -896,6 +953,32 @@ void Gates_block::add_gate_to_end( Gate* gate ) {
 
 
 /**
+@brief ??????
+@param gate A pointer to a class Gate describing an gate.
+*/
+void 
+Gates_block::insert_gate( Gate* gate, int idx ) {
+
+
+        // set the number of qubit in the gate
+        gate->set_qbit_num( qbit_num );
+
+        gates.insert( gates.begin()+idx, gate);
+
+        // increase the number of U3 gate parameters by the number of parameters
+        parameter_num = parameter_num + gate->get_parameter_num();
+
+        // increase the number of layers if necessary
+        if (gate->get_type() == BLOCK_OPERATION) {
+            layer_num = layer_num + 1;
+        }
+
+
+}
+
+
+
+/**
 @brief Call to get the number of the individual gate types in the list of gates
 @return Returns with an instance gates_num describing the number of the individual gate types
 */
@@ -918,6 +1001,7 @@ gates_num Gates_block::get_gate_nums() {
         gate_nums.on     = 0;
         gate_nums.com     = 0;
         gate_nums.general = 0;
+        gate_nums.adap = 0;
 
         for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
             // get the specific gate or block of gates
@@ -941,6 +1025,7 @@ gates_num Gates_block::get_gate_nums() {
                 gate_nums.un   = gate_nums.un + gate_nums_loc.un;
                 gate_nums.on   = gate_nums.on + gate_nums_loc.on;
                 gate_nums.com  = gate_nums.com + gate_nums_loc.com;
+                gate_nums.adap = gate_nums.adap + gate_nums_loc.adap;
             }
             else if (gate->get_type() == U3_OPERATION) {
                 gate_nums.u3   = gate_nums.u3 + 1;
@@ -986,6 +1071,9 @@ gates_num Gates_block::get_gate_nums() {
             }
             else if (gate->get_type() == COMPOSITE_OPERATION) {
                 gate_nums.com   = gate_nums.com + 1;
+            }
+            else if (gate->get_type() == ADAPTIVE_OPERATION) {
+                gate_nums.adap   = gate_nums.adap + 1;
             }
 
         }
@@ -1149,16 +1237,16 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
             else if (gate->get_type() == CRY_OPERATION) {
 
                 // definig the rotation parameter
-                double vartheta;
+                double Phi;
 
                 // get the inverse parameters of the U3 rotation
 
                 CRY* cry_gate = static_cast<CRY*>(gate);
 
-                vartheta = std::fmod( parameters[parameter_idx-1], 4*M_PI);
+                Phi = std::fmod( parameters[parameter_idx-1], 2*M_PI);
                 parameter_idx = parameter_idx - 1;
 
-                printf("%dth gate: CRY on target qubit: %d, control qubit %d and with parameters theta = %f\n", gate_idx, cry_gate->get_target_qbit(), cry_gate->get_control_qbit(), vartheta );
+                printf("%dth gate: CRY on target qubit: %d, control qubit %d and with parameters Phi = %f\n", gate_idx, cry_gate->get_target_qbit(), cry_gate->get_control_qbit(), Phi );
                 gate_idx = gate_idx + 1;
 
             }
@@ -1226,6 +1314,22 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 parameter_idx = parameter_idx - gate->get_parameter_num();
 
                 printf("%dth gate: Composite %d parameters\n", gate_idx, gate->get_parameter_num() );
+                gate_idx = gate_idx + 1;
+
+            }
+            else if (gate->get_type() == ADAPTIVE_OPERATION) {
+
+                // definig the rotation parameter
+                double Phi;
+
+                // get the inverse parameters of the U3 rotation
+
+                Adaptive* ad_gate = static_cast<Adaptive*>(gate);
+
+                Phi = std::fmod( parameters[parameter_idx-1], 2*M_PI);
+                parameter_idx = parameter_idx - 1;
+
+                printf("%dth gate: Adaptive gate on target qubit: %d, control qubit %d and with parameters Phi = %f\n", gate_idx, ad_gate->get_target_qbit(), ad_gate->get_control_qbit(), Phi );
                 gate_idx = gate_idx + 1;
 
             }
@@ -1304,6 +1408,10 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
          else if (gate->get_type() == COMPOSITE_OPERATION) {
              Composite* com_gate = static_cast<Composite*>(gate);
              com_gate->reorder_qubits( qbit_list );
+         }
+         else if (gate->get_type() == ADAPTIVE_OPERATION) {
+             Adaptive* ad_gate = static_cast<Adaptive*>(gate);
+             ad_gate->reorder_qubits( qbit_list );
          }
 
 
@@ -1474,6 +1582,12 @@ void Gates_block::combine(Gates_block* op_block) {
             Gate* op_cloned = static_cast<Gate*>( com_op_cloned );
             add_gate_to_end( op_cloned );
         }
+        else if (op->get_type() == ADAPTIVE_OPERATION) {
+            Adaptive* ad_op = static_cast<Adaptive*>( op );
+            Adaptive* ad_op_cloned = ad_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( ad_op_cloned );
+            add_gate_to_end( op_cloned );
+        }
 
     }
 
@@ -1555,6 +1669,10 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         }
         else if (op->get_type() == GENERAL_OPERATION) {
             op->set_qbit_num( qbit_num_in );
+        }
+        else if (op->get_type() == ADAPTIVE_OPERATION) {
+            Adaptive* ad_op = static_cast<Adaptive*>( op );
+            ad_op->set_qbit_num( qbit_num_in );
         }
     }
 }
@@ -1686,6 +1804,12 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
             Gate* op_cloned = op->clone();
             op_block->add_gate_to_end( op_cloned );
         }
+        else if (op->get_type() == ADAPTIVE_OPERATION) {
+            Adaptive* ad_op = static_cast<Adaptive*>( op );
+            Adaptive* ad_op_cloned = ad_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( ad_op_cloned );
+            op_block->add_gate_to_end( op_cloned );
+        }
 
     }
 
@@ -1704,7 +1828,7 @@ bool Gates_block::contains_adaptive_gate() {
     for ( std::vector<Gate*>::iterator it=gates.begin(); it != gates.end(); ++it ) {
         Gate* op = *it;
 
-        if (op->get_type() == CRY_OPERATION) {
+        if (op->get_type() == ADAPTIVE_OPERATION) {
             return true;
         }
         else if (op->get_type() == BLOCK_OPERATION) {
@@ -1730,7 +1854,7 @@ bool Gates_block::contains_adaptive_gate(int idx) {
     
     Gate* op = gates[idx];
 
-    if (op->get_type() == CRY_OPERATION) {
+    if (op->get_type() == ADAPTIVE_OPERATION) {
         return true;
     }
     else if (op->get_type() == BLOCK_OPERATION) {

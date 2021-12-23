@@ -792,6 +792,10 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
             block_gate->apply_to(parameters_mtx, ret_matrix);            
         }
+        else if (gate->get_type() == ADAPTIVE_OPERATION ) {
+            Adaptive* ad_gate = static_cast<Adaptive*>( gate );
+            ad_gate->apply_to( parameters_mtx, ret_matrix);            
+        }
 
     }
 
@@ -907,6 +911,10 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>(gate);
             block_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else if (gate->get_type() == ADAPTIVE_OPERATION ) {
+            Adaptive* ad_gate = static_cast<Adaptive*>(gate);
+            ad_gate->apply_from_right(parameters_loc_mtx, mtx);
         }
 
         parameters_loc = parameters_loc + gate->get_parameter_num();
@@ -1236,17 +1244,17 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         else if (gate->get_type() == CRY_OPERATION) {
 
             // definig the parameter of the rotational angle
-            double vartheta;
+            double phi;
 
-            // get the inverse parameters of the RY rotation
+            // get the inverse parameters of the RZ rotation
 
             CRY* cry_gate = static_cast<CRY*>(gate);
 
-            vartheta = std::fmod( parameters[parameter_idx], 4*M_PI);
+            phi = std::fmod( parameters[parameter_idx], 2*M_PI);
             parameter_idx = parameter_idx + 1;
 
 
-            cry_gate->set_optimized_parameters( vartheta );
+            cry_gate->set_optimized_parameters( phi );
             ops_ret.push_back( static_cast<Gate*>(cry_gate) );
 
 
@@ -1317,6 +1325,24 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
             com_gate->set_optimized_parameters( optimized_parameters );
             ops_ret.push_back( static_cast<Gate*>(com_gate) );
+
+
+        }
+        else if (gate->get_type() == ADAPTIVE_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double phi;
+
+            // get the inverse parameters of the RZ rotation
+
+            Adaptive* ad_gate = static_cast<Adaptive*>(gate);
+
+            phi = std::fmod( parameters[parameter_idx], 2*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            ad_gate->set_optimized_parameters( phi );
+            ops_ret.push_back( static_cast<Gate*>(ad_gate) );
 
 
         }

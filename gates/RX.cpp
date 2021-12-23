@@ -48,8 +48,8 @@ RX::RX() {
         lambda = false;
 
         // set static values for the angles
-        phi0 = -3.141592653589793238462643383279/2;
-        lambda0 = 3.141592653589793238462643383279/2;
+        phi0 = -M_PI/2;
+        lambda0 = M_PI/2;
 
         parameter_num = 0;
 
@@ -94,8 +94,8 @@ RX::RX(int qbit_num_in, int target_qbit_in) {
         lambda = false;
 
         // set static values for the angles
-        phi0 = -3.141592653589793238462643383279/2;
-        lambda0 = 3.141592653589793238462643383279/2;
+        phi0 = -M_PI/2;
+        lambda0 = M_PI/2;
 
         parameter_num = 1;
 

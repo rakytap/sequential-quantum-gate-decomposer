@@ -404,7 +404,7 @@ double N_Qubit_Decomposition_Base::optimization_problem_panelty( double* paramet
         Gate* gate = *it;
 
     
-        if ( gate->get_type() == CRY_OPERATION ) {
+        if ( gate->get_type() == ADAPTIVE_OPERATION ) {
             double param_val = parameters[parameter_num_loc];//std::fmod( parameters[parameter_num_loc], 2*M_PI);
 //std::cout << parameter_num_loc << std::endl;
             double partial_panelty = ( param_val*(param_val-M_PI) );

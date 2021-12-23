@@ -301,6 +301,10 @@ void Sub_Matrix_Decomposition::add_gate_layers() {
                 SX* sx_gate = static_cast<SX*>( gate );
                 add_gate_to_end( (Gate*)sx_gate->clone() );
             }
+            else if (gate->get_type() == ADAPTIVE_OPERATION ) {
+                Adaptive* ad_gate = static_cast<Adaptive*>( gate );
+                add_gate_to_end( (Gate*)ad_gate->clone() );
+            }
             else if (gate->get_type() == BLOCK_OPERATION ) {
                 Gates_block* block_gate = static_cast<Gates_block*>( gate );
                 add_gate_to_end( (Gate*)block_gate->clone() );

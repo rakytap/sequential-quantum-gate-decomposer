@@ -174,6 +174,7 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
         if ( gates_num.x>0 ) std::cout << gates_num.x << " X opeartions," << std::endl;
         if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX opeartions," << std::endl;
         if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore opeartions," << std::endl;
+        if ( gates_num.adap>0 ) std::cout << gates_num.adap << " Adaptive opeartions," << std::endl;
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
         std::cout << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
@@ -404,6 +405,20 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
                 SX* sx_op_cloned = sx_op->clone();
                 sx_op_cloned->set_qbit_num( qbit_num );
                 Gate* op_cloned = static_cast<Gate*>( sx_op_cloned );
+                add_gate( op_cloned );
+            }
+            else if (op->get_type() == CRY_OPERATION) {
+                CRY* cry_op = static_cast<CRY*>( op );
+                CRY* cry_op_cloned = cry_op->clone();
+                cry_op_cloned->set_qbit_num( qbit_num );
+                Gate* op_cloned = static_cast<Gate*>( cry_op_cloned );
+                add_gate( op_cloned );
+            }
+            else if (op->get_type() == ADAPTIVE_OPERATION) {
+                Adaptive* ad_op = static_cast<Adaptive*>( op );
+                Adaptive* ad_op_cloned = ad_op->clone();
+                ad_op_cloned->set_qbit_num( qbit_num );
+                Gate* op_cloned = static_cast<Gate*>( ad_op_cloned );
                 add_gate( op_cloned );
             }
             else if (op->get_type() == BLOCK_OPERATION) {

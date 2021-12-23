@@ -39,6 +39,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "SYC.h"
 #include "UN.h"
 #include "ON.h"
+#include "Adaptive.h"
 #include "Composite.h"
 #include <map>
 #include <cstdlib>

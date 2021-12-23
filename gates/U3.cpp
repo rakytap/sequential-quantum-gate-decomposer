@@ -236,10 +236,14 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 //std::cout << "target qbit: " << target_qbit << std::endl;
 
+tbb::task_arena ta(1);
+ta.execute([&](){
+
     while ( current_idx_pair < matrix_size ) {
 
 
-        tbb::parallel_for(0, index_step, 1, [&](int idx) {  
+        //tbb::parallel_for(0, index_step, 1, [&](int idx) {  
+        for( int idx=0; idx<index_step; idx++ )  {
 
             int current_idx_loc = current_idx + idx;
             int current_idx_pair_loc = current_idx_pair + idx;
@@ -267,8 +271,8 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
             };         
 
 //std::cout << current_idx << " " << current_idx_pair << std::endl;
-
-        });
+        }
+        //});
 
 
         current_idx = current_idx + 2*index_step;
@@ -277,6 +281,7 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     }
 
+}); // task arena
 
 }
 
@@ -357,11 +362,14 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     int current_idx_pair = current_idx+index_step;
 
 //std::cout << "target qbit: " << target_qbit << std::endl;
+tbb::task_arena ta(1);
+ta.execute([&](){
 
     while ( current_idx_pair < matrix_size ) {
 
 
-        tbb::parallel_for(0, index_step, 1, [&](int idx) {  
+        //tbb::parallel_for(0, index_step, 1, [&](int idx) {  
+        for( int idx=0; idx<index_step; idx++ )  {
 
             int current_idx_loc = current_idx + idx;
             int current_idx_pair_loc = current_idx_pair + idx;
@@ -391,8 +399,8 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
             };         
 
 //std::cout << current_idx << " " << current_idx_pair << std::endl;
-
-        });
+        }
+        //});
 
 
         current_idx = current_idx + 2*index_step;
@@ -401,7 +409,7 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
     }
 
-
+}); // task arena
 
 }
 

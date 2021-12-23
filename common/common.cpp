@@ -28,6 +28,30 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "common.h"
 #include <tbb/scalable_allocator.h>
 
+/**
+@brief ?????
+*/
+double activation_function( double Phi ) {
+
+    while (Phi < 0 ) {
+        Phi = Phi + 2*M_PI;
+    }
+
+    while (Phi > 2*M_PI ) {
+        Phi = Phi - 2*M_PI;
+    }
+
+    double ret = 0.5*(1.0-std::cos(Phi))*M_PI;
+//return ret;
+ 
+    if ( Phi < M_PI ) {
+        return ret;
+    }
+    else {
+        return 2*M_PI - ret;
+    }
+
+}
 
 
 /**

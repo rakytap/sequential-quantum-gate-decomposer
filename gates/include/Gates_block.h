@@ -297,6 +297,21 @@ void add_composite();
 
 
 /**
+@brief Append a Adaptive gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_adaptive_to_end(int target_qbit, int control_qbit);
+
+/**
+@brief Add a Adaptive gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_adaptive(int target_qbit, int control_qbit);
+
+
+/**
 @brief Append a list of gates to the list of gates
 @param gates_in A list of gate class instances.
 */
@@ -321,6 +336,13 @@ void add_gate_to_end( Gate* gate );
 @param gate A pointer to a class Gate describing an gate.
 */
 void add_gate( Gate* gate );
+
+
+/**
+@brief ??????
+@param gate A pointer to a class Gate describing an gate.
+*/
+void insert_gate( Gate* gate, int idx );
 
 
 

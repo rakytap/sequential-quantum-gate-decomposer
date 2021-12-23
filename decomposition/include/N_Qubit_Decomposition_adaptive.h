@@ -85,6 +85,8 @@ protected:
     ///
     int level_limit;
     ///
+    int level_limit_min;
+    ///
     int decomposition_iterations;
 
     
@@ -107,7 +109,7 @@ N_Qubit_Decomposition_adaptive();
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, guess_type initial_guess_in );
+N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, guess_type initial_guess_in );
 
 
 
@@ -134,12 +136,23 @@ Gates_block* compress_gate_structure( Gates_block* gate_structure );
 /**
 @brief ???????????????
 */
-Gates_block* compress_gate_structure( Gates_block* gate_structure, Matrix_real& optimized_parameters, int layer_idx, double& current_minimum );
+Gates_block* compress_gate_structure( Gates_block* gate_structure, Matrix_real& optimized_parameters, int layer_idx );
 
 /**
 @brief ???????????????
 */
-Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& current_minimum );
+Gates_block* replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
+
+/**
+@brief ???????????????
+*/
+int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
+
+
+/**
+@brief ???????????????
+*/
+Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 /**
 @brief ???????????????
@@ -182,6 +195,10 @@ void add_static_gate_layers_2( Gates_block* gate_structure );
 */
 void add_finalyzing_layer( Gates_block* gate_structure );
 
+/**
+@brief ??????????????????
+*/
+Gates_block* exchange_CRZ_to_Adaptive_gates( Gates_block* gate_structure, Matrix_real& parameters );
 
 /**
 @brief ??????????????????

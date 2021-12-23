@@ -135,6 +135,7 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
         if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX opeartions," << std::endl;
         if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore opeartions," << std::endl;
         if ( gates_num.un>0 ) std::cout << gates_num.un << " UN opeartions," << std::endl;
+        if ( gates_num.adap>0 ) std::cout << gates_num.adap << " Adaptive opeartions," << std::endl;
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
         std::cout << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
@@ -156,6 +157,8 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 */
 void 
 N_Qubit_Decomposition_custom::add_gate_layers() {
+
+    release_gates();
 
     //////////////////////////////////////
     // add custom gate structure
@@ -239,6 +242,10 @@ N_Qubit_Decomposition_custom::add_gate_layers() {
             else if (gate->get_type() == COMPOSITE_OPERATION ) {
                 Composite* com_gate = static_cast<Composite*>( gate );
                 add_gate_to_end( (Gate*)com_gate->clone() );
+            }
+            else if (gate->get_type() == ADAPTIVE_OPERATION ) {
+                Adaptive* ad_gate = static_cast<Adaptive*>( gate );
+                add_gate_to_end( (Gate*)ad_gate->clone() );
             }
             else if (gate->get_type() == BLOCK_OPERATION ) {
                 Gates_block* block_gate = static_cast<Gates_block*>( gate );
