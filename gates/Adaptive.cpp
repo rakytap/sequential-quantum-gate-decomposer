@@ -32,6 +32,8 @@ Adaptive::Adaptive() : CRY() {
         // A string describing the type of the gate
         type = ADAPTIVE_OPERATION;
 
+        limit = 1;
+
 }
 
 
@@ -48,6 +50,25 @@ Adaptive::Adaptive(int qbit_num_in, int target_qbit_in, int control_qbit_in) : C
 
         // A string describing the type of the gate
         type = ADAPTIVE_OPERATION;
+
+        limit = 1;
+}
+
+
+/**
+@brief Constructor of the class.
+@param qbit_num_in The number of qubits spanning the gate.
+@param target_qbit_in The 0<=ID<qbit_num of the target qubit.
+@param theta_in logical value indicating whether the matrix creation takes an argument theta.
+@param phi_in logical value indicating whether the matrix creation takes an argument phi
+@param lambda_in logical value indicating whether the matrix creation takes an argument lambda
+*/
+Adaptive::Adaptive(int qbit_num_in, int target_qbit_in, int control_qbit_in, int limit_in) : CRY(qbit_num_in, target_qbit_in, control_qbit_in) {
+
+        // A string describing the type of the gate
+        type = ADAPTIVE_OPERATION;
+
+        limit = limit_in;
 }
 
 /**
@@ -79,8 +100,7 @@ Adaptive::apply_to( Matrix_real& parameters, Matrix& input ) {
     Matrix_real Phi_transformed(1,1);
 //    Phi_transformed[0] = Phi;
 //    Phi_transformed[0] = 0.5*(1.0-std::cos(Phi))*M_PI;
-    Phi = activation_function( Phi );
-    Phi = activation_function( Phi );
+    Phi = activation_function( Phi, limit );
     Phi_transformed[0] = Phi;
 
 
@@ -119,8 +139,7 @@ Adaptive::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     Matrix_real Phi_transformed(1,1);
 //    Phi_transformed[0] = Phi;
 //    Phi_transformed[0] = 0.5*(1.0-std::cos(Phi))*M_PI;
-    Phi = activation_function( Phi );
-    Phi = activation_function( Phi );
+    Phi = activation_function( Phi, limit );
     Phi_transformed[0] = Phi;
 /*
 Phi = Phi + M_PI;
@@ -147,7 +166,32 @@ Adaptive* Adaptive::clone() {
         ret->set_optimized_parameters(parameters[0]);
     }
 
+    ret->set_limit( limit );
+
 
     return ret;
 
 }
+
+
+
+/**
+@brief ???????????
+*/
+void 
+Adaptive::set_limit( int limit_in ) {
+
+    limit = limit_in;
+
+}
+
+
+/**
+@brief ???????????
+*/
+int 
+Adaptive::get_limit() {
+
+    return limit;
+}
+

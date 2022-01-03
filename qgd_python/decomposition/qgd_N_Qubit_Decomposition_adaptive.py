@@ -182,7 +182,111 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         return circuit
 
 
-        
-        
-            
+##
+# @brief ???????????????????????
+# @return ??????????????????????
+    def import_Qiskit_Circuit( self, qc_in ):  
+
+        from qiskit import QuantumCircuit, transpile
+        from qiskit.circuit import ParameterExpression
+        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
+
+        qc = transpile(qc_in, optimization_level=3, basis_gates=['cz', 'u3'], layout_method='sabre')
+        print('Depth of Qiskit transpiled quantum circuit:', qc.depth())
+        print('Gate counts in Qiskit transpiled quantum circuit:', qc.count_ops())
+
+        # get the size of the register
+        gate = qc.data[0]
+        qubits = gate[1]
+        register_size = qubits[0].register.size
+
+        # prepare dictionary for single qubit gates
+        single_qubit_gates = dict()
+        for idx in range(register_size):
+            single_qubit_gates[idx] = []
+
+        # prepare dictionary for two-qubit gates
+        two_qubit_gates = list()
+
+        # construct the qgd gate structure            
+        Gates_Block_ret = qgd_Gates_Block(register_size)
+        optimized_parameters = list()
+
+        for gate in qc.data:
+
+            name = gate[0].name
+            if name == 'u3':
+                # add u3 gate 
+                qubits = gate[1]
+                qubit = qubits[0].index
+                single_qubit_gates[qubit].append( {'params': gate[0].params, 'type': 'u3'} )
+
+            elif name == 'cz':
+                # add cz gate 
+                qubits = gate[1]
+                two_qubit_gate = {'type': 'cz', 'qubits': [qubits[0].index, qubits[1].index]}
+
+                qubit0 = qubits[0].index
+                qubit1 = qubits[1].index
+
+                # creating an instance of the wrapper class qgd_Gates_Block
+                Layer = qgd_Gates_Block( register_size )
+
+                # retrive the corresponding single qubit gates and create layer from them
+                if len(single_qubit_gates[qubit0])>0:
+                    gate0 = single_qubit_gates[qubit0][0]
+                    single_qubit_gates[qubit0].pop(0)
+                    
+                    if gate0['type'] == 'u3':
+                        Layer.add_U3( qubit0, True, True, True )
+                        params = gate0['params']
+                        params.reverse()
+                        for param in params:
+                            optimized_parameters = optimized_parameters + [float(param)]
+                        
+
+                if len(single_qubit_gates[qubit1])>0:
+                    gate1 = single_qubit_gates[qubit1][0]
+                    single_qubit_gates[qubit1].pop(0)
+                    
+                    if gate1['type'] == 'u3':
+                        Layer.add_U3( qubit1, True, True, True )
+                        params = gate1['params']
+                        params.reverse()
+                        for param in params:
+                            optimized_parameters = optimized_parameters + [float(param)]
+
+                ## add cz gate to the layer                
+                #Layer.add_CZ( qubit0, qubit1 )
+                Layer.add_adaptive( qubit0, qubit1 )
+                optimized_parameters = optimized_parameters + [np.pi]
+
+                Gates_Block_ret.add_Gates_Block( Layer )
+   
+       
+
+        # add remaining single qubit gates
+        # creating an instance of the wrapper class qgd_Gates_Block
+        Layer = qgd_Gates_Block( register_size )
+
+        for qubit in range(register_size):
+
+            gates = single_qubit_gates[qubit]
+            for gate in gates:
+
+                if gate['type'] == 'u3':
+                    Layer.add_U3( qubit, True, True, True )
+                    params = gate['params']
+                    params.reverse()
+                    for param in params:
+                        optimized_parameters = optimized_parameters + [float(param)]
+
+        Gates_Block_ret.add_Gates_Block( Layer )
+
+        optimized_parameters = np.asarray(optimized_parameters, dtype=np.float64)
+
+        # setting gate structure and optimized initial parameters
+        self.set_Gate_Structure(Gates_Block_ret)
+        self.set_Optimized_Parameters( optimized_parameters )
+          
 

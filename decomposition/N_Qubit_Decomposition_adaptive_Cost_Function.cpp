@@ -53,7 +53,26 @@ double get_adaptive_cost_function(Matrix& matrix) {
     tbb::combinable<double> priv_addend{[](){return 0.0;}};
 
     // determine the partial cost functions
-//    for (int qbit=0; qbit<qbit_num; qbit++) {
+    //for (int qbit=1; qbit<qbit_num; qbit++) {
+    tbb::parallel_for(1, qbit_num, 1, [&](int qbit) {
+
+
+        int submatrix_dim = Power_of_2(qbit+1);
+        int submatrices_num_in_row = dim/submatrix_dim;
+
+        for (int submatrix_idx=0; submatrix_idx<submatrices_num_in_row; submatrix_idx++) {
+
+            Matrix submatrix(matrix.get_data()+submatrix_dim*submatrix_idx, submatrix_dim, submatrix_dim, matrix.stride);
+
+            double &partial_cost_function = priv_addend.local();
+            partial_cost_function += get_submatrix_cost_function(submatrix);
+
+        }
+
+    });
+/*
+
+    //for (int qbit=0; qbit<qbit_num; qbit++) {
     tbb::parallel_for(0, qbit_num, 1, [&](int qbit) {
 
         // reorder the matrix elements
@@ -83,10 +102,11 @@ double get_adaptive_cost_function(Matrix& matrix) {
 
         double &partial_cost_function = priv_addend.local();
         partial_cost_function += get_submatrix_cost_function(mtx_new);
-//std::cout << "qbit: " << qbit << " cost function: " << get_submatrix_cost_function(mtx_new) << std::endl;
-    });
-  
 
+//std::cout << "qbit: " << qbit << " cost function: " << get_submatrix_cost_function(mtx_new) << std::endl;
+    //}
+   });
+  */
 
     //cost_function = get_submatrix_cost_function(matrix);
     double cost_function = 0.0;

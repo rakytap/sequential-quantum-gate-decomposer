@@ -237,6 +237,49 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
             iteration_loops_max = 1;
         }
 
+//////////////////////////
+/*
+        Matrix_real Optimized_parameter_loc( solution_guess_gsl->data, 1, num_of_parameters);
+
+        // do the optimization loops
+        for (int idx=0; idx<iteration_loops_max; idx++) {
+
+            size_t iter = 0;
+            int status;
+
+            double current_minimum_loc;
+
+            
+            for (int iter=0; iter<40; iter++) {               
+ 
+                status = gradient_descent_iteration( Optimized_parameter_loc, current_minimum_loc);
+
+                if (status) {
+                  break;
+                }
+
+            }
+
+            if (current_minimum > current_minimum_loc) {
+                current_minimum = current_minimum_loc;
+                memcpy( optimized_parameters_mtx.get_data(), Optimized_parameter_loc.get_data(), num_of_parameters*sizeof(double) );
+
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    Optimized_parameter_loc[jdx] = Optimized_parameter_loc[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                }
+            }
+            else {
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    Optimized_parameter_loc[jdx] = Optimized_parameter_loc[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
+                }
+            }
+
+
+//std::cout << current_minimum << " " << current_minimum_loc << std::endl;
+        }
+*/
+///////////////////////////////
+
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
 
@@ -263,7 +306,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
             s = gsl_multimin_fdfminimizer_alloc (T, num_of_parameters);
 
 
-            gsl_multimin_fdfminimizer_set (s, &my_func, solution_guess_gsl, 0.1, 0.1);
+            gsl_multimin_fdfminimizer_set (s, &my_func, solution_guess_gsl, 1e-2, 0.1);
 
             do {
                 iter++;
@@ -274,7 +317,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
                   break;
                 }
 
-                status = gsl_multimin_test_gradient (s->gradient, 1e-1);
+                status = gsl_multimin_test_gradient (s->gradient, 1e-3);
 
             } while (status == GSL_CONTINUE && iter < 100);
 
@@ -301,6 +344,91 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 
 }
 
+
+
+/**
+@brief ??????????????????????????????
+*/
+int 
+N_Qubit_Decomposition_Base::gradient_descent_iteration( Matrix_real Optimized_parameter_loc, double& current_minimum_loc) {
+
+    double cost_function;
+    Matrix_real grad;
+    optimization_problem_combined( Optimized_parameter_loc, cost_function, grad );
+
+    current_minimum_loc = cost_function;
+
+    double grad_norm = 0.0;
+
+
+
+    for ( int idx=0; idx<Optimized_parameter_loc.size(); idx++ ) {
+        // calculate the norm of the gradient
+        grad_norm += grad[idx]*grad[idx];
+
+        // calculate the displaced parameters
+        Optimized_parameter_loc[idx] -= 1e-3*grad[idx];
+    }
+    grad_norm = std::sqrt(grad_norm);
+
+//current_minimum_loc = optimization_problem( Optimized_parameter_loc.get_data() );
+
+   /*
+    
+    double eta = 1e-3;
+    int cost_val_num = 6;
+    Matrix_real cost_vals(1, cost_val_num);
+    for (int idx=0; idx<cost_val_num; idx++) {
+
+        Matrix_real&& parameters = Optimized_parameter_loc.copy();
+
+        for ( int jdx=0; jdx<Optimized_parameter_loc.size(); jdx++ ) {
+            // calculate the displaced parameters
+            parameters[idx] -= eta*grad[idx];
+        }
+
+        cost_vals[idx] = optimization_problem( parameters.get_data() );
+        eta = eta/5;
+
+    }
+
+
+
+    // find the lowest cost function
+    eta = 1e-1;
+    int idx_min = -1;
+    double eta_min = eta;
+    for (int idx=0; idx<cost_val_num; idx++) {
+
+        if ( current_minimum_loc > cost_vals[idx] ) {
+            idx_min = idx;
+            current_minimum_loc = cost_vals[idx];
+            eta_min = eta;
+        }
+
+        eta = eta/5;
+
+    }
+
+    if ( idx_min>=0 ) {
+
+        // set the parameters for the minimum
+        for ( int idx=0; idx<Optimized_parameter_loc.size(); idx++ ) {
+            // calculate the displaced parameters
+            Optimized_parameter_loc[idx] -= eta_min*grad[idx];
+        } 
+    }
+*/
+
+//std::cout << "grad norm: " << grad_norm << ", cost_function: " << cost_function << std::endl;
+
+    if ( grad_norm < 1e-3 || current_minimum_loc < optimization_tolerance ) {
+        return 1;
+    }
+    else {
+        return 0;
+    }
+}
 
 
 /**

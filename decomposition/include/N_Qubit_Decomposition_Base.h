@@ -132,6 +132,11 @@ void final_optimization();
 */
 void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
+/**
+@brief ??????????????????????????????
+*/
+int gradient_descent_iteration( Matrix_real Optimized_parameter_loc, double& current_minimum_loc);
+
 
 /**
 @brief The optimization problem of the final optimization
@@ -167,6 +172,8 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
 static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
+
+void optimization_problem_combined( Matrix_real Optimized_parameter_loc, double& cost_function, Matrix_real& grad );
 
 
 /**

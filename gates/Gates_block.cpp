@@ -71,6 +71,7 @@ Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
 Gates_block::~Gates_block() {
 
     release_gates();
+
 }
 
 /**

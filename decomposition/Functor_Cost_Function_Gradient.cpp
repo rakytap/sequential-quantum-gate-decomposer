@@ -65,6 +65,52 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
 
 
 
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param f0 The value of the cost function at x0.
+@param grad A GNU Scientific Library vector containing the calculated gradient components.
+*/
+
+void N_Qubit_Decomposition_Base::optimization_problem_combined( Matrix_real parameters, double& f0, Matrix_real& grad ) {
+
+    Matrix_real f_vals(1,parameters.size());
+
+
+    // the difference in one direction in the parameter for the gradient calculation
+    double dparam = 1e-8;
+
+    // calculate the function values at displaced x and the central x0 points through TBB parallel for
+    tbb::parallel_for(0, (int)parameter_num+1, 1, [&](int idx) {
+
+        if (idx == (int)parameters.size()) {
+            // calculate function value at x0
+            f0 = optimization_problem(parameters.get_data() );
+        }
+        else {
+
+            Matrix_real parameters_d = parameters.copy();
+            parameters_d[idx] = parameters_d[idx] + dparam;
+
+            // calculate the cost function at the displaced point
+            f_vals[idx] = optimization_problem(parameters_d.get_data());
+
+        }
+
+    });
+
+
+    grad = Matrix_real(1,parameters.size());
+    for (int idx=0; idx<parameter_num; idx++) {
+        // calculate and set the gradient
+        grad[idx] = (f_vals[idx]-f0)/dparam;
+    }
+
+
+}
+
+
 
 /**
 @brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.

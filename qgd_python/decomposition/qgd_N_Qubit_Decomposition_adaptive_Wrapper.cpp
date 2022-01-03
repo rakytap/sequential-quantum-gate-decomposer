@@ -904,6 +904,34 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Blocks(qgd_N_Qubit_D
 
 
 
+/**
+@brief Wrapper function to set custom gate structure for the decomposition.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+@param args A tuple of the input arguments: gate_structure_dict (PyDict)
+gate_structure_dict: ?????????????????????????????
+@return Returns with zero on success.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    PyObject* gate_structure_py; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &gate_structure_py )) return Py_BuildValue("i", -1);
+
+
+    // convert gate structure from PyObject to qgd_Gates_Block
+    qgd_Gates_Block* qgd_op_block = (qgd_Gates_Block*) gate_structure_py;
+
+    self->decomp->set_adaptive_gate_structure( qgd_op_block->gate );
+
+    return Py_BuildValue("i", 0);
+
+
+}
+
+
 
 /**
 @brief Wrapper method to reorder the qubits in the decomposition class.
@@ -1001,6 +1029,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Verbose", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Verbose, METH_VARARGS,
      "Call to set the verbosity of the qgd_N_Qubit_Decomposition class."
+    },
+    {"set_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure, METH_VARARGS,
+     "Call to set adaptive custom gate structure in the decomposition."
     },
     {"Reorder_Qubits", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Reorder_Qubits, METH_VARARGS,
      "Wrapper method to reorder the qubits in the decomposition class."

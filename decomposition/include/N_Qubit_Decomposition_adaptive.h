@@ -78,17 +78,14 @@ protected:
     std::vector<Decomposition_Tree_Node*> root_nodes;
 */
 
-    /// A map of <int n: Gates_block* block> describing custom gate structure to be used in the decomposition. Gate block corresponding to n is used in the subdecomposition of the n-th qubit. The Gate block is repeated periodically.
+    /// A gate structure describing custom gate structure to be used in the decomposition. 
     Gates_block* gate_structure;
-    ///
-    std::vector<Decomposition_Tree_Node*> root_nodes;
     ///
     int level_limit;
     ///
     int level_limit_min;
     ///
     int decomposition_iterations;
-
     
 
 public:
@@ -159,58 +156,27 @@ Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_real& opt
 */
 Matrix_real create_reduced_parameters( Gates_block* gate_structure, Matrix_real& optimized_parameters, int layer_idx );
 
-
-/**
-@brief ???????????????
-*/
-void decompose_UN_gates();
-
-/**
-@brief ????????????????
-*/
-void create_layers_from_decomposition_tree( const Decomposition_Tree_Node* minimal_root_node, int max_level, Gates_block* gate_structure );
-
-
-
 /**
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
 Gates_block* construct_gate_layer( const int& _target_qbit, const int& _control_qbit);
-
-
-/**
-@brief Call to add static gate components in front of the adaptively optimized gate structure.
-*/
-void add_static_gate_layers_1( Gates_block* gate_structure );
-
-
-/**
-@brief Call to add static gate components following the the adaptively optimized gate structure.
-*/
-void add_static_gate_layers_2( Gates_block* gate_structure );
-
 
 /**
 @brief ??????????????????
 */
 void add_finalyzing_layer( Gates_block* gate_structure );
 
-/**
-@brief ??????????????????
-*/
-Gates_block* exchange_CRZ_to_Adaptive_gates( Gates_block* gate_structure, Matrix_real& parameters );
 
 /**
-@brief ??????????????????
+@brief ???????????????
 */
-Decomposition_Tree_Node* find_minimal_child_node( std::vector<Decomposition_Tree_Node*> &children );
-
+void insert_random_layers( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 /**
-@brief ??????????????????
+@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
+@param gate_structure An <int, Gates_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
 */
-void delete_root_node( Decomposition_Tree_Node* root_node );
-
+void set_adaptive_gate_structure( Gates_block* gate_structure_in );
 
 };
 

@@ -521,7 +521,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
             // optimization result is displayed in each 500th iteration
-            if (iter_idx % 5000 == 0) {
+            if (iter_idx % 500 == 0) {
                 if (verbose) {
                     tbb::tick_count current_time = tbb::tick_count::now();
                     printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, (current_time - start_time).seconds());
@@ -535,7 +535,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, min_vec_num, minvec_mean));
 
             // conditions to break the iteration cycles
-            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < optimization_tolerance ) {
+            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-6 ) {
                 if (verbose) {
                     printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
                     fflush(stdout);

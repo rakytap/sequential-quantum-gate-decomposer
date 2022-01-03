@@ -117,8 +117,8 @@ void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) con
         // create submarix data by striding the original matrix
         size_t jdx = submtx_idx % submatrices_num_row;
         size_t idx = (size_t) (submtx_idx-jdx)/submatrices_num_row;
-        size_t matrix_offset = idx*(matrix_size*submatrix_size) + jdx*(submatrix_size);
-        submatrix = Matrix(matrix.get_data()+matrix_offset, submatrix_size, submatrix_size, matrix_size);
+        size_t matrix_offset = idx*(matrix.stride*submatrix_size) + jdx*(submatrix_size);
+        submatrix = Matrix(matrix.get_data()+matrix_offset, submatrix_size, submatrix_size, matrix.stride);
 
 
 /*
@@ -206,7 +206,7 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
     //tbb::parallel_for( tbb::blocked_range<size_t>(0, submatrix_size, 1), [&](tbb::blocked_range<size_t> r){
 //        for ( size_t row_idx=r.begin(); row_idx != r.end(); row_idx++) {
         for ( size_t row_idx=0; row_idx < submatrix_size; row_idx++) {
-            size_t element_idx = row_idx*submatrix_size+row_idx;
+            size_t element_idx = row_idx*submatrix_prod.stride+row_idx;
             submatrix_prod[element_idx].real = submatrix_prod[element_idx].real  - corner_element.real;
             submatrix_prod[element_idx].imag = submatrix_prod[element_idx].imag  - corner_element.imag;
         }

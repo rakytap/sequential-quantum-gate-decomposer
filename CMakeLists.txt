@@ -16,6 +16,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
 include(CheckFunctionExists)
+include(cmake/check_AVX.cmake)
 
 # variables for compile and link options
 set(CXX_FLAGS_DEBUG)
@@ -154,6 +155,9 @@ list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEB
 list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
 
 
+# checking for AVX/AVX2 support
+CHECK_FOR_AVX()
+
 # Identify the compiler type and set compiler specific options
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   # using Clang
@@ -165,19 +169,44 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   list(APPEND CXX_FLAGS_DEBUG "-g3" "-ggdb")
   list(APPEND CXX_FLAGS_RELEASE "-ftree-vectorize")
 
+  if (${HAVE_AVX512F_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx512f" "-DUSE_AVX")
+  elseif (${HAVE_AVX2_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx2" "-DUSE_AVX")
+  elseif (${HAVE_AVX_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx" "-DUSE_AVX")
+  endif()
+
+
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   # using Intel C++
   message("-- Using Intel compiler")
-  if (USE_MKL)
+  if (BLAS_IS_MKL)
     list(APPEND CXX_FLAGS_DEBUG "-mkl" "-tbb")
     list(APPEND CXX_FLAGS_RELEASE "-mkl" "-tbb")
+  endif()
+
+  if (${HAVE_AVX512F_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx512f" "-DUSE_AVX512F")
+  elseif (${HAVE_AVX2_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx2" "-DUSE_AVX")
+  elseif (${HAVE_AVX_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx" "-DUSE_AVX")
   endif()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   # using Visual Studio C++
   message("-- Using Visual Studio C++ compiler")
-endif()
 
+  if (${HAVE_AVX512F_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "/arch:AVX512F" "-DUSE_AVX512F")
+  elseif (${HAVE_AVX2_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "/arch:AVX2" "-DUSE_AVX")
+  elseif (${HAVE_AVX_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "/arch:AVX" "-DUSE_AVX")
+  endif()
+
+endif()
 
 
 ############################################################

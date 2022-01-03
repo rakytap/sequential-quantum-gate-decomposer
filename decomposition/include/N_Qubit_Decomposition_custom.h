@@ -38,7 +38,7 @@ public:
 
 protected:
 
-    /// A map of <int n: Gates_block* block> describing custom gate structure to be used in the decomposition. Gate block corresponding to n is used in the subdecomposition of the n-th qubit. The Gate block is repeated periodically.
+    /// A gate structure describing custom gate structure to be used in the decomposition.
     Gates_block* gate_structure;
 
 

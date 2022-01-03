@@ -67,7 +67,7 @@ extern "C"
 /**
 @brief ?????
 */
-double activation_function( double Phi );
+double activation_function( double Phi, int limit );
 
 
 /**

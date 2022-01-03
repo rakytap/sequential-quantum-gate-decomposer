@@ -38,6 +38,13 @@ class Adaptive: public CRY {
 
 public:
 
+protected:
+    ///
+    int limit;
+
+
+public:
+
 /**
 @brief Nullary constructor of the class.
 */
@@ -53,6 +60,17 @@ Adaptive();
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
 Adaptive(int qbit_num_in, int target_qbit_in, int control_qbit_in);
+
+
+/**
+@brief Constructor of the class.
+@param qbit_num_in The number of qubits spanning the gate.
+@param target_qbit_in The 0<=ID<qbit_num of the target qubit.
+@param theta_in logical value indicating whether the matrix creation takes an argument theta.
+@param phi_in logical value indicating whether the matrix creation takes an argument phi
+@param lambda_in logical value indicating whether the matrix creation takes an argument lambda
+*/
+Adaptive(int qbit_num_in, int target_qbit_in, int control_qbit_in, int limit_in);
 
 /**
 @brief Destructor of the class
@@ -81,6 +99,18 @@ void apply_to( Matrix_real& parameters, Matrix& input );
 @param input The input array on which the gate is applied
 */
 void apply_from_right( Matrix_real& parameters, Matrix& input );
+
+
+/**
+@brief ???????????
+*/
+void set_limit( int limit_in );
+
+
+/**
+@brief ???????????
+*/
+int get_limit();
 
 
 /**
