@@ -48,7 +48,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "gsl/gsl_multimin.h"
 #include "gsl/gsl_statistics.h"
 #include <tbb/cache_aligned_allocator.h>
-#include "Decomposition_Tree.h"
 
 
 /// @brief Type definition of the types of the initial guess

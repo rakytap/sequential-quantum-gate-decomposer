@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Composite.h"
 #include "common.h"
 #include "dot.h"
+#include "Random_Unitary.h"
 
 
 /**
@@ -67,7 +68,7 @@ Composite::Composite(int qbit_num_in) {
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled operations
     control_qbit = -1;
     // The number of parameters
-    parameter_num = (matrix_size/2)*(matrix_size/2-1)/2 - 5;
+    parameter_num = (matrix_size)*(matrix_size-1) + (matrix_size-1);
 }
 
 
@@ -89,7 +90,7 @@ void Composite::set_qbit_num( int qbit_num_in ) {
     matrix_size = Power_of_2(qbit_num);
 
     // Update the number of the parameters
-    parameter_num = (matrix_size/2)*(matrix_size/2-1)/2 - 5;
+    parameter_num = (matrix_size)*(matrix_size-1) + (matrix_size-1);
 
 
 }
@@ -102,10 +103,16 @@ void Composite::set_qbit_num( int qbit_num_in ) {
 Matrix
 Composite::get_matrix( Matrix_real& parameters ) {
 
-    
         
-Matrix com_matrix;
 
+
+        // create array of random parameters to construct random unitary
+    double* vartheta = parameters.get_data();//(double*) qgd_calloc( int(dim*(dim-1)/2),sizeof(double), 64);
+    double* varphi = parameters.get_data()+int((matrix_size*(matrix_size-1))/2);//(double*) qgd_calloc( int(dim*(dim-1)/2),sizeof(double), 64);
+    double* varkappa = parameters.get_data()+matrix_size*(matrix_size-1);//(double*) qgd_calloc( (dim-1),sizeof(double), 64);
+
+    Random_Unitary ru(matrix_size);
+    Matrix com_matrix  = ru.Construct_Unitary_Matrix( vartheta, varphi, varkappa );
 //com_matrix.print_matrix();
 #ifdef DEBUG
         if (com_matrix.isnan()) {
@@ -125,12 +132,12 @@ void
 Composite::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in UN gate apply" << std::endl;
+        std::cout<< "Wrong matrix size in Composite gate apply" << std::endl;
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-        std::cout << "Not enough parameters given for the UN gate" << std::endl;
+        std::cout << "Not enough parameters given for the Composite gate" << std::endl;
         exit(-1);
     }
 
@@ -153,12 +160,12 @@ Composite::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in UN gate apply" << std::endl;
+        std::cout<< "Wrong matrix size in Composite gate apply" << std::endl;
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-        std::cout << "Not enough parameters given for the UN gate" << std::endl;
+        std::cout << "Not enough parameters given for the Composite gate" << std::endl;
         exit(-1);
     }
 

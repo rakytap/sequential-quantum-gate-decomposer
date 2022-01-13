@@ -100,6 +100,21 @@ Gate::get_matrix() {
     return matrix_alloc;
 }
 
+/**
+@brief Call to apply the gate on the input array/matrix by U3*input
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void 
+Gate::apply_to_list( std::vector<Matrix>& input ) {
+
+
+    for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
+        apply_to( *it );
+    }
+
+}
+
 
 /**
 @brief Call to apply the gate on the input array/matrix

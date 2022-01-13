@@ -24,7 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef CRZ_H
 #define CRZ_H
 
-#include "RZ.h"
+#include "RY.h"
 #include "matrix.h"
 #include "matrix_real.h"
 #include <math.h>
@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief A class representing a CRY gate.
 */
-class CRY: public RZ {
+class CRY: public RY {
 
 
 public:
@@ -72,7 +72,7 @@ CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in);
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_to( Matrix_real& parameters, Matrix& input );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 );
 
 
 /**
@@ -80,7 +80,12 @@ void apply_to( Matrix_real& parameters, Matrix& input );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_from_right( Matrix_real& parameters, Matrix& input );
+virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
+
+/**
+@brief ???????????????
+*/
+virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
 
 
 /**

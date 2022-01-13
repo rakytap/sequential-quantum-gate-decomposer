@@ -159,6 +159,22 @@ U3::get_matrix( Matrix_real& parameters ) {
 
 }
 
+/**
+@brief Call to apply the gate on the input array/matrix by U3*input
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void 
+U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input, const double scale=1.0 ) {
+
+
+    for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
+        apply_to( parameters_mtx, *it, scale );
+    }
+
+}
+
+
 
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
@@ -166,55 +182,54 @@ U3::get_matrix( Matrix_real& parameters ) {
 @param input The input array on which the gate is applied
 */
 void 
-U3::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
+U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, const double scale=1.0 ) {
 
     if (input.rows != matrix_size ) {
         std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
         exit(-1);
     }
 
-    double* parameters = parameters_mtx.get_data();
 
     double Theta, Phi, Lambda;
 
     if (theta && !phi && lambda) {
-        Theta = parameters[0];
+        Theta = parameters_mtx[0];
         Phi = 0.0;
-        Lambda = parameters[1];
+        Lambda = parameters_mtx[1];
     }
 
     else if (theta && phi && lambda) {
-        Theta = parameters[0];
-        Phi = parameters[1];
-        Lambda = parameters[2];
+        Theta = parameters_mtx[0];
+        Phi = parameters_mtx[1];
+        Lambda = parameters_mtx[2];
     }
 
     else if (!theta && phi && lambda) {
         Theta = 0.0;
-        Phi = parameters[0];
-        Lambda = parameters[1];
+        Phi = parameters_mtx[0];
+        Lambda = parameters_mtx[1];
     }
 
     else if (theta && phi && !lambda) {
-        Theta = parameters[0];
-        Phi = parameters[1];
+        Theta = parameters_mtx[0];
+        Phi = parameters_mtx[1];
         Lambda = 0.0;
     }
 
     else if (!theta && !phi && lambda) {
         Theta = 0.0;
         Phi = 0.0;
-        Lambda = parameters[0];
+        Lambda = parameters_mtx[0];
     }
 
     else if (!theta && phi && !lambda) {
         Theta = 0.0;
-        Phi = parameters[0];
+        Phi = parameters_mtx[0];
         Lambda = 0.0;
     }
 
     else if (theta && !phi && !lambda) {
-        Theta = parameters[0];
+        Theta = parameters_mtx[0];
         Phi = 0.0;
         Lambda = 0.0;
     }
@@ -227,7 +242,21 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda, scale );
+
+
+    apply_kernel_to( u3_1qbit, input );
+
+
+}
+
+
+
+/**
+@brief ???????????
+*/
+void 
+U3::apply_kernel_to( Matrix& u3_1qbit, Matrix& input ) {
 
 
     int index_step = Power_of_2(target_qbit);
@@ -236,8 +265,6 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 //std::cout << "target qbit: " << target_qbit << std::endl;
 
-tbb::task_arena ta(1);
-ta.execute([&](){
 
     while ( current_idx_pair < matrix_size ) {
 
@@ -281,9 +308,8 @@ ta.execute([&](){
 
     }
 
-}); // task arena
-
 }
+
 
 
 
@@ -301,48 +327,46 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         exit(-1);
     }
 
-    double* parameters = parameters_mtx.get_data();
-
     double Theta, Phi, Lambda;
 
     if (theta && !phi && lambda) {
-        Theta = parameters[0];
+        Theta = parameters_mtx[0];
         Phi = 0.0;
-        Lambda = parameters[1];
+        Lambda = parameters_mtx[1];
     }
 
     else if (theta && phi && lambda) {
-        Theta = parameters[0];
-        Phi = parameters[1];
-        Lambda = parameters[2];
+        Theta = parameters_mtx[0];
+        Phi = parameters_mtx[1];
+        Lambda = parameters_mtx[2];
     }
 
     else if (!theta && phi && lambda) {
         Theta = 0.0;
-        Phi = parameters[0];
-        Lambda = parameters[1];
+        Phi = parameters_mtx[0];
+        Lambda = parameters_mtx[1];
     }
 
     else if (theta && phi && !lambda) {
-        Theta = parameters[0];
-        Phi = parameters[1];
+        Theta = parameters_mtx[0];
+        Phi = parameters_mtx[1];
         Lambda = 0.0;
     }
 
     else if (!theta && !phi && lambda) {
         Theta = 0.0;
         Phi = 0.0;
-        Lambda = parameters[0];
+        Lambda = parameters_mtx[0];
     }
 
     else if (!theta && phi && !lambda) {
         Theta = 0.0;
-        Phi = parameters[0];
+        Phi = parameters_mtx[0];
         Lambda = 0.0;
     }
 
     else if (theta && !phi && !lambda) {
-        Theta = parameters[0];
+        Theta = parameters_mtx[0];
         Phi = 0.0;
         Lambda = 0.0;
     }
@@ -357,13 +381,24 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
 
 
+    apply_kernel_from_right(u3_1qbit, input);
+
+
+}
+
+
+/**
+@brief Call to apply the gate on the input array/matrix by input*U3
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void 
+U3::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
+
     int index_step = Power_of_2(target_qbit);
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step;
 
-//std::cout << "target qbit: " << target_qbit << std::endl;
-tbb::task_arena ta(1);
-ta.execute([&](){
 
     while ( current_idx_pair < matrix_size ) {
 
@@ -409,10 +444,117 @@ ta.execute([&](){
 
     }
 
-}); // task arena
-
 }
 
+
+/**
+@brief ???????????????
+*/
+std::vector<Matrix> 
+U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+
+    if (input.rows != matrix_size ) {
+        std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
+        exit(-1);
+    }
+
+
+    std::vector<Matrix> ret;
+
+    double Theta, Phi, Lambda;
+
+    if (theta && !phi && lambda) {
+
+        Theta = parameters_mtx[0];
+        Phi = 0.0;
+        Lambda = parameters_mtx[1];        
+    }
+
+    else if (theta && phi && lambda) {
+        Theta = parameters_mtx[0];
+        Phi = parameters_mtx[1];
+        Lambda = parameters_mtx[2];
+    }
+
+    else if (!theta && phi && lambda) {
+        Theta = 0.0;
+        Phi = parameters_mtx[0];
+        Lambda = parameters_mtx[1];
+    }
+
+    else if (theta && phi && !lambda) {
+        Theta = parameters_mtx[0];
+        Phi = parameters_mtx[1];
+        Lambda = 0.0;
+    }
+
+    else if (!theta && !phi && lambda) {
+        Theta = 0.0;
+        Phi = 0.0;
+        Lambda = parameters_mtx[0];
+    }
+
+    else if (!theta && phi && !lambda) {
+        Theta = 0.0;
+        Phi = parameters_mtx[0];
+        Lambda = 0.0;
+    }
+
+    else if (theta && !phi && !lambda) {
+        Theta = parameters_mtx[0];
+        Phi = 0.0;
+        Lambda = 0.0;
+    }
+
+    else {
+        Theta = 0.0;
+        Phi = 0.0;
+        Lambda = 0.0;
+    }
+
+
+
+    if (theta) {
+
+        Matrix u3_1qbit = calc_one_qubit_u3(Theta+M_PI, Phi, Lambda, 0.5);
+        Matrix res_mtx = input.copy();
+        apply_kernel_to( u3_1qbit, res_mtx );
+        ret.push_back(res_mtx);
+
+    }
+
+
+
+    if (phi) {
+
+        Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi+M_PI/2, Lambda, 1.0 );
+        memset(u3_1qbit.get_data(), 0.0, 2*sizeof(QGD_Complex16) );
+
+        Matrix res_mtx = input.copy();
+        apply_kernel_to( u3_1qbit, res_mtx );
+        ret.push_back(res_mtx);
+
+    }
+
+
+
+    if (lambda) {
+
+        Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda+M_PI/2, 1.0 );
+        memset(u3_1qbit.get_data(), 0.0, sizeof(QGD_Complex16) );
+        memset(u3_1qbit.get_data()+2, 0.0, sizeof(QGD_Complex16) );
+
+        Matrix res_mtx = input.copy();
+        apply_kernel_to( u3_1qbit, res_mtx );
+        ret.push_back(res_mtx);
+
+    }
+
+
+    return ret;
+
+
+}
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the gate
@@ -472,7 +614,7 @@ bool U3::is_lambda_parameter() {
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-Matrix U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda ) {
+Matrix U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda, const double scale=1.0 ) {
 
     Matrix u3_1qbit = Matrix(2,2);
 
@@ -489,8 +631,8 @@ Matrix U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda ) {
 #endif // DEBUG
 
 
-    double cos_theta = cos(Theta/2);
-    double sin_theta = sin(Theta/2);
+    double cos_theta = cos(Theta/2)*scale;
+    double sin_theta = sin(Theta/2)*scale;
 
 
     // the 1,1 element

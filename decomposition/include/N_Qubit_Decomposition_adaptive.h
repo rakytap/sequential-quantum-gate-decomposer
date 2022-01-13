@@ -64,19 +64,6 @@ public:
 
 protected:
 
-/*
-    /// logical value. Set true to optimize the minimum number of gate layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
-    bool optimize_layer_num;
-
-    /// A map of <int n: int num> indicating that how many identical successive blocks should be used in the disentanglement of the nth qubit from the others
-    std::map<int,int> identical_blocks;
-
-    /// A map of <int n: Gates_block* block> describing custom gate structure to be used in the decomposition. Gate block corresponding to n is used in the subdecomposition of the n-th qubit. The Gate block is repeated periodically.
-    Gates_block* gate_structure;
-
-
-    std::vector<Decomposition_Tree_Node*> root_nodes;
-*/
 
     /// A gate structure describing custom gate structure to be used in the decomposition. 
     Gates_block* gate_structure;
@@ -84,8 +71,6 @@ protected:
     int level_limit;
     ///
     int level_limit_min;
-    ///
-    int decomposition_iterations;
     
 
 public:
@@ -167,10 +152,6 @@ Gates_block* construct_gate_layer( const int& _target_qbit, const int& _control_
 void add_finalyzing_layer( Gates_block* gate_structure );
 
 
-/**
-@brief ???????????????
-*/
-void insert_random_layers( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.

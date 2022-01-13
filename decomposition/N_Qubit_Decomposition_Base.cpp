@@ -24,7 +24,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "N_Qubit_Decomposition_Base.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
-#include "N_Qubit_Decomposition_adaptive_Cost_Function.h"
 
 /**
 @brief Nullary constructor of the class.
@@ -217,12 +216,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
         if (solution_guess_gsl == NULL) {
             solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
         }
-/*
-        if (optimized_parameters == NULL) {
-            optimized_parameters = (double*)qgd_calloc(num_of_parameters,sizeof(double), 64);
-            memcpy(optimized_parameters, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
-        }
-*/
+
+
         if (optimized_parameters_mtx.size() == 0) {
             optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
             memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
@@ -237,48 +232,6 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
             iteration_loops_max = 1;
         }
 
-//////////////////////////
-/*
-        Matrix_real Optimized_parameter_loc( solution_guess_gsl->data, 1, num_of_parameters);
-
-        // do the optimization loops
-        for (int idx=0; idx<iteration_loops_max; idx++) {
-
-            size_t iter = 0;
-            int status;
-
-            double current_minimum_loc;
-
-            
-            for (int iter=0; iter<40; iter++) {               
- 
-                status = gradient_descent_iteration( Optimized_parameter_loc, current_minimum_loc);
-
-                if (status) {
-                  break;
-                }
-
-            }
-
-            if (current_minimum > current_minimum_loc) {
-                current_minimum = current_minimum_loc;
-                memcpy( optimized_parameters_mtx.get_data(), Optimized_parameter_loc.get_data(), num_of_parameters*sizeof(double) );
-
-                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    Optimized_parameter_loc[jdx] = Optimized_parameter_loc[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
-                }
-            }
-            else {
-                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    Optimized_parameter_loc[jdx] = Optimized_parameter_loc[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
-                }
-            }
-
-
-//std::cout << current_minimum << " " << current_minimum_loc << std::endl;
-        }
-*/
-///////////////////////////////
 
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
@@ -306,7 +259,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
             s = gsl_multimin_fdfminimizer_alloc (T, num_of_parameters);
 
 
-            gsl_multimin_fdfminimizer_set (s, &my_func, solution_guess_gsl, 1e-2, 0.1);
+            gsl_multimin_fdfminimizer_set (s, &my_func, solution_guess_gsl, 0.01, 0.1);
 
             do {
                 iter++;
@@ -317,9 +270,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
                   break;
                 }
 
-                status = gsl_multimin_test_gradient (s->gradient, 1e-3);
+                status = gsl_multimin_test_gradient (s->gradient, 1e-8);
 
-            } while (status == GSL_CONTINUE && iter < 100);
+            } while (status == GSL_CONTINUE && iter < 1000);
 
             if (current_minimum > s->f) {
                 current_minimum = s->f;
@@ -347,110 +300,18 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 
 
 /**
-@brief ??????????????????????????????
-*/
-int 
-N_Qubit_Decomposition_Base::gradient_descent_iteration( Matrix_real Optimized_parameter_loc, double& current_minimum_loc) {
-
-    double cost_function;
-    Matrix_real grad;
-    optimization_problem_combined( Optimized_parameter_loc, cost_function, grad );
-
-    current_minimum_loc = cost_function;
-
-    double grad_norm = 0.0;
-
-
-
-    for ( int idx=0; idx<Optimized_parameter_loc.size(); idx++ ) {
-        // calculate the norm of the gradient
-        grad_norm += grad[idx]*grad[idx];
-
-        // calculate the displaced parameters
-        Optimized_parameter_loc[idx] -= 1e-3*grad[idx];
-    }
-    grad_norm = std::sqrt(grad_norm);
-
-//current_minimum_loc = optimization_problem( Optimized_parameter_loc.get_data() );
-
-   /*
-    
-    double eta = 1e-3;
-    int cost_val_num = 6;
-    Matrix_real cost_vals(1, cost_val_num);
-    for (int idx=0; idx<cost_val_num; idx++) {
-
-        Matrix_real&& parameters = Optimized_parameter_loc.copy();
-
-        for ( int jdx=0; jdx<Optimized_parameter_loc.size(); jdx++ ) {
-            // calculate the displaced parameters
-            parameters[idx] -= eta*grad[idx];
-        }
-
-        cost_vals[idx] = optimization_problem( parameters.get_data() );
-        eta = eta/5;
-
-    }
-
-
-
-    // find the lowest cost function
-    eta = 1e-1;
-    int idx_min = -1;
-    double eta_min = eta;
-    for (int idx=0; idx<cost_val_num; idx++) {
-
-        if ( current_minimum_loc > cost_vals[idx] ) {
-            idx_min = idx;
-            current_minimum_loc = cost_vals[idx];
-            eta_min = eta;
-        }
-
-        eta = eta/5;
-
-    }
-
-    if ( idx_min>=0 ) {
-
-        // set the parameters for the minimum
-        for ( int idx=0; idx<Optimized_parameter_loc.size(); idx++ ) {
-            // calculate the displaced parameters
-            Optimized_parameter_loc[idx] -= eta_min*grad[idx];
-        } 
-    }
-*/
-
-//std::cout << "grad norm: " << grad_norm << ", cost_function: " << cost_function << std::endl;
-
-    if ( grad_norm < 1e-3 || current_minimum_loc < optimization_tolerance ) {
-        return 1;
-    }
-    else {
-        return 0;
-    }
-}
-
-
-/**
 // @brief The optimization problem of the final optimization
 // @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 // @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-
 double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
 
     // get the transformed matrix with the gates in the list
     Matrix_real parameters_mtx(parameters, 1, parameter_num );
     Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
 
-    double cost_function;    
-if ( opt_method == 0 ) {
-    cost_function = get_cost_function(matrix_new);
-}
-else{
-    cost_function = get_adaptive_cost_function(matrix_new);
-}
-        return cost_function;
+    return get_cost_function(matrix_new);
+
 }
 
 
@@ -470,89 +331,61 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
     Matrix_real parameters_mtx(parameters->data, 1, instance->get_parameter_num() );
     Matrix matrix_new = instance->get_transformed_matrix( parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx_loc );
 
-    double cost_function;    
-if ( instance->opt_method == 0 ) {
-    cost_function = get_cost_function(matrix_new);
-}
-else{
-    cost_function = get_adaptive_cost_function(matrix_new);
-/*
-    // add extra panelties to force the parameters of the controlled rotations to be 0 or -pi
-    double panelty = 0;
-    bool first = false;
-    std::vector<Gate*> gates_loc = instance->get_gates();
-
-    // iterate over the gates and identify controlled rotations
-    int parameter_num_loc = 0;
-    for ( std::vector<Gate*>::iterator it=gates_loc.begin(); it!=gates_loc.end(); it++) {
-    
-        Gate* gate = *it;
-    
-        if ( gate->get_type() == CRY_OPERATION ) {
-            double param_val = parameters->data[parameter_num_loc];//std::fmod( parameters->data[parameter_num_loc], 2*M_PI);
-            double partial_panelty = ( param_val*(param_val-M_PI) );
-            panelty += partial_panelty*partial_panelty;
-        }
-        else if ( gate->get_type() == BLOCK_OPERATION ) {
-//std::cout << "block " << gate->get_parameter_num() <<  std::endl;
-            Gates_block* block = static_cast<Gates_block*>( gate );
-            panelty += instance->optimization_problem_panelty(parameters->data+parameter_num_loc, block); 
-            break;
-        }
-        
-        parameter_num_loc += gate->get_parameter_num();
-        
-
-    }
-
-    cost_function = cost_function * (1 + 0.01*panelty);
-*/
-
-}
-    return cost_function;
+    return get_cost_function(matrix_new);
 }
 
 
 /**
-// @brief The optimization problem of the final optimization
-@param parameters A GNU Scientific Library containing the parameters to be optimized.
+@brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
+@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-double N_Qubit_Decomposition_Base::optimization_problem_panelty( double* parameters, Gates_block* gates_block ) {
 
-    double panelty = 0;
-    std::vector<Gate*> gates_loc = gates_block->get_gates();
+void N_Qubit_Decomposition_Base::optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad ) {
 
+    // The function value at x0
+    double f0;
 
-    // iterate over the gates and identify controlled rotations
-    int parameter_num_loc = 0;
-    for ( std::vector<Gate*>::iterator it=gates_loc.begin(); it!=gates_loc.end(); it++) {
-    
-        Gate* gate = *it;
+    // calculate the approximate gradient
+    optimization_problem_combined( parameters, void_instance, &f0, grad);
 
-    
-        if ( gate->get_type() == ADAPTIVE_OPERATION ) {
-            double param_val = parameters[parameter_num_loc];//std::fmod( parameters[parameter_num_loc], 2*M_PI);
-//std::cout << parameter_num_loc << std::endl;
-            double partial_panelty = ( param_val*(param_val-M_PI) );
-            panelty += partial_panelty*partial_panelty;
-        }
-        else if ( gate->get_type() == BLOCK_OPERATION ) {
-//std::cout << "block 2" << std::endl;
-            Gates_block* block = static_cast<Gates_block*>( gate );
-            panelty += optimization_problem_panelty(parameters+parameter_num_loc, block); 
-        }
-        
-
-        parameter_num_loc += gate->get_parameter_num();
-
-    }
-
-    return panelty;
 }
 
 
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param f0 The value of the cost function at x0.
+@param grad A GNU Scientific Library vector containing the calculated gradient components.
+*/
+
+void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+
+    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+
+    int parameter_num_loc = instance->get_parameter_num();
+
+    // vector containing gradients of the transformed matrix
+    std::vector<Matrix> Umtx_deriv;
+
+    tbb::parallel_invoke(
+        [&]{*f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance)); },
+        [&]{
+            Matrix Umtx_loc = instance->get_Umtx();
+            Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
+            Umtx_deriv = instance->apply_derivate_to( parameters_mtx, Umtx_loc );
+        });
+
+    tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+            double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0)/(*f0);
+            //double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0);
+            gsl_vector_set(grad, idx, grad_comp);
+        }
+    });
 
 
+}
 

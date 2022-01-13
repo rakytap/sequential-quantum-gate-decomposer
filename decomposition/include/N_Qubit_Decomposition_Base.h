@@ -173,7 +173,6 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 */
 static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
 
-void optimization_problem_combined( Matrix_real Optimized_parameter_loc, double& cost_function, Matrix_real& grad );
 
 
 /**

@@ -72,7 +72,7 @@ virtual ~RY();
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_to( Matrix_real& parameters, Matrix& input );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 );
 
 
 /**
@@ -80,8 +80,12 @@ void apply_to( Matrix_real& parameters, Matrix& input );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_from_right( Matrix_real& parameters, Matrix& input );
+virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
 
+/**
+@brief ???????????????
+*/
+virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
 
 /**
 @brief Call to set the final optimized parameters of the gate.

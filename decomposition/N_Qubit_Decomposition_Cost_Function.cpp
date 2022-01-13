@@ -53,6 +53,7 @@ double get_cost_function(Matrix matrix) {
     });
 */
 
+/*
 #ifdef USE_AVX
 
 
@@ -63,7 +64,7 @@ double get_cost_function(Matrix matrix) {
     for (size_t idx=0; idx<matrix_size; idx++) {
         
         // get the diagonal element
-        __m128d element_128 = _mm_loadu_pd(matrix_data);
+        __m128d element_128 = _mm_load_pd(matrix_data);
         
         // add the diagonal elements to the trace
         trace_128 = _mm_add_pd(trace_128, element_128);
@@ -73,7 +74,7 @@ double get_cost_function(Matrix matrix) {
 
 
     trace_128 = _mm_mul_pd(trace_128, trace_128);    
-    double cost_function = 1.0 - (trace_128[0] + trace_128[1])/(matrix_size*matrix_size);
+    double cost_function = std::sqrt(1.0 - (trace_128[0] + trace_128[1])/(matrix_size*matrix_size));
 
 #else
 
@@ -88,10 +89,19 @@ double get_cost_function(Matrix matrix) {
         trace.imag += matrix[idx*matrix.stride + idx].imag;
     }
 
-    double cost_function = 1.0 - (trace.real*trace.real + trace.imag*trace.imag)/(matrix_size*matrix_size);
+    double cost_function = std::sqrt(1.0 - (trace.real*trace.real + trace.imag*trace.imag)/(matrix_size*matrix_size));
 #endif
+*/
 
 
+    double trace_real = 0.0;
+
+    for (size_t idx=0; idx<matrix_size; idx++) {
+        
+        trace_real += matrix[idx*matrix.stride + idx].real;
+    }
+
+    double cost_function = std::sqrt(1.0 - trace_real/matrix_size);
 
     return cost_function;
 

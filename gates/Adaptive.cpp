@@ -155,6 +155,43 @@ Phi_transformed[0] = Phi - M_PI;
 
 
 /**
+@brief Call to apply the gate on the input array/matrix by U3*input
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+
+std::vector<Matrix>
+Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input ) {
+
+    if (input.rows != matrix_size ) {
+        std::cout<< "Wrong matrix size in Adaptive gate apply" << std::endl;
+        exit(-1);
+    }
+
+    double Phi = parameters[0];
+
+    Matrix_real Phi_transformed(1,1);
+//    Phi_transformed[0] = Phi;
+//    Phi_transformed[0] = 0.5*(1.0-std::cos(Phi))*M_PI;
+    Phi = activation_function( Phi, limit );
+    Phi_transformed[0] = Phi;
+
+
+/*
+Phi = Phi + M_PI;
+Phi = (1.0-std::cos(Phi/2))*M_PI;
+Phi_transformed[0] = Phi - M_PI;
+*/
+
+
+
+    return CRY::apply_derivate_to( Phi_transformed, input );
+
+
+
+}
+
+/**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */

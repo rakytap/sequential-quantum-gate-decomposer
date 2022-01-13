@@ -79,6 +79,14 @@ void release_gate( int idx);
 */
 Matrix get_matrix( Matrix_real& parameters );
 
+
+/**
+@brief Call to apply the gate on the input array/matrix by U3*input
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void apply_to_list( Matrix_real& parameters, std::vector<Matrix> input );
+
 /**
 @brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
@@ -92,6 +100,14 @@ void apply_to( Matrix_real& parameters_mtx, Matrix& input );
 @param input The input array on which the gate is applied
 */
 void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
+
+
+/**
+@brief ???????????????
+*/
+std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input );
+
+
 
 
 /**

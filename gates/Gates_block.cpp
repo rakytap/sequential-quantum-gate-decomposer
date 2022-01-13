@@ -221,6 +221,22 @@ Gates_block::get_matrix( Matrix_real& parameters ) {
 
 
 /**
+@brief Call to apply the gate on the input array/matrix by U3*input
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void 
+Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix> input ) {
+
+
+    for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
+        apply_to( parameters_mtx, *it );
+    }
+
+}
+
+
+/**
 @brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
@@ -417,6 +433,233 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 }
 
 
+
+/**
+@brief ???????????????
+*/
+std::vector<Matrix> 
+Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) {
+
+  
+    std::vector<Matrix> grad(parameter_num, Matrix(0,0));
+
+    // deriv_idx ... the index of the gate block for which the gradient is to be calculated
+    tbb::parallel_for( tbb::blocked_range<int>(0,gates.size()), [&](tbb::blocked_range<int> r) {
+        for (int deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
+
+
+            Gate* gate_deriv = gates[deriv_idx];
+
+            // for constant gate no gardient component is calculated
+            if ( gate_deriv->get_parameter_num() == 0 ) {
+                continue;
+            }
+
+            int deriv_parameter_idx = 0;
+            for ( int idx=0; idx<deriv_idx; idx++ ) {
+                deriv_parameter_idx += gates[idx]->get_parameter_num();
+            }
+
+            Matrix&& input_loc = input.copy();
+
+            double* parameters = parameters_mtx_in.get_data();
+            parameters = parameters + parameter_num;
+
+
+            std::vector<Matrix> grad_loc;
+
+            for( int idx=gates.size()-1; idx>=0; idx--) {
+
+                Gate* operation = gates[idx];
+                parameters = parameters - operation->get_parameter_num();
+                Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
+
+                if (operation->get_type() == CNOT_OPERATION) {
+                    CNOT* cnot_operation = static_cast<CNOT*>(operation);
+                    if ( deriv_idx < idx ) {
+                        cnot_operation->apply_to( input_loc );    
+                    }
+                    else {
+                        cnot_operation->apply_to_list( grad_loc );
+                    }
+                }
+                else if (operation->get_type() == CZ_OPERATION) {
+                    CZ* cz_operation = static_cast<CZ*>(operation);
+                    if ( deriv_idx < idx ) {
+                        cz_operation->apply_to( input_loc );    
+                    }
+                    else {
+                        cz_operation->apply_to_list( grad_loc );
+                    }
+                }
+                else if (operation->get_type() == CH_OPERATION) {
+                    CH* ch_operation = static_cast<CH*>(operation);
+                    if ( deriv_idx < idx ) {
+                        ch_operation->apply_to( input_loc );    
+                    }
+                    else {
+                        ch_operation->apply_to_list( grad_loc );
+                    }
+                }    
+    
+                else if (operation->get_type() == SYC_OPERATION) {
+                    std::cout << "Sycamore operation not supported in gardient calculation" << std::endl;
+                    exit(-1);
+                }
+
+                else if (operation->get_type() == U3_OPERATION) {
+    
+                    U3* u3_operation = static_cast<U3*>(operation);
+                    if ( deriv_idx < idx ) {
+                        u3_operation->apply_to( parameters_mtx, input_loc );    
+                    }
+                    else if ( deriv_idx == idx ) {
+    
+                        grad_loc = u3_operation->apply_derivate_to( parameters_mtx, input_loc );    
+                    }
+                    else {
+                        u3_operation->apply_to_list( parameters_mtx, grad_loc );
+                    }
+                }
+
+                else if (operation->get_type() == RX_OPERATION) {
+                    RX* rx_operation = static_cast<RX*>(operation);
+                    if ( deriv_idx < idx ) {
+                        rx_operation->apply_to( parameters_mtx, input_loc );    
+                    }
+                    else if ( deriv_idx == idx ) {
+    
+                        grad_loc = rx_operation->apply_derivate_to( parameters_mtx, input_loc );    
+                    }
+                    else {
+                        rx_operation->apply_to_list( parameters_mtx, grad_loc );
+                    }
+                }
+
+
+                else if (operation->get_type() == RY_OPERATION) {
+                    RY* ry_operation = static_cast<RY*>(operation);
+                    if ( deriv_idx < idx ) {
+                        ry_operation->apply_to( parameters_mtx, input_loc );    
+                    }
+                    else if ( deriv_idx == idx ) {
+    
+                        grad_loc = ry_operation->apply_derivate_to( parameters_mtx, input_loc );    
+                    }
+                    else {
+                        ry_operation->apply_to_list( parameters_mtx, grad_loc );    
+                    }    
+                }
+
+                else if (operation->get_type() == CRY_OPERATION) {
+                    CRY* cry_operation = static_cast<CRY*>(operation);
+                    if ( deriv_idx < idx ) {
+                        cry_operation->apply_to( parameters_mtx, input_loc );    
+                    }
+                    else if ( deriv_idx == idx ) {
+                        grad_loc = cry_operation->apply_derivate_to( parameters_mtx, input_loc );    
+                    }
+                    else {
+                        cry_operation->apply_to_list( parameters_mtx, grad_loc );
+                    }
+                }
+
+                else if (operation->get_type() == RZ_OPERATION) {
+                    RZ* rz_operation = static_cast<RZ*>(operation);
+                    if ( deriv_idx < idx ) {
+                        rz_operation->apply_to( parameters_mtx, input_loc );    
+                    }
+                    else if ( deriv_idx == idx ) {
+    
+                        grad_loc = rz_operation->apply_derivate_to( parameters_mtx, input_loc );    
+                    }
+                    else {
+                        rz_operation->apply_to_list( parameters_mtx, grad_loc );
+                    }
+                }
+
+                else if (operation->get_type() == X_OPERATION) {
+                    X* x_operation = static_cast<X*>(operation);
+                    if ( deriv_idx < idx ) {
+                        x_operation->apply_to( input_loc );    
+                    }
+                    else {
+                        x_operation->apply_to_list( grad_loc );
+                    }
+                }
+                else if (operation->get_type() == SX_OPERATION) {
+                    SX* sx_operation = static_cast<SX*>(operation);
+                    if ( deriv_idx < idx ) {
+                        sx_operation->apply_to( input_loc );    
+                    }
+                    else {
+                        sx_operation->apply_to_list( grad_loc );
+                    }
+                }
+                else if (operation->get_type() == GENERAL_OPERATION) {
+                    if ( deriv_idx < idx ) {
+                        operation->apply_to( input_loc );    
+                    }
+                    else {
+                        operation->apply_to_list( grad_loc );
+                    }
+                }
+
+                else if (operation->get_type() == UN_OPERATION) {
+                    std::cout << "UN operation not supported in gardient calculation" << std::endl;
+                    exit(-1);
+                }
+                else if (operation->get_type() == ON_OPERATION) {
+                    std::cout << "ON operation not supported in gardient calculation" << std::endl;
+                    exit(-1);
+                }
+
+                else if (operation->get_type() == BLOCK_OPERATION) {
+                    Gates_block* block_operation = static_cast<Gates_block*>(operation);
+                    if ( deriv_idx < idx ) {
+                        block_operation->apply_to( parameters_mtx, input_loc );    
+                    }
+                    else if ( deriv_idx == idx ) {
+                        grad_loc = block_operation->apply_derivate_to( parameters_mtx, input_loc );    
+                    }
+                    else {
+                        block_operation->apply_to_list( parameters_mtx, grad_loc );
+                    }
+                }
+
+                else if (operation->get_type() == COMPOSITE_OPERATION) {
+                    std::cout << "Composite  operation not supported in gardient calculation" << std::endl;
+                    exit(-1);
+                }
+
+                else if (operation->get_type() == ADAPTIVE_OPERATION) {
+                    Adaptive* ad_operation = static_cast<Adaptive*>(operation);
+                    if ( deriv_idx < idx ) {
+                        ad_operation->apply_to( parameters_mtx, input_loc );    
+                    }
+                    else if ( deriv_idx == idx ) {
+                        grad_loc = ad_operation->apply_derivate_to( parameters_mtx, input_loc );    
+                    }
+                    else {
+                        ad_operation->apply_to_list( parameters_mtx, grad_loc );
+                    }
+                }
+
+            }
+
+
+            for ( int idx = 0; idx<grad_loc.size(); idx++ ) {
+                grad[deriv_parameter_idx+idx] = grad_loc[idx];
+            }
+
+
+        } // tbb range end
+    
+    });
+
+    return grad;
+
+}
 
 /**
 @brief Append a U3 gate to the list of gates

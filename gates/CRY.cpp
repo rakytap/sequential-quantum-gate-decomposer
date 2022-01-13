@@ -26,7 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief Nullary constructor of the class.
 */
-CRY::CRY() : RZ() {
+CRY::CRY() : RY() {
 
         // A string describing the type of the gate
         type = CRY_OPERATION;
@@ -43,7 +43,7 @@ CRY::CRY() : RZ() {
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-CRY::CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RZ(qbit_num_in, target_qbit_in) {
+CRY::CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RY(qbit_num_in, target_qbit_in) {
 
         // A string describing the type of the gate
         type = CRY_OPERATION;
@@ -77,7 +77,7 @@ CRY::~CRY() {
 */
 
 void 
-CRY::apply_to( Matrix_real& parameters, Matrix& input ) {
+CRY::apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 ) {
 
     if (input.rows != matrix_size ) {
         std::cout<< "Wrong matrix size in CRY gate apply" << std::endl;
@@ -86,14 +86,15 @@ CRY::apply_to( Matrix_real& parameters, Matrix& input ) {
 
 
     double Theta, Phi, Lambda;
-/*
+
     Theta = parameters[0];
     Phi = phi0;
     Lambda = lambda0;
-*/
+/*
     Theta = theta0;
     Phi = parameters[0];
     Lambda = lambda0;
+*/
 /*  
 Phi = Phi + M_PI;
 Phi = (1.0-std::cos(Phi/2))*M_PI;
@@ -184,14 +185,15 @@ CRY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     }
 
     double Theta, Phi, Lambda;
-/*
+
     Theta = parameters[0];
     Phi = phi0;
     Lambda = lambda0;
-*/
+/*
     Theta = theta0;
     Phi = parameters[0];
     Lambda = lambda0;
+*/
 /*
 Phi = Phi + M_PI;
 Phi = (1.0-std::cos(Phi/2))*M_PI;
@@ -212,8 +214,6 @@ Phi = Phi - M_PI;
 
 //std::cout << "target qbit: " << target_qbit << std::endl;
 
-tbb::task_arena ta(1);
-ta.execute([&](){
 
     while ( current_idx_pair < matrix_size ) {
 
@@ -270,7 +270,106 @@ ta.execute([&](){
 
     }
 
-}); // task arena
+
+}
+
+
+/**
+@brief ???????????????
+*/
+std::vector<Matrix> 
+CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+
+    if (input.rows != matrix_size ) {
+        std::cout<< "Wrong matrix size in CRY gate apply" << std::endl;
+        exit(-1);
+    }
+
+    std::vector<Matrix> ret;
+
+    double Theta, Phi, Lambda;
+
+    Theta = parameters_mtx[0]+M_PI;
+    Phi = phi0;
+    Lambda = lambda0;
+
+    // the resulting matrix
+    Matrix res_mtx = input.copy();
+    
+
+
+    // get the U3 gate of one qubit
+    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda, 0.5 );
+
+
+    int index_step_target = Power_of_2(target_qbit);
+    int current_idx = 0;
+    int current_idx_pair = current_idx+index_step_target;
+
+    int index_step_control = Power_of_2(control_qbit);
+
+//std::cout << "target qbit: " << target_qbit << std::endl;
+
+    while ( current_idx_pair < matrix_size ) {
+
+
+        //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+        for( int idx=0; idx<index_step_target; idx++ )  {
+
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            int row_offset = current_idx_loc*res_mtx.stride;
+            int row_offset_pair = current_idx_pair_loc*res_mtx.stride;
+
+            // determine the action according to the state of the control qubit
+            if ( (current_idx_loc/index_step_control) % 2 == 0) {
+                memset( res_mtx.get_data()+row_offset, 0.0, matrix_size*sizeof(QGD_Complex16));
+                memset( res_mtx.get_data()+row_offset_pair, 0.0, matrix_size*sizeof(QGD_Complex16));
+            }
+            else {          
+
+                for ( int col_idx=0; col_idx<matrix_size; col_idx++) {
+                    int index      = row_offset+col_idx;
+                    int index_pair = row_offset_pair+col_idx;
+  
+                    QGD_Complex16 element      = res_mtx[index];
+                    QGD_Complex16 element_pair = res_mtx[index_pair];
+
+                    QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
+                    QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
+                    res_mtx[index].real = tmp1.real + tmp2.real;
+                    res_mtx[index].imag = tmp1.imag + tmp2.imag;
+
+                    tmp1 = mult(u3_1qbit[2], element);
+                    tmp2 = mult(u3_1qbit[3], element_pair);
+                    res_mtx[index_pair].real = tmp1.real + tmp2.real;
+                    res_mtx[index_pair].imag = tmp1.imag + tmp2.imag;
+                }
+
+            };         
+
+
+//std::cout << current_idx << " " << current_idx_pair << std::endl;
+        }
+        //});
+
+
+        current_idx = current_idx + 2*index_step_target;
+        current_idx_pair = current_idx_pair + 2*index_step_target;
+
+
+    }
+
+
+
+    ret.push_back(res_mtx);
+
+
+
+    
+    return ret;
+
 
 }
 

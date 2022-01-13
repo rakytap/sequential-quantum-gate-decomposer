@@ -354,8 +354,6 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/gates/RZ.cpp
     ${PROJECT_SOURCE_DIR}/gates/Composite.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Base.cpp
-    ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Tree.cpp
-    ${PROJECT_SOURCE_DIR}/decomposition/Functor_Cost_Function_Gradient.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive.cpp
@@ -363,7 +361,6 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition.cpp  
-    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Unitary.cpp
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Orthogonal.cpp
 )
@@ -425,8 +422,6 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/RZ.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Composite.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Decomposition_Base.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Decomposition_Tree.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Functor_Cost_Function_Gradient.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_Base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_adaptive.h

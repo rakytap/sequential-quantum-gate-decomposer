@@ -194,6 +194,7 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
     }
 #endif
 
+
 //std::cout << idx << " " << jdx << std::endl;
 //submatrix_prod.print_matrix();
 

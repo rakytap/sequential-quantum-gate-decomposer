@@ -33,7 +33,7 @@ class Test_Decomposition:
 
     
 
-    def test_IBM_Chellenge(self):
+    def ctest_IBM_Chellenge(self):
         r"""
         This method is called by pytest. 
         Test to decompose a 4-qubit unitary of the IBM chellenge
@@ -123,10 +123,8 @@ class Test_Decomposition:
         
 
         # creating a class to decompose the unitary
-        cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, optimize_layer_num=True, initial_guess="ZEROS" )
-        
-        # set the maximal number of layers in the decomposition
-        cDecompose.set_Max_Layer_Num( {4: 9, 3:4} )
+        cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, 5, 1, initial_guess="RANDOM"  )
+
 
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( True )

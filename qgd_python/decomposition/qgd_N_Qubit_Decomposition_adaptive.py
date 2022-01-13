@@ -258,7 +258,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
                 ## add cz gate to the layer                
                 #Layer.add_CZ( qubit0, qubit1 )
-                Layer.add_adaptive( qubit0, qubit1 )
+                Layer.add_adaptive( qubit1, qubit0 )
                 optimized_parameters = optimized_parameters + [np.pi]
 
                 Gates_Block_ret.add_Gates_Block( Layer )

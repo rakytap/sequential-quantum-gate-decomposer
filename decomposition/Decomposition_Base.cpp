@@ -535,7 +535,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, min_vec_num, minvec_mean));
 
             // conditions to break the iteration cycles
-            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-6 ) {
+            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-5 ) {
                 if (verbose) {
                     printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
                     fflush(stdout);

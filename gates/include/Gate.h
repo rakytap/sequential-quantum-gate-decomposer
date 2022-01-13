@@ -87,19 +87,26 @@ Gate(int qbit_num_in);
 */
 Matrix get_matrix();
 
+/**
+@brief Call to apply the gate on the input array/matrix by U3*input
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void apply_to_list( std::vector<Matrix>& input );
+
 
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
 */
-void apply_to( Matrix& input );
+virtual void apply_to( Matrix& input );
 
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*Gate
 @param input The input array on which the gate is applied
 */
-void apply_from_right( Matrix& input );
+virtual void apply_from_right( Matrix& input );
 
 /**
 @brief Call to set the stored matrix in the operation.

@@ -23,7 +23,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Sub_Matrix_Decomposition.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
-#include "Functor_Cost_Function_Gradient.h"
 
 //tbb::spin_mutex my_mutex;
 
@@ -548,6 +547,101 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 
     return cost_function;
 }
+
+
+
+
+
+/**
+@brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
+@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param grad A GNU Scientific Library vector containing the calculated gradient components.
+*/
+void Sub_Matrix_Decomposition::optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad ) {
+
+    // The function value at x0
+    double f0;
+
+    // calculate the approximate gradient
+    optimization_problem_combined( parameters, void_instance, &f0, grad);
+
+}
+
+
+
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param f0 The value of the cost function at x0.
+@param grad A GNU Scientific Library vector containing the calculated gradient components.
+*/
+void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+
+    Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
+
+    int parameter_num_loc = instance->get_parameter_num();
+
+    // storage for the function values calculated at the displaced points x
+    gsl_vector* f = gsl_vector_alloc(grad->size);
+
+    // the difference in one direction in the parameter for the gradient calculation
+    double dparam = 1e-8;
+
+    // calculate the function values at displaced x and the central x0 points through TBB parallel for
+    tbb::parallel_for(0, parameter_num_loc+1, 1, [&](int i) {
+
+        if (i == (int)parameters->size) {
+            // calculate function value at x0
+            *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance));
+        }
+        else {
+
+            gsl_vector* parameters_d = gsl_vector_calloc(parameters->size);
+            memcpy( parameters_d->data, parameters->data, parameters->size*sizeof(double) );
+            parameters_d->data[i] = parameters_d->data[i] + dparam;
+
+            // calculate the cost function at the displaced point
+            f->data[i] = instance->optimization_problem(parameters_d, reinterpret_cast<void*>(instance));
+
+            // release vectors
+            gsl_vector_free(parameters_d);
+            parameters_d = NULL;
+
+        }
+    });
+
+
+/*
+    // sequential version
+    functor_sub_optimization_grad<Sub_Matrix_Decomposition> tmp = functor_grad<Sub_Matrix_Decomposition>( parameters, instance, f, f0, dparam );
+    #pragma omp parallel for
+    for (int idx=0; idx<parameter_num_loc+1; idx++) {
+        tmp(idx);
+    }
+*/
+
+
+    for (int idx=0; idx<parameter_num_loc; idx++) {
+        // set the gradient
+#ifdef DEBUG
+        if (isnan(f->data[idx])) {
+            std::cout << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
+            exit(-1);
+        }
+#endif // DEBUG
+        gsl_vector_set(grad, idx, (f->data[idx]-(*f0))/dparam);
+    }
+
+
+    gsl_vector_free(f);
+
+}
+
+
+
+
 
 
 
