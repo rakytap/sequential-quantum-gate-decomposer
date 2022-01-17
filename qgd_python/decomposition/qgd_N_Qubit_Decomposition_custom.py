@@ -187,16 +187,16 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 ##
 # @brief ???????????????????????
 # @return ??????????????????????
-    def import_Qiskit_Circuit( self, qc ):  
+    def import_Qiskit_Circuit( self, qc_in ):  
 
-        #from qiskit import QuantumCircuit, transpile
+        from qiskit import QuantumCircuit, transpile
         from qiskit.circuit import ParameterExpression
         from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
 
-        #qc = transpile(qc_in, optimization_level=3, basis_gates=['cz', 'cx', 'u3'], layout_method='sabre')
+        qc = transpile(qc_in, optimization_level=3, basis_gates=['cz', 'cx', 'u3'], layout_method='sabre')
         #print('Depth of Qiskit transpiled quantum circuit:', qc.depth())
         #print('Gate counts in Qiskit transpiled quantum circuit:', qc.count_ops())
-
+        print(qc)
         # get the size of the register
         gate = qc.data[0]
         qubits = gate[1]
@@ -293,4 +293,5 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
         self.set_Gate_Structure(Gates_Block_ret)
         self.set_Optimized_Parameters( optimized_parameters )        
             
+
 

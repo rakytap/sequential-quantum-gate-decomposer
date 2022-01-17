@@ -717,12 +717,11 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimized_Parameters( qgd_N_Qubit_D
     npy_intp param_num = PyArray_Size( parameters_arr );
 
     // reversing the order
-    matrix_base<double> parameters_mtx_reversed(param_num, 1);
+    Matrix_real parameters_mtx_reversed(param_num, 1);
     double* parameters_reversed = parameters_mtx_reversed.get_data();
     for (int idx=0; idx<param_num; idx++ ) {
         parameters_reversed[idx] = parameters[param_num-1-idx];
     }
-
 
 
     self->decomp->set_optimized_parameters(parameters_reversed, param_num);
