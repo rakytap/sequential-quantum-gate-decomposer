@@ -1580,6 +1580,8 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
         }
 
+        fflush(stdout);
+
 }
 
 

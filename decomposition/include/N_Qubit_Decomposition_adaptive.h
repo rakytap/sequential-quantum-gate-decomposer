@@ -108,6 +108,17 @@ virtual ~N_Qubit_Decomposition_adaptive();
 */
 virtual void start_decomposition(bool prepare_export=true);
 
+/**
+@brief ??????????????
+*/
+Gates_block* optimize_imported_gate_structure(Matrix_real& optimized_parameters_mtx_loc);
+
+
+/**
+@brief ??????????????
+*/
+Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_mtx);
+
 
 
 /**
@@ -128,13 +139,13 @@ Gates_block* replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real
 /**
 @brief ???????????????
 */
-int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
+virtual int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 
 /**
 @brief ???????????????
 */
-Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
+virtual Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 /**
 @brief ???????????????

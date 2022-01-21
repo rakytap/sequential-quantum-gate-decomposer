@@ -30,6 +30,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "structmember.h"
 #include <stdio.h>
 #include "N_Qubit_Decomposition_adaptive.h"
+#include "N_Qubit_Decomposition_adaptive_general.h"
+#include "Gates_block.h"
 
 #include <numpy/arrayobject.h>
 #include "matrix.h"
@@ -120,6 +122,10 @@ typedef struct qgd_N_Qubit_Decomposition_adaptive_Wrapper {
     PyObject *Umtx;
     /// An object to decompose the unitary
     N_Qubit_Decomposition_adaptive* decomp;
+    /// An object to decompose the unitary
+    N_Qubit_Decomposition_adaptive_general* decomp_general;
+    /// a pointer to base class represented by the decomposing classes
+    N_Qubit_Decomposition_Base* decomp_base;
 
 } qgd_N_Qubit_Decomposition_adaptive_Wrapper;
 
@@ -140,12 +146,43 @@ create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_lim
 }
 
 
+
 /**
-@brief Call to deallocate an instance of N_Qubit_Decomposition class
+@brief Creates an instance of class N_Qubit_Decomposition and return with a pointer pointing to the class instance (C++ linking is needed)
+@param Umtx An instance of class Matrix containing the unitary to be decomposed
+@param qbit_num Number of qubits spanning the unitary
+@param level_limit The maximal number of layers used in the decomposition
+@param initial_guess Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
+@return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
+*/
+N_Qubit_Decomposition_adaptive_general* 
+create_N_Qubit_Decomposition_adaptive_general( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, guess_type initial_guess ) {
+
+    return new N_Qubit_Decomposition_adaptive_general( Umtx, qbit_num, level_limit, level_limit_min, initial_guess );
+}
+
+
+/**
+@brief Call to deallocate an instance of N_Qubit_Decomposition_adaptive class
 @param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 void
-release_N_Qubit_Decomposition( N_Qubit_Decomposition_adaptive*  instance ) {
+release_N_Qubit_Decomposition_adaptive( N_Qubit_Decomposition_adaptive*  instance ) {
+
+    if (instance != NULL ) {
+        delete instance;
+    }
+    return;
+}
+
+
+
+/**
+@brief Call to deallocate an instance of N_Qubit_Decomposition_adaptive_general class
+@param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
+*/
+void
+release_N_Qubit_Decomposition_adaptive_general( N_Qubit_Decomposition_adaptive_general*  instance ) {
 
     if (instance != NULL ) {
         delete instance;
@@ -207,9 +244,17 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_dealloc(qgd_N_Qubit_Decomposition_ada
 
     if ( self->decomp != NULL ) {
         // deallocate the instance of class N_Qubit_Decomposition
-        release_N_Qubit_Decomposition( self->decomp );
+        release_N_Qubit_Decomposition_adaptive( self->decomp );
         self->decomp = NULL;
     }
+
+    if ( self->decomp_general != NULL ) {
+        // deallocate the instance of class N_Qubit_Decomposition
+        release_N_Qubit_Decomposition_adaptive_general( self->decomp_general );
+        self->decomp_general = NULL;
+    }
+
+    self->decomp_base = NULL;
 
     if ( self->Umtx != NULL ) {
         // release the unitary to be decomposed
@@ -233,6 +278,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_new(PyTypeObject *type, PyObject *arg
     if (self != NULL) {}
 
     self->decomp = NULL;
+    self->decomp_general = NULL;
     self->Umtx = NULL;
 
     return (PyObject *) self;
@@ -249,7 +295,7 @@ static int
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit", (char*)"level_limit_min", (char*)"initial_guess", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit", (char*)"level_limit_min", (char*)"initial_guess", (char*)"method", NULL};
  
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
@@ -257,10 +303,11 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     int level_limit = 0;
     int level_limit_min = 0;
     PyObject *initial_guess = NULL;
+    PyObject *method = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiO", kwlist,
-                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &initial_guess))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiOO", kwlist,
+                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &initial_guess, &method))
         return -1;
 
     // convert python object array to numpy C API array
@@ -297,12 +344,35 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
         qgd_initial_guess = ZEROS;     
     }
 
+
+    // determine the optimizaton method
+    PyObject* method_string = PyObject_Str(method);
+    PyObject* method_string_unicode = PyUnicode_AsEncodedString(method_string, "utf-8", "~E~");
+    const char* method_C = PyBytes_AS_STRING(method_string_unicode);
+
+
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
-        self->decomp =  create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, qgd_initial_guess);
+        if ( strcmp("limited", method_C)==0 or strcmp("LIMITED", method_C)==0) {
+            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, qgd_initial_guess);
+            self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp;
+        }
+        else if ( strcmp("general", method_C)==0 or strcmp("GENERAL", method_C)==0) {
+            self->decomp_general = create_N_Qubit_Decomposition_adaptive_general( Umtx_mtx, qbit_num, level_limit, level_limit_min, qgd_initial_guess);    
+            self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp_general;
+        }
+        else {
+            std::cout << "Wrong optmimization method. Falling back to limited." << std::endl;
+            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, qgd_initial_guess);
+            self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp;
+        }
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;
+        Py_XDECREF(initial_guess_string);
+        Py_XDECREF(initial_guess_string_unicode);
+        Py_XDECREF(method_string);
+        Py_XDECREF(method_string_unicode);
         return -1;
     }
 
@@ -310,6 +380,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
 
     Py_XDECREF(initial_guess_string);
     Py_XDECREF(initial_guess_string_unicode);
+    Py_XDECREF(method_string);
+    Py_XDECREF(method_string_unicode);
 
     return 0;
 }
@@ -337,7 +409,13 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Start_Decomposition(qgd_N_Qubit_Decom
 
 
     // starting the decomposition
-    self->decomp->start_decomposition(prepare_export);
+    if (  self->decomp != NULL ) {
+        self->decomp->start_decomposition(prepare_export);
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->start_decomposition(prepare_export);
+    }
+    
 
 
     return Py_BuildValue("i", 0);
@@ -357,7 +435,7 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gate_num( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
     // get the number of gates
-    int ret = self->decomp->get_gate_num();
+    int ret = self->decomp_base->get_gate_num();
 
 
     return Py_BuildValue("i", ret);
@@ -373,7 +451,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gate_num( qgd_N_Qubit_Decompositi
 @return Returns with a python dictionary containing the metadata of the idx-th gate
 */
 static PyObject *
-get_gate( N_Qubit_Decomposition_adaptive* decomp, int &idx ) {
+get_gate( N_Qubit_Decomposition_Base* decomp, int &idx ) {
 
 
     // create dictionary conatining the gate data
@@ -596,7 +674,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gate( qgd_N_Qubit_Decomposition_a
     if (!PyArg_ParseTuple(args, "|i", &idx )) return Py_BuildValue("i", -1);
 
 
-    return get_gate( self->decomp, idx );
+    return get_gate( self->decomp_base, idx );
 
 
 }
@@ -619,7 +697,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates( qgd_N_Qubit_Decomposition_
 
 
     // get the number of gates
-    int op_num = self->decomp->get_gate_num();
+    int op_num = self->decomp_base->get_gate_num();
 
     // preallocate Python tuple for the output
     PyObject* ret = PyTuple_New( (Py_ssize_t) op_num );
@@ -630,7 +708,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates( qgd_N_Qubit_Decomposition_
     for (int idx = 0; idx < op_num; idx++ ) {
 
         // get metadata about the idx-th gate
-        PyObject* gate = get_gate( self->decomp, idx );
+        PyObject* gate = get_gate( self->decomp_base, idx );
 
         // adding gate information to the tuple
         PyTuple_SetItem( ret, (Py_ssize_t) idx, gate );
@@ -650,7 +728,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates( qgd_N_Qubit_Decomposition_
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_List_Gates( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
-    self->decomp->list_gates( 0 );
+    self->decomp_base->list_gates( 0 );
 
     return Py_None;
 }
@@ -669,7 +747,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Optimized_Parameters( qgd_N_Qubit
 
     matrix_base<double> parameters_mtx(1, parameter_num);
     double* parameters = parameters_mtx.get_data();
-    self->decomp->get_optimized_parameters(parameters);
+    self->decomp_base->get_optimized_parameters(parameters);
 
     // reversing the order
     matrix_base<double> parameters_mtx_reversed(1, parameter_num);
@@ -725,9 +803,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimized_Parameters( qgd_N_Qubit
         parameters_reversed[idx] = parameters[param_num-1-idx];
     }
 
-
-
-    self->decomp->set_optimized_parameters(parameters_reversed, param_num);
+    self->decomp_base->set_optimized_parameters(parameters_reversed, param_num);
 
 
     Py_DECREF(parameters_arr);
@@ -775,7 +851,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Max_Layer_Num(qgd_N_Qubit_Decompo
         int key_int = (int) PyLong_AsLong(key);
 
         // set maximal layer nums on the C++ side
-        self->decomp->set_max_layer_num( key_int, value_int );
+        self->decomp_base->set_max_layer_num( key_int, value_int );
+
     }
 
     return Py_BuildValue("i", 0);
@@ -824,7 +901,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Iteration_Loops(qgd_N_Qubit_Decom
         int key_int = (int) PyLong_AsLong(key);
 
         // set maximal layer nums on the C++ side
-        self->decomp->set_iteration_loops( key_int, value_int );
+        self->decomp_base->set_iteration_loops( key_int, value_int );
+
     }
 
     return Py_BuildValue("i", 0);
@@ -849,7 +927,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition
 
 
     // set maximal layer nums on the C++ side
-    self->decomp->set_verbose( verbose );
+    self->decomp_base->set_verbose( verbose );
+
 
     return Py_BuildValue("i", 0);
 }
@@ -873,7 +952,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Tolerance(qgd_N_Qubi
 
 
     // set maximal layer nums on the C++ side
-    self->decomp->set_optimization_tolerance( tolerance );
+    self->decomp_base->set_optimization_tolerance( tolerance );
+
 
     return Py_BuildValue("i", 0);
 }
@@ -897,7 +977,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Blocks(qgd_N_Qubit_D
 
 
     // set maximal layer nums on the C++ side
-    self->decomp->set_optimization_blocks( optimization_block );
+    self->decomp_base->set_optimization_blocks( optimization_block );
+
 
     return Py_BuildValue("i", 0);
 }
@@ -924,7 +1005,13 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decom
     // convert gate structure from PyObject to qgd_Gates_Block
     qgd_Gates_Block* qgd_op_block = (qgd_Gates_Block*) gate_structure_py;
 
-    self->decomp->set_adaptive_gate_structure( qgd_op_block->gate );
+    if (  self->decomp != NULL ) {
+        self->decomp->set_adaptive_gate_structure( qgd_op_block->gate );
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->set_adaptive_gate_structure( qgd_op_block->gate );
+    }
+
 
     return Py_BuildValue("i", 0);
 
@@ -980,7 +1067,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Reorder_Qubits(qgd_N_Qubit_Decomposit
 
 
     // reorder the qubits in the decomposition class
-    self->decomp->reorder_qubits( qbit_list_C );
+    self->decomp_base->reorder_qubits( qbit_list_C );
+
 
     
 

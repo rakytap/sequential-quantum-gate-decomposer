@@ -164,17 +164,17 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 
     if (verbose) {
         std::cout << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
-        if ( gates_num.u3>0 ) std::cout << gates_num.u3 << " U3 opeartions," << std::endl;
-        if ( gates_num.rx>0 ) std::cout << gates_num.rx << " RX opeartions," << std::endl;
-        if ( gates_num.ry>0 ) std::cout << gates_num.ry << " RY opeartions," << std::endl;
-        if ( gates_num.rz>0 ) std::cout << gates_num.rz << " RZ opeartions," << std::endl;
-        if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT opeartions," << std::endl;
-        if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ opeartions," << std::endl;
-        if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH opeartions," << std::endl;
-        if ( gates_num.x>0 ) std::cout << gates_num.x << " X opeartions," << std::endl;
-        if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX opeartions," << std::endl;
-        if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore opeartions," << std::endl;
-        if ( gates_num.adap>0 ) std::cout << gates_num.adap << " Adaptive opeartions," << std::endl;
+        if ( gates_num.u3>0 ) std::cout << gates_num.u3 << " U3 gates," << std::endl;
+        if ( gates_num.rx>0 ) std::cout << gates_num.rx << " RX gates," << std::endl;
+        if ( gates_num.ry>0 ) std::cout << gates_num.ry << " RY gates," << std::endl;
+        if ( gates_num.rz>0 ) std::cout << gates_num.rz << " RZ gates," << std::endl;
+        if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT gates," << std::endl;
+        if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ gates," << std::endl;
+        if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH gates," << std::endl;
+        if ( gates_num.x>0 ) std::cout << gates_num.x << " X gates," << std::endl;
+        if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX gates," << std::endl;
+        if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore gates," << std::endl;
+        if ( gates_num.adap>0 ) std::cout << gates_num.adap << " Adaptive gates," << std::endl;
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
         std::cout << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
