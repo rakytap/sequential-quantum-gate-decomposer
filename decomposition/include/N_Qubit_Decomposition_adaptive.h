@@ -71,6 +71,8 @@ protected:
     int level_limit;
     ///
     int level_limit_min;
+    ///
+    std::vector<matrix_base<int>> topology;
     
 
 public:
@@ -82,6 +84,16 @@ public:
 N_Qubit_Decomposition_adaptive();
 
 
+/**
+@brief Constructor of the class.
+@param Umtx_in The unitary matrix to be decomposed
+@param qbit_num_in The number of qubits spanning the unitary Umtx
+@param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
+@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@return An instance of the class
+*/
+N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, guess_type initial_guess_in= CLOSE_TO_ZERO );
+
 
 /**
 @brief Constructor of the class.
@@ -91,7 +103,7 @@ N_Qubit_Decomposition_adaptive();
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, guess_type initial_guess_in );
+N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, guess_type initial_guess_in= CLOSE_TO_ZERO );
 
 
 

@@ -81,7 +81,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, false, initial_guess_in) {
+N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, guess_type initial_guess_in ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, false, initial_guess_in) {
 
 
     // initialize custom gate structure
@@ -93,6 +93,35 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 
     // Maximal number of iteartions in the optimization process
     max_iterations = 4;
+
+    srand(time(NULL));   // Initialization, should only be called once.
+}
+
+
+
+/**
+@brief Constructor of the class.
+@param Umtx_in The unitary matrix to be decomposed
+@param qbit_num_in The number of qubits spanning the unitary Umtx
+@param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
+@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@return An instance of the class
+*/
+N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, guess_type initial_guess_in ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, false, initial_guess_in) {
+
+
+    // initialize custom gate structure
+    gate_structure = NULL;
+
+    // set the level limit
+    level_limit = level_limit_in;
+    level_limit_min = level_limit_min_in;
+
+    // Maximal number of iteartions in the optimization process
+    max_iterations = 4;
+
+    // setting the topology
+    topology = topology_in;
 
     srand(time(NULL));   // Initialization, should only be called once.
 }
@@ -936,28 +965,24 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
 
     int layer_num = (qbit_num*(qbit_num-1))/2;
     std::vector<Gates_block* > layers;
-/*
-    // spin
-    for (int target_qbit_loc = 0; target_qbit_loc<qbit_num-1; target_qbit_loc+=2) {
-
-        int control_qbit_loc = target_qbit_loc+1;
-
-            Gates_block* layer = new Gates_block( qbit_num );
-
-            bool Theta = true;
-            bool Phi = true;
-            bool Lambda = true;
-            layer->add_u3(target_qbit_loc, Theta, Phi, Lambda);
-            layer->add_u3(control_qbit_loc, Theta, Phi, Lambda); 
-            layer->add_adaptive(target_qbit_loc, control_qbit_loc);
-
-            layers.push_back(layer);
-    }
 
 
-    for (int target_qbit_loc = 1; target_qbit_loc<qbit_num-1; target_qbit_loc+=2) {
+    if ( topology.size() > 0 ) {
+        for ( std::vector<matrix_base<int>>::iterator it=topology.begin(); it!=topology.end(); it++) {
 
-        int control_qbit_loc = target_qbit_loc+1;
+            if ( it->size() != 2 ) {
+                std::cout << "The connectivity data should contains two qubits" << std::endl;
+                it->print_matrix();
+                exit(-1);
+            }
+
+            int control_qbit_loc = (*it)[0];
+            int target_qbit_loc = (*it)[1];
+
+            if ( control_qbit_loc >= qbit_num || target_qbit_loc >= qbit_num ) {
+                std::cout << "Label of control/target qubit should be less than the number of qubits in the register." << std::endl;
+                exit(-1);            
+            }
 
             Gates_block* layer = new Gates_block( qbit_num );
 
@@ -969,50 +994,29 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
             layer->add_adaptive(target_qbit_loc, control_qbit_loc);
 
             layers.push_back(layer);
-    }
 
-*/
-/*
-    int index_diff_max = qbit_num;
-    for (int index_diff=2; index_diff<index_diff_max; index_diff++) {
-        for (int target_qbit_loc = 0; target_qbit_loc<qbit_num-1; target_qbit_loc++) {
 
-            int control_qbit_loc = target_qbit_loc+index_diff;
-
-            if (control_qbit_loc >= qbit_num ) break;
-
-            Gates_block* layer = new Gates_block( qbit_num );
-
-            bool Theta = true;
-            bool Phi = true;
-            bool Lambda = true;
-            layer->add_u3(target_qbit_loc, Theta, Phi, Lambda);
-            layer->add_u3(control_qbit_loc, Theta, Phi, Lambda); 
-            layer->add_adaptive(target_qbit_loc, control_qbit_loc);
-
-            layers.push_back(layer);
         }
-
-
     }
-*/
+    else {  
     
+        // sequ
+        for (int target_qbit_loc = 0; target_qbit_loc<qbit_num; target_qbit_loc++) {
+            for (int control_qbit_loc = target_qbit_loc+1; control_qbit_loc<qbit_num; control_qbit_loc++) {
 
-    // sequ
-    for (int target_qbit_loc = 0; target_qbit_loc<qbit_num; target_qbit_loc++) {
-        for (int control_qbit_loc = target_qbit_loc+1; control_qbit_loc<qbit_num; control_qbit_loc++) {
+                Gates_block* layer = new Gates_block( qbit_num );
 
-            Gates_block* layer = new Gates_block( qbit_num );
+                bool Theta = true;
+                bool Phi = true;
+                bool Lambda = true;
+                layer->add_u3(target_qbit_loc, Theta, Phi, Lambda);
+                layer->add_u3(control_qbit_loc, Theta, Phi, Lambda); 
+                layer->add_adaptive(target_qbit_loc, control_qbit_loc);
 
-            bool Theta = true;
-            bool Phi = true;
-            bool Lambda = true;
-            layer->add_u3(target_qbit_loc, Theta, Phi, Lambda);
-            layer->add_u3(control_qbit_loc, Theta, Phi, Lambda); 
-            layer->add_adaptive(target_qbit_loc, control_qbit_loc);
-
-            layers.push_back(layer);
+                layers.push_back(layer);
+            }
         }
+
     }
 
 /*
@@ -1077,6 +1081,7 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( Gates_block* gate_s
     gate_structure = gate_structure_in->clone();
 
 }
+
 
 
 

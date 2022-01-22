@@ -41,13 +41,38 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
 # @return An instance of the class
-    def __init__( self, Umtx, level_limit, level_limit_min=0, initial_guess="zeros", method='LIMITED' ):
+    def __init__( self, Umtx, level_limit=8, level_limit_min=0, initial_guess="zeros", method='LIMITED', topology=None ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
 
+        # validate input parameters
+        if method == 'LIMITED' or method == 'limited' :
+            pass
+        elif method == 'GENERAL' or method == 'general' :
+            pass
+        else: 
+            print('Invalid input argument method=', method, '. Falling back to default.')
+            method = 'limited'
+
+        topology_validated = list()
+        if isinstance(topology, list) or isinstance(topology, tuple):
+            for item in topology:
+                if isinstance(item, tuple) and len(item) == 2:
+                    item_validated = (np.intc(item[0]), np.intc(item[1]))
+                    topology_validated.append(item_validated)
+                else:
+                    print("Elements of topology should be two-component tuples (int, int)")
+                    return
+        elif topology == None:
+            pass
+        else:
+            print("Input parameter topology should be a list of (int, int) describing the connected qubits in the topology")
+            return
+        
+        print( topology_validated )
         # call the constructor of the wrapper class
-        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit, level_limit_min, initial_guess=initial_guess, method=method)
+        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit, level_limit_min, initial_guess=initial_guess, method=method, topology=topology_validated)
 
 
 

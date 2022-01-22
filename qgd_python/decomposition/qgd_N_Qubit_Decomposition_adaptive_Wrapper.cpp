@@ -140,9 +140,9 @@ typedef struct qgd_N_Qubit_Decomposition_adaptive_Wrapper {
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition_adaptive* 
-create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, guess_type initial_guess ) {
+create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in, guess_type initial_guess ) {
 
-    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, level_limit, level_limit_min, initial_guess );
+    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, level_limit, level_limit_min, topology_in, initial_guess );
 }
 
 
@@ -156,9 +156,9 @@ create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_lim
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition_adaptive_general* 
-create_N_Qubit_Decomposition_adaptive_general( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, guess_type initial_guess ) {
+create_N_Qubit_Decomposition_adaptive_general( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in, guess_type initial_guess ) {
 
-    return new N_Qubit_Decomposition_adaptive_general( Umtx, qbit_num, level_limit, level_limit_min, initial_guess );
+    return new N_Qubit_Decomposition_adaptive_general( Umtx, qbit_num, level_limit, level_limit_min, topology_in, initial_guess );
 }
 
 
@@ -295,7 +295,7 @@ static int
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit", (char*)"level_limit_min", (char*)"initial_guess", (char*)"method", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit", (char*)"level_limit_min", (char*)"initial_guess", (char*)"method", (char*)"topology", NULL};
  
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
@@ -304,10 +304,11 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     int level_limit_min = 0;
     PyObject *initial_guess = NULL;
     PyObject *method = NULL;
+    PyObject *topology = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiOO", kwlist,
-                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &initial_guess, &method))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiOOO", kwlist,
+                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &initial_guess, &method, &topology))
         return -1;
 
     // convert python object array to numpy C API array
@@ -350,20 +351,55 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     PyObject* method_string_unicode = PyUnicode_AsEncodedString(method_string, "utf-8", "~E~");
     const char* method_C = PyBytes_AS_STRING(method_string_unicode);
 
+    // elaborate connectivity topology
+    bool is_None = topology == Py_None;
+    bool is_list = PyList_Check(topology);
+
+    // Check whether input is a list
+    if (!is_list && !is_None) {
+        printf("Input topology must be a list!\n");
+        return -1;
+    }
+
+    // create C++ variant of the list
+    std::vector<matrix_base<int>> topology_Cpp;
+
+    if ( !is_None ) {
+
+        // get the number of qbubits
+        Py_ssize_t element_num = PyList_GET_SIZE(topology);
+
+        for ( Py_ssize_t idx=0; idx<element_num; idx++ ) {
+            PyObject *item = PyList_GetItem(topology, idx );
+
+            // Check whether input is a list
+            if (!PyTuple_Check(item)) {
+                printf("Elements of topology must be a tuple!\n");
+                return -1;
+            }
+
+            matrix_base<int> item_Cpp(1,2);  
+            item_Cpp[0] = (int) PyLong_AsLong( PyTuple_GetItem(item, 0 ) );
+            item_Cpp[1] = (int) PyLong_AsLong( PyTuple_GetItem(item, 1 ) );
+
+            topology_Cpp.push_back( item_Cpp );        
+        }
+    }
+
 
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
         if ( strcmp("limited", method_C)==0 or strcmp("LIMITED", method_C)==0) {
-            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, qgd_initial_guess);
+            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp, qgd_initial_guess);
             self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp;
         }
         else if ( strcmp("general", method_C)==0 or strcmp("GENERAL", method_C)==0) {
-            self->decomp_general = create_N_Qubit_Decomposition_adaptive_general( Umtx_mtx, qbit_num, level_limit, level_limit_min, qgd_initial_guess);    
+            self->decomp_general = create_N_Qubit_Decomposition_adaptive_general( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp, qgd_initial_guess);    
             self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp_general;
         }
         else {
             std::cout << "Wrong optmimization method. Falling back to limited." << std::endl;
-            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, qgd_initial_guess);
+            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp, qgd_initial_guess);
             self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp;
         }
     }
