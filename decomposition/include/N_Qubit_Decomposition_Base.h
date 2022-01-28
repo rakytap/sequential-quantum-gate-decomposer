@@ -72,7 +72,8 @@ protected:
     /// A map of <int n: int num> indicating that how many identical successive blocks should be used in the disentanglement of the nth qubit from the others
     std::map<int,int> identical_blocks;
 
-
+    int iter_max;
+    int gradient_threshold;
 
 
 

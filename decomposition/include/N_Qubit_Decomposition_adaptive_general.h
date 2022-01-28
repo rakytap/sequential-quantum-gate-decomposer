@@ -21,58 +21,19 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 */
 
-#ifndef N_Qubit_Decomposition_adaptive_H
-#define N_Qubit_Decomposition_adaptive_H
+#ifndef N_Qubit_Decomposition_adaptive_general_H
+#define N_Qubit_Decomposition_adaptive_general_H
 
-#include "N_Qubit_Decomposition_Base.h"
-
-#ifdef __cplusplus
-extern "C" 
-{
-#endif
-
-/// Definition of the zggev function from Lapacke to calculate the eigenvalues of a complex matrix
-int LAPACKE_zggev 	( 	int  	matrix_layout,
-		char  	jobvl,
-		char  	jobvr,
-		int  	n,
-		QGD_Complex16 *  	a,
-		int  	lda,
-		QGD_Complex16 *  	b,
-		int  	ldb,
-		QGD_Complex16 *  	alpha,
-		QGD_Complex16 *  	beta,
-		QGD_Complex16 *  	vl,
-		int  	ldvl,
-		QGD_Complex16 *  	vr,
-		int  	ldvr 
-	); 	
-
-#ifdef __cplusplus
-}
-#endif
+#include "N_Qubit_Decomposition_adaptive.h"
 
 
 /**
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 This class contains the non-template implementation of the decomposition class.
 */
-class N_Qubit_Decomposition_adaptive : public N_Qubit_Decomposition_Base {
+class N_Qubit_Decomposition_adaptive_general : public N_Qubit_Decomposition_adaptive {
 
 
-public:
-
-protected:
-
-
-    /// A gate structure describing custom gate structure to be used in the decomposition. 
-    Gates_block* gate_structure;
-    ///
-    int level_limit;
-    ///
-    int level_limit_min;
-    ///
-    std::vector<matrix_base<int>> topology;
     
 
 public:
@@ -81,18 +42,8 @@ public:
 @brief Nullary constructor of the class.
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive();
+N_Qubit_Decomposition_adaptive_general();
 
-
-/**
-@brief Constructor of the class.
-@param Umtx_in The unitary matrix to be decomposed
-@param qbit_num_in The number of qubits spanning the unitary Umtx
-@param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
-@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
-@return An instance of the class
-*/
-N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, guess_type initial_guess_in= CLOSE_TO_ZERO );
 
 
 /**
@@ -103,14 +54,24 @@ N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, guess_type initial_guess_in= CLOSE_TO_ZERO );
+N_Qubit_Decomposition_adaptive_general( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, guess_type initial_guess_in= CLOSE_TO_ZERO );
 
 
+
+/**
+@brief Constructor of the class.
+@param Umtx_in The unitary matrix to be decomposed
+@param qbit_num_in The number of qubits spanning the unitary Umtx
+@param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
+@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@return An instance of the class
+*/
+N_Qubit_Decomposition_adaptive_general( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, guess_type initial_guess_in= CLOSE_TO_ZERO );
 
 /**
 @brief Destructor of the class
 */
-virtual ~N_Qubit_Decomposition_adaptive();
+virtual ~N_Qubit_Decomposition_adaptive_general();
 
 
 /**
@@ -120,44 +81,18 @@ virtual ~N_Qubit_Decomposition_adaptive();
 */
 virtual void start_decomposition(bool prepare_export=true);
 
-/**
-@brief ??????????????
-*/
-Gates_block* optimize_imported_gate_structure(Matrix_real& optimized_parameters_mtx_loc);
-
-
-/**
-@brief ??????????????
-*/
-Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_mtx);
-
 
 
 /**
 @brief ???????????????
 */
-Gates_block* compress_gate_structure( Gates_block* gate_structure );
-
-/**
-@brief ???????????????
-*/
-Gates_block* compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& currnt_minimum_loc );
-
-/**
-@brief ???????????????
-*/
-Gates_block* replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
-
-/**
-@brief ???????????????
-*/
-virtual int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
+int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 
 /**
 @brief ???????????????
 */
-virtual Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& currnt_minimum_loc );
+Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& currnt_minimum_loc );
 
 /**
 @brief ???????????????
@@ -175,12 +110,6 @@ Gates_block* construct_gate_layer( const int& _target_qbit, const int& _control_
 void add_finalyzing_layer( Gates_block* gate_structure );
 
 
-
-/**
-@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
-@param gate_structure An <int, Gates_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
-*/
-void set_adaptive_gate_structure( Gates_block* gate_structure_in );
 
 };
 

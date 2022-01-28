@@ -34,6 +34,9 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom() : N_Qubit_Decomposi
 
     // initialize custom gate structure
     gate_structure = NULL;
+
+    iter_max = 10000;
+    gradient_threshold = 1e-8;
 }
 
 /**
@@ -48,6 +51,9 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int 
 
     // initialize custom gate structure
     gate_structure = NULL;
+
+    iter_max = 10000;
+    gradient_threshold = 1e-8;
 
 }
 

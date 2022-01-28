@@ -258,21 +258,20 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
             T = gsl_multimin_fdfminimizer_vector_bfgs2;
             s = gsl_multimin_fdfminimizer_alloc (T, num_of_parameters);
 
-
-            gsl_multimin_fdfminimizer_set (s, &my_func, solution_guess_gsl, 0.01, 0.1);
+            gsl_multimin_fdfminimizer_set(s, &my_func, solution_guess_gsl, 0.01, 0.1);
 
             do {
                 iter++;
-
+                gsl_set_error_handler_off();
                 status = gsl_multimin_fdfminimizer_iterate (s);
 
                 if (status) {
                   break;
                 }
 
-                status = gsl_multimin_test_gradient (s->gradient, 1e-8);
+                status = gsl_multimin_test_gradient (s->gradient, gradient_threshold);
 
-            } while (status == GSL_CONTINUE && iter < 1000);
+            } while (status == GSL_CONTINUE && iter < iter_max);
 
             if (current_minimum > s->f) {
                 current_minimum = s->f;

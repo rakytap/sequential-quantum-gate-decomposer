@@ -70,6 +70,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
     // set the level limit
     level_limit = 0;
 
+    iter_max = 10000;
+    gradient_threshold = 1e-8;
+
     srand(time(NULL));   // Initialization, should only be called once.
 }
 
@@ -93,6 +96,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 
     // Maximal number of iteartions in the optimization process
     max_iterations = 4;
+
+    iter_max = 10000;
+    gradient_threshold = 1e-8;
 
     srand(time(NULL));   // Initialization, should only be called once.
 }
@@ -246,15 +252,34 @@ mtx.print_matrix();
     }
 
 
+
+
     std::cout << std::endl;
     std::cout << std::endl;
     std::cout << "**************************************************************" << std::endl;
     std::cout << "***************** Compressing Gate structure *****************" << std::endl;
     std::cout << "**************************************************************" << std::endl;
 
-    for ( int iter=0; iter<25; iter++ ) {
+    int iter = 0;
+    int uncompressed_iter_num = 0;
+    while ( iter<25 || uncompressed_iter_num <= 5 ) {
+
+        if ( current_minimum > 1e-2 ) {
+             for (int idx=0; idx<optimized_parameters_mtx.size(); idx++ ) {
+                 optimized_parameters_mtx[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
+             }
+        }
+
+
         std::cout << "iteration " << iter+1 << ": ";
         Gates_block* gate_structure_compressed = compress_gate_structure( gate_structure_loc );
+
+        if ( gate_structure_compressed->get_gate_num() < gate_structure_loc->get_gate_num() ) {
+            uncompressed_iter_num = 0;
+        }
+        else {
+            uncompressed_iter_num++;
+        }
 
         if ( gate_structure_compressed != gate_structure_loc ) {
             delete( gate_structure_loc );
@@ -262,8 +287,11 @@ mtx.print_matrix();
             gate_structure_compressed = NULL;
         }
 
-    }
+        iter++;
 
+        if (uncompressed_iter_num>10) break;
+
+    }
 
 
     std::cout << "**************************************************************" << std::endl;
@@ -560,21 +588,30 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     matrix_base<int> panelties(1,panelties_num);
     std::vector<Gates_block*> gate_structures_vec(panelties_num, NULL);
     std::vector<Matrix_real> optimized_parameters_vec(panelties_num, Matrix_real(0,0));
+    std::vector<double> current_minimum_vec(panelties_num, 0.0);
 
 
 
     tbb::parallel_for( 0, panelties_num, 1, [&](int idx_to_remove) {
     //for (int idx_to_remove=0; idx_to_remove<layer_num_orig; idx_to_remove++) {
 
+        double current_minimum_loc = 0.0;
+
         Matrix_real optimized_parameters_loc = optimized_parameters_mtx.copy();
-        Gates_block* gate_structure_reduced = compress_gate_structure( gate_structure, optimized_parameters_loc, layers_to_remove[idx_to_remove] );
+        Gates_block* gate_structure_reduced = compress_gate_structure( gate_structure, layers_to_remove[idx_to_remove], optimized_parameters_loc,  current_minimum_loc  );
  
         // remove further adaptive gates if possible
-        //Gates_block* gate_structure_tmp = gate_structure_reduced->clone();
-        Gates_block* gate_structure_tmp = remove_trivial_gates( gate_structure_reduced, optimized_parameters_loc );
+        Gates_block* gate_structure_tmp;
+        if ( gate_structure_reduced->get_gate_num() ==  gate_structure->get_gate_num() ) {
+            gate_structure_tmp = gate_structure_reduced->clone();
+        }
+        else {
+            gate_structure_tmp = remove_trivial_gates( gate_structure_reduced, optimized_parameters_loc, current_minimum_loc );
+        }
         panelties[idx_to_remove] = get_panelty(gate_structure_tmp, optimized_parameters_loc);
         gate_structures_vec[idx_to_remove] = gate_structure_tmp;
         optimized_parameters_vec[idx_to_remove] = optimized_parameters_loc;
+        current_minimum_vec[idx_to_remove] = current_minimum_loc;
 
         
 
@@ -616,6 +653,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     // release the reduced gate structure, keep only the most efficient one
     gate_structure = gate_structures_vec[idx_min];
     optimized_parameters_mtx = optimized_parameters_vec[idx_min];
+    current_minimum =  current_minimum_vec[idx_min];
 
     int layer_num = gate_structure->get_gate_num();
 
@@ -637,7 +675,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 @brief ???????????????
 */
 Gates_block* 
-N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure, Matrix_real& optimized_parameters, int layer_idx ) {
+N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& currnt_minimum_loc ) {
 
     // create reduced gate structure without layer indexed by layer_idx
     Gates_block* gate_structure_reduced = gate_structure->clone();
@@ -855,7 +893,7 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
 @brief ???????????????
 */
 Gates_block*
-N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters ) {
+N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& currnt_minimum_loc ) {
 
 
     int layer_num = gate_structure->get_gate_num();
@@ -884,7 +922,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
                
                 // remove gate from the structure
-                Gates_block* gate_structure_tmp = compress_gate_structure( gate_structure_loc, optimized_parameters_loc, idx );
+                Gates_block* gate_structure_tmp = compress_gate_structure( gate_structure_loc, idx, optimized_parameters_loc, currnt_minimum_loc );
 
                 optimized_parameters = optimized_parameters_loc;
                 delete( gate_structure_loc );

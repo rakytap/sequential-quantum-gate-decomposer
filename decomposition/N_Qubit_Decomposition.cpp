@@ -31,6 +31,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
 
+    iter_max = 10;
+    gradient_threshold = 1e-1;
+
 }
 
 /**
@@ -43,6 +46,8 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
 */
 N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, optimize_layer_num_in, initial_guess_in) {
 
+    iter_max = 10;
+    gradient_threshold = 1e-1;
 
 }
 
@@ -143,11 +148,18 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 
         // simplify layers
         if (qbit_num>2) {
-            //simplify_layers();
+            simplify_layers();
         }
+
+        int optimization_block_orig = optimization_block;
+        optimization_block = optimization_block*3;
+        //max_iterations = 4;
+
 
         // final tuning of the decomposition parameters
         final_optimization();
+
+        optimization_block = optimization_block_orig;
 
         // prepare gates to export
         if (prepare_export) {
