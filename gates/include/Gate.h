@@ -27,6 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <vector>
 #include "common.h"
 #include "matrix.h"
+#include "printclasssq.h"
 
 
 /// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)
