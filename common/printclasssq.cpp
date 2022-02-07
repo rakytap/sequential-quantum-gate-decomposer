@@ -12,11 +12,13 @@
 
 
 
-int verbose_main_level=1; //set the verbose main level
+
 
 void printsq::printnewsq(std::stringstream& ssq, int verbose_level) 
 
 {
+
+	int verbose_main_level=1; //set the verbose main level
 
 	if (verbose_level<verbose_main_level) { //can be seen on the standart output
         	std::cout << ssq.str() <<'\n';
