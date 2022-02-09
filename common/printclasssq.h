@@ -21,7 +21,7 @@ public:
 
  	
  
- 	void printnewsq(std::stringstream& ssq, int verbose_level=1); //default verbose_level=1
+ 	static void printnewsq(std::stringstream& ssq, int verbose_level=1); //default verbose_level=1
 
 };
 
