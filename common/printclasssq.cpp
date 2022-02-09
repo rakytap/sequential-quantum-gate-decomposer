@@ -14,7 +14,7 @@
 
 
 
-void printsq::printnewsq(std::stringstream& ssq, int verbose_level) 
+void logging::printnewsq(std::stringstream& ssq, int verbose_level) 
 
 {
 
