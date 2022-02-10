@@ -31,6 +31,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <stdlib.h>
 
 
+
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
+
 Matrix_real create_random_paramaters( Gates_block* gate_structure ) {
 
     int parameter_num = gate_structure->get_parameter_num();
@@ -182,9 +188,14 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     tbb::tick_count start_time = tbb::tick_count::now();
 
     if (level_limit == 0 ) {
-        std::cout << "please increase level limit" << std::endl;
+
+	ss << "please increase level limit" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
         exit(-1);
     }
+
 /*
 int qbit_num_loc = 2;
 int target_qbit = 0;
@@ -243,11 +254,21 @@ mtx.print_matrix();
 
     Gates_block* gate_structure_loc = NULL;
     if ( gate_structure != NULL ) {
-        std::cout << "Using imported gate structure for the decomposition." << std::endl;
+
+	ss << "Using imported gate structure for the decomposition." << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         gate_structure_loc = optimize_imported_gate_structure(optimized_parameters_mtx);
     }
     else {
-        std::cout << "Construct initial gate structure for the decomposition." << std::endl;
+
+	ss << "Construct initial gate structure for the decomposition." << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+
         gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
     }
 
@@ -270,8 +291,11 @@ mtx.print_matrix();
              }
         }
 
-
-        std::cout << "iteration " << iter+1 << ": ";
+	ss << "iteration " << iter+1 << ": ";
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");	
+       
         Gates_block* gate_structure_compressed = compress_gate_structure( gate_structure_loc );
 
         if ( gate_structure_compressed->get_gate_num() < gate_structure_loc->get_gate_num() ) {
@@ -304,7 +328,12 @@ mtx.print_matrix();
     combine( gate_structure_loc );
     optimization_block = get_gate_num();
 
-std::cout << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+
+
+	ss << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");	
 
 
     Gates_block* gate_structure_tmp = replace_trivial_CRY_gates( gate_structure_loc, optimized_parameters_mtx );
@@ -317,7 +346,13 @@ std::cout << optimization_problem(optimized_parameters_mtx.get_data()) << std::e
     delete( gate_structure_tmp );
     delete( gate_structure_loc );
 
-std::cout << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+
+	ss << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");	
+
+
 
     // reset the global minimum before final tuning
     current_minimum = DBL_MAX;
@@ -433,18 +468,38 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
 
 
     if ( cDecomp_custom.get_current_minimum() < optimization_tolerance ) {
-        std::cout << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+
+	ss << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");        
+
     }   
     else {
-        std::cout << "Optimization problem converged to " << cDecomp_custom.get_current_minimum() << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+
+	ss << "Optimization problem converged to " << cDecomp_custom.get_current_minimum() << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");     
+       
     }
 
     if (current_minimum > optimization_tolerance) {
-        std::cout << "Decomposition did not reached prescribed high numerical precision." << std::endl;        
+
+	ss << "Decomposition did not reached prescribed high numerical precision." << std::endl; 
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");     
+             
         optimization_tolerance = 1.5*current_minimum < 1e-2 ? 1.5*current_minimum : 1e-2;
     }
 
-    std::cout << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+	ss << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");   
+
+   
 
     return gate_structure_loc;
 
@@ -509,12 +564,22 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
 
         if ( cDecomp_custom.get_current_minimum() < optimization_tolerance ) {
-            std::cout << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+
+	    ss << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str("");   
+           
             //cDecomp_custom.list_gates(0);
             break;
         }   
         else {
-            std::cout << "Optimization problem converged to " << cDecomp_custom.get_current_minimum() << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+
+	    ss << "Optimization problem converged to " << cDecomp_custom.get_current_minimum() << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str("");  
+            
         }
 
         level++;
@@ -548,13 +613,21 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
     
 
     if (current_minimum > optimization_tolerance) {
-        std::cout << "Decomposition did not reached prescribed high numerical precision." << std::endl;        
+
+	    ss << "Decomposition did not reached prescribed high numerical precision." << std::endl; 
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str("");  
+              
         optimization_tolerance = 1.5*current_minimum < 1e-2 ? 1.5*current_minimum : 1e-2;
     }
 
-    std::cout << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+	    ss << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str("");  
 
-    return gate_structure_loc;
+      return gate_structure_loc;
 
 }
 
@@ -658,10 +731,20 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     int layer_num = gate_structure->get_gate_num();
 
     if ( layer_num < layer_num_orig+1 ) {
-        std::cout << "gate structure reduced from " << layer_num_orig+1 << " to " << layer_num << " decomposing layers" << std::endl;
+
+	    ss << "gate structure reduced from " << layer_num_orig+1 << " to " << layer_num << " decomposing layers" << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str("");  
+        
     }
     else {
-        std::cout << "gate structure kept at " << layer_num << " layers" << std::endl;
+
+	    ss << "gate structure kept at " << layer_num << " layers" << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str(""); 
+       
     }
 
 
@@ -766,7 +849,12 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
         Gate* gate = gate_structure->get_gate(idx);
 
         if ( gate->get_type() != BLOCK_OPERATION ) {
-            std::cout << "N_Qubit_Decomposition_adaptive::replace_trivial_adaptive_gates: Only block gates are accepted in this conversion." << std::endl;
+
+	    ss << "N_Qubit_Decomposition_adaptive::replace_trivial_adaptive_gates: Only block gates are accepted in this conversion." << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str(""); 
+            
             exit(-1);
         }
 
@@ -1009,17 +1097,28 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
         for ( std::vector<matrix_base<int>>::iterator it=topology.begin(); it!=topology.end(); it++) {
 
             if ( it->size() != 2 ) {
-                std::cout << "The connectivity data should contains two qubits" << std::endl;
-                it->print_matrix();
-                exit(-1);
+
+	    ss << "The connectivity data should contains two qubits" << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str(""); 
+
+            it->print_matrix();
+            exit(-1);
+
             }
 
             int control_qbit_loc = (*it)[0];
             int target_qbit_loc = (*it)[1];
 
             if ( control_qbit_loc >= qbit_num || target_qbit_loc >= qbit_num ) {
-                std::cout << "Label of control/target qubit should be less than the number of qubits in the register." << std::endl;
-                exit(-1);            
+
+	    ss << "Label of control/target qubit should be less than the number of qubits in the register." << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str(""); 
+
+            exit(-1);            
             }
 
             Gates_block* layer = new Gates_block( qbit_num );

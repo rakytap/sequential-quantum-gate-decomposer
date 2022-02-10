@@ -24,6 +24,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Decomposition_Base.h"
 
 
+
+
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
+
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
 
