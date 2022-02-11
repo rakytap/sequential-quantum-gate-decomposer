@@ -24,6 +24,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Sub_Matrix_Decomposition.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
+
 //tbb::spin_mutex my_mutex;
 
 /**
@@ -502,7 +507,11 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
-            std::cout << "Sub_Matrix_Decomposition::optimization_problem: matrix_new contains NaN a. Exiting" << std::endl;
+
+		ss << "Sub_Matrix_Decomposition::optimization_problem: matrix_new contains NaN a. Exiting" << std::endl;
+		verbose_level=1;
+            	logging::printnewsq(ss, verbose_level);	
+	        ss.str("");
         }
 #endif
 
@@ -535,7 +544,13 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
-            std::cout << "Sub_Matrix_Decomposition::optimization_problem matrix_new contains NaN b." << std::endl;
+
+
+		ss << "Sub_Matrix_Decomposition::optimization_problem matrix_new contains NaN b." << std::endl;
+		verbose_level=1;
+            	logging::printnewsq(ss, verbose_level);	
+	        ss.str("");
+
         }
 #endif
 
@@ -627,8 +642,13 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* 
         // set the gradient
 #ifdef DEBUG
         if (isnan(f->data[idx])) {
-            std::cout << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
-            exit(-1);
+
+		ss << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
+		verbose_level=1;
+            	logging::printnewsq(ss, verbose_level);	
+	        ss.str("");
+            
+            	exit(-1);
         }
 #endif // DEBUG
         gsl_vector_set(grad, idx, (f->data[idx]-(*f0))/dparam);

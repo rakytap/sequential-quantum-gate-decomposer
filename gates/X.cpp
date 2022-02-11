@@ -22,6 +22,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "X.h"
+
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief NullaRX constructor of the class.
@@ -103,7 +108,11 @@ X::get_matrix( ) {
 
 #ifdef DEBUG
         if (X_matrix.isnan()) {
-            std::cout << "X::get_matrix: X_matrix contains NaN." << std::endl;
+	    ss << "X::get_matrix: X_matrix contains NaN." << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str("");
+            
         }
 #endif
 
@@ -122,7 +131,11 @@ void
 X::apply_to( Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in X gate apply" << std::endl;
+	ss << "Wrong matrix size in X gate apply" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 
@@ -182,7 +195,11 @@ X::apply_from_right( Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 apply_from_right" << std::endl;
+	ss << "Wrong matrix size in U3 apply_from_right" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 

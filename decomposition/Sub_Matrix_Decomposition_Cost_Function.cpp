@@ -25,6 +25,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 
 
 /**
@@ -141,7 +145,12 @@ void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) con
 */
 #ifdef DEBUG
         if (submatrix.isnan()) {
-            std::cout << "Submatrix contains NaN." << std::endl;
+
+		ss << "Submatrix contains NaN." << std::endl;
+		verbose_level=1;
+            	logging::printnewsq(ss, verbose_level);	
+	        ss.str("");
+            
         }
 #endif
 
@@ -190,7 +199,12 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
 #ifdef DEBUG
     if (submatrix_prod.isnan()) {
-        std::cout << "functor_submtx_cost_fnc::operator: Submatrix product contains NaN. Exiting" << std::endl;
+
+		ss << "functor_submtx_cost_fnc::operator: Submatrix product contains NaN. Exiting" << std::endl;
+		verbose_level=1;
+            	logging::printnewsq(ss, verbose_level);	
+	        ss.str("");
+        
     }
 #endif
 
@@ -227,7 +241,12 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
     // checking NaN
     if (std::isnan(prod_cost_functions->local())) {
-        std::cout << "cost function NaN on cost function product "<< product_idx << std::endl;
+
+		ss << "cost function NaN on cost function product "<< product_idx << std::endl;
+		verbose_level=1;
+            	logging::printnewsq(ss, verbose_level);	
+	        ss.str("");
+        
     }
 
 

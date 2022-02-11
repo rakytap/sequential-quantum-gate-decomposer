@@ -275,11 +275,14 @@ mtx.print_matrix();
 
 
 
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "**************************************************************" << std::endl;
-    std::cout << "***************** Compressing Gate structure *****************" << std::endl;
-    std::cout << "**************************************************************" << std::endl;
+    ss << std::endl;
+    ss << std::endl;
+    ss << "**************************************************************" << std::endl;
+    ss << "***************** Compressing Gate structure *****************" << std::endl;
+    ss << "**************************************************************" << std::endl;
+    verbose_level=1;
+    logging::printnewsq(ss,verbose_level);	    	
+    ss.str("");
 
     int iter = 0;
     int uncompressed_iter_num = 0;
@@ -318,9 +321,12 @@ mtx.print_matrix();
     }
 
 
-    std::cout << "**************************************************************" << std::endl;
-    std::cout << "************ Final tuning of the Gate structure **************" << std::endl;
-    std::cout << "**************************************************************" << std::endl;
+    ss << "**************************************************************" << std::endl;
+    ss << "************ Final tuning of the Gate structure **************" << std::endl;
+    ss << "**************************************************************" << std::endl;
+    verbose_level=1;
+    logging::printnewsq(ss,verbose_level);	    	
+    ss.str("");
 
     optimization_tolerance = optimization_tolerance_orig;
 

@@ -28,6 +28,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "common.h"
 #include <tbb/scalable_allocator.h>
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 
 /**
 @brief ?????

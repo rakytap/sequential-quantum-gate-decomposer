@@ -23,6 +23,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "SYC.h"
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 using namespace std;
 
 

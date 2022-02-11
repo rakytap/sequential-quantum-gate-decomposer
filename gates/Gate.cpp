@@ -26,6 +26,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "common.h"
 
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 /**
 @brief Deafult constructor of the class.
 @return An instance of the class

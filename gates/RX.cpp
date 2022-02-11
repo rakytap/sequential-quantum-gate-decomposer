@@ -22,6 +22,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "RX.h"
+
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief NullaRX constructor of the class.
@@ -124,7 +129,11 @@ void
 RX::apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in RX gate apply" << std::endl;
+	ss << "Wrong matrix size in RX gate apply" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 
@@ -157,7 +166,11 @@ RX::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 apply_from_right" << std::endl;
+	ss << "Wrong matrix size in U3 apply_from_right" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+       
         exit(-1);
     }
 
@@ -187,7 +200,11 @@ std::vector<Matrix>
 RX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in RX apply_derivate_to" << std::endl;
+	ss << "Wrong matrix size in RX apply_derivate_to" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 

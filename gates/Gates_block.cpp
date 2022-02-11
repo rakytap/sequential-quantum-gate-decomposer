@@ -38,6 +38,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Composite.h"
 #include "Gates_block.h"
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief Default constructor of the class.
@@ -209,7 +213,11 @@ Gates_block::get_matrix( Matrix_real& parameters ) {
 
 #ifdef DEBUG
     if (block_mtx.isnan()) {
-        std::cout << "Gates_block::get_matrix: block_mtx contains NaN." << std::endl;
+	ss << "Gates_block::get_matrix: block_mtx contains NaN." << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
     }
 #endif
 
@@ -324,7 +332,11 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 #ifdef DEBUG
         if (input.isnan()) {
-            std::cout << "Gates_block::apply_to: transformed matrix contains NaN." << std::endl;
+	    ss << "Gates_block::apply_to: transformed matrix contains NaN." << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str("");
+            
         }
 #endif
 
@@ -422,7 +434,11 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
 #ifdef DEBUG
         if (input.isnan()) {
-            std::cout << "Gates_block::apply_from_right: transformed matrix contains NaN." << std::endl;
+	    ss << "Gates_block::apply_from_right: transformed matrix contains NaN." << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str("");
+            
         }
 #endif
 
@@ -503,7 +519,11 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }    
     
                 else if (operation->get_type() == SYC_OPERATION) {
-                    std::cout << "Sycamore operation not supported in gardient calculation" << std::endl;
+	    	    ss << "Sycamore operation not supported in gardient calculation" << std::endl;
+	            verbose_level=1;
+                    logging::printnewsq(ss, verbose_level);	
+	            ss.str("");
+                    
                     exit(-1);
                 }
 
@@ -606,11 +626,19 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }
 
                 else if (operation->get_type() == UN_OPERATION) {
-                    std::cout << "UN operation not supported in gardient calculation" << std::endl;
+	    	    ss << "UN operation not supported in gardient calculation" << std::endl;
+	            verbose_level=1;
+                    logging::printnewsq(ss, verbose_level);	
+	            ss.str("");
+                    
                     exit(-1);
                 }
                 else if (operation->get_type() == ON_OPERATION) {
-                    std::cout << "ON operation not supported in gardient calculation" << std::endl;
+	    	    ss << "ON operation not supported in gardient calculation" << std::endl;
+	            verbose_level=1;
+                    logging::printnewsq(ss, verbose_level);	
+	            ss.str("");
+                    
                     exit(-1);
                 }
 
@@ -628,7 +656,11 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }
 
                 else if (operation->get_type() == COMPOSITE_OPERATION) {
-                    std::cout << "Composite  operation not supported in gardient calculation" << std::endl;
+	    	    ss << "Composite  operation not supported in gardient calculation" << std::endl;
+	            verbose_level=1;
+                    logging::printnewsq(ss, verbose_level);	
+	            ss.str("");
+                    
                     exit(-1);
                 }
 

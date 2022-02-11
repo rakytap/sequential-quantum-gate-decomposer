@@ -25,6 +25,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //#include <tbb/parallel_for.h>
 
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
+
 /**
 @brief Call co calculate the cost function during the final optimization process.
 @param matrix The square shaped complex matrix from which the cost function is calculated.

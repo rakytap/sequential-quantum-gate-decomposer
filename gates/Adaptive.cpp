@@ -23,6 +23,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Adaptive.h"
 #include "common.h"
+
+
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief Nullary constructor of the class.
@@ -91,7 +97,12 @@ void
 Adaptive::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in Adaptive gate apply" << std::endl;
+
+	ss << "Wrong matrix size in Adaptive gate apply" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 
@@ -130,7 +141,11 @@ Adaptive::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::cout<< "Wrong matrix size in Adaptive apply_from_right" << std::endl;
+	ss << "Wrong matrix size in Adaptive apply_from_right" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 
@@ -164,7 +179,11 @@ std::vector<Matrix>
 Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in Adaptive gate apply" << std::endl;
+	ss << "Wrong matrix size in Adaptive gate apply" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 

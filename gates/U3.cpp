@@ -22,6 +22,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "U3.h"
+
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief Nullary constructor of the class.
@@ -151,7 +156,11 @@ U3::get_matrix( Matrix_real& parameters ) {
 
 #ifdef DEBUG
         if (U3_matrix.isnan()) {
-            std::cout << "U3::get_matrix: U3_matrix contains NaN." << std::endl;
+	    ss << "U3::get_matrix: U3_matrix contains NaN." << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str("");
+            
         }
 #endif
 
@@ -185,7 +194,11 @@ void
 U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, const double scale=1.0 ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
+	ss << "Wrong matrix size in U3 gate apply" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 
@@ -323,7 +336,11 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 apply_from_right" << std::endl;
+	ss << "Wrong matrix size in U3 apply_from_right" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 
@@ -454,7 +471,11 @@ std::vector<Matrix>
 U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
+	ss << "Wrong matrix size in U3 gate apply" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 
@@ -620,13 +641,25 @@ Matrix U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda, const doub
 
 #ifdef DEBUG
     if (isnan(Theta)) {
-        std::cout << "Matrix U3::calc_one_qubit_u3: Theta is NaN." << std::endl;
+	ss << "Matrix U3::calc_one_qubit_u3: Theta is NaN." << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
     }
     if (isnan(Phi)) {
-        std::cout << "Matrix U3::calc_one_qubit_u3: Phi is NaN." << std::endl;
+	ss << "Matrix U3::calc_one_qubit_u3: Phi is NaN." << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
     }
     if (isnan(Lambda)) {
-        std::cout << "Matrix U3::calc_one_qubit_u3: Lambda is NaN." << std::endl;
+	ss << "Matrix U3::calc_one_qubit_u3: Lambda is NaN." << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
     }
 #endif // DEBUG
 

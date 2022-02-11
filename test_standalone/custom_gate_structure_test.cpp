@@ -36,6 +36,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 using namespace std;
 
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 /**
 @brief Function to create custom gate structure for the decomposition
 @param qbit_num The number of qubits for which the gate structure is constructed.

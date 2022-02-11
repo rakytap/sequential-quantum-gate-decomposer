@@ -34,6 +34,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 using namespace std;
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
 
 /**
 @brief Decomposition of general random unitary matrix into U3 and CNOT gates

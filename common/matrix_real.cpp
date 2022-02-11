@@ -27,6 +27,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "tbb/tbb.h"
 #include <math.h>
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 
 /**
 @brief Default constructor of the class.

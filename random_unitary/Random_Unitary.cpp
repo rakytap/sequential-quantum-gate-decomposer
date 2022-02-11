@@ -24,6 +24,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Random_Unitary.h"
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
 
 
 /**

@@ -25,6 +25,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
+
+
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
+
 /**
 @brief Nullary constructor of the class.
 @return An instance of the class
@@ -35,6 +42,10 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
     gradient_threshold = 1e-1;
 
 }
+
+
+
+
 
 /**
 @brief Constructor of the class.

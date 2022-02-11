@@ -28,6 +28,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "dot.h"
 
 
+//setting local_verbose_parameter 
+std::stringstream ss;
+int verbose_level;
+
 /**
 @brief Deafult constructor of the class.
 @return An instance of the class
@@ -108,7 +112,11 @@ UN::get_matrix( Matrix_real& parameters ) {
 
 #ifdef DEBUG
         if (UN_matrix.isnan()) {
-            std::cout << "U3::get_matrix: UN_matrix contains NaN." << std::endl;
+	    ss << "U3::get_matrix: UN_matrix contains NaN." << std::endl;
+	    verbose_level=1;
+            logging::printnewsq(ss, verbose_level);	
+	    ss.str("");
+            
         }
 #endif
 
@@ -124,12 +132,20 @@ void
 UN::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in UN gate apply" << std::endl;
+	ss << "Wrong matrix size in UN gate apply" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-        std::cout << "Not enough parameters given for the UN gate" << std::endl;
+	ss << "Not enough parameters given for the UN gate" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 
@@ -161,12 +177,20 @@ UN::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in UN gate apply" << std::endl;
+	ss << "Wrong matrix size in UN gate apply" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-        std::cout << "Not enough parameters given for the UN gate" << std::endl;
+	ss << "Not enough parameters given for the UN gate" << std::endl;
+	verbose_level=1;
+        logging::printnewsq(ss, verbose_level);	
+	ss.str("");
+        
         exit(-1);
     }
 
