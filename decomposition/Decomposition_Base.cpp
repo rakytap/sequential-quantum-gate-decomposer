@@ -30,7 +30,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 std::stringstream ss;
 int verbose_level;
 
-
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
 
@@ -237,7 +236,12 @@ void Decomposition_Base::finalize_decomposition() {
 
 
         if (verbose) {
-            printf( "The error of the decomposition after finalyzing gates is %f with %d layers containing %d U3 gates and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
+
+	verbose_level=1;
+	ss << "The error of the decomposition after finalyzing gates is " << decomposition_error << " with " << layer_num << " layers containing " << gates_num.u3 << " U3 gates and " << gates_num.cnot <<  " CNOT gates" << std::endl;
+	logging::printnewsq(ss,verbose_level);	    	
+	ss.str("");
+            
         }
 
 }
@@ -396,7 +400,11 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             }
         }
         else {
-            printf("bad value for initial guess\n");
+		verbose_level=1;
+		ss << "bad value for initial guess" << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+	 	           
             exit(-1);
         }
 
@@ -530,9 +538,14 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // optimization result is displayed in each 500th iteration
             if (iter_idx % 500 == 0) {
                 if (verbose) {
-                    tbb::tick_count current_time = tbb::tick_count::now();
-                    printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, (current_time - start_time).seconds());
-                    fflush(stdout);
+                	tbb::tick_count current_time = tbb::tick_count::now();
+
+			verbose_level=1;
+			ss << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << " calculated in " << (current_time - start_time).seconds() << " seconds" << std::endl;
+			logging::printnewsq(ss,verbose_level);	    	
+			ss.str("");
+		                  
+                	fflush(stdout);
                 }
                 start_time = tbb::tick_count::now();
             }
@@ -544,15 +557,24 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // conditions to break the iteration cycles
             if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-5 ) {
                 if (verbose) {
-                    printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
+
+		    verbose_level=1;
+		    ss << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " iterations with " << layer_num << " layers" << std::endl;
+		    logging::printnewsq(ss,verbose_level);	    	
+		    ss.str("");
+	                                
                     fflush(stdout);
                 }
                 break;
             }
             else if (check_optimization_solution()) {
                 if (verbose) {
-                    printf("The minimum with %d layers after %d iterations is %e\n", layer_num, iter_idx, current_minimum);
-                }
+
+		    verbose_level=1;
+		    ss << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << std::endl;
+		    logging::printnewsq(ss,verbose_level);	    	
+		    ss.str("");
+		                    }
                 break;
             }
 
@@ -562,7 +584,11 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
         if (iter_idx == max_iterations ) {
             if (verbose) {
-                printf("Reached maximal number of iterations\n\n");
+		    verbose_level=1;
+		    ss << "Reached maximal number of iterations" << std::endl << std::endl;
+		    logging::printnewsq(ss,verbose_level);	    	
+		    ss.str("");
+                
             }
         }
 
@@ -1203,7 +1229,11 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
                 parameter_idx = parameter_idx + 3;
             }
             else {
-                printf("wrong parameters in U3 class\n");
+		verbose_level=1;
+		ss << "wrong parameters in U3 class" << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 exit(-1);
             }
 
