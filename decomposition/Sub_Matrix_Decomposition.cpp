@@ -27,6 +27,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
+char bufferprint [100];
+int bufferprintf;
 
 
 //tbb::spin_mutex my_mutex;
@@ -124,13 +126,25 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
     if (subdisentaglement_done) {
         if (verbose) {
-            printf("Sub-disentaglement already done.\n");
+
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"Sub-disentaglement already done.\n");
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+           
         }
         return;
     }
 
     if (verbose) {
-        printf("\nDisentagling submatrices.\n");
+
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"\nDisentagling submatrices.\n");
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+      
     }
 
     // setting the global target minimum
@@ -140,7 +154,13 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     // check if it needed to do the subunitarization
     if (check_optimization_solution()) {
         if (verbose) {
-            printf("Disentanglig not needed\n");
+
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"Disentanglig not needed\n");
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+            
         }
         subdecomposed_mtx = Umtx;
         subdisentaglement_done = true;
@@ -194,7 +214,13 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
         if (verbose) {
             tbb::tick_count current_time = tbb::tick_count::now();
-            printf("--- %f seconds elapsed during the decomposition ---\n\n", (current_time - start_time).seconds());
+
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"--- %f seconds elapsed during the decomposition ---\n\n", (current_time - start_time).seconds());
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+            
         }
 
 
@@ -204,12 +230,22 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
     if (check_optimization_solution()) {
         if (verbose) {
-            printf("Sub-disentaglement was succesfull.\n\n");
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"Sub-disentaglement was succesfull.\n\n");
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+            
         }
     }
     else {
         if (verbose) {
-            printf("Sub-disentaglement did not reach the tolerance limit.\n\n");
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"Sub-disentaglement did not reach the tolerance limit.\n\n");
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+            
         }
     }
 
@@ -721,7 +757,13 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
     ret->set_iteration_loops( iteration_loops );
 
     if ( extract_gates(static_cast<Gates_block*>(ret)) != 0 ) {
-        printf("Sub_Matrix_Decomposition::clone(): extracting gates was not succesfull\n");
+
+	verbose_level=1;
+	bufferprintf=sprintf (bufferprint,"Sub_Matrix_Decomposition::clone(): extracting gates was not succesfull\n");
+	ss << bufferprint << std::endl;
+	logging::printnewsq(ss,verbose_level);	    	
+	ss.str("");
+     
         exit(-1);
     }
 

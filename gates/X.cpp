@@ -26,6 +26,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
+char bufferprint [100];
+int bufferprintf;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -72,8 +74,14 @@ X::X(int qbit_num_in, int target_qbit_in) {
 
 
         if (target_qbit_in >= qbit_num) {
-            printf("The index of the target qubit is larger than the number of qubits");
-            throw "The index of the target qubit is larger than the number of qubits";
+
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"The index of the target qubit is larger than the number of qubits");
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+            
+            	throw "The index of the target qubit is larger than the number of qubits";
         }
         // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = target_qbit_in;

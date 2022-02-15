@@ -29,6 +29,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
+char bufferprint [100];
+int bufferprintf;
 
 /**
 @brief Deafult constructor of the class.
@@ -165,7 +167,13 @@ void Gate::reorder_qubits( std::vector<int> qbit_list ) {
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
-        printf("Wrong number of qubits\n");
+
+	verbose_level=1;
+	bufferprintf=sprintf (bufferprint,"Wrong number of qubits\n");
+	ss << bufferprint << std::endl;
+	logging::printnewsq(ss,verbose_level);	    	
+	ss.str("");
+       
         exit(-1);
     }
 

@@ -29,6 +29,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
+char bufferprint [100];
+int bufferprintf;
 
 /**
 @brief Nullary constructor of the class.
@@ -187,10 +189,19 @@ N_Qubit_Decomposition_Base::calc_decomposition_error(Matrix& decomposed_matrix )
 void  N_Qubit_Decomposition_Base::final_optimization() {
 
         if (verbose) {
-            printf("***************************************************************\n");
-            printf("Final fine tuning of the parameters in the %d-qubit decomposition\n", qbit_num);
-            printf("***************************************************************\n");
-        }
+
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"***************************************************************\n");
+		ss << bufferprint << std::endl;
+		bufferprintf=sprintf (bufferprint,"Final fine tuning of the parameters in the %d-qubit decomposition\n", qbit_num);
+		ss << bufferprint << std::endl;
+		bufferprintf=sprintf (bufferprint,"***************************************************************\n");
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+
+
+         }
 
 
         //# setting the global minimum

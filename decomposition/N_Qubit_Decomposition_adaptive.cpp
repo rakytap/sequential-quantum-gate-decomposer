@@ -35,6 +35,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
+char bufferprint [100];
+int bufferprintf;
 
 
 Matrix_real create_random_paramaters( Gates_block* gate_structure ) {
@@ -167,10 +169,18 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
 
     if (verbose) {
-        printf("***************************************************************\n");
-        printf("Starting to disentangle %d-qubit matrix\n", qbit_num);
-        printf("***************************************************************\n\n\n");
-    }
+
+	verbose_level=1;
+	bufferprintf=sprintf (bufferprint,"***************************************************************\n");
+	ss << bufferprint << std::endl;
+	bufferprintf=sprintf (bufferprint,"Starting to disentangle %d-qubit matrix\n", qbit_num);
+	ss << bufferprint << std::endl;
+	bufferprintf=sprintf (bufferprint,"***************************************************************\n\n\n");
+	ss << bufferprint << std::endl;
+	logging::printnewsq(ss,verbose_level);	    	
+	ss.str("");
+
+      }
 
     // temporarily turn off OpenMP parallelism
 #if BLAS==0 // undefined BLAS
@@ -320,11 +330,10 @@ mtx.print_matrix();
 
     }
 
-
+    verbose_level=1;
     ss << "**************************************************************" << std::endl;
     ss << "************ Final tuning of the Gate structure **************" << std::endl;
     ss << "**************************************************************" << std::endl;
-    verbose_level=1;
     logging::printnewsq(ss,verbose_level);	    	
     ss.str("");
 
@@ -382,23 +391,74 @@ mtx.print_matrix();
     gates_num gates_num = get_gate_nums();
 
     if (verbose) {
-        std::cout << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
-        if ( gates_num.u3>0 ) std::cout << gates_num.u3 << " U3 gates," << std::endl;
-        if ( gates_num.rx>0 ) std::cout << gates_num.rx << " RX gates," << std::endl;
-        if ( gates_num.ry>0 ) std::cout << gates_num.ry << " RY gates," << std::endl;
-        if ( gates_num.rz>0 ) std::cout << gates_num.rz << " RZ gates," << std::endl;
-        if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT gates," << std::endl;
-        if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ gates," << std::endl;
-        if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH gates," << std::endl;
-        if ( gates_num.x>0 ) std::cout << gates_num.x << " X gates," << std::endl;
-        if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX gates," << std::endl;
-        if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore gates," << std::endl;
-        if ( gates_num.un>0 ) std::cout << gates_num.un << " UN gates," << std::endl;
-        if ( gates_num.cry>0 ) std::cout << gates_num.cry << " CRY gates," << std::endl;
-        if ( gates_num.adap>0 ) std::cout << gates_num.adap << " Adaptive gates," << std::endl;
+
+	verbose_level=1;
+    	ss << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");
+
+	verbose_level=1;
+      
+        if ( gates_num.u3>0 ) {ss << gates_num.u3 << " U3 gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");}
+
+        if ( gates_num.rx>0 ) {ss << gates_num.rx << " RX gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");}
+
+        if ( gates_num.ry>0 ) {ss << gates_num.ry << " RY gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");}
+
+        if ( gates_num.rz>0 ) {ss << gates_num.rz << " RZ gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");}
+
+        if ( gates_num.cnot>0 ){ss << gates_num.cnot << " CNOT gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");}
+
+        if ( gates_num.cz>0 ) {ss << gates_num.cz << " CZ gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");}
+
+        if ( gates_num.ch>0 ) {ss << gates_num.ch << " CH gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");}
+
+        if ( gates_num.x>0 ) {ss << gates_num.x << " X gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");} 
+
+        if ( gates_num.sx>0 ) {ss << gates_num.sx << " SX gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");} 
+ 
+        if ( gates_num.syc>0 ){ss << gates_num.syc << " Sycamore gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");} 
+
+        if ( gates_num.un>0 ){ss << gates_num.un << " UN gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");} 
+
+        if ( gates_num.cry>0 ){ss << gates_num.cry << " CRY gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");} 
+
+        if ( gates_num.adap>0 ){ss << gates_num.adap << " Adaptive gates," << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");} 
+
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
-        std::cout << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
+
+	ss << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
+    	logging::printnewsq(ss,verbose_level);	    	
+    	ss.str("");
+            
+               
     }
 
 /*

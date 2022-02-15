@@ -37,17 +37,27 @@ using namespace std;
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
+char bufferprint [100];
+int bufferprintf;
+
 
 /**
 @brief Decomposition of general random unitary matrix into U3 and CNOT gates
 */
 int main() {
 
-    printf("\n\n****************************************\n");
-    printf("Test of N qubit decomposition\n");
-    printf("****************************************\n\n\n");
 
-//! [few CNOT]
+	verbose_level=1;
+	bufferprintf=sprintf (bufferprint,"\n\n****************************************\n");
+	ss << bufferprint << std::endl;
+	bufferprintf=sprintf (bufferprint,"Test of N qubit decomposition\n");
+	ss << bufferprint << std::endl;
+	bufferprintf=sprintf (bufferprint,"****************************************\n\n\n");
+	ss << bufferprint << std::endl;
+	logging::printnewsq(ss,verbose_level);	    	
+	ss.str("");
+
+  //! [few CNOT]
     // The number of qubits spanning the random unitary
     int qbit_num = 2;
 
@@ -118,7 +128,14 @@ int main() {
     cDecomposition.set_verbose( true );
 //! [set parameters]
 
-    printf("Starting the decompsition\n");
+
+   verbose_level=1;
+   bufferprintf=sprintf (bufferprint,"Starting the decompsition\n");
+   ss << bufferprint << std::endl;
+   logging::printnewsq(ss,verbose_level);	    	
+   ss.str("");
+
+   
 //! [performing decomposition]
     // starting the decomposition
     cDecomposition.start_decomposition(/* prepare_export= */ true);

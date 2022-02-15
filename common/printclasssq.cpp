@@ -2,12 +2,12 @@
 
 */
 
-
 #include <string>
 #include <iostream>
 #include <sstream>
 #include <fstream>
 #include "printclasssq.h"
+#include <stdio.h> 
 
 
 

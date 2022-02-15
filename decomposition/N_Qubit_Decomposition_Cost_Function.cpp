@@ -28,6 +28,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
+char bufferprint [100];
+int bufferprintf;
 
 
 /**
@@ -142,7 +144,13 @@ void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
     for ( size_t row_idx = r.begin(); row_idx != r.end(); row_idx++) {
 
         if ( row_idx > matrix_size ) {
-            printf("Error: row idx should be less than the number of roes in the matrix\n");
+
+	    verbose_level=1;
+	    bufferprintf=sprintf (bufferprint,"Error: row idx should be less than the number of roes in the matrix\n");
+      	    ss << bufferprint << std::endl;
+            logging::printnewsq(ss,verbose_level);	    	
+	    ss.str("");
+            
             exit(-1);
         }
 

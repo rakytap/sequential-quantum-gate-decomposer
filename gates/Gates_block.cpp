@@ -41,6 +41,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
+char bufferprint [100];
+int bufferprintf;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -1385,7 +1387,13 @@ int Gates_block::get_gate_num() {
 */
 void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
-        printf( "\nThe gates in the list of gates:\n" );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"\nThe gates in the list of gates:\n");
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+
+      
 
         int gate_idx = start_index;
         int parameter_idx = parameter_num;
@@ -1397,25 +1405,45 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
             if (gate->get_type() == CNOT_OPERATION) {
                 CNOT* cnot_gate = static_cast<CNOT*>(gate);
 
-                printf( "%dth gate: CNOT with control qubit: %d and target qubit: %d\n", gate_idx, cnot_gate->get_control_qbit(), cnot_gate->get_target_qbit() );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: CNOT with control qubit: %d and target qubit: %d\n", gate_idx, cnot_gate->get_control_qbit(), cnot_gate->get_target_qbit());
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == CZ_OPERATION) {
                 CZ* cz_gate = static_cast<CZ*>(gate);
 
-                printf( "%dth gate: CZ with control qubit: %d and target qubit: %d\n", gate_idx, cz_gate->get_control_qbit(), cz_gate->get_target_qbit() );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: CZ with control qubit: %d and target qubit: %d\n", gate_idx, cz_gate->get_control_qbit(), cz_gate->get_target_qbit());
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == CH_OPERATION) {
                 CH* ch_gate = static_cast<CH*>(gate);
 
-                printf( "%dth gate: CH with control qubit: %d and target qubit: %d\n", gate_idx, ch_gate->get_control_qbit(), ch_gate->get_target_qbit() );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: CH with control qubit: %d and target qubit: %d\n", gate_idx, ch_gate->get_control_qbit(), ch_gate->get_target_qbit());
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+               
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == SYC_OPERATION) {
                 SYC* syc_gate = static_cast<SYC*>(gate);
 
-                printf( "%dth gate: Sycamore gate with control qubit: %d and target qubit: %d\n", gate_idx, syc_gate->get_control_qbit(), syc_gate->get_target_qbit() );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: Sycamore gate with control qubit: %d and target qubit: %d\n", gate_idx, syc_gate->get_control_qbit(), syc_gate->get_target_qbit());
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == U3_OPERATION) {
@@ -1474,7 +1502,13 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 }
 
 //                message = message + "U3 on target qubit %d with parameters theta = %f, phi = %f and lambda = %f";
-                printf("%dth gate: U3 on target qubit: %d and with parameters theta = %f, phi = %f and lambda = %f\n", gate_idx, u3_gate->get_target_qbit(), vartheta, varphi, varlambda );
+
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: U3 on target qubit: %d and with parameters theta = %f, phi = %f and lambda = %f\n", gate_idx, u3_gate->get_target_qbit(), vartheta, varphi, varlambda);
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 gate_idx = gate_idx + 1;
 
             }
@@ -1490,7 +1524,12 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 vartheta = std::fmod( parameters[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
-                printf("%dth gate: RX on target qubit: %d and with parameters theta = %f\n", gate_idx, rx_gate->get_target_qbit(), vartheta );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: RX on target qubit: %d and with parameters theta = %f\n", gate_idx, rx_gate->get_target_qbit(), vartheta);
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+
                 gate_idx = gate_idx + 1;
 
             }
@@ -1506,7 +1545,12 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 vartheta = std::fmod( parameters[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
-                printf("%dth gate: RY on target qubit: %d and with parameters theta = %f\n", gate_idx, ry_gate->get_target_qbit(), vartheta );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: RY on target qubit: %d and with parameters theta = %f\n", gate_idx, ry_gate->get_target_qbit(), vartheta);
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+               
                 gate_idx = gate_idx + 1;
 
             }
@@ -1522,7 +1566,12 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 Phi = std::fmod( parameters[parameter_idx-1], 2*M_PI);
                 parameter_idx = parameter_idx - 1;
 
-                printf("%dth gate: CRY on target qubit: %d, control qubit %d and with parameters Phi = %f\n", gate_idx, cry_gate->get_target_qbit(), cry_gate->get_control_qbit(), Phi );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: CRY on target qubit: %d, control qubit %d and with parameters Phi = %f\n", gate_idx, cry_gate->get_target_qbit(), cry_gate->get_control_qbit(), Phi);
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 gate_idx = gate_idx + 1;
 
             }
@@ -1538,7 +1587,12 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 varphi = std::fmod( parameters[parameter_idx-1], 2*M_PI);
                 parameter_idx = parameter_idx - 1;
 
-                printf("%dth gate: RZ on target qubit: %d and with parameters varphi = %f\n", gate_idx, rz_gate->get_target_qbit(), varphi );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: RZ on target qubit: %d and with parameters varphi = %f\n", gate_idx, rz_gate->get_target_qbit(), varphi);
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 gate_idx = gate_idx + 1;
 
             }
@@ -1548,7 +1602,12 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
                 X* x_gate = static_cast<X*>(gate);
 
-                printf("%dth gate: X on target qubit: %d\n", gate_idx, x_gate->get_target_qbit() );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: X on target qubit: %d\n", gate_idx, x_gate->get_target_qbit());
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 gate_idx = gate_idx + 1;
 
             }
@@ -1558,7 +1617,12 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
                 SX* sx_gate = static_cast<SX*>(gate);
 
-                printf("%dth gate: SX on target qubit: %d\n", gate_idx, sx_gate->get_target_qbit() );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: SX on target qubit: %d\n", gate_idx, sx_gate->get_target_qbit());
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 gate_idx = gate_idx + 1;
 
             }
@@ -1573,7 +1637,12 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
                 parameter_idx = parameter_idx - gate->get_parameter_num();
 
-                printf("%dth gate: UN %d parameters\n", gate_idx, gate->get_parameter_num() );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: UN %d parameters\n", gate_idx, gate->get_parameter_num());
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 gate_idx = gate_idx + 1;
 
             }
@@ -1581,7 +1650,12 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
                 parameter_idx = parameter_idx - gate->get_parameter_num();
 
-                printf("%dth gate: ON %d parameters\n", gate_idx, gate->get_parameter_num() );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: ON %d parameters\n", gate_idx, gate->get_parameter_num() );
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 gate_idx = gate_idx + 1;
 
             }
@@ -1589,7 +1663,12 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
                 parameter_idx = parameter_idx - gate->get_parameter_num();
 
-                printf("%dth gate: Composite %d parameters\n", gate_idx, gate->get_parameter_num() );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: Composite %d parameters\n", gate_idx, gate->get_parameter_num() );
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 gate_idx = gate_idx + 1;
 
             }
@@ -1605,7 +1684,12 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 Phi = std::fmod( parameters[parameter_idx-1], 2*M_PI);
                 parameter_idx = parameter_idx - 1;
 
-                printf("%dth gate: Adaptive gate on target qubit: %d, control qubit %d and with parameters Phi = %f\n", gate_idx, ad_gate->get_target_qbit(), ad_gate->get_control_qbit(), Phi );
+		verbose_level=1;
+		bufferprintf=sprintf (bufferprint,"%dth gate: Adaptive gate on target qubit: %d, control qubit %d and with parameters Phi = %f\n", gate_idx, ad_gate->get_target_qbit(), ad_gate->get_control_qbit(), Phi );
+		ss << bufferprint << std::endl;
+		logging::printnewsq(ss,verbose_level);	    	
+		ss.str("");
+                
                 gate_idx = gate_idx + 1;
 
             }
@@ -1967,7 +2051,12 @@ Gates_block* Gates_block::clone() {
 
     // extracting the gates from the current class
     if (extract_gates( ret ) != 0 ) {
-        printf("Gates_block::clone(): extracting gates was not succesfull\n");
+	verbose_level=1;
+	bufferprintf=sprintf (bufferprint,"Gates_block::clone(): extracting gates was not succesfull\n" );
+	ss << bufferprint << std::endl;
+	logging::printnewsq(ss,verbose_level);	    	
+	ss.str("");
+        
         exit(-1);
     };
 

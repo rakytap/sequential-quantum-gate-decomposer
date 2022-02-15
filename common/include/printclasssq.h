@@ -9,11 +9,12 @@
 #include <iostream>
 #include <sstream> 
 #include <fstream>
+#include <stdio.h> 
 
 
 
 
-class printsq 
+class logging 
 { 
 
 
@@ -21,7 +22,7 @@ public:
 
  	
  
- 	void printnewsq(std::stringstream& ssq, int verbose_level=1); //default verbose_level=1
+ 	static void printnewsq(std::stringstream& ssq, int verbose_level=1); //default verbose_level=1
 
 };
 
