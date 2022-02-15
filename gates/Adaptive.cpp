@@ -28,10 +28,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
-char bufferprint [100];
-int bufferprintf;
-
-
 
 //static tbb::spin_mutex my_mutex;
 /**

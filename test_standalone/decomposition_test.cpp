@@ -37,8 +37,6 @@ using namespace std;
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
-char bufferprint [100];
-int bufferprintf;
 
 
 /**
@@ -48,12 +46,9 @@ int main() {
 
 
 	verbose_level=1;
-	bufferprintf=sprintf (bufferprint,"\n\n****************************************\n");
-	ss << bufferprint << std::endl;
-	bufferprintf=sprintf (bufferprint,"Test of N qubit decomposition\n");
-	ss << bufferprint << std::endl;
-	bufferprintf=sprintf (bufferprint,"****************************************\n\n\n");
-	ss << bufferprint << std::endl;
+	ss << std::endl << std::endl << "****************************************" << std::endl;
+	ss << "Test of N qubit decomposition" << std::endl;
+	ss << "****************************************" << std::endl << std::endl << std::endl;
 	logging::printnewsq(ss,verbose_level);	    	
 	ss.str("");
 
@@ -130,8 +125,7 @@ int main() {
 
 
    verbose_level=1;
-   bufferprintf=sprintf (bufferprint,"Starting the decompsition\n");
-   ss << bufferprint << std::endl;
+   ss << "Starting the decompsition" << std::endl;
    logging::printnewsq(ss,verbose_level);	    	
    ss.str("");
 

@@ -28,10 +28,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
-char bufferprint [100];
-int bufferprintf;
-
-
 
 /**
 @brief Call to calculate the cost function of a given matrix during the submatrix decomposition process.

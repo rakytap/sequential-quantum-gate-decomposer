@@ -26,8 +26,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
-char bufferprint [100];
-int bufferprintf;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -59,8 +57,7 @@ CRY::CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RY(qbit_num
         if (control_qbit_in >= qbit_num) {
 
 	    verbose_level=1;
-	    bufferprintf=sprintf (bufferprint,"The index of the control qubit is larger than the number of qubits in CRY gate.\n");
-	    ss << bufferprint << std::endl;
+	    ss << "The index of the control qubit is larger than the number of qubits in CRY gate." << std::endl;
 	    logging::printnewsq(ss,verbose_level);	    	
 	    ss.str("");
             

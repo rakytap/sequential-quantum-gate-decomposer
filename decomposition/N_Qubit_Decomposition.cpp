@@ -30,8 +30,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
-char bufferprint [100];
-int bufferprintf;
 
 
 /**
@@ -90,12 +88,9 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
     if (verbose) {
 
 	verbose_level=1;
-	bufferprintf=sprintf (bufferprint,"***************************************************************\n");
-	ss << bufferprint << std::endl;
-	bufferprintf=sprintf (bufferprint,"Starting to disentangle %d-qubit matrix\n", qbit_num);
-	ss << bufferprint << std::endl;
-	bufferprintf=sprintf (bufferprint,"***************************************************************\n\n\n");
-	ss << bufferprint << std::endl;
+	ss << "***************************************************************" << std::endl;
+	ss << "Starting to disentangle " << qbit_num << "-qubit matrix" << std::endl;
+	ss << "***************************************************************" << std::endl << std::endl << std::endl;
 	logging::printnewsq(ss,verbose_level);	    	
 	ss.str("");
 
@@ -282,8 +277,7 @@ N_Qubit_Decomposition::decompose_submatrix() {
             if (verbose) {
 
 		verbose_level=1;
-		bufferprintf=sprintf (bufferprint,"Decomposition was already finalized\n");
-		ss << bufferprint << std::endl;
+		ss << "Decomposition was already finalized" << std::endl;
 		logging::printnewsq(ss,verbose_level);	    	
 		ss.str("");
                 
@@ -531,12 +525,9 @@ N_Qubit_Decomposition::simplify_layers() {
         if (verbose) {
 
 		verbose_level=1;
-		bufferprintf=sprintf (bufferprint,"***************************************************************\n");
-		ss << bufferprint << std::endl;
-		bufferprintf=sprintf (bufferprint,"Try to simplify layers\n");
-		ss << bufferprint << std::endl;
-		bufferprintf=sprintf (bufferprint,"***************************************************************\n");
-		ss << bufferprint << std::endl;
+		ss << "***************************************************************" << std::endl;
+		ss << "Try to simplify layers" << std::endl;
+		ss << "***************************************************************" << std::endl;
 		logging::printnewsq(ss,verbose_level);	    	
 		ss.str("");
             
@@ -719,13 +710,11 @@ N_Qubit_Decomposition::simplify_layers() {
         int two_qbit_num_simplified = gate_num_simplified.cnot + gate_num_simplified.cz + gate_num_simplified.ch;
 
         if (verbose) {
+
 		verbose_level=1;
-		bufferprintf=sprintf (bufferprint,"\n\n************************************\n");
-		ss << bufferprint << std::endl;
-		bufferprintf=sprintf (bufferprint,"After some additional 2-qubit decompositions the initial gate structure with %d two-qubit gates simplified to a structure containing %d two-qubit gates.\n", two_qbit_num_initial, two_qbit_num_simplified);
-		ss << bufferprint << std::endl;
-		bufferprintf=sprintf (bufferprint,"************************************\n\n");
-		ss << bufferprint << std::endl;
+		ss << std::endl << std::endl << "************************************" << std::endl;
+		ss << "After some additional 2-qubit decompositions the initial gate structure with " <<  two_qbit_num_initial << " two-qubit gates simplified to a structure containing " << two_qbit_num_simplified << " two-qubit gates" << std::endl;
+		ss << "************************************" << std::endl << std::endl;
 		logging::printnewsq(ss,verbose_level);	    	
 		ss.str("");
         }
@@ -751,8 +740,7 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
         if (verbose) {
 
 		verbose_level=1;
-		bufferprintf=sprintf (bufferprint,"Try to simplify sub-structure \n");
-		ss << bufferprint << std::endl;
+		ss << "Try to simplify sub-structure " << std::endl;
 		logging::printnewsq(ss,verbose_level);	    	
 		ss.str("");
             
@@ -834,8 +822,7 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
             if (verbose) {
 
 		verbose_level=1;
-		bufferprintf=sprintf (bufferprint,"The simplification of the sub-structure was not possible\n");
-		ss << bufferprint << std::endl;
+		ss << "The simplification of the sub-structure was not possible" << std::endl;
 		logging::printnewsq(ss,verbose_level);	    	
 		ss.str("");
                 
@@ -881,8 +868,7 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
         if (verbose) {
 
 		verbose_level=1;
-		bufferprintf=sprintf (bufferprint,"%d two-qubit gates successfully simplified to %d CNOT gates\n", gate_nums_layer.cnot+gate_nums_layer.cz+gate_nums_layer.ch, gate_nums_simplified.cnot);
-		ss << bufferprint << std::endl;
+		ss << gate_nums_layer.cnot+gate_nums_layer.cz+gate_nums_layer.ch << " two-qubit gates successfully simplified to " << gate_nums_simplified.cnot << " CNOT gates" << std::endl;
 		logging::printnewsq(ss,verbose_level);	    	
 		ss.str("");
             

@@ -28,9 +28,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
-char bufferprint [100];
-int bufferprintf;
-
 
 /**
 @brief Call co calculate the cost function during the final optimization process.
@@ -146,8 +143,7 @@ void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
         if ( row_idx > matrix_size ) {
 
 	    verbose_level=1;
-	    bufferprintf=sprintf (bufferprint,"Error: row idx should be less than the number of roes in the matrix\n");
-      	    ss << bufferprint << std::endl;
+      	    ss << "Error: row idx should be less than the number of roes in the matrix" << std::endl;
             logging::printnewsq(ss,verbose_level);	    	
 	    ss.str("");
             

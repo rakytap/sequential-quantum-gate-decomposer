@@ -35,9 +35,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //setting local_verbose_parameter 
 std::stringstream ss;
 int verbose_level;
-char bufferprint [100];
-int bufferprintf;
-
 
 Matrix_real create_random_paramaters( Gates_block* gate_structure ) {
 
@@ -171,12 +168,9 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     if (verbose) {
 
 	verbose_level=1;
-	bufferprintf=sprintf (bufferprint,"***************************************************************\n");
-	ss << bufferprint << std::endl;
-	bufferprintf=sprintf (bufferprint,"Starting to disentangle %d-qubit matrix\n", qbit_num);
-	ss << bufferprint << std::endl;
-	bufferprintf=sprintf (bufferprint,"***************************************************************\n\n\n");
-	ss << bufferprint << std::endl;
+	ss << "***************************************************************" << std::endl;	
+	ss << "Starting to disentangle " << qbit_num << "-qubit matrix" << std::endl;
+	ss << "***************************************************************" << std::endl << std::endl << std::endl;
 	logging::printnewsq(ss,verbose_level);	    	
 	ss.str("");
 
