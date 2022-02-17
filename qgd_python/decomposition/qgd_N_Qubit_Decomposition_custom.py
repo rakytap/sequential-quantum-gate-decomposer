@@ -196,7 +196,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
         qc = transpile(qc_in, optimization_level=3, basis_gates=['cz', 'cx', 'u3'], layout_method='sabre')
         #print('Depth of Qiskit transpiled quantum circuit:', qc.depth())
         #print('Gate counts in Qiskit transpiled quantum circuit:', qc.count_ops())
-        print(qc)
+
         # get the size of the register
         gate = qc.data[0]
         qubits = gate[1]

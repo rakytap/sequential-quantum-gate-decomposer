@@ -40,7 +40,6 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     // The global minimum of the optimization problem
     global_target_minimum = 0;
 
-opt_method = 0;
 }
 
 /**
@@ -72,7 +71,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
         }
     }
 
-opt_method = 0;
+
 }
 
 
@@ -316,6 +315,27 @@ double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
 
 /**
 // @brief The optimization problem of the final optimization
+// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+// @return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters ) {
+
+    // get the transformed matrix with the gates in the list
+    if ( parameters.size() != parameter_num ) {
+       std::cout << "Number of free paramaters should be " << parameter_num << ", but got " << parameters.size() << std::endl;
+       abort();
+    }
+
+
+    Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
+
+    return get_cost_function(matrix_new);
+
+}
+
+
+/**
+// @brief The optimization problem of the final optimization
 @param parameters A GNU Scientific Library containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
@@ -379,8 +399,12 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
-            double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0)/(*f0);
-            //double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0);
+            // This is approximate derivate giving a good approximation when f0->0. Helps to avoid higher barren plateaus
+            //double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0)/(*f0);  
+
+            //double f = get_cost_function(Umtx_deriv[idx]);
+            //double grad_comp = (f*f - 1.0)/(*f0)/2;
+            double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0);
             gsl_vector_set(grad, idx, grad_comp);
         }
     });

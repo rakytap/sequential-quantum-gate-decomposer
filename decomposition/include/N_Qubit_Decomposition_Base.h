@@ -61,7 +61,10 @@ class N_Qubit_Decomposition_Base : public Decomposition_Base {
 
 
 public:
-int opt_method;
+
+
+    int iter_max;
+    int gradient_threshold;
 
 protected:
 
@@ -72,8 +75,7 @@ protected:
     /// A map of <int n: int num> indicating that how many identical successive blocks should be used in the disentanglement of the nth qubit from the others
     std::map<int,int> identical_blocks;
 
-    int iter_max;
-    int gradient_threshold;
+
 
 
 
@@ -145,6 +147,14 @@ int gradient_descent_iteration( Matrix_real Optimized_parameter_loc, double& cur
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 double optimization_problem( double* parameters);
+
+
+/**
+@brief The optimization problem of the final optimization
+@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double optimization_problem( Matrix_real& parameters);
 
 
 

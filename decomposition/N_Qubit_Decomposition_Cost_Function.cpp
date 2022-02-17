@@ -101,7 +101,8 @@ double get_cost_function(Matrix matrix) {
         trace_real += matrix[idx*matrix.stride + idx].real;
     }
 
-    double cost_function = std::sqrt(1.0 - trace_real/matrix_size);
+    //double cost_function = std::sqrt(1.0 - trace_real/matrix_size);
+    double cost_function = (1.0 - trace_real/matrix_size);
 
     return cost_function;
 
