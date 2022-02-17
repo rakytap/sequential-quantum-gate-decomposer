@@ -77,7 +77,7 @@ CRY::~CRY() {
 */
 
 void 
-CRY::apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 ) {
+CRY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
 
     if (input.rows != matrix_size ) {
         std::cout<< "Wrong matrix size in CRY gate apply" << std::endl;

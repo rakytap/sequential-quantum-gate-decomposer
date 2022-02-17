@@ -165,7 +165,7 @@ U3::get_matrix( Matrix_real& parameters ) {
 @param input The input array on which the gate is applied
 */
 void 
-U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input, const double scale=1.0 ) {
+U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input, const double scale ) {
 
 
     for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
@@ -614,7 +614,7 @@ bool U3::is_lambda_parameter() {
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-Matrix U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda, const double scale=1.0 ) {
+Matrix U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda, const double scale ) {
 
     Matrix u3_1qbit = Matrix(2,2);
 
