@@ -25,13 +25,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 
-
-// Stringstream input to store the output messages.
-std::stringstream ss;
-
-// Set the verbosity level of the output messages.
-int verbose_level;
-
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
 
