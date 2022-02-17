@@ -26,8 +26,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 
-//setting local_verbose_parameter 
+// The stringstream input to store the output messages.
 std::stringstream ss;
+
+// Set the level of the verbosity of the output messages.
 int verbose_level;
 
 // default layer numbers
@@ -239,7 +241,7 @@ void Decomposition_Base::finalize_decomposition() {
 
 	verbose_level=1;
 	ss << "The error of the decomposition after finalyzing gates is " << decomposition_error << " with " << layer_num << " layers containing " << gates_num.u3 << " U3 gates and " << gates_num.cnot <<  " CNOT gates" << std::endl;
-	logging::printnewsq(ss,verbose_level);	    	
+	print(ss,verbose_level);	    	
 	ss.str("");
             
         }
@@ -402,7 +404,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         else {
 		verbose_level=1;
 		ss << "bad value for initial guess" << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
+		print(ss,verbose_level);	    	
 		ss.str("");
 	 	           
             exit(-1);
@@ -542,7 +544,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 			verbose_level=1;
 			ss << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << " calculated in " << (current_time - start_time).seconds() << " seconds" << std::endl;
-			logging::printnewsq(ss,verbose_level);	    	
+			print(ss,verbose_level);	    	
 			ss.str("");
 		                  
                 	fflush(stdout);
@@ -560,7 +562,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 		    verbose_level=1;
 		    ss << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " iterations with " << layer_num << " layers" << std::endl;
-		    logging::printnewsq(ss,verbose_level);	    	
+		    print(ss,verbose_level);	    	
 		    ss.str("");
 	                                
                     fflush(stdout);
@@ -572,7 +574,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 		    verbose_level=1;
 		    ss << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << std::endl;
-		    logging::printnewsq(ss,verbose_level);	    	
+		    print(ss,verbose_level);	    	
 		    ss.str("");
 		                    }
                 break;
@@ -586,7 +588,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             if (verbose) {
 		    verbose_level=1;
 		    ss << "Reached maximal number of iterations" << std::endl << std::endl;
-		    logging::printnewsq(ss,verbose_level);	    	
+		    print(ss,verbose_level);	    	
 		    ss.str("");
                 
             }
@@ -1231,7 +1233,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             else {
 		verbose_level=1;
 		ss << "wrong parameters in U3 class" << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
+		print(ss,verbose_level);	    	
 		ss.str("");
                 
                 exit(-1);

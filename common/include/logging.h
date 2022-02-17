@@ -46,7 +46,7 @@ class logging
 public:
 
 
-/// Integer variable. Set the level of the verbosity of the output messages. 
+/// Set the level of the verbosity of the output messages. 
 int verbose; 
 
 
