@@ -47,7 +47,7 @@ public:
 
 
 /// Integer variable. Set the level of the verbosity of the output messages. 
-int verbose =3; 
+int verbose; 
 
 
 /// Logical variable. Set true to write output messages to  the 'debug.txt' file.
