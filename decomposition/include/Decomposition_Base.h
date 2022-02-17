@@ -61,9 +61,7 @@ class Decomposition_Base : public Gates_block {
 
 
 public:
-    /// Logical variable. Set true for verbose mode, or to false to suppress output messages.
-    bool verbose;
-
+  
     /// number of gate blocks used in one shot of the optimization process
     int optimization_block;
 
@@ -360,10 +358,10 @@ Gate* get_gate( int n );
 
 
 /**
-@brief Call to set the verbose attribute to true or false.
-@param verbose_in Logical variable. Set true for verbose mode, or to false to suppress output messages.
+@brief Call to set the verbose attribute.
+@param verbose_in Integer variable. Set the number to specify the verbosity level for output messages.
 */
-void set_verbose( bool verbose_in );
+void set_verbose( int verbose_in );
 
 
 /**

@@ -29,7 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 // The stringstream input to store the output messages.
 std::stringstream ss;
 
-// Set the level of the verbosity of the output messages.
+// Set the verbosity level of the output messages.
 int verbose_level;
 
 // default layer numbers
@@ -43,9 +43,7 @@ Decomposition_Base::Decomposition_Base() {
 
     Init_max_layer_num();
 
-    // Logical variable. Set true for verbose mode, or to false to suppress output messages.
-    verbose = true;
-
+    
     // logical value describing whether the decomposition was finalized or not
     decomposition_finalized = false;
 
@@ -107,9 +105,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
 
     Init_max_layer_num();
 
-    // Logical variable. Set true for verbose mode, or to false to suppress output messages.
-    verbose = true;
-
+   
     // the unitary operator to be decomposed
     Umtx = Umtx_in;
 
@@ -237,14 +233,14 @@ void Decomposition_Base::finalize_decomposition() {
         gates_num gates_num = get_gate_nums();
 
 
-        if (verbose) {
+        
 
 	verbose_level=1;
 	ss << "The error of the decomposition after finalyzing gates is " << decomposition_error << " with " << layer_num << " layers containing " << gates_num.u3 << " U3 gates and " << gates_num.cnot <<  " CNOT gates" << std::endl;
 	print(ss,verbose_level);	    	
 	ss.str("");
             
-        }
+        
 
 }
 
@@ -539,7 +535,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
             // optimization result is displayed in each 500th iteration
             if (iter_idx % 500 == 0) {
-                if (verbose) {
+                
                 	tbb::tick_count current_time = tbb::tick_count::now();
 
 			verbose_level=1;
@@ -548,7 +544,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 			ss.str("");
 		                  
                 	fflush(stdout);
-                }
+                
                 start_time = tbb::tick_count::now();
             }
 
@@ -558,7 +554,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
             // conditions to break the iteration cycles
             if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-5 ) {
-                if (verbose) {
+                
 
 		    verbose_level=1;
 		    ss << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " iterations with " << layer_num << " layers" << std::endl;
@@ -566,17 +562,17 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 		    ss.str("");
 	                                
                     fflush(stdout);
-                }
+                
                 break;
             }
             else if (check_optimization_solution()) {
-                if (verbose) {
+                
 
 		    verbose_level=1;
 		    ss << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << std::endl;
 		    print(ss,verbose_level);	    	
 		    ss.str("");
-		                    }
+		                    
                 break;
             }
 
@@ -585,13 +581,13 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
         if (iter_idx == max_iterations ) {
-            if (verbose) {
+            
 		    verbose_level=1;
 		    ss << "Reached maximal number of iterations" << std::endl << std::endl;
 		    print(ss,verbose_level);	    	
 		    ss.str("");
                 
-            }
+           
         }
 
         // restoring the parameters to originals
@@ -1441,10 +1437,10 @@ Gate* Decomposition_Base::get_gate( int n ) {
 
 
 /**
-@brief Call to set the verbose attribute to true or false.
-@param verbose_in Logical variable. Set true for verbose mode, or to false to suppress output messages.
+@brief Call to set the verbose attribute.
+@param verbose_in Integer variable. Set the number to specify the verbosity level for output messages.
 */
-void Decomposition_Base::set_verbose( bool verbose_in ) {
+void Decomposition_Base::set_verbose( int verbose_in ) {
 
     verbose = verbose_in;
 
