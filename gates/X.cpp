@@ -23,9 +23,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "X.h"
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
 
 
 //static tbb::spin_mutex my_mutex;
@@ -76,7 +73,7 @@ X::X(int qbit_num_in, int target_qbit_in) {
 
 		verbose_level=1;
 		ss << "The index of the target qubit is larger than the number of qubits" << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
+		print(ss,verbose_level);	    	
 		ss.str("");
             
             	throw "The index of the target qubit is larger than the number of qubits";
@@ -116,7 +113,7 @@ X::get_matrix( ) {
         if (X_matrix.isnan()) {
 	    ss << "X::get_matrix: X_matrix contains NaN." << std::endl;
 	    verbose_level=1;
-            logging::printnewsq(ss, verbose_level);	
+            print(ss, verbose_level);	
 	    ss.str("");
             
         }
@@ -139,7 +136,7 @@ X::apply_to( Matrix& input ) {
     if (input.rows != matrix_size ) {
 	ss << "Wrong matrix size in X gate apply" << std::endl;
 	verbose_level=1;
-        logging::printnewsq(ss, verbose_level);	
+        print(ss, verbose_level);	
 	ss.str("");
         
         exit(-1);
@@ -203,7 +200,7 @@ X::apply_from_right( Matrix& input ) {
     if (input.cols != matrix_size ) {
 	ss << "Wrong matrix size in U3 apply_from_right" << std::endl;
 	verbose_level=1;
-        logging::printnewsq(ss, verbose_level);	
+        print(ss, verbose_level);	
 	ss.str("");
         
         exit(-1);

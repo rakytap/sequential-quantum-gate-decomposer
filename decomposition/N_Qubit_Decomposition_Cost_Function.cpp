@@ -25,9 +25,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //#include <tbb/parallel_for.h>
 
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
 
 /**
 @brief Call co calculate the cost function during the final optimization process.
@@ -144,7 +141,7 @@ void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
 
 	    verbose_level=1;
       	    ss << "Error: row idx should be less than the number of roes in the matrix" << std::endl;
-            logging::printnewsq(ss,verbose_level);	    	
+            print(ss,verbose_level);	    	
 	    ss.str("");
             
             exit(-1);

@@ -27,9 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Random_Orthogonal.h"
 #include "dot.h"
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
+
 
 /**
 @brief Deafult constructor of the class.
@@ -113,7 +111,7 @@ ON::get_matrix( Matrix_real& parameters ) {
         if (ON_matrix.isnan()) {
 	   ss << "U3::get_matrix: ON_matrix contains NaN." << std::endl;
 	   verbose_level=1;
-           logging::printnewsq(ss, verbose_level);	
+           print(ss, verbose_level);	
 	   ss.str("");
             
         }
@@ -133,7 +131,7 @@ ON::apply_to( Matrix_real& parameters, Matrix& input ) {
     if (input.rows != matrix_size ) {
 	ss << "Wrong matrix size in ON gate apply" << std::endl;
 	verbose_level=1;
-        logging::printnewsq(ss, verbose_level);	
+        print(ss, verbose_level);	
 	ss.str("");
         
         exit(-1);
@@ -142,7 +140,7 @@ ON::apply_to( Matrix_real& parameters, Matrix& input ) {
     if (parameters.size() < parameter_num) {
 	ss << "Not enough parameters given for the ON gate" << std::endl;
 	verbose_level=1;
-        logging::printnewsq(ss, verbose_level);	
+        print(ss, verbose_level);	
 	ss.str("");
         
         exit(-1);
@@ -178,7 +176,7 @@ ON::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     if (input.rows != matrix_size ) {
 	ss << "Wrong matrix size in ON gate apply" << std::endl;
 	verbose_level=1;
-        logging::printnewsq(ss, verbose_level);	
+        print(ss, verbose_level);	
 	ss.str("");
         
         exit(-1);
@@ -187,7 +185,7 @@ ON::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     if (parameters.size() < parameter_num) {
 	ss << "Not enough parameters given for the ON gate" << std::endl;
 	verbose_level=1;
-        logging::printnewsq(ss, verbose_level);	
+        print(ss, verbose_level);	
 	ss.str("");
         
         exit(-1);
@@ -241,7 +239,7 @@ void ON::reorder_qubits( std::vector<int> qbit_list ) {
 
 	verbose_level=1;
 	ss << "Wrong number of qubits" << std::endl;
-	logging::printnewsq(ss,verbose_level);	    	
+	print(ss,verbose_level);	    	
 	ss.str("");
         
         exit(-1);

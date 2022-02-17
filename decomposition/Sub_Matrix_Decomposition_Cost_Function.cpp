@@ -25,9 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
+
 
 /**
 @brief Call to calculate the cost function of a given matrix during the submatrix decomposition process.
@@ -146,7 +144,7 @@ void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) con
 
 		ss << "Submatrix contains NaN." << std::endl;
 		verbose_level=1;
-            	logging::printnewsq(ss, verbose_level);	
+            	print(ss, verbose_level);	
 	        ss.str("");
             
         }
@@ -200,7 +198,7 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
 		ss << "functor_submtx_cost_fnc::operator: Submatrix product contains NaN. Exiting" << std::endl;
 		verbose_level=1;
-            	logging::printnewsq(ss, verbose_level);	
+            	print(ss, verbose_level);	
 	        ss.str("");
         
     }
@@ -242,7 +240,7 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
 		ss << "cost function NaN on cost function product "<< product_idx << std::endl;
 		verbose_level=1;
-            	logging::printnewsq(ss, verbose_level);	
+            	print(ss, verbose_level);	
 	        ss.str("");
         
     }

@@ -26,9 +26,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "common.h"
 
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
 
 /**
 @brief Deafult constructor of the class.
@@ -168,7 +165,7 @@ void Gate::reorder_qubits( std::vector<int> qbit_list ) {
 
 	verbose_level=1;
 	ss << "Wrong number of qubits" << std::endl;
-	logging::printnewsq(ss,verbose_level);	    	
+	print(ss,verbose_level);	    	
 	ss.str("");
        
         exit(-1);

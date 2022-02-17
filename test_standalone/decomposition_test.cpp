@@ -34,9 +34,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 using namespace std;
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
 
 
 /**
@@ -45,12 +42,12 @@ int verbose_level;
 int main() {
 
 
-	verbose_level=1;
-	ss << std::endl << std::endl << "****************************************" << std::endl;
-	ss << "Test of N qubit decomposition" << std::endl;
-	ss << "****************************************" << std::endl << std::endl << std::endl;
-	logging::printnewsq(ss,verbose_level);	    	
-	ss.str("");
+    verbose_level=1;
+    ss << std::endl << std::endl << "****************************************" << std::endl;
+    ss << "Test of N qubit decomposition" << std::endl;
+    ss << "****************************************" << std::endl << std::endl << std::endl;
+    print(ss,verbose_level);	    	
+    ss.str("");
 
   //! [few CNOT]
     // The number of qubits spanning the random unitary
@@ -126,7 +123,7 @@ int main() {
 
    verbose_level=1;
    ss << "Starting the decompsition" << std::endl;
-   logging::printnewsq(ss,verbose_level);	    	
+   print(ss,verbose_level);	    	
    ss.str("");
 
    

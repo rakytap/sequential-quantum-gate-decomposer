@@ -23,9 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "CH.h"
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
+
 
 using namespace std;
 
@@ -74,7 +72,7 @@ CH::CH(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
         if (target_qbit_in >= qbit_num) {
 		verbose_level=1;
 		ss << "The index of the target qubit is larger than the number of qubits" << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
+		print(ss,verbose_level);	    	
 		ss.str("");
 
                 throw "The index of the target qubit is larger than the number of qubits";
@@ -87,7 +85,7 @@ CH::CH(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
 
 		verbose_level=1;
 		ss << "The index of the control qubit is larger than the number of qubits" << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
+		print(ss,verbose_level);	    	
 		ss.str("");
             
             	throw "The index of the control qubit is larger than the number of qubits";

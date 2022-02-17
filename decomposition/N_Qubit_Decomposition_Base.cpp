@@ -26,9 +26,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
 
 /**
 @brief Nullary constructor of the class.
@@ -186,16 +183,16 @@ N_Qubit_Decomposition_Base::calc_decomposition_error(Matrix& decomposed_matrix )
 */
 void  N_Qubit_Decomposition_Base::final_optimization() {
 
-        if (verbose) {
+       
 
-		verbose_level=1;
-		ss << "***************************************************************" << std::endl;
-		ss << "Final fine tuning of the parameters in the " << qbit_num << "-qubit decomposition" << std::endl;
-		ss << "***************************************************************" << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
-		ss.str("");
+	verbose_level=1;
+	ss << "***************************************************************" << std::endl;
+	ss << "Final fine tuning of the parameters in the " << qbit_num << "-qubit decomposition" << std::endl;
+	ss << "***************************************************************" << std::endl;
+	print(ss,verbose_level);	    	
+	ss.str("");
 
-         }
+         
 
 
         //# setting the global minimum

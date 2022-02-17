@@ -27,10 +27,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "tbb/tbb.h"
 #include <math.h>
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
-
 
 /**
 @brief Default constructor of the class.
@@ -151,7 +147,7 @@ void
 Matrix::print_matrix() {
     ss << std::endl << "The stored matrix:" << std::endl;
     verbose_level=1;
-    logging::printnewsq(ss, verbose_level);	
+    print(ss, verbose_level);	
     ss.str("");
     
     for ( size_t row_idx=0; row_idx < rows; row_idx++ ) {
@@ -159,7 +155,7 @@ Matrix::print_matrix() {
             size_t element_idx = row_idx*stride + col_idx;
     		ss << " (" << data[element_idx].real << ", " << data[element_idx].imag << "*i)";
     		verbose_level=1;
-    		logging::printnewsq(ss, verbose_level);	
+    		print(ss, verbose_level);	
     		ss.str("");
               
         }

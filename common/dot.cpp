@@ -5,9 +5,6 @@
 #include "tbb/tbb.h"
 #include <tbb/scalable_allocator.h>
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
 
 // number of rows in matrix A and cols in matrix B, under which serialized multiplication is applied instead of parallel one
 #define SERIAL_CUTOFF 16
@@ -122,7 +119,7 @@ check_matrices( Matrix &A, Matrix &B ) {
         if ( A.cols != B.rows ) {
 		ss << "pic::dot:: Cols of matrix A does not match rows of matrix B!" << std::endl;
 		verbose_level=1;
-        	logging::printnewsq(ss, verbose_level);	
+        	print(ss, verbose_level);	
 		ss.str("");
            
         }
@@ -131,7 +128,7 @@ check_matrices( Matrix &A, Matrix &B ) {
         if ( A.rows != B.rows ) {
 		ss << "pic::dot:: Cols of matrix A.transpose does not match rows of matrix B!" << std::endl;
 		verbose_level=1;
-        	logging::printnewsq(ss, verbose_level);	
+        	print(ss, verbose_level);	
 		ss.str("");
             
             	return false;
@@ -141,7 +138,7 @@ check_matrices( Matrix &A, Matrix &B ) {
         if ( A.rows != B.cols ) {
 		ss << "pic::dot:: Cols of matrix A.transpose does not match rows of matrix B.transpose!" << std::endl;
 		verbose_level=1;
-        	logging::printnewsq(ss, verbose_level);	
+        	print(ss, verbose_level);	
 		ss.str("");
             
             	return false;
@@ -151,7 +148,7 @@ check_matrices( Matrix &A, Matrix &B ) {
         if ( A.cols != B.cols ) {
 		ss << "pic::dot:: Cols of matrix A does not match rows of matrix B.transpose!" << std::endl;
 		verbose_level=1;
-        	logging::printnewsq(ss, verbose_level);	
+        	print(ss, verbose_level);	
 		ss.str("");
             
             	return false;
@@ -163,7 +160,7 @@ check_matrices( Matrix &A, Matrix &B ) {
     if ( A.get_data() == NULL ) {
 		ss << "pic::dot:: No preallocated data in matrix A!" << std::endl;
 		verbose_level=1;
-        	logging::printnewsq(ss, verbose_level);	
+        	print(ss, verbose_level);	
 		ss.str("");
         
         	return false;
@@ -171,7 +168,7 @@ check_matrices( Matrix &A, Matrix &B ) {
     if ( B.get_data() == NULL ) {
 		ss << "pic::dot:: No preallocated data in matrix B!" << std::endl;
 		verbose_level=1;
-        	logging::printnewsq(ss, verbose_level);	
+        	print(ss, verbose_level);	
 		ss.str("");
         
         	return false;
@@ -196,7 +193,7 @@ get_cblas_transpose( Matrix &A, CBLAS_TRANSPOSE &transpose ) {
     else if ( A.is_conjugated() & !A.is_transposed() ) {
 	ss << "CblasConjNoTrans NOT IMPLEMENTED in GSL!!!!!!!!!!!!!!!" << std::endl;
 	verbose_level=1;
-        logging::printnewsq(ss, verbose_level);	
+        print(ss, verbose_level);	
 	ss.str("");
 	
 	exit(-1);

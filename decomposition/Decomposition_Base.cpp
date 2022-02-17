@@ -529,14 +529,14 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // optimization result is displayed in each 500th iteration
             if (iter_idx % 500 == 0) {
                 
-                	tbb::tick_count current_time = tbb::tick_count::now();
+                tbb::tick_count current_time = tbb::tick_count::now();
 
-			verbose_level=1;
-			ss << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << " calculated in " << (current_time - start_time).seconds() << " seconds" << std::endl;
-			print(ss,verbose_level);	    	
-			ss.str("");
+		verbose_level=1;
+		ss << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << " calculated in " << (current_time - start_time).seconds() << " seconds" << std::endl;
+		print(ss,verbose_level);	    	
+		ss.str("");
 		                  
-                	fflush(stdout);
+                fflush(stdout);
                 
                 start_time = tbb::tick_count::now();
             }
@@ -549,22 +549,22 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-5 ) {
                 
 
-		    verbose_level=1;
-		    ss << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " iterations with " << layer_num << " layers" << std::endl;
-		    print(ss,verbose_level);	    	
-		    ss.str("");
+		verbose_level=1;
+	        ss << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " iterations with " << layer_num << " layers" << std::endl;
+		print(ss,verbose_level);	    	
+		ss.str("");
 	                                
-                    fflush(stdout);
+                fflush(stdout);
                 
                 break;
             }
             else if (check_optimization_solution()) {
                 
 
-		    verbose_level=1;
-		    ss << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << std::endl;
-		    print(ss,verbose_level);	    	
-		    ss.str("");
+		verbose_level=1;
+		ss << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << std::endl;
+		print(ss,verbose_level);	    	
+		ss.str("");
 		                    
                 break;
             }
@@ -575,10 +575,10 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
         if (iter_idx == max_iterations ) {
             
-		    verbose_level=1;
-		    ss << "Reached maximal number of iterations" << std::endl << std::endl;
-		    print(ss,verbose_level);	    	
-		    ss.str("");
+		verbose_level=1;
+		ss << "Reached maximal number of iterations" << std::endl << std::endl;
+		print(ss,verbose_level);	    	
+		ss.str("");
                 
            
         }

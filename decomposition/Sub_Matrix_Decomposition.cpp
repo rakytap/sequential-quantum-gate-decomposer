@@ -24,9 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Sub_Matrix_Decomposition.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
+
 
 //tbb::spin_mutex my_mutex;
 
@@ -121,26 +119,22 @@ Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
 */
 void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
-    if (subdisentaglement_done) {
-        if (verbose) {
+    if (subdisentaglement_done) {        
 
-		verbose_level=1;
-		ss << "Sub-disentaglement already done." << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
-		ss.str("");
-           
-        }
+	verbose_level=1;
+	ss << "Sub-disentaglement already done." << std::endl;
+	print(ss,verbose_level);	    	
+	ss.str("");           
+        
         return;
-    }
+    }   
 
-    if (verbose) {
-
-		verbose_level=1;
-		ss << std::endl << "Disentagling submatrices." << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
-		ss.str("");
+	verbose_level=1;
+	ss << std::endl << "Disentagling submatrices." << std::endl;
+	print(ss,verbose_level);	    	
+	ss.str("");
       
-    }
+    
 
     // setting the global target minimum
     global_target_minimum = 0;
@@ -148,14 +142,12 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
     // check if it needed to do the subunitarization
     if (check_optimization_solution()) {
-        if (verbose) {
-
-		verbose_level=1;
-		ss << "Disentanglig not needed" << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
-		ss.str("");
-            
-        }
+        
+	verbose_level=1;
+	ss << "Disentanglig not needed" << std::endl;
+	print(ss,verbose_level);	    	
+	ss.str("");
+                    
         subdecomposed_mtx = Umtx;
         subdisentaglement_done = true;
         return;
@@ -206,38 +198,36 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
         }
 
-        if (verbose) {
+        
             tbb::tick_count current_time = tbb::tick_count::now();
 
 		verbose_level=1;
 		ss << "--- " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
-		ss.str("");
-            
-        }
-
+		print(ss,verbose_level);	    	
+		ss.str("");           
+        
 
     }
 
 
 
     if (check_optimization_solution()) {
-        if (verbose) {
+        
 		verbose_level=1;
 		ss << "Sub-disentaglement was succesfull." << std::endl << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
+		print(ss,verbose_level);	    	
 		ss.str("");
             
-        }
+        
     }
     else {
-        if (verbose) {
+        
 		verbose_level=1;
 		ss << "Sub-disentaglement did not reach the tolerance limit." << std::endl << std::endl;
-		logging::printnewsq(ss,verbose_level);	    	
+		print(ss,verbose_level);	    	
 		ss.str("");
             
-        }
+        
     }
 
 
@@ -537,7 +527,7 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 
 		ss << "Sub_Matrix_Decomposition::optimization_problem: matrix_new contains NaN a. Exiting" << std::endl;
 		verbose_level=1;
-            	logging::printnewsq(ss, verbose_level);	
+            	print(ss, verbose_level);	
 	        ss.str("");
         }
 #endif
@@ -575,7 +565,7 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 
 		ss << "Sub_Matrix_Decomposition::optimization_problem matrix_new contains NaN b." << std::endl;
 		verbose_level=1;
-            	logging::printnewsq(ss, verbose_level);	
+            	print(ss, verbose_level);	
 	        ss.str("");
 
         }
@@ -672,7 +662,7 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* 
 
 		ss << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
 		verbose_level=1;
-            	logging::printnewsq(ss, verbose_level);	
+            	print(ss, verbose_level);	
 	        ss.str("");
             
             	exit(-1);
@@ -751,7 +741,7 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
 
 	verbose_level=1;
 	ss << "Sub_Matrix_Decomposition::clone(): extracting gates was not succesfull\n" << std::endl;
-	logging::printnewsq(ss,verbose_level);	    	
+	print(ss,verbose_level);	    	
 	ss.str("");
      
         exit(-1);

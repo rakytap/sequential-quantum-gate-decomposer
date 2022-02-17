@@ -24,9 +24,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Random_Orthogonal.h"
 
-//setting local_verbose_parameter 
-std::stringstream ss;
-int verbose_level;
 
 
 /**
@@ -88,7 +85,7 @@ Random_Orthogonal::Construct_Orthogonal_Matrix( Matrix_real &vargamma ) {
     if (vargamma.size() != dim*(dim-1)/2) {
 	ss << "Wring number of parameters in Random_Orthogonal::Construct_Orthogonal_Matrix" << std::endl;
 	verbose_level=1;
-        logging::printnewsq(ss, verbose_level);	
+        print(ss, verbose_level);	
 	ss.str("");
         
         exit(-1);
