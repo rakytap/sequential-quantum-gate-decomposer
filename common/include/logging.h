@@ -46,9 +46,14 @@ class logging
 public:
 
 
-/// Set the level of the verbosity of the output messages. 
+/// Set the verbosity level of the output messages. 
 int verbose; 
 
+/// Set the verbosity level of the individual messages.
+int verbose_level;
+
+/// Stringstream input to store the output messages.
+std::stringstream ss;
 
 /// Logical variable. Set true to write output messages to  the 'debug.txt' file.
 bool debug; 	

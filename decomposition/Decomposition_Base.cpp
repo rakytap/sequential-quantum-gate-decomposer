@@ -26,7 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 
-// The stringstream input to store the output messages.
+// Stringstream input to store the output messages.
 std::stringstream ss;
 
 // Set the verbosity level of the output messages.
