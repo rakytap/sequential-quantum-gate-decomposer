@@ -959,7 +959,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition
     bool verbose; 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|b", &verbose )) return Py_BuildValue("i", -1);
+    if (!PyArg_ParseTuple(args, "|i", &verbose )) return Py_BuildValue("i", -1);
 
 
     // set maximal layer nums on the C++ side
