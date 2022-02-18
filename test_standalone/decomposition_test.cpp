@@ -30,6 +30,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "common.h"
 #include "N_Qubit_Decomposition.h"
 #include "Random_Unitary.h"
+#include "logging.h"
 //! [include]
 
 using namespace std;
@@ -42,11 +43,20 @@ using namespace std;
 int main() {
 
 
+/// Stringstream input to store the output messages.
+std::stringstream ss;
+
+/// Logging variable to set the verbosity level.
+logging output;
+
+/// Set the verbosity level of the output messages. 
+int verbose_level;
+
     verbose_level=1;
     ss << std::endl << std::endl << "****************************************" << std::endl;
     ss << "Test of N qubit decomposition" << std::endl;
     ss << "****************************************" << std::endl << std::endl << std::endl;
-    print(ss,verbose_level);	    	
+    output.print(ss,verbose_level);	    	
     ss.str("");
 
   //! [few CNOT]
@@ -123,7 +133,7 @@ int main() {
 
    verbose_level=1;
    ss << "Starting the decompsition" << std::endl;
-   print(ss,verbose_level);	    	
+   output.print(ss,verbose_level);	    	
    ss.str("");
 
    

@@ -145,18 +145,18 @@ Matrix::isnan() {
 */
 void 
 Matrix::print_matrix() {
-    ss << std::endl << "The stored matrix:" << std::endl;
+    /*ss << std::endl << "The stored matrix:" << std::endl;
     verbose_level=1;
     print(ss, verbose_level);	
-    ss.str("");
+    ss.str("");*/
     
     for ( size_t row_idx=0; row_idx < rows; row_idx++ ) {
         for ( size_t col_idx=0; col_idx < cols; col_idx++ ) {
             size_t element_idx = row_idx*stride + col_idx;
-    		ss << " (" << data[element_idx].real << ", " << data[element_idx].imag << "*i)";
+    		/*ss << " (" << data[element_idx].real << ", " << data[element_idx].imag << "*i)";
     		verbose_level=1;
     		print(ss, verbose_level);	
-    		ss.str("");
+    		ss.str("");*/
               
         }
 
