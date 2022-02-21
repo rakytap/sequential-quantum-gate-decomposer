@@ -42,13 +42,7 @@ void logging::print(std::stringstream& ssq, int verbose_level)
 	debug=true;
 
 
-
-	if (verbose_level>=verbose) { 
-        	std::cout << ssq.str() <<'\n';
-		
-        }
-
-	else if (debug==true) { 
+	if (debug==true) { 
 
 		std::ofstream debug_file; 
 		debug_file.open("debug.txt", std::ios_base::app);
@@ -56,6 +50,14 @@ void logging::print(std::stringstream& ssq, int verbose_level)
 		debug_file.close();
 		
         }
+	
+
+	if (verbose_level>=verbose) { 
+        	std::cout << ssq.str() <<'\n';
+		
+        }
+
+	
 
 
 	
