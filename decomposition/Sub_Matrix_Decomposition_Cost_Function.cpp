@@ -148,7 +148,7 @@ void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) con
 
 		sstream << "Submatrix contains NaN." << std::endl;
 		verbose_level=1;
-            	print(sstream,verbose_level);	
+            	//print(sstream,verbose_level);	
 	        
             
         }
@@ -202,7 +202,7 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
 		sstream << "functor_submtx_cost_fnc::operator: Submatrix product contains NaN. Exiting" << std::endl;
 		verbose_level=1;
-            	print(sstream,verbose_level);	
+            	//print(sstream,verbose_level);	
 	        
         
     }
@@ -244,7 +244,7 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
 		sstream << "cost function NaN on cost function product "<< product_idx << std::endl;
 		verbose_level=1;
-            	print(sstream,verbose_level);	
+            	//print(sstream,verbose_level);	
 	        
         
     }
