@@ -23,7 +23,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "RX.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -82,9 +86,9 @@ RX::RX(int qbit_num_in, int target_qbit_in) {
 
         if (target_qbit_in >= qbit_num) {
 		verbose_level=1;
-		ss << "The index of the target qubit is larger than the number of qubits" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 throw "The index of the target qubit is larger than the number of qubits";
         }
         // The index of the qubit on which the gate acts (target_qbit >= 0)
@@ -130,10 +134,10 @@ void
 RX::apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 ) {
 
     if (input.rows != matrix_size ) {
-	ss << "Wrong matrix size in RX gate apply" << std::endl;
+	sstream << "Wrong matrix size in RX gate apply" << std::endl;
 	verbose_level=1;
-        print(ss, verbose_level);	
-	ss.str("");
+        print(sstream,verbose_level);	
+	
         
         exit(-1);
     }
@@ -167,10 +171,10 @@ RX::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-	ss << "Wrong matrix size in U3 apply_from_right" << std::endl;
+	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
 	verbose_level=1;
-        print(ss, verbose_level);	
-	ss.str("");
+        print(sstream,verbose_level);	
+	
        
         exit(-1);
     }
@@ -201,10 +205,10 @@ std::vector<Matrix>
 RX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-	ss << "Wrong matrix size in RX apply_derivate_to" << std::endl;
+	sstream << "Wrong matrix size in RX apply_derivate_to" << std::endl;
 	verbose_level=1;
-        print(ss, verbose_level);	
-	ss.str("");
+        print(sstream,verbose_level);	
+	
         
         exit(-1);
     }

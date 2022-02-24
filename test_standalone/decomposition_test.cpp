@@ -44,7 +44,7 @@ int main() {
 
 
 /// Stringstream input to store the output messages.
-std::stringstream ss;
+std::stringstream sstream;
 
 /// Logging variable to set the verbosity level.
 logging output;
@@ -53,11 +53,10 @@ logging output;
 int verbose_level;
 
     verbose_level=1;
-    ss << std::endl << std::endl << "****************************************" << std::endl;
-    ss << "Test of N qubit decomposition" << std::endl;
-    ss << "****************************************" << std::endl << std::endl << std::endl;
-    output.print(ss,verbose_level);	    	
-    ss.str("");
+    sstream << std::endl << std::endl << "****************************************" << std::endl;
+    sstream << "Test of N qubit decomposition" << std::endl;
+    sstream << "****************************************" << std::endl << std::endl << std::endl;
+    output.print(sstream,verbose_level);	    	
 
   //! [few CNOT]
     // The number of qubits spanning the random unitary
@@ -132,9 +131,8 @@ int verbose_level;
 
 
    verbose_level=1;
-   ss << "Starting the decompsition" << std::endl;
-   output.print(ss,verbose_level);	    	
-   ss.str("");
+   sstream << "Starting the decompsition" << std::endl;
+   output.print(sstream,verbose_level);	    	
 
    
 //! [performing decomposition]

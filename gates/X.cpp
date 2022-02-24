@@ -23,7 +23,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "X.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -72,9 +76,9 @@ X::X(int qbit_num_in, int target_qbit_in) {
         if (target_qbit_in >= qbit_num) {
 
 		verbose_level=1;
-		ss << "The index of the target qubit is larger than the number of qubits" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+		print(sstream,verbose_level);	    	
+		
             
             	throw "The index of the target qubit is larger than the number of qubits";
         }
@@ -111,10 +115,10 @@ X::get_matrix( ) {
 
 #ifdef DEBUG
         if (X_matrix.isnan()) {
-	    ss << "X::get_matrix: X_matrix contains NaN." << std::endl;
+	    sstream << "X::get_matrix: X_matrix contains NaN." << std::endl;
 	    verbose_level=1;
-            print(ss, verbose_level);	
-	    ss.str("");
+            print(sstream,verbose_level);	
+	    
             
         }
 #endif
@@ -134,10 +138,10 @@ void
 X::apply_to( Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-	ss << "Wrong matrix size in X gate apply" << std::endl;
+	sstream << "Wrong matrix size in X gate apply" << std::endl;
 	verbose_level=1;
-        print(ss, verbose_level);	
-	ss.str("");
+        print(sstream,verbose_level);	
+	
         
         exit(-1);
     }
@@ -198,10 +202,10 @@ X::apply_from_right( Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-	ss << "Wrong matrix size in U3 apply_from_right" << std::endl;
+	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
 	verbose_level=1;
-        print(ss, verbose_level);	
-	ss.str("");
+        print(sstream,verbose_level);	
+	
         
         exit(-1);
     }

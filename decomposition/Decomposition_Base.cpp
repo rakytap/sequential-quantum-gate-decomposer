@@ -23,7 +23,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Decomposition_Base.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
@@ -229,9 +233,9 @@ void Decomposition_Base::finalize_decomposition() {
         
 
 	verbose_level=1;
-	ss << "The error of the decomposition after finalyzing gates is " << decomposition_error << " with " << layer_num << " layers containing " << gates_num.u3 << " U3 gates and " << gates_num.cnot <<  " CNOT gates" << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << "The error of the decomposition after finalyzing gates is " << decomposition_error << " with " << layer_num << " layers containing " << gates_num.u3 << " U3 gates and " << gates_num.cnot <<  " CNOT gates" << std::endl;
+	print(sstream,verbose_level);	    	
+	
             
         
 
@@ -392,9 +396,9 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
         else {
 		verbose_level=1;
-		ss << "bad value for initial guess" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << "bad value for initial guess" << std::endl;
+		print(sstream,verbose_level);	    	
+		
 	 	           
             exit(-1);
         }
@@ -532,9 +536,9 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 tbb::tick_count current_time = tbb::tick_count::now();
 
 		verbose_level=1;
-		ss << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << " calculated in " << (current_time - start_time).seconds() << " seconds" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << " calculated in " << (current_time - start_time).seconds() << " seconds" << std::endl;
+		print(sstream,verbose_level);	    	
+		
 		                  
                 fflush(stdout);
                 
@@ -550,9 +554,9 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 
 
 		verbose_level=1;
-	        ss << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " iterations with " << layer_num << " layers" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+	        sstream << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " iterations with " << layer_num << " layers" << std::endl;
+		print(sstream,verbose_level);	    	
+		
 	                                
                 fflush(stdout);
                 
@@ -562,9 +566,9 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 
 
 		verbose_level=1;
-		ss << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << std::endl;
+		print(sstream,verbose_level);	    	
+		
 		                    
                 break;
             }
@@ -576,9 +580,9 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         if (iter_idx == max_iterations ) {
             
 		verbose_level=1;
-		ss << "Reached maximal number of iterations" << std::endl << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << "Reached maximal number of iterations" << std::endl << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
            
         }
@@ -1221,9 +1225,9 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             }
             else {
 		verbose_level=1;
-		ss << "wrong parameters in U3 class" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << "wrong parameters in U3 class" << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 exit(-1);
             }

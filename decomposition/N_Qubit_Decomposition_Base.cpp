@@ -25,7 +25,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Base.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 /**
 @brief Nullary constructor of the class.
@@ -186,11 +190,10 @@ void  N_Qubit_Decomposition_Base::final_optimization() {
        
 
 	verbose_level=1;
-	ss << "***************************************************************" << std::endl;
-	ss << "Final fine tuning of the parameters in the " << qbit_num << "-qubit decomposition" << std::endl;
-	ss << "***************************************************************" << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << "***************************************************************" << std::endl;
+	sstream << "Final fine tuning of the parameters in the " << qbit_num << "-qubit decomposition" << std::endl;
+	sstream << "***************************************************************" << std::endl;
+	print(sstream,verbose_level);	    	
 
          
 

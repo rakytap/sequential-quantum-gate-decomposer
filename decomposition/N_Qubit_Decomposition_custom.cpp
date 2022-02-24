@@ -25,6 +25,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_custom.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
+
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 /**
 @brief Nullary constructor of the class.
@@ -86,11 +91,11 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
    
 
    verbose_level=1;
-   ss << "***************************************************************" << std::endl;
-   ss << "Starting to disentangle " << qbit_num << "-qubit matrix via custom gate structure" << std::endl;
-   ss << "***************************************************************" << std::endl << std::endl << std::endl;
-   print(ss,verbose_level);	    	
-   ss.str("");
+   sstream << "***************************************************************" << std::endl;
+   sstream << "Starting to disentangle " << qbit_num << "-qubit matrix via custom gate structure" << std::endl;
+   sstream << "***************************************************************" << std::endl << std::endl << std::endl;
+   print(sstream,verbose_level);	    	
+   
 
     
 
@@ -136,66 +141,35 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     
 
 	verbose_level=1;
-    	ss << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");
+    	sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
+    	print(sstream,verbose_level);	    	
+    	
 
 	verbose_level=1;
       
-        if ( gates_num.u3>0 ) {ss << gates_num.u3 << " U3 opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.rx>0 ) {ss << gates_num.rx << " RX opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.ry>0 ) {ss << gates_num.ry << " RY opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.rz>0 ) {ss << gates_num.rz << " RZ opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.cnot>0 ){ss << gates_num.cnot << " CNOT opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.cz>0 ) {ss << gates_num.cz << " CZ opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.ch>0 ) {ss << gates_num.ch << " CH opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.x>0 ) {ss << gates_num.x << " X opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");} 
-
-        if ( gates_num.sx>0 ) {ss << gates_num.sx << " SX opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");} 
- 
-        if ( gates_num.syc>0 ){ss << gates_num.syc << " Sycamore opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");} 
-
-        if ( gates_num.un>0 ){ss << gates_num.un << " UN opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");} 
-
-        if ( gates_num.adap>0 ){ss << gates_num.adap << " Adaptive opeartions," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");} 
+        if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 opeartions," << std::endl;
+        if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX opeartions," << std::endl;
+        if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY opeartions," << std::endl;
+        if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ opeartions," << std::endl;
+        if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT opeartions," << std::endl;
+        if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ opeartions," << std::endl;
+        if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH opeartions," << std::endl;
+        if ( gates_num.x>0 ) sstream << gates_num.x << " X opeartions," << std::endl;
+        if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX opeartions," << std::endl;
+        if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore opeartions," << std::endl;
+        if ( gates_num.un>0 ) sstream << gates_num.un << " UN opeartions," << std::endl;
+        if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive opeartions," << std::endl;
+    	
+	print(sstream,verbose_level);	    	
+    	} 
 
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
 
-	ss << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");
+	verbose_level=1;
+	sstream << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
+    	print(sstream,verbose_level);	    	
+    	
 
 
        

@@ -5,6 +5,11 @@
 #include "tbb/tbb.h"
 #include <tbb/scalable_allocator.h>
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
+
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 // number of rows in matrix A and cols in matrix B, under which serialized multiplication is applied instead of parallel one
 #define SERIAL_CUTOFF 16
@@ -117,39 +122,39 @@ check_matrices( Matrix &A, Matrix &B ) {
 
     if (!A.is_transposed() & !B.is_transposed())  {
         if ( A.cols != B.rows ) {
-		/*ss << "pic::dot:: Cols of matrix A does not match rows of matrix B!" << std::endl;
+		/*sstream << "pic::dot:: Cols of matrix A does not match rows of matrix B!" << std::endl;
 		verbose_level=1;
-        	print(ss, verbose_level);	
-		ss.str("");*/
+        	print(sstream,verbose_level);	
+		*/
            
         }
     }
     else if ( A.is_transposed() & !B.is_transposed() )  {
         if ( A.rows != B.rows ) {
-		/*ss << "pic::dot:: Cols of matrix A.transpose does not match rows of matrix B!" << std::endl;
+		/*sstream << "pic::dot:: Cols of matrix A.transpose does not match rows of matrix B!" << std::endl;
 		verbose_level=1;
-        	print(ss, verbose_level);	
-		ss.str("");*/
+        	print(sstream,verbose_level);	
+		*/
             
             	return false;
         }
     }
     else if ( A.is_transposed() & B.is_transposed() )  {
         if ( A.rows != B.cols ) {
-		/*ss << "pic::dot:: Cols of matrix A.transpose does not match rows of matrix B.transpose!" << std::endl;
+		/*sstream << "pic::dot:: Cols of matrix A.transpose does not match rows of matrix B.transpose!" << std::endl;
 		verbose_level=1;
-        	print(ss, verbose_level);	
-		ss.str("");*/
+        	print(sstream,verbose_level);	
+		*/
             
             	return false;
         }
     }
     else if ( !A.is_transposed() & B.is_transposed() )  {
         if ( A.cols != B.cols ) {
-		/*ss << "pic::dot:: Cols of matrix A does not match rows of matrix B.transpose!" << std::endl;
+		/*sstream << "pic::dot:: Cols of matrix A does not match rows of matrix B.transpose!" << std::endl;
 		verbose_level=1;
-        	print(ss, verbose_level);	
-		ss.str("");*/
+        	print(sstream,verbose_level);	
+		*/
             
             	return false;
         }
@@ -158,18 +163,18 @@ check_matrices( Matrix &A, Matrix &B ) {
 
     // check the pointer of the matrices
     if ( A.get_data() == NULL ) {
-		/*ss << "pic::dot:: No preallocated data in matrix A!" << std::endl;
+		/*sstream << "pic::dot:: No preallocated data in matrix A!" << std::endl;
 		verbose_level=1;
-        	print(ss, verbose_level);*/	
-		ss.str("");
+        	print(sstream,verbose_level);*/	
+		*/
         
         	return false;
     }
     if ( B.get_data() == NULL ) {
-		/*ss << "pic::dot:: No preallocated data in matrix B!" << std::endl;
+		/*sstream << "pic::dot:: No preallocated data in matrix B!" << std::endl;
 		verbose_level=1;
-        	print(ss, verbose_level);	
-		ss.str("");*/
+        	print(sstream,verbose_level);	
+		*/
         
         	return false;
     }
@@ -191,10 +196,10 @@ get_cblas_transpose( Matrix &A, CBLAS_TRANSPOSE &transpose ) {
         transpose = CblasConjTrans;
     }
     else if ( A.is_conjugated() & !A.is_transposed() ) {
-	/*ss << "CblasConjNoTrans NOT IMPLEMENTED in GSL!!!!!!!!!!!!!!!" << std::endl;
+	/*sstream << "CblasConjNoTrans NOT IMPLEMENTED in GSL!!!!!!!!!!!!!!!" << std::endl;
 	verbose_level=1;
-        print(ss, verbose_level);	
-	ss.str("");*/
+        print(sstream,verbose_level);	
+	*/
 	
 	exit(-1);
         //transpose = CblasConjNoTrans; // not present in MKL

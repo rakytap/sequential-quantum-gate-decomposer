@@ -24,7 +24,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Cost_Function.h"
 //#include <tbb/parallel_for.h>
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 /**
 @brief Call co calculate the cost function during the final optimization process.
@@ -140,9 +144,8 @@ void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
         if ( row_idx > matrix_size ) {
 
 	    verbose_level=1;
-      	    ss << "Error: row idx should be less than the number of roes in the matrix" << std::endl;
-            print(ss,verbose_level);	    	
-	    ss.str("");
+      	    sstream << "Error: row idx should be less than the number of roes in the matrix" << std::endl;
+            print(sstream,verbose_level);	    	
             
             exit(-1);
         }

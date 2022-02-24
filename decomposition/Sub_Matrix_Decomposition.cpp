@@ -24,7 +24,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Sub_Matrix_Decomposition.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 //tbb::spin_mutex my_mutex;
 
@@ -122,17 +126,17 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     if (subdisentaglement_done) {        
 
 	verbose_level=1;
-	ss << "Sub-disentaglement already done." << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");           
+	sstream << "Sub-disentaglement already done." << std::endl;
+	print(sstream,verbose_level);	    	
+	           
         
         return;
     }   
 
 	verbose_level=1;
-	ss << std::endl << "Disentagling submatrices." << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << std::endl << "Disentagling submatrices." << std::endl;
+	print(sstream,verbose_level);	    	
+	
       
     
 
@@ -144,9 +148,9 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     if (check_optimization_solution()) {
         
 	verbose_level=1;
-	ss << "Disentanglig not needed" << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << "Disentanglig not needed" << std::endl;
+	print(sstream,verbose_level);	    	
+	
                     
         subdecomposed_mtx = Umtx;
         subdisentaglement_done = true;
@@ -202,9 +206,9 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
             tbb::tick_count current_time = tbb::tick_count::now();
 
 		verbose_level=1;
-		ss << "--- " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");           
+		sstream << "--- " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl << std::endl;
+		print(sstream,verbose_level);	    	
+		           
         
 
     }
@@ -214,18 +218,18 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     if (check_optimization_solution()) {
         
 		verbose_level=1;
-		ss << "Sub-disentaglement was succesfull." << std::endl << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << "Sub-disentaglement was succesfull." << std::endl << std::endl;
+		print(sstream,verbose_level);	    	
+		
             
         
     }
     else {
         
 		verbose_level=1;
-		ss << "Sub-disentaglement did not reach the tolerance limit." << std::endl << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << "Sub-disentaglement did not reach the tolerance limit." << std::endl << std::endl;
+		print(sstream,verbose_level);	    	
+		
             
         
     }
@@ -525,10 +529,10 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 #ifdef DEBUG
         if (matrix_new.isnan()) {
 
-		ss << "Sub_Matrix_Decomposition::optimization_problem: matrix_new contains NaN a. Exiting" << std::endl;
+		sstream << "Sub_Matrix_Decomposition::optimization_problem: matrix_new contains NaN a. Exiting" << std::endl;
 		verbose_level=1;
-            	print(ss, verbose_level);	
-	        ss.str("");
+            	print(sstream,verbose_level);	
+	        
         }
 #endif
 
@@ -563,10 +567,10 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
         if (matrix_new.isnan()) {
 
 
-		ss << "Sub_Matrix_Decomposition::optimization_problem matrix_new contains NaN b." << std::endl;
+		sstream << "Sub_Matrix_Decomposition::optimization_problem matrix_new contains NaN b." << std::endl;
 		verbose_level=1;
-            	print(ss, verbose_level);	
-	        ss.str("");
+            	print(sstream,verbose_level);	
+	        
 
         }
 #endif
@@ -660,10 +664,10 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* 
 #ifdef DEBUG
         if (isnan(f->data[idx])) {
 
-		ss << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
+		sstream << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
 		verbose_level=1;
-            	print(ss, verbose_level);	
-	        ss.str("");
+            	print(sstream,verbose_level);	
+	        
             
             	exit(-1);
         }
@@ -740,9 +744,9 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
     if ( extract_gates(static_cast<Gates_block*>(ret)) != 0 ) {
 
 	verbose_level=1;
-	ss << "Sub_Matrix_Decomposition::clone(): extracting gates was not succesfull\n" << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << "Sub_Matrix_Decomposition::clone(): extracting gates was not succesfull\n" << std::endl;
+	print(sstream,verbose_level);	    	
+	
      
         exit(-1);
     }

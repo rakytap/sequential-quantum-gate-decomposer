@@ -27,7 +27,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "dot.h"
 #include "Random_Unitary.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 /**
 @brief Deafult constructor of the class.
@@ -117,10 +121,10 @@ Composite::get_matrix( Matrix_real& parameters ) {
 //com_matrix.print_matrix();
 #ifdef DEBUG
         if (com_matrix.isnan()) {
-	    ss << "Composite::get_matrix: UN_matrix contains NaN." << std::endl;
+	    sstream << "Composite::get_matrix: UN_matrix contains NaN." << std::endl;
 	    verbose_level=1;
-            print(ss, verbose_level);	
-	    ss.str("");
+            print(sstream,verbose_level);	
+	    
             
         }
 #endif
@@ -137,19 +141,19 @@ void
 Composite::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-	 ss << "Wrong matrix size in Composite gate apply" << std::endl;
+	 sstream << "Wrong matrix size in Composite gate apply" << std::endl;
 	 verbose_level=1;
-         print(ss, verbose_level);	
-	 ss.str("");
+         print(sstream,verbose_level);	
+	 
         
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-	 ss << "Not enough parameters given for the Composite gate" << std::endl;
+	 sstream << "Not enough parameters given for the Composite gate" << std::endl;
 	 verbose_level=1;
-         print(ss, verbose_level);	
-	 ss.str("");
+         print(sstream,verbose_level);	
+	 
         
         exit(-1);
     }
@@ -173,19 +177,19 @@ Composite::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.rows != matrix_size ) {
-	 ss << "Wrong matrix size in Composite gate apply" << std::endl;
+	 sstream << "Wrong matrix size in Composite gate apply" << std::endl;
 	 verbose_level=1;
-         print(ss, verbose_level);	
-	 ss.str("");
+         print(sstream,verbose_level);	
+	 
         
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-	 ss << "Not enough parameters given for the Composite gate" << std::endl;
+	 sstream << "Not enough parameters given for the Composite gate" << std::endl;
 	 verbose_level=1;
-         print(ss, verbose_level);	
-	 ss.str("");
+         print(sstream,verbose_level);	
+	 
         
         exit(-1);
     }
@@ -212,9 +216,9 @@ void Composite::reorder_qubits( std::vector<int> qbit_list ) {
     if ((int)qbit_list.size() != qbit_num ) {
 
 	verbose_level=1;
-	ss << "Wrong number of qubits" << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << "Wrong number of qubits" << std::endl;
+	print(sstream,verbose_level);	    	
+	
         
         exit(-1);
     }

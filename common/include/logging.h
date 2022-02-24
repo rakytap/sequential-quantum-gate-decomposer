@@ -39,9 +39,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief A class containing basic methods for setting up the verbosity level. 
 */
-class logging 
-{ 
-
+class logging {
 
 public:
 
@@ -49,23 +47,24 @@ public:
 /// Set the verbosity level of the output messages. 
 int verbose; 
 
-/// Set the verbosity level of the individual messages.
-int verbose_level;
-
-/// Stringstream input to store the output messages.
-std::stringstream ss;
-
 /// Logical variable. Set true to write output messages to  the 'debug.txt' file.
 bool debug; 	
-
  
 /**
 @brief Call to print output messages in the function of the verbosity level.
-@param ssq The stringstream input to store the output messages.
+@param sstream The stringstream input to store the output messages.
 @param verbose_level Integer input. High level means write more to the standart output, 0 means write nothing. The default value is set to 1. 
 */
-void print(std::stringstream& ssq, int verbose_level=1); 
+void print(std::stringstream& sstream, int verbose_level=1); 
+
+/** Nullary constructor of the class
+@return An instance of the class
+*/
+logging();
+
 
 };
+
+
 
 #endif

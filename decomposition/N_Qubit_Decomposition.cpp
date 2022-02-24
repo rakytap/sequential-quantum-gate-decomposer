@@ -25,7 +25,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 /**
 @brief Nullary constructor of the class.
@@ -83,11 +87,11 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
     
 
     verbose_level=1;
-    ss << "***************************************************************" << std::endl;
-    ss << "Starting to disentangle " << qbit_num << "-qubit matrix" << std::endl;
-    ss << "***************************************************************" << std::endl << std::endl << std::endl;
-    print(ss,verbose_level);	    	
-    ss.str("");
+    sstream << "***************************************************************" << std::endl;
+    sstream << "Starting to disentangle " << qbit_num << "-qubit matrix" << std::endl;
+    sstream << "***************************************************************" << std::endl << std::endl << std::endl;
+    print(sstream,verbose_level);	    	
+    
 
     
 
@@ -188,62 +192,33 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
     
 
 	verbose_level=1;
-    	ss << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");
+    	sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
+    	print(sstream,verbose_level);	    	
+    	
 
 	verbose_level=1;
       
-        if ( gates_num.u3>0 ) {ss << gates_num.u3 << " U3 gates," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
+        if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 gates," << std::endl;
+        if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX gates," << std::endl;
+        if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY gates," << std::endl;
+        if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ gates," << std::endl;
+        if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT gates," << std::endl;
+        if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ gates," << std::endl;
+        if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH gates," << std::endl;
+        if ( gates_num.x>0 ) sstream << gates_num.x << " X gates," << std::endl;
+        if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX gates," << std::endl; 
+        if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore gates," << std::endl;
+        if ( gates_num.adap>0 )sstream << gates_num.adap << " Adaptive gates," << std::endl;   	
 
-        if ( gates_num.rx>0 ) {ss << gates_num.rx << " RX gates," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.ry>0 ) {ss << gates_num.ry << " RY gates," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.rz>0 ) {ss << gates_num.rz << " RZ gates," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.cnot>0 ){ss << gates_num.cnot << " CNOT gates," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.cz>0 ) {ss << gates_num.cz << " CZ gates," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.ch>0 ) {ss << gates_num.ch << " CH gates," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");}
-
-        if ( gates_num.x>0 ) {ss << gates_num.x << " X gates," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");} 
-
-        if ( gates_num.sx>0 ) {ss << gates_num.sx << " SX gates," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");} 
- 
-        if ( gates_num.syc>0 ){ss << gates_num.syc << " Sycamore gates," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");} 
-
-         if ( gates_num.adap>0 ){ss << gates_num.adap << " Adaptive gates," << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");} 
+	print(sstream,verbose_level);
 
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
 
-	ss << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
-    	print(ss,verbose_level);	    	
-    	ss.str("");
+	verbose_level=1;
+	sstream << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
+    	print(sstream,verbose_level);	    	
+    	
 
         
 
@@ -272,9 +247,9 @@ N_Qubit_Decomposition::decompose_submatrix() {
             
 
 		verbose_level=1;
-		ss << "Decomposition was already finalized" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << "Decomposition was already finalized" << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
             
             return;
@@ -520,11 +495,11 @@ N_Qubit_Decomposition::simplify_layers() {
         
 
 	verbose_level=1;
-	ss << "***************************************************************" << std::endl;
-	ss << "Try to simplify layers" << std::endl;
-	ss << "***************************************************************" << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << "***************************************************************" << std::endl;
+	sstream << "Try to simplify layers" << std::endl;
+	sstream << "***************************************************************" << std::endl;
+	print(sstream,verbose_level);	    	
+	
             
         
 
@@ -707,11 +682,11 @@ N_Qubit_Decomposition::simplify_layers() {
         
 
 	verbose_level=1;
-	ss << std::endl << std::endl << "************************************" << std::endl;
-	ss << "After some additional 2-qubit decompositions the initial gate structure with " <<  two_qbit_num_initial << " two-qubit gates simplified to a structure containing " << two_qbit_num_simplified << " two-qubit gates" << std::endl;
-	ss << "************************************" << std::endl << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << std::endl << std::endl << "************************************" << std::endl;
+	sstream << "After some additional 2-qubit decompositions the initial gate structure with " <<  two_qbit_num_initial << " two-qubit gates simplified to a structure containing " << two_qbit_num_simplified << " two-qubit gates" << std::endl;
+	sstream << "************************************" << std::endl << std::endl;
+	print(sstream,verbose_level);	    	
+	
         
 
 
@@ -735,9 +710,9 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
         
 
 	verbose_level=1;
-	ss << "Try to simplify sub-structure " << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << "Try to simplify sub-structure " << std::endl;
+	print(sstream,verbose_level);	    	
+	
             
         
 
@@ -816,9 +791,9 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
             // return with the original layer, if the simplification wa snot successfull
             
 		verbose_level=1;
-		ss << "The simplification of the sub-structure was not possible" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << "The simplification of the sub-structure was not possible" << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 delete cdecomposition;
             return 1;
@@ -860,9 +835,9 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
         gates_num gate_nums_simplified = simplified_layer->get_gate_nums();
         
 	verbose_level=1;
-	ss << gate_nums_layer.cnot+gate_nums_layer.cz+gate_nums_layer.ch << " two-qubit gates successfully simplified to " << gate_nums_simplified.cnot << " CNOT gates" << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << gate_nums_layer.cnot+gate_nums_layer.cz+gate_nums_layer.ch << " two-qubit gates successfully simplified to " << gate_nums_simplified.cnot << " CNOT gates" << std::endl;
+	print(sstream,verbose_level);	    	
+	
             
         
 

@@ -25,7 +25,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Gate.h"
 #include "common.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 /**
 @brief Deafult constructor of the class.
@@ -164,9 +168,8 @@ void Gate::reorder_qubits( std::vector<int> qbit_list ) {
     if ((int)qbit_list.size() != qbit_num ) {
 
 	verbose_level=1;
-	ss << "Wrong number of qubits" << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << "Wrong number of qubits" << std::endl;
+	print(sstream,verbose_level);	    	
        
         exit(-1);
     }

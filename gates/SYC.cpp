@@ -23,7 +23,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "SYC.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 using namespace std;
 
@@ -72,10 +76,9 @@ SYC::SYC(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
         if (target_qbit_in >= qbit_num) {
 
 		verbose_level=1;
-		ss << "The index of the target qubit is larger than the number of qubits" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
-            
+		sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+		print(sstream,verbose_level);	    	
+
             	throw "The index of the target qubit is larger than the number of qubits";
         }
         // The index of the qubit on which the gate acts (target_qbit >= 0)
@@ -85,10 +88,9 @@ SYC::SYC(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
         if (control_qbit_in >= qbit_num) {
 
 		verbose_level=1;
-		ss << "The index of the control qubit is larger than the number of qubits" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
-            
+		sstream << "The index of the control qubit is larger than the number of qubits" << std::endl;
+		print(sstream,verbose_level);	    	
+ 
             	throw "The index of the control qubit is larger than the number of qubits";
         }
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate

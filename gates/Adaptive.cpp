@@ -24,7 +24,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Adaptive.h"
 #include "common.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -95,10 +99,10 @@ Adaptive::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
 
-	ss << "Wrong matrix size in Adaptive gate apply" << std::endl;
+	sstream << "Wrong matrix size in Adaptive gate apply" << std::endl;
 	verbose_level=1;
-        print(ss, verbose_level);	
-	ss.str("");
+        print(sstream,verbose_level);	
+	
         
         exit(-1);
     }
@@ -138,10 +142,10 @@ Adaptive::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-	ss << "Wrong matrix size in Adaptive apply_from_right" << std::endl;
+	sstream << "Wrong matrix size in Adaptive apply_from_right" << std::endl;
 	verbose_level=1;
-        print(ss, verbose_level);	
-	ss.str("");
+        print(sstream,verbose_level);	
+	
         
         exit(-1);
     }
@@ -176,10 +180,10 @@ std::vector<Matrix>
 Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-	ss << "Wrong matrix size in Adaptive gate apply" << std::endl;
+	sstream << "Wrong matrix size in Adaptive gate apply" << std::endl;
 	verbose_level=1;
-        print(ss, verbose_level);	
-	ss.str("");
+        print(sstream,verbose_level);	
+	
         
         exit(-1);
     }

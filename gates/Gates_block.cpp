@@ -38,7 +38,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Composite.h"
 #include "Gates_block.h"
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -211,10 +215,10 @@ Gates_block::get_matrix( Matrix_real& parameters ) {
 
 #ifdef DEBUG
     if (block_mtx.isnan()) {
-	ss << "Gates_block::get_matrix: block_mtx contains NaN." << std::endl;
+	sstream << "Gates_block::get_matrix: block_mtx contains NaN." << std::endl;
 	verbose_level=1;
-        print(ss, verbose_level);	
-	ss.str("");
+        print(sstream,verbose_level);	
+	
         
     }
 #endif
@@ -330,10 +334,10 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 #ifdef DEBUG
         if (input.isnan()) {
-	    ss << "Gates_block::apply_to: transformed matrix contains NaN." << std::endl;
+	    sstream << "Gates_block::apply_to: transformed matrix contains NaN." << std::endl;
 	    verbose_level=1;
-            print(ss, verbose_level);	
-	    ss.str("");
+            print(sstream,verbose_level);	
+	    
             
         }
 #endif
@@ -432,10 +436,10 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
 #ifdef DEBUG
         if (input.isnan()) {
-	    ss << "Gates_block::apply_from_right: transformed matrix contains NaN." << std::endl;
+	    sstream << "Gates_block::apply_from_right: transformed matrix contains NaN." << std::endl;
 	    verbose_level=1;
-            print(ss, verbose_level);	
-	    ss.str("");
+            print(sstream,verbose_level);	
+	    
             
         }
 #endif
@@ -517,10 +521,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }    
     
                 else if (operation->get_type() == SYC_OPERATION) {
-	    	    ss << "Sycamore operation not supported in gardient calculation" << std::endl;
+	    	    sstream << "Sycamore operation not supported in gardient calculation" << std::endl;
 	            verbose_level=1;
-                    print(ss, verbose_level);	
-	            ss.str("");
+                    print(sstream,verbose_level);	
+	            
                     
                     exit(-1);
                 }
@@ -624,18 +628,18 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }
 
                 else if (operation->get_type() == UN_OPERATION) {
-	    	    ss << "UN operation not supported in gardient calculation" << std::endl;
+	    	    sstream << "UN operation not supported in gardient calculation" << std::endl;
 	            verbose_level=1;
-                    print(ss, verbose_level);	
-	            ss.str("");
+                    print(sstream,verbose_level);	
+	            
                     
                     exit(-1);
                 }
                 else if (operation->get_type() == ON_OPERATION) {
-	    	    ss << "ON operation not supported in gardient calculation" << std::endl;
+	    	    sstream << "ON operation not supported in gardient calculation" << std::endl;
 	            verbose_level=1;
-                    print(ss, verbose_level);	
-	            ss.str("");
+                    print(sstream,verbose_level);	
+	            
                     
                     exit(-1);
                 }
@@ -654,10 +658,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }
 
                 else if (operation->get_type() == COMPOSITE_OPERATION) {
-	    	    ss << "Composite  operation not supported in gardient calculation" << std::endl;
+	    	    sstream << "Composite  operation not supported in gardient calculation" << std::endl;
 	            verbose_level=1;
-                    print(ss, verbose_level);	
-	            ss.str("");
+                    print(sstream,verbose_level);	
+	            
                     
                     exit(-1);
                 }
@@ -1384,9 +1388,9 @@ int Gates_block::get_gate_num() {
 void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
 		verbose_level=1;
-		ss << std::endl << "The gates in the list of gates:" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << std::endl << "The gates in the list of gates:" << std::endl;
+		print(sstream,verbose_level);	    	
+		
 
       
 
@@ -1401,9 +1405,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 CNOT* cnot_gate = static_cast<CNOT*>(gate);
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: CNOT with control qubit: " << cnot_gate->get_control_qbit() << " and target qubit: " << cnot_gate->get_target_qbit() << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: CNOT with control qubit: " << cnot_gate->get_control_qbit() << " and target qubit: " << cnot_gate->get_target_qbit() << std::endl;
+		print(sstream,verbose_level);	    	
+		
 
                 gate_idx = gate_idx + 1;
             }
@@ -1411,9 +1415,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 CZ* cz_gate = static_cast<CZ*>(gate);
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: CZ with control qubit: " << cz_gate->get_control_qbit() << " and target qubit: " << cz_gate->get_target_qbit() << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: CZ with control qubit: " << cz_gate->get_control_qbit() << " and target qubit: " << cz_gate->get_target_qbit() << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 gate_idx = gate_idx + 1;
             }
@@ -1421,9 +1425,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 CH* ch_gate = static_cast<CH*>(gate);
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: CH with control qubit: " << ch_gate->get_control_qbit() << " and target qubit: " << ch_gate->get_target_qbit() << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: CH with control qubit: " << ch_gate->get_control_qbit() << " and target qubit: " << ch_gate->get_target_qbit() << std::endl;
+		print(sstream,verbose_level);	    	
+		
                
                 gate_idx = gate_idx + 1;
             }
@@ -1431,9 +1435,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 SYC* syc_gate = static_cast<SYC*>(gate);
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: Sycamore gate with control qubit: " << syc_gate->get_control_qbit() << " and target qubit: " << syc_gate->get_target_qbit() << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: Sycamore gate with control qubit: " << syc_gate->get_control_qbit() << " and target qubit: " << syc_gate->get_target_qbit() << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 gate_idx = gate_idx + 1;
             }
@@ -1495,9 +1499,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 //                message = message + "U3 on target qubit %d with parameters theta = %f, phi = %f and lambda = %f";
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: U3 on target qubit: " << u3_gate->get_target_qbit() << " and with parameters theta = " << vartheta << ", phi = " << varphi << " and lambda = " << varlambda << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: U3 on target qubit: " << u3_gate->get_target_qbit() << " and with parameters theta = " << vartheta << ", phi = " << varphi << " and lambda = " << varlambda << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 gate_idx = gate_idx + 1;
 
@@ -1515,9 +1519,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 parameter_idx = parameter_idx - 1;
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: RX on target qubit: " << rx_gate->get_target_qbit() << " and with parameters theta = " << vartheta << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: RX on target qubit: " << rx_gate->get_target_qbit() << " and with parameters theta = " << vartheta << std::endl;
+		print(sstream,verbose_level);	    	
+		
 
                 gate_idx = gate_idx + 1;
 
@@ -1535,9 +1539,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 parameter_idx = parameter_idx - 1;
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: RY on target qubit: " << ry_gate->get_target_qbit() << " and with parameters theta = " << vartheta << std::endl; 
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: RY on target qubit: " << ry_gate->get_target_qbit() << " and with parameters theta = " << vartheta << std::endl; 
+		print(sstream,verbose_level);	    	
+		
                
                 gate_idx = gate_idx + 1;
 
@@ -1555,9 +1559,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 parameter_idx = parameter_idx - 1;
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: CRY on target qubit: " << cry_gate->get_target_qbit() << ", control qubit" << cry_gate->get_control_qbit() << " and with parameters Phi = " << Phi << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: CRY on target qubit: " << cry_gate->get_target_qbit() << ", control qubit" << cry_gate->get_control_qbit() << " and with parameters Phi = " << Phi << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 gate_idx = gate_idx + 1;
 
@@ -1575,9 +1579,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 parameter_idx = parameter_idx - 1;
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: RZ on target qubit: " << rz_gate->get_target_qbit() << " and with parameters varphi = " << varphi << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: RZ on target qubit: " << rz_gate->get_target_qbit() << " and with parameters varphi = " << varphi << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 gate_idx = gate_idx + 1;
 
@@ -1589,9 +1593,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 X* x_gate = static_cast<X*>(gate);
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: X on target qubit: " << x_gate->get_target_qbit() << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: X on target qubit: " << x_gate->get_target_qbit() << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 gate_idx = gate_idx + 1;
 
@@ -1603,9 +1607,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 SX* sx_gate = static_cast<SX*>(gate);
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: SX on target qubit: " << sx_gate->get_target_qbit() << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: SX on target qubit: " << sx_gate->get_target_qbit() << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 gate_idx = gate_idx + 1;
 
@@ -1622,9 +1626,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 parameter_idx = parameter_idx - gate->get_parameter_num();
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: UN " << gate->get_parameter_num() << " parameters" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: UN " << gate->get_parameter_num() << " parameters" << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 gate_idx = gate_idx + 1;
 
@@ -1634,9 +1638,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 parameter_idx = parameter_idx - gate->get_parameter_num();
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: ON " << gate->get_parameter_num() << " parameters" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: ON " << gate->get_parameter_num() << " parameters" << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 gate_idx = gate_idx + 1;
 
@@ -1646,9 +1650,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 parameter_idx = parameter_idx - gate->get_parameter_num();
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: Composite " << gate->get_parameter_num() << " parameters" << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: Composite " << gate->get_parameter_num() << " parameters" << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 gate_idx = gate_idx + 1;
 
@@ -1666,9 +1670,9 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 parameter_idx = parameter_idx - 1;
 
 		verbose_level=1;
-		ss << gate_idx << "th gate: Adaptive gate on target qubit: " << ad_gate->get_target_qbit() << ", control qubit " << ad_gate->get_control_qbit() << " and with parameters Phi = " << Phi << std::endl;
-		print(ss,verbose_level);	    	
-		ss.str("");
+		sstream << gate_idx << "th gate: Adaptive gate on target qubit: " << ad_gate->get_target_qbit() << ", control qubit " << ad_gate->get_control_qbit() << " and with parameters Phi = " << Phi << std::endl;
+		print(sstream,verbose_level);	    	
+		
                 
                 gate_idx = gate_idx + 1;
 
@@ -2033,9 +2037,9 @@ Gates_block* Gates_block::clone() {
     if (extract_gates( ret ) != 0 ) {
 
 	verbose_level=1;
-	ss << "Gates_block::clone(): extracting gates was not succesfull" << std::endl;
-	print(ss,verbose_level);	    	
-	ss.str("");
+	sstream << "Gates_block::clone(): extracting gates was not succesfull" << std::endl;
+	print(sstream,verbose_level);	    	
+	
         
         exit(-1);
     };
