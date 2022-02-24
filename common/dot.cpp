@@ -165,7 +165,7 @@ check_matrices( Matrix &A, Matrix &B ) {
     if ( A.get_data() == NULL ) {
 		/*sstream << "pic::dot:: No preallocated data in matrix A!" << std::endl;
 		verbose_level=1;
-        	print(sstream,verbose_level);*/	
+        	print(sstream,verbose_level);	
 		*/
         
         	return false;

@@ -78,8 +78,7 @@ SX::SX(int qbit_num_in, int target_qbit_in) {
 		verbose_level=1;
 		sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
 		print(sstream,verbose_level);	    	
-		ss.str("");
-            
+	            
             	throw "The index of the target qubit is larger than the number of qubits";
         }
         // The index of the qubit on which the gate acts (target_qbit >= 0)
@@ -118,7 +117,6 @@ SX::get_matrix( ) {
 	    sstream << "SX::get_matrix: SX_matrix contains NaN." << std::endl;
 	    verbose_level=1;
             print(sstream,verbose_level);	
-	    ss.str("");
             
         }
 #endif
@@ -141,7 +139,6 @@ SX::apply_to( Matrix& input ) {
 	sstream << "Wrong matrix size in X gate apply" << std::endl;
 	verbose_level=1;
         print(sstream,verbose_level);	
-	ss.str("");
         
         exit(-1);
     }
@@ -219,7 +216,6 @@ SX::apply_from_right( Matrix& input ) {
 	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
 	verbose_level=1;
         print(sstream,verbose_level);	
-	ss.str("");
        
         exit(-1);
     }
