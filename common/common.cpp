@@ -29,10 +29,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <tbb/scalable_allocator.h>
 
 //The stringstream input to store the output messages.
-std::stringstream sstream;
+//std::stringstream sstream;
 
 //Integer value to set the verbosity level of the output messages.
-int verbose_level;
+//int verbose_level;
 
 /**
 @brief ?????
