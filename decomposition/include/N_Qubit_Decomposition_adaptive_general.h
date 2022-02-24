@@ -25,13 +25,14 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define N_Qubit_Decomposition_adaptive_general_H
 
 #include "N_Qubit_Decomposition_adaptive.h"
+#include "logging.h"
 
 
 /**
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 This class contains the non-template implementation of the decomposition class.
 */
-class N_Qubit_Decomposition_adaptive_general : public N_Qubit_Decomposition_adaptive {
+class N_Qubit_Decomposition_adaptive_general : public N_Qubit_Decomposition_adaptive, public logging {
 
 
     
