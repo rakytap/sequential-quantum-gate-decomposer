@@ -145,7 +145,7 @@ void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
 
 	    verbose_level=1;
       	    sstream << "Error: row idx should be less than the number of roes in the matrix" << std::endl;
-            print(sstream,verbose_level);	    	
+            //print(sstream,verbose_level);	    	
             
             exit(-1);
         }

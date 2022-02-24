@@ -262,7 +262,7 @@ mtx.print_matrix();
 
 	sstream << "Using imported gate structure for the decomposition." << std::endl;
 	verbose_level=1;
-        print(sstream,verbose_level);	
+        //print(sstream,verbose_level);	
 	
         
         gate_structure_loc = optimize_imported_gate_structure(optimized_parameters_mtx);
@@ -271,7 +271,7 @@ mtx.print_matrix();
 
 	sstream << "Construct initial gate structure for the decomposition." << std::endl;
 	verbose_level=1;
-        print(sstream,verbose_level);	
+        //print(sstream,verbose_level);	
 	
 
         gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
@@ -286,7 +286,7 @@ mtx.print_matrix();
     sstream << "***************** Compressing Gate structure *****************" << std::endl;
     sstream << "**************************************************************" << std::endl;
     verbose_level=1;
-    print(sstream,verbose_level);	    	
+    //print(sstream,verbose_level);	    	
     
 
     int iter = 0;
@@ -301,7 +301,7 @@ mtx.print_matrix();
 
 	sstream << "iteration " << iter+1 << ": ";
 	verbose_level=1;
-        print(sstream,verbose_level);	
+        //print(sstream,verbose_level);	
 		
        
         Gates_block* gate_structure_compressed = compress_gate_structure( gate_structure_loc );
@@ -329,7 +329,7 @@ mtx.print_matrix();
     sstream << "**************************************************************" << std::endl;
     sstream << "************ Final tuning of the Gate structure **************" << std::endl;
     sstream << "**************************************************************" << std::endl;
-    print(sstream,verbose_level);	    	
+    //print(sstream,verbose_level);	    	
     
 
     optimization_tolerance = optimization_tolerance_orig;
@@ -342,7 +342,7 @@ mtx.print_matrix();
 
     sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
     verbose_level=1;
-    print(sstream,verbose_level);	
+    //print(sstream,verbose_level);	
     	
 
 
@@ -359,7 +359,7 @@ mtx.print_matrix();
 
     sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
     verbose_level=1;
-    print(sstream,verbose_level);	
+    //print(sstream,verbose_level);	
     	
 
 
@@ -389,7 +389,7 @@ mtx.print_matrix();
 
 	verbose_level=1;
     	sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
-    	print(sstream,verbose_level);	    	
+    	//print(sstream,verbose_level);	    	
     	
 
 	verbose_level=1;
@@ -408,18 +408,18 @@ mtx.print_matrix();
         if ( gates_num.cry>0 ) sstream << gates_num.cry << " CRY gates," << std::endl;  
         if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive gates," << std::endl;
     
-	print(sstream,verbose_level);
+	//print(sstream,verbose_level);
 
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
 
 	verbose_level=1;
 	sstream << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
-    	print(sstream,verbose_level);	    	
+    	//print(sstream,verbose_level);	    	
     	
             
                
-    }
+    
 
 /*
 Matrix_real param0 = optimized_parameters_mtx;
@@ -497,7 +497,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
 
 	sstream << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
 	verbose_level=1;
-        print(sstream,verbose_level);	
+       // print(sstream,verbose_level);	
 	        
 
     }   
@@ -505,7 +505,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
 
 	sstream << "Optimization problem converged to " << cDecomp_custom.get_current_minimum() << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
 	verbose_level=1;
-        print(sstream,verbose_level);	
+        //print(sstream,verbose_level);	
 	     
        
     }
@@ -514,7 +514,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
 
 	sstream << "Decomposition did not reached prescribed high numerical precision." << std::endl; 
 	verbose_level=1;
-        print(sstream,verbose_level);	
+        //print(sstream,verbose_level);	
 	     
              
         optimization_tolerance = 1.5*current_minimum < 1e-2 ? 1.5*current_minimum : 1e-2;
@@ -522,7 +522,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
 
 	sstream << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
 	verbose_level=1;
-        print(sstream,verbose_level);	
+        //print(sstream,verbose_level);	
 	   
 
    
@@ -593,7 +593,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
 	    sstream << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
 	    verbose_level=1;
-            print(sstream,verbose_level);	
+            //print(sstream,verbose_level);	
 	       
            
             //cDecomp_custom.list_gates(0);
@@ -603,7 +603,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
 	    sstream << "Optimization problem converged to " << cDecomp_custom.get_current_minimum() << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
 	    verbose_level=1;
-            print(sstream,verbose_level);	
+            //print(sstream,verbose_level);	
 	      
             
         }
@@ -642,7 +642,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
 	    sstream << "Decomposition did not reached prescribed high numerical precision." << std::endl; 
 	    verbose_level=1;
-            print(sstream,verbose_level);	
+            //print(sstream,verbose_level);	
 	      
               
         optimization_tolerance = 1.5*current_minimum < 1e-2 ? 1.5*current_minimum : 1e-2;
@@ -650,7 +650,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
 	    sstream << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
 	    verbose_level=1;
-            print(sstream,verbose_level);	
+            //print(sstream,verbose_level);	
 	      
 
       return gate_structure_loc;
@@ -760,7 +760,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 
 	    sstream << "gate structure reduced from " << layer_num_orig+1 << " to " << layer_num << " decomposing layers" << std::endl;
 	    verbose_level=1;
-            print(sstream,verbose_level);	
+            //print(sstream,verbose_level);	
 	      
         
     }
@@ -768,7 +768,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 
 	    sstream << "gate structure kept at " << layer_num << " layers" << std::endl;
 	    verbose_level=1;
-            print(sstream,verbose_level);	
+            //print(sstream,verbose_level);	
 	     
        
     }
@@ -878,7 +878,7 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
 
 	    sstream << "N_Qubit_Decomposition_adaptive::replace_trivial_adaptive_gates: Only block gates are accepted in this conversion." << std::endl;
 	    verbose_level=1;
-            print(sstream,verbose_level);	
+            //print(sstream,verbose_level);	
 	     
             
             exit(-1);
@@ -1126,7 +1126,7 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
 
 	    sstream << "The connectivity data should contains two qubits" << std::endl;
 	    verbose_level=1;
-            print(sstream,verbose_level);	
+            //print(sstream,verbose_level);	
 	     
 
             it->print_matrix();
@@ -1141,7 +1141,7 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
 
 	    sstream << "Label of control/target qubit should be less than the number of qubits in the register." << std::endl;
 	    verbose_level=1;
-            print(sstream,verbose_level);	
+            //print(sstream,verbose_level);	
 	     
 
             exit(-1);            

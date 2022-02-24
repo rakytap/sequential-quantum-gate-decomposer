@@ -94,7 +94,7 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
    sstream << "***************************************************************" << std::endl;
    sstream << "Starting to disentangle " << qbit_num << "-qubit matrix via custom gate structure" << std::endl;
    sstream << "***************************************************************" << std::endl << std::endl << std::endl;
-   print(sstream,verbose_level);	    	
+   //print(sstream,verbose_level);	    	
    
 
     
@@ -142,7 +142,7 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
 	verbose_level=1;
     	sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
-    	print(sstream,verbose_level);	    	
+    	//print(sstream,verbose_level);	    	
     	
 
 	verbose_level=1;
@@ -160,15 +160,15 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
         if ( gates_num.un>0 ) sstream << gates_num.un << " UN opeartions," << std::endl;
         if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive opeartions," << std::endl;
     	
-	print(sstream,verbose_level);	    	
-    	} 
+	//print(sstream,verbose_level);	    	
+    	 
 
         std::cout << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
 
 	verbose_level=1;
 	sstream << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
-    	print(sstream,verbose_level);	    	
+    	//print(sstream,verbose_level);	    	
     	
 
 
