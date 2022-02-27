@@ -94,7 +94,7 @@ void
 N_Qubit_Decomposition_adaptive_general::start_decomposition(bool prepare_export) {
 
 
-logging lg;
+//logging lg;
     
 	//The stringstream input to store the output messages.
 	std::stringstream sstream;
@@ -106,7 +106,7 @@ logging lg;
 	sstream << "***************************************************************" << std::endl;
 	sstream << "Starting to disentangle " << qbit_num << "-qubit matrix" << std::endl;
 	sstream << "***************************************************************" << std::endl << std::endl << std::endl;
-	lg.print(sstream,verbose_level);	    	
+	print(sstream,verbose_level);	    	
 	
 
     
@@ -199,9 +199,9 @@ logging lg;
 
         if ( cDecomp_custom.get_current_minimum() < optimization_tolerance ) {
 
-	/*sstream << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+	sstream << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
 	verbose_level=1;
-        //print(sstream, verbose_level);	*/
+        print(sstream, verbose_level);	
 	
 
           
