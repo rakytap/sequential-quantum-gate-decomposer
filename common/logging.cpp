@@ -27,6 +27,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 /** Nullary constructor of the class
 */
+
+
+
+
 logging::logging() {
 
 	// Number of the verbosity level in order to control the amount of the output messages. If this value is higher or equal than the local verbosity levels belongs to the messages, than the messages 	will be seen on the standart output screen.  
@@ -35,6 +39,7 @@ logging::logging() {
 
 	// Logical variable. Set true to write output messages to the 'debug.txt' file.
 	debug=true;
+
 
 }
 
@@ -45,7 +50,7 @@ logging::logging() {
 @param sstream The stringstream input to store the output messages.
 @param verbose_level Integer input. High level means write more to the standart output, 0 means write nothing. The default value is set to 1. 
 */
-void logging::print(std::stringstream& sstream, int verbose_level) {
+void logging::print(const std::stringstream& sstream, int verbose_level) {
 
 
 

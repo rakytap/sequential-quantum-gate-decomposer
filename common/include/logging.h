@@ -55,7 +55,7 @@ bool debug;
 @param sstream The stringstream input to store the output messages.
 @param verbose_level Integer input. High level means write more to the standart output, 0 means write nothing. The default value is set to 1. 
 */
-void print(std::stringstream& sstream, int verbose_level=1); 
+void print(const std::stringstream& sstream, int verbose_level=1); 
 
 /** Nullary constructor of the class
 @return An instance of the class
