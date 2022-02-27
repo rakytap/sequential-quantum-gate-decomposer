@@ -27,11 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "dot.h"
 #include "Random_Unitary.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 /**
 @brief Deafult constructor of the class.
@@ -109,7 +105,11 @@ Matrix
 Composite::get_matrix( Matrix_real& parameters ) {
 
         
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
 
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
         // create array of random parameters to construct random unitary
     double* vartheta = parameters.get_data();//(double*) qgd_calloc( int(dim*(dim-1)/2),sizeof(double), 64);
@@ -139,6 +139,12 @@ Composite::get_matrix( Matrix_real& parameters ) {
 */
 void 
 Composite::apply_to( Matrix_real& parameters, Matrix& input ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	 sstream << "Wrong matrix size in Composite gate apply" << std::endl;
@@ -174,6 +180,12 @@ Composite::apply_to( Matrix_real& parameters, Matrix& input ) {
 */
 void 
 Composite::apply_from_right( Matrix_real& parameters, Matrix& input ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
 
     if (input.rows != matrix_size ) {
@@ -211,6 +223,12 @@ Composite::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void Composite::reorder_qubits( std::vector<int> qbit_list ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {

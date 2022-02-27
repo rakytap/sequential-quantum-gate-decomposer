@@ -24,11 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "RY.h"
 
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -76,6 +72,13 @@ RY::RY() {
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
 RY::RY(int qbit_num_in, int target_qbit_in) {
+
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
         // number of qubits spanning the matrix of the gate
         qbit_num = qbit_num_in;
@@ -136,6 +139,12 @@ RY::~RY() {
 void 
 RY::apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
 	verbose_level=1;
@@ -172,6 +181,11 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 ) {
 void 
 RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.cols != matrix_size ) {
 	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
@@ -206,6 +220,12 @@ RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 */
 std::vector<Matrix> 
 RY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in RY apply_derivate_to" << std::endl;

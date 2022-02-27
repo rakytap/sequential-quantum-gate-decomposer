@@ -23,11 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "U3.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -71,6 +67,12 @@ U3::U3() {
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
 U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lambda_in) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
         // number of qubits spanning the matrix of the gate
         qbit_num = qbit_num_in;
@@ -158,6 +160,13 @@ U3::~U3() {
 Matrix
 U3::get_matrix( Matrix_real& parameters ) {
 
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
         Matrix U3_matrix = create_identity(matrix_size);
         apply_to(parameters, U3_matrix);
 
@@ -199,6 +208,12 @@ U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input, cons
 */
 void 
 U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, const double scale=1.0 ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
@@ -341,6 +356,11 @@ U3::apply_kernel_to( Matrix& u3_1qbit, Matrix& input ) {
 void 
 U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.cols != matrix_size ) {
 	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
@@ -476,6 +496,12 @@ U3::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
 */
 std::vector<Matrix> 
 U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
@@ -643,6 +669,12 @@ bool U3::is_lambda_parameter() {
 @return Returns with the matrix of the one-qubit matrix.
 */
 Matrix U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda, const double scale=1.0 ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     Matrix u3_1qbit = Matrix(2,2);
 

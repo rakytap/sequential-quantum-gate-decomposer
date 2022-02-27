@@ -24,11 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Adaptive.h"
 #include "common.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -97,6 +93,12 @@ Adaptive::~Adaptive() {
 void 
 Adaptive::apply_to( Matrix_real& parameters, Matrix& input ) {
 
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
     if (input.rows != matrix_size ) {
 
 	sstream << "Wrong matrix size in Adaptive gate apply" << std::endl;
@@ -140,6 +142,11 @@ Phi_transformed[0] = Phi - M_PI;
 void 
 Adaptive::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.cols != matrix_size ) {
 	sstream << "Wrong matrix size in Adaptive apply_from_right" << std::endl;
@@ -178,6 +185,12 @@ Phi_transformed[0] = Phi - M_PI;
 
 std::vector<Matrix>
 Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in Adaptive gate apply" << std::endl;

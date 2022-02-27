@@ -28,11 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "dot.h"
 
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 /**
 @brief Deafult constructor of the class.
@@ -109,6 +105,12 @@ void UN::set_qbit_num( int qbit_num_in ) {
 Matrix
 UN::get_matrix( Matrix_real& parameters ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
         Matrix UN_matrix = create_identity(matrix_size);
         apply_to(parameters, UN_matrix);
 
@@ -132,6 +134,12 @@ UN::get_matrix( Matrix_real& parameters ) {
 */
 void 
 UN::apply_to( Matrix_real& parameters, Matrix& input ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in UN gate apply" << std::endl;
@@ -177,6 +185,11 @@ UN::apply_to( Matrix_real& parameters, Matrix& input ) {
 void 
 UN::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in UN gate apply" << std::endl;
@@ -241,6 +254,12 @@ UN::get_submatrix( Matrix_real& parameters ) {
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void UN::reorder_qubits( std::vector<int> qbit_list ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {

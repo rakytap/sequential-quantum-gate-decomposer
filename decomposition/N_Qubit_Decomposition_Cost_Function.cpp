@@ -24,11 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Cost_Function.h"
 //#include <tbb/parallel_for.h>
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 /**
 @brief Call co calculate the cost function during the final optimization process.
@@ -135,6 +131,12 @@ functor_cost_fnc::functor_cost_fnc( Matrix matrix_in, tbb::combinable<double>* p
 @param r A TBB range labeling the partial cost function to be calculated.
 */
 void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     size_t matrix_size = matrix.rows;
     double &cost_function_priv = partial_cost_functions->local();

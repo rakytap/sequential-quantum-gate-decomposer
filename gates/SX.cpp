@@ -24,11 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "SX.h"
 
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -65,6 +61,12 @@ SX::SX() {
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
 SX::SX(int qbit_num_in, int target_qbit_in) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
         // number of qubits spanning the matrix of the gate
         qbit_num = qbit_num_in;
@@ -109,6 +111,12 @@ SX::~SX() {
 Matrix
 SX::get_matrix( ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
         Matrix SX_matrix = create_identity(matrix_size);
         apply_to(SX_matrix);
 
@@ -134,6 +142,12 @@ SX::get_matrix( ) {
 */
 void 
 SX::apply_to( Matrix& input ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in X gate apply" << std::endl;
@@ -211,6 +225,11 @@ SX::apply_to( Matrix& input ) {
 void 
 SX::apply_from_right( Matrix& input ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.cols != matrix_size ) {
 	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;

@@ -25,11 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Base.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 /**
 @brief Nullary constructor of the class.
@@ -187,7 +183,11 @@ N_Qubit_Decomposition_Base::calc_decomposition_error(Matrix& decomposed_matrix )
 */
 void  N_Qubit_Decomposition_Base::final_optimization() {
 
-       
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;       
 
 	verbose_level=1;
 	sstream << "***************************************************************" << std::endl;

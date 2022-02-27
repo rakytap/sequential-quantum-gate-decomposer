@@ -25,11 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Gate.h"
 #include "common.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 /**
 @brief Deafult constructor of the class.
@@ -163,6 +159,12 @@ Gate::set_matrix( Matrix input ) {
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void Gate::reorder_qubits( std::vector<int> qbit_list ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {

@@ -23,11 +23,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Decomposition_Base.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
+	
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
@@ -37,6 +34,9 @@ std::map<int,int> Decomposition_Base::max_layer_num_def;
 @return An instance of the class
 */
 Decomposition_Base::Decomposition_Base() {
+
+	
+
 
     Init_max_layer_num();
 
@@ -230,7 +230,11 @@ void Decomposition_Base::finalize_decomposition() {
         gates_num gates_num = get_gate_nums();
 
 
-        
+        //The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
 	verbose_level=1;
 	sstream << "The error of the decomposition after finalyzing gates is " << decomposition_error << " with " << layer_num << " layers containing " << gates_num.u3 << " U3 gates and " << gates_num.cnot <<  " CNOT gates" << std::endl;
@@ -343,6 +347,11 @@ Matrix Decomposition_Base::get_finalizing_gates( Matrix& mtx, Gates_block* final
 */
 void  Decomposition_Base::solve_optimization_problem( double* solution_guess, int solution_guess_num ) {
 
+        //The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
         if ( gates.size() == 0 ) {
             return;
@@ -1142,6 +1151,12 @@ void Decomposition_Base::prepare_gates_to_export() {
 @return Returns with a list of gate gates.
 */
 std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate*> ops, double* parameters ) {
+
+        //The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     std::vector<Gate*> ops_ret;
     int parameter_idx = 0;

@@ -27,11 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Random_Orthogonal.h"
 #include "dot.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 /**
 @brief Deafult constructor of the class.
@@ -108,6 +104,13 @@ void ON::set_qbit_num( int qbit_num_in ) {
 Matrix
 ON::get_matrix( Matrix_real& parameters ) {
 
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
         Matrix ON_matrix = create_identity(matrix_size);
         apply_to(parameters, ON_matrix);
 
@@ -131,6 +134,13 @@ ON::get_matrix( Matrix_real& parameters ) {
 */
 void 
 ON::apply_to( Matrix_real& parameters, Matrix& input ) {
+
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in ON gate apply" << std::endl;
@@ -176,6 +186,11 @@ ON::apply_to( Matrix_real& parameters, Matrix& input ) {
 void 
 ON::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in ON gate apply" << std::endl;
@@ -237,6 +252,13 @@ ON::get_submatrix( Matrix_real& parameters ) {
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void ON::reorder_qubits( std::vector<int> qbit_list ) {
+
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {

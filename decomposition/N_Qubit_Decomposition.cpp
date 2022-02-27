@@ -25,11 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 /**
 @brief Nullary constructor of the class.
@@ -84,7 +80,11 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 
 
 
-    
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     verbose_level=1;
     sstream << "***************************************************************" << std::endl;
@@ -243,6 +243,12 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 void
 N_Qubit_Decomposition::decompose_submatrix() {
 
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
+
         if (decomposition_finalized) {
             
 
@@ -360,6 +366,12 @@ N_Qubit_Decomposition::decompose_submatrix() {
 */
 void
 N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposition ) {
+
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
 
         // get the unitarization parameters
@@ -492,7 +504,11 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
 void
 N_Qubit_Decomposition::simplify_layers() {
 
-        
+    	//The stringstream input to store the output messages.
+    	std::stringstream sstream;
+
+    	//Integer value to set the verbosity level of the output messages.
+    	int verbose_level;
 
 	verbose_level=1;
 	sstream << "***************************************************************" << std::endl;
@@ -707,7 +723,11 @@ N_Qubit_Decomposition::simplify_layers() {
 int
 N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Gates_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num) {
 
-        
+        //The stringstream input to store the output messages.
+    	std::stringstream sstream;
+
+    	//Integer value to set the verbosity level of the output messages.
+    	int verbose_level;
 
 	verbose_level=1;
 	sstream << "Try to simplify sub-structure " << std::endl;

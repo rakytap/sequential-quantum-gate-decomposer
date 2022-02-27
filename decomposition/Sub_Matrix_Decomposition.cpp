@@ -24,11 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Sub_Matrix_Decomposition.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 //tbb::spin_mutex my_mutex;
 
@@ -122,6 +118,12 @@ Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
 @brief Start the optimization process to disentangle the most significant qubit from the others. The optimized parameters and gates are stored in the attributes optimized_parameters and gates.
 */
 void  Sub_Matrix_Decomposition::disentangle_submatrices() {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (subdisentaglement_done) {        
 
@@ -522,6 +524,12 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
 */
 double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
         // get the transformed matrix with the gates in the list
         Matrix_real parameters_mtx(parameters, 1, parameter_num );
         Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
@@ -550,6 +558,12 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 @return Returns with the cost function. (zero if the qubits are disentangled.)
 */
 double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* parameters, void* void_instance ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
@@ -614,6 +628,12 @@ void Sub_Matrix_Decomposition::optimization_problem_grad( const gsl_vector* para
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
 void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
 
@@ -731,6 +751,12 @@ int Sub_Matrix_Decomposition::set_identical_blocks( std::map<int, int> identical
 @return Return with a pointer pointing to the cloned object.
 */
 Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     Sub_Matrix_Decomposition* ret = new Sub_Matrix_Decomposition(Umtx, qbit_num, optimize_layer_num, initial_guess);
 

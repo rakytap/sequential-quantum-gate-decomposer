@@ -23,11 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "CRY.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -51,6 +47,13 @@ CRY::CRY() : RY() {
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
 CRY::CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RY(qbit_num_in, target_qbit_in) {
+
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
         // A string describing the type of the gate
         type = CRY_OPERATION;
@@ -90,6 +93,13 @@ CRY::~CRY() {
 
 void 
 CRY::apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 ) {
+
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in CRY gate apply" << std::endl;
@@ -195,6 +205,12 @@ void
 CRY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
     if (input.cols != matrix_size ) {
 	sstream << "Wrong matrix size in CRY apply_from_right" << std::endl;
 	verbose_level=1;
@@ -299,6 +315,13 @@ Phi = Phi - M_PI;
 */
 std::vector<Matrix> 
 CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in CRY gate apply" << std::endl;

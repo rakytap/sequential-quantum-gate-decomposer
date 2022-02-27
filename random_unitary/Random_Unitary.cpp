@@ -24,11 +24,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Random_Unitary.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
-
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 /**
 @brief Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by random U3 operations.

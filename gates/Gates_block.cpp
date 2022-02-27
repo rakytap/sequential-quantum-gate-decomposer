@@ -38,11 +38,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Composite.h"
 #include "Gates_block.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -209,6 +205,12 @@ Gates_block::release_gate( int idx) {
 Matrix
 Gates_block::get_matrix( Matrix_real& parameters ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
     // create matrix representation of the gate operations
     Matrix block_mtx = create_identity(matrix_size);
     apply_to(parameters, block_mtx);
@@ -357,6 +359,13 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 void 
 Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
     double* parameters = parameters_mtx.get_data();
 
     for( int idx=0; idx<gates.size(); idx++) {
@@ -458,6 +467,11 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 std::vector<Matrix> 
 Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
   
     std::vector<Matrix> grad(parameter_num, Matrix(0,0));
 
@@ -1387,6 +1401,13 @@ int Gates_block::get_gate_num() {
 */
 void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
 		verbose_level=1;
 		sstream << std::endl << "The gates in the list of gates:" << std::endl;
 		print(sstream,verbose_level);	    	
@@ -2032,6 +2053,12 @@ Gates_block* Gates_block::clone() {
 
     // creatign new instance of class Gates_block
     Gates_block* ret = new Gates_block( qbit_num );
+
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     // extracting the gates from the current class
     if (extract_gates( ret ) != 0 ) {

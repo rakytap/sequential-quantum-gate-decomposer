@@ -31,11 +31,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <time.h>
 #include <stdlib.h>
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 /**
 @brief Nullary constructor of the class.
@@ -100,6 +96,11 @@ N_Qubit_Decomposition_adaptive_general::start_decomposition(bool prepare_export)
 
 logging lg;
     
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
 	verbose_level=1;
 	sstream << "***************************************************************" << std::endl;

@@ -23,11 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "CZ.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 using namespace std;
 
@@ -63,6 +59,13 @@ CZ::CZ() {
 @param control_qbit_in The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
 CZ::CZ(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
+
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
         // number of qubits spanning the matrix of the gate
         qbit_num = qbit_num_in;

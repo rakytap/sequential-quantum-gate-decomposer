@@ -31,11 +31,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <stdlib.h>
 
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 Matrix_real create_random_paramaters( Gates_block* gate_structure ) {
 
@@ -165,7 +161,11 @@ void
 N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
 
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
     
 
 	verbose_level=1;
@@ -466,6 +466,12 @@ Gates_block*
 N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& optimized_parameters_mtx_loc) {
 
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
     Gates_block* gate_structure_loc = gate_structure->clone();
 
     //measure the time for the decompositin
@@ -539,6 +545,12 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
 Gates_block* 
 N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& optimized_parameters_mtx_loc) {
 
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     // strages to store the optimized minimums in case of different cirquit depths
     std::vector<double> minimum_vec;
@@ -664,6 +676,12 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 */
 Gates_block*
 N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure ) {
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     int layer_num_max = 10;
     int layer_num_orig = gate_structure->get_gate_num()-1;
@@ -864,6 +882,12 @@ N_Qubit_Decomposition_adaptive::get_panelty( Gates_block* gate_structure, Matrix
 Gates_block* 
 N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters ) {
 
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     Gates_block* gate_structure_ret = new Gates_block(qbit_num);
 
@@ -1111,6 +1135,12 @@ N_Qubit_Decomposition_adaptive::create_reduced_parameters( Gates_block* gate_str
 Gates_block* 
 N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, const int& _control_qbit) {
 
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );

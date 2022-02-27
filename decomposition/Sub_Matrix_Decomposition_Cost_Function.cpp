@@ -25,11 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <tbb/blocked_range.h>
 #include <tbb/parallel_for.h>
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 /**
 @brief Call to calculate the cost function of a given matrix during the submatrix decomposition process.
@@ -146,6 +142,13 @@ void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) con
 #ifdef DEBUG
         if (submatrix.isnan()) {
 
+
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
 		sstream << "Submatrix contains NaN." << std::endl;
 		verbose_level=1;
             	//print(sstream,verbose_level);	
@@ -181,6 +184,11 @@ functor_submtx_cost_fnc::functor_submtx_cost_fnc( std::vector<Matrix, tbb::cache
 */
 void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
 
     // number of submatrices

@@ -25,11 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_custom.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
 
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 /**
 @brief Nullary constructor of the class.
@@ -87,7 +83,11 @@ void
 N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
 
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
    
 
    verbose_level=1;
