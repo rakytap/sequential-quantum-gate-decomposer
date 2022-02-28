@@ -118,9 +118,7 @@ ON::get_matrix( Matrix_real& parameters ) {
         if (ON_matrix.isnan()) {
 	   sstream << "U3::get_matrix: ON_matrix contains NaN." << std::endl;
 	   verbose_level=1;
-           print(sstream,verbose_level);	
-	   
-            
+           print(sstream,verbose_level);	            
         }
 #endif
 
@@ -136,18 +134,16 @@ void
 ON::apply_to( Matrix_real& parameters, Matrix& input ) {
 
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in ON gate apply" << std::endl;
 	verbose_level=1;
         print(sstream,verbose_level);	
-	
-        
         exit(-1);
     }
 
@@ -155,8 +151,6 @@ ON::apply_to( Matrix_real& parameters, Matrix& input ) {
 	sstream << "Not enough parameters given for the ON gate" << std::endl;
 	verbose_level=1;
         print(sstream,verbose_level);	
-	
-        
         exit(-1);
     }
 
@@ -195,9 +189,7 @@ ON::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in ON gate apply" << std::endl;
 	verbose_level=1;
-        print(sstream,verbose_level);	
-	
-        
+        print(sstream,verbose_level);	        
         exit(-1);
     }
 
@@ -205,8 +197,6 @@ ON::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 	sstream << "Not enough parameters given for the ON gate" << std::endl;
 	verbose_level=1;
         print(sstream,verbose_level);	
-	
-        
         exit(-1);
     }
 
@@ -254,20 +244,17 @@ ON::get_submatrix( Matrix_real& parameters ) {
 void ON::reorder_qubits( std::vector<int> qbit_list ) {
 
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
-
 	verbose_level=1;
 	sstream << "Wrong number of qubits" << std::endl;
-	print(sstream,verbose_level);	    	
-	
-        
+	print(sstream,verbose_level);	    	        
         exit(-1);
     }
 
