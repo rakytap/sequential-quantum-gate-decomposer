@@ -257,8 +257,7 @@ mtx.print_matrix();
 	sstream << "Using imported gate structure for the decomposition." << std::endl;
 	verbose_level=1;
         print(sstream,verbose_level);	
-	
-        
+	        
         gate_structure_loc = optimize_imported_gate_structure(optimized_parameters_mtx);
     }
     else {
