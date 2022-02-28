@@ -160,15 +160,14 @@ Gate::set_matrix( Matrix input ) {
 */
 void Gate::reorder_qubits( std::vector<int> qbit_list ) {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
-
 	verbose_level=1;
 	sstream << "Wrong number of qubits" << std::endl;
 	print(sstream,verbose_level);	    	

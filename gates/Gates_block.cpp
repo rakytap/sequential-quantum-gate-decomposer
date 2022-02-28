@@ -205,11 +205,11 @@ Gates_block::release_gate( int idx) {
 Matrix
 Gates_block::get_matrix( Matrix_real& parameters ) {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     // create matrix representation of the gate operations
     Matrix block_mtx = create_identity(matrix_size);
@@ -219,9 +219,7 @@ Gates_block::get_matrix( Matrix_real& parameters ) {
     if (block_mtx.isnan()) {
 	sstream << "Gates_block::get_matrix: block_mtx contains NaN." << std::endl;
 	verbose_level=1;
-        print(sstream,verbose_level);	
-	
-        
+        print(sstream,verbose_level);		       
     }
 #endif
 
@@ -360,11 +358,11 @@ void
 Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     double* parameters = parameters_mtx.get_data();
 
@@ -447,9 +445,7 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         if (input.isnan()) {
 	    sstream << "Gates_block::apply_from_right: transformed matrix contains NaN." << std::endl;
 	    verbose_level=1;
-            print(sstream,verbose_level);	
-	    
-            
+            print(sstream,verbose_level);	            
         }
 #endif
 
@@ -467,11 +463,11 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 std::vector<Matrix> 
 Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
   
     std::vector<Matrix> grad(parameter_num, Matrix(0,0));
 
@@ -535,12 +531,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }    
     
                 else if (operation->get_type() == SYC_OPERATION) {
-	    	    sstream << "Sycamore operation not supported in gardient calculation" << std::endl;
-	            verbose_level=1;
-                    print(sstream,verbose_level);	
-	            
-                    
-                    exit(-1);
+	    	        sstream << "Sycamore operation not supported in gardient calculation" << std::endl;
+			verbose_level=1;
+			print(sstream,verbose_level);	                    
+			exit(-1);
                 }
 
                 else if (operation->get_type() == U3_OPERATION) {
@@ -642,20 +636,16 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }
 
                 else if (operation->get_type() == UN_OPERATION) {
-	    	    sstream << "UN operation not supported in gardient calculation" << std::endl;
-	            verbose_level=1;
-                    print(sstream,verbose_level);	
-	            
-                    
-                    exit(-1);
+	    	        sstream << "UN operation not supported in gardient calculation" << std::endl;
+			verbose_level=1;
+			print(sstream,verbose_level);	
+			exit(-1);
                 }
                 else if (operation->get_type() == ON_OPERATION) {
-	    	    sstream << "ON operation not supported in gardient calculation" << std::endl;
-	            verbose_level=1;
-                    print(sstream,verbose_level);	
-	            
-                    
-                    exit(-1);
+		        sstream << "ON operation not supported in gardient calculation" << std::endl;
+			verbose_level=1;
+			print(sstream,verbose_level);	
+			exit(-1);
                 }
 
                 else if (operation->get_type() == BLOCK_OPERATION) {
@@ -672,12 +662,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }
 
                 else if (operation->get_type() == COMPOSITE_OPERATION) {
-	    	    sstream << "Composite  operation not supported in gardient calculation" << std::endl;
-	            verbose_level=1;
-                    print(sstream,verbose_level);	
-	            
-                    
-                    exit(-1);
+	    	        sstream << "Composite  operation not supported in gardient calculation" << std::endl;
+			verbose_level=1;
+			print(sstream,verbose_level);	
+	                exit(-1);
                 }
 
                 else if (operation->get_type() == ADAPTIVE_OPERATION) {
@@ -1408,13 +1396,10 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 	//Integer value to set the verbosity level of the output messages.
 	int verbose_level;
 
-		verbose_level=1;
-		sstream << std::endl << "The gates in the list of gates:" << std::endl;
-		print(sstream,verbose_level);	    	
+	verbose_level=1;
+	sstream << std::endl << "The gates in the list of gates:" << std::endl;
+	print(sstream,verbose_level);	    	
 		
-
-      
-
         int gate_idx = start_index;
         int parameter_idx = parameter_num;
 
@@ -1424,42 +1409,30 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
             if (gate->get_type() == CNOT_OPERATION) {
                 CNOT* cnot_gate = static_cast<CNOT*>(gate);
-
 		verbose_level=1;
 		sstream << gate_idx << "th gate: CNOT with control qubit: " << cnot_gate->get_control_qbit() << " and target qubit: " << cnot_gate->get_target_qbit() << std::endl;
-		print(sstream,verbose_level);	    	
-		
-
+		print(sstream,verbose_level);   		
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == CZ_OPERATION) {
                 CZ* cz_gate = static_cast<CZ*>(gate);
-
 		verbose_level=1;
 		sstream << gate_idx << "th gate: CZ with control qubit: " << cz_gate->get_control_qbit() << " and target qubit: " << cz_gate->get_target_qbit() << std::endl;
-		print(sstream,verbose_level);	    	
-		
-                
+		print(sstream,verbose_level);	    	             
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == CH_OPERATION) {
                 CH* ch_gate = static_cast<CH*>(gate);
-
 		verbose_level=1;
 		sstream << gate_idx << "th gate: CH with control qubit: " << ch_gate->get_control_qbit() << " and target qubit: " << ch_gate->get_target_qbit() << std::endl;
 		print(sstream,verbose_level);	    	
-		
-               
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == SYC_OPERATION) {
                 SYC* syc_gate = static_cast<SYC*>(gate);
-
 		verbose_level=1;
 		sstream << gate_idx << "th gate: Sycamore gate with control qubit: " << syc_gate->get_control_qbit() << " and target qubit: " << syc_gate->get_target_qbit() << std::endl;
 		print(sstream,verbose_level);	    	
-		
-                
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == U3_OPERATION) {
@@ -1522,118 +1495,78 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 		verbose_level=1;
 		sstream << gate_idx << "th gate: U3 on target qubit: " << u3_gate->get_target_qbit() << " and with parameters theta = " << vartheta << ", phi = " << varphi << " and lambda = " << varlambda << std::endl;
 		print(sstream,verbose_level);	    	
-		
-                
+		                
                 gate_idx = gate_idx + 1;
 
             }
             else if (gate->get_type() == RX_OPERATION) {
-
-                // definig the rotation parameter
+	        // definig the rotation parameter
                 double vartheta;
-
                 // get the inverse parameters of the U3 rotation
-
                 RX* rx_gate = static_cast<RX*>(gate);
-
                 vartheta = std::fmod( parameters[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		verbose_level=1;
 		sstream << gate_idx << "th gate: RX on target qubit: " << rx_gate->get_target_qbit() << " and with parameters theta = " << vartheta << std::endl;
 		print(sstream,verbose_level);	    	
-		
-
                 gate_idx = gate_idx + 1;
-
             }
             else if (gate->get_type() == RY_OPERATION) {
-
                 // definig the rotation parameter
                 double vartheta;
-
                 // get the inverse parameters of the U3 rotation
-
                 RY* ry_gate = static_cast<RY*>(gate);
-
                 vartheta = std::fmod( parameters[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		verbose_level=1;
 		sstream << gate_idx << "th gate: RY on target qubit: " << ry_gate->get_target_qbit() << " and with parameters theta = " << vartheta << std::endl; 
 		print(sstream,verbose_level);	    	
-		
-               
                 gate_idx = gate_idx + 1;
-
             }
             else if (gate->get_type() == CRY_OPERATION) {
-
                 // definig the rotation parameter
                 double Phi;
-
                 // get the inverse parameters of the U3 rotation
-
                 CRY* cry_gate = static_cast<CRY*>(gate);
-
                 Phi = std::fmod( parameters[parameter_idx-1], 2*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		verbose_level=1;
 		sstream << gate_idx << "th gate: CRY on target qubit: " << cry_gate->get_target_qbit() << ", control qubit" << cry_gate->get_control_qbit() << " and with parameters Phi = " << Phi << std::endl;
-		print(sstream,verbose_level);	    	
-		
-                
+		print(sstream,verbose_level);	    		                    
                 gate_idx = gate_idx + 1;
-
             }
             else if (gate->get_type() == RZ_OPERATION) {
-
                 // definig the rotation parameter
                 double varphi;
-
                 // get the inverse parameters of the U3 rotation
-
                 RZ* rz_gate = static_cast<RZ*>(gate);
-
                 varphi = std::fmod( parameters[parameter_idx-1], 2*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		verbose_level=1;
 		sstream << gate_idx << "th gate: RZ on target qubit: " << rz_gate->get_target_qbit() << " and with parameters varphi = " << varphi << std::endl;
 		print(sstream,verbose_level);	    	
-		
-                
                 gate_idx = gate_idx + 1;
-
             }
             else if (gate->get_type() == X_OPERATION) {
-
                 // get the inverse parameters of the U3 rotation
-
                 X* x_gate = static_cast<X*>(gate);
-
 		verbose_level=1;
 		sstream << gate_idx << "th gate: X on target qubit: " << x_gate->get_target_qbit() << std::endl;
 		print(sstream,verbose_level);	    	
-		
-                
                 gate_idx = gate_idx + 1;
-
             }
             else if (gate->get_type() == SX_OPERATION) {
-
                 // get the inverse parameters of the U3 rotation
-
                 SX* sx_gate = static_cast<SX*>(gate);
 
 		verbose_level=1;
 		sstream << gate_idx << "th gate: SX on target qubit: " << sx_gate->get_target_qbit() << std::endl;
 		print(sstream,verbose_level);	    	
-		
-                
                 gate_idx = gate_idx + 1;
-
             }
             else if (gate->get_type() == BLOCK_OPERATION) {
                 Gates_block* block_gate = static_cast<Gates_block*>(gate);
@@ -1643,60 +1576,40 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 gate_idx = gate_idx + block_gate->get_gate_num();
             }
             else if (gate->get_type() == UN_OPERATION) {
-
                 parameter_idx = parameter_idx - gate->get_parameter_num();
 
 		verbose_level=1;
 		sstream << gate_idx << "th gate: UN " << gate->get_parameter_num() << " parameters" << std::endl;
-		print(sstream,verbose_level);	    	
-		
-                
+		print(sstream,verbose_level);	    	         
                 gate_idx = gate_idx + 1;
-
             }
             else if (gate->get_type() == ON_OPERATION) {
-
                 parameter_idx = parameter_idx - gate->get_parameter_num();
-
 		verbose_level=1;
 		sstream << gate_idx << "th gate: ON " << gate->get_parameter_num() << " parameters" << std::endl;
-		print(sstream,verbose_level);	    	
-		
-                
+		print(sstream,verbose_level);	    	 
                 gate_idx = gate_idx + 1;
-
             }
             else if (gate->get_type() == COMPOSITE_OPERATION) {
-
                 parameter_idx = parameter_idx - gate->get_parameter_num();
 
 		verbose_level=1;
 		sstream << gate_idx << "th gate: Composite " << gate->get_parameter_num() << " parameters" << std::endl;
-		print(sstream,verbose_level);	    	
-		
-                
+		print(sstream,verbose_level);	    	               
                 gate_idx = gate_idx + 1;
-
             }
             else if (gate->get_type() == ADAPTIVE_OPERATION) {
-
                 // definig the rotation parameter
                 double Phi;
-
                 // get the inverse parameters of the U3 rotation
-
                 Adaptive* ad_gate = static_cast<Adaptive*>(gate);
-
                 Phi = std::fmod( parameters[parameter_idx-1], 2*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		verbose_level=1;
 		sstream << gate_idx << "th gate: Adaptive gate on target qubit: " << ad_gate->get_target_qbit() << ", control qubit " << ad_gate->get_control_qbit() << " and with parameters Phi = " << Phi << std::endl;
 		print(sstream,verbose_level);	    	
-		
-                
                 gate_idx = gate_idx + 1;
-
             }
 
         }
@@ -2062,12 +1975,9 @@ Gates_block* Gates_block::clone() {
 
     // extracting the gates from the current class
     if (extract_gates( ret ) != 0 ) {
-
 	verbose_level=1;
 	sstream << "Gates_block::clone(): extracting gates was not succesfull" << std::endl;
-	print(sstream,verbose_level);	    	
-	
-        
+	print(sstream,verbose_level);	    	        
         exit(-1);
     };
 
