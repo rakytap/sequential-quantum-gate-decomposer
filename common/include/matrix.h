@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define matrix_H
 
 #include "matrix_base.h"
+#include "logging.h"
 #include <cmath>
 
 
@@ -36,7 +37,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief Class to store data of complex arrays and its properties. Compatible with the Picasso numpy interface.
 */
-class Matrix : public matrix_base<QGD_Complex16> {
+class Matrix : public matrix_base<QGD_Complex16>, public logging {
 
     /// padding class object to cache line borders
     char padding[CACHELINE-48];

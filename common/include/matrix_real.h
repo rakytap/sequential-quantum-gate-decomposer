@@ -27,6 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "matrix_base.h"
 #include <cmath>
+#include "logging.h"
 
 
 /*! \file matrix.h
@@ -36,7 +37,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief Class to store data of complex arrays and its properties. Compatible with the Picasso numpy interface.
 */
-class Matrix_real : public matrix_base<double> {
+class Matrix_real : public matrix_base<double>, public logging {
 
     /// padding class object to cache line borders
     char padding[CACHELINE-48];

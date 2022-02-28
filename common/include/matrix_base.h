@@ -6,6 +6,7 @@
 #include <iostream>
 #include <tbb/scalable_allocator.h>
 #include <tbb/spin_mutex.h>
+#include "logging.h"
 
 
 
@@ -18,7 +19,7 @@
 @brief Base Class to store data of arrays and its properties.
 */
 template<typename scalar>
-class matrix_base {
+class matrix_base : public logging {
 
 public:
   /// The number of rows
