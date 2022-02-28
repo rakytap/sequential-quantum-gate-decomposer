@@ -83,20 +83,18 @@ void
 N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+   //The stringstream input to store the output messages.
+   std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+   //Integer value to set the verbosity level of the output messages.
+   int verbose_level;
    
-
    verbose_level=1;
    sstream << "***************************************************************" << std::endl;
    sstream << "Starting to disentangle " << qbit_num << "-qubit matrix via custom gate structure" << std::endl;
    sstream << "***************************************************************" << std::endl << std::endl << std::endl;
-   //print(sstream,verbose_level);	    	
+   print(sstream,verbose_level);	    	
    
-
     
 
     // temporarily turn off OpenMP parallelism
@@ -138,14 +136,11 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     // get the number of gates used in the decomposition
     gates_num gates_num = get_gate_nums();
 
-    
+    verbose_level=1;
+    sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
+    print(sstream,verbose_level);
 
-	verbose_level=1;
-    	sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
-    	//print(sstream,verbose_level);	    	
-    	
-
-	verbose_level=1;
+    verbose_level=1;
       
         if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 opeartions," << std::endl;
         if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX opeartions," << std::endl;
@@ -160,7 +155,7 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
         if ( gates_num.un>0 ) sstream << gates_num.un << " UN opeartions," << std::endl;
         if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive opeartions," << std::endl;
     	
-	//print(sstream,verbose_level);	    	
+        print(sstream,verbose_level);	    	
     	 
 
         std::cout << std::endl;
@@ -168,10 +163,8 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
 	verbose_level=1;
 	sstream << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
-    	//print(sstream,verbose_level);	    	
+    	print(sstream,verbose_level);	    	
     	
-
-
        
 
 #if BLAS==0 // undefined BLAS

@@ -132,11 +132,11 @@ functor_cost_fnc::functor_cost_fnc( Matrix matrix_in, tbb::combinable<double>* p
 */
 void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     size_t matrix_size = matrix.rows;
     double &cost_function_priv = partial_cost_functions->local();
@@ -144,11 +144,9 @@ void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
     for ( size_t row_idx = r.begin(); row_idx != r.end(); row_idx++) {
 
         if ( row_idx > matrix_size ) {
-
 	    verbose_level=1;
       	    sstream << "Error: row idx should be less than the number of roes in the matrix" << std::endl;
-            print(sstream,verbose_level);	    	
-            
+            print(sstream,verbose_level);   
             exit(-1);
         }
 
