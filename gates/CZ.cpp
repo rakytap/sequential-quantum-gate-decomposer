@@ -77,8 +77,7 @@ CZ::CZ(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
         parameter_num = 0;
 
         if (target_qbit_in >= qbit_num) {
-
-		verbose_level=1;
+        	verbose_level=1;
 		sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
 		print(sstream,verbose_level);	    	
             

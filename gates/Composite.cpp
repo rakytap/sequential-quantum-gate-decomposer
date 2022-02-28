@@ -104,14 +104,14 @@ void Composite::set_qbit_num( int qbit_num_in ) {
 Matrix
 Composite::get_matrix( Matrix_real& parameters ) {
 
-        
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-        // create array of random parameters to construct random unitary
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
+
+    // create array of random parameters to construct random unitary
     double* vartheta = parameters.get_data();//(double*) qgd_calloc( int(dim*(dim-1)/2),sizeof(double), 64);
     double* varphi = parameters.get_data()+int((matrix_size*(matrix_size-1))/2);//(double*) qgd_calloc( int(dim*(dim-1)/2),sizeof(double), 64);
     double* varkappa = parameters.get_data()+matrix_size*(matrix_size-1);//(double*) qgd_calloc( (dim-1),sizeof(double), 64);
@@ -123,9 +123,7 @@ Composite::get_matrix( Matrix_real& parameters ) {
         if (com_matrix.isnan()) {
 	    sstream << "Composite::get_matrix: UN_matrix contains NaN." << std::endl;
 	    verbose_level=1;
-            print(sstream,verbose_level);	
-	    
-            
+            print(sstream,verbose_level);	           
         }
 #endif
 
@@ -147,20 +145,16 @@ Composite::apply_to( Matrix_real& parameters, Matrix& input ) {
 	int verbose_level;
 
     if (input.rows != matrix_size ) {
-	 sstream << "Wrong matrix size in Composite gate apply" << std::endl;
-	 verbose_level=1;
-         print(sstream,verbose_level);	
-	 
-        
+        sstream << "Wrong matrix size in Composite gate apply" << std::endl;
+	verbose_level=1;
+        print(sstream,verbose_level);	
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-	 sstream << "Not enough parameters given for the Composite gate" << std::endl;
-	 verbose_level=1;
-         print(sstream,verbose_level);	
-	 
-        
+	sstream << "Not enough parameters given for the Composite gate" << std::endl;
+	verbose_level=1;
+        print(sstream,verbose_level);	
         exit(-1);
     }
 
@@ -181,28 +175,24 @@ Composite::apply_to( Matrix_real& parameters, Matrix& input ) {
 void 
 Composite::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
 
     if (input.rows != matrix_size ) {
-	 sstream << "Wrong matrix size in Composite gate apply" << std::endl;
-	 verbose_level=1;
-         print(sstream,verbose_level);	
-	 
-        
+	sstream << "Wrong matrix size in Composite gate apply" << std::endl;
+	verbose_level=1;
+        print(sstream,verbose_level);	        
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-	 sstream << "Not enough parameters given for the Composite gate" << std::endl;
-	 verbose_level=1;
-         print(sstream,verbose_level);	
-	 
-        
+        sstream << "Not enough parameters given for the Composite gate" << std::endl;
+        verbose_level=1;
+        print(sstream,verbose_level);	 
         exit(-1);
     }
 
@@ -224,20 +214,17 @@ Composite::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 */
 void Composite::reorder_qubits( std::vector<int> qbit_list ) {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
-
 	verbose_level=1;
 	sstream << "Wrong number of qubits" << std::endl;
 	print(sstream,verbose_level);	    	
-	
-        
         exit(-1);
     }
 

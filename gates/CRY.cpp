@@ -60,12 +60,10 @@ CRY::CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RY(qbit_num
 
 
         if (control_qbit_in >= qbit_num) {
-
 	    verbose_level=1;
 	    sstream << "The index of the control qubit is larger than the number of qubits in CRY gate." << std::endl;
 	    print(sstream,verbose_level);	    	
-	    
-            
+           
             throw "The index of the control qubit is larger than the number of qubits in CRY gate";
         }
 
@@ -105,8 +103,6 @@ CRY::apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 ) 
 	sstream << "Wrong matrix size in CRY gate apply" << std::endl;
 	verbose_level=1;
         print(sstream,verbose_level);	
-	
-        
         exit(-1);
     }
 
@@ -204,19 +200,16 @@ Phi = Phi - M_PI;
 void 
 CRY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
-
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     if (input.cols != matrix_size ) {
 	sstream << "Wrong matrix size in CRY apply_from_right" << std::endl;
 	verbose_level=1;
         print(sstream,verbose_level);	
-	
-        
         exit(-1);
     }
 
@@ -326,9 +319,7 @@ CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in CRY gate apply" << std::endl;
 	verbose_level=1;
-        print(sstream,verbose_level);	
-	
-        
+        print(sstream,verbose_level);	   
         exit(-1);
     }
 
