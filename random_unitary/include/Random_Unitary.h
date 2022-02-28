@@ -30,7 +30,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "U3.h"
 #include "CNOT.h"
 #include "matrix.h"
-
+#include "logging.h"
 
 
 /**
@@ -46,7 +46,7 @@ Matrix few_CNOT_unitary( int qbit_num, int cnot_num);
 /**
 @brief A class to cerate general random unitary matrix according to arXiv:1303:5904v1
 */
-class Random_Unitary {
+class Random_Unitary : public logging {
 
 
 public:

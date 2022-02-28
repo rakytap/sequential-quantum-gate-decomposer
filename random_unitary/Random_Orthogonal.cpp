@@ -87,14 +87,10 @@ std::stringstream sstream;
 //Integer value to set the verbosity level of the output messages.
 int verbose_level;
 
-/// Logging variable to set the verbosity level.
-logging output;
-
     if (vargamma.size() != dim*(dim-1)/2) {
 	sstream << "Wring number of parameters in Random_Orthogonal::Construct_Orthogonal_Matrix" << std::endl;
 	verbose_level=1;
-        output.print(sstream, verbose_level);	
-        
+        print(sstream, verbose_level);	
         exit(-1);
     }
 

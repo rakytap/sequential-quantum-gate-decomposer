@@ -29,14 +29,14 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "common.h"
 #include "matrix.h"
 #include "matrix_real.h"
-
+#include "logging.h"
 
 
 
 /**
 @brief A class to cerate general random unitary matrix according to arXiv:1303:5904v1
 */
-class Random_Orthogonal {
+class Random_Orthogonal : public logging {
 
 
 public:
