@@ -28,11 +28,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <math.h>
 
 
-//The stringstream input to store the output messages.
-//std::stringstream sstream;
-
-//Integer value to set the verbosity level of the output messages.
-//int verbose_level;
 
 /**
 @brief Default constructor of the class.
@@ -151,6 +146,7 @@ Matrix::isnan() {
 */
 void 
 Matrix::print_matrix() {
+  
     /*sstream << std::endl << "The stored matrix:" << std::endl;
     verbose_level=1;
     print(sstream,verbose_level);	
@@ -159,11 +155,10 @@ Matrix::print_matrix() {
     for ( size_t row_idx=0; row_idx < rows; row_idx++ ) {
         for ( size_t col_idx=0; col_idx < cols; col_idx++ ) {
             size_t element_idx = row_idx*stride + col_idx;
-    		/*sstream << " (" << data[element_idx].real << ", " << data[element_idx].imag << "*i)";
-    		verbose_level=1;
-    		print(sstream,verbose_level);	
-    		*/
-              
+            /*sstream << " (" << data[element_idx].real << ", " << data[element_idx].imag << "*i)";
+	      verbose_level=1;
+	      print(sstream,verbose_level);	
+	    */              
         }
 
         std::cout << std::endl;

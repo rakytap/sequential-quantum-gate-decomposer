@@ -404,12 +404,10 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             }
         }
         else {
-		verbose_level=1;
-		sstream << "bad value for initial guess" << std::endl;
-		print(sstream,verbose_level);	    	
-		
-	 	           
-            exit(-1);
+	     verbose_level=1;
+	     sstream << "bad value for initial guess" << std::endl;
+	     print(sstream,verbose_level);  	
+	     exit(-1);
         }
 
         if ( solution_guess_num > 0) {
@@ -540,17 +538,12 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
             // optimization result is displayed in each 500th iteration
-            if (iter_idx % 500 == 0) {
-                
+            if (iter_idx % 500 == 0) {                
                 tbb::tick_count current_time = tbb::tick_count::now();
-
 		verbose_level=1;
 		sstream << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << " calculated in " << (current_time - start_time).seconds() << " seconds" << std::endl;
-		print(sstream,verbose_level);	    	
-		
-		                  
-                fflush(stdout);
-                
+		print(sstream,verbose_level); 				                  
+                fflush(stdout);                
                 start_time = tbb::tick_count::now();
             }
 
@@ -559,26 +552,17 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, min_vec_num, minvec_mean));
 
             // conditions to break the iteration cycles
-            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-5 ) {
-                
-
+            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-5 ) {              
 		verbose_level=1;
 	        sstream << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " iterations with " << layer_num << " layers" << std::endl;
-		print(sstream,verbose_level);	    	
-		
-	                                
-                fflush(stdout);
-                
+		print(sstream,verbose_level);  		                            
+                fflush(stdout);                
                 break;
             }
             else if (check_optimization_solution()) {
-                
-
-		verbose_level=1;
+      		verbose_level=1;
 		sstream << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << std::endl;
-		print(sstream,verbose_level);	    	
-		
-		                    
+		print(sstream,verbose_level);  		               
                 break;
             }
 
@@ -1152,11 +1136,11 @@ void Decomposition_Base::prepare_gates_to_export() {
 */
 std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate*> ops, double* parameters ) {
 
-        //The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     std::vector<Gate*> ops_ret;
     int parameter_idx = 0;
@@ -1242,8 +1226,6 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 		verbose_level=1;
 		sstream << "wrong parameters in U3 class" << std::endl;
 		print(sstream,verbose_level);	    	
-		
-                
                 exit(-1);
             }
 
