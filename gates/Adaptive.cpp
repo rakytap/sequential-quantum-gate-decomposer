@@ -94,18 +94,16 @@ void
 Adaptive::apply_to( Matrix_real& parameters, Matrix& input ) {
 
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
+
     if (input.rows != matrix_size ) {
-
 	sstream << "Wrong matrix size in Adaptive gate apply" << std::endl;
 	verbose_level=1;
         print(sstream,verbose_level);	
-	
-        
         exit(-1);
     }
 
@@ -142,18 +140,16 @@ Phi_transformed[0] = Phi - M_PI;
 void 
 Adaptive::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     if (input.cols != matrix_size ) {
 	sstream << "Wrong matrix size in Adaptive apply_from_right" << std::endl;
 	verbose_level=1;
         print(sstream,verbose_level);	
-	
-        
         exit(-1);
     }
 
@@ -186,18 +182,16 @@ Phi_transformed[0] = Phi - M_PI;
 std::vector<Matrix>
 Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input ) {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     if (input.rows != matrix_size ) {
 	sstream << "Wrong matrix size in Adaptive gate apply" << std::endl;
 	verbose_level=1;
-        print(sstream,verbose_level);	
-	
-        
+        print(sstream,verbose_level);	     
         exit(-1);
     }
 
