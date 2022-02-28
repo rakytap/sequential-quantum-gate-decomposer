@@ -77,25 +77,25 @@ SYC::SYC(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
         parameter_num = 0;
 
         if (target_qbit_in >= qbit_num) {
+	   verbose_level=1;
+	   sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+	   print(sstream,verbose_level);
 
-		verbose_level=1;
-		sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-		print(sstream,verbose_level);	    	
-
-            	throw "The index of the target qubit is larger than the number of qubits";
+	   throw "The index of the target qubit is larger than the number of qubits";
         }
+	
         // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = target_qbit_in;
 
 
         if (control_qbit_in >= qbit_num) {
-
-		verbose_level=1;
-		sstream << "The index of the control qubit is larger than the number of qubits" << std::endl;
-		print(sstream,verbose_level);	    	
+	   verbose_level=1;
+	   sstream << "The index of the control qubit is larger than the number of qubits" << std::endl;
+	   print(sstream,verbose_level);	    	
  
-            	throw "The index of the control qubit is larger than the number of qubits";
+	   throw "The index of the control qubit is larger than the number of qubits";
         }
+	
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
         control_qbit = control_qbit_in;
 
