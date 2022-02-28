@@ -99,6 +99,12 @@ functor_extract_submatrices::functor_extract_submatrices( Matrix& matrix_in, std
 */
 void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) const {
 
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
+  
     // number of submatrices
     size_t submatrices_num_row = 2;
 
@@ -141,19 +147,9 @@ void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) con
 */
 #ifdef DEBUG
         if (submatrix.isnan()) {
-
-
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
-
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
-
-		sstream << "Submatrix contains NaN." << std::endl;
-		verbose_level=1;
-            	//print(sstream,verbose_level);	
-	        
-            
+	  sstream << "Submatrix contains NaN." << std::endl;
+	  verbose_level=1;
+          print(sstream,verbose_level);		            
         }
 #endif
 
@@ -184,12 +180,11 @@ functor_submtx_cost_fnc::functor_submtx_cost_fnc( std::vector<Matrix, tbb::cache
 */
 void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
-
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     // number of submatrices
     size_t submatrices_num_row = 2;
@@ -207,12 +202,9 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
 #ifdef DEBUG
     if (submatrix_prod.isnan()) {
-
-		sstream << "functor_submtx_cost_fnc::operator: Submatrix product contains NaN. Exiting" << std::endl;
-		verbose_level=1;
-            	//print(sstream,verbose_level);	
-	        
-        
+       sstream << "functor_submtx_cost_fnc::operator: Submatrix product contains NaN. Exiting" << std::endl;
+       verbose_level=1;
+       print(sstream,verbose_level);		               
     }
 #endif
 
@@ -249,12 +241,9 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
     // checking NaN
     if (std::isnan(prod_cost_functions->local())) {
-
-		sstream << "cost function NaN on cost function product "<< product_idx << std::endl;
-		verbose_level=1;
-            	//print(sstream,verbose_level);	
-	        
-        
+       sstream << "cost function NaN on cost function product "<< product_idx << std::endl;
+       verbose_level=1;
+       // print(sstream,verbose_level);	
     }
 
 

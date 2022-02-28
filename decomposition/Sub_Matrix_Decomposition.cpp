@@ -119,46 +119,37 @@ Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
 */
 void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     if (subdisentaglement_done) {        
-
 	verbose_level=1;
 	sstream << "Sub-disentaglement already done." << std::endl;
 	print(sstream,verbose_level);	    	
-	           
-        
         return;
     }   
 
-	verbose_level=1;
-	sstream << std::endl << "Disentagling submatrices." << std::endl;
-	print(sstream,verbose_level);	    	
-	
-      
+    verbose_level=1;
+    sstream << std::endl << "Disentagling submatrices." << std::endl;
+    print(sstream,verbose_level);	    	
+	 
     
-
     // setting the global target minimum
     global_target_minimum = 0;
     current_minimum = optimization_problem(NULL);
 
     // check if it needed to do the subunitarization
     if (check_optimization_solution()) {
-        
 	verbose_level=1;
 	sstream << "Disentanglig not needed" << std::endl;
-	print(sstream,verbose_level);	    	
-	
-                    
+	print(sstream,verbose_level);	    	                    
         subdecomposed_mtx = Umtx;
         subdisentaglement_done = true;
         return;
     }
-
 
 
     if ( !check_optimization_solution() ) {
@@ -218,22 +209,14 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
 
     if (check_optimization_solution()) {
-        
-		verbose_level=1;
-		sstream << "Sub-disentaglement was succesfull." << std::endl << std::endl;
-		print(sstream,verbose_level);	    	
-		
-            
-        
+       verbose_level=1;
+       sstream << "Sub-disentaglement was succesfull." << std::endl << std::endl;
+       print(sstream,verbose_level);	    	    
     }
     else {
-        
-		verbose_level=1;
-		sstream << "Sub-disentaglement did not reach the tolerance limit." << std::endl << std::endl;
-		print(sstream,verbose_level);	    	
-		
-            
-        
+       verbose_level=1;
+       sstream << "Sub-disentaglement did not reach the tolerance limit." << std::endl << std::endl;
+       print(sstream,verbose_level);	    	
     }
 
 
@@ -536,11 +519,9 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
-
-		sstream << "Sub_Matrix_Decomposition::optimization_problem: matrix_new contains NaN a. Exiting" << std::endl;
-		verbose_level=1;
-            	print(sstream,verbose_level);	
-	        
+	   sstream << "Sub_Matrix_Decomposition::optimization_problem: matrix_new contains NaN a. Exiting" << std::endl;
+	   verbose_level=1;
+	   print(sstream,verbose_level);	
         }
 #endif
 
@@ -559,11 +540,11 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 */
 double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* parameters, void* void_instance ) {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
@@ -579,13 +560,9 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
-
-
-		sstream << "Sub_Matrix_Decomposition::optimization_problem matrix_new contains NaN b." << std::endl;
-		verbose_level=1;
-            	print(sstream,verbose_level);	
-	        
-
+	   sstream << "Sub_Matrix_Decomposition::optimization_problem matrix_new contains NaN b." << std::endl;
+	   verbose_level=1;
+	   print(sstream,verbose_level);	 
         }
 #endif
 
@@ -629,11 +606,11 @@ void Sub_Matrix_Decomposition::optimization_problem_grad( const gsl_vector* para
 */
 void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
 
@@ -683,13 +660,10 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* 
         // set the gradient
 #ifdef DEBUG
         if (isnan(f->data[idx])) {
-
-		sstream << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
-		verbose_level=1;
-            	print(sstream,verbose_level);	
-	        
-            
-            	exit(-1);
+	  sstream << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
+	  verbose_level=1;
+	  print(sstream,verbose_level);	  
+          exit(-1);
         }
 #endif // DEBUG
         gsl_vector_set(grad, idx, (f->data[idx]-(*f0))/dparam);
@@ -752,11 +726,11 @@ int Sub_Matrix_Decomposition::set_identical_blocks( std::map<int, int> identical
 */
 Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     Sub_Matrix_Decomposition* ret = new Sub_Matrix_Decomposition(Umtx, qbit_num, optimize_layer_num, initial_guess);
 
@@ -768,12 +742,9 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
     ret->set_iteration_loops( iteration_loops );
 
     if ( extract_gates(static_cast<Gates_block*>(ret)) != 0 ) {
-
 	verbose_level=1;
 	sstream << "Sub_Matrix_Decomposition::clone(): extracting gates was not succesfull\n" << std::endl;
 	print(sstream,verbose_level);	    	
-	
-     
         exit(-1);
     }
 
