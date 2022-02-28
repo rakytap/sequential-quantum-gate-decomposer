@@ -570,14 +570,10 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
 
 
-        if (iter_idx == max_iterations ) {
-            
+        if (iter_idx == max_iterations ) {            
 		verbose_level=1;
 		sstream << "Reached maximal number of iterations" << std::endl << std::endl;
-		print(sstream,verbose_level);	    	
-		
-                
-           
+		print(sstream,verbose_level);
         }
 
         // restoring the parameters to originals

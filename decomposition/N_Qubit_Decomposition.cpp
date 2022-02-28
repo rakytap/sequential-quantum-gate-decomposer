@@ -243,22 +243,17 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 void
 N_Qubit_Decomposition::decompose_submatrix() {
 
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
+        //The stringstream input to store the output messages.
+        std::stringstream sstream;
 
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
         if (decomposition_finalized) {
-            
-
-		verbose_level=1;
-		sstream << "Decomposition was already finalized" << std::endl;
-		print(sstream,verbose_level);	    	
-		
-                
-            
-            return;
+	   verbose_level=1;
+	   sstream << "Decomposition was already finalized" << std::endl;
+	   print(sstream,verbose_level);	    	     
+           return;
         }
 
         if (qbit_num == 2) {
@@ -367,12 +362,11 @@ N_Qubit_Decomposition::decompose_submatrix() {
 void
 N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposition ) {
 
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
+        //The stringstream input to store the output messages.
+        std::stringstream sstream;
 
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
-
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
         // get the unitarization parameters
         int parameter_num_sub_decomp = cSub_decomposition->get_parameter_num();
@@ -515,8 +509,7 @@ N_Qubit_Decomposition::simplify_layers() {
 	sstream << "Try to simplify layers" << std::endl;
 	sstream << "***************************************************************" << std::endl;
 	print(sstream,verbose_level);	    	
-	
-            
+	         
         
 
         // current starting index of the optimized parameters
@@ -732,8 +725,7 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
 	verbose_level=1;
 	sstream << "Try to simplify sub-structure " << std::endl;
 	print(sstream,verbose_level);	    	
-	
-            
+	          
         
 
         // get the target bit
@@ -808,14 +800,11 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
 
         // check whether simplification was succesfull
         if (!cdecomposition->check_optimization_solution()) {
-            // return with the original layer, if the simplification wa snot successfull
-            
-		verbose_level=1;
-		sstream << "The simplification of the sub-structure was not possible" << std::endl;
-		print(sstream,verbose_level);	    	
-		
-                
-                delete cdecomposition;
+            // return with the original layer, if the simplification wa snot successfull            
+	    verbose_level=1;
+	    sstream << "The simplification of the sub-structure was not possible" << std::endl;
+	    print(sstream,verbose_level);	    	   
+            delete cdecomposition;
             return 1;
         }
 
@@ -856,12 +845,9 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
         
 	verbose_level=1;
 	sstream << gate_nums_layer.cnot+gate_nums_layer.cz+gate_nums_layer.ch << " two-qubit gates successfully simplified to " << gate_nums_simplified.cnot << " CNOT gates" << std::endl;
-	print(sstream,verbose_level);	    	
+	print(sstream,verbose_level);	  	
 	
-            
         
-
-
         //release allocated memory
         delete cdecomposition;
 
