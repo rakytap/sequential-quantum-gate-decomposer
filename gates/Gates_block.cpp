@@ -337,8 +337,6 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 	    sstream << "Gates_block::apply_to: transformed matrix contains NaN." << std::endl;
 	    verbose_level=1;
             print(sstream,verbose_level);	
-	    
-            
         }
 #endif
 
