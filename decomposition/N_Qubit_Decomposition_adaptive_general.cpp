@@ -370,7 +370,8 @@ N_Qubit_Decomposition_adaptive_general::start_decomposition(bool prepare_export)
 
 
 
-bool are_two_qubits_independent( Gates_block* two_qubit_gate, Matrix_real& params ) {
+bool
+N_Qubit_Decomposition_adaptive_general::are_two_qubits_independent( Gates_block* two_qubit_gate, Matrix_real& params ) {
 
 
     //The stringstream input to store the output messages.
@@ -381,9 +382,9 @@ bool are_two_qubits_independent( Gates_block* two_qubit_gate, Matrix_real& param
 
     std::vector<int> involved_qubits = two_qubit_gate->get_involved_qubits();
     if ( involved_qubits.size() > 2 ) {
-	/*sstream << "N_Qubit_Decomposition_adaptive::are_two_qubits_independent: the givel block contains more than 2 qubits" << std::endl;
+	sstream << "N_Qubit_Decomposition_adaptive::are_two_qubits_independent: the givel block contains more than 2 qubits" << std::endl;
 	verbose_level=1;
-        print(sstream, verbose_level);	*/
+        print(sstream, verbose_level);	
         exit(-1);
     }
 

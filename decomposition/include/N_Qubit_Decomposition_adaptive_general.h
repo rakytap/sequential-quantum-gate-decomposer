@@ -110,7 +110,7 @@ Gates_block* construct_gate_layer( const int& _target_qbit, const int& _control_
 */
 void add_finalyzing_layer( Gates_block* gate_structure );
 
-
+bool are_two_qubits_independent( Gates_block* two_qubit_gate, Matrix_real& params );
 
 };
 
