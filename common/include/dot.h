@@ -3,6 +3,7 @@
 
 
 #include "matrix.h"
+#include "logging.h"
 
 #ifndef CPYTHON
 #include <tbb/tbb.h>
@@ -126,7 +127,7 @@ struct col_indices {
 /**
 @brief Class to calculate a matrix product C=A*B in serial. This class is used to divide the multiplication into chunks for parallel calculations.
 */
-class zgemm_Task_serial {
+class zgemm_Task_serial : public logging {
 
 public:
     /// The matrix A
