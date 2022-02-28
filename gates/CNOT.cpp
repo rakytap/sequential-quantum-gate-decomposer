@@ -23,11 +23,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "CNOT.h"
 
-//The stringstream input to store the output messages.
-std::stringstream sstream;
-
-//Integer value to set the verbosity level of the output messages.
-int verbose_level;
 
 using namespace std;
 
@@ -64,6 +59,12 @@ CNOT::CNOT() {
 */
 CNOT::CNOT(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
 
+        //The stringstream input to store the output messages.
+        std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+ 
         // number of qubits spanning the matrix of the gate
         qbit_num = qbit_num_in;
         // the size of the matrix
@@ -74,24 +75,22 @@ CNOT::CNOT(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
         parameter_num = 0;
 
         if (target_qbit_in >= qbit_num) {
+	   verbose_level=1;
+	   sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+	   print(sstream,verbose_level);	    	
 
-		verbose_level=1;
-		sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-		print(sstream,verbose_level);	    	
-           
-            	throw "The index of the target qubit is larger than the number of qubits";
+	   throw "The index of the target qubit is larger than the number of qubits";
         }
         // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = target_qbit_in;
 
 
         if (control_qbit_in >= qbit_num) {
+	  verbose_level=1;
+	  sstream << "The index of the control qubit is larger than the number of qubits" << std::endl;
+	  print(sstream,verbose_level);	    	
 
-		verbose_level=1;
-		sstream << "The index of the control qubit is larger than the number of qubits" << std::endl;
-		print(sstream,verbose_level);	    	
-
-            	throw "The index of the control qubit is larger than the number of qubits";
+	  throw "The index of the control qubit is larger than the number of qubits";
         }
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
         control_qbit = control_qbit_in;
