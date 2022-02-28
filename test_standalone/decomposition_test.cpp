@@ -43,15 +43,16 @@ using namespace std;
 int main() {
 
 
-/// Stringstream input to store the output messages.
-std::stringstream sstream;
+    /// Stringstream input to store the output messages.
+    std::stringstream sstream;
 
-/// Logging variable to set the verbosity level.
-logging output;
+    /// Logging variable to set the verbosity level.
+    logging output;
 
-/// Set the verbosity level of the output messages. 
-int verbose_level;
+    /// Set the verbosity level of the output messages. 
+    int verbose_level;
 
+    //Setting the verbosity level of the Test of N qubit decomposition
     verbose_level=1;
     sstream << std::endl << std::endl << "****************************************" << std::endl;
     sstream << "Test of N qubit decomposition" << std::endl;
@@ -129,10 +130,10 @@ int verbose_level;
     cDecomposition.set_verbose( true );
 //! [set parameters]
 
-
-   verbose_level=1;
-   sstream << "Starting the decompsition" << std::endl;
-   output.print(sstream,verbose_level);	    	
+    // setting the verbosity of the decomposition
+    verbose_level=1;
+    sstream << "Starting the decompsition" << std::endl;
+    output.print(sstream,verbose_level);	    	
 
    
 //! [performing decomposition]
