@@ -26,7 +26,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include <assert.h>
 #include <cstddef>
-#include "logging.h"
 
 // platform independent types
 #include <stdint.h>

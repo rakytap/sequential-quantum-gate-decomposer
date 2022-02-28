@@ -146,19 +146,13 @@ Matrix::isnan() {
 */
 void 
 Matrix::print_matrix() {
-  
-    /*sstream << std::endl << "The stored matrix:" << std::endl;
-    verbose_level=1;
-    print(sstream,verbose_level);	
-    */
+
+    std::cout << std::endl << "The stored matrix:" << std::endl;
     
     for ( size_t row_idx=0; row_idx < rows; row_idx++ ) {
         for ( size_t col_idx=0; col_idx < cols; col_idx++ ) {
             size_t element_idx = row_idx*stride + col_idx;
-            /*sstream << " (" << data[element_idx].real << ", " << data[element_idx].imag << "*i)";
-	      verbose_level=1;
-	      print(sstream,verbose_level);	
-	    */              
+	     std::cout << " (" << data[element_idx].real << ", " << data[element_idx].imag << "*i)";	              
         }
 
         std::cout << std::endl;
