@@ -239,11 +239,12 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
         }
     //});
 
+
     // checking NaN
     if (std::isnan(prod_cost_functions->local())) {
        sstream << "cost function NaN on cost function product "<< product_idx << std::endl;
        verbose_level=1;
-       // print(sstream,verbose_level);	
+       print(sstream,verbose_level);	
     }
 
 
