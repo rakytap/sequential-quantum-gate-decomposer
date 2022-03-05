@@ -956,7 +956,7 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
 
     // initiate variables for input arguments
-    bool verbose; 
+    int verbose; 
 
     // parsing input arguments
     if (!PyArg_ParseTuple(args, "|i", &verbose )) return Py_BuildValue("i", -1);
