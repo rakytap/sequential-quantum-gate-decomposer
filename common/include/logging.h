@@ -23,16 +23,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
     \brief Header file for a class containing basic methods for setting up the verbosity level.
 */
 
-#ifndef PRINTCLASSSQ_H
-#define PRINTCLASSSQ_H
+#ifndef LOGGING_H
+#define LOGGING_H
 
 #include <string>
 #include <iostream>
 #include <sstream> 
 #include <fstream>
-#include <stdio.h> 
-#include <ostream>
-
 
 
 
