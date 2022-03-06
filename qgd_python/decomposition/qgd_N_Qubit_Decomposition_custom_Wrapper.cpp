@@ -248,17 +248,16 @@ static int
 qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_custom_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"optimize_layer_num", (char*)"initial_guess", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"initial_guess", NULL};
  
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
     int  qbit_num = -1; 
-    bool optimize_layer_num = false;
     PyObject *initial_guess = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OibO", kwlist,
-                                     &Umtx_arg, &qbit_num, &optimize_layer_num, &initial_guess))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiO", kwlist,
+                                     &Umtx_arg, &qbit_num, &initial_guess))
         return -1;
 
     // convert python object array to numpy C API array
@@ -297,7 +296,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_custom_W
   
     // create an instance of the class N_Qubit_Decomposition_custom
     if (qbit_num > 0 ) {
-        self->decomp =  create_N_Qubit_Decomposition_custom( Umtx_mtx, qbit_num, optimize_layer_num, qgd_initial_guess);
+        self->decomp =  create_N_Qubit_Decomposition_custom( Umtx_mtx, qbit_num, false, qgd_initial_guess);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;

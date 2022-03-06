@@ -41,13 +41,13 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 # @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False, initial_guess="zeros" ):
+    def __init__( self, Umtx, initial_guess="RANDOM" ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
 
         # call the constructor of the wrapper class
-        super(qgd_N_Qubit_Decomposition_custom, self).__init__(Umtx, self.qbit_num, optimize_layer_num, initial_guess)
+        super(qgd_N_Qubit_Decomposition_custom, self).__init__(Umtx, self.qbit_num, initial_guess)
 
 
 
@@ -193,7 +193,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
         from qiskit.circuit import ParameterExpression
         from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
 
-        qc = transpile(qc_in, optimization_level=3, basis_gates=['cz', 'cx', 'u3'], layout_method='sabre')
+        qc = qc_in#transpile(qc_in, optimization_level=3, basis_gates=['cz', 'cx', 'u3'], layout_method='sabre')
         #print('Depth of Qiskit transpiled quantum circuit:', qc.depth())
         #print('Gate counts in Qiskit transpiled quantum circuit:', qc.count_ops())
 
