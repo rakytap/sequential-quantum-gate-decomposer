@@ -487,34 +487,97 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
         tbb::tick_count start_time_loc = tbb::tick_count::now();
 
 
-        // solve the optimization problem
-        N_Qubit_Decomposition_custom cDecomp_custom;
-        // solve the optimization problem in isolated optimization process
-        cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, initial_guess);
-        cDecomp_custom.set_custom_gate_structure( gate_structure_loc );
-        cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
-        cDecomp_custom.set_max_iteration( max_iterations );
-        cDecomp_custom.set_verbose(false);
-        cDecomp_custom.set_iteration_loops( iteration_loops );
-        cDecomp_custom.set_optimization_tolerance( optimization_tolerance );  
-        cDecomp_custom.start_decomposition(true);
-        //cDecomp_custom.list_gates(0);
+        N_Qubit_Decomposition_custom cDecomp_custom_random, cDecomp_custom_close_to_zero;
 
-        tbb::tick_count end_time_loc = tbb::tick_count::now();
+        // try the decomposition withrandom and with close to zero initial values
+        tbb::parallel_invoke(
+            [&]{            
+                // solve the optimization problem in isolated optimization process
+                cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, RANDOM);
+                cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
+                cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+                cDecomp_custom_random.set_max_iteration( max_iterations );
+                cDecomp_custom_random.set_verbose(false);
+                cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );  
+                cDecomp_custom_random.start_decomposition(true);
+            },
+            [&]{
+                // solve the optimization problem in isolated optimization process
+                cDecomp_custom_close_to_zero = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, CLOSE_TO_ZERO);
+                cDecomp_custom_close_to_zero.set_custom_gate_structure( gate_structure_loc );
+                cDecomp_custom_close_to_zero.set_optimization_blocks( gate_structure_loc->get_gate_num() );    
+                cDecomp_custom_close_to_zero.set_max_iteration( max_iterations );
+                cDecomp_custom_close_to_zero.set_verbose(false);
+                cDecomp_custom_close_to_zero.set_optimization_tolerance( optimization_tolerance );  
+                cDecomp_custom_close_to_zero.start_decomposition(true);
+               }
+         );
 
-        minimum_vec.push_back(cDecomp_custom.get_current_minimum());
+
+         tbb::tick_count end_time_loc = tbb::tick_count::now();
+
+         double current_minimum_random         = cDecomp_custom_random.get_current_minimum();
+         double current_minimum_close_to_zero = cDecomp_custom_close_to_zero.get_current_minimum();
+         double current_minimum_loc;
+
+
+         // select between the results obtained for different initial value strategy
+         if ( current_minimum_random < optimization_tolerance && current_minimum_close_to_zero > optimization_tolerance ) {
+             current_minimum_loc = current_minimum_random;
+             optimized_parameters_mtx_loc = cDecomp_custom_random.get_optimized_parameters();
+             initial_guess = RANDOM;
+         }
+         else if ( current_minimum_random > optimization_tolerance && current_minimum_close_to_zero < optimization_tolerance ) {
+             current_minimum_loc = current_minimum_close_to_zero;
+             optimized_parameters_mtx_loc = cDecomp_custom_close_to_zero.get_optimized_parameters();
+             initial_guess = CLOSE_TO_ZERO;
+         }
+         else if ( current_minimum_random < optimization_tolerance && current_minimum_close_to_zero < optimization_tolerance ) {
+             Matrix_real optimized_parameters_mtx_random = cDecomp_custom_random.get_optimized_parameters();
+             Matrix_real optimized_parameters_mtx_close_to_zero = cDecomp_custom_close_to_zero.get_optimized_parameters();
+
+             int panelty_random         = get_panelty(gate_structure_loc, optimized_parameters_mtx_random);
+             int panelty_close_to_zero = get_panelty(gate_structure_loc, optimized_parameters_mtx_close_to_zero );
+
+             if ( panelty_random < panelty_close_to_zero ) {
+                 current_minimum_loc = current_minimum_random;
+                 optimized_parameters_mtx_loc = cDecomp_custom_random.get_optimized_parameters();
+                 initial_guess = RANDOM;
+             }
+             else {
+                 current_minimum_loc = current_minimum_close_to_zero;
+                 optimized_parameters_mtx_loc = cDecomp_custom_close_to_zero.get_optimized_parameters();
+                 initial_guess = CLOSE_TO_ZERO;
+             }
+
+        }
+        else {
+           if ( current_minimum_random < current_minimum_close_to_zero ) {
+                current_minimum_loc = current_minimum_random;
+                optimized_parameters_mtx_loc = cDecomp_custom_random.get_optimized_parameters();
+                initial_guess = RANDOM;
+           }
+           else {
+                current_minimum_loc = current_minimum_close_to_zero;
+                optimized_parameters_mtx_loc = cDecomp_custom_close_to_zero.get_optimized_parameters();
+                initial_guess = CLOSE_TO_ZERO;
+           }
+
+        }
+
+        minimum_vec.push_back(current_minimum_loc);
         gate_structure_vec.push_back(gate_structure_loc);
-        optimized_parameters_vec.push_back(cDecomp_custom.get_optimized_parameters());
+        optimized_parameters_vec.push_back(optimized_parameters_mtx_loc);
 
 
 
-        if ( cDecomp_custom.get_current_minimum() < optimization_tolerance ) {
+        if ( current_minimum_loc < optimization_tolerance ) {
             std::cout << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
             //cDecomp_custom.list_gates(0);
             break;
         }   
         else {
-            std::cout << "Optimization problem converged to " << cDecomp_custom.get_current_minimum() << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+            std::cout << "Optimization problem converged to " << current_minimum_loc << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
         }
 
         level++;
@@ -566,8 +629,11 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 Gates_block*
 N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure ) {
 
-    int layer_num_max = 10;
+    int layer_num_max;
     int layer_num_orig = gate_structure->get_gate_num()-1;
+    if ( layer_num_orig < 50 ) layer_num_max = 10;
+    else if ( layer_num_orig < 60 ) layer_num_max = 4;
+    else layer_num_max = 2;
 
     // create a list of layers to be tested for removal.
     std::vector<int> layers_to_remove;
@@ -596,10 +662,20 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     //for (int idx_to_remove=0; idx_to_remove<layer_num_orig; idx_to_remove++) {
 
         double current_minimum_loc = 0.0;
+        Matrix_real optimized_parameters_loc;
 
-        Matrix_real optimized_parameters_loc = optimized_parameters_mtx.copy();
+        if ( current_minimum > 1e-2 ) {
+             optimized_parameters_loc = Matrix_real(0, 0);
+        }
+        else {
+            optimized_parameters_loc = optimized_parameters_mtx.copy();
+        }
+
+   //         optimized_parameters_loc = optimized_parameters_mtx.copy();
+
         Gates_block* gate_structure_reduced = compress_gate_structure( gate_structure, layers_to_remove[idx_to_remove], optimized_parameters_loc,  current_minimum_loc  );
- 
+        if ( optimized_parameters_loc.size() == 0 ) optimized_parameters_loc = optimized_parameters_mtx.copy();
+
         // remove further adaptive gates if possible
         Gates_block* gate_structure_tmp;
         if ( gate_structure_reduced->get_gate_num() ==  gate_structure->get_gate_num() ) {
@@ -612,7 +688,6 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         gate_structures_vec[idx_to_remove] = gate_structure_tmp;
         optimized_parameters_vec[idx_to_remove] = optimized_parameters_loc;
         current_minimum_vec[idx_to_remove] = current_minimum_loc;
-
         
 
         delete(gate_structure_reduced);
@@ -675,13 +750,21 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 @brief ???????????????
 */
 Gates_block* 
-N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& currnt_minimum_loc ) {
+N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& current_minimum_loc ) {
 
     // create reduced gate structure without layer indexed by layer_idx
     Gates_block* gate_structure_reduced = gate_structure->clone();
     gate_structure_reduced->release_gate( layer_idx );
-        
-    Matrix_real&& parameters_reduced = create_reduced_parameters( gate_structure_reduced, optimized_parameters, layer_idx );
+
+    Matrix_real parameters_reduced;
+    if ( optimized_parameters.size() > 0 ) {
+        parameters_reduced = create_reduced_parameters( gate_structure_reduced, optimized_parameters, layer_idx );
+    }
+    else {
+        parameters_reduced = Matrix_real(0, 0);
+    }
+
+
 
     N_Qubit_Decomposition_custom cDecomp_custom;
        
@@ -695,11 +778,12 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     cDecomp_custom.set_optimization_blocks( gate_structure_reduced->get_gate_num() ) ;
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance );
     cDecomp_custom.start_decomposition(true);
-    double current_minimum_loc = cDecomp_custom.get_current_minimum();
+    double current_minimum_tmp = cDecomp_custom.get_current_minimum();
 
-    if ( current_minimum_loc < optimization_tolerance ) {
+    if ( current_minimum_tmp < optimization_tolerance ) {
         //cDecomp_custom.list_gates(0);
         optimized_parameters = cDecomp_custom.get_optimized_parameters();
+        current_minimum_loc = current_minimum_tmp;
         return gate_structure_reduced;
     }
 
@@ -893,7 +977,7 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
 @brief ???????????????
 */
 Gates_block*
-N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& currnt_minimum_loc ) {
+N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& current_minimum_loc ) {
 
 
     int layer_num = gate_structure->get_gate_num();
@@ -922,7 +1006,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
                
                 // remove gate from the structure
-                Gates_block* gate_structure_tmp = compress_gate_structure( gate_structure_loc, idx, optimized_parameters_loc, currnt_minimum_loc );
+                Gates_block* gate_structure_tmp = compress_gate_structure( gate_structure_loc, idx, optimized_parameters_loc, current_minimum_loc );
 
                 optimized_parameters = optimized_parameters_loc;
                 delete( gate_structure_loc );
@@ -1063,7 +1147,6 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
         block->add_gate( layers[idx] );
 
     }
-
 */
     while (layers.size()>0) { 
         int idx = std::rand() % layers.size();
