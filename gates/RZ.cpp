@@ -123,7 +123,7 @@ RZ::~RZ() {
 @param input The input array on which the gate is applied
 */
 void 
-RZ::apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 ) {
+RZ::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
 
     if (input.rows != matrix_size ) {
         std::cout<< "Wrong matrix size in RZ gate apply" << std::endl;
