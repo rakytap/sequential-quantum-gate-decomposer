@@ -50,7 +50,7 @@ class Test_Decomposition:
         
 
         # creating a class to decompose the unitary
-        cDecompose = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, initial_guess="ZEROS" )
+        cDecompose = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, initial_guess="CLOSE_TO_ZERO" )
         
 
         # set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
@@ -65,8 +65,11 @@ class Test_Decomposition:
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( True )
 
+        # set the number of block to be optimized in one shot
+        cDecompose.set_Optimization_Blocks( 20 )
+
         # starting the decomposition
-        cDecompose.Start_Decomposition(finalize_decomp=True, prepare_export=True)
+        cDecompose.Start_Decomposition()
 
         # list the decomposing operations
         cDecompose.List_Gates()
@@ -98,7 +101,7 @@ class Test_Decomposition:
     
         product_matrix = np.eye(16)*2 - product_matrix - product_matrix.conj().T
         # the error of the decomposition
-        decomposition_error =  np.sqrt(LA.norm(product_matrix, 2))
+        decomposition_error = (np.real(np.trace(product_matrix)))/2
        
         print('The error of the decomposition is ' + str(decomposition_error))
 
@@ -106,7 +109,7 @@ class Test_Decomposition:
 
 
 
-    def ctest_IBM_Chellenge_adaptive(self):
+    def test_IBM_Chellenge_adaptive(self):
         r"""
         This method is called by pytest. 
         Test to decompose a 4-qubit unitary of the IBM chellenge
@@ -123,14 +126,14 @@ class Test_Decomposition:
         
 
         # creating a class to decompose the unitary
-        cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, 5, 0, initial_guess="RANDOM", method='limited'  )
+        cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
 
 
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( True )
 
         # starting the decomposition
-        cDecompose.Start_Decomposition(prepare_export=True)
+        cDecompose.Start_Decomposition()
 
         # list the decomposing operations
         cDecompose.List_Gates()
@@ -155,14 +158,14 @@ class Test_Decomposition:
         result = job.result()
     
         # the unitary matrix from the result object
-        decomposed_matrix = result.get_unitary(quantum_circuit)
+        decomposed_matrix = np.asarray( result.get_unitary(quantum_circuit) )
         product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
         phase = np.angle(product_matrix[0,0])
         product_matrix = product_matrix*np.exp(-1j*phase)
     
         product_matrix = np.eye(16)*2 - product_matrix - product_matrix.conj().T
         # the error of the decomposition
-        decomposition_error =  np.sqrt(LA.norm(product_matrix, 2))
+        decomposition_error = (np.real(np.trace(product_matrix)))/2
        
         print('The error of the decomposition is ' + str(decomposition_error))
 

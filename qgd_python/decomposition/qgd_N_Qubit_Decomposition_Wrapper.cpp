@@ -316,7 +316,7 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
 /**
 @brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
-@param args A tuple of the input arguments: finalize_decomp (bool), prepare_export (bool)
+@param args A tuple of the input arguments: prepare_export (bool)
 @param kwds A tuple of keywords
 */
 static PyObject *
@@ -324,20 +324,19 @@ qgd_N_Qubit_Decomposition_Wrapper_Start_Decomposition(qgd_N_Qubit_Decomposition_
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"finalize_decomp", (char*)"prepare_export", NULL};
+    static char *kwlist[] = {(char*)"prepare_export", NULL};
 
     // initiate variables for input arguments
-    bool  finalize_decomp = true; 
     bool  prepare_export = true; 
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|bb", kwlist,
-                                     &finalize_decomp, &prepare_export))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|b", kwlist,
+                                     &prepare_export))
         return Py_BuildValue("i", -1);
 
 
     // starting the decomposition
-    self->decomp->start_decomposition(finalize_decomp, prepare_export);
+    self->decomp->start_decomposition(true, prepare_export);
 
 
     return Py_BuildValue("i", 0);

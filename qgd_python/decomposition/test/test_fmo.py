@@ -1,8 +1,6 @@
 import numpy as np
-import matplotlib.pyplot as plt
 import scipy.constants as cnst
 import scipy.linalg as linalg
-import json
 
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition_custom import qgd_N_Qubit_Decomposition_custom
@@ -219,17 +217,11 @@ class Test_Decomposition:
         # setting the tolerance of the optimization process. The final error of the decomposition would scale with the square root of this value.
         decomp.set_Optimization_Tolerance( 1e-6 )
 
-        # set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
-        decomp.set_Optimization_Blocks( 1 )
-
-        # set the number of iteration loops in the decomposition
-        #decomp.set_Iteration_Loops({4: 1})
-
-        # set initial guess values
-        #decomp.set_Optimized_Parameters(parameters)
+        # set the number of block to be optimized in one shot
+        decomp.set_Optimization_Blocks( 50 )
 
         # starting the decomposition
-        decomp.Start_Decomposition(prepare_export=True)
+        decomp.Start_Decomposition()
 
 
         # list the decomposing operations
@@ -250,14 +242,14 @@ class Test_Decomposition:
         result = job.result()
 		
         # the unitary matrix from the result object
-        decomposed_matrix = result.get_unitary(quantum_circuit)
+        decomposed_matrix = np.asarray( result.get_unitary(quantum_circuit) )
         product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
         phase = np.angle(product_matrix[0,0])
         product_matrix = product_matrix*np.exp(-1j*phase)
 		
         product_matrix = np.eye(matrix_size)*2 - product_matrix - product_matrix.conj().T
         # the error of the decomposition
-        decomposition_error =  np.sqrt(linalg.norm(product_matrix, 2))
+        decomposition_error =  (np.real(np.trace(product_matrix)))/2
 	   
         print('The error of the decomposition is ' + str(decomposition_error))
 	

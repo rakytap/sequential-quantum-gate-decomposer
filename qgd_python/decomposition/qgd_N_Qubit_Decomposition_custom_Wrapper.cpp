@@ -215,7 +215,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_dealloc(qgd_N_Qubit_Decomposition_custo
         Py_DECREF(self->Umtx);    
         self->Umtx = NULL;
     }
-    
+
     Py_TYPE(self)->tp_free((PyObject *) self);
 
 }

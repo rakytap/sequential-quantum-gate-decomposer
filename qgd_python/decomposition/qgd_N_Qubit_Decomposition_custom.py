@@ -52,6 +52,31 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
 
 ##
+# @brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
+# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
+    def Start_Decomposition(self,prepare_export=True):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_custom, self).Start_Decomposition(prepare_export=prepare_export)
+
+
+##
+# @brief Call to reorder the qubits in the matrix of the gate
+# @param qbit_list The reordered list of qubits spanning the matrix
+    def Reorder_Qubits( self, qbit_list ):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_custom, self).Reorder_Qubits(qbit_list)
+
+
+##
+# @brief @brief Call to print the gates decomposing the initial unitary. These gates brings the intial matrix into unity.
+    def List_Gates(self):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_custom, self).List_Gates()
+
+##
 # @brief Export the unitary decomposition into Qiskit format.
 # @return Return with a Qiskit compatible quantum circuit.
     def get_Quantum_Circuit( self ):
@@ -185,8 +210,8 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
         
 ##
-# @brief ???????????????????????
-# @return ??????????????????????
+# @brief Call to import initial quantum circuit in QISKIT format to be further comporessed
+# @param qc_in The quantum circuit to be imported
     def import_Qiskit_Circuit( self, qc_in ):  
 
         from qiskit import QuantumCircuit, transpile

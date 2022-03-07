@@ -140,9 +140,9 @@ typedef struct qgd_N_Qubit_Decomposition_adaptive_Wrapper {
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition_adaptive* 
-create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in, guess_type initial_guess ) {
+create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in ) {
 
-    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, level_limit, level_limit_min, topology_in, initial_guess );
+    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, level_limit, level_limit_min, topology_in );
 }
 
 
@@ -156,9 +156,9 @@ create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_lim
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition_adaptive_general* 
-create_N_Qubit_Decomposition_adaptive_general( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in, guess_type initial_guess ) {
+create_N_Qubit_Decomposition_adaptive_general( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in ) {
 
-    return new N_Qubit_Decomposition_adaptive_general( Umtx, qbit_num, level_limit, level_limit_min, topology_in, initial_guess );
+    return new N_Qubit_Decomposition_adaptive_general( Umtx, qbit_num, level_limit, level_limit_min, topology_in );
 }
 
 
@@ -295,20 +295,19 @@ static int
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit", (char*)"level_limit_min", (char*)"initial_guess", (char*)"method", (char*)"topology", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit", (char*)"level_limit_min", (char*)"method", (char*)"topology", NULL};
  
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
     int  qbit_num = -1; 
     int level_limit = 0;
     int level_limit_min = 0;
-    PyObject *initial_guess = NULL;
     PyObject *method = NULL;
     PyObject *topology = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiOOO", kwlist,
-                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &initial_guess, &method, &topology))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiOO", kwlist,
+                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &method, &topology))
         return -1;
 
     // convert python object array to numpy C API array
@@ -325,25 +324,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     Matrix Umtx_mtx = numpy2matrix(self->Umtx);  
 
 
-    // determine the initial guess type
-    PyObject* initial_guess_string = PyObject_Str(initial_guess);
-    PyObject* initial_guess_string_unicode = PyUnicode_AsEncodedString(initial_guess_string, "utf-8", "~E~");
-    const char* initial_guess_C = PyBytes_AS_STRING(initial_guess_string_unicode);
-
-    guess_type qgd_initial_guess;
-    if ( strcmp("zeros", initial_guess_C) == 0 or strcmp("ZEROS", initial_guess_C) == 0) {
-        qgd_initial_guess = ZEROS;        
-    }
-    else if ( strcmp("random", initial_guess_C)==0 or strcmp("RANDOM", initial_guess_C)==0) {
-        qgd_initial_guess = RANDOM;        
-    }
-    else if ( strcmp("close_to_zero", initial_guess_C)==0 or strcmp("CLOSE_TO_ZERO", initial_guess_C)==0) {
-        qgd_initial_guess = CLOSE_TO_ZERO;        
-    }
-    else {
-        std::cout << "Wrong initial guess format. Using default ZEROS." << std::endl; 
-        qgd_initial_guess = ZEROS;     
-    }
 
 
     // determine the optimizaton method
@@ -390,23 +370,21 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
         if ( strcmp("limited", method_C)==0 or strcmp("LIMITED", method_C)==0) {
-            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp, qgd_initial_guess);
+            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp);
             self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp;
         }
         else if ( strcmp("general", method_C)==0 or strcmp("GENERAL", method_C)==0) {
-            self->decomp_general = create_N_Qubit_Decomposition_adaptive_general( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp, qgd_initial_guess);    
+            self->decomp_general = create_N_Qubit_Decomposition_adaptive_general( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp);    
             self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp_general;
         }
         else {
             std::cout << "Wrong optmimization method. Falling back to limited." << std::endl;
-            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp, qgd_initial_guess);
+            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp );
             self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp;
         }
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;
-        Py_XDECREF(initial_guess_string);
-        Py_XDECREF(initial_guess_string_unicode);
         Py_XDECREF(method_string);
         Py_XDECREF(method_string_unicode);
         return -1;
@@ -414,8 +392,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
 
 
 
-    Py_XDECREF(initial_guess_string);
-    Py_XDECREF(initial_guess_string_unicode);
     Py_XDECREF(method_string);
     Py_XDECREF(method_string_unicode);
 

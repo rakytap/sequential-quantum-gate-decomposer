@@ -48,7 +48,7 @@ N_Qubit_Decomposition_adaptive_general::N_Qubit_Decomposition_adaptive_general()
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive_general::N_Qubit_Decomposition_adaptive_general( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, guess_type initial_guess_in ) : N_Qubit_Decomposition_adaptive(Umtx_in, qbit_num_in, level_limit_in, level_limit_min_in, initial_guess_in) {
+N_Qubit_Decomposition_adaptive_general::N_Qubit_Decomposition_adaptive_general( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in ) : N_Qubit_Decomposition_adaptive(Umtx_in, qbit_num_in, level_limit_in, level_limit_min_in) {
 
 }
 
@@ -63,7 +63,7 @@ N_Qubit_Decomposition_adaptive_general::N_Qubit_Decomposition_adaptive_general( 
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive_general::N_Qubit_Decomposition_adaptive_general( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, guess_type initial_guess_in ) : N_Qubit_Decomposition_adaptive(Umtx_in, qbit_num_in, level_limit_in, level_limit_min_in, topology_in, initial_guess_in) {
+N_Qubit_Decomposition_adaptive_general::N_Qubit_Decomposition_adaptive_general( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in ) : N_Qubit_Decomposition_adaptive(Umtx_in, qbit_num_in, level_limit_in, level_limit_min_in, topology_in) {
 
 }
 

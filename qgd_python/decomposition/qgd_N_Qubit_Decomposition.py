@@ -41,7 +41,7 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
 # @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
 # @return An instance of the class
-    def __init__( self, Umtx, optimize_layer_num=False, initial_guess="zeros" ):
+    def __init__( self, Umtx, optimize_layer_num=False, initial_guess="RANDOM" ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
@@ -49,6 +49,31 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
         # call the constructor of the wrapper class
         super(qgd_N_Qubit_Decomposition, self).__init__(Umtx, self.qbit_num, optimize_layer_num, initial_guess)
 
+
+##
+# @brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
+# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
+    def Start_Decomposition(self,prepare_export=True):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition, self).Start_Decomposition(prepare_export=prepare_export)
+
+
+##
+# @brief Call to reorder the qubits in the matrix of the gate
+# @param qbit_list The reordered list of qubits spanning the matrix
+    def Reorder_Qubits( self, qbit_list ):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition, self).Reorder_Qubits(qbit_list)
+
+
+##
+# @brief @brief Call to print the gates decomposing the initial unitary. These gates brings the intial matrix into unity.
+    def List_Gates(self):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition, self).List_Gates()
 
 
 ##
@@ -112,7 +137,6 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
 
 
         return circuit
-
 
 
 
@@ -181,13 +205,6 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
 
         return circuit
 
-
-##
-# @brief Call to set the number of blocks to be optimized in one shot
-# @param optimalization_block The number of blocks to be optimized in one shot
-    def set_optimalization_block( self, optimalization_block ):
-
-        _qgd_library.iface_set_optimalization_block( self.c_instance, ctypes.c_int(optimalization_block) )
 
 
 

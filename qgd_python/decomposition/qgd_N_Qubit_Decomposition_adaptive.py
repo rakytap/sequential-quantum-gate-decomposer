@@ -41,7 +41,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
 # @return An instance of the class
-    def __init__( self, Umtx, level_limit=8, level_limit_min=0, initial_guess="zeros", method='LIMITED', topology=None ):
+    def __init__( self, Umtx, level_limit_max=8, level_limit_min=0, method='LIMITED', topology=None ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
@@ -70,11 +70,35 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             print("Input parameter topology should be a list of (int, int) describing the connected qubits in the topology")
             return
         
-
+        print(topology_validated) 
         # call the constructor of the wrapper class
-        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit, level_limit_min, initial_guess=initial_guess, method=method, topology=topology_validated)
+        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, method=method, topology=topology_validated)
 
 
+##
+# @brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
+# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
+    def Start_Decomposition(self,prepare_export=True):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_adaptive, self).Start_Decomposition(prepare_export=prepare_export)
+
+
+##
+# @brief Call to reorder the qubits in the matrix of the gate
+# @param qbit_list The reordered list of qubits spanning the matrix
+    def Reorder_Qubits( self, qbit_list ):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_adaptive, self).Reorder_Qubits(qbit_list)
+
+
+##
+# @brief @brief Call to print the gates decomposing the initial unitary. These gates brings the intial matrix into unity.
+    def List_Gates(self):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_adaptive, self).List_Gates()
 
 ##
 # @brief Export the unitary decomposition into Qiskit format.
@@ -208,8 +232,8 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 
 ##
-# @brief ???????????????????????
-# @return ??????????????????????
+# @brief Call to import initial quantum circuit in QISKIT format to be further comporessed
+# @param qc_in The quantum circuit to be imported
     def import_Qiskit_Circuit( self, qc_in ):  
 
         from qiskit import QuantumCircuit, transpile

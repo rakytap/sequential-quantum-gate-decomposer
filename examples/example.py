@@ -23,6 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 ## [import]
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition 
+from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive       
 ## [import]
 
 print('******************** Decomposing general 3-qubit matrix *******************************')
@@ -42,13 +43,16 @@ matrix_size = int(2**qbit_num)
 Umtx = unitary_group.rvs(matrix_size)
 
 # creating a class to decompose the 
-cDecompose = qgd_N_Qubit_Decomposition( Umtx.conj().T, False, "ZEROS"  )
+cDecompose = qgd_N_Qubit_Decomposition( Umtx.conj().T )
 
 # setting the tolerance of the optimization process. The final error of the decomposition would scale with the square root of this value.
 cDecompose.set_Optimization_Tolerance( 1e-12 )
 
+# set the number of block to be optimized in one shot
+cDecompose.set_Optimization_Blocks( 20 )
+
 # starting the decomposition
-cDecompose.Start_Decomposition(True, True)
+cDecompose.Start_Decomposition()
 
 # list the decomposing operations
 cDecompose.List_Gates()
@@ -74,20 +78,16 @@ data = loadmat('Umtx.mat')
 Umtx = data['Umtx']
 ## [load Umtx]
 
+
+# determine the size of the unitary to be decomposed
+matrix_size = len(Umtx)
+
 ## [create decomposition class]
 ## creating a class to decompose the unitary
-cDecompose = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=True, initial_guess="zeros" )
+cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
 ## [create decomposition class]
 
 ## [set parameters]
-# set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
-cDecompose.set_Identical_Blocks( {4: 2, 3: 1} )
-
-# set the maximal number of layers in the decomposition
-cDecompose.set_Max_Layer_Num( {4: 9, 3:4})
-
-# set the number of iteration loops in the decomposition
-cDecompose.set_Iteration_Loops({4: 3, 3: 3, 2: 3})
 
 # setting the verbosity of the decomposition
 cDecompose.set_Verbose( True )
@@ -96,7 +96,7 @@ cDecompose.set_Verbose( True )
 
 ## [start decomposition]
 # starting the decomposition
-cDecompose.Start_Decomposition(finalize_decomp=True, prepare_export=True)
+cDecompose.Start_Decomposition()
 
 # list the decomposing operations
 cDecompose.List_Gates()
@@ -126,14 +126,14 @@ job = execute(quantum_circuit, backend)
 result = job.result()
     
 ## the unitary matrix from the result object
-decomposed_matrix = result.get_unitary(quantum_circuit)
+decomposed_matrix = np.asarray( result.get_unitary(quantum_circuit) )
 product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
 phase = np.angle(product_matrix[0,0])
 product_matrix = product_matrix*np.exp(-1j*phase)
     
 product_matrix = np.eye(matrix_size)*2 - product_matrix - product_matrix.conj().T
 # the error of the decomposition
-decomposition_error =  np.sqrt(LA.norm(product_matrix, 2))
+decomposition_error =  (np.real(np.trace(product_matrix)))/2
        
 print('The error of the decomposition is ' + str(decomposition_error))
 

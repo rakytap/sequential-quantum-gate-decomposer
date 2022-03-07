@@ -107,12 +107,9 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     // setting the gate structure for optimization
     add_gate_layers();
 //std::cout << optimization_problem( optimized_parameters_mtx.get_data() ) << std::endl;
-//tbb::task_arena ta(16);
-//ta.execute([&]() {
+
     // final tuning of the decomposition parameters
     final_optimization();
-//});   
-
 
 
     // prepare gates to export
