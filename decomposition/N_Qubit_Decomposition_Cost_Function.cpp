@@ -22,9 +22,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "N_Qubit_Decomposition_Cost_Function.h"
-#include <tbb/parallel_for.h>
-
-
+//#include <tbb/parallel_for.h>
 
 
 /**
@@ -35,10 +33,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 double get_cost_function(Matrix matrix) {
 
     size_t matrix_size = matrix.rows;
-
+/*
     tbb::combinable<double> priv_partial_cost_functions{[](){return 0;}};
     tbb::parallel_for( tbb::blocked_range<size_t>(0, matrix_size, 1), functor_cost_fnc( matrix, &priv_partial_cost_functions ));
-
+*/
 /*
     //sequential version
     functor_cost_fnc tmp = functor_cost_fnc( matrix, matrix_size, partial_cost_functions, matrix_size );
@@ -47,12 +45,64 @@ double get_cost_function(Matrix matrix) {
         tmp(idx);
     }
 */
-
+/*
     // calculate the final cost function
     double cost_function = 0;
     priv_partial_cost_functions.combine_each([&cost_function](double a) {
         cost_function = cost_function + a;
     });
+*/
+
+/*
+#ifdef USE_AVX
+
+
+    __m128d trace_128 = _mm_setr_pd(0.0, 0.0);
+    double* matrix_data = (double*)matrix.get_data();
+    int offset = 2*(matrix.stride+1);
+
+    for (size_t idx=0; idx<matrix_size; idx++) {
+        
+        // get the diagonal element
+        __m128d element_128 = _mm_load_pd(matrix_data);
+        
+        // add the diagonal elements to the trace
+        trace_128 = _mm_add_pd(trace_128, element_128);
+
+        matrix_data = matrix_data + offset;
+    }
+
+
+    trace_128 = _mm_mul_pd(trace_128, trace_128);    
+    double cost_function = std::sqrt(1.0 - (trace_128[0] + trace_128[1])/(matrix_size*matrix_size));
+
+#else
+
+    QGD_Complex16 trace;
+    memset( &trace, 0.0, 2*sizeof(double) );
+    //trace.real = 0.0;
+    //trace.imag = 0.0;
+
+    for (size_t idx=0; idx<matrix_size; idx++) {
+        
+        trace.real += matrix[idx*matrix.stride + idx].real;
+        trace.imag += matrix[idx*matrix.stride + idx].imag;
+    }
+
+    double cost_function = std::sqrt(1.0 - (trace.real*trace.real + trace.imag*trace.imag)/(matrix_size*matrix_size));
+#endif
+*/
+
+
+    double trace_real = 0.0;
+
+    for (size_t idx=0; idx<matrix_size; idx++) {
+        
+        trace_real += matrix[idx*matrix.stride + idx].real;
+    }
+
+    //double cost_function = std::sqrt(1.0 - trace_real/matrix_size);
+    double cost_function = (1.0 - trace_real/matrix_size);
 
     return cost_function;
 

@@ -77,8 +77,6 @@ Decomposition_Base::Decomposition_Base() {
     // method to guess initial values for the optimization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
     initial_guess = ZEROS;
 
-    // optimized parameters
-    optimized_parameters = NULL;
 
 
 #if CBLAS==1
@@ -146,8 +144,6 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
     // method to guess initial values for the optimization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
     initial_guess = initial_guess_in;
 
-    // optimized parameters
-    optimized_parameters = NULL;
 
 
 #if CBLAS==1
@@ -162,12 +158,12 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
 @brief Destructor of the class
 */
 Decomposition_Base::~Decomposition_Base() {
-
+/*
     if (optimized_parameters != NULL ) {
         qgd_free( optimized_parameters );
         optimized_parameters = NULL;
     }
-
+*/
 }
 
 
@@ -194,7 +190,7 @@ void Decomposition_Base::set_max_iteration( int max_iterations_in) {
 void Decomposition_Base::finalize_decomposition() {
 
         // get the transformed matrix resulted by the gates in the list
-        Matrix transformed_matrix = get_transformed_matrix( optimized_parameters, gates.begin(), gates.size(), Umtx );
+        Matrix transformed_matrix = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 
         // preallocate the storage for the finalizing parameters
         finalizing_parameter_num = 3*qbit_num;
@@ -208,19 +204,16 @@ void Decomposition_Base::finalize_decomposition() {
         // adding the opeartion block to the gates
         add_gate( finalizing_gates );
 // TODO: use memcpy
-        double* optimized_parameters_tmp = (double*)qgd_calloc( (parameter_num),sizeof(double), 64 );
+        Matrix_real optimized_parameters_tmp(1, parameter_num);
         for (int idx=0; idx < finalizing_parameter_num; idx++) {
             optimized_parameters_tmp[idx] = finalizing_parameters[idx];
         }
         for (unsigned int idx=0; idx < parameter_num-finalizing_parameter_num; idx++) {
-            optimized_parameters_tmp[idx+finalizing_parameter_num] = optimized_parameters[idx];
+            optimized_parameters_tmp[idx+finalizing_parameter_num] = optimized_parameters_mtx[idx];
         }
-        qgd_free( optimized_parameters );
         qgd_free( finalizing_parameters);
-        optimized_parameters = NULL;
         finalizing_parameters = NULL;
-        optimized_parameters = optimized_parameters_tmp;
-        optimized_parameters_tmp = NULL;
+        optimized_parameters_mtx = optimized_parameters_tmp;
 
         finalizing_gates_num = finalizing_gates->get_gate_num();
 
@@ -249,7 +242,7 @@ void Decomposition_Base::finalize_decomposition() {
 */
 void Decomposition_Base::list_gates( int start_index ) {
 
-        Gates_block::list_gates( optimized_parameters, start_index );
+        Gates_block::list_gates( optimized_parameters_mtx, start_index );
 
 }
 
@@ -302,7 +295,7 @@ Matrix Decomposition_Base::get_finalizing_gates( Matrix& mtx, Gates_block* final
                 Lambda = atan2(-element01.imag*element00.real + element01.real*element00.imag, -element01.real*element00.real - element01.imag*element00.imag); //np.angle( -element01*np.conj(element00))
             }
 
-            double parameters_loc[3];
+            Matrix_real parameters_loc(1,3);
             parameters_loc[0] = Theta;
             parameters_loc[1] = M_PI-Lambda;
             parameters_loc[2] = M_PI-Phi;
@@ -441,25 +434,25 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             for ( int block_idx=block_idx_start-1; block_idx>=block_idx_end; block_idx--) {
                 block_parameter_num = block_parameter_num + gates_loc[block_idx]->get_parameter_num();
             }
-
-            
+       
 
             // ***** get applied the fixed gates applied before the optimized gates *****
             if (block_idx_start < gates_loc.size() ) {
                 std::vector<Gate*>::iterator fixed_gates_pre_it = gates.begin() + 1;
-                Umtx = get_transformed_matrix(optimized_parameters, fixed_gates_pre_it, gates.size()-1, Umtx);
+                //Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
+                Umtx = get_transformed_matrix(optimized_parameters_mtx, fixed_gates_pre_it, gates.size()-1, Umtx);
             }
             else {
                 Umtx = Umtx_loc.copy();
             }
 
-
             // clear the gate list used in the previous iterations
             gates.clear();
 
-            if (optimized_parameters != NULL ) {
-                qgd_free( optimized_parameters );
-                optimized_parameters = NULL;
+            if (optimized_parameters_mtx.size() > 0 ) {
+//                qgd_free( optimized_parameters );
+//                optimized_parameters = NULL;
+                  optimized_parameters_mtx = Matrix_real(0,0);
             }
 
 
@@ -515,7 +508,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             minvec_mean = minvec_mean/min_vec_num;
 
             // store the obtained optimalized parameters for the block
-            memcpy( optimized_parameters_gsl->data+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters, parameter_num*sizeof(double) );
+            memcpy( optimized_parameters_gsl->data+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );
 
             if (block_idx_end == 0) {
                 block_idx_start = gates_loc.size();
@@ -542,7 +535,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, min_vec_num, minvec_mean));
 
             // conditions to break the iteration cycles
-            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < optimization_tolerance ) {
+            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-5 ) {
                 if (verbose) {
                     printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
                     fflush(stdout);
@@ -574,12 +567,15 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         gates = gates_loc;
 
         parameter_num = parameter_num_loc;
+/*
         if (optimized_parameters != NULL ) {
             qgd_free( optimized_parameters );
         }
+*/
 
-        optimized_parameters = (double*)qgd_calloc(parameter_num,sizeof(double), CACHELINE);
-        memcpy( optimized_parameters, optimized_parameters_gsl->data, parameter_num*sizeof(double) );
+
+        optimized_parameters_mtx = Matrix_real( 1, parameter_num );
+        memcpy( optimized_parameters_mtx.get_data(), optimized_parameters_gsl->data, parameter_num*sizeof(double) );
 
 
         // free unnecessary resources
@@ -654,10 +650,10 @@ int Decomposition_Base::get_Umtx_size() {
 @brief Call to get the optimized parameters.
 @return Return with the pointer pointing to the array storing the optimized parameters
 */
-double* Decomposition_Base::get_optimized_parameters() {
-    double *ret = (double*)qgd_calloc( parameter_num,sizeof(double), 64);
-    get_optimized_parameters( ret );
-    return ret;
+Matrix_real Decomposition_Base::get_optimized_parameters() {    
+    
+    return optimized_parameters_mtx.copy();
+
 }
 
 /**
@@ -665,7 +661,20 @@ double* Decomposition_Base::get_optimized_parameters() {
 @param ret Preallocated array to store the optimized parameters.
 */
 void Decomposition_Base::get_optimized_parameters( double* ret ) {
-    memcpy(ret, optimized_parameters, parameter_num*sizeof(double));
+    memcpy(ret, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double));
+    return;
+}
+
+
+/**
+@brief Call to set the optimized parameters for initial optimization.
+@param ret Preallocated array to store the optimized parameters.
+*/
+void Decomposition_Base::set_optimized_parameters( double* parameters, int num_of_parameters ) {
+
+    optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+    memcpy( optimized_parameters_mtx.get_data(), parameters, num_of_parameters*sizeof(double) );
+
     return;
 }
 
@@ -677,7 +686,7 @@ void Decomposition_Base::get_optimized_parameters( double* ret ) {
 @return Returns with the transformed matrix.
 */
 Matrix
-Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates ) {
+Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates ) {
 
     return get_transformed_matrix( parameters, gates_it, num_of_gates, Umtx );
 }
@@ -692,7 +701,7 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
 @return Returns with the transformed matrix.
 */
 Matrix
-Decomposition_Base::get_transformed_matrix( const double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix ) {
+Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix ) {
 
     // The matrix to be returned
     Matrix ret_matrix = initial_matrix.copy();
@@ -707,15 +716,8 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
 
         // The current gate
         Gate* gate = *(gates_it++);
+        parameters_num_total = parameters_num_total + gate->get_parameter_num();
 
-        if (gate->get_type() == U3_OPERATION ) {
-            U3* u3_gate = static_cast<U3*>( gate );
-            parameters_num_total = parameters_num_total + u3_gate->get_parameter_num();
-        }
-        else if (gate->get_type() == BLOCK_OPERATION ) {
-            Gates_block* block_gate = static_cast<Gates_block*>( gate );
-            parameters_num_total = parameters_num_total + block_gate->get_parameter_num();
-        }
     }
 
 
@@ -724,6 +726,8 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
 
         // The current gate
         Gate* gate = *(--gates_it);
+        parameters_num_total = parameters_num_total - gate->get_parameter_num();
+        Matrix_real parameters_mtx( parameters.get_data()+parameters_num_total, 1, gate->get_parameter_num() );
 
         if (gate->get_type() == CNOT_OPERATION ) {
             CNOT* cnot_gate = static_cast<CNOT*>( gate );
@@ -737,19 +741,60 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
             CH* ch_gate = static_cast<CH*>( gate );
             ch_gate->apply_to(ret_matrix);
         }
+        else if (gate->get_type() == SYC_OPERATION ) {
+            SYC* syc_gate = static_cast<SYC*>( gate );
+            syc_gate->apply_to(ret_matrix);
+        }
         else if (gate->get_type() == GENERAL_OPERATION ) {
             gate->apply_to(ret_matrix);
-
         }
         else if (gate->get_type() == U3_OPERATION ) {
             U3* u3_gate = static_cast<U3*>( gate );
-            parameters_num_total = parameters_num_total - u3_gate->get_parameter_num();
-            u3_gate->apply_to( parameters+parameters_num_total, ret_matrix);            
+            u3_gate->apply_to( parameters_mtx, ret_matrix);            
+        }
+        else if (gate->get_type() == RX_OPERATION ) {
+            RX* rx_gate = static_cast<RX*>( gate );
+            rx_gate->apply_to( parameters_mtx, ret_matrix);            
+        }
+        else if (gate->get_type() == RY_OPERATION ) {
+            RY* ry_gate = static_cast<RY*>( gate );
+            ry_gate->apply_to( parameters_mtx, ret_matrix);            
+        }
+        else if (gate->get_type() == CRY_OPERATION ) {
+            CRY* cry_gate = static_cast<CRY*>( gate );
+            cry_gate->apply_to( parameters_mtx, ret_matrix);            
+        }
+        else if (gate->get_type() == RZ_OPERATION ) {
+            RZ* rz_gate = static_cast<RZ*>( gate );
+            rz_gate->apply_to( parameters_mtx, ret_matrix);            
+        }
+        else if (gate->get_type() == X_OPERATION ) {
+            X* x_gate = static_cast<X*>( gate );
+            x_gate->apply_to( ret_matrix );            
+        }
+        else if (gate->get_type() == SX_OPERATION ) {
+            SX* sx_gate = static_cast<SX*>( gate );
+            sx_gate->apply_to( ret_matrix );            
+        }
+        else if (gate->get_type() == UN_OPERATION ) {
+            UN* un_gate = static_cast<UN*>( gate );
+            un_gate->apply_to( parameters_mtx, ret_matrix);            
+        }
+        else if (gate->get_type() == ON_OPERATION ) {
+            ON* on_gate = static_cast<ON*>( gate );
+            on_gate->apply_to( parameters_mtx, ret_matrix);            
+        }
+        else if (gate->get_type() == COMPOSITE_OPERATION ) {
+            Composite* com_gate = static_cast<Composite*>( gate );
+            com_gate->apply_to( parameters_mtx, ret_matrix);            
         }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
-            parameters_num_total = parameters_num_total - block_gate->get_parameter_num();
-            block_gate->apply_to(parameters+parameters_num_total, ret_matrix);            
+            block_gate->apply_to(parameters_mtx, ret_matrix);            
+        }
+        else if (gate->get_type() == ADAPTIVE_OPERATION ) {
+            Adaptive* ad_gate = static_cast<Adaptive*>( gate );
+            ad_gate->apply_to( parameters_mtx, ret_matrix);            
         }
 
     }
@@ -767,8 +812,8 @@ Decomposition_Base::get_transformed_matrix( const double* parameters, std::vecto
 @return Returns with the decomposed matrix.
 */
 Matrix Decomposition_Base::get_decomposed_matrix() {
-
-        return get_transformed_matrix( optimized_parameters, gates.begin(), gates.size(), Umtx );
+        
+        return get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 }
 
 
@@ -800,8 +845,9 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
     for (int idx=0; idx<num_of_gates; idx++) {
        
 
-        // get the matrix representation of th egate
+        // get the matrix representation of the gate
         Gate* gate = *gates_it;        
+        Matrix_real parameters_loc_mtx( parameters_loc, 1, gate->get_parameter_num() );
 
         if (gate->get_type() == CNOT_OPERATION ) {
             CNOT* cnot_gate = static_cast<CNOT*>(gate);
@@ -815,19 +861,63 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
             CH* ch_gate = static_cast<CH*>(gate);
             ch_gate->apply_from_right(mtx);
         }
+        else if (gate->get_type() == SYC_OPERATION ) {
+            SYC* syc_gate = static_cast<SYC*>(gate);
+            syc_gate->apply_from_right(mtx);
+        }
         else if (gate->get_type() == GENERAL_OPERATION ) {
             gate->apply_from_right(mtx);
         }
         else if (gate->get_type() == U3_OPERATION ) {
             U3* u3_gate = static_cast<U3*>(gate);
-            u3_gate->apply_from_right(parameters_loc, mtx);
-            parameters_loc = parameters_loc + u3_gate->get_parameter_num();
+            u3_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else if (gate->get_type() == RX_OPERATION ) {
+            RX* rx_gate = static_cast<RX*>(gate);
+            rx_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else if (gate->get_type() == RY_OPERATION ) {
+            RY* ry_gate = static_cast<RY*>(gate);
+            ry_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else if (gate->get_type() == CRY_OPERATION ) {
+            CRY* cry_gate = static_cast<CRY*>(gate);
+            cry_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else if (gate->get_type() == RZ_OPERATION ) {
+            RZ* rz_gate = static_cast<RZ*>(gate);
+            rz_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else if (gate->get_type() == X_OPERATION ) {
+            X* x_gate = static_cast<X*>(gate);
+            x_gate->apply_from_right(mtx);
+        }
+        else if (gate->get_type() == SX_OPERATION ) {
+            SX* sx_gate = static_cast<SX*>(gate);
+            sx_gate->apply_from_right(mtx);
+        }
+        else if (gate->get_type() == UN_OPERATION ) {
+            UN* un_gate = static_cast<UN*>(gate);
+            un_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else if (gate->get_type() == ON_OPERATION ) {
+            ON* on_gate = static_cast<ON*>(gate);
+            on_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else if (gate->get_type() == COMPOSITE_OPERATION ) {
+            Composite* com_gate = static_cast<Composite*>(gate);
+            com_gate->apply_from_right(parameters_loc_mtx, mtx);
         }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>(gate);
-            block_gate->apply_from_right(parameters_loc, mtx);
-            parameters_loc = parameters_loc + block_gate->get_parameter_num();
+            block_gate->apply_from_right(parameters_loc_mtx, mtx);
         }
+        else if (gate->get_type() == ADAPTIVE_OPERATION ) {
+            Adaptive* ad_gate = static_cast<Adaptive*>(gate);
+            ad_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+
+        parameters_loc = parameters_loc + gate->get_parameter_num();
 
         gate_mtxs[idx] = mtx.copy();     
         gates_it++;   
@@ -1007,7 +1097,7 @@ void Decomposition_Base::Init_max_layer_num() {
 */
 void Decomposition_Base::prepare_gates_to_export() {
 
-    std::vector<Gate*> gates_tmp = prepare_gates_to_export( gates, optimized_parameters );
+    std::vector<Gate*> gates_tmp = prepare_gates_to_export( gates, optimized_parameters_mtx.get_data() );
 
     // release the gates and replace them with the ones prepared to export
     gates.clear();
@@ -1023,7 +1113,7 @@ void Decomposition_Base::prepare_gates_to_export() {
 @param parameters The parameters of the gates
 @return Returns with a list of gate gates.
 */
-std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate*> ops, const double* parameters ) {
+std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate*> ops, double* parameters ) {
 
     std::vector<Gate*> ops_ret;
     int parameter_idx = 0;
@@ -1040,6 +1130,15 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             ops_ret.push_back( gate );
         }
         else if (gate->get_type() == CH_OPERATION) {
+            ops_ret.push_back( gate );
+        }
+        else if (gate->get_type() == SYC_OPERATION) {
+            ops_ret.push_back( gate );
+        }
+        else if (gate->get_type() == X_OPERATION) {
+            ops_ret.push_back( gate );
+        }
+        else if (gate->get_type() == SX_OPERATION) {
             ops_ret.push_back( gate );
         }
         else if (gate->get_type() == U3_OPERATION) {
@@ -1106,6 +1205,147 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
 
         }
+        else if (gate->get_type() == RX_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double vartheta;
+
+            // get the inverse parameters of the RX rotation
+
+            RX* rx_gate = static_cast<RX*>(gate);
+
+            vartheta = std::fmod( parameters[parameter_idx], 4*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            rx_gate->set_optimized_parameters( vartheta );
+            ops_ret.push_back( static_cast<Gate*>(rx_gate) );
+
+
+        }
+        else if (gate->get_type() == RY_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double vartheta;
+
+            // get the inverse parameters of the RY rotation
+
+            RY* ry_gate = static_cast<RY*>(gate);
+
+            vartheta = std::fmod( parameters[parameter_idx], 4*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            ry_gate->set_optimized_parameters( vartheta );
+            ops_ret.push_back( static_cast<Gate*>(ry_gate) );
+
+
+        }
+        else if (gate->get_type() == CRY_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double phi;
+
+            // get the inverse parameters of the RZ rotation
+
+            CRY* cry_gate = static_cast<CRY*>(gate);
+
+            phi = std::fmod( parameters[parameter_idx], 2*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            cry_gate->set_optimized_parameters( phi );
+            ops_ret.push_back( static_cast<Gate*>(cry_gate) );
+
+
+        }
+        else if (gate->get_type() == RZ_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double varphi;
+
+            // get the inverse parameters of the RZ rotation
+
+            RZ* rz_gate = static_cast<RZ*>(gate);
+
+            varphi = std::fmod( parameters[parameter_idx], 2*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            rz_gate->set_optimized_parameters( varphi );
+            ops_ret.push_back( static_cast<Gate*>(rz_gate) );
+
+
+        }
+        else if (gate->get_type() == UN_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double varphi;
+
+            // get the inverse parameters of the RZ rotation
+            UN* un_gate = static_cast<UN*>(gate);
+
+            Matrix_real optimized_parameters( parameters+parameter_idx, 1, (int)un_gate->get_parameter_num());
+            parameter_idx = parameter_idx + un_gate->get_parameter_num();
+
+
+            un_gate->set_optimized_parameters( optimized_parameters );
+            ops_ret.push_back( static_cast<Gate*>(un_gate) );
+
+
+        }
+        else if (gate->get_type() == ON_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double varphi;
+
+            // get the inverse parameters of the RZ rotation
+            ON* on_gate = static_cast<ON*>(gate);
+
+            Matrix_real optimized_parameters( parameters+parameter_idx, 1, (int)on_gate->get_parameter_num());
+            parameter_idx = parameter_idx + on_gate->get_parameter_num();
+
+
+            on_gate->set_optimized_parameters( optimized_parameters );
+            ops_ret.push_back( static_cast<Gate*>(on_gate) );
+
+
+        }
+        else if (gate->get_type() == COMPOSITE_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double varphi;
+
+            // get the inverse parameters of the RZ rotation
+            Composite* com_gate = static_cast<Composite*>(gate);
+
+            Matrix_real optimized_parameters( parameters+parameter_idx, 1, (int)com_gate->get_parameter_num());
+            parameter_idx = parameter_idx + com_gate->get_parameter_num();
+
+
+            com_gate->set_optimized_parameters( optimized_parameters );
+            ops_ret.push_back( static_cast<Gate*>(com_gate) );
+
+
+        }
+        else if (gate->get_type() == ADAPTIVE_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double phi;
+
+            // get the inverse parameters of the RZ rotation
+
+            Adaptive* ad_gate = static_cast<Adaptive*>(gate);
+
+            phi = std::fmod( parameters[parameter_idx], 2*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            ad_gate->set_optimized_parameters( phi );
+            ops_ret.push_back( static_cast<Gate*>(ad_gate) );
+
+
+        }
         else if (gate->get_type() == BLOCK_OPERATION) {
             Gates_block* block_gate = static_cast<Gates_block*>(gate);
             const double* parameters_layer = parameters + parameter_idx;
@@ -1131,7 +1371,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 @param parameters The parameters of the gates
 @return Returns with a list of gate gates.
 */
-std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( Gates_block* block_op, const double* parameters ) {
+std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( Gates_block* block_op, double* parameters ) {
 
     std::vector<Gate*> ops_tmp = block_op->get_gates();
     std::vector<Gate*> ops_ret = prepare_gates_to_export( ops_tmp, parameters );
@@ -1141,48 +1381,6 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( Gates_block* blo
 }
 
 
-/**
-@brief Call to prepare the optimized gates to export --- OBSOLETE
-@param n Integer labeling the n-th oepration  (n>=0).
-@param type The type of the gate from enumeration gate_type is returned via this parameter.
-@param target_qbit The ID of the target qubit is returned via this input parameter.
-@param control_qbit The ID of the control qubit is returned via this input parameter.
-@param parameters The parameters of the gates
-@return Returns with 0 if the export of the n-th gate was successful. If the n-th gate does not exists, -1 is returned. If the gate is not allowed to be exported, i.e. it is not a CNOT or U3 gate, then -2 is returned.
-*/
-int Decomposition_Base::get_gate( unsigned int n, gate_type &type, int &target_qbit, int &control_qbit, double* parameters ) {
-
-//printf("n: %d\n", n);
-    // get the n-th gate if exists
-    if ( n >= gates.size() ) {
-        return -1;
-    }
-
-    Gate* gate = gates[n];
-//printf("gate type: %d\n", gate->get_type());
-
-
-    if (gate->get_type() == CNOT_OPERATION || gate->get_type() == CZ_OPERATION || gate->get_type() == CH_OPERATION ) {
-        type = gate->get_type();
-        target_qbit = gate->get_target_qbit();
-        control_qbit = gate->get_control_qbit();
-        memset( parameters, 0, 3*sizeof(double) );
-        return 0;
-    }
-    else if (gate->get_type() == U3_OPERATION) {
-        U3* u3_gate = static_cast<U3*>(gate);
-        type = u3_gate->get_type();
-        target_qbit = u3_gate->get_target_qbit();
-        control_qbit = gate->get_control_qbit();
-        u3_gate->get_optimized_parameters(parameters);
-//printf("c %f, %f, %f\n", parameters[0], parameters[1], parameters[2] );
-        return 0;
-    }
-    else {
-        return -2;
-    }
-
-}
 
 
 
@@ -1232,6 +1430,19 @@ void Decomposition_Base::set_optimization_tolerance( double tolerance_in ) {
 double Decomposition_Base::get_decomposition_error( ) {
 
     return decomposition_error;
+
+}
+
+
+
+
+/**
+@brief Call to get the obtained minimum of the cost function
+@return Returns with the minimum of the cost function
+*/
+double Decomposition_Base::get_current_minimum( ) {
+
+    return current_minimum;
 
 }
 

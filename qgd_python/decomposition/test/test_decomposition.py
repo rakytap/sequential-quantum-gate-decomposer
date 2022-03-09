@@ -31,7 +31,7 @@ import numpy as np
 class Test_Decomposition:
     """This is a test class of the python iterface to the decompsition classes of the QGD package"""
 
-    def test_N_Qubit_Decomposition_creation(self):
+    def ctest_N_Qubit_Decomposition_creation(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of class N_Qubit_Decomposition.
@@ -72,10 +72,10 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
 
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx, optimize_layer_num=False, initial_guess="zeros" )
+        decomp = qgd_N_Qubit_Decomposition( Umtx )
 
         # start the decomposition
-        decomp.Start_Decomposition(finalize_decomp=True, prepare_export=True)
+        decomp.Start_Decomposition(prepare_export=True)
 
         decomp.List_Gates()
 
@@ -98,10 +98,13 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
 
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="zeros" )
+        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T )
+
+        # set the number of block to be optimized in one shot
+        decomp.set_Optimization_Blocks( 20 )
 
         # start the decomposition
-        decomp.Start_Decomposition(finalize_decomp=True, prepare_export=True)
+        decomp.Start_Decomposition()
 
         # get the decomposing operations
         quantum_circuit = decomp.get_Quantum_Circuit()
@@ -126,14 +129,14 @@ class Test_Decomposition:
         result = job.result()
     
         # the unitary matrix from the result object
-        decomposed_matrix = result.get_unitary(quantum_circuit)
+        decomposed_matrix = np.asarray( result.get_unitary(quantum_circuit) )
         product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
         phase = np.angle(product_matrix[0,0])
         product_matrix = product_matrix*np.exp(-1j*phase)
     
         product_matrix = np.eye(matrix_size)*2 - product_matrix - product_matrix.conj().T
         # the error of the decomposition
-        decomposition_error =  np.sqrt(LA.norm(product_matrix, 2))
+        decomposition_error =  (np.real(np.trace(product_matrix)))/2
        
         print('The error of the decomposition is ' + str(decomposition_error))
 

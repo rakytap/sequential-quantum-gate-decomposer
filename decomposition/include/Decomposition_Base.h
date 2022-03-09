@@ -30,6 +30,17 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CH.h"
 #include "CNOT.h"
 #include "U3.h"
+#include "RX.h"
+#include "X.h"
+#include "SX.h"
+#include "RY.h"
+#include "CRY.h"
+#include "RZ.h"
+#include "SYC.h"
+#include "UN.h"
+#include "ON.h"
+#include "Adaptive.h"
+#include "Composite.h"
 #include <map>
 #include <cstdlib>
 #include <time.h>
@@ -41,7 +52,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 /// @brief Type definition of the types of the initial guess
 typedef enum guess_type {ZEROS, RANDOM, CLOSE_TO_ZERO} guess_type;
-
 
 
 /**
@@ -75,7 +85,10 @@ protected:
     Matrix Umtx;
 
     /// The optimized parameters for the gates
-    double* optimized_parameters;
+    Matrix_real optimized_parameters_mtx;
+
+    /// The optimized parameters for the gates
+    //double* optimized_parameters;
 
     /// logical value describing whether the decomposition was finalized or not (i.e. whether the decomposed qubits were rotated into the state |0> or not)
     bool decomposition_finalized;
@@ -219,13 +232,20 @@ int get_Umtx_size();
 @brief Call to get the optimized parameters.
 @return Return with the pointer pointing to the array storing the optimized parameters
 */
-double* get_optimized_parameters();
+Matrix_real get_optimized_parameters();
 
 /**
 @brief Call to get the optimized parameters.
 @param ret Preallocated array to store the optimized parameters.
 */
 void get_optimized_parameters( double* ret );
+
+
+/**
+@brief Call to set the optimized parameters for initial optimization.
+@param ret Preallocated array to store the optimized parameters.
+*/
+void set_optimized_parameters( double* parameters, int num_of_parameters );
 
 /**
 @brief Calculate the transformed matrix resulting by an array of gates on the matrix Umtx
@@ -234,7 +254,7 @@ void get_optimized_parameters( double* ret );
 @param num_of_gates The number of gates to be applied on the initial matrix
 @return Returns with the transformed matrix.
 */
-Matrix get_transformed_matrix( const double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates );
+Matrix get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates );
 
 
 
@@ -246,7 +266,7 @@ Matrix get_transformed_matrix( const double* parameters, std::vector<Gate*>::ite
 @param initial_matrix The initial matrix wich is transformed by the given gates.
 @return Returns with the transformed matrix.
 */
-Matrix get_transformed_matrix( const double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix );
+Matrix get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix );
 
 
 /**
@@ -319,7 +339,7 @@ void prepare_gates_to_export();
 @param parameters The parameters of the gates
 @return Returns with a list of gate gates.
 */
-std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, const double* parameters );
+std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, double* parameters );
 
 
 
@@ -329,19 +349,7 @@ std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, const double
 @param parameters The parameters of the gates
 @return Returns with a list of gate gates.
 */
-std::vector<Gate*> prepare_gates_to_export( Gates_block* block_op, const double* parameters );
-
-/**
-@brief Call to prepare the optimized gates to export --- OBSOLETE
-@param n Integer labeling the n-th oepration  (n>=0).
-@param type The type of the gate from enumeration gate_type is returned via this parameter.
-@param target_qbit The ID of the target qubit is returned via this input parameter.
-@param control_qbit The ID of the control qubit is returned via this input parameter.
-@param parameters The parameters of the gates
-@return Returns with 0 if the export of the n-th gate was successful. If the n-th gate does not exists, -1 is returned. If the gate is not allowed to be exported, i.e. it is not a CNOT or U3 gate, then -2 is returned.
-*/
-int get_gate( unsigned int n, gate_type &type, int &target_qbit, int &control_qbit, double* parameters );
-
+std::vector<Gate*> prepare_gates_to_export( Gates_block* block_op, double* parameters );
 
 /**
 @brief Call to prepare the optimized gates to export
@@ -371,6 +379,12 @@ void set_optimization_tolerance( double tolerance_in );
 */
 double get_decomposition_error( );
 
+
+/**
+@brief Call to get the obtained minimum of the cost function
+@return Returns with the minimum of the cost function
+*/
+double get_current_minimum( );
 
 
 };

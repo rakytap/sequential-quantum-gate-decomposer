@@ -55,8 +55,7 @@ few_CNOT_unitary( int qbit_num, int cnot_num) {
 
         if (cnot_or_u3 <= 4) {
             // creating random parameters for the U3 operation
-            double parameters[3];
-
+            Matrix_real parameters(1, 3);
             parameters[0] = double(rand())/RAND_MAX*4*M_PI;
             parameters[1] = double(rand())/RAND_MAX*2*M_PI;
             parameters[2] = double(rand())/RAND_MAX*2*M_PI;
@@ -69,6 +68,7 @@ few_CNOT_unitary( int qbit_num, int cnot_num) {
             u3_op = new U3(qbit_num, target_qbit, true, true, true);
 
             // get the matrix of the operation
+            
             gate_matrix = u3_op->get_matrix(parameters);
         }
         else if ( cnot_or_u3 == 5 ) {

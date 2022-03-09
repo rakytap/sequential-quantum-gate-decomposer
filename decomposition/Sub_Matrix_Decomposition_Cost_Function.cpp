@@ -50,6 +50,9 @@ double get_submatrix_cost_function(Matrix& matrix) {
 
     tbb::parallel_for( tbb::blocked_range<size_t>(0, submatrices_num, 1), functor_extract_submatrices( matrix, &submatrices ));
 
+
+    
+
     // ********************************
     // Calculate the partial cost functions
     // ********************************
@@ -96,20 +99,29 @@ functor_extract_submatrices::functor_extract_submatrices( Matrix& matrix_in, std
 */
 void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) const {
 
+    // number of submatrices
+    size_t submatrices_num_row = 2;
+
+    // number of columns in the input matrix
+    size_t matrix_size = matrix.rows;
+
+    // number of columns in the submatrices
+    size_t submatrix_size = matrix_size/2;
+
     for ( size_t submtx_idx = r.begin(); submtx_idx != r.end(); submtx_idx++) {
 
         // The given Submatrix
         Matrix& submatrix = (*submatrices)[ submtx_idx ];
 
-        // number of submatrices
-        size_t submatrices_num_row = 2;
 
-        // number of columns in the input matrix
-        size_t matrix_size = matrix.rows;
+        // create submarix data by striding the original matrix
+        size_t jdx = submtx_idx % submatrices_num_row;
+        size_t idx = (size_t) (submtx_idx-jdx)/submatrices_num_row;
+        size_t matrix_offset = idx*(matrix.stride*submatrix_size) + jdx*(submatrix_size);
+        submatrix = Matrix(matrix.get_data()+matrix_offset, submatrix_size, submatrix_size, matrix.stride);
 
-        // number of columns in the submatrices
-        size_t submatrix_size = matrix_size/2;
 
+/*
         // preallocate memory for the submatrix
         submatrix = Matrix(submatrix_size, submatrix_size);
 
@@ -126,7 +138,7 @@ void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) con
             memcpy(submatrix.get_data()+submatrix_offset, matrix.get_data()+matrix_offset, submatrix_size*sizeof(QGD_Complex16));
 
         }
-
+*/
 #ifdef DEBUG
         if (submatrix.isnan()) {
             std::cout << "Submatrix contains NaN." << std::endl;
@@ -173,7 +185,8 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
     Matrix tmp = (*submatrices)[jdx];
     tmp.transpose();
     tmp.conjugate();
-    Matrix submatrix_prod = dot( (*submatrices)[idx], tmp);
+    Matrix submatrix_prod = dot( (*submatrices)[idx], tmp );
+//    Matrix submatrix_prod = dot( tmp, (*submatrices)[idx] );
 
 #ifdef DEBUG
     if (submatrix_prod.isnan()) {
@@ -182,6 +195,8 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 #endif
 
 
+//std::cout << idx << " " << jdx << std::endl;
+//submatrix_prod.print_matrix();
 
     // number of elements in the matrix of submatrix products
     size_t submatrix_size = submatrix_prod.rows;
@@ -189,24 +204,26 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
     // subtract the corner element from the diagonal
     QGD_Complex16 corner_element = submatrix_prod[0];
-    tbb::parallel_for( tbb::blocked_range<size_t>(0, submatrix_size, 1), [&](tbb::blocked_range<size_t> r){
-        for ( size_t row_idx=r.begin(); row_idx != r.end(); row_idx++) {
-            size_t element_idx = row_idx*submatrix_size+row_idx;
+    //tbb::parallel_for( tbb::blocked_range<size_t>(0, submatrix_size, 1), [&](tbb::blocked_range<size_t> r){
+//        for ( size_t row_idx=r.begin(); row_idx != r.end(); row_idx++) {
+        for ( size_t row_idx=0; row_idx < submatrix_size; row_idx++) {
+            size_t element_idx = row_idx*submatrix_prod.stride+row_idx;
             submatrix_prod[element_idx].real = submatrix_prod[element_idx].real  - corner_element.real;
             submatrix_prod[element_idx].imag = submatrix_prod[element_idx].imag  - corner_element.imag;
         }
 
-    });
+    //});
 
     // Calculate the |x|^2 value of the elements of the submatrixproducts and add to the partial cost function
-    tbb::parallel_for( tbb::blocked_range<size_t>(0, element_num, 1), [&](tbb::blocked_range<size_t> r){
-        for (size_t idx = r.begin(); idx != r.end(); idx ++) {
+    //tbb::parallel_for( tbb::blocked_range<size_t>(0, element_num, 1), [&](tbb::blocked_range<size_t> r){
+//        for (size_t idx = r.begin(); idx != r.end(); idx ++) {
+        for (size_t idx = 0; idx < element_num; idx++) {
 
             // store the calculated value for the given submatrix product element
             double &prod_cost_function_priv = prod_cost_functions->local();
             prod_cost_function_priv = prod_cost_function_priv + submatrix_prod[idx].real*submatrix_prod[idx].real + submatrix_prod[idx].imag*submatrix_prod[idx].imag;
         }
-    });
+    //});
 
     // checking NaN
     if (std::isnan(prod_cost_functions->local())) {

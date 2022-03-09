@@ -24,7 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef N_Qubit_Decomposition_H
 #define N_Qubit_Decomposition_H
 
-#include "Decomposition_Base.h"
+#include "N_Qubit_Decomposition_Base.h"
 #include "Sub_Matrix_Decomposition.h"
 
 #ifdef __cplusplus
@@ -58,14 +58,14 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 This class contains the non-template implementation of the decomposition class.
 */
-class N_Qubit_Decomposition : public Decomposition_Base {
+class N_Qubit_Decomposition : public N_Qubit_Decomposition_Base {
 
 
 public:
 
 protected:
 
-
+/*
     /// logical value. Set true to optimize the minimum number of gate layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
     bool optimize_layer_num;
 
@@ -73,9 +73,14 @@ protected:
     std::map<int,int> identical_blocks;
 
     /// A map of <int n: Gates_block* block> describing custom gate structure to be used in the decomposition. Gate block corresponding to n is used in the subdecomposition of the n-th qubit. The Gate block is repeated periodically.
+    Gates_block* gate_structure;
+
+
+    std::vector<decomposition_tree_node*> root_nodes;
+*/
+
+    /// A map of <int n: Gates_block* block> describing custom gate structure to be used in the decomposition. Gate block corresponding to n is used in the subdecomposition of the n-th qubit. The Gate block is repeated periodically.
     std::map<int, Gates_block*> gate_structure;
-
-
 public:
 
 /**
@@ -112,14 +117,6 @@ virtual ~N_Qubit_Decomposition();
 virtual void start_decomposition(bool finalize_decomp=true, bool prepare_export=true);
 
 
-/**
-@brief Calculate the error of the decomposition according to the spectral norm of \f$ U-U_{approx} \f$, where \f$ U_{approx} \f$ is the unitary produced by the decomposing quantum cirquit. The calculated error is stored in the attribute decomposition_error.
-@param decomposed_matrix The decomposed matrix, i.e. the result of the decomposing gate structure applied on the initial unitary.
-@return Returns with the calculated spectral norm.
-*/
-void calc_decomposition_error(Matrix& decomposed_matrix );
-
-
 
 /**
 @brief Start the decompostion process to recursively decompose the submatrices.
@@ -132,56 +129,6 @@ void  decompose_submatrix();
 @param cSub_decomposition An instance of class Sub_Matrix_Decomposition used to disentangle the n-th qubit from the others.
 */
 void  extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposition );
-
-
-/**
-@brief final optimization procedure improving the accuracy of the decompositin when all the qubits were already disentangled.
-*/
-void final_optimization();
-
-
-/**
-@brief Call to solve layer by layer the optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
-@param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
-*/
-void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
-
-
-/**
-@brief The optimization problem of the final optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
-*/
-double optimization_problem( const double* parameters);
-
-
-
-/**
-@brief The optimization problem of the final optimization
-@param parameters A GNU Scientific Library containing the parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@return Returns with the cost function. (zero if the qubits are desintangled.)
-*/
-static double optimization_problem( const gsl_vector* parameters, void* void_instance );
-
-
-/**
-@brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
-@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param grad A GNU Scientific Library vector containing the calculated gradient components.
-*/
-static void optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad );
-
-/**
-@brief Call to calculate both the cost function and the its gradient components.
-@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param f0 The value of the cost function at x0.
-@param grad A GNU Scientific Library vector containing the calculated gradient components.
-*/
-static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
 
 /**
 @brief Call to simplify the gate structure in the layers if possible (i.e. tries to reduce the number of CNOT gates)

@@ -30,7 +30,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)
-typedef enum gate_type {GENERAL_OPERATION, CZ_OPERATION, CNOT_OPERATION, CH_OPERATION, U3_OPERATION, BLOCK_OPERATION, DECOMPOSITION_BASE_CLASS, SUB_MATRIX_DECOMPOSITION_CLASS, N_QUBIT_DECOMPOSITION_CLASS_BASE, N_QUBIT_DECOMPOSITION_CLASS} gate_type;
+typedef enum gate_type {GENERAL_OPERATION, UN_OPERATION, ON_OPERATION, CZ_OPERATION, CNOT_OPERATION, CH_OPERATION, U3_OPERATION, RY_OPERATION, RX_OPERATION, RZ_OPERATION, X_OPERATION, SX_OPERATION, CRY_OPERATION, SYC_OPERATION, BLOCK_OPERATION, COMPOSITE_OPERATION, ADAPTIVE_OPERATION, DECOMPOSITION_BASE_CLASS, SUB_MATRIX_DECOMPOSITION_CLASS, N_QUBIT_DECOMPOSITION_CLASS_BASE, N_QUBIT_DECOMPOSITION_CLASS} gate_type;
 
 
 
@@ -87,19 +87,26 @@ Gate(int qbit_num_in);
 */
 Matrix get_matrix();
 
+/**
+@brief Call to apply the gate on the input array/matrix by U3*input
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void apply_to_list( std::vector<Matrix>& input );
+
 
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
 */
-void apply_to( Matrix& input );
+virtual void apply_to( Matrix& input );
 
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*Gate
 @param input The input array on which the gate is applied
 */
-void apply_from_right( Matrix& input );
+virtual void apply_from_right( Matrix& input );
 
 /**
 @brief Call to set the stored matrix in the operation.

@@ -460,7 +460,7 @@ void print_matrix() {
     for ( size_t row_idx=0; row_idx < rows; row_idx++ ) {
         for ( size_t col_idx=0; col_idx < cols; col_idx++ ) {
             size_t element_idx = row_idx*stride + col_idx;
-              std::cout << " (" << data[element_idx].real << ", " << data[element_idx].imag << "*i)";
+              std::cout << " " << data[element_idx];
         }
         std::cout << std::endl;
     }

@@ -166,6 +166,105 @@ qgd_Gates_Block_add_U3(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 }
 
+
+
+/**
+@brief Wrapper function to add a RX gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Gates_Block_add_RX(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->gate->add_rx(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+
+/**
+@brief Wrapper function to add a RY gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Gates_Block_add_RY(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->gate->add_ry(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+
+/**
+@brief Wrapper function to add a RZ gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Gates_Block_add_RZ(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->gate->add_rz(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
 /**
 @brief Wrapper function to add a CNOT gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Gates_Block.
@@ -269,6 +368,141 @@ qgd_Gates_Block_add_CH(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 
 
+
+
+/**
+@brief Wrapper function to add a Sycamore gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param args A tuple of the input arguments: control_qbit (int), target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Gates_Block_add_SYC(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit",  NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+    int  control_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
+                                     &target_qbit, &control_qbit))
+        return Py_BuildValue("i", -1);
+
+
+    // adding Sycamore gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->gate->add_syc(target_qbit, control_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+/**
+@brief Wrapper function to add a X gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class Gates_Block.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Gates_Block_add_X(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit",  NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+
+    // adding X gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->gate->add_x(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+
+/**
+@brief Wrapper function to add a SX gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class Gates_Block.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Gates_Block_add_SX(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit",  NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+
+    // adding SX gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->gate->add_sx(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+/**
+@brief Wrapper function to add an adaptive gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Gates_Block_add_adaptive(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+    int  control_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
+                                     &target_qbit, &control_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->gate->add_adaptive(target_qbit, control_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
 /**
 @brief Wrapper function to add a block of operations to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Gates_Block.
@@ -302,6 +536,15 @@ static PyMethodDef qgd_Gates_Block_Methods[] = {
     {"add_U3", (PyCFunction) qgd_Gates_Block_add_U3, METH_VARARGS | METH_KEYWORDS,
      "Call to add a U3 gate to the front of the gate structure"
     },
+    {"add_RX", (PyCFunction) qgd_Gates_Block_add_RX, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a RX gate to the front of the gate structure"
+    },
+    {"add_RY", (PyCFunction) qgd_Gates_Block_add_RY, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a RY gate to the front of the gate structure"
+    },
+    {"add_RZ", (PyCFunction) qgd_Gates_Block_add_RZ, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a RZ gate to the front of the gate structure"
+    },
     {"add_CNOT", (PyCFunction) qgd_Gates_Block_add_CNOT, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CNOT gate to the front of the gate structure"
     },
@@ -310,6 +553,18 @@ static PyMethodDef qgd_Gates_Block_Methods[] = {
     },
     {"add_CH", (PyCFunction) qgd_Gates_Block_add_CH, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CH gate to the front of the gate structure"
+    },
+    {"add_SYC", (PyCFunction) qgd_Gates_Block_add_SYC, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a Sycamore gate to the front of the gate structure"
+    },
+    {"add_X", (PyCFunction) qgd_Gates_Block_add_X, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a X gate to the front of the gate structure"
+    },
+    {"add_SX", (PyCFunction) qgd_Gates_Block_add_SX, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a SX gate to the front of the gate structure"
+    },
+    {"add_adaptive", (PyCFunction) qgd_Gates_Block_add_adaptive, METH_VARARGS | METH_KEYWORDS,
+     "Call to add an adaptive gate to the front of the gate structure"
     },
     {"add_Gates_Block", (PyCFunction) qgd_Gates_Block_add_Gates_Block, METH_VARARGS,
      "Call to add a block of operations to the front of the gate structure."

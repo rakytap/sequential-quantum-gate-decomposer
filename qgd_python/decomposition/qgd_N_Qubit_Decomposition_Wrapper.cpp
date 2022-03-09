@@ -31,6 +31,76 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <stdio.h>
 #include "N_Qubit_Decomposition.h"
 
+#include <numpy/arrayobject.h>
+#include "matrix.h"
+#include "matrix_real.h"
+
+
+/**
+@brief Method to cleanup the memory when the python object becomes released
+@param capsule Pointer to the memory capsule
+*/
+void capsule_cleanup(PyObject* capsule) {
+
+    void *memory = PyCapsule_GetPointer(capsule, NULL);
+    // I'm going to assume your memory needs to be freed with free().
+    // If it needs different cleanup, perform whatever that cleanup is
+    // instead of calling free().
+    scalable_aligned_free(memory);
+
+
+}
+
+
+
+
+/**
+@brief Call to make a numpy array from data stored via void pointer.
+@param ptr pointer pointing to the data
+@param dim The number of dimensions
+@param shape array containing the dimensions.
+@param np_type The data type stored in the numpy array (see possible values at https://numpy.org/doc/1.17/reference/c-api.dtype.html)
+*/
+PyObject* array_from_ptr(void * ptr, int dim, npy_intp* shape, int np_type) {
+
+        if (PyArray_API == NULL) {
+            import_array();
+        }
+
+
+        // create numpy array
+        PyObject* arr = PyArray_SimpleNewFromData(dim, shape, np_type, ptr);
+
+        // set memory keeper for the numpy array
+        PyObject *capsule = PyCapsule_New(ptr, NULL, capsule_cleanup);
+        PyArray_SetBaseObject((PyArrayObject *) arr, capsule);
+
+        return arr;
+
+}
+
+
+
+/**
+@brief Call to make a numpy array from an instance of matrix class.
+@param mtx a matrix instance
+*/
+PyObject* matrix_real_to_numpy( matrix_base<double> &mtx ) {
+        // initialize Numpy API
+        import_array();
+
+
+        npy_intp shape[2];
+        shape[0] = (npy_intp) mtx.rows;
+        shape[1] = (npy_intp) mtx.cols;
+
+        double* data = mtx.get_data();
+        return array_from_ptr( (void*) data, 2, shape, NPY_DOUBLE);
+
+
+}
+
+
 
 /**
 @brief Type definition of the qgd_gates_Block Python class of the qgd_Gates_Block module
@@ -76,6 +146,7 @@ create_N_Qubit_Decomposition( Matrix& Umtx, int qbit_num, bool optimize_layer_nu
 */
 void
 release_N_Qubit_Decomposition( N_Qubit_Decomposition*  instance ) {
+
     if (instance != NULL ) {
         delete instance;
     }
@@ -224,7 +295,7 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
         std::cout << "Wrong initial guess format. Using default ZEROS." << std::endl; 
         qgd_initial_guess = ZEROS;     
     }
-  
+
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
         self->decomp =  create_N_Qubit_Decomposition( Umtx_mtx, qbit_num, optimize_layer_num, qgd_initial_guess);
@@ -245,7 +316,7 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
 /**
 @brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
-@param args A tuple of the input arguments: finalize_decomp (bool), prepare_export (bool)
+@param args A tuple of the input arguments: prepare_export (bool)
 @param kwds A tuple of keywords
 */
 static PyObject *
@@ -253,20 +324,19 @@ qgd_N_Qubit_Decomposition_Wrapper_Start_Decomposition(qgd_N_Qubit_Decomposition_
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"finalize_decomp", (char*)"prepare_export", NULL};
+    static char *kwlist[] = {(char*)"prepare_export", NULL};
 
     // initiate variables for input arguments
-    bool  finalize_decomp = true; 
     bool  prepare_export = true; 
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|bb", kwlist,
-                                     &finalize_decomp, &prepare_export))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|b", kwlist,
+                                     &prepare_export))
         return Py_BuildValue("i", -1);
 
 
     // starting the decomposition
-    self->decomp->start_decomposition(finalize_decomp, prepare_export);
+    self->decomp->start_decomposition(true, prepare_export);
 
 
     return Py_BuildValue("i", 0);
@@ -361,12 +431,28 @@ get_gate( N_Qubit_Decomposition* decomp, int &idx ) {
         Py_XDECREF(control_qbit);
 
     }
+    else if (gate->get_type() == SYC_OPERATION) {
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "SYC" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
+
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "control_qbit", control_qbit );            
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(control_qbit);
+
+    }
     else if (gate->get_type() == U3_OPERATION) {
 
         // get U3 parameters
         U3* u3_gate = static_cast<U3*>(gate);
-        double* parameters = (double*)malloc(3*sizeof(double));
-        u3_gate->get_optimized_parameters(parameters);
+        Matrix_real&& parameters = u3_gate->get_optimized_parameters();
  
 
         // create gate parameters
@@ -390,7 +476,100 @@ get_gate( N_Qubit_Decomposition* decomp, int &idx ) {
         Py_XDECREF(Lambda);
 
 
-        free( parameters);
+    }
+    else if (gate->get_type() == RX_OPERATION) {
+
+        // get U3 parameters
+        RX* rx_gate = static_cast<RX*>(gate);
+        Matrix_real&& parameters = rx_gate->get_optimized_parameters();
+ 
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "RX" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* Theta = Py_BuildValue("f",  parameters[0] );
+
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "Theta", Theta );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(Theta);
+
+
+    }
+    else if (gate->get_type() == RY_OPERATION) {
+
+        // get U3 parameters
+        RY* ry_gate = static_cast<RY*>(gate);
+        Matrix_real&& parameters = ry_gate->get_optimized_parameters();
+ 
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "RY" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* Theta = Py_BuildValue("f",  parameters[0] );
+
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "Theta", Theta );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(Theta);
+
+
+    }
+    else if (gate->get_type() == RZ_OPERATION) {
+
+        // get U3 parameters
+        RZ* rz_gate = static_cast<RZ*>(gate);
+        Matrix_real&& parameters = rz_gate->get_optimized_parameters();
+ 
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "RZ" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* Phi = Py_BuildValue("f",  parameters[0] );
+
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "Phi", Phi );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(Phi);
+
+    }
+    else if (gate->get_type() == X_OPERATION) {
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "X" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+
+    }
+    else if (gate->get_type() == SX_OPERATION) {
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "SX" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+
     }
     else {
   
@@ -476,6 +655,39 @@ qgd_N_Qubit_Decomposition_Wrapper_List_Gates( qgd_N_Qubit_Decomposition_Wrapper 
 
     return Py_None;
 }
+
+
+
+
+/**
+@brief Extract the optimized parameters
+@param start_index The index of the first inverse gate
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters( qgd_N_Qubit_Decomposition_Wrapper *self ) {
+
+    int parameter_num = self->decomp->get_parameter_num();
+
+    matrix_base<double> parameters_mtx(1, parameter_num);
+    double* parameters = parameters_mtx.get_data();
+    self->decomp->get_optimized_parameters(parameters);
+
+    // reversing the order
+    matrix_base<double> parameters_mtx_reversed(1, parameter_num);
+    double* parameters_reversed = parameters_mtx_reversed.get_data();
+    for (int idx=0; idx<parameter_num; idx++ ) {
+        parameters_reversed[idx] = parameters[parameter_num-1-idx];
+    }
+
+    // convert to numpy array
+    parameters_mtx_reversed.set_owner(false);
+    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx_reversed );
+
+    return parameter_arr;
+}
+
+
+
 
 
 
@@ -739,7 +951,6 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decomposition_
 
 }
 
-
 /**
 @brief Wrapper method to reorder the qubits in the decomposition class.
 @param 
@@ -812,6 +1023,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Wrapper_methods[] = {
     },
     {"get_Gate_Num", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_gate_num, METH_NOARGS,
      "Method to get the number of decomposing gates."
+    },
+    {"get_Optimized_Parameters", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters, METH_NOARGS,
+     "Method to get the array of optimized parameters."
     },
     {"get_Gate", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_gate, METH_VARARGS,
      "Method to get the i-th decomposing gates."

@@ -23,7 +23,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Sub_Matrix_Decomposition.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
-#include "Functor_Cost_Function_Gradient.h"
 
 //tbb::spin_mutex my_mutex;
 
@@ -170,13 +169,13 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
             // Do the optimization
             if (optimize_layer_num || layer_num >= max_layer_num_loc ) {
-
+/*
                 // release optimized parameters if necessary
                 if (optimized_parameters != NULL) {
                     qgd_free(optimized_parameters);
                     optimized_parameters = NULL;
                 }
-
+*/
                 // solve the optimization problem to find the correct minimum
                 solve_optimization_problem( NULL, 0);
 
@@ -214,7 +213,9 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     subdisentaglement_done = true;
 
     // The subunitarized matrix
-    subdecomposed_mtx = get_transformed_matrix( optimized_parameters, gates.begin(), gates.size(), Umtx );
+//Matrix_real optimized_parameters_mtx_tmp(optimized_parameters, 1, parameter_num );
+    subdecomposed_mtx = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+
 }
 
 /**
@@ -260,12 +261,48 @@ void Sub_Matrix_Decomposition::add_gate_layers() {
                 CZ* cz_gate = static_cast<CZ*>( gate );
                 add_gate_to_end( (Gate*)cz_gate->clone() );
             }
+            else if (gate->get_type() == CH_OPERATION ) {
+                CH* ch_gate = static_cast<CH*>( gate );
+                add_gate_to_end( (Gate*)ch_gate->clone() );
+            }
+            else if (gate->get_type() == SYC_OPERATION ) {
+                SYC* syc_gate = static_cast<SYC*>( gate );
+                add_gate_to_end( (Gate*)syc_gate->clone() );
+            }
             else if (gate->get_type() == GENERAL_OPERATION ) {
                 add_gate_to_end( gate->clone() );
             }
             else if (gate->get_type() == U3_OPERATION ) {
                 U3* u3_gate = static_cast<U3*>( gate );
                 add_gate_to_end( (Gate*)u3_gate->clone() );
+            }
+            else if (gate->get_type() == RX_OPERATION ) {
+                RX* rx_gate = static_cast<RX*>( gate );
+                add_gate_to_end( (Gate*)rx_gate->clone() );
+            }
+            else if (gate->get_type() == RY_OPERATION ) {
+                RY* ry_gate = static_cast<RY*>( gate );
+                add_gate_to_end( (Gate*)ry_gate->clone() );
+            }
+            else if (gate->get_type() == CRY_OPERATION ) {
+                CRY* cry_gate = static_cast<CRY*>( gate );
+                add_gate_to_end( (Gate*)cry_gate->clone() );
+            }
+            else if (gate->get_type() == RZ_OPERATION ) {
+                RZ* rz_gate = static_cast<RZ*>( gate );
+                add_gate_to_end( (Gate*)rz_gate->clone() );
+            }
+            else if (gate->get_type() == X_OPERATION ) {
+                X* x_gate = static_cast<X*>( gate );
+                add_gate_to_end( (Gate*)x_gate->clone() );
+            }
+            else if (gate->get_type() == SX_OPERATION ) {
+                SX* sx_gate = static_cast<SX*>( gate );
+                add_gate_to_end( (Gate*)sx_gate->clone() );
+            }
+            else if (gate->get_type() == ADAPTIVE_OPERATION ) {
+                Adaptive* ad_gate = static_cast<Adaptive*>( gate );
+                add_gate_to_end( (Gate*)ad_gate->clone() );
             }
             else if (gate->get_type() == BLOCK_OPERATION ) {
                 Gates_block* block_gate = static_cast<Gates_block*>( gate );
@@ -359,11 +396,17 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
         if (solution_guess_gsl == NULL) {
             solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
         }
-
+/*
         if (optimized_parameters == NULL) {
             optimized_parameters = (double*)qgd_calloc(num_of_parameters,sizeof(double), 64);
             memcpy(optimized_parameters, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
         }
+*/
+        if (optimized_parameters_mtx.size() == 0) {
+            optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+        }
+
 
         // maximal number of iteration loops
         int iteration_loops_max;
@@ -421,7 +464,7 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
 
             if (current_minimum > s->f) {
                 current_minimum = s->f;
-                memcpy( optimized_parameters, s->x->data, num_of_parameters*sizeof(double) );
+                memcpy( optimized_parameters_mtx.get_data(), s->x->data, num_of_parameters*sizeof(double) );
                 gsl_multimin_fdfminimizer_free (s);
 
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
@@ -441,7 +484,6 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
         }
 
 
-
 }
 
 
@@ -452,10 +494,11 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double Sub_Matrix_Decomposition::optimization_problem( const double* parameters ) {
+double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 
         // get the transformed matrix with the gates in the list
-        Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
+        Matrix_real parameters_mtx(parameters, 1, parameter_num );
+        Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
@@ -487,7 +530,8 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 //tbb::spin_mutex::scoped_lock my_lock{my_mutex};
 
     Umtx_loc = instance->get_Umtx();
-    matrix_new = instance->get_transformed_matrix( parameters->data, gates_loc.begin(), gates_loc.size(), Umtx_loc );
+    Matrix_real parameters_mtx(parameters->data, 1, instance->get_parameter_num() );
+    matrix_new = instance->get_transformed_matrix( parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx_loc );
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
@@ -503,6 +547,101 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 
     return cost_function;
 }
+
+
+
+
+
+/**
+@brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
+@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param grad A GNU Scientific Library vector containing the calculated gradient components.
+*/
+void Sub_Matrix_Decomposition::optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad ) {
+
+    // The function value at x0
+    double f0;
+
+    // calculate the approximate gradient
+    optimization_problem_combined( parameters, void_instance, &f0, grad);
+
+}
+
+
+
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param f0 The value of the cost function at x0.
+@param grad A GNU Scientific Library vector containing the calculated gradient components.
+*/
+void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+
+    Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
+
+    int parameter_num_loc = instance->get_parameter_num();
+
+    // storage for the function values calculated at the displaced points x
+    gsl_vector* f = gsl_vector_alloc(grad->size);
+
+    // the difference in one direction in the parameter for the gradient calculation
+    double dparam = 1e-8;
+
+    // calculate the function values at displaced x and the central x0 points through TBB parallel for
+    tbb::parallel_for(0, parameter_num_loc+1, 1, [&](int i) {
+
+        if (i == (int)parameters->size) {
+            // calculate function value at x0
+            *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance));
+        }
+        else {
+
+            gsl_vector* parameters_d = gsl_vector_calloc(parameters->size);
+            memcpy( parameters_d->data, parameters->data, parameters->size*sizeof(double) );
+            parameters_d->data[i] = parameters_d->data[i] + dparam;
+
+            // calculate the cost function at the displaced point
+            f->data[i] = instance->optimization_problem(parameters_d, reinterpret_cast<void*>(instance));
+
+            // release vectors
+            gsl_vector_free(parameters_d);
+            parameters_d = NULL;
+
+        }
+    });
+
+
+/*
+    // sequential version
+    functor_sub_optimization_grad<Sub_Matrix_Decomposition> tmp = functor_grad<Sub_Matrix_Decomposition>( parameters, instance, f, f0, dparam );
+    #pragma omp parallel for
+    for (int idx=0; idx<parameter_num_loc+1; idx++) {
+        tmp(idx);
+    }
+*/
+
+
+    for (int idx=0; idx<parameter_num_loc; idx++) {
+        // set the gradient
+#ifdef DEBUG
+        if (isnan(f->data[idx])) {
+            std::cout << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
+            exit(-1);
+        }
+#endif // DEBUG
+        gsl_vector_set(grad, idx, (f->data[idx]-(*f0))/dparam);
+    }
+
+
+    gsl_vector_free(f);
+
+}
+
+
+
+
 
 
 

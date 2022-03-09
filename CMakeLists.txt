@@ -16,6 +16,7 @@ set(CMAKE_CXX_STANDARD_REQUIRED True)
 include(CheckIncludeFile)
 include(CheckIncludeFileCXX)
 include(CheckFunctionExists)
+include(cmake/check_AVX.cmake)
 
 # variables for compile and link options
 set(CXX_FLAGS_DEBUG)
@@ -154,6 +155,9 @@ list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEB
 list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
 
 
+# checking for AVX/AVX2 support
+CHECK_FOR_AVX()
+
 # Identify the compiler type and set compiler specific options
 if (CMAKE_CXX_COMPILER_ID STREQUAL "Clang")
   # using Clang
@@ -165,19 +169,44 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
   list(APPEND CXX_FLAGS_DEBUG "-g3" "-ggdb")
   list(APPEND CXX_FLAGS_RELEASE "-ftree-vectorize")
 
+  if (${HAVE_AVX512F_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx512f" "-DUSE_AVX")
+  elseif (${HAVE_AVX2_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx2" "-DUSE_AVX")
+  elseif (${HAVE_AVX_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx" "-DUSE_AVX")
+  endif()
+
+
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "Intel")
   # using Intel C++
   message("-- Using Intel compiler")
-  if (USE_MKL)
+  if (BLAS_IS_MKL)
     list(APPEND CXX_FLAGS_DEBUG "-mkl" "-tbb")
     list(APPEND CXX_FLAGS_RELEASE "-mkl" "-tbb")
+  endif()
+
+  if (${HAVE_AVX512F_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx512f" "-DUSE_AVX512F")
+  elseif (${HAVE_AVX2_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx2" "-DUSE_AVX")
+  elseif (${HAVE_AVX_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "-mavx" "-DUSE_AVX")
   endif()
 
 elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
   # using Visual Studio C++
   message("-- Using Visual Studio C++ compiler")
-endif()
 
+  if (${HAVE_AVX512F_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "/arch:AVX512F" "-DUSE_AVX512F")
+  elseif (${HAVE_AVX2_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "/arch:AVX2" "-DUSE_AVX")
+  elseif (${HAVE_AVX_EXTENSIONS})
+    list(APPEND CXX_FLAGS_RELEASE "/arch:AVX" "-DUSE_AVX")
+  endif()
+
+endif()
 
 
 ############################################################
@@ -306,19 +335,35 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/common/common.cpp
     ${PROJECT_SOURCE_DIR}/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix.cpp
+    ${PROJECT_SOURCE_DIR}/common/matrix_real.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
+    ${PROJECT_SOURCE_DIR}/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
     ${PROJECT_SOURCE_DIR}/gates/CH.cpp
     ${PROJECT_SOURCE_DIR}/gates/Gate.cpp
+    ${PROJECT_SOURCE_DIR}/gates/UN.cpp
+    ${PROJECT_SOURCE_DIR}/gates/ON.cpp
     ${PROJECT_SOURCE_DIR}/gates/Gates_block.cpp
+    ${PROJECT_SOURCE_DIR}/gates/X.cpp
+    ${PROJECT_SOURCE_DIR}/gates/SX.cpp
     ${PROJECT_SOURCE_DIR}/gates/U3.cpp
+    ${PROJECT_SOURCE_DIR}/gates/RY.cpp
+    ${PROJECT_SOURCE_DIR}/gates/CRY.cpp
+    ${PROJECT_SOURCE_DIR}/gates/Adaptive.cpp
+    ${PROJECT_SOURCE_DIR}/gates/RX.cpp
+    ${PROJECT_SOURCE_DIR}/gates/RZ.cpp
+    ${PROJECT_SOURCE_DIR}/gates/Composite.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Base.cpp
-    ${PROJECT_SOURCE_DIR}/decomposition/Functor_Cost_Function_Gradient.cpp
+    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition.cpp
+    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive.cpp
+    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive_general.cpp
+    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_custom.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition.cpp  
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Unitary.cpp
+    ${PROJECT_SOURCE_DIR}/random_unitary/Random_Orthogonal.cpp
 )
 
 
@@ -358,21 +403,37 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/Config.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix_base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix_real.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/QGDTypes.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CNOT.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/SYC.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CZ.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CH.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Gate.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/UN.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/ON.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Gates_block.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/X.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/SX.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/U3.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/RX.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/RY.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CRY.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Adaptive.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/RZ.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Composite.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Decomposition_Base.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Functor_Cost_Function_Gradient.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_Base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_adaptive.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_adaptive_general.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_custom.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_Cost_Function.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Sub_Matrix_Decomposition_Cost_Function.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Sub_Matrix_Decomposition.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Unitary.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Orthogonal.h
 )
 
 configure_file(${PROJECT_SOURCE_DIR}/common/include/Config.h.in

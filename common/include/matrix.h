@@ -111,6 +111,13 @@ Matrix copy();
 bool isnan();
 
 
+
+/**
+@brief Call to prints the stored matrix on the standard output
+*/
+void print_matrix();
+
+
 }; //matrix
 
 

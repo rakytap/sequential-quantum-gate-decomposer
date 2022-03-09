@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include <vector>
 #include "common.h"
+#include "matrix_real.h"
 #include "Gate.h"
 
 
@@ -67,25 +68,46 @@ virtual ~Gates_block();
 void release_gates();
 
 /**
+@brief Call to release one gate in the list
+*/
+void release_gate( int idx);
+
+/**
 @brief Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate block)
 @param parameters An array pointing to the parameters of the gates
 @return Returns with the gate matrix
 */
-Matrix get_matrix( const double* parameters );
+Matrix get_matrix( Matrix_real& parameters );
+
+
+/**
+@brief Call to apply the gate on the input array/matrix by U3*input
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void apply_to_list( Matrix_real& parameters, std::vector<Matrix> input );
 
 /**
 @brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_to( const double* parameters, Matrix& input );
+void apply_to( Matrix_real& parameters_mtx, Matrix& input );
 
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*CNOT
 @param input The input array on which the gate is applied
 */
-void apply_from_right( const double* parameters, Matrix& input );
+void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
+
+
+/**
+@brief ???????????????
+*/
+std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input );
+
+
 
 
 /**
@@ -105,6 +127,62 @@ void add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool Lambda);
 @param Lambda The Lambda parameter of the U3 gate
 */
 void add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda);
+
+
+/**
+@brief Append a RX gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_rx_to_end(int target_qbit);
+
+/**
+@brief Add a RX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_rx(int target_qbit);
+
+
+/**
+@brief Append a RY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_ry_to_end(int target_qbit);
+
+/**
+@brief Add a RY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_ry(int target_qbit);
+
+
+
+
+/**
+@brief Append a CRY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cry_to_end(int target_qbit, int control_qbit);
+
+/**
+@brief Add a CRY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cry(int target_qbit, int control_qbit);
+
+
+/**
+@brief Append a RZ gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_rz_to_end(int target_qbit);
+
+/**
+@brief Add a RZ gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_rz(int target_qbit);
 
 /**
 @brief Append a CNOT gate gate to the list of gates
@@ -156,6 +234,99 @@ void add_ch_to_end( int target_qbit, int control_qbit);
 */
 void add_ch( int target_qbit, int control_qbit );
 
+
+/**
+@brief Append a X gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_x_to_end(int target_qbit);
+
+/**
+@brief Add a X gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_x(int target_qbit);
+
+
+/**
+@brief Append a SX gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_sx_to_end(int target_qbit);
+
+/**
+@brief Add a SX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_sx(int target_qbit);
+
+/**
+@brief Append a Sycamore gate (i.e. controlled Hadamard gate) gate to the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_syc_to_end( int target_qbit, int control_qbit);
+
+
+
+/**
+@brief Add a Sycamore gate (i.e. controlled Hadamard gate) gate to the front of the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_syc( int target_qbit, int control_qbit );
+
+
+
+
+/**
+@brief Append a UN gate to the list of gates
+*/
+void add_un_to_end();
+
+/**
+@brief Add a UN gate to the front of the list of gates
+*/
+void add_un();
+
+
+/**
+@brief Append a ON gate to the list of gates
+*/
+void add_on_to_end();
+
+/**
+@brief Add a OUN gate to the front of the list of gates
+*/
+void add_on();
+
+
+/**
+@brief Append a Composite gate to the list of gates
+*/
+void add_composite_to_end();
+
+/**
+@brief Add a Composite gate to the front of the list of gates
+*/
+void add_composite();
+
+
+/**
+@brief Append a Adaptive gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_adaptive_to_end(int target_qbit, int control_qbit);
+
+/**
+@brief Add a Adaptive gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_adaptive(int target_qbit, int control_qbit);
+
+
 /**
 @brief Append a list of gates to the list of gates
 @param gates_in A list of gate class instances.
@@ -181,6 +352,13 @@ void add_gate_to_end( Gate* gate );
 @param gate A pointer to a class Gate describing an gate.
 */
 void add_gate( Gate* gate );
+
+
+/**
+@brief ??????
+@param gate A pointer to a class Gate describing an gate.
+*/
+void insert_gate( Gate* gate, int idx );
 
 
 
@@ -210,7 +388,7 @@ int get_gate_num();
 @param parameters The parameters of the gates that should be printed.
 @param start_index The ordinal number of the first gate.
 */
-void list_gates( const double* parameters, int start_index );
+void list_gates( const Matrix_real &parameters, int start_index );
 
 
 /**
@@ -231,6 +409,13 @@ std::vector<int> get_involved_qubits();
 @return Return with a list of the gates.
 */
 std::vector<Gate*> get_gates();
+
+
+/**
+@brief Call to get the gates stored in the class.
+@return Return with a list of the gates.
+*/
+Gate* get_gate(int idx);
 
 /**
 @brief Call to append the gates of an gate block to the current block
@@ -259,6 +444,19 @@ Gates_block* clone();
 */
 int extract_gates( Gates_block* op_block );
 
+
+
+/**
+@brief ?????????
+@return Return with ?????????
+*/
+bool contains_adaptive_gate();
+
+/**
+@brief ?????????
+@return Return with ?????????
+*/
+bool contains_adaptive_gate(int idx);
 
 };
 

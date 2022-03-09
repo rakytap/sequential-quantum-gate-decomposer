@@ -29,6 +29,42 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <tbb/scalable_allocator.h>
 
 
+/**
+@brief ?????
+*/
+double activation_function( double Phi, int limit ) {
+
+
+    return Phi;
+
+/*
+    while (Phi < 0 ) {
+        Phi = Phi + 2*M_PI;
+    }
+
+    while (Phi > 2*M_PI ) {
+        Phi = Phi - 2*M_PI;
+    }
+ 
+
+    double ret = Phi;
+
+
+    for (int idx=0; idx<limit; idx++) {
+
+
+        ret = 0.5*(1.0-std::cos(ret))*M_PI;
+ 
+        if ( Phi > M_PI ) {
+            ret = 2*M_PI - ret;
+        }
+
+    }
+
+    return ret;
+*/
+}
+
 
 /**
 @brief custom defined memory allocation function.  Memory allocated with aligned realloc *MUST* be freed using qgd_free.

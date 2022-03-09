@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Gate.h"
 #include "matrix.h"
+#include "matrix_real.h"
 #include <math.h>
 
 
@@ -42,8 +43,14 @@ protected:
    bool phi;
    /// logical value indicating whether the matrix creation takes an argument lambda
    bool lambda;
+   /// value applied for theta if it is not varied during the gate decomposition
+   double theta0;
+   /// value applied for phi if it is not varied during the gate decomposition
+   double phi0;
+   /// value applied for lambda if it is not varied during the gate decomposition
+   double lambda0;
    /// Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
-   double* parameters;
+   Matrix_real parameters;
 
 
 
@@ -75,7 +82,14 @@ U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lambda_
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( const double* parameters );
+Matrix get_matrix( Matrix_real& parameters );
+
+/**
+@brief Call to apply the gate on the input array/matrix by U3*input
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+*/
+void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& input, const double scale=1.0 );
 
 
 /**
@@ -83,7 +97,23 @@ Matrix get_matrix( const double* parameters );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_to( const double* parameters, Matrix& input );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 );
+
+protected:
+/**
+@brief ???????????
+*/
+void apply_kernel_to( Matrix& u3_1qbit, Matrix& input );
+
+
+public:
+
+
+/**
+@brief ???????????????
+*/
+virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
+
 
 
 /**
@@ -91,8 +121,18 @@ void apply_to( const double* parameters, Matrix& input );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_from_right( const double* parameters, Matrix& input );
+virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
 
+
+protected:
+
+/**
+@brief ???????????
+*/
+void apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input );
+
+
+public:
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the gate
@@ -135,7 +175,7 @@ bool is_lambda_parameter();
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
+Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda, const double scale=1.0 );
 
 
 /**
@@ -157,7 +197,27 @@ void set_optimized_parameters(double Theta, double Phi, double Lambda );
 @brief Call to get the final optimized parameters of the gate.
 @param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
 */
-void get_optimized_parameters(double *parameters_in );
+Matrix_real get_optimized_parameters();
+
+
+/**
+@brief Call to set the parameter theta0
+@param theta_in The value for the parameter theta0
+*/
+void set_theta(double theta_in );
+
+/**
+@brief Call to set the parameter phi0
+@param theta_in The value for the parameter theta0
+*/
+void set_phi(double phi_in );
+
+
+/**
+@brief Call to set the parameter lambda0
+@param theta_in The value for the parameter theta0
+*/
+void set_lambda(double lambda_in );
 
 };
 
