@@ -37,7 +37,7 @@ The dependencies necessary to compile and build the SQUANDER package are the fol
 * [CMake](https://cmake.org/) (>=3.10.2)
 * [GNU Scientific Library](https://www.gnu.org/software/gsl/doc/html/index.html) (>=2.5)
 * C++/C [Intel](https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html) (>=14.0.1) or [GNU](https://gcc.gnu.org/) (>=v4.8.1) compiler
-* [TBB](https://github.com/oneapi-src/oneTBB) library
+* [TBB](https://github.com/oneapi-src/oneTBB) library (shipped with tbb-devel Python package)
 * [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html) (optional)
 * [OpenBlas](https://www.openblas.net/) (optional, recommended)
 * [LAPACKE](https://www.netlib.org/lapack/lapacke.html)
@@ -107,13 +107,33 @@ The **setup.py** script also build the C++ library of the SQUANDER package by ma
 
 
 
-### In-place build
+### Developer build
 
-After the basic environment variables are set, the compilation can be started by the Python command:
+
+We recommend to install the SQUANDER package in the Anaconda environment. In order to install the necessary requirements, follow the steps below:
+
+Creating new python environment: 
+
+$ conda create -n qgd
+
+Activate the new anaconda environment
+
+$ conda activate qgd
+
+Install dependencies:
+
+$ conda install numpy scipy pip pytest scikit-build tbb-devel
+
+$ pip install qiskit 
+
+After the basic environment variables are set and the dependencies are installed (including GSL), the compilation can be started by the Python command:
 
 $ python3 setup.py build_ext
 
 The command above starts the compilation of the C++ library and builds the necessary C++ Python extensions for the Python interface of the SQUANDER package in place.
+After a successful build, one can register the SQUANDER package in the Python distribution in developer (i.e. editable) mode by command:
+
+$ python -m pip install -e .
 
 
 ### Binary distribution
