@@ -24,6 +24,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Sub_Matrix_Decomposition.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
 
+
+
 //tbb::spin_mutex my_mutex;
 
 /**
@@ -117,31 +119,31 @@ Sub_Matrix_Decomposition::~Sub_Matrix_Decomposition() {
 */
 void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
-    if (subdisentaglement_done) {
-        if (verbose) {
-            printf("Sub-disentaglement already done.\n");
-        }
+    if (subdisentaglement_done) {        
+	std::stringstream sstream;
+	sstream << "Sub-disentaglement already done." << std::endl;
+	print(sstream, 2);	    	
         return;
-    }
+    }   
 
-    if (verbose) {
-        printf("\nDisentagling submatrices.\n");
-    }
-
+    std::stringstream sstream;
+    sstream << std::endl << "Disentagling submatrices." << std::endl;
+    print(sstream, 2);	    	
+	 
+    
     // setting the global target minimum
     global_target_minimum = 0;
     current_minimum = optimization_problem(NULL);
 
     // check if it needed to do the subunitarization
     if (check_optimization_solution()) {
-        if (verbose) {
-            printf("Disentanglig not needed\n");
-        }
+        std::stringstream sstream;
+        sstream << "Disentanglig not needed" << std::endl;
+        print(sstream, 2);	    	                    
         subdecomposed_mtx = Umtx;
         subdisentaglement_done = true;
         return;
     }
-
 
 
     if ( !check_optimization_solution() ) {
@@ -156,7 +158,10 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
             max_layer_num_loc = max_layer_num[qbit_num];
         }
         catch (...) {
-            throw "Layer number not given";
+            std::stringstream sstream;
+	    sstream << "Layer number not given" << std::endl;
+	    print(sstream, 0);	    
+            throw sstream.str();
         }
 
         while ( layer_num < max_layer_num_loc ) {
@@ -187,25 +192,26 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
         }
 
-        if (verbose) {
-            tbb::tick_count current_time = tbb::tick_count::now();
-            printf("--- %f seconds elapsed during the decomposition ---\n\n", (current_time - start_time).seconds());
-        }
+        
+        tbb::tick_count current_time = tbb::tick_count::now();
 
-
+	std::stringstream sstream;
+	sstream << "--- " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl << std::endl;
+	print(sstream, 2);	    	
+	
     }
 
 
 
     if (check_optimization_solution()) {
-        if (verbose) {
-            printf("Sub-disentaglement was succesfull.\n\n");
-        }
+       std::stringstream sstream;
+       sstream << "Sub-disentaglement was succesfull." << std::endl << std::endl;
+       print(sstream, 1);	    	    
     }
     else {
-        if (verbose) {
-            printf("Sub-disentaglement did not reach the tolerance limit.\n\n");
-        }
+       std::stringstream sstream;
+       sstream << "Sub-disentaglement did not reach the tolerance limit." << std::endl << std::endl;
+       print(sstream, 1);	    	
     }
 
 
@@ -502,7 +508,9 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
-            std::cout << "Sub_Matrix_Decomposition::optimization_problem: matrix_new contains NaN a. Exiting" << std::endl;
+           std::stringstream sstream;
+	   sstream << "Sub_Matrix_Decomposition::optimization_problem: matrix_new contains NaN a. Exiting" << std::endl;
+	   print(sstream, 1);	
         }
 #endif
 
@@ -535,7 +543,9 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
-            std::cout << "Sub_Matrix_Decomposition::optimization_problem matrix_new contains NaN b." << std::endl;
+           std::stringstream sstream;
+	   sstream << "Sub_Matrix_Decomposition::optimization_problem matrix_new contains NaN b." << std::endl;
+	   print(sstream, 1);	 
         }
 #endif
 
@@ -627,8 +637,9 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* 
         // set the gradient
 #ifdef DEBUG
         if (isnan(f->data[idx])) {
-            std::cout << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
-            exit(-1);
+	  sstream << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
+	  print(sstream, 0);	  
+          exit(-1);
         }
 #endif // DEBUG
         gsl_vector_set(grad, idx, (f->data[idx]-(*f0))/dparam);
@@ -691,6 +702,7 @@ int Sub_Matrix_Decomposition::set_identical_blocks( std::map<int, int> identical
 */
 Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
 
+
     Sub_Matrix_Decomposition* ret = new Sub_Matrix_Decomposition(Umtx, qbit_num, optimize_layer_num, initial_guess);
 
     // setting computational parameters
@@ -701,7 +713,9 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
     ret->set_iteration_loops( iteration_loops );
 
     if ( extract_gates(static_cast<Gates_block*>(ret)) != 0 ) {
-        printf("Sub_Matrix_Decomposition::clone(): extracting gates was not succesfull\n");
+	std::stringstream sstream;
+	sstream << "Sub_Matrix_Decomposition::clone(): extracting gates was not succesfull\n" << std::endl;
+	print(sstream, 0);	    	
         exit(-1);
     }
 

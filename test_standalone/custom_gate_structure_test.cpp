@@ -31,9 +31,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "common.h"
 #include "N_Qubit_Decomposition.h"
 #include "Random_Unitary.h"
+#include "logging.h"
 //! [include]
 
 using namespace std;
+
 
 
 /**
@@ -107,13 +109,24 @@ Gates_block* create_custom_gate_structure( int qbit_num ) {
 */
 int main() {
 
-    printf("\n\n****************************************\n");
-    printf("Test of N qubit decomposition with custom gate structure\n");
-    printf("****************************************\n\n\n");
 
 
+    /// Stringstream input to store the output messages.
+    std::stringstream sstream;
 
+    /// Logging variable to set the verbosity level.
+    logging output;
 
+    /// Set the verbosity level of the output messages. 
+    int verbose_level;
+
+    //Setting the verbosity level of the Test of N qubit decomposition with custom gate structure
+    verbose_level=1;
+    sstream << std::endl << std::endl << "****************************************" << std::endl;
+    sstream << "Test of N qubit decomposition with custom gate structure" << std::endl;
+    sstream << "****************************************"<< std::endl << std::endl << std::endl;
+    output.print(sstream,verbose_level);	    	
+ 
 //! [general random]
     // The number of qubits spanning the random unitary
     int qbit_num = 3;
@@ -164,7 +177,11 @@ int main() {
 //! [creating custom gate structure]
 
 
-    printf("Starting the decompsition\n");
+    // setting the verbosity level of the decomposition
+    verbose_level=1;
+    sstream << "Starting the decompsition" << std::endl;
+    output.print(sstream,verbose_level);	    	
+    
 //! [performing decomposition]
     // starting the decomposition
     cDecomposition.start_decomposition(/* finalize_decomposition = */ true, /* prepare_export= */ true);

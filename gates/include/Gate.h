@@ -27,6 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <vector>
 #include "common.h"
 #include "matrix.h"
+#include "logging.h"
 
 
 /// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)
@@ -37,7 +38,7 @@ typedef enum gate_type {GENERAL_OPERATION, UN_OPERATION, ON_OPERATION, CZ_OPERAT
 /**
 @brief Base class for the representation of general gate operations.
 */
-class Gate {
+class Gate : public logging {
 
 
 protected:

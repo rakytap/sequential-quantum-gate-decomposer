@@ -98,7 +98,7 @@ functor_extract_submatrices::functor_extract_submatrices( Matrix& matrix_in, std
 @param r A range of indices labeling the given submatrix to be extracted
 */
 void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) const {
-
+  
     // number of submatrices
     size_t submatrices_num_row = 2;
 
@@ -141,7 +141,9 @@ void functor_extract_submatrices::operator()( tbb::blocked_range<size_t> r ) con
 */
 #ifdef DEBUG
         if (submatrix.isnan()) {
-            std::cout << "Submatrix contains NaN." << std::endl;
+          std::stringstream sstream;
+	  sstream << "Submatrix contains NaN." << std::endl;
+          print(sstream, 1);		            
         }
 #endif
 
@@ -172,8 +174,6 @@ functor_submtx_cost_fnc::functor_submtx_cost_fnc( std::vector<Matrix, tbb::cache
 */
 void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
-
-
     // number of submatrices
     size_t submatrices_num_row = 2;
 
@@ -190,7 +190,9 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
 
 #ifdef DEBUG
     if (submatrix_prod.isnan()) {
-        std::cout << "functor_submtx_cost_fnc::operator: Submatrix product contains NaN. Exiting" << std::endl;
+       std::stringstream sstream;
+       sstream << "functor_submtx_cost_fnc::operator: Submatrix product contains NaN. Exiting" << std::endl;
+       print(sstream, 1);		               
     }
 #endif
 
@@ -225,9 +227,12 @@ void functor_submtx_cost_fnc::operator()( int product_idx ) const {
         }
     //});
 
+
     // checking NaN
     if (std::isnan(prod_cost_functions->local())) {
-        std::cout << "cost function NaN on cost function product "<< product_idx << std::endl;
+       std::stringstream sstream;
+       sstream << "cost function NaN on cost function product "<< product_idx << std::endl;
+       print(sstream, 1);	
     }
 
 

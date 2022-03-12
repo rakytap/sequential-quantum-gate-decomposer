@@ -25,7 +25,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Random_Unitary.h"
 
 
-
 /**
 @brief Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by random U3 operations.
 @param qbit_num The number of qubits spanning the unitary.

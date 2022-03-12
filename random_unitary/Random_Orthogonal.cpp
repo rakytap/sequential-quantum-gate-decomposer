@@ -23,6 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 #include "Random_Orthogonal.h"
+#include "logging.h"
 
 
 
@@ -80,10 +81,16 @@ Random_Orthogonal::Construct_Orthogonal_Matrix() {
 Matrix
 Random_Orthogonal::Construct_Orthogonal_Matrix( Matrix_real &vargamma ) {
 
+//The stringstream input to store the output messages.
+std::stringstream sstream;
 
+//Integer value to set the verbosity level of the output messages.
+int verbose_level;
 
     if (vargamma.size() != dim*(dim-1)/2) {
-        std::cout<<"Wring number of parameters in Random_Orthogonal::Construct_Orthogonal_Matrix" << std::endl;
+	sstream << "Wring number of parameters in Random_Orthogonal::Construct_Orthogonal_Matrix" << std::endl;
+	verbose_level=1;
+        print(sstream, verbose_level);	
         exit(-1);
     }
 

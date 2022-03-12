@@ -90,7 +90,7 @@ cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=
 ## [set parameters]
 
 # setting the verbosity of the decomposition
-cDecompose.set_Verbose( True )
+cDecompose.set_Verbose( 3 )
 
 ## [set parameters]
 

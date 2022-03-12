@@ -25,6 +25,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
+
+
 /**
 @brief Nullary constructor of the class.
 @return An instance of the class
@@ -35,6 +37,10 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
     gradient_threshold = 1e-1;
 
 }
+
+
+
+
 
 /**
 @brief Constructor of the class.
@@ -74,11 +80,15 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 
 
 
-    if (verbose) {
-        printf("***************************************************************\n");
-        printf("Starting to disentangle %d-qubit matrix\n", qbit_num);
-        printf("***************************************************************\n\n\n");
-    }
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+    sstream << "***************************************************************" << std::endl;
+    sstream << "Starting to disentangle " << qbit_num << "-qubit matrix" << std::endl;
+    sstream << "***************************************************************" << std::endl << std::endl << std::endl;
+    print(sstream, 1);	    	
+    
+
+    
 
     // temporarily turn off OpenMP parallelism
 #if BLAS==0 // undefined BLAS
@@ -174,23 +184,30 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
         // get the number of gates used in the decomposition
         gates_num gates_num = get_gate_nums();
 
-    if (verbose) {
-        std::cout << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
-        if ( gates_num.u3>0 ) std::cout << gates_num.u3 << " U3 gates," << std::endl;
-        if ( gates_num.rx>0 ) std::cout << gates_num.rx << " RX gates," << std::endl;
-        if ( gates_num.ry>0 ) std::cout << gates_num.ry << " RY gates," << std::endl;
-        if ( gates_num.rz>0 ) std::cout << gates_num.rz << " RZ gates," << std::endl;
-        if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT gates," << std::endl;
-        if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ gates," << std::endl;
-        if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH gates," << std::endl;
-        if ( gates_num.x>0 ) std::cout << gates_num.x << " X gates," << std::endl;
-        if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX gates," << std::endl;
-        if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore gates," << std::endl;
-        if ( gates_num.adap>0 ) std::cout << gates_num.adap << " Adaptive gates," << std::endl;
-        std::cout << std::endl;
+        sstream.str("");
+    	sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
+    	
+        if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 gates," << std::endl;
+        if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX gates," << std::endl;
+        if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY gates," << std::endl;
+        if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ gates," << std::endl;
+        if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT gates," << std::endl;
+        if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ gates," << std::endl;
+        if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH gates," << std::endl;
+        if ( gates_num.x>0 ) sstream << gates_num.x << " X gates," << std::endl;
+        if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX gates," << std::endl; 
+        if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore gates," << std::endl;
+        if ( gates_num.adap>0 )sstream << gates_num.adap << " Adaptive gates," << std::endl;   	
+
+
+        sstream << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
-        std::cout << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
-    }
+
+	sstream << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
+    	print(sstream, 1);	    	
+    	
+
+        
 
     }
 
@@ -213,11 +230,12 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 void
 N_Qubit_Decomposition::decompose_submatrix() {
 
+
         if (decomposition_finalized) {
-            if (verbose) {
-                printf("Decomposition was already finalized\n");
-            }
-            return;
+	   std::stringstream sstream;
+	   sstream << "Decomposition was already finalized" << std::endl;
+	   print(sstream, 1);	    	     
+           return;
         }
 
         if (qbit_num == 2) {
@@ -457,11 +475,14 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
 void
 N_Qubit_Decomposition::simplify_layers() {
 
-        if (verbose) {
-            printf("***************************************************************\n");
-            printf("Try to simplify layers\n");
-            printf("***************************************************************\n");
-        }
+    	//The stringstream input to store the output messages.
+    	std::stringstream sstream;
+	sstream << "***************************************************************" << std::endl;
+	sstream << "Try to simplify layers" << std::endl;
+	sstream << "***************************************************************" << std::endl;
+	print(sstream, 1);	    	
+	         
+        
 
         // current starting index of the optimized parameters
         int parameter_idx = 0;
@@ -639,11 +660,14 @@ N_Qubit_Decomposition::simplify_layers() {
         gates_num gate_num_simplified = get_gate_nums();
         int two_qbit_num_simplified = gate_num_simplified.cnot + gate_num_simplified.cz + gate_num_simplified.ch;
 
-        if (verbose) {
-            printf("\n\n************************************\n");
-            printf("After some additional 2-qubit decompositions the initial gate structure with %d two-qubit gates simplified to a structure containing %d two-qubit gates.\n", two_qbit_num_initial, two_qbit_num_simplified);
-            printf("************************************\n\n");
-        }
+        
+        sstream.str("");
+	sstream << std::endl << std::endl << "************************************" << std::endl;
+	sstream << "After some additional 2-qubit decompositions the initial gate structure with " <<  two_qbit_num_initial << " two-qubit gates simplified to a structure containing " << two_qbit_num_simplified << " two-qubit gates" << std::endl;
+	sstream << "************************************" << std::endl << std::endl;
+	print(sstream, 1);	    	
+	
+        
 
 
 
@@ -663,9 +687,12 @@ N_Qubit_Decomposition::simplify_layers() {
 int
 N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Gates_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num) {
 
-        if (verbose) {
-            printf("Try to simplify sub-structure \n");
-        }
+        //The stringstream input to store the output messages.
+    	std::stringstream sstream;
+	sstream << "Try to simplify sub-structure " << std::endl;
+	print(sstream, 1);	    	
+	          
+        
 
         // get the target bit
         int target_qbit = -1;
@@ -739,10 +766,10 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
 
         // check whether simplification was succesfull
         if (!cdecomposition->check_optimization_solution()) {
-            // return with the original layer, if the simplification wa snot successfull
-            if (verbose) {
-                printf("The simplification of the sub-structure was not possible\n");
-            }
+            // return with the original layer, if the simplification wa snot successfull            
+	    std::stringstream sstream;
+	    sstream << "The simplification of the sub-structure was not possible" << std::endl;
+	    print(sstream, 1);	    	   
             delete cdecomposition;
             return 1;
         }
@@ -781,11 +808,12 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
 
         gates_num gate_nums_layer = layer->get_gate_nums();
         gates_num gate_nums_simplified = simplified_layer->get_gate_nums();
-        if (verbose) {
-            printf("%d two-qubit gates successfully simplified to %d CNOT gates\n", gate_nums_layer.cnot+gate_nums_layer.cz+gate_nums_layer.ch, gate_nums_simplified.cnot);
-        }
-
-
+        
+        sstream.str("");
+	sstream << gate_nums_layer.cnot+gate_nums_layer.cz+gate_nums_layer.ch << " two-qubit gates successfully simplified to " << gate_nums_simplified.cnot << " CNOT gates" << std::endl;
+	print(sstream,1);	  	
+	
+        
         //release allocated memory
         delete cdecomposition;
 

@@ -22,6 +22,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "RZ.h"
+
+
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief NullaRZ constructor of the class.
@@ -70,6 +73,12 @@ RZ::RZ() {
 */
 RZ::RZ(int qbit_num_in, int target_qbit_in) {
 
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
+
         // number of qubits spanning the matrix of the gate
         qbit_num = qbit_num_in;
         // the size of the matrix
@@ -79,9 +88,13 @@ RZ::RZ(int qbit_num_in, int target_qbit_in) {
 
 
         if (target_qbit_in >= qbit_num) {
-            printf("The index of the target qubit is larger than the number of qubits");
-            throw "The index of the target qubit is larger than the number of qubits";
+	   verbose_level=1;
+	   sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+	   print(sstream,verbose_level);	    	
+	            
+	   throw "The index of the target qubit is larger than the number of qubits";
         }
+	
         // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = target_qbit_in;
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
@@ -125,8 +138,11 @@ RZ::~RZ() {
 void 
 RZ::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
 
+
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in RZ gate apply" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in RZ gate apply" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
 
@@ -158,7 +174,9 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 apply_from_right" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
 
@@ -188,7 +206,9 @@ std::vector<Matrix>
 RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in RZ apply_derivate_to" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in RZ apply_derivate_to" << std::endl;
+        print(sstream, 0);	 
         exit(-1);
     }
 

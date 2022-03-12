@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 //#include <tbb/parallel_for.h>
 
 
+
 /**
 @brief Call co calculate the cost function during the final optimization process.
 @param matrix The square shaped complex matrix from which the cost function is calculated.
@@ -138,7 +139,9 @@ void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
     for ( size_t row_idx = r.begin(); row_idx != r.end(); row_idx++) {
 
         if ( row_idx > matrix_size ) {
-            printf("Error: row idx should be less than the number of roes in the matrix\n");
+            std::stringstream sstream;
+      	    sstream << "Error: row idx should be less than the number of roes in the matrix" << std::endl;
+            print(sstream, 0);   
             exit(-1);
         }
 

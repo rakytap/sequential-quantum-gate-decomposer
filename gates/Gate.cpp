@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "common.h"
 
 
+
 /**
 @brief Deafult constructor of the class.
 @return An instance of the class
@@ -161,7 +162,10 @@ void Gate::reorder_qubits( std::vector<int> qbit_list ) {
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
-        printf("Wrong number of qubits\n");
+	std::stringstream sstream;
+	sstream << "Wrong number of qubits" << std::endl;
+	print(sstream, 0);	    	
+       
         exit(-1);
     }
 

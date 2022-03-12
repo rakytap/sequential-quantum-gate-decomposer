@@ -70,7 +70,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             print("Input parameter topology should be a list of (int, int) describing the connected qubits in the topology")
             return
         
-        print(topology_validated) 
+
         # call the constructor of the wrapper class
         super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, method=method, topology=topology_validated)
 

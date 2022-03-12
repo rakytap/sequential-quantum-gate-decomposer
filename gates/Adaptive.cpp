@@ -23,6 +23,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Adaptive.h"
 #include "common.h"
+
+
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief Nullary constructor of the class.
@@ -90,8 +93,11 @@ Adaptive::~Adaptive() {
 void 
 Adaptive::apply_to( Matrix_real& parameters, Matrix& input ) {
 
+
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in Adaptive gate apply" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in Adaptive gate apply" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
 
@@ -130,7 +136,9 @@ Adaptive::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::cout<< "Wrong matrix size in Adaptive apply_from_right" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in Adaptive apply_from_right" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
 
@@ -164,7 +172,9 @@ std::vector<Matrix>
 Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in Adaptive gate apply" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in Adaptive gate apply" << std::endl;
+        print(sstream, 0);	     
         exit(-1);
     }
 

@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
 
+
 /**
 @brief Nullary constructor of the class.
 @return An instance of the class
@@ -82,12 +83,14 @@ void
 N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
 
-
-    if (verbose) {
-        printf("***************************************************************\n");
-        printf("Starting to disentangle %d-qubit matrix via custom gate structure\n", qbit_num);
-        printf("***************************************************************\n\n\n");
-    }
+   //The stringstream input to store the output messages.
+   std::stringstream sstream;
+   sstream << "***************************************************************" << std::endl;
+   sstream << "Starting to disentangle " << qbit_num << "-qubit matrix via custom gate structure" << std::endl;
+   sstream << "***************************************************************" << std::endl << std::endl << std::endl;
+   print(sstream, 1);	    	
+   
+    
 
     // temporarily turn off OpenMP parallelism
 #if BLAS==0 // undefined BLAS
@@ -125,24 +128,31 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     // get the number of gates used in the decomposition
     gates_num gates_num = get_gate_nums();
 
-    if (verbose) {
-        std::cout << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
-        if ( gates_num.u3>0 ) std::cout << gates_num.u3 << " U3 opeartions," << std::endl;
-        if ( gates_num.rx>0 ) std::cout << gates_num.rx << " RX opeartions," << std::endl;
-        if ( gates_num.ry>0 ) std::cout << gates_num.ry << " RY opeartions," << std::endl;
-        if ( gates_num.rz>0 ) std::cout << gates_num.rz << " RZ opeartions," << std::endl;
-        if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT opeartions," << std::endl;
-        if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ opeartions," << std::endl;
-        if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH opeartions," << std::endl;
-        if ( gates_num.x>0 ) std::cout << gates_num.x << " X opeartions," << std::endl;
-        if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX opeartions," << std::endl;
-        if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore opeartions," << std::endl;
-        if ( gates_num.un>0 ) std::cout << gates_num.un << " UN opeartions," << std::endl;
-        if ( gates_num.adap>0 ) std::cout << gates_num.adap << " Adaptive opeartions," << std::endl;
-        std::cout << std::endl;
-        tbb::tick_count current_time = tbb::tick_count::now();
-        std::cout << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
-    }
+    sstream.str("");
+    sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
+
+      
+    if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 opeartions," << std::endl;
+    if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX opeartions," << std::endl;
+    if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY opeartions," << std::endl;
+    if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ opeartions," << std::endl;
+    if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT opeartions," << std::endl;
+    if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ opeartions," << std::endl;
+    if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH opeartions," << std::endl;
+    if ( gates_num.x>0 ) sstream << gates_num.x << " X opeartions," << std::endl;
+    if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX opeartions," << std::endl;
+    if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore opeartions," << std::endl;
+    if ( gates_num.un>0 ) sstream << gates_num.un << " UN opeartions," << std::endl;
+    if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive opeartions," << std::endl;
+    	
+    	 
+    sstream << std::endl;
+    tbb::tick_count current_time = tbb::tick_count::now();
+
+    sstream << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
+    print(sstream, 1);	    	
+    	
+       
 
 #if BLAS==0 // undefined BLAS
     omp_set_num_threads(num_threads);

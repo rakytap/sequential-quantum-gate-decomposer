@@ -27,7 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "common.h"
 #include <tbb/combinable.h>
-
+#include "logging.h"
 
 
 /**
@@ -44,7 +44,7 @@ double get_submatrix_cost_function(Matrix& matrix);
 /**
 @brief Function operator class to extract the submatrices from a unitary.
 */
-class functor_extract_submatrices {
+class functor_extract_submatrices : public logging {
 
 protected:
 
@@ -77,7 +77,7 @@ void operator()( tbb::blocked_range<size_t> r ) const;
 /**
 @brief Function operator class to calculate the partial cost function derived from the individual products of the submatrices.
 */
-class functor_submtx_cost_fnc {
+class functor_submtx_cost_fnc : public logging {
 
 protected:
 

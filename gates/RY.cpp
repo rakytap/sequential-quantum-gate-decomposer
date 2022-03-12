@@ -22,6 +22,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "RY.h"
+
+
+
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief Nullary constructor of the class.
@@ -78,9 +82,12 @@ RY::RY(int qbit_num_in, int target_qbit_in) {
 
 
         if (target_qbit_in >= qbit_num) {
-            printf("The index of the target qubit is larger than the number of qubits");
-            throw "The index of the target qubit is larger than the number of qubits";
+            std::stringstream sstream;
+	    sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+	    print(sstream, 0);	             
+	    throw "The index of the target qubit is larger than the number of qubits";
         }
+	
         // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = target_qbit_in;
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
@@ -124,8 +131,11 @@ RY::~RY() {
 void 
 RY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
 
+
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
 
@@ -156,9 +166,10 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
 void 
 RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
-
     if (input.cols != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 apply_from_right" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
 
@@ -188,10 +199,11 @@ std::vector<Matrix>
 RY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in RY apply_derivate_to" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in RY apply_derivate_to" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
-
 
     std::vector<Matrix> ret;
 

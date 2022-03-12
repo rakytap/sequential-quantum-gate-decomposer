@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define N_Qubit_Decomposition_adaptive_general_H
 
 #include "N_Qubit_Decomposition_adaptive.h"
+//#include "logging.h"
 
 
 /**
@@ -108,7 +109,6 @@ Gates_block* construct_gate_layer( const int& _target_qbit, const int& _control_
 @brief ??????????????????
 */
 void add_finalyzing_layer( Gates_block* gate_structure );
-
 
 
 };
