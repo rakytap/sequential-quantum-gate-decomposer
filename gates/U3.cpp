@@ -22,6 +22,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "U3.h"
+
+
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief Nullary constructor of the class.
@@ -74,9 +77,12 @@ U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lam
 
 
         if (target_qbit_in >= qbit_num) {
-            printf("The index of the target qubit is larger than the number of qubits");
+            std::stringstream sstream;
+            sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+	    print(sstream, 0);	             
             throw "The index of the target qubit is larger than the number of qubits";
         }
+	
         // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = target_qbit_in;
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
@@ -151,7 +157,10 @@ U3::get_matrix( Matrix_real& parameters ) {
 
 #ifdef DEBUG
         if (U3_matrix.isnan()) {
-            std::cout << "U3::get_matrix: U3_matrix contains NaN." << std::endl;
+            std::stringstream sstream;
+	    sstream << "U3::get_matrix: U3_matrix contains NaN." << std::endl;
+	    verbose_level=1;
+            print(sstream,verbose_level);	  
         }
 #endif
 
@@ -184,8 +193,11 @@ U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input, cons
 void 
 U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, const double scale ) {
 
+
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
+        print(sstream, 0);	        
         exit(-1);
     }
 
@@ -321,9 +333,10 @@ U3::apply_kernel_to( Matrix& u3_1qbit, Matrix& input ) {
 void 
 U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
-
     if (input.cols != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 apply_from_right" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
+        print(sstream, 1);	      
         exit(-1);
     }
 
@@ -454,7 +467,9 @@ std::vector<Matrix>
 U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 gate apply" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
+        print(sstream, 1);	   
         exit(-1);
     }
 
@@ -620,13 +635,19 @@ Matrix U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda, const doub
 
 #ifdef DEBUG
     if (isnan(Theta)) {
-        std::cout << "Matrix U3::calc_one_qubit_u3: Theta is NaN." << std::endl;
+        std::stringstream sstream;
+	sstream << "Matrix U3::calc_one_qubit_u3: Theta is NaN." << std::endl;
+        print(sstream, 1);	    
     }
     if (isnan(Phi)) {
-        std::cout << "Matrix U3::calc_one_qubit_u3: Phi is NaN." << std::endl;
+        std::stringstream sstream;
+	sstream << "Matrix U3::calc_one_qubit_u3: Phi is NaN." << std::endl;
+        print(sstream, 1);	     
     }
     if (isnan(Lambda)) {
-        std::cout << "Matrix U3::calc_one_qubit_u3: Lambda is NaN." << std::endl;
+        std::stringstream sstream;
+	sstream << "Matrix U3::calc_one_qubit_u3: Lambda is NaN." << std::endl;
+        print(sstream, 1);	   
     }
 #endif // DEBUG
 

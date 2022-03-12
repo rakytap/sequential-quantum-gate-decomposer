@@ -28,6 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Random_Unitary.h"
 
 
+
 /**
 @brief Deafult constructor of the class.
 @return An instance of the class
@@ -103,10 +104,8 @@ void Composite::set_qbit_num( int qbit_num_in ) {
 Matrix
 Composite::get_matrix( Matrix_real& parameters ) {
 
-        
 
-
-        // create array of random parameters to construct random unitary
+    // create array of random parameters to construct random unitary
     double* vartheta = parameters.get_data();//(double*) qgd_calloc( int(dim*(dim-1)/2),sizeof(double), 64);
     double* varphi = parameters.get_data()+int((matrix_size*(matrix_size-1))/2);//(double*) qgd_calloc( int(dim*(dim-1)/2),sizeof(double), 64);
     double* varkappa = parameters.get_data()+matrix_size*(matrix_size-1);//(double*) qgd_calloc( (dim-1),sizeof(double), 64);
@@ -116,7 +115,9 @@ Composite::get_matrix( Matrix_real& parameters ) {
 //com_matrix.print_matrix();
 #ifdef DEBUG
         if (com_matrix.isnan()) {
-            std::cout << "Composite::get_matrix: UN_matrix contains NaN." << std::endl;
+	    std::stringstream sstream;
+	    sstream << "Composite::get_matrix: UN_matrix contains NaN." << std::endl;
+            print(sstream, 1);	           
         }
 #endif
 
@@ -131,13 +132,18 @@ Composite::get_matrix( Matrix_real& parameters ) {
 void 
 Composite::apply_to( Matrix_real& parameters, Matrix& input ) {
 
+
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in Composite gate apply" << std::endl;
+	std::stringstream sstream;
+        sstream << "Wrong matrix size in Composite gate apply" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-        std::cout << "Not enough parameters given for the Composite gate" << std::endl;
+	std::stringstream sstream;
+	sstream << "Not enough parameters given for the Composite gate" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
 
@@ -160,12 +166,16 @@ Composite::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in Composite gate apply" << std::endl;
+	std::stringstream sstream;
+	sstream << "Wrong matrix size in Composite gate apply" << std::endl;
+        print(sstream, 0);	        
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-        std::cout << "Not enough parameters given for the Composite gate" << std::endl;
+	std::stringstream sstream;
+        sstream << "Not enough parameters given for the Composite gate" << std::endl;
+        print(sstream, 0);	 
         exit(-1);
     }
 
@@ -189,7 +199,9 @@ void Composite::reorder_qubits( std::vector<int> qbit_list ) {
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
-        printf("Wrong number of qubits\n");
+	std::stringstream sstream;
+	sstream << "Wrong number of qubits" << std::endl;
+	print(sstream, 0);	    	
         exit(-1);
     }
 

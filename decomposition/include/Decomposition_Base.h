@@ -61,9 +61,7 @@ class Decomposition_Base : public Gates_block {
 
 
 public:
-    /// Logical variable. Set true for verbose mode, or to false to suppress output messages.
-    bool verbose;
-
+  
     /// number of gate blocks used in one shot of the optimization process
     int optimization_block;
 
@@ -358,12 +356,6 @@ std::vector<Gate*> prepare_gates_to_export( Gates_block* block_op, double* param
 */
 Gate* get_gate( int n );
 
-
-/**
-@brief Call to set the verbose attribute to true or false.
-@param verbose_in Logical variable. Set true for verbose mode, or to false to suppress output messages.
-*/
-void set_verbose( bool verbose_in );
 
 
 /**

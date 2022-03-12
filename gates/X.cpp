@@ -22,6 +22,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "X.h"
+
+
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief NullaRX constructor of the class.
@@ -67,9 +70,13 @@ X::X(int qbit_num_in, int target_qbit_in) {
 
 
         if (target_qbit_in >= qbit_num) {
-            printf("The index of the target qubit is larger than the number of qubits");
-            throw "The index of the target qubit is larger than the number of qubits";
+           std::stringstream sstream;
+	   sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+	   print(sstream, 0);
+	   
+           throw "The index of the target qubit is larger than the number of qubits";
         }
+	
         // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = target_qbit_in;
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
@@ -103,7 +110,9 @@ X::get_matrix( ) {
 
 #ifdef DEBUG
         if (X_matrix.isnan()) {
-            std::cout << "X::get_matrix: X_matrix contains NaN." << std::endl;
+            std::stringstream sstream;
+	    sstream << "X::get_matrix: X_matrix contains NaN." << std::endl;
+            print(sstream, 1);	          
         }
 #endif
 
@@ -122,7 +131,9 @@ void
 X::apply_to( Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in X gate apply" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in X gate apply" << std::endl;
+        print(sstream, 0);	       
         exit(-1);
     }
 
@@ -180,9 +191,16 @@ X::apply_to( Matrix& input ) {
 void 
 X::apply_from_right( Matrix& input ) {
 
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
 
     if (input.cols != matrix_size ) {
-        std::cout<< "Wrong matrix size in U3 apply_from_right" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
+        print(sstream, 0);	  
         exit(-1);
     }
 

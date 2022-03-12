@@ -25,6 +25,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Base.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
+
+
 /**
 @brief Nullary constructor of the class.
 @return An instance of the class
@@ -180,20 +182,27 @@ N_Qubit_Decomposition_Base::calc_decomposition_error(Matrix& decomposed_matrix )
 */
 void  N_Qubit_Decomposition_Base::final_optimization() {
 
-        if (verbose) {
-            printf("***************************************************************\n");
-            printf("Final fine tuning of the parameters in the %d-qubit decomposition\n", qbit_num);
-            printf("***************************************************************\n");
-        }
+	//The stringstream input to store the output messages.
+	std::stringstream sstream;
+	sstream << "***************************************************************" << std::endl;
+	sstream << "Final fine tuning of the parameters in the " << qbit_num << "-qubit decomposition" << std::endl;
+	sstream << "***************************************************************" << std::endl;
+	print(sstream, 1);	    	
+
+         
 
 
         //# setting the global minimum
         global_target_minimum = 0;
 
+
         if ( optimized_parameters_mtx.size() == 0 ) {
             solve_optimization_problem(NULL, 0);
         }
         else {
+            current_minimum = optimization_problem(optimized_parameters_mtx.get_data());
+            if ( check_optimization_solution() ) return;
+
             solve_optimization_problem(optimized_parameters_mtx.get_data(), parameter_num);
         }
 }
@@ -322,8 +331,10 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
 
     // get the transformed matrix with the gates in the list
     if ( parameters.size() != parameter_num ) {
-       std::cout << "Number of free paramaters should be " << parameter_num << ", but got " << parameters.size() << std::endl;
-       abort();
+        std::stringstream sstream;
+	sstream << "Number of free paramaters should be " << parameter_num << ", but got " << parameters.size() << std::endl;
+        print(sstream, 0);	  
+        exit(-1);
     }
 
 

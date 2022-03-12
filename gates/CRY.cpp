@@ -22,6 +22,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "CRY.h"
+
+
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief Nullary constructor of the class.
@@ -45,13 +48,16 @@ CRY::CRY() : RY() {
 */
 CRY::CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RY(qbit_num_in, target_qbit_in) {
 
+
         // A string describing the type of the gate
         type = CRY_OPERATION;
 
 
         if (control_qbit_in >= qbit_num) {
-            printf("The index of the control qubit is larger than the number of qubits in CRY gate.\n");
-            throw "The index of the control qubit is larger than the number of qubits in CRY gate";
+	    std::stringstream sstream;
+	    sstream << "The index of the control qubit is larger than the number of qubits in CRY gate." << std::endl;
+	    print(sstream, 0);	  
+            throw sstream.str();
         }
 
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
@@ -79,8 +85,11 @@ CRY::~CRY() {
 void 
 CRY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
 
+
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in CRY gate apply" << std::endl;
+	std::stringstream sstream;
+	sstream << "Wrong matrix size in CRY gate apply" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
 
@@ -180,7 +189,9 @@ CRY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::cout<< "Wrong matrix size in CRY apply_from_right" << std::endl;
+	std::stringstream sstream;
+	sstream << "Wrong matrix size in CRY apply_from_right" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
 
@@ -281,7 +292,9 @@ std::vector<Matrix>
 CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in CRY gate apply" << std::endl;
+	std::stringstream sstream;
+	sstream << "Wrong matrix size in CRY gate apply" << std::endl;
+        print(sstream, 0);	   
         exit(-1);
     }
 

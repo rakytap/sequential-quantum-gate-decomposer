@@ -63,7 +63,7 @@ class Test_Decomposition:
         cDecompose.set_Iteration_Loops({4: 3, 3: 3, 2: 3})
 
         # setting the verbosity of the decomposition
-        cDecompose.set_Verbose( True )
+        #cDecompose.set_Verbose( True )
 
         # set the number of block to be optimized in one shot
         cDecompose.set_Optimization_Blocks( 20 )

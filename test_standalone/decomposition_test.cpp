@@ -30,9 +30,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "common.h"
 #include "N_Qubit_Decomposition.h"
 #include "Random_Unitary.h"
+#include "logging.h"
 //! [include]
 
 using namespace std;
+
 
 
 /**
@@ -40,11 +42,24 @@ using namespace std;
 */
 int main() {
 
-    printf("\n\n****************************************\n");
-    printf("Test of N qubit decomposition\n");
-    printf("****************************************\n\n\n");
 
-//! [few CNOT]
+    /// Stringstream input to store the output messages.
+    std::stringstream sstream;
+
+    /// Logging variable to set the verbosity level.
+    logging output;
+
+    /// Set the verbosity level of the output messages. 
+    int verbose_level;
+
+    //Setting the verbosity level of the Test of N qubit decomposition
+    verbose_level=1;
+    sstream << std::endl << std::endl << "****************************************" << std::endl;
+    sstream << "Test of N qubit decomposition" << std::endl;
+    sstream << "****************************************" << std::endl << std::endl << std::endl;
+    output.print(sstream,verbose_level);	    	
+
+  //! [few CNOT]
     // The number of qubits spanning the random unitary
     int qbit_num = 2;
 
@@ -115,7 +130,12 @@ int main() {
     cDecomposition.set_verbose( true );
 //! [set parameters]
 
-    printf("Starting the decompsition\n");
+    // setting the verbosity of the decomposition
+    verbose_level=1;
+    sstream << "Starting the decompsition" << std::endl;
+    output.print(sstream,verbose_level);	    	
+
+   
 //! [performing decomposition]
     // starting the decomposition
     cDecomposition.start_decomposition(/* prepare_export= */ true);

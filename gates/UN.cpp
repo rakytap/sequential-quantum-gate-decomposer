@@ -28,6 +28,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "dot.h"
 
 
+
+
 /**
 @brief Deafult constructor of the class.
 @return An instance of the class
@@ -108,7 +110,9 @@ UN::get_matrix( Matrix_real& parameters ) {
 
 #ifdef DEBUG
         if (UN_matrix.isnan()) {
-            std::cout << "U3::get_matrix: UN_matrix contains NaN." << std::endl;
+            std::stringstream sstream;
+	    sstream << "U3::get_matrix: UN_matrix contains NaN." << std::endl;
+            print(sstream, 1);	         
         }
 #endif
 
@@ -124,12 +128,16 @@ void
 UN::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in UN gate apply" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in UN gate apply" << std::endl;
+        print(sstream, 0);	       
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-        std::cout << "Not enough parameters given for the UN gate" << std::endl;
+        std::stringstream sstream;
+	sstream << "Not enough parameters given for the UN gate" << std::endl;
+        print(sstream, 0);	      
         exit(-1);
     }
 
@@ -159,14 +167,17 @@ UN::apply_to( Matrix_real& parameters, Matrix& input ) {
 void 
 UN::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
-
     if (input.rows != matrix_size ) {
-        std::cout<< "Wrong matrix size in UN gate apply" << std::endl;
+        std::stringstream sstream;
+	sstream << "Wrong matrix size in UN gate apply" << std::endl;
+        print(sstream, 0);	        
         exit(-1);
     }
 
     if (parameters.size() < parameter_num) {
-        std::cout << "Not enough parameters given for the UN gate" << std::endl;
+        std::stringstream sstream;
+	sstream << "Not enough parameters given for the UN gate" << std::endl;
+        print(sstream, 0);	   
         exit(-1);
     }
 
@@ -218,8 +229,9 @@ void UN::reorder_qubits( std::vector<int> qbit_list ) {
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
-        printf("Wrong number of qubits\n");
-        exit(-1);
+        std::stringstream sstream;
+	sstream << "Wrong number of qubits" << std::endl;
+	print(sstream, 0);	
     }
 
 

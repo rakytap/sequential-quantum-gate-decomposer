@@ -31,6 +31,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <stdlib.h>
 
 
+
+
 Matrix_real create_random_paramaters( Gates_block* gate_structure ) {
 
     int parameter_num = gate_structure->get_parameter_num();
@@ -159,12 +161,14 @@ void
 N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
 
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+    sstream << "***************************************************************" << std::endl;
+    sstream << "Starting to disentangle " << qbit_num << "-qubit matrix" << std::endl;
+    sstream << "***************************************************************" << std::endl << std::endl << std::endl;
 
-    if (verbose) {
-        printf("***************************************************************\n");
-        printf("Starting to disentangle %d-qubit matrix\n", qbit_num);
-        printf("***************************************************************\n\n\n");
-    }
+    print(sstream, 1);   
+
 
     // temporarily turn off OpenMP parallelism
 #if BLAS==0 // undefined BLAS
@@ -182,9 +186,12 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     tbb::tick_count start_time = tbb::tick_count::now();
 
     if (level_limit == 0 ) {
-        std::cout << "please increase level limit" << std::endl;
+        std::stringstream sstream;
+	sstream << "please increase level limit" << std::endl;
+        print(sstream, 0);	
         exit(-1);
     }
+
 /*
 int qbit_num_loc = 2;
 int target_qbit = 0;
@@ -243,22 +250,27 @@ mtx.print_matrix();
 
     Gates_block* gate_structure_loc = NULL;
     if ( gate_structure != NULL ) {
-        std::cout << "Using imported gate structure for the decomposition." << std::endl;
+        std::stringstream sstream;
+	sstream << "Using imported gate structure for the decomposition." << std::endl;
+        print(sstream, 1);	
+	        
         gate_structure_loc = optimize_imported_gate_structure(optimized_parameters_mtx);
     }
     else {
-        std::cout << "Construct initial gate structure for the decomposition." << std::endl;
+        std::stringstream sstream;
+	sstream << "Construct initial gate structure for the decomposition." << std::endl;
+        print(sstream, 1);
         gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
     }
 
-
-
-
-    std::cout << std::endl;
-    std::cout << std::endl;
-    std::cout << "**************************************************************" << std::endl;
-    std::cout << "***************** Compressing Gate structure *****************" << std::endl;
-    std::cout << "**************************************************************" << std::endl;
+    sstream.str("");
+    sstream << std::endl;
+    sstream << std::endl;
+    sstream << "**************************************************************" << std::endl;
+    sstream << "***************** Compressing Gate structure *****************" << std::endl;
+    sstream << "**************************************************************" << std::endl;
+    print(sstream, 1);	    	
+    
 
     int iter = 0;
     int uncompressed_iter_num = 0;
@@ -270,8 +282,11 @@ mtx.print_matrix();
              }
         }
 
+    sstream.str("");
+    sstream << "iteration " << iter+1 << ": ";
+    print(sstream, 1);	
 
-        std::cout << "iteration " << iter+1 << ": ";
+       
         Gates_block* gate_structure_compressed = compress_gate_structure( gate_structure_loc );
 
         if ( gate_structure_compressed->get_gate_num() < gate_structure_loc->get_gate_num() ) {
@@ -293,10 +308,12 @@ mtx.print_matrix();
 
     }
 
-
-    std::cout << "**************************************************************" << std::endl;
-    std::cout << "************ Final tuning of the Gate structure **************" << std::endl;
-    std::cout << "**************************************************************" << std::endl;
+    sstream.str("");
+    sstream << "**************************************************************" << std::endl;
+    sstream << "************ Final tuning of the Gate structure **************" << std::endl;
+    sstream << "**************************************************************" << std::endl;
+    print(sstream, 1);	    	
+    
 
     optimization_tolerance = optimization_tolerance_orig;
 
@@ -304,9 +321,11 @@ mtx.print_matrix();
     combine( gate_structure_loc );
     optimization_block = get_gate_num();
 
-std::cout << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
 
-
+    sstream.str("");
+    sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+    print(sstream, 3);	
+    	
     Gates_block* gate_structure_tmp = replace_trivial_CRY_gates( gate_structure_loc, optimized_parameters_mtx );
     Matrix_real optimized_parameters_save = optimized_parameters_mtx;
 
@@ -317,8 +336,10 @@ std::cout << optimization_problem(optimized_parameters_mtx.get_data()) << std::e
     delete( gate_structure_tmp );
     delete( gate_structure_loc );
 
-std::cout << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
-
+    sstream.str("");
+    sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+    print(sstream, 3);	
+    	
     // reset the global minimum before final tuning
     current_minimum = DBL_MAX;
 
@@ -340,25 +361,33 @@ std::cout << optimization_problem(optimized_parameters_mtx.get_data()) << std::e
     // get the number of gates used in the decomposition
     gates_num gates_num = get_gate_nums();
 
-    if (verbose) {
-        std::cout << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
-        if ( gates_num.u3>0 ) std::cout << gates_num.u3 << " U3 gates," << std::endl;
-        if ( gates_num.rx>0 ) std::cout << gates_num.rx << " RX gates," << std::endl;
-        if ( gates_num.ry>0 ) std::cout << gates_num.ry << " RY gates," << std::endl;
-        if ( gates_num.rz>0 ) std::cout << gates_num.rz << " RZ gates," << std::endl;
-        if ( gates_num.cnot>0 ) std::cout << gates_num.cnot << " CNOT gates," << std::endl;
-        if ( gates_num.cz>0 ) std::cout << gates_num.cz << " CZ gates," << std::endl;
-        if ( gates_num.ch>0 ) std::cout << gates_num.ch << " CH gates," << std::endl;
-        if ( gates_num.x>0 ) std::cout << gates_num.x << " X gates," << std::endl;
-        if ( gates_num.sx>0 ) std::cout << gates_num.sx << " SX gates," << std::endl;
-        if ( gates_num.syc>0 ) std::cout << gates_num.syc << " Sycamore gates," << std::endl;
-        if ( gates_num.un>0 ) std::cout << gates_num.un << " UN gates," << std::endl;
-        if ( gates_num.cry>0 ) std::cout << gates_num.cry << " CRY gates," << std::endl;
-        if ( gates_num.adap>0 ) std::cout << gates_num.adap << " Adaptive gates," << std::endl;
-        std::cout << std::endl;
+    
+    sstream.str("");
+    sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
+      
+        if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 gates," << std::endl;
+        if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX gates," << std::endl;
+        if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY gates," << std::endl;
+        if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ gates," << std::endl;
+        if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT gates," << std::endl;
+        if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ gates," << std::endl;
+        if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH gates," << std::endl;
+        if ( gates_num.x>0 ) sstream << gates_num.x << " X gates," << std::endl;
+        if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX gates," << std::endl; 
+        if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore gates," << std::endl;   
+        if ( gates_num.un>0 ) sstream << gates_num.un << " UN gates," << std::endl;
+        if ( gates_num.cry>0 ) sstream << gates_num.cry << " CRY gates," << std::endl;  
+        if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive gates," << std::endl;
+    
+        sstream << std::endl;
         tbb::tick_count current_time = tbb::tick_count::now();
-        std::cout << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
-    }
+
+	sstream << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
+    	print(sstream, 1);	    	
+    	
+            
+               
+    
 
 /*
 Matrix_real param0 = optimized_parameters_mtx;
@@ -419,7 +448,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx_loc.get_data(), optimized_parameters_mtx_loc.size() );
     cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
     cDecomp_custom.set_max_iteration( max_iterations );
-    cDecomp_custom.set_verbose(false);
+    cDecomp_custom.set_verbose(0);
     cDecomp_custom.set_iteration_loops( iteration_loops );
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance );  
     cDecomp_custom.start_decomposition(true);
@@ -433,19 +462,26 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
 
 
     if ( cDecomp_custom.get_current_minimum() < optimization_tolerance ) {
-        std::cout << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+        std::stringstream sstream;
+	sstream << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+        print(sstream, 1);	
     }   
     else {
-        std::cout << "Optimization problem converged to " << cDecomp_custom.get_current_minimum() << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+        std::stringstream sstream;
+	sstream << "Optimization problem converged to " << cDecomp_custom.get_current_minimum() << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+        print(sstream, 1);       
     }
 
     if (current_minimum > optimization_tolerance) {
-        std::cout << "Decomposition did not reached prescribed high numerical precision." << std::endl;        
+        std::stringstream sstream;
+	sstream << "Decomposition did not reached prescribed high numerical precision." << std::endl; 
+        print(sstream, 1);             
         optimization_tolerance = 1.5*current_minimum < 1e-2 ? 1.5*current_minimum : 1e-2;
     }
 
-    std::cout << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
-
+    std::stringstream sstream;
+    sstream << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+    print(sstream, 1);	
     return gate_structure_loc;
 
 
@@ -457,7 +493,6 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
 */
 Gates_block* 
 N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& optimized_parameters_mtx_loc) {
-
 
     // strages to store the optimized minimums in case of different cirquit depths
     std::vector<double> minimum_vec;
@@ -497,7 +532,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
                 cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
                 cDecomp_custom_random.set_max_iteration( max_iterations );
-                cDecomp_custom_random.set_verbose(false);
+                cDecomp_custom_random.set_verbose(0);
                 cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );  
                 cDecomp_custom_random.start_decomposition(true);
             },
@@ -507,12 +542,11 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_close_to_zero.set_custom_gate_structure( gate_structure_loc );
                 cDecomp_custom_close_to_zero.set_optimization_blocks( gate_structure_loc->get_gate_num() );    
                 cDecomp_custom_close_to_zero.set_max_iteration( max_iterations );
-                cDecomp_custom_close_to_zero.set_verbose(false);
+                cDecomp_custom_close_to_zero.set_verbose(0);
                 cDecomp_custom_close_to_zero.set_optimization_tolerance( optimization_tolerance );  
                 cDecomp_custom_close_to_zero.start_decomposition(true);
                }
          );
-
 
          tbb::tick_count end_time_loc = tbb::tick_count::now();
 
@@ -572,12 +606,15 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
 
         if ( current_minimum_loc < optimization_tolerance ) {
-            std::cout << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
-            //cDecomp_custom.list_gates(0);
+	    std::stringstream sstream;
+            sstream << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+            print(sstream, 1);	       
             break;
         }   
         else {
-            std::cout << "Optimization problem converged to " << current_minimum_loc << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+            std::stringstream sstream;
+            sstream << "Optimization problem converged to " << current_minimum_loc << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
+            print(sstream, 1);  
         }
 
         level++;
@@ -611,14 +648,17 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
     
 
     if (current_minimum > optimization_tolerance) {
-        std::cout << "Decomposition did not reached prescribed high numerical precision." << std::endl;        
-        optimization_tolerance = 1.5*current_minimum < 1e-2 ? 1.5*current_minimum : 1e-2;
+       std::stringstream sstream;
+       sstream << "Decomposition did not reached prescribed high numerical precision." << std::endl;
+       print(sstream, 1);              
+       optimization_tolerance = 1.5*current_minimum < 1e-2 ? 1.5*current_minimum : 1e-2;
     }
-
-    std::cout << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
-
+    
+    std::stringstream sstream;
+    sstream << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+    print(sstream, 1);	
     return gate_structure_loc;
-
+       
 }
 
 
@@ -628,6 +668,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 */
 Gates_block*
 N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure ) {
+
 
     int layer_num_max;
     int layer_num_orig = gate_structure->get_gate_num()-1;
@@ -733,10 +774,14 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     int layer_num = gate_structure->get_gate_num();
 
     if ( layer_num < layer_num_orig+1 ) {
-        std::cout << "gate structure reduced from " << layer_num_orig+1 << " to " << layer_num << " decomposing layers" << std::endl;
+       std::stringstream sstream;
+       sstream << "gate structure reduced from " << layer_num_orig+1 << " to " << layer_num << " decomposing layers" << std::endl;
+       print(sstream, 1);	
     }
     else {
-        std::cout << "gate structure kept at " << layer_num << " layers" << std::endl;
+       std::stringstream sstream;
+       sstream << "gate structure kept at " << layer_num << " layers" << std::endl;
+       print(sstream, 1);		            
     }
 
 
@@ -772,7 +817,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, initial_guess);
     cDecomp_custom.set_custom_gate_structure( gate_structure_reduced );
     cDecomp_custom.set_optimized_parameters( parameters_reduced.get_data(), parameters_reduced.size() );
-    cDecomp_custom.set_verbose(false);
+    cDecomp_custom.set_verbose(0);
     cDecomp_custom.set_max_iteration( max_iterations );
     cDecomp_custom.set_iteration_loops( iteration_loops );
     cDecomp_custom.set_optimization_blocks( gate_structure_reduced->get_gate_num() ) ;
@@ -839,7 +884,6 @@ N_Qubit_Decomposition_adaptive::get_panelty( Gates_block* gate_structure, Matrix
 Gates_block* 
 N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters ) {
 
-
     Gates_block* gate_structure_ret = new Gates_block(qbit_num);
 
     int layer_num = gate_structure->get_gate_num();
@@ -850,8 +894,10 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
         Gate* gate = gate_structure->get_gate(idx);
 
         if ( gate->get_type() != BLOCK_OPERATION ) {
-            std::cout << "N_Qubit_Decomposition_adaptive::replace_trivial_adaptive_gates: Only block gates are accepted in this conversion." << std::endl;
-            exit(-1);
+           std::stringstream sstream;
+	   sstream << "N_Qubit_Decomposition_adaptive::replace_trivial_adaptive_gates: Only block gates are accepted in this conversion." << std::endl;
+           print(sstream, 1);	
+           exit(-1);
         }
 
         Gates_block* block_op = static_cast<Gates_block*>(gate);
@@ -1082,6 +1128,12 @@ Gates_block*
 N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, const int& _control_qbit) {
 
 
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
+
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );
 
@@ -1093,7 +1145,9 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
         for ( std::vector<matrix_base<int>>::iterator it=topology.begin(); it!=topology.end(); it++) {
 
             if ( it->size() != 2 ) {
-                std::cout << "The connectivity data should contains two qubits" << std::endl;
+                std::stringstream sstream;
+	        sstream << "The connectivity data should contains two qubits" << std::endl;
+	        print(sstream, 0);	
                 it->print_matrix();
                 exit(-1);
             }
@@ -1102,7 +1156,9 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
             int target_qbit_loc = (*it)[1];
 
             if ( control_qbit_loc >= qbit_num || target_qbit_loc >= qbit_num ) {
-                std::cout << "Label of control/target qubit should be less than the number of qubits in the register." << std::endl;
+                std::stringstream sstream;
+	        sstream << "Label of control/target qubit should be less than the number of qubits in the register." << std::endl;	        
+                print(sstream, 0);
                 exit(-1);            
             }
 

@@ -23,6 +23,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Decomposition_Base.h"
 
+	
+
 
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
@@ -33,11 +35,12 @@ std::map<int,int> Decomposition_Base::max_layer_num_def;
 */
 Decomposition_Base::Decomposition_Base() {
 
+	
+
+
     Init_max_layer_num();
 
-    // Logical variable. Set true for verbose mode, or to false to suppress output messages.
-    verbose = true;
-
+    
     // logical value describing whether the decomposition was finalized or not
     decomposition_finalized = false;
 
@@ -99,9 +102,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
 
     Init_max_layer_num();
 
-    // Logical variable. Set true for verbose mode, or to false to suppress output messages.
-    verbose = true;
-
+   
     // the unitary operator to be decomposed
     Umtx = Umtx_in;
 
@@ -229,9 +230,13 @@ void Decomposition_Base::finalize_decomposition() {
         gates_num gates_num = get_gate_nums();
 
 
-        if (verbose) {
-            printf( "The error of the decomposition after finalyzing gates is %f with %d layers containing %d U3 gates and %d CNOT gates.\n", decomposition_error, layer_num, gates_num.u3, gates_num.cnot );
-        }
+        //The stringstream input to store the output messages.
+	std::stringstream sstream;
+	sstream << "The error of the decomposition after finalyzing gates is " << decomposition_error << " with " << layer_num << " layers containing " << gates_num.u3 << " U3 gates and " << gates_num.cnot <<  " CNOT gates" << std::endl;
+	print(sstream, 1);	    	
+	
+            
+        
 
 }
 
@@ -336,7 +341,10 @@ Matrix Decomposition_Base::get_finalizing_gates( Matrix& mtx, Gates_block* final
 @param solution_guess_num The number of guessed parameters. (not necessarily equal to the number of free parameters)
 */
 void  Decomposition_Base::solve_optimization_problem( double* solution_guess, int solution_guess_num ) {
+	
 
+	//Integer value to set the verbosity level of the output messages.
+	int verbose_level;
 
         if ( gates.size() == 0 ) {
             return;
@@ -389,8 +397,10 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             }
         }
         else {
-            printf("bad value for initial guess\n");
-            exit(-1);
+	     std::stringstream sstream;
+	     sstream << "bad value for initial guess" << std::endl;
+	     print(sstream, 0);  	
+	     exit(-1);
         }
 
         if ( solution_guess_num > 0) {
@@ -521,12 +531,11 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
             // optimization result is displayed in each 500th iteration
-            if (iter_idx % 500 == 0) {
-                if (verbose) {
-                    tbb::tick_count current_time = tbb::tick_count::now();
-                    printf("The minimum with %d layers after %d iterations is %e calculated in %f seconds\n", layer_num, iter_idx, current_minimum, (current_time - start_time).seconds());
-                    fflush(stdout);
-                }
+            if (iter_idx % 500 == 0) {                
+                tbb::tick_count current_time = tbb::tick_count::now();
+                std::stringstream sstream;
+		sstream << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << " calculated in " << (current_time - start_time).seconds() << " seconds" << std::endl;
+		print(sstream, 2);            
                 start_time = tbb::tick_count::now();
             }
 
@@ -535,17 +544,16 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, min_vec_num, minvec_mean));
 
             // conditions to break the iteration cycles
-            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-5 ) {
-                if (verbose) {
-                    printf("The iterations converged to minimum %e after %d iterations with %d layers\n", current_minimum, iter_idx, layer_num  );
-                    fflush(stdout);
-                }
+            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-5 ) {              
+		std::stringstream sstream;
+	        sstream << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " iterations with " << layer_num << " layers" << std::endl;
+		print(sstream, 1);             
                 break;
             }
             else if (check_optimization_solution()) {
-                if (verbose) {
-                    printf("The minimum with %d layers after %d iterations is %e\n", layer_num, iter_idx, current_minimum);
-                }
+      		std::stringstream sstream;
+		sstream << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << std::endl;
+		print(sstream, 1);  		               
                 break;
             }
 
@@ -553,10 +561,10 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
 
 
-        if (iter_idx == max_iterations ) {
-            if (verbose) {
-                printf("Reached maximal number of iterations\n\n");
-            }
+        if (iter_idx == max_iterations ) {            
+		std::stringstream sstream;
+		sstream << "Reached maximal number of iterations" << std::endl << std::endl;
+		print(sstream, 1);
         }
 
         // restoring the parameters to originals
@@ -1115,6 +1123,12 @@ void Decomposition_Base::prepare_gates_to_export() {
 */
 std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate*> ops, double* parameters ) {
 
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
+
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
+
     std::vector<Gate*> ops_ret;
     int parameter_idx = 0;
 
@@ -1196,7 +1210,9 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
                 parameter_idx = parameter_idx + 3;
             }
             else {
-                printf("wrong parameters in U3 class\n");
+		verbose_level=1;
+		sstream << "wrong parameters in U3 class" << std::endl;
+		print(sstream,verbose_level);	    	
                 exit(-1);
             }
 
@@ -1401,15 +1417,7 @@ Gate* Decomposition_Base::get_gate( int n ) {
 }
 
 
-/**
-@brief Call to set the verbose attribute to true or false.
-@param verbose_in Logical variable. Set true for verbose mode, or to false to suppress output messages.
-*/
-void Decomposition_Base::set_verbose( bool verbose_in ) {
 
-    verbose = verbose_in;
-
-}
 
 
 /**
