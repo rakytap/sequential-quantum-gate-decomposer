@@ -1,4 +1,7 @@
 [![DOI](https://zenodo.org/badge/DOI/10.5281/zenodo.4508680.svg)](https://doi.org/10.5281/zenodo.4508680)
+ <a href="https://trackgit.com">
+<img src="https://us-central1-trackgit-analytics.cloudfunctions.net/token/ping/l0sfey1m19at85951dwl" alt="trackgit-views" />
+</a>
 
 # Sequential Quantum Gate Decomposer (SQUANDER)
 
@@ -196,7 +199,8 @@ The example files import the necessary **qgd_python** modules containing the wra
 
 If you have found our work useful for your research project, please cite us by
 
-Rakyta,Peter, & Zimborás,Zoltán. (2021, February 4). Sequential Quantum Gate Decomposer (SQUANDER) (Version 1.4). Zenodo. http://doi.org/10.5281/zenodo.4508680
+Péter Rakyta, Zoltán Zimborás, Approaching the theoretical limit in quantum gate decomposition, arXiv:2109.06770.
+Péter Rakyta, Zoltán Zimborás, Efficient quantum gate decomposition via adaptive circuit compression, arXiv:2203.04426
 
 
 
