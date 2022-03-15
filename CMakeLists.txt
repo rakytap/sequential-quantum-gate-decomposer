@@ -214,25 +214,16 @@ endif()
 
 # adding GSL library dir if given
 if(DEFINED ENV{GSL_LIB_DIR})
-  find_library(GSL_LIB gsl PATH $ENV{GSL_LIB_DIR} )
 
-  if(NOT GSL_LIB)
-    message(FATAL_ERROR "GSL library not found")
-  endif()
-
-
-  message("-- Adding library directory $ENV{GSL_LIB_DIR}")
-  list(APPEND GSL_LIBS "-Wl,-rpath=$ENV{GSL_LIB_DIR}" "-L$ENV{GSL_LIB_DIR}" "-lgsl")
-
+  find_library(GSL_LIB gsl 
+               PATHS $ENV{GSL_LIB_DIR} 
+               NO_DEFAULT_PATH
+               REQUIRED)
 else()
 
-  find_library(GSL_LIB gsl)
-
-  if(NOT GSL_LIB)
-    message(FATAL_ERROR "GSL library not found")
-  endif()
-
-  list(APPEND GSL_LIBS "-lgsl")
+  find_library(GSL_LIB gsl
+               PATHS ${PYTHON_SYS_PATH}
+               REQUIRED)
 
 endif()
 
@@ -240,10 +231,11 @@ endif()
 # adding GSL include dir
 if(DEFINED ENV{GSL_INC_DIR})
 
+  set(CMAKE_REQUIRED_FLAGS "-c")
   check_include_file_cxx(gsl/gsl_multimin.h GSL_HEADER "-I$ENV{GSL_INC_DIR}")
 
   if(NOT GSL_HEADER)
-    #message(FATAL_ERROR "GSL header gsl_multimin.h not found")
+    message(FATAL_ERROR "GSL header gsl_multimin.h not found")
   endif()
 
   message("-- Adding include directory $ENV{GSL_INC_DIR}")
@@ -251,7 +243,9 @@ if(DEFINED ENV{GSL_INC_DIR})
 
 else()
 
+  set(CMAKE_REQUIRED_FLAGS "-c")
   check_include_file_cxx(gsl/gsl_multimin.h GSL_HEADER)
+  list(APPEND EXTRA_INCLUDES "${CMAKE_REQUIRED_INCLUDES}") 
 
   if(NOT GSL_HEADER)
     message(FATAL_ERROR "GSL header gsl_multimin.h not found")
@@ -336,7 +330,6 @@ add_library( qgd SHARED
     ${PROJECT_SOURCE_DIR}/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix_real.cpp
-    ${PROJECT_SOURCE_DIR}/common/logging.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
@@ -386,7 +379,7 @@ target_link_libraries( qgd PRIVATE
     ${TBBMALLOC_LIB}
     ${TBBMALLOC_PROXY_LIB}
     ${TBB_LIB}
-    ${GSL_LIBS}
+    ${GSL_LIB}
 )
 
 target_include_directories(qgd PRIVATE
