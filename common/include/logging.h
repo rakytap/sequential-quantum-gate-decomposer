@@ -47,6 +47,9 @@ int verbose;
 /// Logical variable. Set true to write output messages to  the 'debug.txt' file.
 bool debug; 	
 
+/// String variable. Set the debug file name. 
+std::string debugfile_name;
+
 
 /** Nullary constructor of the class
 @return An instance of the class
@@ -70,8 +73,17 @@ void print(const std::stringstream& sstream, int verbose_level=1);
 void set_verbose( int verbose_in );
 
 
+/**
+@brief Call to set the debugfile name.
+@param debugfile String variable. Set the debugfile name. 
+*/
+void set_debugfile( std::string debugfile );
+
+
 
 };
+
+
 
 
 

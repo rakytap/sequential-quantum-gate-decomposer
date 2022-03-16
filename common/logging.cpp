@@ -36,6 +36,8 @@ logging::logging() {
 	// Number of the verbosity level in order to control the amount of the output messages. If this value is higher or equal than the local verbosity levels belongs to the messages, than the messages 	will be seen on the standart output screen.  
 	verbose=3;
 
+
+
 	// Logical variable. Set true to write output messages to the 'debug.txt' file.
 	debug=false;
 
@@ -84,3 +86,14 @@ void logging::set_verbose( int verbose_in ) {
     verbose = verbose_in;
 
 }
+
+/**
+@brief Call to set the debugfile name.
+@param debugfile String variable. Set the debugfile name. 
+*/
+void logging::set_debugfile(std::string debugfile ) {
+
+    debugfile_name = debugfile;
+
+}
+
