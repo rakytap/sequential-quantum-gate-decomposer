@@ -111,6 +111,9 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
     // setting the verbosity
     cSub_decomposition->set_verbose( verbose );
 
+    // setting the debugfile name
+    cSub_decomposition->set_debugfile( debugfile_name );
+
     // setting the maximal number of layers used in the subdecomposition
     cSub_decomposition->set_max_layer_num( max_layer_num );
 
@@ -302,6 +305,9 @@ N_Qubit_Decomposition::decompose_submatrix() {
 
         // setting the verbosity
         cdecomposition->set_verbose( verbose );
+
+        // setting the debugfile name
+        cdecomposition->set_debugfile( debugfile_name );
 
         // Maximal number of iteartions in the optimization process
         cdecomposition->set_max_iteration(max_iterations);
@@ -758,6 +764,9 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
 
         // suppress output messages
         cdecomposition->set_verbose( false );
+
+        // setting the debugfile name
+        //cdecomposition->set_debugfile( false );
 
         // starting the decomposition
         cdecomposition->start_decomposition(true, false);
