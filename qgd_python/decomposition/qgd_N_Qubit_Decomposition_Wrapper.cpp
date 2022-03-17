@@ -866,9 +866,7 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Debugfile(qgd_N_Qubit_Decomposition_Wrappe
     PyObject* debugfile_name_unicode = PyUnicode_AsEncodedString(debugfile_name, "utf-8", "~E~");
     const char* initial_debugfile_name = PyBytes_AS_STRING(debugfile_name_unicode);
     
-    // initiate variables for input arguments
-    //std::string debugfile_name; 
-
+ 
     // parsing input arguments
     if (!PyArg_ParseTuple(args, "|O", &debugfile_name )) return Py_BuildValue("O", -1);
 

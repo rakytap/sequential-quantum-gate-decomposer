@@ -961,12 +961,12 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Debugfile(qgd_N_Qubit_Decompositi
     PyObject* debugfile_name_unicode = PyUnicode_AsEncodedString(debugfile_name, "utf-8", "~E~");
     const char* initial_debugfile_name = PyBytes_AS_STRING(debugfile_name_unicode);
  
-    // parsing input arguments
+    /*// parsing input arguments
     if (!PyArg_ParseTuple(args, "|O", &debugfile_name )) return Py_BuildValue("O", -1);
 
 
     // set maximal layer nums on the C++ side
-    self->decomp_base->set_debugfile( initial_debugfile_name );
+    self->decomp_base->set_debugfile( initial_debugfile_name );*/
 
 
     return Py_BuildValue("O", 0);
