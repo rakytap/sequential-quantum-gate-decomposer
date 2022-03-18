@@ -62,7 +62,7 @@ The SQUANDER Python interface needs the following packages to be installed on th
 ### How to obtain GNU Scientific Library
 
 In order to build and use the SQUANDER we recommend the Anaconda virtual python environment providing all the required dependencies for SQUANDER.
-Ono can easily install the GNU Scientific Library for local users by the command
+One can easily install the GNU Scientific Library for local users by the command
 
 $ conda install -c conda-forge gsl
 
