@@ -39,7 +39,7 @@ logging::logging() {
 
 
 	// Logical variable. Set true to write output messages to the 'debug.txt' file.
-	debug=false;
+	if (debugfile_name.empty()) debug=false;
 
 
 }
