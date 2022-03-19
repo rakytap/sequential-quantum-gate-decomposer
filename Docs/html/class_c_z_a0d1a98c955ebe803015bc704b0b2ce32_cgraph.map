@@ -1,3 +1,4 @@
 <map id="CZ::reorder_qubits" name="CZ::reorder_qubits">
 <area shape="rect" id="node2" href="$class_gate.html#a04a3a1cf92c714da09d16b49060b4a02" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="180,5,319,32"/>
+<area shape="rect" id="node3" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="367,5,461,32"/>
 </map>

@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -69,12 +69,13 @@ Include dependency graph for CH.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="_c_h_8h__incl.png" border="0" usemap="#_c_h_8h" alt=""/></div>
 <map name="_c_h_8h" id="_c_h_8h">
-<area shape="rect" id="node2" href="matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="93,304,160,331"/>
-<area shape="rect" id="node13" href="_gate_8h.html" title="Gate.h" alt="" coords="174,80,234,107"/>
-<area shape="rect" id="node3" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="102,379,205,405"/>
-<area shape="rect" id="node4" href="_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="440,453,536,480"/>
-<area shape="rect" id="node15" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="293,155,376,181"/>
-<area shape="rect" id="node17" href="dot_8h.html" title="dot.h" alt="" coords="483,229,533,256"/>
+<area shape="rect" id="node2" href="matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="720,304,786,331"/>
+<area shape="rect" id="node13" href="_gate_8h.html" title="Gate.h" alt="" coords="668,80,728,107"/>
+<area shape="rect" id="node3" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="702,379,804,405"/>
+<area shape="rect" id="node4" href="_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="474,453,570,480"/>
+<area shape="rect" id="node15" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="404,155,486,181"/>
+<area shape="rect" id="node18" href="logging_8h.html" title="Header file for a class containing basic methods for setting up the verbosity level. " alt="" coords="110,304,183,331"/>
+<area shape="rect" id="node17" href="dot_8h.html" title="dot.h" alt="" coords="357,229,408,256"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -82,20 +83,31 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="_c_h_8h__dep__incl.png" border="0" usemap="#_c_h_8hdep" alt=""/></div>
 <map name="_c_h_8hdep" id="_c_h_8hdep">
-<area shape="rect" id="node2" href="_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="399,80,553,107"/>
-<area shape="rect" id="node13" href="_c_h_8cpp.html" title="Class representing a CH gate. " alt="" coords="578,80,643,107"/>
-<area shape="rect" id="node14" href="_gates__block_8cpp.html" title="Class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="667,80,786,107"/>
-<area shape="rect" id="node15" href="qgd___c_h_8cpp.html" title="qgd_CH.cpp" alt="" coords="811,80,904,107"/>
-<area shape="rect" id="node3" href="_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process. " alt="" coords="146,162,315,189"/>
-<area shape="rect" id="node4" href="_functor___get___operation___products_8cpp.html" title="Functor_Get_Operation\l_Products.cpp" alt="" coords="340,155,497,196"/>
-<area shape="rect" id="node5" href="_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="428,244,601,271"/>
-<area shape="rect" id="node11" href="_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="613,162,803,189"/>
-<area shape="rect" id="node6" href="_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="795,319,952,360"/>
-<area shape="rect" id="node7" href="_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="5,326,192,353"/>
-<area shape="rect" id="node8" href="qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="217,319,407,360"/>
-<area shape="rect" id="node9" href="custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="432,319,587,360"/>
-<area shape="rect" id="node10" href="decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="611,326,770,353"/>
-<area shape="rect" id="node12" href="_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="626,244,830,271"/>
+<area shape="rect" id="node2" href="_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="902,155,1057,181"/>
+<area shape="rect" id="node22" href="_c_h_8cpp.html" title="Class representing a CH gate. " alt="" coords="1018,80,1083,107"/>
+<area shape="rect" id="node23" href="_gates__block_8cpp.html" title="Class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="1214,155,1332,181"/>
+<area shape="rect" id="node24" href="_composite_8h.html" title="Header file for a class for the representation of general gate operations on the first qbit_num&#45;1 qub..." alt="" coords="1107,80,1202,107"/>
+<area shape="rect" id="node26" href="qgd___c_h_8cpp.html" title="qgd_CH.cpp" alt="" coords="1277,80,1370,107"/>
+<area shape="rect" id="node3" href="_decomposition___base_8cpp.html" title="Class containing basic methods for setting up the verbosity level. " alt="" coords="704,237,874,263"/>
+<area shape="rect" id="node4" href="_n___qubit___decomposition___base_8h.html" title="N_Qubit_Decomposition\l_Base.h" alt="" coords="898,229,1061,271"/>
+<area shape="rect" id="node20" href="_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="1103,237,1294,263"/>
+<area shape="rect" id="node5" href="_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="1112,326,1285,353"/>
+<area shape="rect" id="node10" href="_n___qubit___decomposition__adaptive_8h.html" title="N_Qubit_Decomposition\l_adaptive.h" alt="" coords="898,319,1061,360"/>
+<area shape="rect" id="node15" href="_n___qubit___decomposition__custom_8h.html" title="N_Qubit_Decomposition\l_custom.h" alt="" coords="336,319,498,360"/>
+<area shape="rect" id="node19" href="_n___qubit___decomposition___base_8cpp.html" title="N_Qubit_Decomposition\l_Base.cpp" alt="" coords="712,319,874,360"/>
+<area shape="rect" id="node6" href="_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="1252,415,1438,442"/>
+<area shape="rect" id="node7" href="qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="1463,408,1654,449"/>
+<area shape="rect" id="node8" href="custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="1678,408,1833,449"/>
+<area shape="rect" id="node9" href="decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="1068,415,1227,442"/>
+<area shape="rect" id="node11" href="_n___qubit___decomposition__adaptive__general_8h.html" title="N_Qubit_Decomposition\l_adaptive_general.h" alt="" coords="830,408,993,449"/>
+<area shape="rect" id="node13" href="qgd___n___qubit___decomposition__adaptive___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_adaptive_Wrapper.cpp" alt="" coords="875,497,1066,539"/>
+<area shape="rect" id="node14" href="_n___qubit___decomposition__adaptive_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="644,408,806,449"/>
+<area shape="rect" id="node12" href="_n___qubit___decomposition__adaptive__general_8cpp.html" title="N_Qubit_Decomposition\l_adaptive_general.cpp" alt="" coords="328,497,490,539"/>
+<area shape="rect" id="node16" href="_n___qubit___decomposition__custom_8cpp.html" title="N_Qubit_Decomposition\l_custom.cpp" alt="" coords="26,408,189,449"/>
+<area shape="rect" id="node17" href="qgd__python_2decomposition_2qgd___n___qubit___decomposition__custom___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_custom_Wrapper.cpp" alt="" coords="214,408,404,449"/>
+<area shape="rect" id="node18" href="tmp_2qgd___n___qubit___decomposition__custom___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_custom_Wrapper.cpp" alt="" coords="428,408,619,449"/>
+<area shape="rect" id="node21" href="_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="1310,326,1514,353"/>
+<area shape="rect" id="node25" href="_composite_8cpp.html" title="Class for the representation of general unitary operation on the first qbit_num&#45;1 qubits..." alt="" coords="1082,155,1190,181"/>
 </map>
 </div>
 </div>
@@ -114,7 +126,7 @@ Classes</h2></td></tr>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:48 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Mar 19 2022 22:14:41 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

@@ -1,4 +1,5 @@
 <map id="Sub_Matrix_Decomposition::optimization_problem_grad" name="Sub_Matrix_Decomposition::optimization_problem_grad">
-<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#adf6b02469b89a561d0c53b08f1f8ceb3" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="236,5,399,61"/>
-<area shape="rect" id="node3" href="$class_gates__block.html#ac021a051f25e4112f355aef65bad2612" title="Call to get the number of free parameters. " alt="" coords="447,20,663,47"/>
+<area shape="rect" id="node2" href="$class_sub___matrix___decomposition.html#aae3fe5273a4259ee2028fbf2e4fde8d7" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="236,16,416,72"/>
+<area shape="rect" id="node3" href="$class_gates__block.html#ac021a051f25e4112f355aef65bad2612" title="Call to get the number of free parameters. " alt="" coords="464,5,680,32"/>
+<area shape="rect" id="node4" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="525,56,619,83"/>
 </map>

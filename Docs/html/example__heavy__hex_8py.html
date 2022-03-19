@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -82,32 +82,28 @@ Functions</h2></td></tr>
 Variables</h2></td></tr>
 <tr class="memitem:a1f2f2de1817d169adf671133b09fedbe"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a1f2f2de1817d169adf671133b09fedbe">example_heavy_hex.backend</a> = Aer.get_backend('unitary_simulator')</td></tr>
 <tr class="separator:a1f2f2de1817d169adf671133b09fedbe"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a1f6f8d0e5a6a1266aa3e35a853d45254"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a1f6f8d0e5a6a1266aa3e35a853d45254">example_heavy_hex.decomp</a> = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess=&quot;random&quot; )</td></tr>
+<tr class="memitem:a1f6f8d0e5a6a1266aa3e35a853d45254"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a1f6f8d0e5a6a1266aa3e35a853d45254">example_heavy_hex.decomp</a> = qgd_N_Qubit_Decomposition( Umtx.conj().T )</td></tr>
 <tr class="separator:a1f6f8d0e5a6a1266aa3e35a853d45254"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a393d14e32dc7b95098c33a04d10c843c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a393d14e32dc7b95098c33a04d10c843c">example_heavy_hex.decomposed_matrix</a> = result.get_unitary(quantum_circuit)</td></tr>
+<tr class="memitem:a393d14e32dc7b95098c33a04d10c843c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a393d14e32dc7b95098c33a04d10c843c">example_heavy_hex.decomposed_matrix</a> = np.asarray( result.get_unitary(quantum_circuit) )</td></tr>
 <tr class="separator:a393d14e32dc7b95098c33a04d10c843c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a47205baf9a15955d5d5a998f4a97848e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a47205baf9a15955d5d5a998f4a97848e">example_heavy_hex.decomposition_error</a> = LA.norm(product_matrix - np.identity(int(2**qbit_num))*product_matrix[0,0], 2)</td></tr>
-<tr class="separator:a47205baf9a15955d5d5a998f4a97848e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a7d5f539261e1ac12236d13c6a835d3c9"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a7d5f539261e1ac12236d13c6a835d3c9">example_heavy_hex.finalize_decomp</a></td></tr>
-<tr class="separator:a7d5f539261e1ac12236d13c6a835d3c9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ae821ee95dfad2c020cc5b005994bdf0e"><td class="memItemLeft" align="right" valign="top">tuple&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#ae821ee95dfad2c020cc5b005994bdf0e">example_heavy_hex.decomposition_error</a> = (np.real(np.trace(product_matrix)))/2</td></tr>
+<tr class="separator:ae821ee95dfad2c020cc5b005994bdf0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad1bff06cabe553ab0bf8dda468a4690f"><td class="memItemLeft" align="right" valign="top">dictionary&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#ad1bff06cabe553ab0bf8dda468a4690f">example_heavy_hex.gate_structure</a> = { 4: create_custom_gate_structure_heavy_hex_4(4), 3: create_custom_gate_structure_heavy_hex_3(3)}</td></tr>
 <tr class="separator:ad1bff06cabe553ab0bf8dda468a4690f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa80969c2b451c15ae9e0a616b015b343"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#aa80969c2b451c15ae9e0a616b015b343">example_heavy_hex.job</a> = execute(quantum_circuit, backend)</td></tr>
 <tr class="separator:aa80969c2b451c15ae9e0a616b015b343"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a10b4637a18087f59fa234c5f326e33ed"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a10b4637a18087f59fa234c5f326e33ed">example_heavy_hex.matrix_size</a> = int(2**qbit_num)</td></tr>
 <tr class="separator:a10b4637a18087f59fa234c5f326e33ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ade84f0e1e303fcdf5330f5dd5ec495bb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#ade84f0e1e303fcdf5330f5dd5ec495bb">example_heavy_hex.prepare_export</a></td></tr>
-<tr class="separator:ade84f0e1e303fcdf5330f5dd5ec495bb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a3b04d70ff9221820188f720e95cf79bc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a3b04d70ff9221820188f720e95cf79bc">example_heavy_hex.product_matrix</a> = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(Umtx, decomposed_matrix.conj().T)</td></tr>
-<tr class="separator:a3b04d70ff9221820188f720e95cf79bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50c138ef3425213ef8e4797151ef02a7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a50c138ef3425213ef8e4797151ef02a7">example_heavy_hex.phase</a> = np.angle(product_matrix[0,0])</td></tr>
+<tr class="separator:a50c138ef3425213ef8e4797151ef02a7"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a79f31e676211f035203109dc0d96a69e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a79f31e676211f035203109dc0d96a69e">example_heavy_hex.product_matrix</a> = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(Umtx,decomposed_matrix.conj().T)</td></tr>
+<tr class="separator:a79f31e676211f035203109dc0d96a69e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abfd94a4c844cf266eeb4f8965205ab85"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#abfd94a4c844cf266eeb4f8965205ab85">example_heavy_hex.qbit_num</a> = 4</td></tr>
 <tr class="separator:abfd94a4c844cf266eeb4f8965205ab85"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ad7b7ef3c4bf885165c3c02b805ecbca5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#ad7b7ef3c4bf885165c3c02b805ecbca5">example_heavy_hex.quantum_circuit</a> = decomp.get_Quantum_Circuit()</td></tr>
 <tr class="separator:ad7b7ef3c4bf885165c3c02b805ecbca5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a8f262a1618e90249b8cf29f494435837"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a8f262a1618e90249b8cf29f494435837">example_heavy_hex.result</a> = job.result()</td></tr>
 <tr class="separator:a8f262a1618e90249b8cf29f494435837"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ae2deb5993fb4546336553f70e8af71d6"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#ae2deb5993fb4546336553f70e8af71d6">example_heavy_hex.True</a></td></tr>
-<tr class="separator:ae2deb5993fb4546336553f70e8af71d6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a40c313a1bc559e8df94d25b82ad02bb3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample__heavy__hex.html#a40c313a1bc559e8df94d25b82ad02bb3">example_heavy_hex.Umtx</a> = unitary_group.rvs(matrix_size)</td></tr>
 <tr class="separator:a40c313a1bc559e8df94d25b82ad02bb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
@@ -118,7 +114,7 @@ Variables</h2></td></tr>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:48 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Mar 19 2022 22:14:41 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

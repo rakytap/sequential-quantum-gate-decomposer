@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -63,27 +63,78 @@ $(function() {
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
 Public Attributes</h2></td></tr>
+<tr class="memitem:a1bc0b16c69af1a041d7d5e0c151f928c"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#a1bc0b16c69af1a041d7d5e0c151f928c">adap</a></td></tr>
+<tr class="memdesc:a1bc0b16c69af1a041d7d5e0c151f928c"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of adaptive gates.  <a href="#a1bc0b16c69af1a041d7d5e0c151f928c">More...</a><br /></td></tr>
+<tr class="separator:a1bc0b16c69af1a041d7d5e0c151f928c"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a34694b43d281c55a0abf698291cf6eb5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#a34694b43d281c55a0abf698291cf6eb5">ch</a></td></tr>
 <tr class="memdesc:a34694b43d281c55a0abf698291cf6eb5"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of <a class="el" href="class_c_h.html" title="A class representing a CH operation. ">CH</a> (i.e. controlled Hadamard) gates.  <a href="#a34694b43d281c55a0abf698291cf6eb5">More...</a><br /></td></tr>
 <tr class="separator:a34694b43d281c55a0abf698291cf6eb5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:abcf819b25f7319deb68b22ef23dd109e"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#abcf819b25f7319deb68b22ef23dd109e">cnot</a></td></tr>
 <tr class="memdesc:abcf819b25f7319deb68b22ef23dd109e"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of <a class="el" href="class_c_n_o_t.html" title="A class representing a CNOT operation. ">CNOT</a> gates.  <a href="#abcf819b25f7319deb68b22ef23dd109e">More...</a><br /></td></tr>
 <tr class="separator:abcf819b25f7319deb68b22ef23dd109e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8fe5f3f260141c9e0a59d724130f06ed"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#a8fe5f3f260141c9e0a59d724130f06ed">com</a></td></tr>
+<tr class="memdesc:a8fe5f3f260141c9e0a59d724130f06ed"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of composite gates.  <a href="#a8fe5f3f260141c9e0a59d724130f06ed">More...</a><br /></td></tr>
+<tr class="separator:a8fe5f3f260141c9e0a59d724130f06ed"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a19c1a6f90a5aa43efa9409d700dc8e53"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#a19c1a6f90a5aa43efa9409d700dc8e53">cry</a></td></tr>
+<tr class="memdesc:a19c1a6f90a5aa43efa9409d700dc8e53"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of <a class="el" href="class_c_r_y.html" title="A class representing a CRY gate. ">CRY</a> gates.  <a href="#a19c1a6f90a5aa43efa9409d700dc8e53">More...</a><br /></td></tr>
+<tr class="separator:a19c1a6f90a5aa43efa9409d700dc8e53"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a32ba771f679b4c57029c53c3e1b7d321"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#a32ba771f679b4c57029c53c3e1b7d321">cz</a></td></tr>
 <tr class="memdesc:a32ba771f679b4c57029c53c3e1b7d321"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of <a class="el" href="class_c_z.html" title="A class representing a CZ operation. ">CZ</a> gates.  <a href="#a32ba771f679b4c57029c53c3e1b7d321">More...</a><br /></td></tr>
 <tr class="separator:a32ba771f679b4c57029c53c3e1b7d321"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aed89b33df39ec82ae7f620c944d66846"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#aed89b33df39ec82ae7f620c944d66846">general</a></td></tr>
 <tr class="memdesc:aed89b33df39ec82ae7f620c944d66846"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of general gates.  <a href="#aed89b33df39ec82ae7f620c944d66846">More...</a><br /></td></tr>
 <tr class="separator:aed89b33df39ec82ae7f620c944d66846"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:adc13e24679b0da6c8a9a63d799ba5b61"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#adc13e24679b0da6c8a9a63d799ba5b61">on</a></td></tr>
+<tr class="memdesc:adc13e24679b0da6c8a9a63d799ba5b61"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of general <a class="el" href="class_o_n.html" title="Base class for the representation of general gate operations. ">ON</a> gates.  <a href="#adc13e24679b0da6c8a9a63d799ba5b61">More...</a><br /></td></tr>
+<tr class="separator:adc13e24679b0da6c8a9a63d799ba5b61"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af5d85047e2dc3b92078837b908fc0756"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#af5d85047e2dc3b92078837b908fc0756">rx</a></td></tr>
+<tr class="memdesc:af5d85047e2dc3b92078837b908fc0756"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of <a class="el" href="class_r_x.html" title="A class representing a U3 gate. ">RX</a> gates.  <a href="#af5d85047e2dc3b92078837b908fc0756">More...</a><br /></td></tr>
+<tr class="separator:af5d85047e2dc3b92078837b908fc0756"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1d28b5332628901a776673c5da5a260f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#a1d28b5332628901a776673c5da5a260f">ry</a></td></tr>
+<tr class="memdesc:a1d28b5332628901a776673c5da5a260f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of <a class="el" href="class_r_y.html" title="A class representing a U3 gate. ">RY</a> gates.  <a href="#a1d28b5332628901a776673c5da5a260f">More...</a><br /></td></tr>
+<tr class="separator:a1d28b5332628901a776673c5da5a260f"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af51dab496d8dbdbc9eca06dbbbe39699"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#af51dab496d8dbdbc9eca06dbbbe39699">rz</a></td></tr>
+<tr class="memdesc:af51dab496d8dbdbc9eca06dbbbe39699"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of <a class="el" href="class_r_z.html" title="A class representing a RZ gate. ">RZ</a> gates.  <a href="#af51dab496d8dbdbc9eca06dbbbe39699">More...</a><br /></td></tr>
+<tr class="separator:af51dab496d8dbdbc9eca06dbbbe39699"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aaec2f158c6c26e85dc7c2842775ba0a4"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#aaec2f158c6c26e85dc7c2842775ba0a4">sx</a></td></tr>
+<tr class="memdesc:aaec2f158c6c26e85dc7c2842775ba0a4"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of <a class="el" href="class_s_x.html" title="A class representing a U3 gate. ">SX</a> gates.  <a href="#aaec2f158c6c26e85dc7c2842775ba0a4">More...</a><br /></td></tr>
+<tr class="separator:aaec2f158c6c26e85dc7c2842775ba0a4"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac08932439d80762feaa82b027abdc07d"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#ac08932439d80762feaa82b027abdc07d">syc</a></td></tr>
+<tr class="memdesc:ac08932439d80762feaa82b027abdc07d"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of Sycamore gates.  <a href="#ac08932439d80762feaa82b027abdc07d">More...</a><br /></td></tr>
+<tr class="separator:ac08932439d80762feaa82b027abdc07d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a4a2b09456d5676e18d441cff35f375d9"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#a4a2b09456d5676e18d441cff35f375d9">u3</a></td></tr>
 <tr class="memdesc:a4a2b09456d5676e18d441cff35f375d9"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of <a class="el" href="class_u3.html" title="A class representing a U3 gate. ">U3</a> gates.  <a href="#a4a2b09456d5676e18d441cff35f375d9">More...</a><br /></td></tr>
 <tr class="separator:a4a2b09456d5676e18d441cff35f375d9"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:abccc12d71e8ad88c7ade4f96bc35e1bc"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#abccc12d71e8ad88c7ade4f96bc35e1bc">un</a></td></tr>
+<tr class="memdesc:abccc12d71e8ad88c7ade4f96bc35e1bc"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of general <a class="el" href="class_u_n.html" title="Base class for the representation of general gate operations. ">UN</a> gates.  <a href="#abccc12d71e8ad88c7ade4f96bc35e1bc">More...</a><br /></td></tr>
+<tr class="separator:abccc12d71e8ad88c7ade4f96bc35e1bc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5106825598924e7e48851441304a1052"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="structgates__num.html#a5106825598924e7e48851441304a1052">x</a></td></tr>
+<tr class="memdesc:a5106825598924e7e48851441304a1052"><td class="mdescLeft">&#160;</td><td class="mdescRight">The number of <a class="el" href="class_x.html" title="A class representing a U3 gate. ">X</a> gates.  <a href="#a5106825598924e7e48851441304a1052">More...</a><br /></td></tr>
+<tr class="separator:a5106825598924e7e48851441304a1052"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Structure type conatining numbers of gates. </p>
 
 <p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00047">47</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
 </div><h2 class="groupheader">Member Data Documentation</h2>
+<a id="a1bc0b16c69af1a041d7d5e0c151f928c"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1bc0b16c69af1a041d7d5e0c151f928c">&#9670;&nbsp;</a></span>adap</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gates_num::adap</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The number of adaptive gates. </p>
+
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00079">79</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+
+</div>
+</div>
 <a id="a34694b43d281c55a0abf698291cf6eb5"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a34694b43d281c55a0abf698291cf6eb5">&#9670;&nbsp;</a></span>ch</h2>
 
@@ -98,7 +149,7 @@ Public Attributes</h2></td></tr>
 
 <p>The number of <a class="el" href="class_c_h.html" title="A class representing a CH operation. ">CH</a> (i.e. controlled Hadamard) gates. </p>
 
-<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00055">55</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00063">63</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
 
 </div>
 </div>
@@ -116,7 +167,43 @@ Public Attributes</h2></td></tr>
 
 <p>The number of <a class="el" href="class_c_n_o_t.html" title="A class representing a CNOT operation. ">CNOT</a> gates. </p>
 
-<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00051">51</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00059">59</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+
+</div>
+</div>
+<a id="a8fe5f3f260141c9e0a59d724130f06ed"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a8fe5f3f260141c9e0a59d724130f06ed">&#9670;&nbsp;</a></span>com</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gates_num::com</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The number of composite gates. </p>
+
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00077">77</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+
+</div>
+</div>
+<a id="a19c1a6f90a5aa43efa9409d700dc8e53"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a19c1a6f90a5aa43efa9409d700dc8e53">&#9670;&nbsp;</a></span>cry</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gates_num::cry</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The number of <a class="el" href="class_c_r_y.html" title="A class representing a CRY gate. ">CRY</a> gates. </p>
+
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00055">55</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
 
 </div>
 </div>
@@ -134,7 +221,7 @@ Public Attributes</h2></td></tr>
 
 <p>The number of <a class="el" href="class_c_z.html" title="A class representing a CZ operation. ">CZ</a> gates. </p>
 
-<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00053">53</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00061">61</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
 
 </div>
 </div>
@@ -152,7 +239,115 @@ Public Attributes</h2></td></tr>
 
 <p>The number of general gates. </p>
 
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00071">71</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+
+</div>
+</div>
+<a id="adc13e24679b0da6c8a9a63d799ba5b61"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#adc13e24679b0da6c8a9a63d799ba5b61">&#9670;&nbsp;</a></span>on</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gates_num::on</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The number of general <a class="el" href="class_o_n.html" title="Base class for the representation of general gate operations. ">ON</a> gates. </p>
+
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00075">75</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+
+</div>
+</div>
+<a id="af5d85047e2dc3b92078837b908fc0756"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af5d85047e2dc3b92078837b908fc0756">&#9670;&nbsp;</a></span>rx</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gates_num::rx</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The number of <a class="el" href="class_r_x.html" title="A class representing a U3 gate. ">RX</a> gates. </p>
+
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00051">51</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+
+</div>
+</div>
+<a id="a1d28b5332628901a776673c5da5a260f"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a1d28b5332628901a776673c5da5a260f">&#9670;&nbsp;</a></span>ry</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gates_num::ry</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The number of <a class="el" href="class_r_y.html" title="A class representing a U3 gate. ">RY</a> gates. </p>
+
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00053">53</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+
+</div>
+</div>
+<a id="af51dab496d8dbdbc9eca06dbbbe39699"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#af51dab496d8dbdbc9eca06dbbbe39699">&#9670;&nbsp;</a></span>rz</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gates_num::rz</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The number of <a class="el" href="class_r_z.html" title="A class representing a RZ gate. ">RZ</a> gates. </p>
+
 <p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00057">57</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+
+</div>
+</div>
+<a id="aaec2f158c6c26e85dc7c2842775ba0a4"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#aaec2f158c6c26e85dc7c2842775ba0a4">&#9670;&nbsp;</a></span>sx</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gates_num::sx</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The number of <a class="el" href="class_s_x.html" title="A class representing a U3 gate. ">SX</a> gates. </p>
+
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00067">67</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+
+</div>
+</div>
+<a id="ac08932439d80762feaa82b027abdc07d"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac08932439d80762feaa82b027abdc07d">&#9670;&nbsp;</a></span>syc</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gates_num::syc</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The number of Sycamore gates. </p>
+
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00069">69</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
 
 </div>
 </div>
@@ -174,13 +369,49 @@ Public Attributes</h2></td></tr>
 
 </div>
 </div>
+<a id="abccc12d71e8ad88c7ade4f96bc35e1bc"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#abccc12d71e8ad88c7ade4f96bc35e1bc">&#9670;&nbsp;</a></span>un</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gates_num::un</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The number of general <a class="el" href="class_u_n.html" title="Base class for the representation of general gate operations. ">UN</a> gates. </p>
+
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00073">73</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+
+</div>
+</div>
+<a id="a5106825598924e7e48851441304a1052"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5106825598924e7e48851441304a1052">&#9670;&nbsp;</a></span>x</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int gates_num::x</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>The number of <a class="el" href="class_x.html" title="A class representing a U3 gate. ">X</a> gates. </p>
+
+<p class="definition">Definition at line <a class="el" href="_q_g_d_types_8h_source.html#l00065">65</a> of file <a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a>.</p>
+
+</div>
+</div>
 <hr/>The documentation for this struct was generated from the following file:<ul>
 <li><a class="el" href="_q_g_d_types_8h_source.html">QGDTypes.h</a></li>
 </ul>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:48 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Mar 19 2022 22:14:41 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

@@ -1,4 +1,18 @@
 <map id="get_cost_function" name="get_cost_function">
-<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#a975b868302471a7b3f623f55384fc973" title="The optimization problem of the final optimization. " alt="" coords="179,13,341,54"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a10eb690b650a33a1ab8c4de4f9f8ab6e" title="Call to solve layer by layer the optimization problem. " alt="" coords="389,5,559,61"/>
+<area shape="rect" id="node2" href="$class_n___qubit___decomposition___base.html#ad177684a72bb11e98769a315a7c84770" title="The optimization problem of the final optimization. " alt="" coords="179,545,365,586"/>
+<area shape="rect" id="node16" href="$class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="413,603,600,659"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition__adaptive.html#a486c74fb4056dea78878593180d1415e" title="Start the disentanglig process of the unitary. " alt="" coords="1169,246,1371,287"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition___base.html#a382d8110a0de379bcc1fe862bedaa2be" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="425,310,589,351"/>
+<area shape="rect" id="node15" href="$class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b" title="Call to solve layer by layer the optimization problem. " alt="" coords="915,661,1121,717"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="676,478,839,519"/>
+<area shape="rect" id="node10" href="$class_n___qubit___decomposition__adaptive__general.html#aab72db9bfa3bbd5134e93d9604acf1c2" title="Start the disentanglig process of the unitary. " alt="" coords="937,245,1099,301"/>
+<area shape="rect" id="node11" href="$class_n___qubit___decomposition__custom.html#a384fb1eb0b29d51262a9f021465bf07d" title="Start the disentanglig process of the unitary. " alt="" coords="660,173,855,214"/>
+<area shape="rect" id="node6" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="993,427,1043,453"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="937,478,1099,519"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="937,595,1099,637"/>
+<area shape="rect" id="node9" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1189,566,1351,607"/>
+<area shape="rect" id="node12" href="$class_n___qubit___decomposition__adaptive.html#a89f4c47432abe740d43aa12842558282" title="?????????????? " alt="" coords="923,85,1113,141"/>
+<area shape="rect" id="node13" href="$class_n___qubit___decomposition__adaptive.html#a28ca0675bb44bba82e7ee92f71be415b" title="?????????????? " alt="" coords="937,165,1099,221"/>
+<area shape="rect" id="node14" href="$class_n___qubit___decomposition__adaptive.html#a5a70c5e495cf4e10754c50ce1082ad66" title="??????????????? " alt="" coords="931,5,1105,61"/>
+<area shape="rect" id="node17" href="$class_n___qubit___decomposition___base.html#ab8e063dc0433796b9eab2c026deba8a9" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="648,610,867,651"/>
 </map>

@@ -1,13 +1,17 @@
 <map id="Decomposition_Base::reorder_qubits" name="Decomposition_Base::reorder_qubits">
-<area shape="rect" id="node2" href="$class_gates__block.html#abb6ba518014d3602c13b5ae52bd4ce23" title="Call to reorder the qubits in the matrix of the gates. " alt="" coords="199,125,340,166"/>
-<area shape="rect" id="node12" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="769,272,860,299"/>
+<area shape="rect" id="node2" href="$class_gates__block.html#abb6ba518014d3602c13b5ae52bd4ce23" title="Call to reorder the qubits in the matrix of the gates. " alt="" coords="199,251,340,293"/>
+<area shape="rect" id="node16" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="224,341,315,368"/>
 <area shape="rect" id="node3" href="$class_gate.html#a5498d67b28027022c72b8b15d47d55cc" title="Call to get the type of the operation. " alt="" coords="409,5,514,32"/>
 <area shape="rect" id="node4" href="$class_c_n_o_t.html#a3e2d8067000d9b3b905729a1a2bfbf7e" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="388,56,535,83"/>
-<area shape="rect" id="node6" href="$class_c_z.html#a0d1a98c955ebe803015bc704b0b2ce32" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="398,107,525,133"/>
-<area shape="rect" id="node7" href="$class_c_h.html#aa3cb1194d814d35f1a8fbc6a68f6fdd5" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="397,157,526,184"/>
-<area shape="rect" id="node8" href="$class_u3.html#a53b0a784fbf2b26a9bcbd2502e849670" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="398,208,525,235"/>
-<area shape="rect" id="node5" href="$class_gate.html#a04a3a1cf92c714da09d16b49060b4a02" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="583,128,721,155"/>
-<area shape="rect" id="node9" href="$class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="583,194,721,235"/>
-<area shape="rect" id="node10" href="$common_8cpp.html#afbe838f9ac6bc59a609014c7e1f757c3" title="custom defined memory release function. " alt="" coords="779,147,851,173"/>
-<area shape="rect" id="node11" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="773,197,857,224"/>
+<area shape="rect" id="node7" href="$class_c_z.html#a0d1a98c955ebe803015bc704b0b2ce32" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="398,107,525,133"/>
+<area shape="rect" id="node8" href="$class_c_h.html#aa3cb1194d814d35f1a8fbc6a68f6fdd5" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="397,157,526,184"/>
+<area shape="rect" id="node9" href="$class_s_y_c.html#a6fabdbe6733819da240a7146df9aa9be" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="393,208,530,235"/>
+<area shape="rect" id="node10" href="$class_u3.html#a53b0a784fbf2b26a9bcbd2502e849670" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="398,259,525,285"/>
+<area shape="rect" id="node11" href="$class_x.html#a8944e65d9d3812df253bbe4df44c66dc" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="402,309,521,336"/>
+<area shape="rect" id="node12" href="$class_s_x.html#aca40d1fd55fbab2c4636a48ca65d7623" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="397,360,525,387"/>
+<area shape="rect" id="node13" href="$class_u_n.html#a4d83117f621ca00044d07f5d804d2f25" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="587,408,717,435"/>
+<area shape="rect" id="node14" href="$class_o_n.html#a690f44bbb247f2f8d627cb0e7a9e57cb" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="587,459,717,485"/>
+<area shape="rect" id="node15" href="$class_composite.html#a66ef8a227bc4abc57a982d43eb6fd0f2" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="587,510,717,551"/>
+<area shape="rect" id="node5" href="$class_gate.html#a04a3a1cf92c714da09d16b49060b4a02" title="Call to reorder the qubits in the matrix of the operation. " alt="" coords="583,233,721,260"/>
+<area shape="rect" id="node6" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="769,433,864,460"/>
 </map>

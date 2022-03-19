@@ -1,4 +1,5 @@
 <map id="get_cblas_transpose" name="get_cblas_transpose">
 <area shape="rect" id="node2" href="$classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="196,5,375,32"/>
 <area shape="rect" id="node3" href="$classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="196,56,375,83"/>
+<area shape="rect" id="node4" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="238,107,333,133"/>
 </map>

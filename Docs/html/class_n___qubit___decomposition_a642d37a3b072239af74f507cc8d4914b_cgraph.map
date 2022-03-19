@@ -1,6 +1,0 @@
-<map id="N_Qubit_Decomposition::optimization_problem" name="N_Qubit_Decomposition::optimization_problem">
-<area shape="rect" id="node2" href="$class_gates__block.html#aa3f7bcf66f2e16fdaeb6ad7db4d9c775" title="Call to get the gates stored in the class. " alt="" coords="219,5,377,32"/>
-<area shape="rect" id="node3" href="$class_decomposition___base.html#a5ad6641386b1eea4dd1244599660c462" title="Call to retrive a pointer to the unitary to be transformed. " alt="" coords="225,57,371,98"/>
-<area shape="rect" id="node4" href="$class_decomposition___base.html#a9f0f0dd8c94cb84fc2dbce4d785dddbb" title="Calculate the transformed matrix resulting by an array of gates on the matrix Umtx. " alt="" coords="216,122,380,163"/>
-<area shape="rect" id="node5" href="$_n___qubit___decomposition___cost___function_8h.html#aa5db632f7e7078d0e9bf48b22fa7525d" title="Call co calculate the cost function during the final optimization process. " alt="" coords="235,188,361,215"/>
-</map>

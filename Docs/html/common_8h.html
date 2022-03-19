@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -77,9 +77,10 @@ Include dependency graph for common.h:</div>
 <div class="center"><img src="common_8h__incl.png" border="0" usemap="#common_8h" alt=""/></div>
 <map name="common_8h" id="common_8h">
 <area shape="rect" id="node3" href="_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="82,304,178,331"/>
-<area shape="rect" id="node7" href="dot_8h.html" title="dot.h" alt="" coords="449,80,499,107"/>
-<area shape="rect" id="node8" href="matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="441,155,507,181"/>
-<area shape="rect" id="node9" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="367,229,469,256"/>
+<area shape="rect" id="node7" href="dot_8h.html" title="dot.h" alt="" coords="501,80,551,107"/>
+<area shape="rect" id="node8" href="matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="270,155,337,181"/>
+<area shape="rect" id="node15" href="logging_8h.html" title="Header file for a class containing basic methods for setting up the verbosity level. " alt="" coords="671,155,744,181"/>
+<area shape="rect" id="node9" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="284,229,387,256"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -87,45 +88,59 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="common_8h__dep__incl.png" border="0" usemap="#common_8hdep" alt=""/></div>
 <map name="common_8hdep" id="common_8hdep">
-<area shape="rect" id="node2" href="common_8cpp.html" title="Provides commonly used functions and wrappers to CBLAS functions. " alt="" coords="5,87,101,114"/>
-<area shape="rect" id="node3" href="dot_8cpp.html" title="dot.cpp" alt="" coords="125,87,189,114"/>
-<area shape="rect" id="node4" href="_functor___cost___function___gradient_8h.html" title="Header file for the paralleized calculation of the gradient components of the cost functions (support..." alt="" coords="335,348,492,389"/>
-<area shape="rect" id="node7" href="_functor___get___operation___products_8h.html" title="Header file for the parallelized calculation of the vector containing the products of operations (sup..." alt="" coords="1843,259,2000,300"/>
-<area shape="rect" id="node9" href="_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="213,80,376,121"/>
-<area shape="rect" id="node12" href="_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="2097,80,2277,121"/>
-<area shape="rect" id="node14" href="_gate_8h.html" title="Gate.h" alt="" coords="1443,87,1503,114"/>
-<area shape="rect" id="node21" href="custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="995,512,1149,553"/>
-<area shape="rect" id="node22" href="decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="2363,519,2522,546"/>
-<area shape="rect" id="node30" href="_random___unitary_8h.html" title="Random_Unitary.h" alt="" coords="2112,266,2240,293"/>
-<area shape="rect" id="node35" href="_gates__block_8h.html" title="Header file for a class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into laye..." alt="" coords="1202,177,1307,203"/>
-<area shape="rect" id="node5" href="_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="400,512,557,553"/>
-<area shape="rect" id="node6" href="_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="658,437,862,464"/>
-<area shape="rect" id="node8" href="_functor___get___operation___products_8cpp.html" title="Functor_Get_Operation\l_Products.cpp" alt="" coords="1604,348,1761,389"/>
-<area shape="rect" id="node10" href="_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="136,519,323,546"/>
-<area shape="rect" id="node11" href="_n___qubit___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the final optimization problem (supporting parallel computa..." alt="" coords="213,169,376,211"/>
-<area shape="rect" id="node13" href="_sub___matrix___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the sub&#45;disantenglement problem with TBB parallelization..." alt="" coords="2225,169,2405,211"/>
-<area shape="rect" id="node15" href="_gate_8cpp.html" title="Gate.cpp" alt="" coords="1480,177,1555,203"/>
-<area shape="rect" id="node16" href="_c_h_8h.html" title="Header file for a class representing a CH operation. " alt="" coords="1405,177,1456,203"/>
-<area shape="rect" id="node27" href="_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="1607,177,1676,203"/>
-<area shape="rect" id="node32" href="_c_z_8h.html" title="Header file for a class representing a CZ operation. " alt="" coords="1331,177,1381,203"/>
-<area shape="rect" id="node38" href="_u3_8h.html" title="Header file for a class representing a U3 gate. " alt="" coords="1897,177,1946,203"/>
-<area shape="rect" id="node17" href="_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="1279,266,1433,293"/>
-<area shape="rect" id="node24" href="_c_h_8cpp.html" title="Class representing a CH gate. " alt="" coords="1071,266,1137,293"/>
-<area shape="rect" id="node25" href="_gates__block_8cpp.html" title="Class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="1458,266,1577,293"/>
-<area shape="rect" id="node26" href="qgd___c_h_8cpp.html" title="qgd_CH.cpp" alt="" coords="1161,266,1255,293"/>
-<area shape="rect" id="node18" href="_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process. " alt="" coords="1149,355,1318,382"/>
-<area shape="rect" id="node19" href="_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="887,437,1060,464"/>
-<area shape="rect" id="node23" href="_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="754,355,945,382"/>
-<area shape="rect" id="node20" href="qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="779,512,970,553"/>
-<area shape="rect" id="node28" href="_c_n_o_t_8cpp.html" title="Class representing a CNOT gate. " alt="" coords="1600,266,1683,293"/>
-<area shape="rect" id="node29" href="qgd___c_n_o_t_8cpp.html" title="qgd_CNOT.cpp" alt="" coords="1707,266,1818,293"/>
-<area shape="rect" id="node31" href="_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="1995,355,2138,382"/>
-<area shape="rect" id="node33" href="_c_z_8cpp.html" title="Class representing a CZ gate. " alt="" coords="985,266,1047,293"/>
-<area shape="rect" id="node34" href="qgd___c_z_8cpp.html" title="qgd_CZ.cpp" alt="" coords="869,266,960,293"/>
-<area shape="rect" id="node36" href="qgd___gates___block_8cpp.html" title="qgd_Gates_Block.cpp" alt="" coords="696,266,845,293"/>
-<area shape="rect" id="node37" href="qgd___operation___block_8cpp.html" title="qgd_Operation_Block.cpp" alt="" coords="501,266,672,293"/>
-<area shape="rect" id="node39" href="_u3_8cpp.html" title="Class representing a U3 gate. " alt="" coords="2025,266,2087,293"/>
-<area shape="rect" id="node40" href="qgd___u3_8cpp.html" title="qgd_U3.cpp" alt="" coords="2264,266,2355,293"/>
+<area shape="rect" id="node2" href="common_8cpp.html" title="Provides commonly used functions and wrappers to CBLAS functions. " alt="" coords="458,87,554,114"/>
+<area shape="rect" id="node3" href="dot_8cpp.html" title="dot.cpp" alt="" coords="578,87,642,114"/>
+<area shape="rect" id="node4" href="_n___qubit___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the final optimization problem (s..." alt="" coords="1238,80,1401,121"/>
+<area shape="rect" id="node11" href="_sub___matrix___decomposition___cost___function_8h.html" title="Header file for the paralleized calculation of the cost function of the subdecomposition (supporting ..." alt="" coords="667,80,847,121"/>
+<area shape="rect" id="node14" href="_adaptive_8cpp.html" title="Adaptive.cpp" alt="" coords="3939,87,4036,114"/>
+<area shape="rect" id="node15" href="_composite_8cpp.html" title="Class for the representation of general unitary operation on the first qbit_num&#45;1 qubits..." alt="" coords="2943,423,3051,449"/>
+<area shape="rect" id="node16" href="_gate_8cpp.html" title="Gate.cpp" alt="" coords="2473,177,2547,203"/>
+<area shape="rect" id="node17" href="_gate_8h.html" title="Gate.h" alt="" coords="2189,87,2249,114"/>
+<area shape="rect" id="node22" href="_composite_8h.html" title="Header file for a class for the representation of general gate operations on the first qbit_num&#45;1 qub..." alt="" coords="1997,341,2092,367"/>
+<area shape="rect" id="node27" href="_random___unitary_8h.html" title="Random_Unitary.h" alt="" coords="2823,259,2951,285"/>
+<area shape="rect" id="node28" href="_u_n_8cpp.html" title="Class for the representation of general unitary operation on the first qbit_num&#45;1 qubits..." alt="" coords="2725,341,2791,367"/>
+<area shape="rect" id="node30" href="custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="3034,333,3189,375"/>
+<area shape="rect" id="node31" href="decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="3213,341,3372,367"/>
+<area shape="rect" id="node38" href="_gates__block_8h.html" title="Header file for a class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into laye..." alt="" coords="3357,259,3463,285"/>
+<area shape="rect" id="node50" href="_u_n_8h.html" title="Header file for a class for the representation of general gate operations on the first qbit_num&#45;1 qub..." alt="" coords="2696,259,2748,285"/>
+<area shape="rect" id="node51" href="_o_n_8h.html" title="Header file for a class for the representation of general gate operations on the first qbit_num&#45;1 qub..." alt="" coords="1873,177,1925,203"/>
+<area shape="rect" id="node52" href="_o_n_8cpp.html" title="Class for the representation of general ONitary operation on the first qbit_num&#45;1 qubits..." alt="" coords="613,259,679,285"/>
+<area shape="rect" id="node53" href="_random___orthogonal_8h.html" title="Random_Orthogonal.h" alt="" coords="871,87,1021,114"/>
+<area shape="rect" id="node5" href="_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="1425,177,1611,203"/>
+<area shape="rect" id="node6" href="_n___qubit___decomposition__adaptive_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="865,169,1027,211"/>
+<area shape="rect" id="node7" href="_n___qubit___decomposition__adaptive__general_8cpp.html" title="N_Qubit_Decomposition\l_adaptive_general.cpp" alt="" coords="678,169,841,211"/>
+<area shape="rect" id="node8" href="_n___qubit___decomposition___base_8cpp.html" title="N_Qubit_Decomposition\l_Base.cpp" alt="" coords="1635,169,1798,211"/>
+<area shape="rect" id="node9" href="_n___qubit___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the final optimization problem (supporting parallel computa..." alt="" coords="1051,169,1214,211"/>
+<area shape="rect" id="node10" href="_n___qubit___decomposition__custom_8cpp.html" title="N_Qubit_Decomposition\l_custom.cpp" alt="" coords="1238,169,1401,211"/>
+<area shape="rect" id="node12" href="_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="5,177,209,203"/>
+<area shape="rect" id="node13" href="_sub___matrix___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the sub&#45;disantenglement problem with TBB parallelization..." alt="" coords="233,169,413,211"/>
+<area shape="rect" id="node18" href="_u3_8h.html" title="Header file for a class representing a rotation gate around the Y axis. " alt="" coords="2153,177,2203,203"/>
+<area shape="rect" id="node32" href="_c_h_8h.html" title="Header file for a class representing a CH operation. " alt="" coords="1343,259,1394,285"/>
+<area shape="rect" id="node35" href="_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="2227,177,2297,203"/>
+<area shape="rect" id="node41" href="_c_z_8h.html" title="Header file for a class representing a CZ operation. " alt="" coords="2623,259,2672,285"/>
+<area shape="rect" id="node44" href="_x_8h.html" title="X.h" alt="" coords="916,259,957,285"/>
+<area shape="rect" id="node47" href="_s_x_8h.html" title="Header file for a class representing a rotation gate around the X axis. " alt="" coords="1441,259,1491,285"/>
+<area shape="rect" id="node49" href="_s_y_c_8h.html" title="Header file for a class representing a Sycamore gate. " alt="" coords="1515,259,1574,285"/>
+<area shape="rect" id="node19" href="_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="1925,423,2079,449"/>
+<area shape="rect" id="node20" href="_gates__block_8cpp.html" title="Class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="1672,423,1791,449"/>
+<area shape="rect" id="node21" href="_r_y_8h.html" title="Header file for a class representing a rotation gate around the Y axis. " alt="" coords="1673,259,1723,285"/>
+<area shape="rect" id="node23" href="_r_x_8h.html" title="Header file for a class representing a rotation gate around the X axis. " alt="" coords="2153,259,2203,285"/>
+<area shape="rect" id="node24" href="_r_z_8h.html" title="Header file for a class representing a rotation gate around the Z axis. " alt="" coords="1599,259,1648,285"/>
+<area shape="rect" id="node25" href="_u3_8cpp.html" title="Class representing a RX gate. " alt="" coords="1799,259,1861,285"/>
+<area shape="rect" id="node26" href="qgd___u3_8cpp.html" title="qgd_U3.cpp" alt="" coords="1886,259,1977,285"/>
+<area shape="rect" id="node29" href="_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="2816,341,2959,367"/>
+<area shape="rect" id="node33" href="_c_h_8cpp.html" title="Class representing a CH gate. " alt="" coords="1312,341,1377,367"/>
+<area shape="rect" id="node34" href="qgd___c_h_8cpp.html" title="qgd_CH.cpp" alt="" coords="1194,341,1287,367"/>
+<area shape="rect" id="node36" href="_c_n_o_t_8cpp.html" title="Class representing a CNOT gate. " alt="" coords="2414,259,2497,285"/>
+<area shape="rect" id="node37" href="qgd___c_n_o_t_8cpp.html" title="qgd_CNOT.cpp" alt="" coords="2279,259,2389,285"/>
+<area shape="rect" id="node39" href="qgd___n___qubit___decomposition__adaptive___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_adaptive_Wrapper.cpp" alt="" coords="3499,333,3689,375"/>
+<area shape="rect" id="node40" href="qgd___gates___block_8cpp.html" title="qgd_Gates_Block.cpp" alt="" coords="3714,341,3863,367"/>
+<area shape="rect" id="node42" href="_c_z_8cpp.html" title="Class representing a CZ gate. " alt="" coords="2485,341,2548,367"/>
+<area shape="rect" id="node43" href="qgd___c_z_8cpp.html" title="qgd_CZ.cpp" alt="" coords="2370,341,2461,367"/>
+<area shape="rect" id="node45" href="_x_8cpp.html" title="Class representing a X gate. " alt="" coords="805,341,860,367"/>
+<area shape="rect" id="node46" href="qgd___x_8cpp.html" title="qgd_X.cpp" alt="" coords="885,341,967,367"/>
+<area shape="rect" id="node48" href="_s_x_8cpp.html" title="Class representing a SX gate. " alt="" coords="1503,341,1567,367"/>
+<area shape="rect" id="node54" href="_random___orthogonal_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="489,177,653,203"/>
 </map>
 </div>
 </div>
@@ -133,6 +148,9 @@ This graph shows which files directly or indirectly include this file:</div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
+<tr class="memitem:a7d3f0ec1867871ce22b121a6a7496fe0"><td class="memItemLeft" align="right" valign="top">double&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="common_8h.html#a7d3f0ec1867871ce22b121a6a7496fe0">activation_function</a> (double Phi, int limit)</td></tr>
+<tr class="memdesc:a7d3f0ec1867871ce22b121a6a7496fe0"><td class="mdescLeft">&#160;</td><td class="mdescRight">?????  <a href="#a7d3f0ec1867871ce22b121a6a7496fe0">More...</a><br /></td></tr>
+<tr class="separator:a7d3f0ec1867871ce22b121a6a7496fe0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aba6badd873191e752e949e21670e67be"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="common_8h.html#aba6badd873191e752e949e21670e67be">add_unique_elelement</a> (std::vector&lt; int &gt; &amp;involved_qbits, int qbit)</td></tr>
 <tr class="memdesc:aba6badd873191e752e949e21670e67be"><td class="mdescLeft">&#160;</td><td class="mdescRight">Add an integer to a vector of integers if the integer is not already an element of the vector.  <a href="#aba6badd873191e752e949e21670e67be">More...</a><br /></td></tr>
 <tr class="separator:aba6badd873191e752e949e21670e67be"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -178,6 +196,78 @@ Functions</h2></td></tr>
 
 <p class="definition">Definition in file <a class="el" href="common_8h_source.html">common.h</a>.</p>
 </div><h2 class="groupheader">Function Documentation</h2>
+<a id="a7d3f0ec1867871ce22b121a6a7496fe0"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a7d3f0ec1867871ce22b121a6a7496fe0">&#9670;&nbsp;</a></span>activation_function()</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">double activation_function </td>
+          <td>(</td>
+          <td class="paramtype">double&#160;</td>
+          <td class="paramname"><em>Phi</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>limit</em>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p>????? </p>
+
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00035">35</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="common_8h_a7d3f0ec1867871ce22b121a6a7496fe0_icgraph.png" border="0" usemap="#common_8h_a7d3f0ec1867871ce22b121a6a7496fe0_icgraph" alt=""/></div>
+<map name="common_8h_a7d3f0ec1867871ce22b121a6a7496fe0_icgraph" id="common_8h_a7d3f0ec1867871ce22b121a6a7496fe0_icgraph">
+<area shape="rect" id="node2" href="class_adaptive.html#a70c343bca7dad3e98a195c3e51c0fd68" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="211,394,337,421"/>
+<area shape="rect" id="node19" href="class_adaptive.html#ab10545fc1a38de0593c8229903e55230" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="203,253,345,295"/>
+<area shape="rect" id="node31" href="class_adaptive.html#a9b1a04d708245e53e9c13a9a1023c6e2" title="Call to retrieve the gate matrix. " alt="" coords="184,475,364,502"/>
+<area shape="rect" id="node32" href="class_n___qubit___decomposition__adaptive.html#a3e1ed43d6cbe798d887ec98b3e3b5b61" title="??????????????? " alt="" coords="412,605,576,661"/>
+<area shape="rect" id="node33" href="class_n___qubit___decomposition__adaptive.html#ad7d05a3e744b38241cd8ab38a424fd8f" title="??????????????? " alt="" coords="624,91,828,132"/>
+<area shape="rect" id="node3" href="class_decomposition___base.html#a501a73d321a9a6f5fb2b53558b8be618" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="644,269,808,311"/>
+<area shape="rect" id="node4" href="class_gates__block.html#a0a8345863ae673bb3f987546d4930a6a" title="Call to apply the gate on the input array/matrix Gates_block*input. " alt="" coords="419,394,569,421"/>
+<area shape="rect" id="node15" href="class_gates__block.html#a4215cac0ddbe6e827340612436562022" title="??????????????? " alt="" coords="904,496,1035,537"/>
+<area shape="rect" id="node5" href="class_gates__block.html#af9546b43aa681935754f66c5cea25aa0" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="645,335,807,362"/>
+<area shape="rect" id="node14" href="class_gates__block.html#a05ffe60aaddb9668d670687ac8e9e2f8" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="661,387,791,428"/>
+<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="888,377,1051,419"/>
+<area shape="rect" id="node11" href="_n___qubit___decomposition__adaptive__general_8cpp.html#a9aa92b989b3e18eabc3ca0ed0d46c327" title="are_two_qubits_independent" alt="" coords="876,311,1063,338"/>
+<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1123,377,1285,419"/>
+<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1373,423,1536,464"/>
+<area shape="rect" id="node9" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1690,489,1741,515"/>
+<area shape="rect" id="node10" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1634,423,1797,464"/>
+<area shape="rect" id="node12" href="class_n___qubit___decomposition__adaptive__general.html#a5cc102240c9e53b1fd6aad9ca795cf16" title="??????????????? " alt="" coords="1123,297,1285,353"/>
+<area shape="rect" id="node13" href="class_n___qubit___decomposition__adaptive__general.html#ac260172fe0d33b1d52a9588c3ad14cd8" title="??????????????? " alt="" coords="1116,85,1292,141"/>
+<area shape="rect" id="node16" href="class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="1111,494,1297,550"/>
+<area shape="rect" id="node17" href="class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b" title="Call to solve layer by layer the optimization problem. " alt="" coords="1612,539,1819,595"/>
+<area shape="rect" id="node18" href="class_n___qubit___decomposition___base.html#ab8e063dc0433796b9eab2c026deba8a9" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="1345,493,1564,535"/>
+<area shape="rect" id="node20" href="class_decomposition___base.html#a92072cb41f4b2cbab6199723fd709131" title="Calculate the list of gate gate matrices such that the i&gt;0&#45;th element in the result list is the produ..." alt="" coords="653,172,799,213"/>
+<area shape="rect" id="node30" href="class_gates__block.html#a90303bc111b36e053572cd3b29342a21" title="Call to apply the gate on the input array/matrix by input*CNOT. " alt="" coords="429,253,559,295"/>
+<area shape="rect" id="node21" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="897,165,1042,221"/>
+<area shape="rect" id="node22" href="class_n___qubit___decomposition___base.html#a382d8110a0de379bcc1fe862bedaa2be" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="1122,165,1286,207"/>
+<area shape="rect" id="node29" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="1114,231,1294,272"/>
+<area shape="rect" id="node23" href="class_n___qubit___decomposition__adaptive.html#a486c74fb4056dea78878593180d1415e" title="Start the disentanglig process of the unitary. " alt="" coords="1867,269,2068,311"/>
+<area shape="rect" id="node24" href="class_n___qubit___decomposition__adaptive__general.html#aab72db9bfa3bbd5134e93d9604acf1c2" title="Start the disentanglig process of the unitary. " alt="" coords="1634,102,1797,158"/>
+<area shape="rect" id="node25" href="class_n___qubit___decomposition__custom.html#a384fb1eb0b29d51262a9f021465bf07d" title="Start the disentanglig process of the unitary. " alt="" coords="1357,189,1552,231"/>
+<area shape="rect" id="node26" href="class_n___qubit___decomposition__adaptive.html#a89f4c47432abe740d43aa12842558282" title="?????????????? " alt="" coords="1621,262,1810,318"/>
+<area shape="rect" id="node27" href="class_n___qubit___decomposition__adaptive.html#a28ca0675bb44bba82e7ee92f71be415b" title="?????????????? " alt="" coords="1634,342,1797,398"/>
+<area shape="rect" id="node28" href="class_n___qubit___decomposition__adaptive.html#a5a70c5e495cf4e10754c50ce1082ad66" title="??????????????? " alt="" coords="1629,182,1802,238"/>
+<area shape="rect" id="node34" href="class_n___qubit___decomposition__adaptive.html#a0c766f2dac9ef7d9c330ea5cb2b66e30" title="??????????????? " alt="" coords="883,83,1056,139"/>
+</map>
+</div>
+
+</div>
+</div>
 <a id="aba6badd873191e752e949e21670e67be"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#aba6badd873191e752e949e21670e67be">&#9670;&nbsp;</a></span>add_unique_elelement()</h2>
 
@@ -213,18 +303,21 @@ Functions</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00096">96</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00132">132</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="common_8h_aba6badd873191e752e949e21670e67be_icgraph.png" border="0" usemap="#common_8h_aba6badd873191e752e949e21670e67be_icgraph" alt=""/></div>
 <map name="common_8h_aba6badd873191e752e949e21670e67be_icgraph" id="common_8h_aba6badd873191e752e949e21670e67be_icgraph">
-<area shape="rect" id="node2" href="class_gates__block.html#a217cd025caca11b59680bed858b4c831" title="Call to get the qubits involved in the gates stored in the block of gates. " alt="" coords="204,59,379,101"/>
-<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="427,89,589,130"/>
-<area shape="rect" id="node4" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="637,57,800,98"/>
-<area shape="rect" id="node5" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="904,5,955,32"/>
-<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="848,57,1011,98"/>
-<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="848,122,1011,163"/>
+<area shape="rect" id="node2" href="class_gates__block.html#a217cd025caca11b59680bed858b4c831" title="Call to get the qubits involved in the gates stored in the block of gates. " alt="" coords="204,177,379,218"/>
+<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="439,118,601,159"/>
+<area shape="rect" id="node8" href="_n___qubit___decomposition__adaptive__general_8cpp.html#a9aa92b989b3e18eabc3ca0ed0d46c327" title="are_two_qubits_independent" alt="" coords="427,191,613,217"/>
+<area shape="rect" id="node4" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="668,57,831,98"/>
+<area shape="rect" id="node5" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="941,5,992,32"/>
+<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="885,57,1048,98"/>
+<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="885,122,1048,163"/>
+<area shape="rect" id="node9" href="class_n___qubit___decomposition__adaptive__general.html#a5cc102240c9e53b1fd6aad9ca795cf16" title="??????????????? " alt="" coords="668,176,831,232"/>
+<area shape="rect" id="node10" href="class_n___qubit___decomposition__adaptive__general.html#ac260172fe0d33b1d52a9588c3ad14cd8" title="??????????????? " alt="" coords="661,256,837,312"/>
 </map>
 </div>
 
@@ -255,7 +348,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with an identity matrix. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00129">129</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00165">165</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -270,21 +363,42 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="common_8h_a478212437ad8647d21171d23c98ae52a_icgraph.png" border="0" usemap="#common_8h_a478212437ad8647d21171d23c98ae52a_icgraph" alt=""/></div>
 <map name="common_8h_a478212437ad8647d21171d23c98ae52a_icgraph" id="common_8h_a478212437ad8647d21171d23c98ae52a_icgraph">
-<area shape="rect" id="node2" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="422,30,567,86"/>
-<area shape="rect" id="node10" href="class_decomposition___base.html#a92072cb41f4b2cbab6199723fd709131" title="Calculate the list of gate gate matrices such that the i&gt;0&#45;th element in the result list is the produ..." alt="" coords="187,79,332,120"/>
-<area shape="rect" id="node11" href="class_n___qubit___decomposition.html#a66df18a96f8edc7c9735dc962468c8fd" title="Calculate the error of the decomposition according to the spectral norm of , where &#160;is the unitary pr..." alt="" coords="407,129,583,171"/>
-<area shape="rect" id="node12" href="_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="193,195,325,222"/>
-<area shape="rect" id="node14" href="class_random___unitary.html#a6b84f487a4b806a1a3af0ad6ff135119" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="631,264,811,305"/>
-<area shape="rect" id="node15" href="class_random___unitary.html#af3985ddf05656dcf003aa18379cd5cd0" title="Implements matrix I below Eq (7) of arXiv:1303:5904v1. " alt="" coords="160,297,359,323"/>
-<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="639,5,802,47"/>
-<area shape="rect" id="node9" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="631,71,811,112"/>
-<area shape="rect" id="node4" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="859,71,1021,112"/>
-<area shape="rect" id="node5" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1125,19,1176,46"/>
-<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1069,71,1232,112"/>
-<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="1069,136,1232,177"/>
-<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1280,165,1443,207"/>
-<area shape="rect" id="node13" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="469,195,520,222"/>
-<area shape="rect" id="node16" href="class_random___unitary.html#a485d4f76c4bfc3fcbccc90580831d79a" title="Eq (6) of arXiv:1303:5904v1. " alt="" coords="411,297,578,323"/>
+<area shape="rect" id="node2" href="class_c_h.html#a041bbe5beb602acc0e9636412a175f0b" title="Call to retrieve the operation matrix. " alt="" coords="206,5,313,32"/>
+<area shape="rect" id="node3" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="197,56,322,83"/>
+<area shape="rect" id="node4" href="_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="434,61,566,88"/>
+<area shape="rect" id="node6" href="class_c_z.html#a3b095783572de5083b444b0d12df7b8d" title="Call to retrieve the operation matrix. " alt="" coords="207,157,312,184"/>
+<area shape="rect" id="node7" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="427,368,573,424"/>
+<area shape="rect" id="node21" href="class_decomposition___base.html#a92072cb41f4b2cbab6199723fd709131" title="Calculate the list of gate gate matrices such that the i&gt;0&#45;th element in the result list is the produ..." alt="" coords="187,361,332,402"/>
+<area shape="rect" id="node22" href="class_gates__block.html#af9546b43aa681935754f66c5cea25aa0" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="179,259,340,285"/>
+<area shape="rect" id="node26" href="class_n___qubit___decomposition___base.html#a0f0c3b16223fcc246f1e64da3632d181" title="Calculate the error of the decomposition according to the spectral norm of , where &#160;is the unitary pr..." alt="" coords="641,673,855,714"/>
+<area shape="rect" id="node27" href="class_o_n.html#a5cf01675dd4a7fe4532af478cf17cc19" title="Call to retrieve the operation matrix. " alt="" coords="205,427,313,453"/>
+<area shape="rect" id="node28" href="class_random___unitary.html#a6b84f487a4b806a1a3af0ad6ff135119" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="658,521,838,562"/>
+<area shape="rect" id="node29" href="class_random___unitary.html#af3985ddf05656dcf003aa18379cd5cd0" title="Implements matrix I below Eq (7) of arXiv:1303:5904v1. " alt="" coords="160,477,359,504"/>
+<area shape="rect" id="node31" href="class_s_x.html#ad8e1575810016cf48b17045318c89575" title="Call to retrieve the gate matrix. " alt="" coords="206,579,313,605"/>
+<area shape="rect" id="node32" href="class_s_y_c.html#a0bb1106c38cbd723b6e1b9591a585b78" title="Call to retrieve the operation matrix. " alt="" coords="202,629,317,656"/>
+<area shape="rect" id="node33" href="class_u3.html#a5bd83233aed95cc277e5d6690f4ac6c9" title="Call to retrieve the gate matrix. " alt="" coords="207,208,312,235"/>
+<area shape="rect" id="node36" href="class_u_n.html#a3d13391886573ed525aa4f36a4a44ab7" title="Call to retrieve the operation matrix. " alt="" coords="205,731,313,757"/>
+<area shape="rect" id="node37" href="class_x.html#ae62dc8951262d93900419516e8aec2a4" title="Call to retrieve the gate matrix. " alt="" coords="211,781,308,808"/>
+<area shape="rect" id="node5" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="723,61,773,88"/>
+<area shape="rect" id="node8" href="class_n___qubit___decomposition___base.html#a382d8110a0de379bcc1fe862bedaa2be" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="666,455,830,497"/>
+<area shape="rect" id="node20" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="658,390,838,431"/>
+<area shape="rect" id="node9" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="919,289,1081,330"/>
+<area shape="rect" id="node14" href="class_n___qubit___decomposition__adaptive.html#a486c74fb4056dea78878593180d1415e" title="Start the disentanglig process of the unitary. " alt="" coords="1383,543,1584,585"/>
+<area shape="rect" id="node15" href="class_n___qubit___decomposition__adaptive__general.html#aab72db9bfa3bbd5134e93d9604acf1c2" title="Start the disentanglig process of the unitary. " alt="" coords="1159,696,1321,752"/>
+<area shape="rect" id="node16" href="class_n___qubit___decomposition__custom.html#a384fb1eb0b29d51262a9f021465bf07d" title="Start the disentanglig process of the unitary. " alt="" coords="903,555,1097,597"/>
+<area shape="rect" id="node10" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1215,355,1265,381"/>
+<area shape="rect" id="node11" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1159,289,1321,330"/>
+<area shape="rect" id="node12" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="1159,171,1321,213"/>
+<area shape="rect" id="node13" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1402,201,1565,242"/>
+<area shape="rect" id="node17" href="class_n___qubit___decomposition__adaptive.html#a89f4c47432abe740d43aa12842558282" title="?????????????? " alt="" coords="1145,456,1335,512"/>
+<area shape="rect" id="node18" href="class_n___qubit___decomposition__adaptive.html#a28ca0675bb44bba82e7ee92f71be415b" title="?????????????? " alt="" coords="1159,616,1321,672"/>
+<area shape="rect" id="node19" href="class_n___qubit___decomposition__adaptive.html#a5a70c5e495cf4e10754c50ce1082ad66" title="??????????????? " alt="" coords="1153,536,1327,592"/>
+<area shape="rect" id="node23" href="_n___qubit___decomposition__adaptive__general_8cpp.html#a9aa92b989b3e18eabc3ca0ed0d46c327" title="are_two_qubits_independent" alt="" coords="407,259,593,285"/>
+<area shape="rect" id="node24" href="class_n___qubit___decomposition__adaptive__general.html#a5cc102240c9e53b1fd6aad9ca795cf16" title="??????????????? " alt="" coords="667,309,829,365"/>
+<area shape="rect" id="node25" href="class_n___qubit___decomposition__adaptive__general.html#ac260172fe0d33b1d52a9588c3ad14cd8" title="??????????????? " alt="" coords="660,229,836,285"/>
+<area shape="rect" id="node30" href="class_random___unitary.html#a485d4f76c4bfc3fcbccc90580831d79a" title="Eq (6) of arXiv:1303:5904v1. " alt="" coords="417,477,583,504"/>
+<area shape="rect" id="node34" href="class_decomposition___base.html#ac2db1c9b9c723053e78f44255b61c428" title="This method determine the gates needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="427,113,573,154"/>
+<area shape="rect" id="node35" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="669,113,827,154"/>
 </map>
 </div>
 
@@ -326,21 +440,65 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the calculated product. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00224">224</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00260">260</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="common_8h_ac876ec30dbcade845af445eb50315653_icgraph.png" border="0" usemap="#common_8h_ac876ec30dbcade845af445eb50315653_icgraph" alt=""/></div>
 <map name="common_8h_ac876ec30dbcade845af445eb50315653_icgraph" id="common_8h_ac876ec30dbcade845af445eb50315653_icgraph">
-<area shape="rect" id="node2" href="class_n___qubit___decomposition.html#a66df18a96f8edc7c9735dc962468c8fd" title="Calculate the error of the decomposition according to the spectral norm of , where &#160;is the unitary pr..." alt="" coords="100,99,276,141"/>
-<area shape="rect" id="node8" href="class_random___unitary.html#a6b84f487a4b806a1a3af0ad6ff135119" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="539,239,719,281"/>
-<area shape="rect" id="node9" href="class_random___unitary.html#a485d4f76c4bfc3fcbccc90580831d79a" title="Eq (6) of arXiv:1303:5904v1. " alt="" coords="324,247,491,273"/>
-<area shape="rect" id="node10" href="class_random___unitary.html#af0a2e33ab85fce81943a5e2739d2f563" title="Implements Eq (8) of arXiv:1303:5904v1. " alt="" coords="121,271,255,297"/>
-<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="326,98,489,139"/>
-<area shape="rect" id="node4" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="603,5,654,32"/>
-<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="547,57,710,98"/>
-<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="547,122,710,163"/>
-<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="767,151,929,193"/>
+<area shape="rect" id="node2" href="class_c_r_y.html#af811b97d5e317fa43c986b4cd22a5fb0" title="Call to retrieve the gate matrix. " alt="" coords="155,563,258,589"/>
+<area shape="rect" id="node14" href="class_c_r_y.html#a86f5543eb950b9b8da83091a8f217ce4" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="131,2029,282,2056"/>
+<area shape="rect" id="node19" href="class_c_r_y.html#aae3a5d1294570138d1c0f27670230cd1" title="??????????????? " alt="" coords="621,5,777,32"/>
+<area shape="rect" id="node21" href="class_n___qubit___decomposition___base.html#a0f0c3b16223fcc246f1e64da3632d181" title="Calculate the error of the decomposition according to the spectral norm of , where &#160;is the unitary pr..." alt="" coords="100,1661,313,1702"/>
+<area shape="rect" id="node31" href="class_random___unitary.html#a6b84f487a4b806a1a3af0ad6ff135119" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="609,2290,789,2331"/>
+<area shape="rect" id="node32" href="class_random___unitary.html#a485d4f76c4bfc3fcbccc90580831d79a" title="Eq (6) of arXiv:1303:5904v1. " alt="" coords="375,2307,542,2333"/>
+<area shape="rect" id="node33" href="class_random___unitary.html#af0a2e33ab85fce81943a5e2739d2f563" title="Implements Eq (8) of arXiv:1303:5904v1. " alt="" coords="139,2307,274,2333"/>
+<area shape="rect" id="node34" href="class_s_x.html#a82abbbc20a3ab1d1aff450bdc02db98e" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="411,107,506,133"/>
+<area shape="rect" id="node36" href="class_s_x.html#a320f8940facf7a1de91b95324b140db1" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="388,2205,529,2232"/>
+<area shape="rect" id="node37" href="class_s_y_c.html#af2142dc5a5db9799250e947a3b73b112" title="Call to apply the gate on the input array/matrix by SYC*input. " alt="" coords="407,688,510,715"/>
+<area shape="rect" id="node38" href="class_s_y_c.html#a04425235b10bb5288d88347e02a458f5" title="Call to apply the gate on the input array/matrix by input*SYC. " alt="" coords="383,2037,534,2064"/>
+<area shape="rect" id="node39" href="class_u3.html#a00bf6e1353d834ea3febca8ea249e066" title="??????????? " alt="" coords="139,891,274,917"/>
+<area shape="rect" id="node50" href="class_u3.html#a2d4b5cb4480c1bc8dd59f74a23ab3786" title="??????????? " alt="" coords="131,1853,282,1894"/>
+<area shape="rect" id="node3" href="class_adaptive.html#a70c343bca7dad3e98a195c3e51c0fd68" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="395,461,522,488"/>
+<area shape="rect" id="node4" href="class_decomposition___base.html#a501a73d321a9a6f5fb2b53558b8be618" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="860,606,1024,647"/>
+<area shape="rect" id="node5" href="class_gates__block.html#a0a8345863ae673bb3f987546d4930a6a" title="Call to apply the gate on the input array/matrix Gates_block*input. " alt="" coords="624,739,773,765"/>
+<area shape="rect" id="node10" href="class_gates__block.html#a4215cac0ddbe6e827340612436562022" title="??????????????? " alt="" coords="1119,538,1249,579"/>
+<area shape="rect" id="node6" href="class_gates__block.html#af9546b43aa681935754f66c5cea25aa0" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="861,1260,1023,1287"/>
+<area shape="rect" id="node9" href="class_gates__block.html#a05ffe60aaddb9668d670687ac8e9e2f8" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="877,673,1007,714"/>
+<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="1103,1326,1265,1367"/>
+<area shape="rect" id="node8" href="_n___qubit___decomposition__adaptive__general_8cpp.html#a9aa92b989b3e18eabc3ca0ed0d46c327" title="are_two_qubits_independent" alt="" coords="1091,1260,1277,1287"/>
+<area shape="rect" id="node11" href="class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="1325,531,1512,587"/>
+<area shape="rect" id="node12" href="class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b" title="Call to solve layer by layer the optimization problem. " alt="" coords="1827,531,2033,587"/>
+<area shape="rect" id="node13" href="class_n___qubit___decomposition___base.html#ab8e063dc0433796b9eab2c026deba8a9" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="1560,567,1779,609"/>
+<area shape="rect" id="node15" href="class_adaptive.html#ab10545fc1a38de0593c8229903e55230" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="387,2089,530,2130"/>
+<area shape="rect" id="node16" href="class_decomposition___base.html#a92072cb41f4b2cbab6199723fd709131" title="Calculate the list of gate gate matrices such that the i&gt;0&#45;th element in the result list is the produ..." alt="" coords="869,2011,1015,2053"/>
+<area shape="rect" id="node18" href="class_gates__block.html#a90303bc111b36e053572cd3b29342a21" title="Call to apply the gate on the input array/matrix by input*CNOT. " alt="" coords="633,2011,764,2053"/>
+<area shape="rect" id="node17" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="1111,2004,1257,2060"/>
+<area shape="rect" id="node20" href="class_adaptive.html#a9b1a04d708245e53e9c13a9a1023c6e2" title="Call to retrieve the gate matrix. " alt="" coords="852,5,1032,32"/>
+<area shape="rect" id="node22" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="377,1305,540,1346"/>
+<area shape="rect" id="node25" href="class_n___qubit___decomposition__adaptive.html#a486c74fb4056dea78878593180d1415e" title="Start the disentanglig process of the unitary. " alt="" coords="841,1501,1043,1542"/>
+<area shape="rect" id="node26" href="class_n___qubit___decomposition__adaptive__general.html#aab72db9bfa3bbd5134e93d9604acf1c2" title="Start the disentanglig process of the unitary. " alt="" coords="617,1653,780,1709"/>
+<area shape="rect" id="node27" href="class_n___qubit___decomposition__custom.html#a384fb1eb0b29d51262a9f021465bf07d" title="Start the disentanglig process of the unitary. " alt="" coords="361,1581,556,1622"/>
+<area shape="rect" id="node23" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="673,1312,724,1339"/>
+<area shape="rect" id="node24" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="617,1246,780,1287"/>
+<area shape="rect" id="node28" href="class_n___qubit___decomposition__adaptive.html#a89f4c47432abe740d43aa12842558282" title="?????????????? " alt="" coords="604,1413,793,1469"/>
+<area shape="rect" id="node29" href="class_n___qubit___decomposition__adaptive.html#a28ca0675bb44bba82e7ee92f71be415b" title="?????????????? " alt="" coords="617,1493,780,1549"/>
+<area shape="rect" id="node30" href="class_n___qubit___decomposition__adaptive.html#a5a70c5e495cf4e10754c50ce1082ad66" title="??????????????? " alt="" coords="612,1573,785,1629"/>
+<area shape="rect" id="node35" href="class_s_x.html#ad8e1575810016cf48b17045318c89575" title="Call to retrieve the gate matrix. " alt="" coords="645,56,752,83"/>
+<area shape="rect" id="node40" href="class_r_x.html#ab953e8f35546bdfc00d5d4083962e032" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="411,992,506,1019"/>
+<area shape="rect" id="node42" href="class_r_y.html#aeb7ddf11db2176525a9903c761c4b0be" title="Call to retrieve the gate matrix. " alt="" coords="411,512,506,539"/>
+<area shape="rect" id="node44" href="class_r_z.html#a6f8758f14370d2a171ad0034df43074f" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="412,789,505,816"/>
+<area shape="rect" id="node45" href="class_r_z.html#a55051db38b901ed69aa56921b092cc15" title="??????????????? " alt="" coords="869,1195,1015,1221"/>
+<area shape="rect" id="node46" href="class_u3.html#a8b1763d0ff3d7704288ff3abd0e207ac" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="412,891,505,917"/>
+<area shape="rect" id="node49" href="class_u3.html#a383d9cca88d14c258b4525176a0c2329" title="??????????????? " alt="" coords="869,208,1015,235"/>
+<area shape="rect" id="node41" href="class_r_x.html#a0798a46f8892aa5782d598af91c50997" title="??????????????? " alt="" coords="869,1144,1015,1171"/>
+<area shape="rect" id="node43" href="class_r_y.html#af0ecbb112f19901ebed8e15086b2c1cc" title="??????????????? " alt="" coords="869,360,1015,387"/>
+<area shape="rect" id="node47" href="class_u3.html#a5bd83233aed95cc277e5d6690f4ac6c9" title="Call to retrieve the gate matrix. " alt="" coords="646,891,751,917"/>
+<area shape="rect" id="node48" href="class_u3.html#a202dd49e63c6699bbb6ebf08b9a869c0" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="883,891,1001,917"/>
+<area shape="rect" id="node51" href="class_r_x.html#afa3dfc4c313d9cc514ca4f0e6325f71b" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="388,1885,529,1912"/>
+<area shape="rect" id="node52" href="class_r_y.html#a2df6bbdb67e5af4ed4c0b92a2c8e00a8" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="388,1936,529,1963"/>
+<area shape="rect" id="node53" href="class_r_z.html#a7d4e0af6ebe38f2a70791a5540e55184" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="389,1784,529,1811"/>
+<area shape="rect" id="node54" href="class_u3.html#ad1519ead3e64fac0c3abd1aa390b4690" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="389,1835,529,1861"/>
 </map>
 </div>
 
@@ -382,7 +540,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the calculated product. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00240">240</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00276">276</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
 
 </div>
 </div>
@@ -421,7 +579,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00257">257</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00293">293</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -454,27 +612,53 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="common_8h_a84e35f14fe6cb1b6648be757446483e2_icgraph.png" border="0" usemap="#common_8h_a84e35f14fe6cb1b6648be757446483e2_icgraph" alt=""/></div>
 <map name="common_8h_a84e35f14fe6cb1b6648be757446483e2_icgraph" id="common_8h_a84e35f14fe6cb1b6648be757446483e2_icgraph">
-<area shape="rect" id="node2" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="207,185,247,212"/>
-<area shape="rect" id="node9" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1172,330,1335,371"/>
-<area shape="rect" id="node3" href="common_8h.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="329,211,440,237"/>
-<area shape="rect" id="node5" href="class_decomposition___base.html#a9ddb4adf4b04cc6cd51a27da9bd6ec83" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="732,141,896,182"/>
-<area shape="rect" id="node11" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1383,359,1545,401"/>
-<area shape="rect" id="node12" href="class_decomposition___base.html#a571c2a88cfc7d88829e8039b60c8d4af" title="Apply an gates on the input matrix. " alt="" coords="312,327,457,369"/>
-<area shape="rect" id="node19" href="_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="319,43,451,69"/>
-<area shape="rect" id="node21" href="class_random___unitary.html#a6b84f487a4b806a1a3af0ad6ff135119" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="295,94,475,135"/>
-<area shape="rect" id="node22" href="classfunctor__submtx__cost__fnc.html#a417d64477c1c376d650730284dc4f2f4" title="Operator to calculate the partial cost function labeled by product_idx. " alt="" coords="313,262,456,303"/>
-<area shape="rect" id="node4" href="class_gates__block.html#ad1840c6b3072f1853c7f91eccc5e777b" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="523,261,684,288"/>
-<area shape="rect" id="node6" href="classfunctor__get__operation__matrices.html#a13a446a1da6ee8ed165801ad66b49784" title="Operator to calculate th ematrix representation of operation labeled by i. " alt="" coords="741,206,887,247"/>
-<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="733,271,895,313"/>
-<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="953,265,1115,306"/>
-<area shape="rect" id="node10" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1439,308,1489,335"/>
-<area shape="rect" id="node13" href="class_decomposition___base.html#ac2db1c9b9c723053e78f44255b61c428" title="This method determine the gates needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="531,319,676,361"/>
-<area shape="rect" id="node15" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="741,413,887,469"/>
-<area shape="rect" id="node18" href="class_decomposition___base.html#a92072cb41f4b2cbab6199723fd709131" title="Calculate the list of gate gate matrices such that the i&gt;0&#45;th element in the result list is the produ..." alt="" coords="531,437,676,478"/>
-<area shape="rect" id="node14" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="955,330,1113,371"/>
-<area shape="rect" id="node16" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="953,461,1115,502"/>
-<area shape="rect" id="node17" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="944,395,1124,437"/>
-<area shape="rect" id="node20" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="578,43,629,69"/>
+<area shape="rect" id="node2" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="207,621,247,647"/>
+<area shape="rect" id="node10" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1429,768,1592,809"/>
+<area shape="rect" id="node25" href="class_n___qubit___decomposition__adaptive.html#a486c74fb4056dea78878593180d1415e" title="Start the disentanglig process of the unitary. " alt="" coords="1923,1049,2124,1091"/>
+<area shape="rect" id="node26" href="class_n___qubit___decomposition__adaptive__general.html#aab72db9bfa3bbd5134e93d9604acf1c2" title="Start the disentanglig process of the unitary. " alt="" coords="1690,994,1853,1050"/>
+<area shape="rect" id="node27" href="class_n___qubit___decomposition__custom.html#a384fb1eb0b29d51262a9f021465bf07d" title="Start the disentanglig process of the unitary. " alt="" coords="1413,1108,1608,1149"/>
+<area shape="rect" id="node3" href="common_8h.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="329,621,440,647"/>
+<area shape="rect" id="node4" href="class_composite.html#a8b8bf7f9b550aa78cf8d1ff87900872b" title="Call to apply the gate on the input array/matrix. " alt="" coords="315,351,454,378"/>
+<area shape="rect" id="node12" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1690,739,1853,780"/>
+<area shape="rect" id="node21" href="class_composite.html#ac327b93428027d327ea7b9ecf99dd5a2" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="308,839,461,880"/>
+<area shape="rect" id="node33" href="class_decomposition___base.html#a571c2a88cfc7d88829e8039b60c8d4af" title="Apply an gates on the input matrix. " alt="" coords="525,647,670,688"/>
+<area shape="rect" id="node36" href="class_gate.html#a8969dab0ffe073f2264f3bd844466ae0" title="Call to apply the gate on the input array/matrix. " alt="" coords="333,166,437,193"/>
+<area shape="rect" id="node38" href="class_gate.html#a90d152169d20e5587e50f5794d44ead5" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="309,905,460,931"/>
+<area shape="rect" id="node39" href="class_o_n.html#a1d15b1fef32715bafd0b529c50f417ed" title="Call to apply the gate on the input array/matrix. " alt="" coords="337,402,433,429"/>
+<area shape="rect" id="node41" href="class_o_n.html#a65983eedeaf1f1ecc875855ba1f76e15" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="313,955,456,982"/>
+<area shape="rect" id="node42" href="_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="319,259,451,286"/>
+<area shape="rect" id="node44" href="class_random___unitary.html#a6b84f487a4b806a1a3af0ad6ff135119" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="295,555,475,596"/>
+<area shape="rect" id="node45" href="classfunctor__submtx__cost__fnc.html#a417d64477c1c376d650730284dc4f2f4" title="Operator to calculate the partial cost function labeled by product_idx. " alt="" coords="313,773,456,815"/>
+<area shape="rect" id="node46" href="class_u_n.html#a8f2d952331a453962af1018a791ded2b" title="Call to apply the gate on the input array/matrix. " alt="" coords="337,453,433,479"/>
+<area shape="rect" id="node48" href="class_u_n.html#a31f18f66d34399e3bc41f380134f0b74" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="313,722,456,749"/>
+<area shape="rect" id="node5" href="class_decomposition___base.html#a501a73d321a9a6f5fb2b53558b8be618" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="720,261,884,303"/>
+<area shape="rect" id="node6" href="class_gates__block.html#a0a8345863ae673bb3f987546d4930a6a" title="Call to apply the gate on the input array/matrix Gates_block*input. " alt="" coords="523,393,672,419"/>
+<area shape="rect" id="node7" href="class_gates__block.html#af9546b43aa681935754f66c5cea25aa0" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="721,486,883,513"/>
+<area shape="rect" id="node16" href="class_gates__block.html#a05ffe60aaddb9668d670687ac8e9e2f8" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="737,327,867,368"/>
+<area shape="rect" id="node17" href="class_gates__block.html#a4215cac0ddbe6e827340612436562022" title="??????????????? " alt="" coords="960,137,1091,179"/>
+<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="944,651,1107,692"/>
+<area shape="rect" id="node13" href="_n___qubit___decomposition__adaptive__general_8cpp.html#a9aa92b989b3e18eabc3ca0ed0d46c327" title="are_two_qubits_independent" alt="" coords="932,486,1119,513"/>
+<area shape="rect" id="node9" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1179,709,1341,751"/>
+<area shape="rect" id="node11" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1746,805,1797,831"/>
+<area shape="rect" id="node14" href="class_n___qubit___decomposition__adaptive__general.html#a5cc102240c9e53b1fd6aad9ca795cf16" title="??????????????? " alt="" coords="1179,493,1341,549"/>
+<area shape="rect" id="node15" href="class_n___qubit___decomposition__adaptive__general.html#ac260172fe0d33b1d52a9588c3ad14cd8" title="??????????????? " alt="" coords="1172,413,1348,469"/>
+<area shape="rect" id="node18" href="class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="1167,130,1353,186"/>
+<area shape="rect" id="node19" href="class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b" title="Call to solve layer by layer the optimization problem. " alt="" coords="1668,82,1875,138"/>
+<area shape="rect" id="node20" href="class_n___qubit___decomposition___base.html#ab8e063dc0433796b9eab2c026deba8a9" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="1401,143,1620,184"/>
+<area shape="rect" id="node22" href="class_decomposition___base.html#a92072cb41f4b2cbab6199723fd709131" title="Calculate the list of gate gate matrices such that the i&gt;0&#45;th element in the result list is the produ..." alt="" coords="729,839,875,880"/>
+<area shape="rect" id="node32" href="class_gates__block.html#a90303bc111b36e053572cd3b29342a21" title="Call to apply the gate on the input array/matrix by input*CNOT. " alt="" coords="532,839,663,880"/>
+<area shape="rect" id="node23" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="953,831,1098,887"/>
+<area shape="rect" id="node24" href="class_n___qubit___decomposition___base.html#a382d8110a0de379bcc1fe862bedaa2be" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="1178,991,1342,1032"/>
+<area shape="rect" id="node31" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="1170,835,1350,876"/>
+<area shape="rect" id="node28" href="class_n___qubit___decomposition__adaptive.html#a89f4c47432abe740d43aa12842558282" title="?????????????? " alt="" coords="1677,1154,1866,1210"/>
+<area shape="rect" id="node29" href="class_n___qubit___decomposition__adaptive.html#a28ca0675bb44bba82e7ee92f71be415b" title="?????????????? " alt="" coords="1690,1234,1853,1290"/>
+<area shape="rect" id="node30" href="class_n___qubit___decomposition__adaptive.html#a5a70c5e495cf4e10754c50ce1082ad66" title="??????????????? " alt="" coords="1685,1074,1858,1130"/>
+<area shape="rect" id="node34" href="class_decomposition___base.html#ac2db1c9b9c723053e78f44255b61c428" title="This method determine the gates needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="729,691,875,732"/>
+<area shape="rect" id="node35" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="946,739,1105,780"/>
+<area shape="rect" id="node37" href="class_gate.html#a6e96411cb4584ecbe54be385bef4d401" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="738,125,866,151"/>
+<area shape="rect" id="node40" href="class_o_n.html#a5cf01675dd4a7fe4532af478cf17cc19" title="Call to retrieve the operation matrix. " alt="" coords="543,443,651,470"/>
+<area shape="rect" id="node43" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="572,217,623,243"/>
+<area shape="rect" id="node47" href="class_u_n.html#a3d13391886573ed525aa4f36a4a44ab7" title="Call to retrieve the operation matrix. " alt="" coords="543,545,651,571"/>
 </map>
 </div>
 
@@ -502,27 +686,53 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="common_8h_ab2a1aadbe72ac6b1f9aed9a2ef8e0044_icgraph.png" border="0" usemap="#common_8h_ab2a1aadbe72ac6b1f9aed9a2ef8e0044_icgraph" alt=""/></div>
 <map name="common_8h_ab2a1aadbe72ac6b1f9aed9a2ef8e0044_icgraph" id="common_8h_ab2a1aadbe72ac6b1f9aed9a2ef8e0044_icgraph">
-<area shape="rect" id="node2" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="208,185,248,212"/>
-<area shape="rect" id="node9" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1173,330,1336,371"/>
-<area shape="rect" id="node3" href="common_8h.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="331,211,441,237"/>
-<area shape="rect" id="node5" href="class_decomposition___base.html#a9ddb4adf4b04cc6cd51a27da9bd6ec83" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="733,141,897,182"/>
-<area shape="rect" id="node11" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1384,359,1547,401"/>
-<area shape="rect" id="node12" href="class_decomposition___base.html#a571c2a88cfc7d88829e8039b60c8d4af" title="Apply an gates on the input matrix. " alt="" coords="313,327,459,369"/>
-<area shape="rect" id="node19" href="_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="320,43,452,69"/>
-<area shape="rect" id="node21" href="class_random___unitary.html#a6b84f487a4b806a1a3af0ad6ff135119" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="296,94,476,135"/>
-<area shape="rect" id="node22" href="classfunctor__submtx__cost__fnc.html#a417d64477c1c376d650730284dc4f2f4" title="Operator to calculate the partial cost function labeled by product_idx. " alt="" coords="315,262,457,303"/>
-<area shape="rect" id="node4" href="class_gates__block.html#ad1840c6b3072f1853c7f91eccc5e777b" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="524,261,685,288"/>
-<area shape="rect" id="node6" href="classfunctor__get__operation__matrices.html#a13a446a1da6ee8ed165801ad66b49784" title="Operator to calculate th ematrix representation of operation labeled by i. " alt="" coords="742,206,889,247"/>
-<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="734,271,897,313"/>
-<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="954,265,1117,306"/>
-<area shape="rect" id="node10" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1440,308,1491,335"/>
-<area shape="rect" id="node13" href="class_decomposition___base.html#ac2db1c9b9c723053e78f44255b61c428" title="This method determine the gates needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="532,319,677,361"/>
-<area shape="rect" id="node15" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="743,413,888,469"/>
-<area shape="rect" id="node18" href="class_decomposition___base.html#a92072cb41f4b2cbab6199723fd709131" title="Calculate the list of gate gate matrices such that the i&gt;0&#45;th element in the result list is the produ..." alt="" coords="532,437,677,478"/>
-<area shape="rect" id="node14" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="956,330,1115,371"/>
-<area shape="rect" id="node16" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="954,461,1117,502"/>
-<area shape="rect" id="node17" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="945,395,1125,437"/>
-<area shape="rect" id="node20" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="579,43,630,69"/>
+<area shape="rect" id="node2" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="208,621,248,647"/>
+<area shape="rect" id="node10" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1431,768,1593,809"/>
+<area shape="rect" id="node25" href="class_n___qubit___decomposition__adaptive.html#a486c74fb4056dea78878593180d1415e" title="Start the disentanglig process of the unitary. " alt="" coords="1924,1049,2125,1091"/>
+<area shape="rect" id="node26" href="class_n___qubit___decomposition__adaptive__general.html#aab72db9bfa3bbd5134e93d9604acf1c2" title="Start the disentanglig process of the unitary. " alt="" coords="1691,994,1854,1050"/>
+<area shape="rect" id="node27" href="class_n___qubit___decomposition__custom.html#a384fb1eb0b29d51262a9f021465bf07d" title="Start the disentanglig process of the unitary. " alt="" coords="1415,1108,1609,1149"/>
+<area shape="rect" id="node3" href="common_8h.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="331,621,441,647"/>
+<area shape="rect" id="node4" href="class_composite.html#a8b8bf7f9b550aa78cf8d1ff87900872b" title="Call to apply the gate on the input array/matrix. " alt="" coords="317,351,455,378"/>
+<area shape="rect" id="node12" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1691,739,1854,780"/>
+<area shape="rect" id="node21" href="class_composite.html#ac327b93428027d327ea7b9ecf99dd5a2" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="309,839,463,880"/>
+<area shape="rect" id="node33" href="class_decomposition___base.html#a571c2a88cfc7d88829e8039b60c8d4af" title="Apply an gates on the input matrix. " alt="" coords="526,647,671,688"/>
+<area shape="rect" id="node36" href="class_gate.html#a8969dab0ffe073f2264f3bd844466ae0" title="Call to apply the gate on the input array/matrix. " alt="" coords="334,166,438,193"/>
+<area shape="rect" id="node38" href="class_gate.html#a90d152169d20e5587e50f5794d44ead5" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="311,905,461,931"/>
+<area shape="rect" id="node39" href="class_o_n.html#a1d15b1fef32715bafd0b529c50f417ed" title="Call to apply the gate on the input array/matrix. " alt="" coords="338,402,434,429"/>
+<area shape="rect" id="node41" href="class_o_n.html#a65983eedeaf1f1ecc875855ba1f76e15" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="315,955,457,982"/>
+<area shape="rect" id="node42" href="_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="320,259,452,286"/>
+<area shape="rect" id="node44" href="class_random___unitary.html#a6b84f487a4b806a1a3af0ad6ff135119" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="296,555,476,596"/>
+<area shape="rect" id="node45" href="classfunctor__submtx__cost__fnc.html#a417d64477c1c376d650730284dc4f2f4" title="Operator to calculate the partial cost function labeled by product_idx. " alt="" coords="315,773,457,815"/>
+<area shape="rect" id="node46" href="class_u_n.html#a8f2d952331a453962af1018a791ded2b" title="Call to apply the gate on the input array/matrix. " alt="" coords="338,453,434,479"/>
+<area shape="rect" id="node48" href="class_u_n.html#a31f18f66d34399e3bc41f380134f0b74" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="315,722,457,749"/>
+<area shape="rect" id="node5" href="class_decomposition___base.html#a501a73d321a9a6f5fb2b53558b8be618" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="721,261,885,303"/>
+<area shape="rect" id="node6" href="class_gates__block.html#a0a8345863ae673bb3f987546d4930a6a" title="Call to apply the gate on the input array/matrix Gates_block*input. " alt="" coords="524,393,673,419"/>
+<area shape="rect" id="node7" href="class_gates__block.html#af9546b43aa681935754f66c5cea25aa0" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="723,486,884,513"/>
+<area shape="rect" id="node16" href="class_gates__block.html#a05ffe60aaddb9668d670687ac8e9e2f8" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="738,327,869,368"/>
+<area shape="rect" id="node17" href="class_gates__block.html#a4215cac0ddbe6e827340612436562022" title="??????????????? " alt="" coords="961,137,1092,179"/>
+<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="945,651,1108,692"/>
+<area shape="rect" id="node13" href="_n___qubit___decomposition__adaptive__general_8cpp.html#a9aa92b989b3e18eabc3ca0ed0d46c327" title="are_two_qubits_independent" alt="" coords="933,486,1120,513"/>
+<area shape="rect" id="node9" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1180,709,1343,751"/>
+<area shape="rect" id="node11" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1747,805,1798,831"/>
+<area shape="rect" id="node14" href="class_n___qubit___decomposition__adaptive__general.html#a5cc102240c9e53b1fd6aad9ca795cf16" title="??????????????? " alt="" coords="1180,493,1343,549"/>
+<area shape="rect" id="node15" href="class_n___qubit___decomposition__adaptive__general.html#ac260172fe0d33b1d52a9588c3ad14cd8" title="??????????????? " alt="" coords="1173,413,1349,469"/>
+<area shape="rect" id="node18" href="class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="1168,130,1355,186"/>
+<area shape="rect" id="node19" href="class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b" title="Call to solve layer by layer the optimization problem. " alt="" coords="1669,82,1876,138"/>
+<area shape="rect" id="node20" href="class_n___qubit___decomposition___base.html#ab8e063dc0433796b9eab2c026deba8a9" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="1403,143,1621,184"/>
+<area shape="rect" id="node22" href="class_decomposition___base.html#a92072cb41f4b2cbab6199723fd709131" title="Calculate the list of gate gate matrices such that the i&gt;0&#45;th element in the result list is the produ..." alt="" coords="731,839,876,880"/>
+<area shape="rect" id="node32" href="class_gates__block.html#a90303bc111b36e053572cd3b29342a21" title="Call to apply the gate on the input array/matrix by input*CNOT. " alt="" coords="533,839,664,880"/>
+<area shape="rect" id="node23" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="954,831,1099,887"/>
+<area shape="rect" id="node24" href="class_n___qubit___decomposition___base.html#a382d8110a0de379bcc1fe862bedaa2be" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="1179,991,1343,1032"/>
+<area shape="rect" id="node31" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="1171,835,1351,876"/>
+<area shape="rect" id="node28" href="class_n___qubit___decomposition__adaptive.html#a89f4c47432abe740d43aa12842558282" title="?????????????? " alt="" coords="1678,1154,1867,1210"/>
+<area shape="rect" id="node29" href="class_n___qubit___decomposition__adaptive.html#a28ca0675bb44bba82e7ee92f71be415b" title="?????????????? " alt="" coords="1691,1234,1854,1290"/>
+<area shape="rect" id="node30" href="class_n___qubit___decomposition__adaptive.html#a5a70c5e495cf4e10754c50ce1082ad66" title="??????????????? " alt="" coords="1686,1074,1859,1130"/>
+<area shape="rect" id="node34" href="class_decomposition___base.html#ac2db1c9b9c723053e78f44255b61c428" title="This method determine the gates needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="731,691,876,732"/>
+<area shape="rect" id="node35" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="947,739,1106,780"/>
+<area shape="rect" id="node37" href="class_gate.html#a6e96411cb4584ecbe54be385bef4d401" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="739,125,867,151"/>
+<area shape="rect" id="node40" href="class_o_n.html#a5cf01675dd4a7fe4532af478cf17cc19" title="Call to retrieve the operation matrix. " alt="" coords="545,443,653,470"/>
+<area shape="rect" id="node43" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="573,217,624,243"/>
+<area shape="rect" id="node47" href="class_u_n.html#a3d13391886573ed525aa4f36a4a44ab7" title="Call to retrieve the operation matrix. " alt="" coords="545,545,653,571"/>
 </map>
 </div>
 
@@ -553,7 +763,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the n-th power of 2. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00082">82</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00118">118</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -567,57 +777,59 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="common_8h_a2085ad6d70ccf80dd353a70fe8262ff9_icgraph.png" border="0" usemap="#common_8h_a2085ad6d70ccf80dd353a70fe8262ff9_icgraph" alt=""/></div>
 <map name="common_8h_a2085ad6d70ccf80dd353a70fe8262ff9_icgraph" id="common_8h_a2085ad6d70ccf80dd353a70fe8262ff9_icgraph">
-<area shape="rect" id="node2" href="class_c_h.html#aed05b04d1f3aafb3b68148f78a99654b" title="Constructor of the class. " alt="" coords="189,372,256,399"/>
-<area shape="rect" id="node3" href="class_c_h.html#a3a54af8424022068c1efb0a271331ad9" title="Calculate the matrix of a CH gate operation acting on the space of qbit_num qubits. " alt="" coords="156,423,289,449"/>
-<area shape="rect" id="node4" href="class_c_n_o_t.html#a9e46511d49d6dc36e04bbd945d3483e4" title="Constructor of the class. " alt="" coords="171,473,274,500"/>
-<area shape="rect" id="node5" href="class_c_n_o_t.html#a8e8f82f7f7d5378268282553148d4660" title="Calculate the matrix of a CNOT gate operation acting on the space of qbit_num qubits. " alt="" coords="144,524,301,551"/>
-<area shape="rect" id="node6" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1737,1256,1788,1283"/>
-<area shape="rect" id="node7" href="class_c_z.html#ac86135c0ce4725e7a94a874b3eb2fa77" title="Constructor of the class. " alt="" coords="191,792,254,819"/>
-<area shape="rect" id="node8" href="class_c_z.html#a6ba3ac22760a3b9450fd09e91917acfb" title="Calculate the matrix of a CZ gate operation acting on the space of qbit_num qubits. " alt="" coords="160,843,285,869"/>
-<area shape="rect" id="node9" href="class_decomposition___base.html#ac2db1c9b9c723053e78f44255b61c428" title="This method determine the gates needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="569,886,714,927"/>
-<area shape="rect" id="node15" href="class_decomposition___base.html#a5d5c560ad2269f5594a70f47aa1831ed" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="796,1471,941,1513"/>
-<area shape="rect" id="node16" href="class_gate.html#a3701035bb4fda32c733c1b9883505712" title="Constructor of the class. " alt="" coords="181,1011,265,1037"/>
-<area shape="rect" id="node17" href="class_gate.html#a9626b4134a82cbb7d62770393e5a6568" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="155,575,290,601"/>
-<area shape="rect" id="node47" href="_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="157,1144,289,1171"/>
-<area shape="rect" id="node49" href="class_u3.html#a3fbe983c050339a247e05a2eea070542" title="Constructor of the class. " alt="" coords="395,1104,458,1131"/>
-<area shape="rect" id="node50" href="class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="154,945,291,986"/>
-<area shape="rect" id="node10" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="789,937,948,978"/>
-<area shape="rect" id="node11" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1471,717,1633,758"/>
-<area shape="rect" id="node12" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1681,714,1844,755"/>
-<area shape="rect" id="node13" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="1681,831,1844,873"/>
-<area shape="rect" id="node14" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1892,831,2055,873"/>
-<area shape="rect" id="node18" href="class_c_h.html#ac12907bcfa44a8b3891c0dfbfcff280c" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="364,187,489,213"/>
-<area shape="rect" id="node19" href="class_gates__block.html#ad1d8c9cd483808309155b0fa34de3d35" title="Set the number of qubits spanning the matrix of the gates stored in the block of gates. " alt="" coords="552,187,731,213"/>
-<area shape="rect" id="node20" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and gates of the sub&#45;decomposition processes..." alt="" coords="1011,248,1190,304"/>
-<area shape="rect" id="node21" href="class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="355,288,498,315"/>
-<area shape="rect" id="node22" href="class_c_z.html#af057fd5dc3440bd26648be56cac55c11" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="365,136,488,163"/>
-<area shape="rect" id="node23" href="class_gates__block.html#a5f537a7bf9992665762bd7593faaa96f" title="Append a general gate to the list of gates. " alt="" coords="349,567,504,609"/>
-<area shape="rect" id="node38" href="class_gates__block.html#a10f7fd8b457b825449c16231b414258c" title="Add an gate to the front of the list of gates. " alt="" coords="349,1003,504,1029"/>
-<area shape="rect" id="node46" href="class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the gate. " alt="" coords="365,411,488,437"/>
-<area shape="rect" id="node24" href="class_gates__block.html#aa00632c15ef88fdd564aac2c4b5d8851" title="Append a U3 gate to the list of gates. " alt="" coords="570,535,713,577"/>
-<area shape="rect" id="node25" href="class_gates__block.html#ab5c1031c309d0d0dbfeb011fce0c3a49" title="Append a CNOT gate gate to the list of gates. " alt="" coords="564,601,719,642"/>
-<area shape="rect" id="node26" href="class_gates__block.html#a5deb7a2cd1faea096009db40c28a7891" title="Append a CZ gate gate to the list of gates. " alt="" coords="570,339,713,381"/>
-<area shape="rect" id="node27" href="class_gates__block.html#a7228087d2ac3f77c9bbcffdc52595cd2" title="Append a CH gate (i.e. " alt="" coords="570,405,713,446"/>
-<area shape="rect" id="node28" href="class_gates__block.html#a8f62a9d7e1898affcdd5ba6fffaeffcc" title="Append a list of gates to the list of gates. " alt="" coords="561,470,722,511"/>
-<area shape="rect" id="node29" href="class_gates__block.html#ab542463604ce9ae205e8569accebc721" title="Call to append the gates of an gate block to the current block. " alt="" coords="1257,911,1408,937"/>
-<area shape="rect" id="node30" href="class_gates__block.html#a20b7625d8dcc9d5838981ee1bfb740a9" title="Call to extract the gates stored in the class. " alt="" coords="571,769,711,810"/>
-<area shape="rect" id="node34" href="class_sub___matrix___decomposition.html#aad17c8f1ecdacb3fe6716fa9bd4dd292" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="1011,651,1191,693"/>
-<area shape="rect" id="node31" href="class_gates__block.html#a08b3c3cc1e02557e985b9d2e9f993b9a" title="Create a clone of the present class. " alt="" coords="803,835,935,861"/>
-<area shape="rect" id="node37" href="class_sub___matrix___decomposition.html#ad5498a197a442b5cf878c83fccfe0180" title="Call to create a clone of the present class. " alt="" coords="779,769,959,810"/>
-<area shape="rect" id="node32" href="qgd___gates___block_8cpp.html#a08fcfb446bb08e15ffcc791c2f903c20" title="Wrapper function to add a block of operations to the front of the gate structure. ..." alt="" coords="1024,987,1177,1029"/>
-<area shape="rect" id="node33" href="qgd___operation___block_8cpp.html#af0055c11511f01509b81ef5d62da2067" title="Wrapper function to add a block of operations to the front of the gate structure. ..." alt="" coords="1007,769,1195,810"/>
-<area shape="rect" id="node36" href="class_sub___matrix___decomposition.html#a0276c1ffbcac11533015acb70dea319d" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="1243,717,1423,758"/>
-<area shape="rect" id="node35" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="1243,651,1423,693"/>
-<area shape="rect" id="node39" href="custom__gate__structure__test_8cpp.html#acc6adab67517358320294cfc3947e793" title="Function to create custom gate structure for the decomposition. " alt="" coords="799,1249,939,1290"/>
-<area shape="rect" id="node40" href="class_gates__block.html#aab1d786fdac42f2d290cc4888a3bcb81" title="Add a U3 gate to the front of the list of gates. " alt="" coords="570,1256,713,1283"/>
-<area shape="rect" id="node41" href="class_sub___matrix___decomposition.html#a528b6ef4c6997243683aaf0450c5fe52" title="Call to add default gate layers to the gate structure used in the subdecomposition. " alt="" coords="779,1074,959,1115"/>
-<area shape="rect" id="node42" href="class_gates__block.html#a7ad45122ea87eec9c83f29b58d76f021" title="Add a C_NOT gate gate to the front of the list of gates. " alt="" coords="564,1155,719,1181"/>
-<area shape="rect" id="node43" href="class_gates__block.html#a6c4f3c6f72350cacddc91fe267169750" title="Add a CZ gate gate to the front of the list of gates. " alt="" coords="570,1053,713,1080"/>
-<area shape="rect" id="node44" href="class_gates__block.html#ac6c42fa0d0cc761bb73bcf3e52fa882d" title="Add a CH gate (i.e. " alt="" coords="570,1104,713,1131"/>
-<area shape="rect" id="node45" href="class_gates__block.html#a47db252969fcdb7ea90c40a929ab9908" title="Add an array of gates to the front of the list of gates. " alt="" coords="561,1205,722,1232"/>
-<area shape="rect" id="node48" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="401,1155,452,1181"/>
-<area shape="rect" id="node51" href="class_u3.html#a53b0a784fbf2b26a9bcbd2502e849670" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="363,1053,490,1080"/>
-<area shape="rect" id="node52" href="class_gates__block.html#abb6ba518014d3602c13b5ae52bd4ce23" title="Call to reorder the qubits in the matrix of the gates. " alt="" coords="571,1433,712,1474"/>
+<area shape="rect" id="node2" href="class_c_h.html#aed05b04d1f3aafb3b68148f78a99654b" title="Constructor of the class. " alt="" coords="204,203,271,230"/>
+<area shape="rect" id="node3" href="class_c_h.html#aaf1f55c7dcc79bec0efc2a58686cfedc" title="Call to apply the gate on the input array/matrix CH*input. " alt="" coords="415,601,510,627"/>
+<area shape="rect" id="node7" href="class_c_h.html#ade5517aaa591b6d3139a0e44c423a58d" title="Call to apply the gate on the input array/matrix by input*CH. " alt="" coords="391,1095,534,1122"/>
+<area shape="rect" id="node10" href="class_c_n_o_t.html#a9e46511d49d6dc36e04bbd945d3483e4" title="Constructor of the class. " alt="" coords="186,1298,289,1325"/>
+<area shape="rect" id="node11" href="class_c_n_o_t.html#a94a64dbf168d0485821ee656fc2fd3f0" title="Call to apply the gate on the input array/matrix by CNOT*input. " alt="" coords="406,278,519,305"/>
+<area shape="rect" id="node12" href="class_c_n_o_t.html#abfd67c3339daac76c24234e508765b1c" title="Call to apply the gate on the input array/matrix by input*CNOT. " alt="" coords="383,1197,543,1223"/>
+<area shape="rect" id="node13" href="class_composite.html#a0c2b4f4169aa690bc3c222acd5ddb7e9" title="Constructor of the class. " alt="" coords="161,1349,313,1375"/>
+<area shape="rect" id="node14" href="class_composite.html#aff70a9135ff1413719a949cc13a7e5aa" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="379,1415,547,1442"/>
+<area shape="rect" id="node16" href="class_c_r_y.html#af811b97d5e317fa43c986b4cd22a5fb0" title="Call to retrieve the gate matrix. " alt="" coords="186,355,289,382"/>
+<area shape="rect" id="node18" href="class_c_r_y.html#a86f5543eb950b9b8da83091a8f217ce4" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="162,1197,313,1223"/>
+<area shape="rect" id="node20" href="class_c_r_y.html#aae3a5d1294570138d1c0f27670230cd1" title="??????????????? " alt="" coords="385,893,541,919"/>
+<area shape="rect" id="node22" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="212,1602,263,1629"/>
+<area shape="rect" id="node23" href="class_c_z.html#ac86135c0ce4725e7a94a874b3eb2fa77" title="Constructor of the class. " alt="" coords="206,1653,269,1679"/>
+<area shape="rect" id="node24" href="class_c_z.html#a49ea39cc465125894089995b3b6a702c" title="Call to apply the gate on the input array/matrix CZ*input. " alt="" coords="416,715,509,742"/>
+<area shape="rect" id="node25" href="class_c_z.html#a2e47d78b26ce9bdbc24ea9a8b9b3137d" title="Call to apply the gate on the input array/matrix by input*CZ. " alt="" coords="393,1365,533,1391"/>
+<area shape="rect" id="node26" href="class_decomposition___base.html#ac2db1c9b9c723053e78f44255b61c428" title="This method determine the gates needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="165,1704,310,1745"/>
+<area shape="rect" id="node28" href="class_decomposition___base.html#a5d5c560ad2269f5594a70f47aa1831ed" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="165,1769,310,1811"/>
+<area shape="rect" id="node29" href="class_gate.html#a3701035bb4fda32c733c1b9883505712" title="Constructor of the class. " alt="" coords="195,1835,279,1862"/>
+<area shape="rect" id="node30" href="class_gate.html#a9626b4134a82cbb7d62770393e5a6568" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="170,1450,305,1477"/>
+<area shape="rect" id="node34" href="_n___qubit___decomposition__adaptive__general_8cpp.html#a9aa92b989b3e18eabc3ca0ed0d46c327" title="are_two_qubits_independent" alt="" coords="144,1886,331,1913"/>
+<area shape="rect" id="node35" href="class_o_n.html#a4e7dbef969eda075ca33d4617ce994df" title="Constructor of the class. " alt="" coords="203,1937,271,1963"/>
+<area shape="rect" id="node36" href="class_o_n.html#a8a84a89f117f80c463db0b6fb57900f0" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="399,1669,526,1695"/>
+<area shape="rect" id="node37" href="_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="171,1987,303,2014"/>
+<area shape="rect" id="node38" href="class_r_x.html#a74880e09989254bea7a7a9b2615ee4a1" title="Constructor of the class. " alt="" coords="205,2038,269,2065"/>
+<area shape="rect" id="node39" href="class_r_y.html#abb3b91c95a77018b0e17469fb4508943" title="Constructor of the class. " alt="" coords="205,2089,269,2115"/>
+<area shape="rect" id="node40" href="class_r_z.html#a6520aa4549e01dcb8d2a028aac04e5f3" title="Constructor of the class. " alt="" coords="206,2139,269,2166"/>
+<area shape="rect" id="node41" href="class_s_x.html#a647fb93e7d120894294ac129b8e5d3ba" title="Constructor of the class. " alt="" coords="205,2190,269,2217"/>
+<area shape="rect" id="node42" href="class_s_x.html#a82abbbc20a3ab1d1aff450bdc02db98e" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="415,474,510,501"/>
+<area shape="rect" id="node43" href="class_s_x.html#a320f8940facf7a1de91b95324b140db1" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="392,943,533,970"/>
+<area shape="rect" id="node44" href="class_s_y_c.html#ab0e30891f8ea2467f7eabc06602bdf2e" title="Constructor of the class. " alt="" coords="196,2241,279,2267"/>
+<area shape="rect" id="node45" href="class_s_y_c.html#af2142dc5a5db9799250e947a3b73b112" title="Call to apply the gate on the input array/matrix by SYC*input. " alt="" coords="411,7,514,34"/>
+<area shape="rect" id="node46" href="class_s_y_c.html#a04425235b10bb5288d88347e02a458f5" title="Call to apply the gate on the input array/matrix by input*SYC. " alt="" coords="387,994,538,1021"/>
+<area shape="rect" id="node47" href="class_u3.html#a3fbe983c050339a247e05a2eea070542" title="Constructor of the class. " alt="" coords="206,2291,269,2318"/>
+<area shape="rect" id="node48" href="class_u3.html#a00bf6e1353d834ea3febca8ea249e066" title="??????????? " alt="" coords="170,2342,305,2369"/>
+<area shape="rect" id="node49" href="class_u3.html#a2d4b5cb4480c1bc8dd59f74a23ab3786" title="??????????? " alt="" coords="162,2393,313,2435"/>
+<area shape="rect" id="node50" href="class_u_n.html#a3731cc9214d7afda1abfe0ae03d90896" title="Constructor of the class. " alt="" coords="203,2459,271,2486"/>
+<area shape="rect" id="node51" href="class_u_n.html#aa547abfd3f98b88b049d6b5c4781c6ca" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="399,1719,526,1746"/>
+<area shape="rect" id="node52" href="class_x.html#a01b5831d2a0e989656a3f81c42d085d0" title="Constructor of the class. " alt="" coords="214,2510,261,2537"/>
+<area shape="rect" id="node53" href="class_x.html#a2dfcce44a3e7dfb8a5591ee7e6419fb0" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="420,405,505,431"/>
+<area shape="rect" id="node54" href="class_x.html#a59eb8e1d0ae0b282d3071da0eb2c25f4" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="397,1045,529,1071"/>
+<area shape="rect" id="node4" href="class_decomposition___base.html#a501a73d321a9a6f5fb2b53558b8be618" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="823,328,987,369"/>
+<area shape="rect" id="node5" href="class_gates__block.html#a0a8345863ae673bb3f987546d4930a6a" title="Call to apply the gate on the input array/matrix Gates_block*input. " alt="" coords="610,335,759,362"/>
+<area shape="rect" id="node6" href="class_gates__block.html#a4215cac0ddbe6e827340612436562022" title="??????????????? " alt="" coords="839,607,970,648"/>
+<area shape="rect" id="node8" href="class_decomposition___base.html#a92072cb41f4b2cbab6199723fd709131" title="Calculate the list of gate gate matrices such that the i&gt;0&#45;th element in the result list is the produ..." alt="" coords="832,1171,977,1212"/>
+<area shape="rect" id="node9" href="class_gates__block.html#a90303bc111b36e053572cd3b29342a21" title="Call to apply the gate on the input array/matrix by input*CNOT. " alt="" coords="619,1171,750,1212"/>
+<area shape="rect" id="node15" href="class_gates__block.html#ad1d8c9cd483808309155b0fa34de3d35" title="Set the number of qubits spanning the matrix of the gates stored in the block of gates. " alt="" coords="595,1567,774,1594"/>
+<area shape="rect" id="node17" href="class_adaptive.html#a70c343bca7dad3e98a195c3e51c0fd68" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="399,222,526,249"/>
+<area shape="rect" id="node19" href="class_adaptive.html#ab10545fc1a38de0593c8229903e55230" title="Call to apply the gate on the input array/matrix by input*U3. " alt="" coords="391,1248,534,1289"/>
+<area shape="rect" id="node21" href="class_adaptive.html#a9b1a04d708245e53e9c13a9a1023c6e2" title="Call to retrieve the gate matrix. " alt="" coords="595,842,775,869"/>
+<area shape="rect" id="node27" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="383,1771,542,1812"/>
+<area shape="rect" id="node31" href="class_c_h.html#ac12907bcfa44a8b3891c0dfbfcff280c" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="400,1517,525,1543"/>
+<area shape="rect" id="node32" href="class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="391,1567,534,1594"/>
+<area shape="rect" id="node33" href="class_c_z.html#af057fd5dc3440bd26648be56cac55c11" title="Call to set the number of qubits spanning the matrix of the operation. " alt="" coords="401,1618,524,1645"/>
 </map>
 </div>
 
@@ -673,45 +885,20 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00039">39</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00075">75</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="common_8h_aa0242605afa8a983a22aa1165cea5979_icgraph.png" border="0" usemap="#common_8h_aa0242605afa8a983a22aa1165cea5979_icgraph" alt=""/></div>
 <map name="common_8h_aa0242605afa8a983a22aa1165cea5979_icgraph" id="common_8h_aa0242605afa8a983a22aa1165cea5979_icgraph">
-<area shape="rect" id="node2" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="1273,647,1432,689"/>
-<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="1701,269,1864,310"/>
-<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1912,639,2075,681"/>
-<area shape="rect" id="node8" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="1048,392,1193,448"/>
-<area shape="rect" id="node11" href="class_decomposition___base.html#ae2dd23fc79127ca9d25eafeb1137d094" title="Call to get the optimized parameters. " alt="" coords="799,53,979,94"/>
-<area shape="rect" id="node12" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and gates of the sub&#45;decomposition processes..." alt="" coords="1031,261,1210,317"/>
-<area shape="rect" id="node13" href="class_n___qubit___decomposition.html#a10eb690b650a33a1ab8c4de4f9f8ab6e" title="Call to solve layer by layer the optimization problem. " alt="" coords="151,973,321,1029"/>
-<area shape="rect" id="node14" href="class_random___unitary.html#ab2efe5039bf7b2f0424d4bce4e3c66b4" title="Call to create a random unitary. " alt="" coords="146,806,326,847"/>
-<area shape="rect" id="node16" href="class_sub___matrix___decomposition.html#ad2cf3bd1c085aa71283df9c9271f6eaf" title="Call to solve layer by layer the optimization problem. " alt="" coords="146,1053,326,1109"/>
-<area shape="rect" id="node17" href="class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="404,246,541,287"/>
-<area shape="rect" id="node24" href="class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the gate. " alt="" coords="137,552,335,579"/>
-<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1491,511,1653,553"/>
-<area shape="rect" id="node4" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1757,659,1808,685"/>
-<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1701,511,1864,553"/>
-<area shape="rect" id="node9" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="1271,445,1434,486"/>
-<area shape="rect" id="node10" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="1263,511,1443,553"/>
-<area shape="rect" id="node15" href="class_random___unitary.html#a5665119bdbf3c97e6c34c990b07e7d0f" title="Generates a unitary matrix from parameters parameters according to arXiv:1303:5904v1. " alt="" coords="383,806,563,847"/>
-<area shape="rect" id="node18" href="class_u3.html#a3fbe983c050339a247e05a2eea070542" title="Constructor of the class. " alt="" coords="649,283,712,309"/>
-<area shape="rect" id="node19" href="class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the gate. " alt="" coords="619,232,742,259"/>
-<area shape="rect" id="node21" href="class_u3.html#a53b0a784fbf2b26a9bcbd2502e849670" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="617,165,744,192"/>
-<area shape="rect" id="node20" href="class_gates__block.html#ad1d8c9cd483808309155b0fa34de3d35" title="Set the number of qubits spanning the matrix of the gates stored in the block of gates. " alt="" coords="799,232,978,259"/>
-<area shape="rect" id="node22" href="class_gates__block.html#abb6ba518014d3602c13b5ae52bd4ce23" title="Call to reorder the qubits in the matrix of the gates. " alt="" coords="818,142,959,183"/>
-<area shape="rect" id="node23" href="class_decomposition___base.html#a5d5c560ad2269f5594a70f47aa1831ed" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="1048,145,1193,186"/>
-<area shape="rect" id="node25" href="class_decomposition___base.html#a190fcc3b3f28783ec893be8a58da1bd5" title="Call to prepare the optimized gates to export. " alt="" coords="387,515,558,557"/>
-<area shape="rect" id="node26" href="class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="435,581,511,608"/>
-<area shape="rect" id="node27" href="class_gates__block.html#ab542463604ce9ae205e8569accebc721" title="Call to append the gates of an gate block to the current block. " alt="" coords="1497,717,1647,744"/>
-<area shape="rect" id="node28" href="class_gates__block.html#a20b7625d8dcc9d5838981ee1bfb740a9" title="Call to extract the gates stored in the class. " alt="" coords="611,545,751,586"/>
-<area shape="rect" id="node32" href="class_sub___matrix___decomposition.html#aad17c8f1ecdacb3fe6716fa9bd4dd292" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="1031,603,1211,645"/>
-<area shape="rect" id="node29" href="class_gates__block.html#a08b3c3cc1e02557e985b9d2e9f993b9a" title="Create a clone of the present class. " alt="" coords="823,552,955,579"/>
-<area shape="rect" id="node34" href="class_sub___matrix___decomposition.html#ad5498a197a442b5cf878c83fccfe0180" title="Call to create a clone of the present class. " alt="" coords="799,486,979,527"/>
-<area shape="rect" id="node30" href="qgd___gates___block_8cpp.html#a08fcfb446bb08e15ffcc791c2f903c20" title="Wrapper function to add a block of operations to the front of the gate structure. ..." alt="" coords="1044,473,1197,514"/>
-<area shape="rect" id="node31" href="qgd___operation___block_8cpp.html#af0055c11511f01509b81ef5d62da2067" title="Wrapper function to add a block of operations to the front of the gate structure. ..." alt="" coords="1027,538,1215,579"/>
-<area shape="rect" id="node33" href="class_sub___matrix___decomposition.html#a0276c1ffbcac11533015acb70dea319d" title="Call to set custom layers to the gate structure that are intended to be used in the subdecomposition..." alt="" coords="1263,578,1443,619"/>
+<area shape="rect" id="node2" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="148,19,307,60"/>
+<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="593,173,756,215"/>
+<area shape="rect" id="node8" href="class_random___unitary.html#ab2efe5039bf7b2f0424d4bce4e3c66b4" title="Call to create a random unitary. " alt="" coords="137,96,317,137"/>
+<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="374,5,537,47"/>
+<area shape="rect" id="node4" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="649,122,700,149"/>
+<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="593,5,756,47"/>
+<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="804,119,967,160"/>
+<area shape="rect" id="node9" href="class_random___unitary.html#a5665119bdbf3c97e6c34c990b07e7d0f" title="Generates a unitary matrix from parameters parameters according to arXiv:1303:5904v1. " alt="" coords="365,71,545,112"/>
 </map>
 </div>
 
@@ -735,33 +922,20 @@ Here is the caller graph for this function:</div>
 
 <p>custom defined memory release function. </p>
 
-<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00067">67</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00103">103</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="common_8h_afbe838f9ac6bc59a609014c7e1f757c3_icgraph.png" border="0" usemap="#common_8h_afbe838f9ac6bc59a609014c7e1f757c3_icgraph" alt=""/></div>
 <map name="common_8h_afbe838f9ac6bc59a609014c7e1f757c3_icgraph" id="common_8h_afbe838f9ac6bc59a609014c7e1f757c3_icgraph">
-<area shape="rect" id="node2" href="class_decomposition___base.html#ae0c67b0a277454c77e0b50e3dfd0ee84" title="Destructor of the class. " alt="" coords="136,5,295,47"/>
-<area shape="rect" id="node3" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="591,129,750,171"/>
-<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1456,392,1619,433"/>
-<area shape="rect" id="node9" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="143,238,288,294"/>
-<area shape="rect" id="node11" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="353,188,533,229"/>
-<area shape="rect" id="node12" href="class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and gates of the sub&#45;decomposition processes..." alt="" coords="808,313,987,369"/>
-<area shape="rect" id="node13" href="class_random___unitary.html#ab2efe5039bf7b2f0424d4bce4e3c66b4" title="Call to create a random unitary. " alt="" coords="125,71,305,112"/>
-<area shape="rect" id="node15" href="class_u3.html#a0ce404f4cd63bc845a9379e7fc532c90" title="Destructor of the class. " alt="" coords="181,622,250,649"/>
-<area shape="rect" id="node16" href="class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="147,389,284,431"/>
-<area shape="rect" id="node4" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1035,251,1197,292"/>
-<area shape="rect" id="node5" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1301,111,1352,138"/>
-<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1245,309,1408,351"/>
-<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="1245,392,1408,433"/>
-<area shape="rect" id="node10" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="816,247,979,288"/>
-<area shape="rect" id="node14" href="class_random___unitary.html#a5665119bdbf3c97e6c34c990b07e7d0f" title="Generates a unitary matrix from parameters parameters according to arXiv:1303:5904v1. " alt="" coords="353,71,533,112"/>
-<area shape="rect" id="node17" href="class_u3.html#a3fbe983c050339a247e05a2eea070542" title="Constructor of the class. " alt="" coords="412,417,475,443"/>
-<area shape="rect" id="node18" href="class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the gate. " alt="" coords="382,366,505,393"/>
-<area shape="rect" id="node20" href="class_u3.html#a53b0a784fbf2b26a9bcbd2502e849670" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="380,490,507,517"/>
-<area shape="rect" id="node19" href="class_gates__block.html#ad1d8c9cd483808309155b0fa34de3d35" title="Set the number of qubits spanning the matrix of the gates stored in the block of gates. " alt="" coords="581,430,760,457"/>
-<area shape="rect" id="node21" href="class_gates__block.html#abb6ba518014d3602c13b5ae52bd4ce23" title="Call to reorder the qubits in the matrix of the gates. " alt="" coords="600,505,741,547"/>
-<area shape="rect" id="node22" href="class_decomposition___base.html#a5d5c560ad2269f5594a70f47aa1831ed" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="825,451,970,492"/>
+<area shape="rect" id="node2" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="136,64,295,105"/>
+<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="792,5,955,47"/>
+<area shape="rect" id="node8" href="class_random___unitary.html#ab2efe5039bf7b2f0424d4bce4e3c66b4" title="Call to create a random unitary. " alt="" coords="125,159,305,200"/>
+<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="362,64,525,105"/>
+<area shape="rect" id="node4" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="637,195,688,222"/>
+<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="581,64,744,105"/>
+<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="581,129,744,171"/>
+<area shape="rect" id="node9" href="class_random___unitary.html#a5665119bdbf3c97e6c34c990b07e7d0f" title="Generates a unitary matrix from parameters parameters according to arXiv:1303:5904v1. " alt="" coords="353,217,533,259"/>
 </map>
 </div>
 
@@ -816,19 +990,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00055">55</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><img src="common_8h_abe45e0c72de2b8d2b20dc68ec85581c2_icgraph.png" border="0" usemap="#common_8h_abe45e0c72de2b8d2b20dc68ec85581c2_icgraph" alt=""/></div>
-<map name="common_8h_abe45e0c72de2b8d2b20dc68ec85581c2_icgraph" id="common_8h_abe45e0c72de2b8d2b20dc68ec85581c2_icgraph">
-<area shape="rect" id="node2" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="141,89,304,130"/>
-<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="352,57,515,98"/>
-<area shape="rect" id="node4" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="619,5,669,32"/>
-<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="563,57,725,98"/>
-<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="563,122,725,163"/>
-</map>
-</div>
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00091">91</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
 
 </div>
 </div>
@@ -858,7 +1020,7 @@ Here is the caller graph for this function:</div>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the calculated product matrix </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00154">154</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00190">190</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -867,30 +1029,16 @@ Here is the call graph for this function:</div>
 <area shape="rect" id="node2" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="164,233,204,260"/>
 <area shape="rect" id="node3" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="253,5,406,32"/>
 <area shape="rect" id="node4" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="252,56,407,83"/>
-<area shape="rect" id="node5" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="489,259,604,285"/>
-<area shape="rect" id="node6" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="883,259,1061,285"/>
-<area shape="rect" id="node7" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="687,309,835,336"/>
-<area shape="rect" id="node8" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="883,487,1061,513"/>
-<area shape="rect" id="node9" href="classzgemm___task__serial.html#ae59c7b6a25caef08555a40838161e586" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="475,361,619,402"/>
-<area shape="rect" id="node12" href="classzgemm___task.html#ad309f35b650f53647ab14451fc2a2e85" title="This function is called when a task is spawned. " alt="" coords="254,208,405,235"/>
-<area shape="rect" id="node10" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="689,461,832,488"/>
-<area shape="rect" id="node11" href="dot_8h.html#a4e33f93b23914217bea67e9d3d9b08fe" title="Definition of the zgemm function from CBLAS. " alt="" coords="709,411,812,437"/>
-<area shape="rect" id="node13" href="classzgemm___task.html#a5d0029f2c2229df642373573f6f9d46c" title="Constructor of the class. " alt="" coords="455,157,639,184"/>
-</map>
-</div>
-<div class="dynheader">
-Here is the caller graph for this function:</div>
-<div class="dyncontent">
-<div class="center"><img src="common_8h_a2e92efab5529b91d084758c064625eb6_icgraph.png" border="0" usemap="#common_8h_a2e92efab5529b91d084758c064625eb6_icgraph" alt=""/></div>
-<map name="common_8h_a2e92efab5529b91d084758c064625eb6_icgraph" id="common_8h_a2e92efab5529b91d084758c064625eb6_icgraph">
-<area shape="rect" id="node2" href="class_gates__block.html#ad1840c6b3072f1853c7f91eccc5e777b" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="164,78,325,105"/>
-<area shape="rect" id="node3" href="class_decomposition___base.html#a9ddb4adf4b04cc6cd51a27da9bd6ec83" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="373,5,537,47"/>
-<area shape="rect" id="node4" href="classfunctor__get__operation__matrices.html#a13a446a1da6ee8ed165801ad66b49784" title="Operator to calculate th ematrix representation of operation labeled by i. " alt="" coords="382,71,529,112"/>
-<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="374,136,537,177"/>
-<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="585,107,748,148"/>
-<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="796,136,959,177"/>
-<area shape="rect" id="node8" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1063,85,1113,111"/>
-<area shape="rect" id="node9" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1007,136,1169,177"/>
+<area shape="rect" id="node5" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="489,208,604,235"/>
+<area shape="rect" id="node6" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="883,360,1061,387"/>
+<area shape="rect" id="node8" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="687,259,835,285"/>
+<area shape="rect" id="node9" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="883,145,1061,172"/>
+<area shape="rect" id="node10" href="classzgemm___task__serial.html#ae59c7b6a25caef08555a40838161e586" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="475,327,619,369"/>
+<area shape="rect" id="node13" href="classzgemm___task.html#ad309f35b650f53647ab14451fc2a2e85" title="This function is called when a task is spawned. " alt="" coords="254,511,405,537"/>
+<area shape="rect" id="node7" href="classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="925,272,1019,299"/>
+<area shape="rect" id="node11" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="689,309,832,336"/>
+<area shape="rect" id="node12" href="dot_8h.html#a4e33f93b23914217bea67e9d3d9b08fe" title="Definition of the zgemm function from CBLAS. " alt="" coords="709,411,812,437"/>
+<area shape="rect" id="node14" href="classzgemm___task.html#a5d0029f2c2229df642373573f6f9d46c" title="Constructor of the class. " alt="" coords="455,487,639,513"/>
 </map>
 </div>
 
@@ -931,7 +1079,7 @@ Here is the caller graph for this function:</div>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00203">203</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="common_8cpp_source.html#l00239">239</a> of file <a class="el" href="common_8cpp_source.html">common.cpp</a>.</p>
 <div class="dynheader">
 Here is the caller graph for this function:</div>
 <div class="dyncontent">
@@ -951,7 +1099,7 @@ Here is the caller graph for this function:</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:48 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Mar 19 2022 22:14:41 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

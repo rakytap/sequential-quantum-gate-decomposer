@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -67,19 +67,22 @@ $(function() {
 <code>#include &quot;<a class="el" href="_u3_8h_source.html">U3.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="_c_n_o_t_8h_source.html">CNOT.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="matrix_8h_source.html">matrix.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="logging_8h_source.html">logging.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for Random_Unitary.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="_random___unitary_8h__incl.png" border="0" usemap="#_random___unitary_8h" alt=""/></div>
 <map name="_random___unitary_8h" id="_random___unitary_8h">
-<area shape="rect" id="node6" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="393,229,475,256"/>
-<area shape="rect" id="node13" href="matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="806,379,873,405"/>
-<area shape="rect" id="node26" href="_u3_8h.html" title="Header file for a class representing a U3 gate. " alt="" coords="669,80,719,107"/>
-<area shape="rect" id="node29" href="_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="758,80,827,107"/>
-<area shape="rect" id="node8" href="_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="622,528,718,555"/>
-<area shape="rect" id="node12" href="dot_8h.html" title="dot.h" alt="" coords="522,304,573,331"/>
-<area shape="rect" id="node14" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="783,453,885,480"/>
-<area shape="rect" id="node27" href="_gate_8h.html" title="Gate.h" alt="" coords="692,155,752,181"/>
+<area shape="rect" id="node6" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="737,229,819,256"/>
+<area shape="rect" id="node13" href="matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="485,379,551,405"/>
+<area shape="rect" id="node20" href="logging_8h.html" title="Header file for a class containing basic methods for setting up the verbosity level. " alt="" coords="1228,379,1301,405"/>
+<area shape="rect" id="node28" href="_u3_8h.html" title="Header file for a class representing a rotation gate around the Y axis. " alt="" coords="392,80,441,107"/>
+<area shape="rect" id="node32" href="_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="493,80,562,107"/>
+<area shape="rect" id="node8" href="_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="602,528,698,555"/>
+<area shape="rect" id="node12" href="dot_8h.html" title="dot.h" alt="" coords="1109,304,1159,331"/>
+<area shape="rect" id="node14" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="467,453,569,480"/>
+<area shape="rect" id="node29" href="_gate_8h.html" title="Gate.h" alt="" coords="591,155,651,181"/>
+<area shape="rect" id="node30" href="matrix__real_8h.html" title="matrix_real.h" alt="" coords="365,379,460,405"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -87,9 +90,11 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="_random___unitary_8h__dep__incl.png" border="0" usemap="#_random___unitary_8hdep" alt=""/></div>
 <map name="_random___unitary_8hdep" id="_random___unitary_8hdep">
-<area shape="rect" id="node2" href="_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="5,87,148,114"/>
-<area shape="rect" id="node3" href="custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="173,80,327,121"/>
-<area shape="rect" id="node4" href="decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="352,87,511,114"/>
+<area shape="rect" id="node2" href="_composite_8cpp.html" title="Class for the representation of general unitary operation on the first qbit_num&#45;1 qubits..." alt="" coords="5,87,113,114"/>
+<area shape="rect" id="node3" href="_u_n_8cpp.html" title="Class for the representation of general unitary operation on the first qbit_num&#45;1 qubits..." alt="" coords="138,87,205,114"/>
+<area shape="rect" id="node4" href="_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="229,87,372,114"/>
+<area shape="rect" id="node5" href="custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="397,80,551,121"/>
+<area shape="rect" id="node6" href="decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="576,87,735,114"/>
 </map>
 </div>
 </div>
@@ -144,39 +149,35 @@ Functions</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the the constructed random unitary. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_random___unitary_8cpp_source.html#l00036">36</a> of file <a class="el" href="_random___unitary_8cpp_source.html">Random_Unitary.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_random___unitary_8cpp_source.html#l00035">35</a> of file <a class="el" href="_random___unitary_8cpp_source.html">Random_Unitary.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="_random___unitary_8h_ac755edbef39273d53b90d33316963b37_cgraph.png" border="0" usemap="#_random___unitary_8h_ac755edbef39273d53b90d33316963b37_cgraph" alt=""/></div>
 <map name="_random___unitary_8h_ac755edbef39273d53b90d33316963b37_cgraph" id="_random___unitary_8h_ac755edbef39273d53b90d33316963b37_cgraph">
-<area shape="rect" id="node2" href="common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="203,223,293,249"/>
-<area shape="rect" id="node3" href="common_8cpp.html#a478212437ad8647d21171d23c98ae52a" title="Call to create an identity matrix. " alt="" coords="637,521,744,548"/>
-<area shape="rect" id="node6" href="class_u3.html#a08e586c6c62189d53f745df6a8a27207" title="Call to retrieve the gate matrix. " alt="" coords="195,273,301,300"/>
-<area shape="rect" id="node17" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="185,749,311,776"/>
-<area shape="rect" id="node18" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="228,699,268,725"/>
-<area shape="rect" id="node4" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="833,631,981,657"/>
-<area shape="rect" id="node5" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="847,423,968,449"/>
-<area shape="rect" id="node7" href="class_u3.html#a08c08f96cb408af104529c9f50dfb741" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of q..." alt="" coords="371,325,538,366"/>
-<area shape="rect" id="node8" href="class_u3.html#aff5d6460d3a4cb8fb93035d673a98404" title="Calculate the matrix of a U3 gate gate corresponding corresponding to the given parameters acting on ..." alt="" coords="627,273,754,300"/>
-<area shape="rect" id="node10" href="class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="860,121,955,148"/>
-<area shape="rect" id="node11" href="class_u3.html#afaaef0ad60697cff81227632d1b38b43" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of q..." alt="" coords="371,390,538,431"/>
-<area shape="rect" id="node12" href="class_u3.html#a4c28767888f67a7ed5ee18ae1bd6cffa" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of q..." alt="" coords="379,455,531,497"/>
-<area shape="rect" id="node13" href="class_u3.html#abefd2aecec7ac1435adbf6b276e193f3" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of q..." alt="" coords="359,71,551,97"/>
-<area shape="rect" id="node14" href="class_u3.html#ae03db9dbca82e272795bc9cb9ec2e8b0" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of q..." alt="" coords="365,121,545,148"/>
-<area shape="rect" id="node15" href="class_u3.html#a088a4108cf9d6514ec9db7dd79a8c7b4" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of q..." alt="" coords="379,172,531,199"/>
-<area shape="rect" id="node16" href="class_u3.html#ad9e004be1003d0286b84d60e582a4472" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on the space of q..." alt="" coords="371,223,538,249"/>
-<area shape="rect" id="node9" href="class_u3.html#a543381b0a091af6a157edf1454fe9b2b" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit ..." alt="" coords="831,273,984,300"/>
-<area shape="rect" id="node19" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="378,572,531,599"/>
-<area shape="rect" id="node20" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="377,623,532,649"/>
-<area shape="rect" id="node21" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="633,724,748,751"/>
-<area shape="rect" id="node22" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1032,833,1211,860"/>
-<area shape="rect" id="node23" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="1032,939,1211,965"/>
-<area shape="rect" id="node24" href="classzgemm___task__serial.html#ae59c7b6a25caef08555a40838161e586" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="619,775,763,817"/>
-<area shape="rect" id="node27" href="classzgemm___task.html#ad309f35b650f53647ab14451fc2a2e85" title="This function is called when a task is spawned. " alt="" coords="379,849,530,876"/>
-<area shape="rect" id="node25" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="836,833,979,860"/>
-<area shape="rect" id="node26" href="dot_8h.html#a4e33f93b23914217bea67e9d3d9b08fe" title="Definition of the zgemm function from CBLAS. " alt="" coords="856,783,959,809"/>
-<area shape="rect" id="node28" href="classzgemm___task.html#a5d0029f2c2229df642373573f6f9d46c" title="Constructor of the class. " alt="" coords="599,896,783,923"/>
+<area shape="rect" id="node2" href="common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="825,29,915,56"/>
+<area shape="rect" id="node3" href="common_8cpp.html#a478212437ad8647d21171d23c98ae52a" title="Call to create an identity matrix. " alt="" coords="383,324,489,351"/>
+<area shape="rect" id="node6" href="class_u3.html#a5bd83233aed95cc277e5d6690f4ac6c9" title="Call to retrieve the gate matrix. " alt="" coords="195,224,301,251"/>
+<area shape="rect" id="node13" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1" title="Call to retrieve the operation matrix. " alt="" coords="185,325,311,352"/>
+<area shape="rect" id="node14" href="dot_8cpp.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="228,551,268,577"/>
+<area shape="rect" id="node4" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="796,392,944,419"/>
+<area shape="rect" id="node5" href="classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="593,384,714,411"/>
+<area shape="rect" id="node7" href="class_u3.html#a8b1763d0ff3d7704288ff3abd0e207ac" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="389,181,483,208"/>
+<area shape="rect" id="node8" href="classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="1037,232,1131,259"/>
+<area shape="rect" id="node12" href="class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="389,232,483,259"/>
+<area shape="rect" id="node9" href="class_u3.html#a1de7cf3905f8e120636d29a811fd7ad0" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit ..." alt="" coords="793,232,947,259"/>
+<area shape="rect" id="node10" href="class_u3.html#a00bf6e1353d834ea3febca8ea249e066" title="??????????? " alt="" coords="586,80,721,107"/>
+<area shape="rect" id="node11" href="common_8cpp.html#ac876ec30dbcade845af445eb50315653" title="Call to calculate the product of two complex scalars. " alt="" coords="847,80,893,107"/>
+<area shape="rect" id="node15" href="common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="359,601,513,628"/>
+<area shape="rect" id="node16" href="common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="359,652,513,679"/>
+<area shape="rect" id="node17" href="dot_8cpp.html#ad672d17d67e98a6960a0850d540224ec" title="Call to check the shape of the matrices for method dot. " alt="" coords="596,283,711,309"/>
+<area shape="rect" id="node18" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="995,497,1173,524"/>
+<area shape="rect" id="node19" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="995,649,1173,676"/>
+<area shape="rect" id="node20" href="classzgemm___task__serial.html#ae59c7b6a25caef08555a40838161e586" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="581,486,725,527"/>
+<area shape="rect" id="node23" href="classzgemm___task.html#ad309f35b650f53647ab14451fc2a2e85" title="This function is called when a task is spawned. " alt="" coords="361,551,511,577"/>
+<area shape="rect" id="node21" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="799,447,941,473"/>
+<area shape="rect" id="node22" href="dot_8h.html#a4e33f93b23914217bea67e9d3d9b08fe" title="Definition of the zgemm function from CBLAS. " alt="" coords="819,548,921,575"/>
+<area shape="rect" id="node24" href="classzgemm___task.html#a5d0029f2c2229df642373573f6f9d46c" title="Constructor of the class. " alt="" coords="561,701,745,728"/>
 </map>
 </div>
 <div class="dynheader">
@@ -193,7 +194,7 @@ Here is the caller graph for this function:</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:48 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Mar 19 2022 22:14:41 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

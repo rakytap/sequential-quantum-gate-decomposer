@@ -1,8 +1,0 @@
-<map id="qgd_N_Qubit_Decomposition_Wrapper_get_gates" name="qgd_N_Qubit_Decomposition_Wrapper_get_gates">
-<area shape="rect" id="node2" href="$qgd__python_2decomposition_2qgd___n___qubit___decomposition___wrapper_8cpp.html#a3f1dba2f62694199f5ea3b0bb688b6d0" title="Call to get the metadata organised into Python dictionary of the idx&#45;th gate. " alt="" coords="244,100,316,127"/>
-<area shape="rect" id="node3" href="$class_decomposition___base.html#ae2324cca8c2d924f95a1b32d32bb3ded" title="Call to prepare the optimized gates to export — OBSOLETE. " alt="" coords="364,93,509,134"/>
-<area shape="rect" id="node4" href="$class_gate.html#a5498d67b28027022c72b8b15d47d55cc" title="Call to get the type of the operation. " alt="" coords="603,5,709,32"/>
-<area shape="rect" id="node5" href="$class_gate.html#a676a838ffca280c7af7c1f9ad15cd2ec" title="Call to get the index of the target qubit. " alt="" coords="585,85,727,112"/>
-<area shape="rect" id="node6" href="$class_gate.html#a7460c74e6969fa187237679879ccfe8d" title="Call to get the index of the control qubit. " alt="" coords="582,137,730,164"/>
-<area shape="rect" id="node7" href="$class_u3.html#a7ebc4a0bf0eb7c4d37034d04ed787aaa" title="Call to get the final optimized parameters of the gate. " alt="" coords="557,192,755,219"/>
-</map>

@@ -3,7 +3,8 @@
 <area shape="rect" id="node3" href="$classzgemm___task.html#a5d0029f2c2229df642373573f6f9d46c" title="Constructor of the class. " alt="" coords="204,29,388,56"/>
 <area shape="rect" id="node4" href="$classzgemm___task__serial.html#ae59c7b6a25caef08555a40838161e586" title="Call to calculate the product of matrix chunks defined by attributes rows, cols. " alt="" coords="224,81,368,122"/>
 <area shape="rect" id="node5" href="$dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="439,80,581,107"/>
-<area shape="rect" id="node7" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="436,131,584,157"/>
-<area shape="rect" id="node8" href="$dot_8h.html#a4e33f93b23914217bea67e9d3d9b08fe" title="Definition of the zgemm function from CBLAS. " alt="" coords="459,181,561,208"/>
+<area shape="rect" id="node8" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="436,131,584,157"/>
+<area shape="rect" id="node9" href="$dot_8h.html#a4e33f93b23914217bea67e9d3d9b08fe" title="Definition of the zgemm function from CBLAS. " alt="" coords="459,181,561,208"/>
 <area shape="rect" id="node6" href="$classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="632,80,811,107"/>
+<area shape="rect" id="node7" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="674,131,769,157"/>
 </map>

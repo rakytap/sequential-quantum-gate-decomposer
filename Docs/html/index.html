@@ -5,7 +5,7 @@
 <meta http-equiv="X-UA-Compatible" content="IE=9"/>
 <meta name="generator" content="Doxygen 1.8.13"/>
 <meta name="viewport" content="width=device-width, initial-scale=1"/>
-<title>Sequential Quantum Gate Decomposer: Introduction to SQUANDER v1.5</title>
+<title>Sequential Quantum Gate Decomposer: Introduction to SQUANDER v1.6</title>
 <link href="tabs.css" rel="stylesheet" type="text/css"/>
 <script type="text/javascript" src="jquery.js"></script>
 <script type="text/javascript" src="dynsections.js"></script>
@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -49,36 +49,44 @@ $(function() {
 </div><!-- top -->
 <div class="header">
   <div class="headertitle">
-<div class="title">Introduction to SQUANDER v1.5 </div>  </div>
+<div class="title">Introduction to SQUANDER v1.6 </div>  </div>
 </div><!--header-->
 <div class="contents">
-<div class="textblock"><p>Sequential Quantum <a class="el" href="class_gate.html" title="Base class for the representation of general gate operations. ">Gate</a> Decomposer (SQUANDER) v1.5 is an open source software distributed under the <a href="http://www.gnu.org/licenses/">GNU General Public License</a>. The project was supported by OTKA PD123927 grant and by the Ministry of Innovation and Technology and the National Research, Development and Innovation Office within the Quantum Information National Laboratory of Hungary.</p>
-<p>The SQUANDER package provides a novel solution to decompose any n-qubit unitary into a sequence of one-qubit rotations and two-qubit controlled gates (such as controlled NOT or controlled phase gate). SQUANDER utilizes a new gate synthesis technique that applies periodic layers of two-qubit and parametric one-qubit gates to an n-qubit unitary such that the resulting unitary is 1-qubit decoupled, i.e., is a tensor product of an (n-1)-qubit and a 1-qubit unitary. Continuing the decoupling procedure sequentially one arrives at the end to a full decomposition of the original unitary into 1- and 2-qubit gates. SQUANDER provides lower <a class="el" href="class_c_n_o_t.html" title="A class representing a CNOT operation. ">CNOT</a> counts for generic n-qubit unitaries (up to n=6) than the previously provided lower bounds.</p>
+<div class="textblock"><p>Sequential Quantum <a class="el" href="class_gate.html" title="Base class for the representation of general gate operations. ">Gate</a> Decomposer (SQUANDER) v1.6 is an open source software distributed under the <a href="http://www.gnu.org/licenses/">GNU General Public License</a>. The project was supported by OTKA PD123927 grant and by the Ministry of Innovation and Technology and the National Research, Development and Innovation Office within the Quantum Information National Laboratory of Hungary.</p>
+<p>The SQUANDER package provides a novel solution to decompose any n-qubit unitaries into a sequence of one-qubit rotations and two-qubit controlled gates (such as controlled NOT or controlled phase gate). SQUANDER utilizes two novel gate synthesis techniques reported in Refereces [1] and [2]. (i) To synthesize general unitaries SQUANDER applies periodic layers of two-qubit and parametric one-qubit gates to an n-qubit unitary such that the resulting unitary is 1-qubit decoupled, i.e., is a tensor product of an (n-1)-qubit and a 1-qubit unitary. Continuing the decoupling procedure sequentially one arrives at the end to a full decomposition of the original unitary into 1- and 2-qubit gates. SQUANDER provides lower <a class="el" href="class_c_n_o_t.html" title="A class representing a CNOT operation. ">CNOT</a> counts for generic n-qubit unitaries (up to n=6) than the previously provided lower bounds. (ii) An adaptive circuit compression is used to optimize quantum circuit by the application of parametric two-qubit gates in the synthesis process. The utilization of these parametric two-qubit gates in the circuit design allows one to transform the discrete combinatorial problem of circuit synthesis into an optimization problem over continuous variables. The circuit is then compressed by a sequential removal of two-qubit gates from the design, while the remaining building blocks are continuously adapted to the reduced gate structure by iterated learning cycles.</p>
+<p>[1] P&eacute;ter Rakyta, Zolt&aacute;n Zimbor&aacute;s, Approaching the theoretical limit in quantum gate decomposition, arXiv:2109.06770. <br />
+ [2] P&eacute;ter Rakyta, Zolt&aacute;n Zimbor&aacute;s, Efficient quantum gate decomposition via adaptive circuit compression, arXiv:2203.04426.</p>
 <p>The SQUANDER library is written in C/C++ providing a Python interface via <a href="https://docs.python.org/3/library/ctypes.html">C++ extensions</a>. The present package is supplied with Python building script and CMake tools to ease its deployment. The SQUANDER package can be built with both Intel and GNU compilers, and can be link against various CBLAS libraries installed on the system. (So far the CLBAS libraries of the GNU Scientific Library, OpenBLAS and the Intel MKL packages were tested.) In the following we briefly summarize the steps to build, install and use the SQUANDER package.</p>
 <div class="image">
 <img src="layers_resized.png" alt="layers_resized.png"/>
 </div>
- <h1>Dependencies</h1>
+ <h1>Contact Us</h1>
+<p>Have a question about the SQUANDER package? Don't hesitate to contact us at the following e-mails:</p>
+<p>Zolt&aacute;n Zimbor&aacute;s (researcher): <a href="#" onclick="location.href='mai'+'lto:'+'zim'+'bo'+'ras'+'.z'+'olt'+'an'+'@wi'+'gn'+'er.'+'hu'; return false;">zimbo<span style="display: none;">.nosp@m.</span>ras.<span style="display: none;">.nosp@m.</span>zolta<span style="display: none;">.nosp@m.</span>n@wi<span style="display: none;">.nosp@m.</span>gner.<span style="display: none;">.nosp@m.</span>hu</a> <br />
+ Peter Rakyta (developer): <a href="#" onclick="location.href='mai'+'lto:'+'pet'+'er'+'.ra'+'ky'+'ta@'+'tt'+'k.e'+'lt'+'e.h'+'u'; return false;">peter<span style="display: none;">.nosp@m.</span>.rak<span style="display: none;">.nosp@m.</span>yta@t<span style="display: none;">.nosp@m.</span>tk.e<span style="display: none;">.nosp@m.</span>lte.h<span style="display: none;">.nosp@m.</span>u</a></p>
+<h1>Dependencies</h1>
 <p>The optimization algorithm of SQUANDER relies on the <a href="https://www.gnu.org/software/gsl/doc/html/multimin.html">multimin</a> component of the <a href="https://www.gnu.org/software/gsl/doc/html/index.html">GNU Scientific Library</a>. We developed and tested the SQUANDER package with GNU Scientific Library of version 2.5 and 2.6. The dependencies necessary to compile and build the SQUANDER package are the followings:</p>
 <ul>
 <li><a href="https://cmake.org/">CMake</a> (&gt;=3.10.2)</li>
-<li><a href="https://www.gnu.org/software/gsl/doc/html/index.html">GNU Scientific Library</a> (&gt;=2.5)</li>
+<li><a href="https://www.gnu.org/software/gsl/doc/html/index.html">GNU Scientific Library</a> (&gt;=2.5, shipped with the gsl python package)</li>
 <li>C++/C <a href="https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html">Intel</a> (&gt;=14.0.1) or <a href="https://gcc.gnu.org/">GNU</a> (&gt;=v4.8.1) compiler</li>
 <li><a href="https://github.com/oneapi-src/oneTBB">TBB</a> library</li>
 <li><a href="https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html">Intel MKL</a> (optional)</li>
 <li><a href="https://www.openblas.net/">OpenBlas</a> (optional, recommended)</li>
 <li><a href="https://www.doxygen.nl/index.html">Doxygen</a> (optional)</li>
 </ul>
-<p>The Python interface of SQUANDER was developed and tested with Python 3.6 and 3.7. The SQUANDER Python interface needs the following packages to be installed on the system:</p>
+<p>The Python interface of SQUANDER was developed and tested with Python 3.6-3.9. The SQUANDER Python interface needs the following packages to be installed on the system:</p>
 <ul>
 <li><a href="https://qiskit.org/documentation/install.html">Qiskit</a></li>
 <li><a href="https://numpy.org/install/">Numpy</a></li>
 <li><a href="https://www.scipy.org/install.html">scipy</a></li>
 <li><a href="https://scikit-build.readthedocs.io/en/latest/">scikit-build</a></li>
 <li><a href="https://pypi.org/project/tbb-devel/">tbb-devel</a></li>
+<li><a href="https://anaconda.org/conda-forge/gsl">gsl</a> (containing the GNU Scientific Library)</li>
 </ul>
 <h1>How to build GNU Scientific Library</h1>
-<p>If the GNU Scientific Library is not installed on the system, it can be easily easily downloaded and deployed from source by the end user even without administrative privileges. The GNU Scientific Library can be downloaded from the site <a href="https://www.gnu.org/software/gsl/">https://www.gnu.org/software/gsl/</a>. After the downloaded package is extracted somewhere in the home directory of the user (<b>path/to/gsl/source</b>), one should configure the compiling environment using the <b>configure</b> tool. Depending on the individual settings the default compiler to be invoked might be different from HPC to HPC. To ensure the usage of the GNU compiler, the following shell command should be executed inside the directory <b>path/to/gsl/source</b>:</p>
+<p>In order to build and use the SQUANDER we recommend the Anaconda virtual python environment providing all the required dependencies for SQUANDER. One can easily install the GNU Scientific Library for local users by the command</p>
+<div class="snippet"> $ conda install -c conda-forge gsl </div><p>Here we describe an alternative way to deploy GNU Scientific Library from source by the end user without administrative privileges. The GNU Scientific Library can be downloaded from the site <a href="https://www.gnu.org/software/gsl/">https://www.gnu.org/software/gsl/</a>. After the downloaded package is extracted somewhere in the home directory of the user (<b>path/to/gsl/source</b>), one should configure the compiling environment using the <b>configure</b> tool. Depending on the individual settings the default compiler to be invoked might be different from HPC to HPC. To ensure the usage of the GNU compiler, the following shell command should be executed inside the directory <b>path/to/gsl/source</b>:</p>
 <div class="snippet"> $ ./configure &ndash;prefix=path/to/gsl FC=gfortran CC=gcc CXX=g++ </div><p>(Similarly, Intel compiler can be forced by setting FC=ifort CC=icc and CXX=icpc.) The installation directory of the compiled GNU Scientific Library is given by &ndash;prefix=path/to/gsl (which is different from the directory path of the source files given by <b>path/to/gslsource</b>). To install GNU Scientific Library the user should have read and write permissions on the path <b>path/to/gsl</b> (which might be for example /home/username/gsl). After the successful configuration the GNU Scientific Library can be compiled by the shell command</p>
 <div class="snippet"> $ make </div><p>The compilation of the GNU Scientific Library takes some time. When the compilation is done, the package (including the C header files and the static and shared libraries) is installed into the directory <b>path/to/gsl</b> by the shell command:</p>
 <div class="snippet"> $ make install </div><h1>Download the SQUANDER package</h1>
@@ -87,30 +95,30 @@ $(function() {
 <p>The SQUANDER package is equipped with a Python build script and CMake tools to ease the compilation and the deployment of the package. To ensure that SQUANDER package would find the necessary libraries and header files during compilation time it is advised to define the following environment variables:</p>
 <div class="snippet"> $ export GSL_LIB_DIR=path/to/gsl/lib(64) &amp;&amp; export GSL_INC_DIR=path/to/gsl/include </div><p>The SQUANDER package is parallelized via Threading Building Block (TBB) libraries. If TBB is not present in the system, it can be easily installed via python package <a href="https://pypi.org/project/tbb-devel/">tbb-devel</a>. Alternatively the TBB libraries can be installed via apt or yum utility (sudo apt install libtbb-dev) or it can be downloaded from <a href="https://github.com/oneapi-src/oneTBB">https://github.com/oneapi-src/oneTBB</a> and built from source. In this case one should supply the necessary environment variables pointing to the header and library files of the TBB package. For newer Intel compilers the TBB package is part of the Intel compiler package, similarly to the MKL package. If the TBB library is located at non-standrad path or the SQUANDER package is compiled with GNU compiler, then setting the following environment variables:</p>
 <div class="snippet"> $ export TBB_LIB_DIR=path/to/TBB/lib(64) &amp;&amp; export TBB_INC_DIR=path/to/TBB/include </div><p>When the TBB library is installed via a python package, setting the environment variables above is not necessary. The SQUANDER package with C++ Python extensions can be compiled via the Python script <b><a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a></b> located in the root directory of the SQUANDER package. The script automatically finds out the CBLAS library working behind the numpy package and uses it in further linking. The <b><a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a></b> script also build the C++ library of the SQUANDER package by making the appropriate CMake calls.</p>
-<h3>In-place build</h3>
-<p>After the basic environment variables are set, the compilation can be started by the Python command:</p>
-<p>$ python3 <a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a> build_ext</p>
-<p>The command above starts the compilation of the C++ library and builds the necessary C++ Python extensions for the Python interface of the $QGD package in place.</p>
-<h3>Binary distribution</h3>
+<h3>Developer build</h3>
+<p>We recommend to install the SQUANDER package in the Anaconda environment. In order to install the necessary requirements, follow the steps below:</p>
+<p>Creating new python environment:</p>
+<div class="snippet"> $ conda create -n qgd </div><p>Activate the new anaconda environment</p>
+<div class="snippet"> $ conda activate qgd </div><p>Install dependencies:</p>
+<div class="snippet"> $ conda install numpy scipy pip pytest scikit-build tbb-devel &amp;&amp; conda install -c conda-forge gsl &amp;&amp; pip install qiskit matplotlib </div><p>After the basic environment variables are set and the dependencies are installed, the compilation of the package can be started by the Python command:</p>
+<div class="snippet"> $ python3 <a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a> build_ext </div><p>The command above starts the compilation of the SQUANDER C++ library and builds the necessary C++ Python interface extensions of the SQUANDER package in place. After a successful build, one can register the SQUANDER package in the Python distribution in developer (i.e. editable) mode by command:</p>
+<div class="snippet"> $ python -m pip install -e . </div><h3>Binary distribution</h3>
 <p>After the environment variables are set it is possible to build wheel binaries of the $QGD package. In order to launch the compilation process from python, <b><a href="https://scikit-build.readthedocs.io/en/latest/">scikit-build</a></b> package is necessary. (It is optional to install the ninja package which speeds up the building process by parallel compilation.) The binary wheel can be constructed by command</p>
-<p>$ python3 <a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a> bdist_wheel</p>
+<div class="snippet"> $ python3 <a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a> build_ext </div><p> $ python3 <a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a> bdist_wheel</p>
 <p>in the root directory of the $QGD package. The created $QGD wheel can be installed on the local machine by issuing the command from the directory <b>path/to/SQUANDER/package/dist</b></p>
-<p>$ pip3 install qgd-*.whl</p>
-<p>We notice, that the created wheel is not portable, since it contains hard coded link to external libraries (TBB and CBLAS).</p>
+<div class="snippet"> $ pip3 install qgd-*.whl </div><p>We notice, that the created wheel is not portable, since it contains hard coded link to external libraries (TBB and CBLAS).</p>
 <h3>Source distribution</h3>
 <p>A portable source distribution of the SQUANDER package can be created by a command launched from the root directory of the SQUANDER package:</p>
-<p>$ python3 <a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a> sdist</p>
-<p>In order to create a source distribution it is not necessary to set the environment variables, since this script only collects the necessary files and pack them into a tar ball located in the directory <b>path/to/SQUANDER/package/dist</b>. In order to install the $QGD package from source tar ball, see the previous section discussing the initialization of the environment variables. The package can be compiled and installed by the command</p>
-<p>$ pip3 install qgd-*.tar.gz</p>
-<p>issued from directory <b>path/to/SQUANDER/package/dist</b> (It is optional to install the ninja package which speeds up the building process by parallel compilation.)</p>
+<div class="snippet"> $ python3 <a class="el" href="setup_8py.html" title="Building script for the SQUANDER package. ">setup.py</a> sdist </div><p>In order to create a source distribution it is not necessary to set the environment variables, since this script only collects the necessary files and pack them into a tar ball located in the directory <b>path/to/SQUANDER/package/dist</b>. In order to install the $QGD package from source tar ball, see the previous section discussing the initialization of the environment variables. The package can be compiled and installed by the command</p>
+<div class="snippet"> $ pip install qgd-*.tar.gz </div><p>issued from directory <b>path/to/SQUANDER/package/dist</b> (It is optional to install the ninja package which speeds up the building process by parallel compilation.)</p>
 <h1>How to use</h1>
 <p>The algorithm implemented in the $QGD package intends to transform the given unitary into an identity matrix via a sequence of two-qubit and one-qubit gate operations applied on the unitary. Thus, in order to get the decomposition of a unitary, one should rather provide the complex transpose of this unitary as the input for the $QGD decomposing process, as can be seen in the examples.</p>
 <h2>Python Interface</h2>
-<p>The SQUANDER package contains a Python interface allowing the access of the functionalities of the SQUANDER package from Python. The usage of the SQUANDER Python interface is demonstrated in the example files in the directory <b>examples</b> located in the root directory <b>path/to/QGD/package</b>, or in test files located in sub-directories of <b>path/to/QGD/package/qgd_python</b>. The example files can be run similarly to any python scripts, while the test files can be invoked by the <b>pytest</b> utility. The example files import the necessary <b>qgd_python</b> modules containing the wrapper classes to interface with the C++ SQUANDER library. (So the $QGD package need to be installed or the compiled package needs to be added to the Python search path.) </p>
+<p>The SQUANDER package contains a Python interface allowing the access of the functionalities of the SQUANDER package from Python. The usage of the SQUANDER Python interface is demonstrated in the example files in the directory <b>examples</b> located in the root directory <b>path/to/QGD/package</b>, or in test files located in sub-directories of <b>path/to/QGD/package/qgd_python</b>. The example files can be run similarly to any python scripts, while the test files can be invoked by the <b>pytest</b> utility. The example files import the necessary <b><a class="el" href="namespaceqgd__python.html">qgd_python</a></b> modules containing the wrapper classes to interface with the C++ SQUANDER library. (So the $QGD package need to be installed or the compiled package needs to be added to the Python search path.) </p>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:49 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sat Mar 19 2022 22:14:42 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

@@ -1,5 +1,6 @@
 <map id="Sub_Matrix_Decomposition" name="Sub_Matrix_Decomposition">
-<area shape="rect" id="node2" href="$class_decomposition___base.html" title="A class containing basic methods for the decomposition process. " alt="" coords="23,155,168,181"/>
-<area shape="rect" id="node3" href="$class_gates__block.html" title="A class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="48,80,143,107"/>
-<area shape="rect" id="node4" href="$class_gate.html" title="Base class for the representation of general gate operations. " alt="" coords="70,5,121,32"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html" title="A class containing basic methods for the decomposition process. " alt="" coords="23,229,168,256"/>
+<area shape="rect" id="node3" href="$class_gates__block.html" title="A class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="48,155,143,181"/>
+<area shape="rect" id="node4" href="$class_gate.html" title="Base class for the representation of general gate operations. " alt="" coords="70,80,121,107"/>
+<area shape="rect" id="node5" href="$classlogging.html" title="A class containing basic methods for setting up the verbosity level. " alt="" coords="64,5,127,32"/>
 </map>

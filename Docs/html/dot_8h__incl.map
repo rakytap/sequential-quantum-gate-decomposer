@@ -1,5 +1,6 @@
 <map id="dot.h" name="dot.h">
-<area shape="rect" id="node2" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="342,80,409,107"/>
-<area shape="rect" id="node3" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="272,155,375,181"/>
+<area shape="rect" id="node2" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="523,80,590,107"/>
+<area shape="rect" id="node13" href="$logging_8h.html" title="Header file for a class containing basic methods for setting up the verbosity level. " alt="" coords="665,80,739,107"/>
+<area shape="rect" id="node3" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="372,155,475,181"/>
 <area shape="rect" id="node4" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="82,229,178,256"/>
 </map>

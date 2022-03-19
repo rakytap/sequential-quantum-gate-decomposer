@@ -1,8 +1,0 @@
-<map id="qgd_N_Qubit_Decomposition_Wrapper_get_operation" name="qgd_N_Qubit_Decomposition_Wrapper_get_operation">
-<area shape="rect" id="node2" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html#a5c6d5d28dc6ec6466bb4ed6bfb7c3307" title="Call to get the metadata organised into Python dictionary of the idx&#45;th operation. " alt="" coords="244,100,344,127"/>
-<area shape="rect" id="node3" href="$class_decomposition___base.html#a1b076dd293978004b7636ed8b1d41119" title="Call to prepare the optimized operations to export — OBSOLETE. " alt="" coords="392,93,537,134"/>
-<area shape="rect" id="node4" href="$class_operation.html#acc601a7a00616fd6e2a61f61e084afac" title="Call to get the type of the operation. " alt="" coords="617,5,751,32"/>
-<area shape="rect" id="node5" href="$class_operation.html#a55eee2ad4b90be085b1ec2ce018502f8" title="Call to get the index of the target qubit. " alt="" coords="599,85,769,112"/>
-<area shape="rect" id="node6" href="$class_operation.html#a2e9b60d334a0e0c99dede014ac989d0a" title="Call to get the index of the control qubit. " alt="" coords="596,140,772,167"/>
-<area shape="rect" id="node7" href="$class_u3.html#a7ebc4a0bf0eb7c4d37034d04ed787aaa" title="Call to get the final optimized parameters of the operation. " alt="" coords="585,200,783,227"/>
-</map>

@@ -1,5 +1,0 @@
-<map id="functor_cost_fnc::functor_cost_fnc" name="functor_cost_fnc::functor_cost_fnc">
-<area shape="rect" id="node2" href="$decomposition_2_n___qubit___decomposition___cost___function_8cpp.html#aa5db632f7e7078d0e9bf48b22fa7525d" title="Call co calculate the cost function during the final optimization process. " alt="" coords="219,20,344,47"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a975b868302471a7b3f623f55384fc973" title="The optimization problem of the final optimization. " alt="" coords="392,13,555,54"/>
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#a10eb690b650a33a1ab8c4de4f9f8ab6e" title="Call to solve layer by layer the optimization problem. " alt="" coords="603,5,772,61"/>
-</map>

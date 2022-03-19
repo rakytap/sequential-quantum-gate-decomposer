@@ -1,6 +1,0 @@
-<map id="main" name="main">
-<area shape="rect" id="node2" href="$counter_8c.html#a9ba94da7db769b98d02381d872dd9bbb" title="count" alt="" coords="116,5,171,32"/>
-<area shape="rect" id="node5" href="$main_8c.html#a2ffe36fb64a2264d48c1e3f6073477b0" title="my_count" alt="" coords="104,56,183,83"/>
-<area shape="rect" id="node3" href="$number_8c.html#aceeb8c6c5418f8ac9c9b5666f4047ae3" title="get_number" alt="" coords="231,5,321,32"/>
-<area shape="rect" id="node4" href="$number_8c.html#a334b2ad8c37175ba2dce847635917eab" title="set_number" alt="" coords="231,56,321,83"/>
-</map>

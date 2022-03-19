@@ -1,8 +1,10 @@
 <map id="Gates_block.h" name="Gates_block.h">
-<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="255,155,338,181"/>
-<area shape="rect" id="node22" href="$_gate_8h.html" title="Gate.h" alt="" coords="199,80,259,107"/>
-<area shape="rect" id="node5" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="82,453,178,480"/>
-<area shape="rect" id="node9" href="$dot_8h.html" title="dot.h" alt="" coords="194,229,245,256"/>
-<area shape="rect" id="node10" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="453,304,519,331"/>
-<area shape="rect" id="node11" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="416,379,519,405"/>
+<area shape="rect" id="node3" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="757,155,839,181"/>
+<area shape="rect" id="node24" href="$matrix__real_8h.html" title="matrix_real.h" alt="" coords="132,304,227,331"/>
+<area shape="rect" id="node25" href="$_gate_8h.html" title="Gate.h" alt="" coords="280,80,340,107"/>
+<area shape="rect" id="node5" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="834,453,930,480"/>
+<area shape="rect" id="node9" href="$dot_8h.html" title="dot.h" alt="" coords="583,229,634,256"/>
+<area shape="rect" id="node10" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="251,304,318,331"/>
+<area shape="rect" id="node17" href="$logging_8h.html" title="Header file for a class containing basic methods for setting up the verbosity level. " alt="" coords="703,304,776,331"/>
+<area shape="rect" id="node11" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="183,379,285,405"/>
 </map>

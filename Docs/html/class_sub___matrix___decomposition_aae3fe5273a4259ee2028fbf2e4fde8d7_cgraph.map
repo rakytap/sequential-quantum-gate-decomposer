@@ -1,3 +1,4 @@
 <map id="Sub_Matrix_Decomposition::optimization_problem_combined" name="Sub_Matrix_Decomposition::optimization_problem_combined">
-<area shape="rect" id="node2" href="$class_gates__block.html#ac021a051f25e4112f355aef65bad2612" title="Call to get the number of free parameters. " alt="" coords="233,20,449,47"/>
+<area shape="rect" id="node2" href="$class_gates__block.html#ac021a051f25e4112f355aef65bad2612" title="Call to get the number of free parameters. " alt="" coords="233,5,449,32"/>
+<area shape="rect" id="node3" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="294,56,389,83"/>
 </map>
