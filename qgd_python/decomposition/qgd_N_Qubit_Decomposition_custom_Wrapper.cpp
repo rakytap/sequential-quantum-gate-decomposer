@@ -859,21 +859,21 @@ debug: Set True to suppress the output messages of the decompostion into a file 
 static PyObject *
 qgd_N_Qubit_Decomposition_custom_Wrapper_set_Debugfile(qgd_N_Qubit_Decomposition_custom_Wrapper *self, PyObject *args ) {
 
-
+    
     // determine the initial guess type
     PyObject* debugfile_name = PyObject_Str(debugfile_name);
     PyObject* debugfile_name_unicode = PyUnicode_AsEncodedString(debugfile_name, "utf-8", "~E~");
     const char* initial_debugfile_name = PyBytes_AS_STRING(debugfile_name_unicode);
  
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &debugfile_name )) return Py_BuildValue("O", -1);
+    if (!PyArg_ParseTuple(args, "|O", &debugfile_name )) return Py_BuildValue("s", -1);
 
 
     // set the name of the debugfile on the C++ side
     self->decomp->set_debugfile( initial_debugfile_name );
 
 
-    return Py_BuildValue("O", 0);
+    return Py_BuildValue("s", 0);
 }
 
 
@@ -1052,7 +1052,7 @@ static PyMethodDef qgd_N_Qubit_Decomposition_custom_Wrapper_methods[] = {
     {"set_Verbose", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_set_Verbose, METH_VARARGS,
      "Call to set the verbosity of the qgd_N_Qubit_Decomposition class."
     },
-    {"set_Debugfile", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_set_Debugfile, METH_VARARGS,
+    {"set_Debugfile", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_set_Debugfile, METH_NOARGS,
      "Set the debugfile name of the N_Qubit_Decomposition class."
     },
     {"set_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_set_Gate_Structure, METH_VARARGS,

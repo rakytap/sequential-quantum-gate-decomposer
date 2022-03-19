@@ -93,7 +93,7 @@ cDecompose.set_Iteration_Loops({4: 3, 3: 3, 2: 3})
 cDecompose.set_Verbose( True )
 
 # setting the debugfile name
-cDecompose.set_Debugfile( 'debug.txt' )
+cDecompose.set_Debugfile( )
 
 ## [set parameters]
 
