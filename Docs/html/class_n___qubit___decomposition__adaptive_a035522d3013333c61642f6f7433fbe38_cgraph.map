@@ -1,0 +1,5 @@
+<map id="N_Qubit_Decomposition_adaptive::get_panelty" name="N_Qubit_Decomposition_adaptive::get_panelty">
+<area shape="rect" id="node2" href="$class_gates__block.html#a9caabf1ee8e35c564a2246a1408708c6" title="Call to get the number of gates grouped in the class. " alt="" coords="216,5,399,32"/>
+<area shape="rect" id="node3" href="$class_gates__block.html#ab00bacd2ffefbd627e4c02bed51890a2" title="Call to get the gates stored in the class. " alt="" coords="232,56,383,83"/>
+<area shape="rect" id="node4" href="$class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce" title="Call to get the number of free parameters. " alt="" coords="222,107,393,133"/>
+</map>

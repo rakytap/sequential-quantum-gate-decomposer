@@ -1,0 +1,7 @@
+<map id="Gates_block::add_x" name="Gates_block::add_x">
+<area shape="rect" id="node2" href="$class_gates__block.html#a10f7fd8b457b825449c16231b414258c" title="Add an gate to the front of the list of gates. " alt="" coords="188,80,343,107"/>
+<area shape="rect" id="node3" href="$class_gate.html#a9626b4134a82cbb7d62770393e5a6568" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="409,29,543,56"/>
+<area shape="rect" id="node5" href="$class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce" title="Call to get the number of free parameters. " alt="" coords="391,80,561,107"/>
+<area shape="rect" id="node6" href="$class_gate.html#a5498d67b28027022c72b8b15d47d55cc" title="Call to get the type of the operation. " alt="" coords="423,131,529,157"/>
+<area shape="rect" id="node4" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="609,29,700,56"/>
+</map>

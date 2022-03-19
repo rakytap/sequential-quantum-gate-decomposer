@@ -1,0 +1,4 @@
+<map id="N_Qubit_Decomposition_Base::optimization_problem_combined" name="N_Qubit_Decomposition_Base::optimization_problem_combined">
+<area shape="rect" id="node2" href="$class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b" title="Call to solve layer by layer the optimization problem. " alt="" coords="507,5,713,61"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition___base.html#ab8e063dc0433796b9eab2c026deba8a9" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="240,42,459,83"/>
+</map>

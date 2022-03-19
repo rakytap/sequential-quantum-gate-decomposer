@@ -1,0 +1,5 @@
+<map id="Composite" name="Composite">
+<area shape="rect" id="node2" href="$class_gates__block.html" title="A class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="5,155,100,181"/>
+<area shape="rect" id="node3" href="$class_gate.html" title="Base class for the representation of general gate operations. " alt="" coords="27,80,78,107"/>
+<area shape="rect" id="node4" href="$classlogging.html" title="A class containing basic methods for setting up the verbosity level. " alt="" coords="21,5,84,32"/>
+</map>

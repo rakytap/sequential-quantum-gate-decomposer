@@ -1,0 +1,7 @@
+<map id="CRY::apply_derivate_to" name="CRY::apply_derivate_to">
+<area shape="rect" id="node2" href="$class_adaptive.html#a9b1a04d708245e53e9c13a9a1023c6e2" title="Call to retrieve the gate matrix. " alt="" coords="209,11,389,38"/>
+<area shape="rect" id="node3" href="$class_gates__block.html#a4215cac0ddbe6e827340612436562022" title="??????????????? " alt="" coords="437,29,568,71"/>
+<area shape="rect" id="node4" href="$class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="616,22,803,78"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b" title="Call to solve layer by layer the optimization problem. " alt="" coords="1117,22,1324,78"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition___base.html#ab8e063dc0433796b9eab2c026deba8a9" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="851,59,1069,100"/>
+</map>

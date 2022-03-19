@@ -1,0 +1,55 @@
+<map id="N_Qubit_Decomposition_custom::start_decomposition" name="N_Qubit_Decomposition_custom::start_decomposition">
+<area shape="rect" id="node2" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="992,1555,1087,1581"/>
+<area shape="rect" id="node3" href="$common_8h.html#a84e35f14fe6cb1b6648be757446483e2" title="get the number of threads in MKL " alt="" coords="257,1923,410,1949"/>
+<area shape="rect" id="node4" href="$common_8h.html#ab2a1aadbe72ac6b1f9aed9a2ef8e0044" title="Set the number of threads on runtime in MKL. " alt="" coords="256,1973,411,2000"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition__custom.html#a43daa03c8b6bfbdf09f64e2a7da69075" title="Call to add further layer to the gate structure used in the subdecomposition. " alt="" coords="487,547,659,589"/>
+<area shape="rect" id="node43" href="$class_n___qubit___decomposition___base.html#a382d8110a0de379bcc1fe862bedaa2be" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="251,1629,415,1670"/>
+<area shape="rect" id="node47" href="$class_decomposition___base.html#a2530709a98773cb3b02aa7a0abebf4ae" title="Calculate the transformed matrix resulting by an array of gates on the matrix Umtx. " alt="" coords="728,1507,892,1549"/>
+<area shape="rect" id="node50" href="$class_decomposition___base.html#aa30d5f53edbc85a60e9f7b0a7d2f5545" title="Call to prepare the optimized gates to export. " alt="" coords="248,1806,419,1847"/>
+<area shape="rect" id="node51" href="$class_n___qubit___decomposition___base.html#a0f0c3b16223fcc246f1e64da3632d181" title="Calculate the error of the decomposition according to the spectral norm of , where &#160;is the unitary pr..." alt="" coords="467,1907,680,1949"/>
+<area shape="rect" id="node54" href="$class_gates__block.html#ab276194ac347edfdfd6ecd37b7a4707c" title="Call to get the number of the individual gate types in the list of gates. " alt="" coords="478,1296,669,1323"/>
+<area shape="rect" id="node6" href="$class_gates__block.html#a11ee1387e5ec4d3c3d8a3eb6e625b3ab" title="Call to release the stored gates. " alt="" coords="739,1121,881,1162"/>
+<area shape="rect" id="node7" href="$class_gate.html#a5498d67b28027022c72b8b15d47d55cc" title="Call to get the type of the operation. " alt="" coords="987,1215,1092,1241"/>
+<area shape="rect" id="node8" href="$class_gates__block.html#aa3f7bcf66f2e16fdaeb6ad7db4d9c775" title="Call to get the gates stored in the class. " alt="" coords="731,157,889,184"/>
+<area shape="rect" id="node9" href="$class_gates__block.html#a5f537a7bf9992665762bd7593faaa96f" title="Append a general gate to the list of gates. " alt="" coords="733,1289,887,1330"/>
+<area shape="rect" id="node12" href="$class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f" title="Call to create a clone of the present class. " alt="" coords="762,208,858,235"/>
+<area shape="rect" id="node13" href="$class_c_z.html#a570caf36ee8e1110b019b4806e2c32e0" title="Call to create a clone of the present class. " alt="" coords="772,259,848,285"/>
+<area shape="rect" id="node14" href="$class_c_h.html#a47e8193f5bb9f639b6509ac4c9986cd7" title="Call to create a clone of the present class. " alt="" coords="771,309,849,336"/>
+<area shape="rect" id="node15" href="$class_s_y_c.html#a09af5c8d1bfebb40e2513478937eb177" title="Call to create a clone of the present class. " alt="" coords="767,360,853,387"/>
+<area shape="rect" id="node16" href="$class_gate.html#ad0230d8d0dbe898f89232e3fd50dc3d3" title="Call to create a clone of the present class. " alt="" coords="767,968,853,995"/>
+<area shape="rect" id="node19" href="$class_u3.html#a67abb82c8f8d29fe968cb5d8fc37b392" title="Call to create a clone of the present class. " alt="" coords="772,56,848,83"/>
+<area shape="rect" id="node23" href="$class_r_x.html#ac1ee0a2d24eeea5699fc9b72c2a7730d" title="Call to create a clone of the present class. " alt="" coords="771,107,849,133"/>
+<area shape="rect" id="node26" href="$class_r_y.html#ac7bf6f09564bfe6769405ad1452f8aab" title="Call to create a clone of the present class. " alt="" coords="771,411,849,437"/>
+<area shape="rect" id="node29" href="$class_c_r_y.html#add79f9aefe2d674f8ea318b5ef1071f9" title="Call to create a clone of the present class. " alt="" coords="767,765,853,792"/>
+<area shape="rect" id="node32" href="$class_r_z.html#a79fb4af362c00b63b8493787048b83ab" title="Call to create a clone of the present class. " alt="" coords="772,867,848,893"/>
+<area shape="rect" id="node35" href="$class_x.html#af74c8b4d669af82963780e3f04210063" title="Call to create a clone of the present class. " alt="" coords="776,917,844,944"/>
+<area shape="rect" id="node37" href="$class_s_x.html#ae001bf27e4236d64feb7b3dad58fc178" title="Call to create a clone of the present class. " alt="" coords="771,816,849,843"/>
+<area shape="rect" id="node38" href="$class_u_n.html#aa691c60bc79040c480233a29528c917b" title="Call to create a clone of the present class. " alt="" coords="771,512,849,539"/>
+<area shape="rect" id="node39" href="$class_o_n.html#a1eee220e77a6c67e31c412fbd7520cc6" title="Call to create a clone of the present class. " alt="" coords="771,563,849,589"/>
+<area shape="rect" id="node40" href="$class_composite.html#a23a5f2fcbe7c8941016d8e28d254b8c8" title="Call to create a clone of the present class. " alt="" coords="749,461,871,488"/>
+<area shape="rect" id="node41" href="$class_adaptive.html#a1fd006c7362e343ae56dc69d53ffc2b0" title="Call to create a clone of the present class. " alt="" coords="755,664,865,691"/>
+<area shape="rect" id="node42" href="$class_gates__block.html#a08b3c3cc1e02557e985b9d2e9f993b9a" title="Create a clone of the present class. " alt="" coords="744,1355,876,1381"/>
+<area shape="rect" id="node10" href="$class_gate.html#a9626b4134a82cbb7d62770393e5a6568" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="972,1320,1107,1347"/>
+<area shape="rect" id="node11" href="$class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce" title="Call to get the number of free parameters. " alt="" coords="954,1269,1125,1296"/>
+<area shape="rect" id="node17" href="$class_gate.html#a4fc24ecebc0ca8252bf7ab96a705e58a" title="Default constructor of the class. " alt="" coords="997,993,1081,1020"/>
+<area shape="rect" id="node18" href="$class_gate.html#acd16cb1e6703717479558bcadbc26a2e" title="Call to set the stored matrix in the operation. " alt="" coords="981,1128,1097,1155"/>
+<area shape="rect" id="node20" href="$class_u3.html#a11a8fca65dd56a6bdc42a98927040a05" title="Nullary constructor of the class. " alt="" coords="1008,56,1071,83"/>
+<area shape="rect" id="node21" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="979,584,1100,611"/>
+<area shape="rect" id="node22" href="$class_u3.html#a4c95c0d73bb15789ab0b50bdcd1475f0" title="Call to set the final optimized parameters of the gate. " alt="" coords="941,5,1138,32"/>
+<area shape="rect" id="node24" href="$class_r_x.html#a3d92dfb505ea007dee8af85c5b81e08e" title="NullaRX constructor of the class. " alt="" coords="1007,157,1071,184"/>
+<area shape="rect" id="node25" href="$class_r_x.html#a724e976c13021cf10546bdc15b2c6096" title="Call to set the final optimized parameters of the gate. " alt="" coords="940,107,1139,133"/>
+<area shape="rect" id="node27" href="$class_r_y.html#ae15c4b13bb2048513f105b29d2114f85" title="Nullary constructor of the class. " alt="" coords="1007,436,1071,463"/>
+<area shape="rect" id="node28" href="$class_r_y.html#ad4efd47b5a629e67503c56dadaff7ecc" title="Call to set the final optimized parameters of the gate. " alt="" coords="940,385,1139,412"/>
+<area shape="rect" id="node30" href="$class_c_r_y.html#a89fbdbd7beae56b2ad69a78eafc9861e" title="Nullary constructor of the class. " alt="" coords="998,765,1081,792"/>
+<area shape="rect" id="node31" href="$class_c_r_y.html#aea1929799cbdc0e5d7d233b85b5aa007" title="Call to set the final optimized parameters of the gate. " alt="" coords="972,678,1107,719"/>
+<area shape="rect" id="node33" href="$class_r_z.html#aef2f12222c9442a5e97fb00d5b2ddf0a" title="NullaRZ constructor of the class. " alt="" coords="1008,867,1071,893"/>
+<area shape="rect" id="node34" href="$class_r_z.html#aa8319070b07259b295da39d99e71cf03" title="Call to set the final optimized parameters of the gate. " alt="" coords="941,816,1138,843"/>
+<area shape="rect" id="node36" href="$class_x.html#ad0df9fcaa438f659091b4b71969085a6" title="NullaRX constructor of the class. " alt="" coords="1016,917,1063,944"/>
+<area shape="rect" id="node44" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="501,1439,646,1495"/>
+<area shape="rect" id="node46" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="965,1805,1113,1832"/>
+<area shape="rect" id="node48" href="$class_decomposition___base.html#ae08620b794f8089431dcf9bb5a2fc092" title="check_optimization_solution " alt="" coords="737,1573,883,1629"/>
+<area shape="rect" id="node49" href="$class_n___qubit___decomposition___base.html#ad177684a72bb11e98769a315a7c84770" title="The optimization problem of the final optimization. " alt="" coords="480,1570,667,1611"/>
+<area shape="rect" id="node45" href="$common_8cpp.html#a478212437ad8647d21171d23c98ae52a" title="Call to create an identity matrix. " alt="" coords="757,1653,863,1680"/>
+<area shape="rect" id="node52" href="$common_8cpp.html#ac876ec30dbcade845af445eb50315653" title="Call to calculate the product of two complex scalars. " alt="" coords="787,2008,833,2035"/>
+<area shape="rect" id="node53" href="$_n___qubit___decomposition_8h.html#aa08012e43c5859e2c9c491851f445f09" title="Definition of the zggev function from Lapacke to calculate the eigenvalues of a complex matrix..." alt="" coords="748,1957,872,1984"/>
+</map>

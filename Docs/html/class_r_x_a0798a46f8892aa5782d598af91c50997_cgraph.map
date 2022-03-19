@@ -1,0 +1,10 @@
+<map id="RX::apply_derivate_to" name="RX::apply_derivate_to">
+<area shape="rect" id="node2" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="544,90,639,117"/>
+<area shape="rect" id="node3" href="$class_matrix.html#a46e203f562c39beefb3a4d2450a87737" title="Call to create a copy of the matrix. " alt="" coords="202,40,293,66"/>
+<area shape="rect" id="node5" href="$class_r_x.html#ab953e8f35546bdfc00d5d4083962e032" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="200,116,295,142"/>
+<area shape="rect" id="node4" href="$class_matrix.html#a2dba13c45127354c9f75ef576f49269b" title="Default constructor of the class. " alt="" coords="370,40,469,66"/>
+<area shape="rect" id="node6" href="$class_u3.html#a1de7cf3905f8e120636d29a811fd7ad0" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit ..." alt="" coords="343,141,496,168"/>
+<area shape="rect" id="node7" href="$class_u3.html#a00bf6e1353d834ea3febca8ea249e066" title="??????????? " alt="" coords="352,192,487,218"/>
+<area shape="rect" id="node8" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="546,178,637,205"/>
+<area shape="rect" id="node9" href="$common_8cpp.html#ac876ec30dbcade845af445eb50315653" title="Call to calculate the product of two complex scalars. " alt="" coords="568,229,615,256"/>
+</map>

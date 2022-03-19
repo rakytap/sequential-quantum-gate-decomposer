@@ -1,0 +1,5 @@
+<map id="CZ::get_matrix" name="CZ::get_matrix">
+<area shape="rect" id="node2" href="$common_8cpp.html#a478212437ad8647d21171d23c98ae52a" title="Call to create an identity matrix. " alt="" coords="159,31,265,57"/>
+<area shape="rect" id="node3" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="313,5,461,32"/>
+<area shape="rect" id="node4" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="327,56,448,83"/>
+</map>

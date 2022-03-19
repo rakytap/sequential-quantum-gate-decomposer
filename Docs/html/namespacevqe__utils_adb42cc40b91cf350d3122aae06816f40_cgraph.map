@@ -1,0 +1,4 @@
+<map id="vqe_utils.get_optimized_circuit" name="vqe_utils.get_optimized_circuit">
+<area shape="rect" id="node2" href="$namespacevqe__utils.html#aac0640c179fe5da20e78630f99600003" title="Retrieve a unitary matrix from a QISKIT quantum circuit. " alt="" coords="211,5,351,47"/>
+<area shape="rect" id="node3" href="$namespacevqe__utils.html#aee0ec83685398ad0f80b32e27d8d2a99" title="Calcuates the distance between two unitaries according to Eq. " alt="" coords="211,71,351,112"/>
+</map>

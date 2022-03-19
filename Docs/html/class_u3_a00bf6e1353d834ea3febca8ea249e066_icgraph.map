@@ -1,0 +1,32 @@
+<map id="U3::apply_kernel_to" name="U3::apply_kernel_to">
+<area shape="rect" id="node2" href="$class_r_x.html#ab953e8f35546bdfc00d5d4083962e032" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="214,208,309,235"/>
+<area shape="rect" id="node20" href="$class_r_y.html#aeb7ddf11db2176525a9903c761c4b0be" title="Call to retrieve the gate matrix. " alt="" coords="214,309,309,336"/>
+<area shape="rect" id="node22" href="$class_r_z.html#a6f8758f14370d2a171ad0034df43074f" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="215,448,308,475"/>
+<area shape="rect" id="node23" href="$class_r_z.html#a55051db38b901ed69aa56921b092cc15" title="??????????????? " alt="" coords="384,5,531,32"/>
+<area shape="rect" id="node24" href="$class_u3.html#a8b1763d0ff3d7704288ff3abd0e207ac" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="215,587,308,613"/>
+<area shape="rect" id="node31" href="$class_u3.html#a383d9cca88d14c258b4525176a0c2329" title="??????????????? " alt="" coords="188,107,335,133"/>
+<area shape="rect" id="node3" href="$class_decomposition___base.html#a501a73d321a9a6f5fb2b53558b8be618" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="580,361,744,402"/>
+<area shape="rect" id="node4" href="$class_gates__block.html#a0a8345863ae673bb3f987546d4930a6a" title="Call to apply the gate on the input array/matrix Gates_block*input. " alt="" coords="383,485,532,512"/>
+<area shape="rect" id="node15" href="$class_gates__block.html#a4215cac0ddbe6e827340612436562022" title="??????????????? " alt="" coords="820,302,951,343"/>
+<area shape="rect" id="node19" href="$class_r_x.html#a0798a46f8892aa5782d598af91c50997" title="??????????????? " alt="" coords="589,107,735,133"/>
+<area shape="rect" id="node5" href="$class_gates__block.html#af9546b43aa681935754f66c5cea25aa0" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="581,739,743,765"/>
+<area shape="rect" id="node14" href="$class_gates__block.html#a05ffe60aaddb9668d670687ac8e9e2f8" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="597,478,727,519"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="804,651,967,693"/>
+<area shape="rect" id="node11" href="$_n___qubit___decomposition__adaptive__general_8cpp.html#a9aa92b989b3e18eabc3ca0ed0d46c327" title="are_two_qubits_independent" alt="" coords="792,739,979,765"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1039,651,1201,693"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1289,651,1452,693"/>
+<area shape="rect" id="node9" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1606,600,1657,627"/>
+<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1550,651,1713,693"/>
+<area shape="rect" id="node12" href="$class_n___qubit___decomposition__adaptive__general.html#a5cc102240c9e53b1fd6aad9ca795cf16" title="??????????????? " alt="" coords="1039,797,1201,853"/>
+<area shape="rect" id="node13" href="$class_n___qubit___decomposition__adaptive__general.html#ac260172fe0d33b1d52a9588c3ad14cd8" title="??????????????? " alt="" coords="1032,717,1208,773"/>
+<area shape="rect" id="node16" href="$class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="1027,295,1213,351"/>
+<area shape="rect" id="node17" href="$class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b" title="Call to solve layer by layer the optimization problem. " alt="" coords="1528,295,1735,351"/>
+<area shape="rect" id="node18" href="$class_n___qubit___decomposition___base.html#ab8e063dc0433796b9eab2c026deba8a9" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="1261,331,1480,373"/>
+<area shape="rect" id="node21" href="$class_r_y.html#af0ecbb112f19901ebed8e15086b2c1cc" title="??????????????? " alt="" coords="384,259,531,285"/>
+<area shape="rect" id="node25" href="$class_u3.html#a5bd83233aed95cc277e5d6690f4ac6c9" title="Call to retrieve the gate matrix. " alt="" coords="405,795,510,821"/>
+<area shape="rect" id="node30" href="$class_u3.html#a202dd49e63c6699bbb6ebf08b9a869c0" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="399,637,516,664"/>
+<area shape="rect" id="node26" href="$class_decomposition___base.html#ac2db1c9b9c723053e78f44255b61c428" title="This method determine the gates needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="813,857,958,898"/>
+<area shape="rect" id="node28" href="$_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="596,795,728,821"/>
+<area shape="rect" id="node27" href="$class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="1041,878,1199,919"/>
+<area shape="rect" id="node29" href="$decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="860,795,911,821"/>
+</map>

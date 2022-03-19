@@ -1,0 +1,10 @@
+<map id="qgd_SX.cpp" name="qgd_SX.cpp">
+<area shape="rect" id="node4" href="$_s_x_8h.html" title="Header file for a class representing a rotation gate around the X axis. " alt="" coords="419,80,469,107"/>
+<area shape="rect" id="node5" href="$_gate_8h.html" title="Gate.h" alt="" coords="414,155,474,181"/>
+<area shape="rect" id="node14" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="5,379,72,405"/>
+<area shape="rect" id="node7" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="403,229,485,256"/>
+<area shape="rect" id="node21" href="$logging_8h.html" title="Header file for a class containing basic methods for setting up the verbosity level. " alt="" coords="643,379,717,405"/>
+<area shape="rect" id="node9" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="424,528,520,555"/>
+<area shape="rect" id="node13" href="$dot_8h.html" title="dot.h" alt="" coords="113,304,164,331"/>
+<area shape="rect" id="node15" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="190,453,293,480"/>
+</map>
