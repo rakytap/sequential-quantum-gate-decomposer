@@ -1,0 +1,11 @@
+<map id="RY.h" name="RY.h">
+<area shape="rect" id="node2" href="$_u3_8h.html" title="Header file for a class representing a rotation gate around the Y axis. " alt="" coords="231,80,280,107"/>
+<area shape="rect" id="node12" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="205,379,271,405"/>
+<area shape="rect" id="node26" href="$matrix__real_8h.html" title="matrix_real.h" alt="" coords="123,229,217,256"/>
+<area shape="rect" id="node3" href="$_gate_8h.html" title="Gate.h" alt="" coords="296,155,356,181"/>
+<area shape="rect" id="node5" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="615,229,698,256"/>
+<area shape="rect" id="node19" href="$logging_8h.html" title="Header file for a class containing basic methods for setting up the verbosity level. " alt="" coords="808,379,881,405"/>
+<area shape="rect" id="node7" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="353,528,449,555"/>
+<area shape="rect" id="node11" href="$dot_8h.html" title="dot.h" alt="" coords="631,304,682,331"/>
+<area shape="rect" id="node13" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="187,453,289,480"/>
+</map>

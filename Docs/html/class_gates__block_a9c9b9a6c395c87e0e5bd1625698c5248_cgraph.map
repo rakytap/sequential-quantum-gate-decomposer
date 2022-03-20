@@ -1,7 +1,0 @@
-<map id="Gates_block::add_cz_to_end" name="Gates_block::add_cz_to_end">
-<area shape="rect" id="node2" href="$class_gates__block.html#a5f537a7bf9992665762bd7593faaa96f" title="Append a general gate to the list of gates. " alt="" coords="196,49,351,90"/>
-<area shape="rect" id="node3" href="$class_gate.html#a9626b4134a82cbb7d62770393e5a6568" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="417,5,551,32"/>
-<area shape="rect" id="node5" href="$class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce" title="Call to get the number of free parameters. " alt="" coords="399,56,569,83"/>
-<area shape="rect" id="node6" href="$class_gate.html#a5498d67b28027022c72b8b15d47d55cc" title="Call to get the type of the operation. " alt="" coords="431,107,537,133"/>
-<area shape="rect" id="node4" href="$__skbuild_2linux-x86__64-3_86_2cmake-install_2common_2common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="617,5,708,32"/>
-</map>

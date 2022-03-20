@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -75,41 +75,35 @@ Variables</h2></td></tr>
 <tr class="memitem:a6b87ddad36fca2722dc5fd955536f578"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a6b87ddad36fca2722dc5fd955536f578">example.backend</a> = Aer.get_backend('unitary_simulator')</td></tr>
 <tr class="memdesc:a6b87ddad36fca2722dc5fd955536f578"><td class="mdescLeft">&#160;</td><td class="mdescRight">Qiskit backend for simulator.  <a href="namespaceexample.html#a6b87ddad36fca2722dc5fd955536f578">More...</a><br /></td></tr>
 <tr class="separator:a6b87ddad36fca2722dc5fd955536f578"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0a2e936f47382b2bd8c9432ca77c6026"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a0a2e936f47382b2bd8c9432ca77c6026">example.cDecompose</a> = qgd_N_Qubit_Decomposition( Umtx.conj().T, False, &quot;ZEROS&quot; )</td></tr>
-<tr class="memdesc:a0a2e936f47382b2bd8c9432ca77c6026"><td class="mdescLeft">&#160;</td><td class="mdescRight">[load Umtx]  <a href="namespaceexample.html#a0a2e936f47382b2bd8c9432ca77c6026">More...</a><br /></td></tr>
+<tr class="memitem:a0a2e936f47382b2bd8c9432ca77c6026"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a0a2e936f47382b2bd8c9432ca77c6026">example.cDecompose</a> = qgd_N_Qubit_Decomposition( Umtx.conj().T )</td></tr>
+<tr class="memdesc:a0a2e936f47382b2bd8c9432ca77c6026"><td class="mdescLeft">&#160;</td><td class="mdescRight">[create decomposition class] creating a class to decompose the unitary  <a href="namespaceexample.html#a0a2e936f47382b2bd8c9432ca77c6026">More...</a><br /></td></tr>
 <tr class="separator:a0a2e936f47382b2bd8c9432ca77c6026"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9b062b4feb0fe50b0056ed5abb65681c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a9b062b4feb0fe50b0056ed5abb65681c">example.data</a> = loadmat('Umtx.mat')</td></tr>
 <tr class="memdesc:a9b062b4feb0fe50b0056ed5abb65681c"><td class="mdescLeft">&#160;</td><td class="mdescRight">load the unitary from file  <a href="namespaceexample.html#a9b062b4feb0fe50b0056ed5abb65681c">More...</a><br /></td></tr>
 <tr class="separator:a9b062b4feb0fe50b0056ed5abb65681c"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4373e9d1485c7c940b9360eb187bca34"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a4373e9d1485c7c940b9360eb187bca34">example.decomposed_matrix</a> = result.get_unitary(quantum_circuit)</td></tr>
+<tr class="memitem:a4373e9d1485c7c940b9360eb187bca34"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a4373e9d1485c7c940b9360eb187bca34">example.decomposed_matrix</a> = np.asarray( result.get_unitary(quantum_circuit) )</td></tr>
 <tr class="memdesc:a4373e9d1485c7c940b9360eb187bca34"><td class="mdescLeft">&#160;</td><td class="mdescRight">the unitary matrix from the result object  <a href="namespaceexample.html#a4373e9d1485c7c940b9360eb187bca34">More...</a><br /></td></tr>
 <tr class="separator:a4373e9d1485c7c940b9360eb187bca34"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af790bb908348ee47307d4eb3668aa5a0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#af790bb908348ee47307d4eb3668aa5a0">example.decomposition_error</a> = LA.norm(product_matrix - np.identity(16)*product_matrix[0,0], 2)</td></tr>
-<tr class="memdesc:af790bb908348ee47307d4eb3668aa5a0"><td class="mdescLeft">&#160;</td><td class="mdescRight">the error of the decomposition  <a href="namespaceexample.html#af790bb908348ee47307d4eb3668aa5a0">More...</a><br /></td></tr>
-<tr class="separator:af790bb908348ee47307d4eb3668aa5a0"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:acaec1ef2d0938bc9df8f5fef1268cacc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#acaec1ef2d0938bc9df8f5fef1268cacc">example.finalize_decomp</a></td></tr>
-<tr class="memdesc:acaec1ef2d0938bc9df8f5fef1268cacc"><td class="mdescLeft">&#160;</td><td class="mdescRight">[create decomposition class]  <a href="namespaceexample.html#acaec1ef2d0938bc9df8f5fef1268cacc">More...</a><br /></td></tr>
-<tr class="separator:acaec1ef2d0938bc9df8f5fef1268cacc"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9a2af59149b3272cf0016a57a3328299"><td class="memItemLeft" align="right" valign="top">tuple&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a9a2af59149b3272cf0016a57a3328299">example.decomposition_error</a> = (np.real(np.trace(product_matrix)))/2</td></tr>
+<tr class="separator:a9a2af59149b3272cf0016a57a3328299"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:acc723d25fd7224c46ee94d2866c9f96a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#acc723d25fd7224c46ee94d2866c9f96a">example.job</a> = execute(quantum_circuit, backend)</td></tr>
 <tr class="memdesc:acc723d25fd7224c46ee94d2866c9f96a"><td class="mdescLeft">&#160;</td><td class="mdescRight">job execution and getting the result as an object  <a href="namespaceexample.html#acc723d25fd7224c46ee94d2866c9f96a">More...</a><br /></td></tr>
 <tr class="separator:acc723d25fd7224c46ee94d2866c9f96a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae04701779f635cdceb8bdee5c8ff074f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#ae04701779f635cdceb8bdee5c8ff074f">example.matrix_size</a> = int(2**qbit_num)</td></tr>
+<tr class="memdesc:ae04701779f635cdceb8bdee5c8ff074f"><td class="mdescLeft">&#160;</td><td class="mdescRight">[load Umtx]  <a href="namespaceexample.html#ae04701779f635cdceb8bdee5c8ff074f">More...</a><br /></td></tr>
 <tr class="separator:ae04701779f635cdceb8bdee5c8ff074f"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a24642f40a57795550626f03a4d99a848"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a24642f40a57795550626f03a4d99a848">example.prepare_export</a></td></tr>
-<tr class="separator:a24642f40a57795550626f03a4d99a848"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ac1039984599e8ffdf0b609b0e2790c1a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#ac1039984599e8ffdf0b609b0e2790c1a">example.product_matrix</a> = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(Umtx, decomposed_matrix.conj().T)</td></tr>
-<tr class="memdesc:ac1039984599e8ffdf0b609b0e2790c1a"><td class="mdescLeft">&#160;</td><td class="mdescRight">the Umtx*Umtx' matrix  <a href="namespaceexample.html#ac1039984599e8ffdf0b609b0e2790c1a">More...</a><br /></td></tr>
-<tr class="separator:ac1039984599e8ffdf0b609b0e2790c1a"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5096935b31c32d181393485b6a77c0da"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a5096935b31c32d181393485b6a77c0da">example.phase</a> = np.angle(product_matrix[0,0])</td></tr>
+<tr class="separator:a5096935b31c32d181393485b6a77c0da"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a8211daba5e583f975dcb5b3bd635c6b0"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a8211daba5e583f975dcb5b3bd635c6b0">example.product_matrix</a> = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(Umtx,decomposed_matrix.conj().T)</td></tr>
+<tr class="separator:a8211daba5e583f975dcb5b3bd635c6b0"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a827ebb25ae0dbe8a985b6796dd0d9c0f"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a827ebb25ae0dbe8a985b6796dd0d9c0f">example.qbit_num</a> = 3</td></tr>
 <tr class="separator:a827ebb25ae0dbe8a985b6796dd0d9c0f"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a1602c6a1a270f94e2c254b3b6501cd86"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a1602c6a1a270f94e2c254b3b6501cd86">example.quantum_circuit</a> = cDecompose.get_Quantum_Circuit()</td></tr>
-<tr class="memdesc:a1602c6a1a270f94e2c254b3b6501cd86"><td class="mdescLeft">&#160;</td><td class="mdescRight">[start decomposition]  <a href="namespaceexample.html#a1602c6a1a270f94e2c254b3b6501cd86">More...</a><br /></td></tr>
+<tr class="memdesc:a1602c6a1a270f94e2c254b3b6501cd86"><td class="mdescLeft">&#160;</td><td class="mdescRight">[create decomposition class]  <a href="namespaceexample.html#a1602c6a1a270f94e2c254b3b6501cd86">More...</a><br /></td></tr>
 <tr class="separator:a1602c6a1a270f94e2c254b3b6501cd86"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae9f7cf9f0786fe88c5590ca4ad5a295a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#ae9f7cf9f0786fe88c5590ca4ad5a295a">example.result</a> = job.result()</td></tr>
 <tr class="memdesc:ae9f7cf9f0786fe88c5590ca4ad5a295a"><td class="mdescLeft">&#160;</td><td class="mdescRight">the result of the Qiskit job  <a href="namespaceexample.html#ae9f7cf9f0786fe88c5590ca4ad5a295a">More...</a><br /></td></tr>
 <tr class="separator:ae9f7cf9f0786fe88c5590ca4ad5a295a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a02d865e3b2b2e0b439a24bd32724ac8d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a02d865e3b2b2e0b439a24bd32724ac8d">example.True</a></td></tr>
-<tr class="separator:a02d865e3b2b2e0b439a24bd32724ac8d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a9f6bbbedb3a0154f9a0199a632198b9f"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample.html#a9f6bbbedb3a0154f9a0199a632198b9f">example.Umtx</a> = unitary_group.rvs(matrix_size)</td></tr>
 <tr class="memdesc:a9f6bbbedb3a0154f9a0199a632198b9f"><td class="mdescLeft">&#160;</td><td class="mdescRight">The unitary to be decomposed.  <a href="namespaceexample.html#a9f6bbbedb3a0154f9a0199a632198b9f">More...</a><br /></td></tr>
 <tr class="separator:a9f6bbbedb3a0154f9a0199a632198b9f"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -121,7 +115,7 @@ Variables</h2></td></tr>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:48 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Mar 20 2022 10:31:20 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

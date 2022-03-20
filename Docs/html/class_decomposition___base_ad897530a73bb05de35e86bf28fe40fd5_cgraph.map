@@ -1,12 +1,14 @@
 <map id="Decomposition_Base::list_gates" name="Decomposition_Base::list_gates">
-<area shape="rect" id="node2" href="$class_gates__block.html#adeb104a0985789e3bea3dc53d3545349" title="Call to print the list of gates stored in the block of gates for a specific set of parameters..." alt="" coords="199,208,356,235"/>
-<area shape="rect" id="node3" href="$class_gate.html#a5498d67b28027022c72b8b15d47d55cc" title="Call to get the type of the operation. " alt="" coords="459,5,565,32"/>
-<area shape="rect" id="node4" href="$class_gate.html#a7460c74e6969fa187237679879ccfe8d" title="Call to get the index of the control qubit. " alt="" coords="438,56,586,83"/>
-<area shape="rect" id="node5" href="$class_gate.html#a676a838ffca280c7af7c1f9ad15cd2ec" title="Call to get the index of the target qubit. " alt="" coords="441,107,583,133"/>
-<area shape="rect" id="node6" href="$class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce" title="Call to get the number of free parameters. " alt="" coords="427,157,597,184"/>
-<area shape="rect" id="node7" href="$class_u3.html#a413ad816b0084c30d916576df56f4b40" title="Call to check whether theta is a free parameter of the gate. " alt="" coords="434,208,590,235"/>
-<area shape="rect" id="node8" href="$class_u3.html#acc83ff7e4a15c2445344e051410ddcc4" title="Call to check whether Phi is a free parameter of the gate. " alt="" coords="440,259,584,285"/>
-<area shape="rect" id="node9" href="$class_u3.html#ae2969dab2a542416fba0f26b9a330014" title="Call to check whether Lambda is a free parameter of the gate. " alt="" coords="427,309,597,336"/>
-<area shape="rect" id="node10" href="$class_gates__block.html#ac021a051f25e4112f355aef65bad2612" title="Call to get the number of free parameters. " alt="" coords="404,360,620,387"/>
-<area shape="rect" id="node11" href="$class_gates__block.html#a9caabf1ee8e35c564a2246a1408708c6" title="Call to get the number of gates grouped in the class. " alt="" coords="421,411,603,437"/>
+<area shape="rect" id="node2" href="$class_gates__block.html#a2c4060bb8d4547f9f653ba14598a19d8" title="Call to print the list of gates stored in the block of gates for a specific set of parameters..." alt="" coords="199,259,356,285"/>
+<area shape="rect" id="node3" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="465,5,559,32"/>
+<area shape="rect" id="node4" href="$class_gate.html#a5498d67b28027022c72b8b15d47d55cc" title="Call to get the type of the operation. " alt="" coords="459,56,565,83"/>
+<area shape="rect" id="node5" href="$class_gate.html#a7460c74e6969fa187237679879ccfe8d" title="Call to get the index of the control qubit. " alt="" coords="438,107,586,133"/>
+<area shape="rect" id="node6" href="$class_gate.html#a676a838ffca280c7af7c1f9ad15cd2ec" title="Call to get the index of the target qubit. " alt="" coords="441,157,583,184"/>
+<area shape="rect" id="node7" href="$class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce" title="Call to get the number of free parameters. " alt="" coords="427,208,597,235"/>
+<area shape="rect" id="node8" href="$class_u3.html#a413ad816b0084c30d916576df56f4b40" title="Call to check whether theta is a free parameter of the gate. " alt="" coords="434,259,590,285"/>
+<area shape="rect" id="node9" href="$class_u3.html#acc83ff7e4a15c2445344e051410ddcc4" title="Call to check whether Phi is a free parameter of the gate. " alt="" coords="440,309,584,336"/>
+<area shape="rect" id="node10" href="$class_u3.html#ae2969dab2a542416fba0f26b9a330014" title="Call to check whether Lambda is a free parameter of the gate. " alt="" coords="427,360,597,387"/>
+<area shape="rect" id="node11" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="438,411,586,437"/>
+<area shape="rect" id="node12" href="$class_gates__block.html#ac021a051f25e4112f355aef65bad2612" title="Call to get the number of free parameters. " alt="" coords="404,461,620,488"/>
+<area shape="rect" id="node13" href="$class_gates__block.html#a9caabf1ee8e35c564a2246a1408708c6" title="Call to get the number of gates grouped in the class. " alt="" coords="421,512,603,539"/>
 </map>

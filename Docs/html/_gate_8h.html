@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -62,16 +62,18 @@ $(function() {
 <div class="textblock"><code>#include &lt;vector&gt;</code><br />
 <code>#include &quot;<a class="el" href="common_8h_source.html">common.h</a>&quot;</code><br />
 <code>#include &quot;<a class="el" href="matrix_8h_source.html">matrix.h</a>&quot;</code><br />
+<code>#include &quot;<a class="el" href="logging_8h_source.html">logging.h</a>&quot;</code><br />
 </div><div class="textblock"><div class="dynheader">
 Include dependency graph for Gate.h:</div>
 <div class="dyncontent">
 <div class="center"><img src="_gate_8h__incl.png" border="0" usemap="#_gate_8h" alt=""/></div>
 <map name="_gate_8h" id="_gate_8h">
-<area shape="rect" id="node3" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="295,80,378,107"/>
-<area shape="rect" id="node10" href="matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="453,229,519,256"/>
-<area shape="rect" id="node5" href="_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="82,379,178,405"/>
-<area shape="rect" id="node9" href="dot_8h.html" title="dot.h" alt="" coords="194,155,245,181"/>
-<area shape="rect" id="node11" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="416,304,519,331"/>
+<area shape="rect" id="node3" href="common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="316,80,399,107"/>
+<area shape="rect" id="node10" href="matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="203,229,269,256"/>
+<area shape="rect" id="node17" href="logging_8h.html" title="Header file for a class containing basic methods for setting up the verbosity level. " alt="" coords="755,229,829,256"/>
+<area shape="rect" id="node5" href="_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="104,379,200,405"/>
+<area shape="rect" id="node9" href="dot_8h.html" title="dot.h" alt="" coords="561,155,612,181"/>
+<area shape="rect" id="node11" href="matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="190,304,293,331"/>
 </map>
 </div>
 </div><div class="textblock"><div class="dynheader">
@@ -79,37 +81,59 @@ This graph shows which files directly or indirectly include this file:</div>
 <div class="dyncontent">
 <div class="center"><img src="_gate_8h__dep__incl.png" border="0" usemap="#_gate_8hdep" alt=""/></div>
 <map name="_gate_8hdep" id="_gate_8hdep">
-<area shape="rect" id="node2" href="_functor___get___operation___products_8h.html" title="Header file for the parallelized calculation of the vector containing the products of operations (sup..." alt="" coords="1347,155,1505,196"/>
-<area shape="rect" id="node4" href="_gate_8cpp.html" title="Gate.cpp" alt="" coords="766,80,841,107"/>
-<area shape="rect" id="node5" href="_c_h_8h.html" title="Header file for a class representing a CH operation. " alt="" coords="691,80,742,107"/>
-<area shape="rect" id="node19" href="_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="1111,80,1181,107"/>
-<area shape="rect" id="node24" href="_c_z_8h.html" title="Header file for a class representing a CZ operation. " alt="" coords="865,80,915,107"/>
-<area shape="rect" id="node27" href="_gates__block_8h.html" title="Header file for a class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into laye..." alt="" coords="939,80,1044,107"/>
-<area shape="rect" id="node30" href="_u3_8h.html" title="Header file for a class representing a U3 gate. " alt="" coords="1401,80,1451,107"/>
-<area shape="rect" id="node3" href="_functor___get___operation___products_8cpp.html" title="Functor_Get_Operation\l_Products.cpp" alt="" coords="1222,244,1379,285"/>
-<area shape="rect" id="node6" href="_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="783,162,938,189"/>
-<area shape="rect" id="node16" href="_c_h_8cpp.html" title="Class representing a CH gate. " alt="" coords="5,162,71,189"/>
-<area shape="rect" id="node17" href="_gates__block_8cpp.html" title="Class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="963,162,1081,189"/>
-<area shape="rect" id="node18" href="qgd___c_h_8cpp.html" title="qgd_CH.cpp" alt="" coords="95,162,189,189"/>
-<area shape="rect" id="node7" href="_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process. " alt="" coords="907,251,1076,278"/>
-<area shape="rect" id="node8" href="_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="1027,333,1201,360"/>
-<area shape="rect" id="node14" href="_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="692,251,883,278"/>
-<area shape="rect" id="node9" href="_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="671,408,829,449"/>
-<area shape="rect" id="node10" href="_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="1069,415,1255,442"/>
-<area shape="rect" id="node11" href="qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="853,408,1044,449"/>
-<area shape="rect" id="node12" href="custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="1279,408,1434,449"/>
-<area shape="rect" id="node13" href="decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="1459,415,1617,442"/>
-<area shape="rect" id="node15" href="_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="788,333,992,360"/>
-<area shape="rect" id="node20" href="_c_n_o_t_8cpp.html" title="Class representing a CNOT gate. " alt="" coords="1105,162,1187,189"/>
-<area shape="rect" id="node21" href="qgd___c_n_o_t_8cpp.html" title="qgd_CNOT.cpp" alt="" coords="1212,162,1323,189"/>
-<area shape="rect" id="node22" href="_random___unitary_8h.html" title="Random_Unitary.h" alt="" coords="1529,162,1657,189"/>
-<area shape="rect" id="node23" href="_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="1576,251,1719,278"/>
-<area shape="rect" id="node25" href="_c_z_8cpp.html" title="Class representing a CZ gate. " alt="" coords="213,162,276,189"/>
-<area shape="rect" id="node26" href="qgd___c_z_8cpp.html" title="qgd_CZ.cpp" alt="" coords="301,162,391,189"/>
-<area shape="rect" id="node28" href="qgd___gates___block_8cpp.html" title="qgd_Gates_Block.cpp" alt="" coords="415,162,565,189"/>
-<area shape="rect" id="node29" href="qgd___operation___block_8cpp.html" title="qgd_Operation_Block.cpp" alt="" coords="589,162,759,189"/>
-<area shape="rect" id="node31" href="_u3_8cpp.html" title="Class representing a U3 gate. " alt="" coords="1681,162,1744,189"/>
-<area shape="rect" id="node32" href="qgd___u3_8cpp.html" title="qgd_U3.cpp" alt="" coords="1769,162,1859,189"/>
+<area shape="rect" id="node2" href="_gate_8cpp.html" title="Gate.cpp" alt="" coords="1318,80,1393,107"/>
+<area shape="rect" id="node3" href="_u3_8h.html" title="Header file for a class representing a rotation gate around the Y axis. " alt="" coords="1569,80,1619,107"/>
+<area shape="rect" id="node32" href="_c_h_8h.html" title="Header file for a class representing a CH operation. " alt="" coords="694,155,745,181"/>
+<area shape="rect" id="node35" href="_c_n_o_t_8h.html" title="Header file for a class representing a CNOT operation. " alt="" coords="386,155,455,181"/>
+<area shape="rect" id="node38" href="_gates__block_8h.html" title="Header file for a class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into laye..." alt="" coords="3597,155,3703,181"/>
+<area shape="rect" id="node40" href="_c_z_8h.html" title="Header file for a class representing a CZ operation. " alt="" coords="2355,155,2404,181"/>
+<area shape="rect" id="node43" href="_x_8h.html" title="X.h" alt="" coords="2741,155,2783,181"/>
+<area shape="rect" id="node46" href="_s_x_8h.html" title="Header file for a class representing a rotation gate around the X axis. " alt="" coords="2971,155,3022,181"/>
+<area shape="rect" id="node49" href="_s_y_c_8h.html" title="Header file for a class representing a Sycamore gate. " alt="" coords="3302,155,3361,181"/>
+<area shape="rect" id="node52" href="_u_n_8h.html" title="Header file for a class for the representation of general gate operations on the first qbit_num&#45;1 qub..." alt="" coords="843,155,895,181"/>
+<area shape="rect" id="node53" href="_o_n_8h.html" title="Header file for a class for the representation of general gate operations on the first qbit_num&#45;1 qub..." alt="" coords="2161,155,2213,181"/>
+<area shape="rect" id="node4" href="_decomposition___base_8h.html" title="Header file for a class containing basic methods for the decomposition process. " alt="" coords="2021,304,2175,331"/>
+<area shape="rect" id="node14" href="_gates__block_8cpp.html" title="Class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="1875,304,1993,331"/>
+<area shape="rect" id="node15" href="_r_y_8h.html" title="Header file for a class representing a rotation gate around the Y axis. " alt="" coords="1791,155,1842,181"/>
+<area shape="rect" id="node17" href="_composite_8h.html" title="Header file for a class for the representation of general gate operations on the first qbit_num&#45;1 qub..." alt="" coords="1887,229,1981,256"/>
+<area shape="rect" id="node21" href="_r_x_8h.html" title="Header file for a class representing a rotation gate around the X axis. " alt="" coords="1569,155,1619,181"/>
+<area shape="rect" id="node24" href="_r_z_8h.html" title="Header file for a class representing a rotation gate around the Z axis. " alt="" coords="1237,155,1287,181"/>
+<area shape="rect" id="node27" href="_u3_8cpp.html" title="Class representing a RX gate. " alt="" coords="1367,155,1429,181"/>
+<area shape="rect" id="node28" href="qgd___u3_8cpp.html" title="qgd_U3.cpp" alt="" coords="1454,155,1545,181"/>
+<area shape="rect" id="node29" href="_random___unitary_8h.html" title="Random_Unitary.h" alt="" coords="13,229,141,256"/>
+<area shape="rect" id="node5" href="_decomposition___base_8cpp.html" title="Class containing basic methods for setting up the verbosity level. " alt="" coords="1917,386,2087,413"/>
+<area shape="rect" id="node6" href="_n___qubit___decomposition___base_8h.html" title="N_Qubit_Decomposition\l_Base.h" alt="" coords="2111,379,2274,420"/>
+<area shape="rect" id="node13" href="_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="1143,386,1333,413"/>
+<area shape="rect" id="node7" href="_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="1021,475,1194,502"/>
+<area shape="rect" id="node10" href="_n___qubit___decomposition__adaptive_8h.html" title="N_Qubit_Decomposition\l_adaptive.h" alt="" coords="2111,468,2274,509"/>
+<area shape="rect" id="node12" href="_n___qubit___decomposition__custom_8h.html" title="N_Qubit_Decomposition\l_custom.h" alt="" coords="2298,468,2461,509"/>
+<area shape="rect" id="node8" href="custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="695,557,850,599"/>
+<area shape="rect" id="node9" href="decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="345,565,504,591"/>
+<area shape="rect" id="node11" href="qgd___n___qubit___decomposition__adaptive___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_adaptive_Wrapper.cpp" alt="" coords="2995,557,3185,599"/>
+<area shape="rect" id="node16" href="_c_r_y_8h.html" title="CRY.h" alt="" coords="2006,229,2065,256"/>
+<area shape="rect" id="node19" href="_r_y_8cpp.html" title="Class representing a U3 gate. " alt="" coords="1682,229,1746,256"/>
+<area shape="rect" id="node20" href="qgd___r_y_8cpp.html" title="qgd_RY.cpp" alt="" coords="1771,229,1863,256"/>
+<area shape="rect" id="node18" href="_composite_8cpp.html" title="Class for the representation of general unitary operation on the first qbit_num&#45;1 qubits..." alt="" coords="1265,304,1373,331"/>
+<area shape="rect" id="node22" href="_r_x_8cpp.html" title="RX.cpp" alt="" coords="1493,229,1557,256"/>
+<area shape="rect" id="node23" href="qgd___r_x_8cpp.html" title="qgd_RX.cpp" alt="" coords="1376,229,1468,256"/>
+<area shape="rect" id="node25" href="_r_z_8cpp.html" title="Class representing a RZ gate. " alt="" coords="1072,229,1135,256"/>
+<area shape="rect" id="node26" href="qgd___r_z_8cpp.html" title="qgd_RZ.cpp" alt="" coords="1159,229,1250,256"/>
+<area shape="rect" id="node30" href="_u_n_8cpp.html" title="Class for the representation of general unitary operation on the first qbit_num&#45;1 qubits..." alt="" coords="643,304,710,331"/>
+<area shape="rect" id="node31" href="_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="5,304,148,331"/>
+<area shape="rect" id="node33" href="_c_h_8cpp.html" title="Class representing a CH gate. " alt="" coords="459,229,524,256"/>
+<area shape="rect" id="node34" href="qgd___c_h_8cpp.html" title="qgd_CH.cpp" alt="" coords="599,229,693,256"/>
+<area shape="rect" id="node36" href="_c_n_o_t_8cpp.html" title="Class representing a CNOT gate. " alt="" coords="165,229,247,256"/>
+<area shape="rect" id="node37" href="qgd___c_n_o_t_8cpp.html" title="qgd_CNOT.cpp" alt="" coords="272,229,383,256"/>
+<area shape="rect" id="node39" href="qgd___gates___block_8cpp.html" title="qgd_Gates_Block.cpp" alt="" coords="3657,229,3806,256"/>
+<area shape="rect" id="node41" href="_c_z_8cpp.html" title="Class representing a CZ gate. " alt="" coords="2383,229,2445,256"/>
+<area shape="rect" id="node42" href="qgd___c_z_8cpp.html" title="qgd_CZ.cpp" alt="" coords="2470,229,2561,256"/>
+<area shape="rect" id="node44" href="_x_8cpp.html" title="Class representing a X gate. " alt="" coords="2737,229,2792,256"/>
+<area shape="rect" id="node45" href="qgd___x_8cpp.html" title="qgd_X.cpp" alt="" coords="2817,229,2899,256"/>
+<area shape="rect" id="node47" href="_s_x_8cpp.html" title="Class representing a SX gate. " alt="" coords="3025,229,3089,256"/>
+<area shape="rect" id="node48" href="qgd___s_x_8cpp.html" title="qgd_SX.cpp" alt="" coords="3113,229,3205,256"/>
+<area shape="rect" id="node50" href="_s_y_c_8cpp.html" title="Class representing a SYC gate. " alt="" coords="3332,229,3405,256"/>
+<area shape="rect" id="node51" href="qgd___s_y_c_8cpp.html" title="qgd_SYC.cpp" alt="" coords="3430,229,3531,256"/>
+<area shape="rect" id="node54" href="_o_n_8cpp.html" title="Class for the representation of general ONitary operation on the first qbit_num&#45;1 qubits..." alt="" coords="2190,229,2257,256"/>
 </map>
 </div>
 </div>
@@ -125,17 +149,31 @@ Classes</h2></td></tr>
 Enumerations</h2></td></tr>
 <tr class="memitem:a8266c44a6cbf9e08d5f2b12cd3c3d92f"><td class="memItemLeft" align="right" valign="top">enum &#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92f">gate_type</a> { <br />
 &#160;&#160;<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa6c5e8ddfcb17a1c5a7e1b62e2a290140">GENERAL_OPERATION</a>, 
+<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa6f5ce4764ab61b5d97445f3a6d8ff6f3">UN_OPERATION</a>, 
+<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fae2de5c9c82b816b4fdce6db704f1bbde">ON_OPERATION</a>, 
 <a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa1a700818502ac2406b6da01166f99460">CZ_OPERATION</a>, 
-<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa5549eaee6174573bed4a703d4b0e3c52">CNOT_OPERATION</a>, 
-<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa5d91f92ec3ceb93c5c88b8f8f41ac167">CH_OPERATION</a>, 
 <br />
-&#160;&#160;<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92faaf42c0acb925acdc7b35f518593ddd16">U3_OPERATION</a>, 
+&#160;&#160;<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa5549eaee6174573bed4a703d4b0e3c52">CNOT_OPERATION</a>, 
+<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa5d91f92ec3ceb93c5c88b8f8f41ac167">CH_OPERATION</a>, 
+<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92faaf42c0acb925acdc7b35f518593ddd16">U3_OPERATION</a>, 
+<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa8fe97d4fe2c2a8f8298d311fa63cabc4">RY_OPERATION</a>, 
+<br />
+&#160;&#160;<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa110dd60e11e007f32d167164d6cfb4c4">RX_OPERATION</a>, 
+<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92faa303d995c337fcdc55bafbae64d605eb">RZ_OPERATION</a>, 
+<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa4a1b6596017a1682b63a7a1835b4279f">X_OPERATION</a>, 
+<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fabfe67b6a861ef45eb5e041bd2a57a97a">SX_OPERATION</a>, 
+<br />
+&#160;&#160;<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92faa0d0a5b2a494e4e308a7c24e4d1a5ad2">CRY_OPERATION</a>, 
+<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa98ef6d6e7eafb1895455229ef4b1d74f">SYC_OPERATION</a>, 
 <a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa1920843064f92bc493e38f3c98edaf97">BLOCK_OPERATION</a>, 
+<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa233f367767b2638c6e19b884aa2e147e">COMPOSITE_OPERATION</a>, 
+<br />
+&#160;&#160;<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92faeb5c088a2bb1173ac0f546ea894b30e8">ADAPTIVE_OPERATION</a>, 
 <a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fab011667fb4fa25555e44612b16e515d4">DECOMPOSITION_BASE_CLASS</a>, 
 <a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa9122fbe71de307f01fcd8f01f8e3754b">SUB_MATRIX_DECOMPOSITION_CLASS</a>, 
+<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fab6ac3fd9b9f6499cb72d8b0159a034a5">N_QUBIT_DECOMPOSITION_CLASS_BASE</a>, 
 <br />
-&#160;&#160;<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fab6ac3fd9b9f6499cb72d8b0159a034a5">N_QUBIT_DECOMPOSITION_CLASS_BASE</a>, 
-<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa3d8b170e0991c00e3fe7cd8ac452cc3f">N_QUBIT_DECOMPOSITION_CLASS</a>
+&#160;&#160;<a class="el" href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92fa3d8b170e0991c00e3fe7cd8ac452cc3f">N_QUBIT_DECOMPOSITION_CLASS</a>
 <br />
  }<tr class="memdesc:a8266c44a6cbf9e08d5f2b12cd3c3d92f"><td class="mdescLeft">&#160;</td><td class="mdescRight">Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)  <a href="_gate_8h.html#a8266c44a6cbf9e08d5f2b12cd3c3d92f">More...</a><br /></td></tr>
 </td></tr>
@@ -157,25 +195,36 @@ Enumerations</h2></td></tr>
 <p>Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block) </p>
 <table class="fieldtable">
 <tr><th colspan="2">Enumerator</th></tr><tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa6c5e8ddfcb17a1c5a7e1b62e2a290140"></a>GENERAL_OPERATION&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa6f5ce4764ab61b5d97445f3a6d8ff6f3"></a>UN_OPERATION&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fae2de5c9c82b816b4fdce6db704f1bbde"></a>ON_OPERATION&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa1a700818502ac2406b6da01166f99460"></a>CZ_OPERATION&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa5549eaee6174573bed4a703d4b0e3c52"></a>CNOT_OPERATION&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa5d91f92ec3ceb93c5c88b8f8f41ac167"></a>CH_OPERATION&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92faaf42c0acb925acdc7b35f518593ddd16"></a>U3_OPERATION&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa8fe97d4fe2c2a8f8298d311fa63cabc4"></a>RY_OPERATION&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa110dd60e11e007f32d167164d6cfb4c4"></a>RX_OPERATION&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92faa303d995c337fcdc55bafbae64d605eb"></a>RZ_OPERATION&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa4a1b6596017a1682b63a7a1835b4279f"></a>X_OPERATION&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fabfe67b6a861ef45eb5e041bd2a57a97a"></a>SX_OPERATION&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92faa0d0a5b2a494e4e308a7c24e4d1a5ad2"></a>CRY_OPERATION&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa98ef6d6e7eafb1895455229ef4b1d74f"></a>SYC_OPERATION&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa1920843064f92bc493e38f3c98edaf97"></a>BLOCK_OPERATION&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa233f367767b2638c6e19b884aa2e147e"></a>COMPOSITE_OPERATION&#160;</td><td class="fielddoc"></td></tr>
+<tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92faeb5c088a2bb1173ac0f546ea894b30e8"></a>ADAPTIVE_OPERATION&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fab011667fb4fa25555e44612b16e515d4"></a>DECOMPOSITION_BASE_CLASS&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa9122fbe71de307f01fcd8f01f8e3754b"></a>SUB_MATRIX_DECOMPOSITION_CLASS&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fab6ac3fd9b9f6499cb72d8b0159a034a5"></a>N_QUBIT_DECOMPOSITION_CLASS_BASE&#160;</td><td class="fielddoc"></td></tr>
 <tr><td class="fieldname"><a id="a8266c44a6cbf9e08d5f2b12cd3c3d92fa3d8b170e0991c00e3fe7cd8ac452cc3f"></a>N_QUBIT_DECOMPOSITION_CLASS&#160;</td><td class="fielddoc"></td></tr>
 </table>
 
-<p class="definition">Definition at line <a class="el" href="_gate_8h_source.html#l00033">33</a> of file <a class="el" href="_gate_8h_source.html">Gate.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_gate_8h_source.html#l00034">34</a> of file <a class="el" href="_gate_8h_source.html">Gate.h</a>.</p>
 
 </div>
 </div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:48 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Mar 20 2022 10:31:20 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

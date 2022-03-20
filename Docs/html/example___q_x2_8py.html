@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -48,7 +48,7 @@ $(function() {
 <div id="main-nav"></div>
 <div id="nav-path" class="navpath">
   <ul>
-<li class="navelem"><a class="el" href="dir_957d08a57080622878536bdd849cec55.html">sequential-quantum-gate-decomposer</a></li><li class="navelem"><a class="el" href="dir_08e026e187c900d22f62f281cd77640d.html">examples</a></li>  </ul>
+<li class="navelem"><a class="el" href="dir_957d08a57080622878536bdd849cec55.html">sequential-quantum-gate-decomposer</a></li>  </ul>
 </div>
 </div><!-- top -->
 <div class="header">
@@ -61,9 +61,6 @@ $(function() {
 </div><!--header-->
 <div class="contents">
 
-<p>Example to decompose on the QX2 architecture.  
-<a href="#details">More...</a></p>
-
 <p><a href="example___q_x2_8py_source.html">Go to the source code of this file.</a></p>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="namespaces"></a>
@@ -73,8 +70,8 @@ Namespaces</h2></td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="func-members"></a>
 Functions</h2></td></tr>
-<tr class="memitem:af90f07cc0a6841202e36007c60e4afb3"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#af90f07cc0a6841202e36007c60e4afb3">example_QX2.create_custom_gate_structure_QX2</a> (qbit_num)</td></tr>
-<tr class="separator:af90f07cc0a6841202e36007c60e4afb3"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aa388edf6e3ad3df05a84d6620bc0fcc6"><td class="memItemLeft" align="right" valign="top">def&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#aa388edf6e3ad3df05a84d6620bc0fcc6">example_QX2.create_custom_gate_structure_QX2</a> (qbit_num)</td></tr>
+<tr class="separator:aa388edf6e3ad3df05a84d6620bc0fcc6"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="var-members"></a>
 Variables</h2></td></tr>
@@ -85,17 +82,14 @@ Variables</h2></td></tr>
 <tr class="separator:aef2b261757e0cbb46f367da7cd8b6ba2"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab214de75f403041254bfa4546b30d6c7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#ab214de75f403041254bfa4546b30d6c7">example_QX2.decomposed_matrix</a> = result.get_unitary(quantum_circuit)</td></tr>
 <tr class="separator:ab214de75f403041254bfa4546b30d6c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aa3af5e4b4f1c65ad8e632ef25a311bbc"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#aa3af5e4b4f1c65ad8e632ef25a311bbc">example_QX2.decomposition_error</a> = LA.norm(product_matrix - np.identity(int(2**qbit_num))*product_matrix[0,0], 2)</td></tr>
-<tr class="separator:aa3af5e4b4f1c65ad8e632ef25a311bbc"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:aea6c65b1e1d10ec64295d8b01a34614a"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#aea6c65b1e1d10ec64295d8b01a34614a">example_QX2.disentangle_qbit</a> = qbit_num - 1</td></tr>
-<tr class="memdesc:aea6c65b1e1d10ec64295d8b01a34614a"><td class="mdescLeft">&#160;</td><td class="mdescRight">[import gates block]  <a href="namespaceexample___q_x2.html#aea6c65b1e1d10ec64295d8b01a34614a">More...</a><br /></td></tr>
-<tr class="separator:aea6c65b1e1d10ec64295d8b01a34614a"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a80edacf9926bb6a8d257115d360d96c7"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a80edacf9926bb6a8d257115d360d96c7">example_QX2.finalize_decomp</a></td></tr>
-<tr class="memdesc:a80edacf9926bb6a8d257115d360d96c7"><td class="mdescLeft">&#160;</td><td class="mdescRight">[set gate structure]  <a href="namespaceexample___q_x2.html#a80edacf9926bb6a8d257115d360d96c7">More...</a><br /></td></tr>
-<tr class="separator:a80edacf9926bb6a8d257115d360d96c7"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a94559975c80a99c8d4d60f1fdc41ca5d"><td class="memItemLeft" align="right" valign="top">dictionary&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a94559975c80a99c8d4d60f1fdc41ca5d">example_QX2.gate_structure</a> = { 4: create_custom_gate_structure_QX2(4), 3: create_custom_gate_structure_QX2(3)}</td></tr>
-<tr class="memdesc:a94559975c80a99c8d4d60f1fdc41ca5d"><td class="mdescLeft">&#160;</td><td class="mdescRight">[reorder qubits]  <a href="namespaceexample___q_x2.html#a94559975c80a99c8d4d60f1fdc41ca5d">More...</a><br /></td></tr>
-<tr class="separator:a94559975c80a99c8d4d60f1fdc41ca5d"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a0337e152f1a739d813b4cfc44c458339"><td class="memItemLeft" align="right" valign="top">tuple&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a0337e152f1a739d813b4cfc44c458339">example_QX2.decomposition_error</a> = (np.real(np.trace(product_matrix)))/2</td></tr>
+<tr class="separator:a0337e152f1a739d813b4cfc44c458339"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a443ca46b69d211591976947ae8399d75"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a443ca46b69d211591976947ae8399d75">example_QX2.disentangle_qbit</a> = qbit_num - 1</td></tr>
+<tr class="memdesc:a443ca46b69d211591976947ae8399d75"><td class="mdescLeft">&#160;</td><td class="mdescRight">[import gates block]  <a href="namespaceexample___q_x2.html#a443ca46b69d211591976947ae8399d75">More...</a><br /></td></tr>
+<tr class="separator:a443ca46b69d211591976947ae8399d75"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a9f2cd48fa7847395063dbd9c1df92495"><td class="memItemLeft" align="right" valign="top">dictionary&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a9f2cd48fa7847395063dbd9c1df92495">example_QX2.gate_structure</a> = { 4: create_custom_gate_structure_QX2(4), 3: create_custom_gate_structure_QX2(3)}</td></tr>
+<tr class="memdesc:a9f2cd48fa7847395063dbd9c1df92495"><td class="mdescLeft">&#160;</td><td class="mdescRight">[reorder qubits]  <a href="namespaceexample___q_x2.html#a9f2cd48fa7847395063dbd9c1df92495">More...</a><br /></td></tr>
+<tr class="separator:a9f2cd48fa7847395063dbd9c1df92495"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0106487b3c8d3677824289f753ce4d6d"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a0106487b3c8d3677824289f753ce4d6d">example_QX2.Gates_Block_ret</a> = <a class="el" href="structqgd___gates___block.html">qgd_Gates_Block</a>( qbit_num )</td></tr>
 <tr class="separator:a0106487b3c8d3677824289f753ce4d6d"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa8285a0f2f959ebc34b1298b13c4ab29"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#aa8285a0f2f959ebc34b1298b13c4ab29">example_QX2.job</a> = execute(quantum_circuit, backend)</td></tr>
@@ -108,42 +102,36 @@ Variables</h2></td></tr>
 <tr class="memitem:a5675322eb6151ef98c6efc6924b2face"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a5675322eb6151ef98c6efc6924b2face">example_QX2.matrix_size</a> = int(2**qbit_num)</td></tr>
 <tr class="memdesc:a5675322eb6151ef98c6efc6924b2face"><td class="mdescLeft">&#160;</td><td class="mdescRight">[set number qubits]  <a href="namespaceexample___q_x2.html#a5675322eb6151ef98c6efc6924b2face">More...</a><br /></td></tr>
 <tr class="separator:a5675322eb6151ef98c6efc6924b2face"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac8dbcae040af385f98dd45da7d2f0948"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#ac8dbcae040af385f98dd45da7d2f0948">example_QX2.phase</a> = np.angle(product_matrix[0,0])</td></tr>
+<tr class="separator:ac8dbcae040af385f98dd45da7d2f0948"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6bdd04aaf45380d1bb1001536a73007b"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classbool.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a6bdd04aaf45380d1bb1001536a73007b">example_QX2.Phi</a> = False</td></tr>
 <tr class="separator:a6bdd04aaf45380d1bb1001536a73007b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a4e5de2bcc4863ff625ce40e3d347164e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a4e5de2bcc4863ff625ce40e3d347164e">example_QX2.prepare_export</a></td></tr>
-<tr class="separator:a4e5de2bcc4863ff625ce40e3d347164e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ababae6724128bf67a6b67fa3b7b1a4b8"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#ababae6724128bf67a6b67fa3b7b1a4b8">example_QX2.product_matrix</a> = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(Umtx, decomposed_matrix.conj().T)</td></tr>
-<tr class="separator:ababae6724128bf67a6b67fa3b7b1a4b8"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a2e6ac8f55254087cdc79bd540175b664"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a2e6ac8f55254087cdc79bd540175b664">example_QX2.qbit_num</a> = 4</td></tr>
-<tr class="memdesc:a2e6ac8f55254087cdc79bd540175b664"><td class="mdescLeft">&#160;</td><td class="mdescRight">[set number qubits] the number of qubits spanning the unitary  <a href="namespaceexample___q_x2.html#a2e6ac8f55254087cdc79bd540175b664">More...</a><br /></td></tr>
-<tr class="separator:a2e6ac8f55254087cdc79bd540175b664"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a1c900178342801459fb93d1676122665"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a1c900178342801459fb93d1676122665">example_QX2.product_matrix</a> = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(Umtx,decomposed_matrix.conj().T)</td></tr>
+<tr class="separator:a1c900178342801459fb93d1676122665"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:af0825f0887f3ecada23562a412875bd5"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#af0825f0887f3ecada23562a412875bd5">example_QX2.qbit_num</a> = 4</td></tr>
+<tr class="memdesc:af0825f0887f3ecada23562a412875bd5"><td class="mdescLeft">&#160;</td><td class="mdescRight">[set number qubits] the number of qubits spanning the unitary  <a href="namespaceexample___q_x2.html#af0825f0887f3ecada23562a412875bd5">More...</a><br /></td></tr>
+<tr class="separator:af0825f0887f3ecada23562a412875bd5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a689a006cef57579c84e8d4a4a65e35ab"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a689a006cef57579c84e8d4a4a65e35ab">example_QX2.quantum_circuit</a> = decomp.get_Quantum_Circuit()</td></tr>
 <tr class="memdesc:a689a006cef57579c84e8d4a4a65e35ab"><td class="mdescLeft">&#160;</td><td class="mdescRight">[revert original labeling]  <a href="namespaceexample___q_x2.html#a689a006cef57579c84e8d4a4a65e35ab">More...</a><br /></td></tr>
 <tr class="separator:a689a006cef57579c84e8d4a4a65e35ab"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a913e738a0ca35f8d94e981298f3a1a46"><td class="memItemLeft" align="right" valign="top">tuple&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a913e738a0ca35f8d94e981298f3a1a46">example_QX2.reordered_qbits</a> = (0,1,3,2)</td></tr>
-<tr class="memdesc:a913e738a0ca35f8d94e981298f3a1a46"><td class="mdescLeft">&#160;</td><td class="mdescRight">[create decomp class]  <a href="namespaceexample___q_x2.html#a913e738a0ca35f8d94e981298f3a1a46">More...</a><br /></td></tr>
-<tr class="separator:a913e738a0ca35f8d94e981298f3a1a46"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:aeb5958fe966e8054cd0c443da7a7ac13"><td class="memItemLeft" align="right" valign="top">tuple&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#aeb5958fe966e8054cd0c443da7a7ac13">example_QX2.reordered_qbits</a> = (0,1,3,2)</td></tr>
+<tr class="memdesc:aeb5958fe966e8054cd0c443da7a7ac13"><td class="mdescLeft">&#160;</td><td class="mdescRight">[create decomp class]  <a href="namespaceexample___q_x2.html#aeb5958fe966e8054cd0c443da7a7ac13">More...</a><br /></td></tr>
+<tr class="separator:aeb5958fe966e8054cd0c443da7a7ac13"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a95d20eec8b7745bb4ae0f99c7c0e1398"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a95d20eec8b7745bb4ae0f99c7c0e1398">example_QX2.result</a> = job.result()</td></tr>
 <tr class="separator:a95d20eec8b7745bb4ae0f99c7c0e1398"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:af42b42e45c9062ee065e17d89f1a7361"><td class="memItemLeft" align="right" valign="top">tuple&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#af42b42e45c9062ee065e17d89f1a7361">example_QX2.revert_qbits</a> = (1,0,2,3)</td></tr>
-<tr class="memdesc:af42b42e45c9062ee065e17d89f1a7361"><td class="mdescLeft">&#160;</td><td class="mdescRight">[start decomp]  <a href="namespaceexample___q_x2.html#af42b42e45c9062ee065e17d89f1a7361">More...</a><br /></td></tr>
-<tr class="separator:af42b42e45c9062ee065e17d89f1a7361"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a31ea23613d38f6ba9cd7640301ba1ecc"><td class="memItemLeft" align="right" valign="top">tuple&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a31ea23613d38f6ba9cd7640301ba1ecc">example_QX2.revert_qbits</a> = (1,0,2,3)</td></tr>
+<tr class="memdesc:a31ea23613d38f6ba9cd7640301ba1ecc"><td class="mdescLeft">&#160;</td><td class="mdescRight">[set gate structure]  <a href="namespaceexample___q_x2.html#a31ea23613d38f6ba9cd7640301ba1ecc">More...</a><br /></td></tr>
+<tr class="separator:a31ea23613d38f6ba9cd7640301ba1ecc"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a97b8704a8c58c869a8ab6b4a445df065"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classbool.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a97b8704a8c58c869a8ab6b4a445df065">example_QX2.Theta</a> = True</td></tr>
 <tr class="memdesc:a97b8704a8c58c869a8ab6b4a445df065"><td class="mdescLeft">&#160;</td><td class="mdescRight">[create layer]  <a href="namespaceexample___q_x2.html#a97b8704a8c58c869a8ab6b4a445df065">More...</a><br /></td></tr>
 <tr class="separator:a97b8704a8c58c869a8ab6b4a445df065"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:ab802f5b5cceda99731b0fcf0fa517814"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#ab802f5b5cceda99731b0fcf0fa517814">example_QX2.True</a></td></tr>
-<tr class="separator:ab802f5b5cceda99731b0fcf0fa517814"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a98a64633825400a51f05cf36fcb2671a"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___q_x2.html#a98a64633825400a51f05cf36fcb2671a">example_QX2.Umtx</a> = unitary_group.rvs(matrix_size)</td></tr>
 <tr class="separator:a98a64633825400a51f05cf36fcb2671a"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
-<a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
-<div class="textblock"><p>Example to decompose on the QX2 architecture. </p>
-
-<p class="definition">Definition in file <a class="el" href="example___q_x2_8py_source.html">example_QX2.py</a>.</p>
-</div></div><!-- contents -->
+</div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:48 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Mar 20 2022 10:31:20 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

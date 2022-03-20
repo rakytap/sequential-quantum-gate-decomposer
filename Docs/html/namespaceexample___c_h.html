@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -65,16 +65,14 @@ Functions</h2></td></tr>
 Variables</h2></td></tr>
 <tr class="memitem:a27db2d2a618c7cbe8cc3a70b43c2a9ef"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a27db2d2a618c7cbe8cc3a70b43c2a9ef">backend</a> = Aer.get_backend('unitary_simulator')</td></tr>
 <tr class="separator:a27db2d2a618c7cbe8cc3a70b43c2a9ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a606c956fc0d3290a615053384b9b45fb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a606c956fc0d3290a615053384b9b45fb">decomp</a> = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess=&quot;random&quot; )</td></tr>
+<tr class="memitem:a606c956fc0d3290a615053384b9b45fb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a606c956fc0d3290a615053384b9b45fb">decomp</a> = <a class="el" href="classqgd__python_1_1decomposition_1_1qgd___n___qubit___decomposition_1_1qgd___n___qubit___decomposition.html">qgd_N_Qubit_Decomposition</a>( Umtx.conj().T )</td></tr>
 <tr class="separator:a606c956fc0d3290a615053384b9b45fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29cbd9cf080fc350dd852b9ab9bf791e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a29cbd9cf080fc350dd852b9ab9bf791e">decomposed_matrix</a> = result.get_unitary(<a class="el" href="namespaceexample___c_h.html#ae6f06609652d3f4b2fd66ab53d1bcaf3">quantum_circuit</a>)</td></tr>
+<tr class="memitem:a29cbd9cf080fc350dd852b9ab9bf791e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a29cbd9cf080fc350dd852b9ab9bf791e">decomposed_matrix</a> = np.asarray( result.get_unitary(<a class="el" href="namespaceexample___c_h.html#ae6f06609652d3f4b2fd66ab53d1bcaf3">quantum_circuit</a>) )</td></tr>
 <tr class="separator:a29cbd9cf080fc350dd852b9ab9bf791e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d05ebf94bfaf5994635a12c6dac8c49"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a0d05ebf94bfaf5994635a12c6dac8c49">decomposition_error</a> = LA.norm(<a class="el" href="namespaceexample___c_h.html#a387ddeaf6278db4267199a809fbb2d3c">product_matrix</a> - np.identity(<a class="el" href="namespaceexample___c_h.html#a586bae87eff1476f2640ac9f1abdb204">matrix_size</a>)*<a class="el" href="namespaceexample___c_h.html#a387ddeaf6278db4267199a809fbb2d3c">product_matrix</a>[0,0], 2)</td></tr>
-<tr class="separator:a0d05ebf94bfaf5994635a12c6dac8c49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d7dcfbb5d114494a8d24245a42f1d70"><td class="memItemLeft" align="right" valign="top">tuple&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a5d7dcfbb5d114494a8d24245a42f1d70">decomposition_error</a> = (np.real(np.trace(<a class="el" href="namespaceexample___c_h.html#acbb72957797b533367c7401734dde9bd">product_matrix</a>)))/2</td></tr>
+<tr class="separator:a5d7dcfbb5d114494a8d24245a42f1d70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0aaf5a372f23a2d100907d4f6041777"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#ac0aaf5a372f23a2d100907d4f6041777">filename</a></td></tr>
 <tr class="separator:ac0aaf5a372f23a2d100907d4f6041777"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9caea6e61b3d37a2a2ed5aec74b9ef3b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a9caea6e61b3d37a2a2ed5aec74b9ef3b">finalize_decomp</a></td></tr>
-<tr class="separator:a9caea6e61b3d37a2a2ed5aec74b9ef3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c18761fcbcd841d818e7fe85d3ec41b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a3c18761fcbcd841d818e7fe85d3ec41b">fold</a></td></tr>
 <tr class="separator:a3c18761fcbcd841d818e7fe85d3ec41b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab67ed57871c89c74bf4f50d495bd8262"><td class="memItemLeft" align="right" valign="top">dictionary&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#ab67ed57871c89c74bf4f50d495bd8262">gate_structure</a> = { 4: <a class="el" href="namespaceexample___c_h.html#a39bddb5537f85dc5792b0da7c5fc864d">create_custom_gate_structure</a>(4), 2: <a class="el" href="namespaceexample___c_h.html#a39bddb5537f85dc5792b0da7c5fc864d">create_custom_gate_structure</a>(2)}</td></tr>
@@ -87,10 +85,10 @@ Variables</h2></td></tr>
 <tr class="separator:a586bae87eff1476f2640ac9f1abdb204"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0fece0183323fd0d2df383bbb6e8f8a5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a0fece0183323fd0d2df383bbb6e8f8a5">output</a></td></tr>
 <tr class="separator:a0fece0183323fd0d2df383bbb6e8f8a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a06a73871caa75b1f4bb1a10e214d782b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a06a73871caa75b1f4bb1a10e214d782b">prepare_export</a></td></tr>
-<tr class="separator:a06a73871caa75b1f4bb1a10e214d782b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a387ddeaf6278db4267199a809fbb2d3c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a387ddeaf6278db4267199a809fbb2d3c">product_matrix</a> = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(<a class="el" href="namespaceexample___c_h.html#afeb5af9d406c966cffff656f1410a4db">Umtx</a>, decomposed_matrix.conj().T)</td></tr>
-<tr class="separator:a387ddeaf6278db4267199a809fbb2d3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50e3f7a62947cd47f9c236e6904f6490"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a50e3f7a62947cd47f9c236e6904f6490">phase</a> = np.angle(<a class="el" href="namespaceexample___c_h.html#acbb72957797b533367c7401734dde9bd">product_matrix</a>[0,0])</td></tr>
+<tr class="separator:a50e3f7a62947cd47f9c236e6904f6490"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbb72957797b533367c7401734dde9bd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#acbb72957797b533367c7401734dde9bd">product_matrix</a> = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(<a class="el" href="namespaceexample___c_h.html#afeb5af9d406c966cffff656f1410a4db">Umtx</a>,decomposed_matrix.conj().T)</td></tr>
+<tr class="separator:acbb72957797b533367c7401734dde9bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6cb4cedb768ea4df894422b426e721ef"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a6cb4cedb768ea4df894422b426e721ef">qbit_num</a> = 2</td></tr>
 <tr class="separator:a6cb4cedb768ea4df894422b426e721ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6f06609652d3f4b2fd66ab53d1bcaf3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#ae6f06609652d3f4b2fd66ab53d1bcaf3">quantum_circuit</a> = decomp.get_Quantum_Circuit()</td></tr>
@@ -136,7 +134,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00110">110</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00112">112</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
@@ -147,7 +145,7 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">example_CH.decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess=&quot;random&quot; )</td>
+          <td class="memname">example_CH.decomp = <a class="el" href="classqgd__python_1_1decomposition_1_1qgd___n___qubit___decomposition_1_1qgd___n___qubit___decomposition.html">qgd_N_Qubit_Decomposition</a>( Umtx.conj().T )</td>
         </tr>
       </table>
 </div><div class="memdoc">
@@ -163,28 +161,28 @@ Variables</h2></td></tr>
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">example_CH.decomposed_matrix = result.get_unitary(<a class="el" href="namespaceexample___c_h.html#ae6f06609652d3f4b2fd66ab53d1bcaf3">quantum_circuit</a>)</td>
+          <td class="memname">example_CH.decomposed_matrix = np.asarray( result.get_unitary(<a class="el" href="namespaceexample___c_h.html#ae6f06609652d3f4b2fd66ab53d1bcaf3">quantum_circuit</a>) )</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00118">118</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00120">120</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
-<a id="a0d05ebf94bfaf5994635a12c6dac8c49"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a0d05ebf94bfaf5994635a12c6dac8c49">&#9670;&nbsp;</a></span>decomposition_error</h2>
+<a id="a5d7dcfbb5d114494a8d24245a42f1d70"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5d7dcfbb5d114494a8d24245a42f1d70">&#9670;&nbsp;</a></span>decomposition_error</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">example_CH.decomposition_error = LA.norm(<a class="el" href="namespaceexample___c_h.html#a387ddeaf6278db4267199a809fbb2d3c">product_matrix</a> - np.identity(<a class="el" href="namespaceexample___c_h.html#a586bae87eff1476f2640ac9f1abdb204">matrix_size</a>)*<a class="el" href="namespaceexample___c_h.html#a387ddeaf6278db4267199a809fbb2d3c">product_matrix</a>[0,0], 2)</td>
+          <td class="memname">tuple example_CH.decomposition_error = (np.real(np.trace(<a class="el" href="namespaceexample___c_h.html#acbb72957797b533367c7401734dde9bd">product_matrix</a>)))/2</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00124">124</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00127">127</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
@@ -200,23 +198,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00129">129</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
-
-</div>
-</div>
-<a id="a9caea6e61b3d37a2a2ed5aec74b9ef3b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a9caea6e61b3d37a2a2ed5aec74b9ef3b">&#9670;&nbsp;</a></span>finalize_decomp</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">example_CH.finalize_decomp</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00094">94</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00132">132</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
@@ -232,7 +214,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00129">129</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00132">132</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
@@ -264,7 +246,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00129">129</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00132">132</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
@@ -280,7 +262,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00113">113</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00115">115</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
@@ -312,39 +294,39 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00129">129</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00132">132</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
-<a id="a06a73871caa75b1f4bb1a10e214d782b"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a06a73871caa75b1f4bb1a10e214d782b">&#9670;&nbsp;</a></span>prepare_export</h2>
+<a id="a50e3f7a62947cd47f9c236e6904f6490"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a50e3f7a62947cd47f9c236e6904f6490">&#9670;&nbsp;</a></span>phase</h2>
 
 <div class="memitem">
 <div class="memproto">
       <table class="memname">
         <tr>
-          <td class="memname">example_CH.prepare_export</td>
-        </tr>
-      </table>
-</div><div class="memdoc">
-
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00094">94</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
-
-</div>
-</div>
-<a id="a387ddeaf6278db4267199a809fbb2d3c"></a>
-<h2 class="memtitle"><span class="permalink"><a href="#a387ddeaf6278db4267199a809fbb2d3c">&#9670;&nbsp;</a></span>product_matrix</h2>
-
-<div class="memitem">
-<div class="memproto">
-      <table class="memname">
-        <tr>
-          <td class="memname">example_CH.product_matrix = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(<a class="el" href="namespaceexample___c_h.html#afeb5af9d406c966cffff656f1410a4db">Umtx</a>, decomposed_matrix.conj().T)</td>
+          <td class="memname">example_CH.phase = np.angle(<a class="el" href="namespaceexample___c_h.html#acbb72957797b533367c7401734dde9bd">product_matrix</a>[0,0])</td>
         </tr>
       </table>
 </div><div class="memdoc">
 
 <p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00122">122</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+
+</div>
+</div>
+<a id="acbb72957797b533367c7401734dde9bd"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#acbb72957797b533367c7401734dde9bd">&#9670;&nbsp;</a></span>product_matrix</h2>
+
+<div class="memitem">
+<div class="memproto">
+      <table class="memname">
+        <tr>
+          <td class="memname">int example_CH.product_matrix = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(<a class="el" href="namespaceexample___c_h.html#afeb5af9d406c966cffff656f1410a4db">Umtx</a>,decomposed_matrix.conj().T)</td>
+        </tr>
+      </table>
+</div><div class="memdoc">
+
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00121">121</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
@@ -376,7 +358,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00097">97</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00099">99</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
@@ -392,7 +374,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00115">115</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00117">117</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
@@ -408,7 +390,7 @@ Variables</h2></td></tr>
       </table>
 </div><div class="memdoc">
 
-<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00094">94</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
+<p class="definition">Definition at line <a class="el" href="example___c_h_8py_source.html#l00132">132</a> of file <a class="el" href="example___c_h_8py_source.html">example_CH.py</a>.</p>
 
 </div>
 </div>
@@ -431,7 +413,7 @@ Variables</h2></td></tr>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:49 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Mar 20 2022 10:31:21 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

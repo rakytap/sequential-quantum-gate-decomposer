@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -80,16 +80,14 @@ Functions</h2></td></tr>
 Variables</h2></td></tr>
 <tr class="memitem:a27db2d2a618c7cbe8cc3a70b43c2a9ef"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a27db2d2a618c7cbe8cc3a70b43c2a9ef">example_CH.backend</a> = Aer.get_backend('unitary_simulator')</td></tr>
 <tr class="separator:a27db2d2a618c7cbe8cc3a70b43c2a9ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a606c956fc0d3290a615053384b9b45fb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a606c956fc0d3290a615053384b9b45fb">example_CH.decomp</a> = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess=&quot;random&quot; )</td></tr>
+<tr class="memitem:a606c956fc0d3290a615053384b9b45fb"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a606c956fc0d3290a615053384b9b45fb">example_CH.decomp</a> = qgd_N_Qubit_Decomposition( Umtx.conj().T )</td></tr>
 <tr class="separator:a606c956fc0d3290a615053384b9b45fb"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a29cbd9cf080fc350dd852b9ab9bf791e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a29cbd9cf080fc350dd852b9ab9bf791e">example_CH.decomposed_matrix</a> = result.get_unitary(quantum_circuit)</td></tr>
+<tr class="memitem:a29cbd9cf080fc350dd852b9ab9bf791e"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a29cbd9cf080fc350dd852b9ab9bf791e">example_CH.decomposed_matrix</a> = np.asarray( result.get_unitary(quantum_circuit) )</td></tr>
 <tr class="separator:a29cbd9cf080fc350dd852b9ab9bf791e"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a0d05ebf94bfaf5994635a12c6dac8c49"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a0d05ebf94bfaf5994635a12c6dac8c49">example_CH.decomposition_error</a> = LA.norm(product_matrix - np.identity(matrix_size)*product_matrix[0,0], 2)</td></tr>
-<tr class="separator:a0d05ebf94bfaf5994635a12c6dac8c49"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5d7dcfbb5d114494a8d24245a42f1d70"><td class="memItemLeft" align="right" valign="top">tuple&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a5d7dcfbb5d114494a8d24245a42f1d70">example_CH.decomposition_error</a> = (np.real(np.trace(product_matrix)))/2</td></tr>
+<tr class="separator:a5d7dcfbb5d114494a8d24245a42f1d70"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ac0aaf5a372f23a2d100907d4f6041777"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#ac0aaf5a372f23a2d100907d4f6041777">example_CH.filename</a></td></tr>
 <tr class="separator:ac0aaf5a372f23a2d100907d4f6041777"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a9caea6e61b3d37a2a2ed5aec74b9ef3b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a9caea6e61b3d37a2a2ed5aec74b9ef3b">example_CH.finalize_decomp</a></td></tr>
-<tr class="separator:a9caea6e61b3d37a2a2ed5aec74b9ef3b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a3c18761fcbcd841d818e7fe85d3ec41b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a3c18761fcbcd841d818e7fe85d3ec41b">example_CH.fold</a></td></tr>
 <tr class="separator:a3c18761fcbcd841d818e7fe85d3ec41b"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ab67ed57871c89c74bf4f50d495bd8262"><td class="memItemLeft" align="right" valign="top">dictionary&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#ab67ed57871c89c74bf4f50d495bd8262">example_CH.gate_structure</a> = { 4: <a class="el" href="custom__gate__structure__test_8cpp.html#acc6adab67517358320294cfc3947e793">create_custom_gate_structure</a>(4), 2: <a class="el" href="custom__gate__structure__test_8cpp.html#acc6adab67517358320294cfc3947e793">create_custom_gate_structure</a>(2)}</td></tr>
@@ -102,10 +100,10 @@ Variables</h2></td></tr>
 <tr class="separator:a586bae87eff1476f2640ac9f1abdb204"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0fece0183323fd0d2df383bbb6e8f8a5"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a0fece0183323fd0d2df383bbb6e8f8a5">example_CH.output</a></td></tr>
 <tr class="separator:a0fece0183323fd0d2df383bbb6e8f8a5"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a06a73871caa75b1f4bb1a10e214d782b"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a06a73871caa75b1f4bb1a10e214d782b">example_CH.prepare_export</a></td></tr>
-<tr class="separator:a06a73871caa75b1f4bb1a10e214d782b"><td class="memSeparator" colspan="2">&#160;</td></tr>
-<tr class="memitem:a387ddeaf6278db4267199a809fbb2d3c"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a387ddeaf6278db4267199a809fbb2d3c">example_CH.product_matrix</a> = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(Umtx, decomposed_matrix.conj().T)</td></tr>
-<tr class="separator:a387ddeaf6278db4267199a809fbb2d3c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a50e3f7a62947cd47f9c236e6904f6490"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a50e3f7a62947cd47f9c236e6904f6490">example_CH.phase</a> = np.angle(product_matrix[0,0])</td></tr>
+<tr class="separator:a50e3f7a62947cd47f9c236e6904f6490"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:acbb72957797b533367c7401734dde9bd"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#acbb72957797b533367c7401734dde9bd">example_CH.product_matrix</a> = <a class="el" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce">np.dot</a>(Umtx,decomposed_matrix.conj().T)</td></tr>
+<tr class="separator:acbb72957797b533367c7401734dde9bd"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a6cb4cedb768ea4df894422b426e721ef"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#a6cb4cedb768ea4df894422b426e721ef">example_CH.qbit_num</a> = 2</td></tr>
 <tr class="separator:a6cb4cedb768ea4df894422b426e721ef"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae6f06609652d3f4b2fd66ab53d1bcaf3"><td class="memItemLeft" align="right" valign="top">&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="namespaceexample___c_h.html#ae6f06609652d3f4b2fd66ab53d1bcaf3">example_CH.quantum_circuit</a> = decomp.get_Quantum_Circuit()</td></tr>
@@ -124,7 +122,7 @@ Variables</h2></td></tr>
 </div></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:48 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Mar 20 2022 10:31:20 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

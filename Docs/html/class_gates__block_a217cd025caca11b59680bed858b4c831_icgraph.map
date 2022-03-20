@@ -1,7 +1,10 @@
 <map id="Gates_block::get_involved_qubits" name="Gates_block::get_involved_qubits">
-<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="228,89,391,130"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="439,57,601,98"/>
-<area shape="rect" id="node4" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="705,5,756,32"/>
-<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="649,57,812,98"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="649,122,812,163"/>
+<area shape="rect" id="node2" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="240,118,403,159"/>
+<area shape="rect" id="node7" href="$_n___qubit___decomposition__adaptive__general_8cpp.html#a9aa92b989b3e18eabc3ca0ed0d46c327" title="are_two_qubits_independent" alt="" coords="228,191,415,217"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="469,57,632,98"/>
+<area shape="rect" id="node4" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="743,5,793,32"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="687,57,849,98"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="687,122,849,163"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition__adaptive__general.html#a5cc102240c9e53b1fd6aad9ca795cf16" title="??????????????? " alt="" coords="469,176,632,232"/>
+<area shape="rect" id="node9" href="$class_n___qubit___decomposition__adaptive__general.html#ac260172fe0d33b1d52a9588c3ad14cd8" title="??????????????? " alt="" coords="463,256,639,312"/>
 </map>

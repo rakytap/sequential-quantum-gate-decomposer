@@ -1,6 +1,11 @@
 <map id="Decomposition_Base" name="Decomposition_Base">
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT and U3 gate..." alt="" coords="5,229,168,256"/>
-<area shape="rect" id="node5" href="$class_sub___matrix___decomposition.html" title="A class responsible for the disentanglement of one qubit from the others. " alt="" coords="193,229,373,256"/>
-<area shape="rect" id="node2" href="$class_gates__block.html" title="A class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="137,80,231,107"/>
-<area shape="rect" id="node3" href="$class_gate.html" title="Base class for the representation of general gate operations. " alt="" coords="159,5,209,32"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition___base.html" title="A base class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT and U3 gate..." alt="" coords="173,304,373,331"/>
+<area shape="rect" id="node10" href="$class_sub___matrix___decomposition.html" title="A class responsible for the disentanglement of one qubit from the others. " alt="" coords="398,304,578,331"/>
+<area shape="rect" id="node2" href="$class_gates__block.html" title="A class responsible for grouping two&#45;qubit (CNOT,CZ,CH) and one&#45;qubit gates into layers. " alt="" coords="333,155,427,181"/>
+<area shape="rect" id="node3" href="$class_gate.html" title="Base class for the representation of general gate operations. " alt="" coords="355,80,405,107"/>
+<area shape="rect" id="node4" href="$classlogging.html" title="A class containing basic methods for setting up the verbosity level. " alt="" coords="349,5,411,32"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html" title="A base class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT and U3 gate..." alt="" coords="5,386,168,413"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition__adaptive.html" title="A base class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT and U3 gate..." alt="" coords="192,379,355,420"/>
+<area shape="rect" id="node9" href="$class_n___qubit___decomposition__custom.html" title="A base class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT and U3 gate..." alt="" coords="379,379,541,420"/>
+<area shape="rect" id="node8" href="$class_n___qubit___decomposition__adaptive__general.html" title="A base class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT and U3 gate..." alt="" coords="192,468,355,509"/>
 </map>

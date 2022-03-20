@@ -1,5 +1,7 @@
-\form#0:$U U^\dagger=I$
-\form#1:$U$
-\form#2:$U^\dagger$
-\form#3:$ U-U_{approx} $
-\form#4:$ U_{approx} $
+\form#0:$ U-U_{approx} $
+\form#1:$ U_{approx} $
+\form#2:$U U^\dagger=I$
+\form#3:$U$
+\form#4:$U^\dagger$
+\form#5:$4.31\times10^-8$
+\form#6:$4.31\times10^{-8}$

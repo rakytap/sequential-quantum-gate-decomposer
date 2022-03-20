@@ -1,7 +1,0 @@
-<map id="Gate.h" name="Gate.h">
-<area shape="rect" id="node2" href="$__skbuild_2linux-x86__64-3_86_2cmake-install_2gates_2include_2_c_h_8h.html" title="CH.h" alt="" coords="5,80,56,107"/>
-<area shape="rect" id="node3" href="$__skbuild_2linux-x86__64-3_86_2cmake-install_2gates_2include_2_c_n_o_t_8h.html" title="CNOT.h" alt="" coords="80,80,149,107"/>
-<area shape="rect" id="node4" href="$__skbuild_2linux-x86__64-3_86_2cmake-install_2gates_2include_2_c_z_8h.html" title="CZ.h" alt="" coords="174,80,223,107"/>
-<area shape="rect" id="node5" href="$__skbuild_2linux-x86__64-3_86_2cmake-install_2gates_2include_2_gates__block_8h.html" title="Gates_block.h" alt="" coords="247,80,353,107"/>
-<area shape="rect" id="node6" href="$__skbuild_2linux-x86__64-3_86_2cmake-install_2gates_2include_2_u3_8h.html" title="U3.h" alt="" coords="377,80,426,107"/>
-</map>

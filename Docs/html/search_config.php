@@ -16,7 +16,7 @@ $translator = array(
   'search_matches' => "Matches:",
   'search' => "Search",
   'split_bar' => "",
-  'logo' => "Generated on Sat Aug 28 2021 21:17:49 for Sequential Quantum Gate Decomposer by&#160;\n<a href=\"http://www.doxygen.org/index.html\">\n<img class=\"footer\" src=\"doxygen.png\" alt=\"doxygen\"/></a> 1.8.13 ",
+  'logo' => "Generated on Sun Mar 20 2022 10:31:22 for Sequential Quantum Gate Decomposer by&#160;\n<a href=\"http://www.doxygen.org/index.html\">\n<img class=\"footer\" src=\"doxygen.png\" alt=\"doxygen\"/></a> 1.8.13 ",
 );
 
 </script>

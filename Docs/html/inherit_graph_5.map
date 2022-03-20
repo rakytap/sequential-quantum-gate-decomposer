@@ -1,3 +1,4 @@
 <map id="Graphical Class Hierarchy" name="Graphical Class Hierarchy">
-<area shape="rect" id="node1" href="$classfunctor__grad.html" title="Function operator class to calculate the gradient components of the cost function in parallel..." alt="" coords="5,5,156,47"/>
+<area shape="rect" id="node1" href="$classmatrix__base.html" title="matrix_base\&lt; double \&gt;" alt="" coords="5,5,157,32"/>
+<area shape="rect" id="node2" href="$class_matrix__real.html" title="Class to store data of complex arrays and its properties. " alt="" coords="205,5,291,32"/>
 </map>

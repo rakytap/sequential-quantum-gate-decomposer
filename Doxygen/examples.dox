@@ -30,7 +30,7 @@ The expected outcome of the test program **decomposition_test.cpp** should look 
 
 @image latex example_result_resized.png
 \htmlonly <style>div.image img[src="decomposition_test_result.png"]{width:1000px;}</style> \endhtmlonly 
-@image html decomposition_test_result.png "Expected result for the 4th IBM Challenge problem"
+@image html decomposition_test_result.png "Expected result for the shipped test case"
 
 The output informs us that the 4-qubit unitary was decomposed by using 75 CNOT gates with decomposition error 0.000316.
 These information are followed by the list of the decomposing operations.
@@ -189,25 +189,6 @@ Finally, we start to decompose the unitary and show the results.
 </div>
 
 
-
-
-# Compiling and linking against the@QGD libraries
-
-To successfuly compile a software using the @QGD package, one need to provide the include path of the header files for the compiler. 
-This can be done by providing the compiler flag **-Ipath/to/qgd/include** at compilation time.
-After a successful installation described at @index the header files are copied in to the **include** directory in the @QGD installation location.
-
-Similarly, the @QGD libraries are installed into the directory **path/to/qgd/lib(64)**. 
-In order to link against the installed libraries located in **path/to/qgd/lib(64)**, you must either use libtool, and specify the full pathname of the library, 
-or use the -Lpath/to/qgd/lib(64) flag during linking and do at least one of the following:
-   - add path/to/qgd/lib(64) to the 'LD_LIBRARY_PATH' environment variable
-     during execution
-   - add path/to/qgd/lib(64) to the 'LD_RUN_PATH' environment variable
-     during linking
-   - use the '-Wl,-rpath -Wl,path/to/qgd/lib(64)' linker flag
-   - have your system administrator add path/to/qgd/lib(64) to '/etc/ld.so.conf'
-
-Another option to build portable standalone application is to link against static library of the @QGD named **libqgd.a** located in the directory **path/to/qgd/lib(64)**.
 
 
 

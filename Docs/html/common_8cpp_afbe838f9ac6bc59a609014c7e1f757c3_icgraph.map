@@ -1,23 +1,10 @@
 <map id="qgd_free" name="qgd_free">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#ae0c67b0a277454c77e0b50e3dfd0ee84" title="Destructor of the class. " alt="" coords="136,5,295,47"/>
-<area shape="rect" id="node3" href="$class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="591,129,750,171"/>
-<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1456,392,1619,433"/>
-<area shape="rect" id="node9" href="$class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="143,238,288,294"/>
-<area shape="rect" id="node11" href="$class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="353,188,533,229"/>
-<area shape="rect" id="node12" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and gates of the sub&#45;decomposition processes..." alt="" coords="808,313,987,369"/>
-<area shape="rect" id="node13" href="$class_random___unitary.html#ab2efe5039bf7b2f0424d4bce4e3c66b4" title="Call to create a random unitary. " alt="" coords="125,71,305,112"/>
-<area shape="rect" id="node15" href="$class_u3.html#a0ce404f4cd63bc845a9379e7fc532c90" title="Destructor of the class. " alt="" coords="181,622,250,649"/>
-<area shape="rect" id="node16" href="$class_u3.html#a046fa59a3a019a2d9cc6d30636c75148" title="Determine the base indices corresponding to the target qubit states |0&gt; and |1&gt; " alt="" coords="147,389,284,431"/>
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1035,251,1197,292"/>
-<area shape="rect" id="node5" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1301,111,1352,138"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1245,309,1408,351"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="1245,392,1408,433"/>
-<area shape="rect" id="node10" href="$class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="816,247,979,288"/>
-<area shape="rect" id="node14" href="$class_random___unitary.html#a5665119bdbf3c97e6c34c990b07e7d0f" title="Generates a unitary matrix from parameters parameters according to arXiv:1303:5904v1. " alt="" coords="353,71,533,112"/>
-<area shape="rect" id="node17" href="$class_u3.html#a3fbe983c050339a247e05a2eea070542" title="Constructor of the class. " alt="" coords="412,417,475,443"/>
-<area shape="rect" id="node18" href="$class_u3.html#abad31b6948215812ec2cfdaea8a2e1bf" title="Call to set the number of qubits spanning the matrix of the gate. " alt="" coords="382,366,505,393"/>
-<area shape="rect" id="node20" href="$class_u3.html#a53b0a784fbf2b26a9bcbd2502e849670" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="380,490,507,517"/>
-<area shape="rect" id="node19" href="$class_gates__block.html#ad1d8c9cd483808309155b0fa34de3d35" title="Set the number of qubits spanning the matrix of the gates stored in the block of gates. " alt="" coords="581,430,760,457"/>
-<area shape="rect" id="node21" href="$class_gates__block.html#abb6ba518014d3602c13b5ae52bd4ce23" title="Call to reorder the qubits in the matrix of the gates. " alt="" coords="600,505,741,547"/>
-<area shape="rect" id="node22" href="$class_decomposition___base.html#a5d5c560ad2269f5594a70f47aa1831ed" title="Call to reorder the qubits in the matrix of the gate. " alt="" coords="825,451,970,492"/>
+<area shape="rect" id="node2" href="$class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="136,64,295,105"/>
+<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="792,5,955,47"/>
+<area shape="rect" id="node8" href="$class_random___unitary.html#ab2efe5039bf7b2f0424d4bce4e3c66b4" title="Call to create a random unitary. " alt="" coords="125,159,305,200"/>
+<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="362,64,525,105"/>
+<area shape="rect" id="node4" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="637,195,688,222"/>
+<area shape="rect" id="node5" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="581,64,744,105"/>
+<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="581,129,744,171"/>
+<area shape="rect" id="node9" href="$class_random___unitary.html#a5665119bdbf3c97e6c34c990b07e7d0f" title="Generates a unitary matrix from parameters parameters according to arXiv:1303:5904v1. " alt="" coords="353,217,533,259"/>
 </map>

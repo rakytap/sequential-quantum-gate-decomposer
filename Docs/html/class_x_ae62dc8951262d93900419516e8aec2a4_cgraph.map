@@ -1,0 +1,9 @@
+<map id="X::get_matrix" name="X::get_matrix">
+<area shape="rect" id="node2" href="$common_8cpp.html#a478212437ad8647d21171d23c98ae52a" title="Call to create an identity matrix. " alt="" coords="151,56,257,83"/>
+<area shape="rect" id="node5" href="$class_x.html#a2dfcce44a3e7dfb8a5591ee7e6419fb0" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="161,157,247,184"/>
+<area shape="rect" id="node6" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="332,107,427,133"/>
+<area shape="rect" id="node8" href="$class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="157,208,251,235"/>
+<area shape="rect" id="node3" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="305,5,453,32"/>
+<area shape="rect" id="node4" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="319,56,440,83"/>
+<area shape="rect" id="node7" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="334,181,425,208"/>
+</map>

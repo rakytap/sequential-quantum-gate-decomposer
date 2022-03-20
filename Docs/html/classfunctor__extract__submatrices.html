@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -51,6 +51,7 @@ $(function() {
   <div class="summary">
 <a href="classfunctor__extract__submatrices-members.html">List of all members</a> &#124;
 <a href="#pub-methods">Public Member Functions</a> &#124;
+<a href="#pub-attribs">Public Attributes</a> &#124;
 <a href="#pro-attribs">Protected Attributes</a>  </div>
   <div class="headertitle">
 <div class="title">functor_extract_submatrices Class Reference</div>  </div>
@@ -61,6 +62,14 @@ $(function() {
  <a href="classfunctor__extract__submatrices.html#details">More...</a></p>
 
 <p><code>#include &lt;<a class="el" href="_sub___matrix___decomposition___cost___function_8h_source.html">Sub_Matrix_Decomposition_Cost_Function.h</a>&gt;</code></p>
+<div class="dynheader">
+Inheritance diagram for functor_extract_submatrices:</div>
+<div class="dyncontent">
+<div class="center"><img src="classfunctor__extract__submatrices__inherit__graph.png" border="0" usemap="#functor__extract__submatrices_inherit__map" alt="Inheritance graph"/></div>
+<map name="functor__extract__submatrices_inherit__map" id="functor__extract__submatrices_inherit__map">
+<area shape="rect" id="node2" href="classlogging.html" title="A class containing basic methods for setting up the verbosity level. " alt="" coords="67,5,130,32"/>
+</map>
+<center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
@@ -70,6 +79,21 @@ Public Member Functions</h2></td></tr>
 <tr class="memitem:a4eedbdeab0918514d764bfab7baff2ac"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classfunctor__extract__submatrices.html#a4eedbdeab0918514d764bfab7baff2ac">operator()</a> (tbb::blocked_range&lt; <a class="el" href="classsize__t.html">size_t</a> &gt; r) const</td></tr>
 <tr class="memdesc:a4eedbdeab0918514d764bfab7baff2ac"><td class="mdescLeft">&#160;</td><td class="mdescRight">Operator to extract the sumbatrix indexed by submtx_idx.  <a href="#a4eedbdeab0918514d764bfab7baff2ac">More...</a><br /></td></tr>
 <tr class="separator:a4eedbdeab0918514d764bfab7baff2ac"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a2cfde5a476c2b54c6b1ecbd396735cc2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2">print</a> (const std::stringstream &amp;sstream, int verbose_level=1)</td></tr>
+<tr class="memdesc:a2cfde5a476c2b54c6b1ecbd396735cc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to print output messages in the function of the verbosity level.  <a href="#a2cfde5a476c2b54c6b1ecbd396735cc2">More...</a><br /></td></tr>
+<tr class="separator:a2cfde5a476c2b54c6b1ecbd396735cc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b3fe50800d8917a791b5f854f755b0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classlogging.html#a5b3fe50800d8917a791b5f854f755b0e">set_verbose</a> (int verbose_in)</td></tr>
+<tr class="memdesc:a5b3fe50800d8917a791b5f854f755b0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to set the verbose attribute.  <a href="#a5b3fe50800d8917a791b5f854f755b0e">More...</a><br /></td></tr>
+<tr class="separator:a5b3fe50800d8917a791b5f854f755b0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
+</table><table class="memberdecls">
+<tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-attribs"></a>
+Public Attributes</h2></td></tr>
+<tr class="memitem:ac633ce153fc993365e6df971f6af73d5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classbool.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classlogging.html#ac633ce153fc993365e6df971f6af73d5">debug</a></td></tr>
+<tr class="memdesc:ac633ce153fc993365e6df971f6af73d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Logical variable. Set true to write output messages to the 'debug.txt' file.  <a href="#ac633ce153fc993365e6df971f6af73d5">More...</a><br /></td></tr>
+<tr class="separator:ac633ce153fc993365e6df971f6af73d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a059334537e1d2e0c94b22a05881ef7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classlogging.html#a6a059334537e1d2e0c94b22a05881ef7">verbose</a></td></tr>
+<tr class="memdesc:a6a059334537e1d2e0c94b22a05881ef7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the verbosity level of the output messages.  <a href="#a6a059334537e1d2e0c94b22a05881ef7">More...</a><br /></td></tr>
+<tr class="separator:a6a059334537e1d2e0c94b22a05881ef7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table><table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pro-attribs"></a>
 Protected Attributes</h2></td></tr>
@@ -130,7 +154,7 @@ Protected Attributes</h2></td></tr>
 </dl>
 <dl class="section return"><dt>Returns</dt><dd>Returns with the instance of the class. </dd></dl>
 
-<p class="definition">Definition at line <a class="el" href="_sub___matrix___decomposition___cost___function_8cpp_source.html#l00085">85</a> of file <a class="el" href="_sub___matrix___decomposition___cost___function_8cpp_source.html">Sub_Matrix_Decomposition_Cost_Function.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_sub___matrix___decomposition___cost___function_8cpp_source.html#l00088">88</a> of file <a class="el" href="_sub___matrix___decomposition___cost___function_8cpp_source.html">Sub_Matrix_Decomposition_Cost_Function.cpp</a>.</p>
 
 </div>
 </div>
@@ -160,7 +184,7 @@ Protected Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="_sub___matrix___decomposition___cost___function_8cpp_source.html#l00097">97</a> of file <a class="el" href="_sub___matrix___decomposition___cost___function_8cpp_source.html">Sub_Matrix_Decomposition_Cost_Function.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="_sub___matrix___decomposition___cost___function_8cpp_source.html#l00100">100</a> of file <a class="el" href="_sub___matrix___decomposition___cost___function_8cpp_source.html">Sub_Matrix_Decomposition_Cost_Function.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
@@ -168,12 +192,140 @@ Here is the call graph for this function:</div>
 <map name="classfunctor__extract__submatrices_a4eedbdeab0918514d764bfab7baff2ac_cgraph" id="classfunctor__extract__submatrices_a4eedbdeab0918514d764bfab7baff2ac_cgraph">
 <area shape="rect" id="node2" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="240,5,388,32"/>
 <area shape="rect" id="node3" href="class_matrix.html#a48f020daf4256cd907585f475bd03e89" title="Call to check the array for NaN entries. " alt="" coords="267,56,361,83"/>
+<area shape="rect" id="node4" href="classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="267,107,361,133"/>
+</map>
+</div>
+
+</div>
+</div>
+<a id="a2cfde5a476c2b54c6b1ecbd396735cc2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2cfde5a476c2b54c6b1ecbd396735cc2">&#9670;&nbsp;</a></span>print()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void logging::print </td>
+          <td>(</td>
+          <td class="paramtype">const std::stringstream &amp;&#160;</td>
+          <td class="paramname"><em>sstream</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>verbose_level</em> = <code>1</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Call to print output messages in the function of the verbosity level. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sstream</td><td>The stringstream input to store the output messages. </td></tr>
+    <tr><td class="paramname">verbose_level</td><td>Integer input. High level means write more to the standart output, 0 means write nothing. The default value is set to 1. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="logging_8cpp_source.html#l00052">52</a> of file <a class="el" href="logging_8cpp_source.html">logging.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a5b3fe50800d8917a791b5f854f755b0e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5b3fe50800d8917a791b5f854f755b0e">&#9670;&nbsp;</a></span>set_verbose()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void logging::set_verbose </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>verbose_in</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Call to set the verbose attribute. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">verbose_in</td><td>Integer variable. Set the number to specify the verbosity level for output messages. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="logging_8cpp_source.html#l00082">82</a> of file <a class="el" href="logging_8cpp_source.html">logging.cpp</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="classlogging_a5b3fe50800d8917a791b5f854f755b0e_icgraph.png" border="0" usemap="#classlogging_a5b3fe50800d8917a791b5f854f755b0e_icgraph" alt=""/></div>
+<map name="classlogging_a5b3fe50800d8917a791b5f854f755b0e_icgraph" id="classlogging_a5b3fe50800d8917a791b5f854f755b0e_icgraph">
+<area shape="rect" id="node2" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="263,5,313,32"/>
+<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="207,107,369,149"/>
+<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="450,49,613,90"/>
+<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="450,217,613,258"/>
+<area shape="rect" id="node8" href="class_n___qubit___decomposition__adaptive.html#a89f4c47432abe740d43aa12842558282" title="?????????????? " alt="" coords="193,224,383,280"/>
+<area shape="rect" id="node10" href="class_n___qubit___decomposition__adaptive.html#a28ca0675bb44bba82e7ee92f71be415b" title="?????????????? " alt="" coords="207,304,369,360"/>
+<area shape="rect" id="node11" href="class_n___qubit___decomposition__adaptive.html#a5a70c5e495cf4e10754c50ce1082ad66" title="??????????????? " alt="" coords="201,384,375,440"/>
+<area shape="rect" id="node12" href="class_n___qubit___decomposition__adaptive__general.html#aab72db9bfa3bbd5134e93d9604acf1c2" title="Start the disentanglig process of the unitary. " alt="" coords="207,464,369,520"/>
+<area shape="rect" id="node4" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="506,115,557,141"/>
+<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="680,187,843,229"/>
+<area shape="rect" id="node9" href="class_n___qubit___decomposition__adaptive.html#a486c74fb4056dea78878593180d1415e" title="Start the disentanglig process of the unitary. " alt="" coords="431,297,632,338"/>
 </map>
 </div>
 
 </div>
 </div>
 <h2 class="groupheader">Member Data Documentation</h2>
+<a id="ac633ce153fc993365e6df971f6af73d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac633ce153fc993365e6df971f6af73d5">&#9670;&nbsp;</a></span>debug</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classbool.html">bool</a> logging::debug</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Logical variable. Set true to write output messages to the 'debug.txt' file. </p>
+
+<p class="definition">Definition at line <a class="el" href="logging_8h_source.html#l00048">48</a> of file <a class="el" href="logging_8h_source.html">logging.h</a>.</p>
+
+</div>
+</div>
 <a id="a2872334630e02636219c33b6b71a385f"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a2872334630e02636219c33b6b71a385f">&#9670;&nbsp;</a></span>matrix</h2>
 
@@ -226,6 +378,32 @@ Here is the call graph for this function:</div>
 
 </div>
 </div>
+<a id="a6a059334537e1d2e0c94b22a05881ef7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a059334537e1d2e0c94b22a05881ef7">&#9670;&nbsp;</a></span>verbose</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int logging::verbose</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Set the verbosity level of the output messages. </p>
+
+<p class="definition">Definition at line <a class="el" href="logging_8h_source.html#l00045">45</a> of file <a class="el" href="logging_8h_source.html">logging.h</a>.</p>
+
+</div>
+</div>
 <hr/>The documentation for this class was generated from the following files:<ul>
 <li><a class="el" href="_sub___matrix___decomposition___cost___function_8h_source.html">Sub_Matrix_Decomposition_Cost_Function.h</a></li>
 <li><a class="el" href="_sub___matrix___decomposition___cost___function_8cpp_source.html">Sub_Matrix_Decomposition_Cost_Function.cpp</a></li>
@@ -233,7 +411,7 @@ Here is the call graph for this function:</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:48 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Mar 20 2022 10:31:21 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

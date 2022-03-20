@@ -1,7 +1,0 @@
-<map id="get_gate" name="get_gate">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#ae2324cca8c2d924f95a1b32d32bb3ded" title="Call to prepare the optimized gates to export — OBSOLETE. " alt="" coords="125,93,271,134"/>
-<area shape="rect" id="node3" href="$class_gate.html#a5498d67b28027022c72b8b15d47d55cc" title="Call to get the type of the operation. " alt="" coords="365,5,470,32"/>
-<area shape="rect" id="node4" href="$class_gate.html#a676a838ffca280c7af7c1f9ad15cd2ec" title="Call to get the index of the target qubit. " alt="" coords="346,85,489,112"/>
-<area shape="rect" id="node5" href="$class_gate.html#a7460c74e6969fa187237679879ccfe8d" title="Call to get the index of the control qubit. " alt="" coords="343,137,491,164"/>
-<area shape="rect" id="node6" href="$class_u3.html#a7ebc4a0bf0eb7c4d37034d04ed787aaa" title="Call to get the final optimized parameters of the gate. " alt="" coords="319,192,516,219"/>
-</map>

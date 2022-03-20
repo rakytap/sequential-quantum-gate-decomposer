@@ -1,9 +1,0 @@
-<map id="N_Qubit_Decomposition::solve_layer_optimization_problem" name="N_Qubit_Decomposition::solve_layer_optimization_problem">
-<area shape="rect" id="node2" href="$common_8cpp.html#aa0242605afa8a983a22aa1165cea5979" title="custom defined memory allocation function. " alt="" coords="272,5,356,32"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a975b868302471a7b3f623f55384fc973" title="The optimization problem of the final optimization. " alt="" coords="233,57,395,98"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#afa5445b98f74d661a50a85c1240546fd" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="223,122,405,163"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#adf6b02469b89a561d0c53b08f1f8ceb3" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="454,144,617,200"/>
-<area shape="rect" id="node4" href="$class_decomposition___base.html#a9f0f0dd8c94cb84fc2dbce4d785dddbb" title="Calculate the transformed matrix resulting by an array of gates on the matrix Umtx. " alt="" coords="453,13,617,54"/>
-<area shape="rect" id="node5" href="$_n___qubit___decomposition___cost___function_8h.html#aa5db632f7e7078d0e9bf48b22fa7525d" title="Call co calculate the cost function during the final optimization process. " alt="" coords="473,79,598,105"/>
-<area shape="rect" id="node8" href="$class_gates__block.html#ac021a051f25e4112f355aef65bad2612" title="Call to get the number of free parameters. " alt="" coords="665,159,881,185"/>
-</map>

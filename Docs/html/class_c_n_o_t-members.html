@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -55,33 +55,40 @@ $(function() {
 
 <p>This is the complete list of members for <a class="el" href="class_c_n_o_t.html">CNOT</a>, including all inherited members.</p>
 <table class="directory">
-  <tr class="even"><td class="entry"><a class="el" href="class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f">clone</a>()</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="class_c_n_o_t.html#abedeff9e145671e081d2bf140ddb2cfc">CNOT</a>()</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_c_n_o_t.html#a9e46511d49d6dc36e04bbd945d3483e4">CNOT</a>(int qbit_num_in, int target_qbit_in, int control_qbit_in)</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="class_c_n_o_t.html#a8e8f82f7f7d5378268282553148d4660">composite_cnot</a>()</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_c_n_o_t.html#abfd67c3339daac76c24234e508765b1c">apply_from_right</a>(Matrix &amp;input)</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
+  <tr><td class="entry"><a class="el" href="class_c_n_o_t.html#a94a64dbf168d0485821ee656fc2fd3f0">apply_to</a>(Matrix &amp;input)</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_gate.html#a6e96411cb4584ecbe54be385bef4d401">apply_to_list</a>(std::vector&lt; Matrix &gt; &amp;input)</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_c_n_o_t.html#adaf82830347d53a38f83cc7d993f923f">clone</a>()</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_c_n_o_t.html#abedeff9e145671e081d2bf140ddb2cfc">CNOT</a>()</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_c_n_o_t.html#a9e46511d49d6dc36e04bbd945d3483e4">CNOT</a>(int qbit_num_in, int target_qbit_in, int control_qbit_in)</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_gate.html#a238bd99f7983493755c7a60398f81066">control_qbit</a></td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
-  <tr><td class="entry"><a class="el" href="class_gate.html#a4fc24ecebc0ca8252bf7ab96a705e58a">Gate</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_gate.html#a3701035bb4fda32c733c1b9883505712">Gate</a>(int qbit_num_in)</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="class_gate.html#a7460c74e6969fa187237679879ccfe8d">get_control_qbit</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1">get_matrix</a>()</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce">get_parameter_num</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_gate.html#a2ac7692e9764e82104014f1bbbc828fa">get_qbit_num</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
-  <tr><td class="entry"><a class="el" href="class_gate.html#a676a838ffca280c7af7c1f9ad15cd2ec">get_target_qbit</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_gate.html#a5498d67b28027022c72b8b15d47d55cc">get_type</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="classlogging.html#ac633ce153fc993365e6df971f6af73d5">debug</a></td><td class="entry"><a class="el" href="classlogging.html">logging</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_gate.html#a4fc24ecebc0ca8252bf7ab96a705e58a">Gate</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_gate.html#a3701035bb4fda32c733c1b9883505712">Gate</a>(int qbit_num_in)</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_gate.html#a7460c74e6969fa187237679879ccfe8d">get_control_qbit</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_c_n_o_t.html#a02211a770a8927303b6d2e17db906fd1">get_matrix</a>()</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce">get_parameter_num</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_gate.html#a2ac7692e9764e82104014f1bbbc828fa">get_qbit_num</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_gate.html#a676a838ffca280c7af7c1f9ad15cd2ec">get_target_qbit</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_gate.html#a5498d67b28027022c72b8b15d47d55cc">get_type</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classlogging.html#a9fc3278b328fdec4922315d85f772489">logging</a>()</td><td class="entry"><a class="el" href="classlogging.html">logging</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_gate.html#ae5d5db89285d157de0cf6dd61a5b1ded">matrix_size</a></td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_gate.html#a6309d13b6f810b8ee96dfabfd33f7120">parameter_num</a></td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
-  <tr><td class="entry"><a class="el" href="class_gate.html#a34e4c0d2b33764ec575928cac8089a93">qbit_num</a></td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_c_n_o_t.html#a3e2d8067000d9b3b905729a1a2bfbf7e">reorder_qubits</a>(std::vector&lt; int &gt; qbit_list)</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
-  <tr><td class="entry"><a class="el" href="class_gate.html#acd16cb1e6703717479558bcadbc26a2e">set_matrix</a>(Matrix input)</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418">set_qbit_num</a>(int qbit_num)</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2">print</a>(const std::stringstream &amp;sstream, int verbose_level=1)</td><td class="entry"><a class="el" href="classlogging.html">logging</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_gate.html#a34e4c0d2b33764ec575928cac8089a93">qbit_num</a></td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
+  <tr><td class="entry"><a class="el" href="class_c_n_o_t.html#a3e2d8067000d9b3b905729a1a2bfbf7e">reorder_qubits</a>(std::vector&lt; int &gt; qbit_list)</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_gate.html#acd16cb1e6703717479558bcadbc26a2e">set_matrix</a>(Matrix input)</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_c_n_o_t.html#a8272bf6e7ce6705a87d1ae9ef1e09418">set_qbit_num</a>(int qbit_num)</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="classlogging.html#a5b3fe50800d8917a791b5f854f755b0e">set_verbose</a>(int verbose_in)</td><td class="entry"><a class="el" href="classlogging.html">logging</a></td><td class="entry"></td></tr>
   <tr><td class="entry"><a class="el" href="class_gate.html#af6effe778ef3c2a9d50bec29f160274f">target_qbit</a></td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
   <tr class="even"><td class="entry"><a class="el" href="class_gate.html#ae95586f7c818a50c4d09c6662d04fae0">type</a></td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"><span class="mlabel">protected</span></td></tr>
-  <tr><td class="entry"><a class="el" href="class_c_n_o_t.html#a9074d4194dff57830d2495c245322b5b">~CNOT</a>()</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"></td></tr>
-  <tr class="even"><td class="entry"><a class="el" href="class_gate.html#aa04556acb1cdc5715e38ced8f28c6b27">~Gate</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
+  <tr><td class="entry"><a class="el" href="classlogging.html#a6a059334537e1d2e0c94b22a05881ef7">verbose</a></td><td class="entry"><a class="el" href="classlogging.html">logging</a></td><td class="entry"></td></tr>
+  <tr class="even"><td class="entry"><a class="el" href="class_c_n_o_t.html#a9074d4194dff57830d2495c245322b5b">~CNOT</a>()</td><td class="entry"><a class="el" href="class_c_n_o_t.html">CNOT</a></td><td class="entry"></td></tr>
+  <tr><td class="entry"><a class="el" href="class_gate.html#aa04556acb1cdc5715e38ced8f28c6b27">~Gate</a>()</td><td class="entry"><a class="el" href="class_gate.html">Gate</a></td><td class="entry"><span class="mlabel">virtual</span></td></tr>
 </table></div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:48 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Mar 20 2022 10:31:21 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

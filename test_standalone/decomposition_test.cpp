@@ -61,7 +61,7 @@ int main() {
 
   //! [few CNOT]
     // The number of qubits spanning the random unitary
-    int qbit_num = 2;
+    int qbit_num = 4;
 
     // the number of rows of the random unitary
     int matrix_size = Power_of_2(qbit_num);
@@ -96,7 +96,7 @@ int main() {
 //! [creating decomp class]
     // creating the class for the decomposition. Here Umtx_adj is the complex transposition of unitary Umtx
     N_Qubit_Decomposition cDecomposition =
-                   N_Qubit_Decomposition( Umtx_adj, qbit_num, /* optimize_layer_num= */ false, /* initial_guess= */ RANDOM );
+                  N_Qubit_Decomposition( Umtx_adj, qbit_num, /* optimize_layer_num= */ false, /* initial_guess= */ RANDOM );
 //! [creating decomp class]
 
 //! [set parameters]
@@ -109,7 +109,7 @@ int main() {
     // setting the maximal number of layers used in the decomposition
     std::map<int,int> num_of_layers;
     num_of_layers[2] = 3;
-    num_of_layers[3] = 16;
+    num_of_layers[3] = 12;
     num_of_layers[4] = 60;
     num_of_layers[5] = 240;
     num_of_layers[6] = 960;
@@ -124,10 +124,10 @@ int main() {
     cDecomposition.set_iteration_loops( num_of_iterations );
 
     // setting operation layer
-    cDecomposition.set_optimization_blocks( 1 );
+    cDecomposition.set_optimization_blocks( 20 );
 
     // setting the verbosity of the decomposition
-    cDecomposition.set_verbose( true );
+    cDecomposition.set_verbose( 3 );
 //! [set parameters]
 
     // setting the verbosity of the decomposition

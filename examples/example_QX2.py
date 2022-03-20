@@ -121,7 +121,7 @@ Umtx = unitary_group.rvs(matrix_size)
 
 ## [create decomp class]    
 # creating an instance of the C++ class
-decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="random" )
+decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T )
 ## [create decomp class]
 
 ## [reorder qubits]

@@ -1,12 +1,21 @@
 <map id="Decomposition_Base.h" name="Decomposition_Base.h">
-<area shape="rect" id="node2" href="$_decomposition___base_8cpp.html" title="Class containing basic methods for the decomposition process. " alt="" coords="146,87,315,114"/>
-<area shape="rect" id="node3" href="$_functor___get___operation___products_8cpp.html" title="Functor_Get_Operation\l_Products.cpp" alt="" coords="340,80,497,121"/>
-<area shape="rect" id="node4" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="428,169,601,196"/>
-<area shape="rect" id="node10" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="613,87,803,114"/>
-<area shape="rect" id="node5" href="$_functor___cost___function___gradient_8cpp.html" title="Methods for the parallel calculation of the gradient components of the cost functions (supporting TBB..." alt="" coords="795,244,952,285"/>
-<area shape="rect" id="node6" href="$_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="5,251,192,278"/>
-<area shape="rect" id="node7" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="217,244,407,285"/>
-<area shape="rect" id="node8" href="$custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="432,244,587,285"/>
-<area shape="rect" id="node9" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="611,251,770,278"/>
-<area shape="rect" id="node11" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="626,169,830,196"/>
+<area shape="rect" id="node2" href="$_decomposition___base_8cpp.html" title="Class containing basic methods for setting up the verbosity level. " alt="" coords="704,87,874,114"/>
+<area shape="rect" id="node3" href="$_n___qubit___decomposition___base_8h.html" title="N_Qubit_Decomposition\l_Base.h" alt="" coords="898,80,1061,121"/>
+<area shape="rect" id="node19" href="$_sub___matrix___decomposition_8h.html" title="Header file for a class responsible for the disentanglement of one qubit from the others..." alt="" coords="1103,87,1294,114"/>
+<area shape="rect" id="node4" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="1112,177,1285,203"/>
+<area shape="rect" id="node9" href="$_n___qubit___decomposition__adaptive_8h.html" title="N_Qubit_Decomposition\l_adaptive.h" alt="" coords="898,169,1061,211"/>
+<area shape="rect" id="node14" href="$_n___qubit___decomposition__custom_8h.html" title="N_Qubit_Decomposition\l_custom.h" alt="" coords="336,169,498,211"/>
+<area shape="rect" id="node18" href="$_n___qubit___decomposition___base_8cpp.html" title="N_Qubit_Decomposition\l_Base.cpp" alt="" coords="712,169,874,211"/>
+<area shape="rect" id="node5" href="$_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="1252,266,1438,293"/>
+<area shape="rect" id="node6" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="1463,259,1654,300"/>
+<area shape="rect" id="node7" href="$custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="1678,259,1833,300"/>
+<area shape="rect" id="node8" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="1068,266,1227,293"/>
+<area shape="rect" id="node10" href="$_n___qubit___decomposition__adaptive__general_8h.html" title="N_Qubit_Decomposition\l_adaptive_general.h" alt="" coords="830,259,993,300"/>
+<area shape="rect" id="node12" href="$qgd___n___qubit___decomposition__adaptive___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_adaptive_Wrapper.cpp" alt="" coords="875,348,1066,389"/>
+<area shape="rect" id="node13" href="$_n___qubit___decomposition__adaptive_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="644,259,806,300"/>
+<area shape="rect" id="node11" href="$_n___qubit___decomposition__adaptive__general_8cpp.html" title="N_Qubit_Decomposition\l_adaptive_general.cpp" alt="" coords="328,348,490,389"/>
+<area shape="rect" id="node15" href="$_n___qubit___decomposition__custom_8cpp.html" title="N_Qubit_Decomposition\l_custom.cpp" alt="" coords="26,259,189,300"/>
+<area shape="rect" id="node16" href="$qgd__python_2decomposition_2qgd___n___qubit___decomposition__custom___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_custom_Wrapper.cpp" alt="" coords="214,259,404,300"/>
+<area shape="rect" id="node17" href="$tmp_2qgd___n___qubit___decomposition__custom___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_custom_Wrapper.cpp" alt="" coords="428,259,619,300"/>
+<area shape="rect" id="node20" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="1310,177,1514,203"/>
 </map>

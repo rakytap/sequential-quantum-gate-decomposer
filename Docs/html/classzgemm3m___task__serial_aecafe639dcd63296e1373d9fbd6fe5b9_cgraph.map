@@ -1,5 +1,0 @@
-<map id="zgemm3m_Task_serial::zgemm3m_chunk" name="zgemm3m_Task_serial::zgemm3m_chunk">
-<area shape="rect" id="node2" href="$dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="209,31,352,57"/>
-<area shape="rect" id="node3" href="$classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="400,5,579,32"/>
-<area shape="rect" id="node4" href="$classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="400,56,579,83"/>
-</map>

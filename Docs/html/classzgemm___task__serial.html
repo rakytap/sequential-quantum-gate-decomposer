@@ -22,7 +22,7 @@
  <tr style="height: 56px;">
   <td id="projectalign" style="padding-left: 0.5em;">
    <div id="projectname">Sequential Quantum Gate Decomposer
-   &#160;<span id="projectnumber">v1.5</span>
+   &#160;<span id="projectnumber">v1.6</span>
    </div>
    <div id="projectbrief">Powerful decomposition of general unitarias into one- and two-qubit gates gates</div>
   </td>
@@ -66,12 +66,19 @@ Inheritance diagram for zgemm_Task_serial:</div>
 <div class="dyncontent">
 <div class="center"><img src="classzgemm___task__serial__inherit__graph.png" border="0" usemap="#zgemm___task__serial_inherit__map" alt="Inheritance graph"/></div>
 <map name="zgemm___task__serial_inherit__map" id="zgemm___task__serial_inherit__map">
-<area shape="rect" id="node2" href="classzgemm___task.html" title="Class to calculate a matrix product C=A*B in parallel. " alt="" coords="25,80,125,107"/>
+<area shape="rect" id="node3" href="classzgemm___task.html" title="Class to calculate a matrix product C=A*B in parallel. " alt="" coords="25,155,125,181"/>
+<area shape="rect" id="node2" href="classlogging.html" title="A class containing basic methods for setting up the verbosity level. " alt="" coords="43,5,106,32"/>
 </map>
 <center><span class="legend">[<a href="graph_legend.html">legend</a>]</span></center></div>
 <table class="memberdecls">
 <tr class="heading"><td colspan="2"><h2 class="groupheader"><a name="pub-methods"></a>
 Public Member Functions</h2></td></tr>
+<tr class="memitem:a2cfde5a476c2b54c6b1ecbd396735cc2"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2">print</a> (const std::stringstream &amp;sstream, int verbose_level=1)</td></tr>
+<tr class="memdesc:a2cfde5a476c2b54c6b1ecbd396735cc2"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to print output messages in the function of the verbosity level.  <a href="#a2cfde5a476c2b54c6b1ecbd396735cc2">More...</a><br /></td></tr>
+<tr class="separator:a2cfde5a476c2b54c6b1ecbd396735cc2"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a5b3fe50800d8917a791b5f854f755b0e"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classlogging.html#a5b3fe50800d8917a791b5f854f755b0e">set_verbose</a> (int verbose_in)</td></tr>
+<tr class="memdesc:a5b3fe50800d8917a791b5f854f755b0e"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to set the verbose attribute.  <a href="#a5b3fe50800d8917a791b5f854f755b0e">More...</a><br /></td></tr>
+<tr class="separator:a5b3fe50800d8917a791b5f854f755b0e"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:ae59c7b6a25caef08555a40838161e586"><td class="memItemLeft" align="right" valign="top">void&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classzgemm___task__serial.html#ae59c7b6a25caef08555a40838161e586">zgemm_chunk</a> ()</td></tr>
 <tr class="memdesc:ae59c7b6a25caef08555a40838161e586"><td class="mdescLeft">&#160;</td><td class="mdescRight">Call to calculate the product of matrix chunks defined by attributes rows, cols.  <a href="#ae59c7b6a25caef08555a40838161e586">More...</a><br /></td></tr>
 <tr class="separator:ae59c7b6a25caef08555a40838161e586"><td class="memSeparator" colspan="2">&#160;</td></tr>
@@ -96,18 +103,24 @@ Public Attributes</h2></td></tr>
 <tr class="memitem:ad57b65a885626ced197a8152b6329c76"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structcol__indices.html">col_indices</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classzgemm___task__serial.html#ad57b65a885626ced197a8152b6329c76">cols</a></td></tr>
 <tr class="memdesc:ad57b65a885626ced197a8152b6329c76"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure containing column limits for the partitioning of the matrix product calculations.  <a href="#ad57b65a885626ced197a8152b6329c76">More...</a><br /></td></tr>
 <tr class="separator:ad57b65a885626ced197a8152b6329c76"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:ac633ce153fc993365e6df971f6af73d5"><td class="memItemLeft" align="right" valign="top"><a class="el" href="classbool.html">bool</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classlogging.html#ac633ce153fc993365e6df971f6af73d5">debug</a></td></tr>
+<tr class="memdesc:ac633ce153fc993365e6df971f6af73d5"><td class="mdescLeft">&#160;</td><td class="mdescRight">Logical variable. Set true to write output messages to the 'debug.txt' file.  <a href="#ac633ce153fc993365e6df971f6af73d5">More...</a><br /></td></tr>
+<tr class="separator:ac633ce153fc993365e6df971f6af73d5"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:aa621c55b817713f4f52535b801cfd451"><td class="memItemLeft" align="right" valign="top">CBLAS_ORDER&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classzgemm___task__serial.html#aa621c55b817713f4f52535b801cfd451">order</a></td></tr>
 <tr class="memdesc:aa621c55b817713f4f52535b801cfd451"><td class="mdescLeft">&#160;</td><td class="mdescRight">CBLAS storage order.  <a href="#aa621c55b817713f4f52535b801cfd451">More...</a><br /></td></tr>
 <tr class="separator:aa621c55b817713f4f52535b801cfd451"><td class="memSeparator" colspan="2">&#160;</td></tr>
 <tr class="memitem:a0afe7f896e2e3b8d2cb2163b7736386c"><td class="memItemLeft" align="right" valign="top"><a class="el" href="structrow__indices.html">row_indices</a>&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classzgemm___task__serial.html#a0afe7f896e2e3b8d2cb2163b7736386c">rows</a></td></tr>
 <tr class="memdesc:a0afe7f896e2e3b8d2cb2163b7736386c"><td class="mdescLeft">&#160;</td><td class="mdescRight">Structure containing row limits for the partitioning of the matrix product calculations.  <a href="#a0afe7f896e2e3b8d2cb2163b7736386c">More...</a><br /></td></tr>
 <tr class="separator:a0afe7f896e2e3b8d2cb2163b7736386c"><td class="memSeparator" colspan="2">&#160;</td></tr>
+<tr class="memitem:a6a059334537e1d2e0c94b22a05881ef7"><td class="memItemLeft" align="right" valign="top">int&#160;</td><td class="memItemRight" valign="bottom"><a class="el" href="classlogging.html#a6a059334537e1d2e0c94b22a05881ef7">verbose</a></td></tr>
+<tr class="memdesc:a6a059334537e1d2e0c94b22a05881ef7"><td class="mdescLeft">&#160;</td><td class="mdescRight">Set the verbosity level of the output messages.  <a href="#a6a059334537e1d2e0c94b22a05881ef7">More...</a><br /></td></tr>
+<tr class="separator:a6a059334537e1d2e0c94b22a05881ef7"><td class="memSeparator" colspan="2">&#160;</td></tr>
 </table>
 <a name="details" id="details"></a><h2 class="groupheader">Detailed Description</h2>
 <div class="textblock"><p>Class to calculate a matrix product C=A*B in serial. </p>
 <p>This class is used to divide the multiplication into chunks for parallel calculations. </p>
 
-<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00129">129</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00130">130</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
 </div><h2 class="groupheader">Constructor &amp; Destructor Documentation</h2>
 <a id="a111895ccdf65e776a923ee7f14df0156"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#a111895ccdf65e776a923ee7f14df0156">&#9670;&nbsp;</a></span>zgemm_Task_serial() <span class="overload">[1/2]</span></h2>
@@ -151,7 +164,7 @@ Public Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="dot_8cpp_source.html#l00195">195</a> of file <a class="el" href="dot_8cpp_source.html">dot.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="dot_8cpp_source.html#l00227">227</a> of file <a class="el" href="dot_8cpp_source.html">dot.cpp</a>.</p>
 
 </div>
 </div>
@@ -211,11 +224,112 @@ Public Attributes</h2></td></tr>
   </dd>
 </dl>
 
-<p class="definition">Definition at line <a class="el" href="dot_8cpp_source.html#l00235">235</a> of file <a class="el" href="dot_8cpp_source.html">dot.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="dot_8cpp_source.html#l00267">267</a> of file <a class="el" href="dot_8cpp_source.html">dot.cpp</a>.</p>
 
 </div>
 </div>
 <h2 class="groupheader">Member Function Documentation</h2>
+<a id="a2cfde5a476c2b54c6b1ecbd396735cc2"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a2cfde5a476c2b54c6b1ecbd396735cc2">&#9670;&nbsp;</a></span>print()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void logging::print </td>
+          <td>(</td>
+          <td class="paramtype">const std::stringstream &amp;&#160;</td>
+          <td class="paramname"><em>sstream</em>, </td>
+        </tr>
+        <tr>
+          <td class="paramkey"></td>
+          <td></td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>verbose_level</em> = <code>1</code>&#160;</td>
+        </tr>
+        <tr>
+          <td></td>
+          <td>)</td>
+          <td></td><td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Call to print output messages in the function of the verbosity level. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">sstream</td><td>The stringstream input to store the output messages. </td></tr>
+    <tr><td class="paramname">verbose_level</td><td>Integer input. High level means write more to the standart output, 0 means write nothing. The default value is set to 1. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="logging_8cpp_source.html#l00052">52</a> of file <a class="el" href="logging_8cpp_source.html">logging.cpp</a>.</p>
+
+</div>
+</div>
+<a id="a5b3fe50800d8917a791b5f854f755b0e"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a5b3fe50800d8917a791b5f854f755b0e">&#9670;&nbsp;</a></span>set_verbose()</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">void logging::set_verbose </td>
+          <td>(</td>
+          <td class="paramtype">int&#160;</td>
+          <td class="paramname"><em>verbose_in</em></td><td>)</td>
+          <td></td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Call to set the verbose attribute. </p>
+<dl class="params"><dt>Parameters</dt><dd>
+  <table class="params">
+    <tr><td class="paramname">verbose_in</td><td>Integer variable. Set the number to specify the verbosity level for output messages. </td></tr>
+  </table>
+  </dd>
+</dl>
+
+<p class="definition">Definition at line <a class="el" href="logging_8cpp_source.html#l00082">82</a> of file <a class="el" href="logging_8cpp_source.html">logging.cpp</a>.</p>
+<div class="dynheader">
+Here is the caller graph for this function:</div>
+<div class="dyncontent">
+<div class="center"><img src="classlogging_a5b3fe50800d8917a791b5f854f755b0e_icgraph.png" border="0" usemap="#classlogging_a5b3fe50800d8917a791b5f854f755b0e_icgraph" alt=""/></div>
+<map name="classlogging_a5b3fe50800d8917a791b5f854f755b0e_icgraph" id="classlogging_a5b3fe50800d8917a791b5f854f755b0e_icgraph">
+<area shape="rect" id="node2" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="263,5,313,32"/>
+<area shape="rect" id="node3" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="207,107,369,149"/>
+<area shape="rect" id="node5" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="450,49,613,90"/>
+<area shape="rect" id="node6" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="450,217,613,258"/>
+<area shape="rect" id="node8" href="class_n___qubit___decomposition__adaptive.html#a89f4c47432abe740d43aa12842558282" title="?????????????? " alt="" coords="193,224,383,280"/>
+<area shape="rect" id="node10" href="class_n___qubit___decomposition__adaptive.html#a28ca0675bb44bba82e7ee92f71be415b" title="?????????????? " alt="" coords="207,304,369,360"/>
+<area shape="rect" id="node11" href="class_n___qubit___decomposition__adaptive.html#a5a70c5e495cf4e10754c50ce1082ad66" title="??????????????? " alt="" coords="201,384,375,440"/>
+<area shape="rect" id="node12" href="class_n___qubit___decomposition__adaptive__general.html#aab72db9bfa3bbd5134e93d9604acf1c2" title="Start the disentanglig process of the unitary. " alt="" coords="207,464,369,520"/>
+<area shape="rect" id="node4" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="506,115,557,141"/>
+<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="680,187,843,229"/>
+<area shape="rect" id="node9" href="class_n___qubit___decomposition__adaptive.html#a486c74fb4056dea78878593180d1415e" title="Start the disentanglig process of the unitary. " alt="" coords="431,297,632,338"/>
+</map>
+</div>
+
+</div>
+</div>
 <a id="ae59c7b6a25caef08555a40838161e586"></a>
 <h2 class="memtitle"><span class="permalink"><a href="#ae59c7b6a25caef08555a40838161e586">&#9670;&nbsp;</a></span>zgemm_chunk()</h2>
 
@@ -234,17 +348,18 @@ Public Attributes</h2></td></tr>
 <p>Call to calculate the product of matrix chunks defined by attributes rows, cols. </p>
 <p>The result is stored in the corresponding chunk of matrix C. </p>
 
-<p class="definition">Definition at line <a class="el" href="dot_8cpp_source.html#l00252">252</a> of file <a class="el" href="dot_8cpp_source.html">dot.cpp</a>.</p>
+<p class="definition">Definition at line <a class="el" href="dot_8cpp_source.html#l00284">284</a> of file <a class="el" href="dot_8cpp_source.html">dot.cpp</a>.</p>
 <div class="dynheader">
 Here is the call graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="classzgemm___task__serial_ae59c7b6a25caef08555a40838161e586_cgraph.png" border="0" usemap="#classzgemm___task__serial_ae59c7b6a25caef08555a40838161e586_cgraph" alt=""/></div>
 <map name="classzgemm___task__serial_ae59c7b6a25caef08555a40838161e586_cgraph" id="classzgemm___task__serial_ae59c7b6a25caef08555a40838161e586_cgraph">
-<area shape="rect" id="node2" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="200,5,343,32"/>
-<area shape="rect" id="node4" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="393,56,572,83"/>
-<area shape="rect" id="node5" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="197,107,345,133"/>
-<area shape="rect" id="node6" href="dot_8h.html#a4e33f93b23914217bea67e9d3d9b08fe" title="Definition of the zgemm function from CBLAS. " alt="" coords="220,157,323,184"/>
+<area shape="rect" id="node2" href="dot_8cpp.html#a3c8fbd47f03f178c533305ae1717f098" title="Call to get the transpose properties of the input matrix for CBLAS calculations. " alt="" coords="200,56,343,83"/>
+<area shape="rect" id="node4" href="classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="393,107,572,133"/>
+<area shape="rect" id="node6" href="classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="197,157,345,184"/>
+<area shape="rect" id="node7" href="dot_8h.html#a4e33f93b23914217bea67e9d3d9b08fe" title="Definition of the zgemm function from CBLAS. " alt="" coords="220,208,323,235"/>
 <area shape="rect" id="node3" href="classmatrix__base.html#ad5d472ac3e7670ac13aff26f8cad0cc1" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="393,5,572,32"/>
+<area shape="rect" id="node5" href="classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="435,56,530,83"/>
 </map>
 </div>
 <div class="dynheader">
@@ -252,28 +367,54 @@ Here is the caller graph for this function:</div>
 <div class="dyncontent">
 <div class="center"><img src="classzgemm___task__serial_ae59c7b6a25caef08555a40838161e586_icgraph.png" border="0" usemap="#classzgemm___task__serial_ae59c7b6a25caef08555a40838161e586_icgraph" alt=""/></div>
 <map name="classzgemm___task__serial_ae59c7b6a25caef08555a40838161e586_icgraph" id="classzgemm___task__serial_ae59c7b6a25caef08555a40838161e586_icgraph">
-<area shape="rect" id="node2" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="396,341,436,367"/>
-<area shape="rect" id="node23" href="classzgemm___task.html#ad309f35b650f53647ab14451fc2a2e85" title="This function is called when a task is spawned. " alt="" coords="197,378,348,405"/>
-<area shape="rect" id="node3" href="common_8h.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="519,135,629,162"/>
-<area shape="rect" id="node5" href="class_decomposition___base.html#a9ddb4adf4b04cc6cd51a27da9bd6ec83" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="921,5,1085,47"/>
-<area shape="rect" id="node11" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1572,207,1735,248"/>
-<area shape="rect" id="node12" href="class_decomposition___base.html#a571c2a88cfc7d88829e8039b60c8d4af" title="Apply an gates on the input matrix. " alt="" coords="501,216,647,257"/>
-<area shape="rect" id="node19" href="_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="508,391,640,418"/>
-<area shape="rect" id="node21" href="class_random___unitary.html#a6b84f487a4b806a1a3af0ad6ff135119" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="484,443,664,484"/>
-<area shape="rect" id="node22" href="classfunctor__submtx__cost__fnc.html#a417d64477c1c376d650730284dc4f2f4" title="Operator to calculate the partial cost function labeled by product_idx. " alt="" coords="503,508,645,549"/>
-<area shape="rect" id="node4" href="class_gates__block.html#ad1840c6b3072f1853c7f91eccc5e777b" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="712,106,873,133"/>
-<area shape="rect" id="node6" href="classfunctor__get__operation__matrices.html#a13a446a1da6ee8ed165801ad66b49784" title="Operator to calculate th ematrix representation of operation labeled by i. " alt="" coords="930,136,1077,177"/>
-<area shape="rect" id="node7" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="922,71,1085,112"/>
-<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1142,27,1305,68"/>
-<area shape="rect" id="node9" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1361,177,1524,219"/>
-<area shape="rect" id="node10" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1628,155,1679,182"/>
-<area shape="rect" id="node13" href="class_decomposition___base.html#ac2db1c9b9c723053e78f44255b61c428" title="This method determine the gates needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="720,275,865,316"/>
-<area shape="rect" id="node15" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="931,202,1076,258"/>
-<area shape="rect" id="node18" href="class_decomposition___base.html#a92072cb41f4b2cbab6199723fd709131" title="Calculate the list of gate gate matrices such that the i&gt;0&#45;th element in the result list is the produ..." alt="" coords="720,157,865,199"/>
-<area shape="rect" id="node14" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="1144,275,1303,316"/>
-<area shape="rect" id="node16" href="class_n___qubit___decomposition.html#adb89ec2447d3cf8e99d5d22b25421b21" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="1142,209,1305,251"/>
-<area shape="rect" id="node17" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="1133,144,1313,185"/>
-<area shape="rect" id="node20" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="767,391,818,418"/>
+<area shape="rect" id="node2" href="dot_8h.html#a9c06422d0be6a44f5273789a321a9fce" title="Call to calculate the product of two complex matrices by calling method zgemm3m from the CBLAS librar..." alt="" coords="396,538,436,564"/>
+<area shape="rect" id="node49" href="classzgemm___task.html#ad309f35b650f53647ab14451fc2a2e85" title="This function is called when a task is spawned. " alt="" coords="197,575,348,602"/>
+<area shape="rect" id="node3" href="common_8h.html#a2e92efab5529b91d084758c064625eb6" title="Calculate the product of several square shaped complex matrices stored in a vector. " alt="" coords="519,95,629,122"/>
+<area shape="rect" id="node4" href="class_composite.html#a8b8bf7f9b550aa78cf8d1ff87900872b" title="Call to apply the gate on the input array/matrix. " alt="" coords="505,259,643,286"/>
+<area shape="rect" id="node12" href="class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="1879,524,2042,565"/>
+<area shape="rect" id="node21" href="class_composite.html#ac327b93428027d327ea7b9ecf99dd5a2" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="497,614,651,656"/>
+<area shape="rect" id="node33" href="class_decomposition___base.html#a571c2a88cfc7d88829e8039b60c8d4af" title="Apply an gates on the input matrix. " alt="" coords="714,513,859,554"/>
+<area shape="rect" id="node36" href="class_gate.html#a8969dab0ffe073f2264f3bd844466ae0" title="Call to apply the gate on the input array/matrix. " alt="" coords="522,146,626,172"/>
+<area shape="rect" id="node38" href="class_gate.html#a90d152169d20e5587e50f5794d44ead5" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="499,863,649,890"/>
+<area shape="rect" id="node39" href="class_o_n.html#a1d15b1fef32715bafd0b529c50f417ed" title="Call to apply the gate on the input array/matrix. " alt="" coords="526,310,622,336"/>
+<area shape="rect" id="node41" href="class_o_n.html#a65983eedeaf1f1ecc875855ba1f76e15" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="503,680,645,707"/>
+<area shape="rect" id="node42" href="_random___unitary_8cpp.html#ac755edbef39273d53b90d33316963b37" title="Call to create a random unitary constructed by CNOT operation between randomly chosen qubits and by r..." alt="" coords="508,563,640,590"/>
+<area shape="rect" id="node44" href="class_random___unitary.html#a6b84f487a4b806a1a3af0ad6ff135119" title="Generates a unitary matrix from parameters vartheta, varphi, varkappa according to arXiv:1303:5904v1..." alt="" coords="484,732,664,773"/>
+<area shape="rect" id="node45" href="classfunctor__submtx__cost__fnc.html#a417d64477c1c376d650730284dc4f2f4" title="Operator to calculate the partial cost function labeled by product_idx. " alt="" coords="503,797,645,838"/>
+<area shape="rect" id="node46" href="class_u_n.html#a8f2d952331a453962af1018a791ded2b" title="Call to apply the gate on the input array/matrix. " alt="" coords="526,386,622,412"/>
+<area shape="rect" id="node48" href="class_u_n.html#a31f18f66d34399e3bc41f380134f0b74" title="Call to apply the gate on the input array/matrix by input*Gate. " alt="" coords="503,914,645,940"/>
+<area shape="rect" id="node5" href="class_decomposition___base.html#a501a73d321a9a6f5fb2b53558b8be618" title="Calculate the transformed matrix resulting by an array of gates on a given initial matrix..." alt="" coords="909,134,1073,176"/>
+<area shape="rect" id="node6" href="class_gates__block.html#a0a8345863ae673bb3f987546d4930a6a" title="Call to apply the gate on the input array/matrix Gates_block*input. " alt="" coords="712,259,861,286"/>
+<area shape="rect" id="node7" href="class_gates__block.html#af9546b43aa681935754f66c5cea25aa0" title="Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate bl..." alt="" coords="911,347,1072,374"/>
+<area shape="rect" id="node16" href="class_gates__block.html#a05ffe60aaddb9668d670687ac8e9e2f8" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="926,252,1057,293"/>
+<area shape="rect" id="node17" href="class_gates__block.html#a4215cac0ddbe6e827340612436562022" title="??????????????? " alt="" coords="1149,178,1280,220"/>
+<area shape="rect" id="node8" href="class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="1133,513,1296,554"/>
+<area shape="rect" id="node13" href="_n___qubit___decomposition__adaptive__general_8cpp.html#a9aa92b989b3e18eabc3ca0ed0d46c327" title="are_two_qubits_independent" alt="" coords="1121,347,1308,374"/>
+<area shape="rect" id="node9" href="class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1368,513,1531,554"/>
+<area shape="rect" id="node10" href="class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="1619,576,1781,617"/>
+<area shape="rect" id="node11" href="custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="1935,590,1986,616"/>
+<area shape="rect" id="node14" href="class_n___qubit___decomposition__adaptive__general.html#a5cc102240c9e53b1fd6aad9ca795cf16" title="??????????????? " alt="" coords="1368,268,1531,324"/>
+<area shape="rect" id="node15" href="class_n___qubit___decomposition__adaptive__general.html#ac260172fe0d33b1d52a9588c3ad14cd8" title="??????????????? " alt="" coords="1361,348,1537,404"/>
+<area shape="rect" id="node18" href="class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="1356,171,1543,227"/>
+<area shape="rect" id="node19" href="class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b" title="Call to solve layer by layer the optimization problem. " alt="" coords="1857,171,2064,227"/>
+<area shape="rect" id="node20" href="class_n___qubit___decomposition___base.html#ab8e063dc0433796b9eab2c026deba8a9" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="1591,149,1809,190"/>
+<area shape="rect" id="node22" href="class_decomposition___base.html#a92072cb41f4b2cbab6199723fd709131" title="Calculate the list of gate gate matrices such that the i&gt;0&#45;th element in the result list is the produ..." alt="" coords="919,752,1064,793"/>
+<area shape="rect" id="node32" href="class_gates__block.html#a90303bc111b36e053572cd3b29342a21" title="Call to apply the gate on the input array/matrix by input*CNOT. " alt="" coords="721,756,852,797"/>
+<area shape="rect" id="node23" href="class_decomposition___base.html#a0c2d27b5be0c1eff9748849e4bfb6e36" title="This method can be used to solve the main optimization problem which is devidid into sub&#45;layer optimi..." alt="" coords="1142,739,1287,795"/>
+<area shape="rect" id="node24" href="class_n___qubit___decomposition___base.html#a382d8110a0de379bcc1fe862bedaa2be" title="final optimization procedure improving the accuracy of the decompositin when all the qubits were alre..." alt="" coords="1367,746,1531,788"/>
+<area shape="rect" id="node31" href="class_sub___matrix___decomposition.html#a8522d56a01b94f51e477c01ad917a5e3" title="Start the optimization process to disentangle the most significant qubit from the others..." alt="" coords="1359,681,1539,722"/>
+<area shape="rect" id="node25" href="class_n___qubit___decomposition__adaptive.html#a486c74fb4056dea78878593180d1415e" title="Start the disentanglig process of the unitary. " alt="" coords="2112,902,2313,944"/>
+<area shape="rect" id="node26" href="class_n___qubit___decomposition__adaptive__general.html#aab72db9bfa3bbd5134e93d9604acf1c2" title="Start the disentanglig process of the unitary. " alt="" coords="1879,655,2042,711"/>
+<area shape="rect" id="node27" href="class_n___qubit___decomposition__custom.html#a384fb1eb0b29d51262a9f021465bf07d" title="Start the disentanglig process of the unitary. " alt="" coords="1603,746,1797,788"/>
+<area shape="rect" id="node28" href="class_n___qubit___decomposition__adaptive.html#a89f4c47432abe740d43aa12842558282" title="?????????????? " alt="" coords="1866,895,2055,951"/>
+<area shape="rect" id="node29" href="class_n___qubit___decomposition__adaptive.html#a28ca0675bb44bba82e7ee92f71be415b" title="?????????????? " alt="" coords="1879,735,2042,791"/>
+<area shape="rect" id="node30" href="class_n___qubit___decomposition__adaptive.html#a5a70c5e495cf4e10754c50ce1082ad66" title="??????????????? " alt="" coords="1874,815,2047,871"/>
+<area shape="rect" id="node34" href="class_decomposition___base.html#ac2db1c9b9c723053e78f44255b61c428" title="This method determine the gates needed to rotate the indepent qubits into the state |0&gt; ..." alt="" coords="919,545,1064,586"/>
+<area shape="rect" id="node35" href="class_decomposition___base.html#a0cdd12741e72e2c074a188fe3867e6d5" title="After the main optimization problem is solved, the indepent qubits can be rotated into state |0&gt; by t..." alt="" coords="1135,600,1294,641"/>
+<area shape="rect" id="node37" href="class_gate.html#a6e96411cb4584ecbe54be385bef4d401" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="927,58,1055,84"/>
+<area shape="rect" id="node40" href="class_o_n.html#a5cf01675dd4a7fe4532af478cf17cc19" title="Call to retrieve the operation matrix. " alt="" coords="733,310,841,336"/>
+<area shape="rect" id="node43" href="decomposition__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into U3 and CNOT gates. " alt="" coords="761,579,812,606"/>
+<area shape="rect" id="node47" href="class_u_n.html#a3d13391886573ed525aa4f36a4a44ab7" title="Call to retrieve the operation matrix. " alt="" coords="733,411,841,438"/>
 </map>
 </div>
 
@@ -294,7 +435,7 @@ Here is the caller graph for this function:</div>
 
 <p>The matrix A. </p>
 
-<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00133">133</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00134">134</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
 
 </div>
 </div>
@@ -312,7 +453,7 @@ Here is the caller graph for this function:</div>
 
 <p>The matrix B. </p>
 
-<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00135">135</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00136">136</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
 
 </div>
 </div>
@@ -330,7 +471,7 @@ Here is the caller graph for this function:</div>
 
 <p>The matrix C. </p>
 
-<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00137">137</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00138">138</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
 
 </div>
 </div>
@@ -348,7 +489,33 @@ Here is the caller graph for this function:</div>
 
 <p>Structure containing column limits for the partitioning of the matrix product calculations. </p>
 
-<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00141">141</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00142">142</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
+
+</div>
+</div>
+<a id="ac633ce153fc993365e6df971f6af73d5"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#ac633ce153fc993365e6df971f6af73d5">&#9670;&nbsp;</a></span>debug</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname"><a class="el" href="classbool.html">bool</a> logging::debug</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Logical variable. Set true to write output messages to the 'debug.txt' file. </p>
+
+<p class="definition">Definition at line <a class="el" href="logging_8h_source.html#l00048">48</a> of file <a class="el" href="logging_8h_source.html">logging.h</a>.</p>
 
 </div>
 </div>
@@ -366,7 +533,7 @@ Here is the caller graph for this function:</div>
 
 <p>CBLAS storage order. </p>
 
-<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00143">143</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00144">144</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
 
 </div>
 </div>
@@ -384,7 +551,33 @@ Here is the caller graph for this function:</div>
 
 <p>Structure containing row limits for the partitioning of the matrix product calculations. </p>
 
-<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00139">139</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
+<p class="definition">Definition at line <a class="el" href="dot_8h_source.html#l00140">140</a> of file <a class="el" href="dot_8h_source.html">dot.h</a>.</p>
+
+</div>
+</div>
+<a id="a6a059334537e1d2e0c94b22a05881ef7"></a>
+<h2 class="memtitle"><span class="permalink"><a href="#a6a059334537e1d2e0c94b22a05881ef7">&#9670;&nbsp;</a></span>verbose</h2>
+
+<div class="memitem">
+<div class="memproto">
+<table class="mlabels">
+  <tr>
+  <td class="mlabels-left">
+      <table class="memname">
+        <tr>
+          <td class="memname">int logging::verbose</td>
+        </tr>
+      </table>
+  </td>
+  <td class="mlabels-right">
+<span class="mlabels"><span class="mlabel">inherited</span></span>  </td>
+  </tr>
+</table>
+</div><div class="memdoc">
+
+<p>Set the verbosity level of the output messages. </p>
+
+<p class="definition">Definition at line <a class="el" href="logging_8h_source.html#l00045">45</a> of file <a class="el" href="logging_8h_source.html">logging.h</a>.</p>
 
 </div>
 </div>
@@ -395,7 +588,7 @@ Here is the caller graph for this function:</div>
 </div><!-- contents -->
 <!-- start footer part -->
 <hr class="footer"/><address class="footer"><small>
-Generated on Sat Aug 28 2021 21:17:49 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
+Generated on Sun Mar 20 2022 10:31:21 for Sequential Quantum Gate Decomposer by &#160;<a href="http://www.doxygen.org/index.html">
 <img class="footer" src="doxygen.png" alt="doxygen"/>
 </a> 1.8.13
 </small></address>

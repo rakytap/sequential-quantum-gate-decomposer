@@ -1,4 +1,5 @@
 <map id="Sub_Matrix_Decomposition_Cost_Function.h" name="Sub_Matrix_Decomposition_Cost_Function.h">
-<area shape="rect" id="node2" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="5,102,209,129"/>
-<area shape="rect" id="node3" href="$_sub___matrix___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the sub&#45;disantenglement problem with TBB parallelization..." alt="" coords="233,95,413,136"/>
+<area shape="rect" id="node2" href="$_n___qubit___decomposition__adaptive__general_8cpp.html" title="N_Qubit_Decomposition\l_adaptive_general.cpp" alt="" coords="5,95,168,136"/>
+<area shape="rect" id="node3" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="193,102,397,129"/>
+<area shape="rect" id="node4" href="$_sub___matrix___decomposition___cost___function_8cpp.html" title="Methods to calculate the cost function of the sub&#45;disantenglement problem with TBB parallelization..." alt="" coords="421,95,601,136"/>
 </map>

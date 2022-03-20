@@ -1,4 +1,0 @@
-<map id="Operation_block::list_operations" name="Operation_block::list_operations">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#a4c6c81d70f49ee249aa455a4f2718ee2" title="Call to print the operations decomposing the initial unitary. " alt="" coords="192,29,337,71"/>
-<area shape="rect" id="node3" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="385,37,436,63"/>
-</map>
