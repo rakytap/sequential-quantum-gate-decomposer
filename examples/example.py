@@ -23,10 +23,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 ## [import]
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition 
-from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive       
+##from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive       
 ## [import]
 
 print('******************** Decomposing general 3-qubit matrix *******************************')
+
 
 # cerate unitary q-bit matrix
 from scipy.stats import unitary_group
@@ -44,6 +45,12 @@ Umtx = unitary_group.rvs(matrix_size)
 
 # creating a class to decompose the 
 cDecompose = qgd_N_Qubit_Decomposition( Umtx.conj().T )
+
+# setting the verbosity of the decomposition
+cDecompose.set_Verbose( 3 )
+
+# setting the debugfile name
+#cDecompose.set_Debugfile( "debug" )
 
 # setting the tolerance of the optimization process. The final error of the decomposition would scale with the square root of this value.
 cDecompose.set_Optimization_Tolerance( 1e-12 )
@@ -89,11 +96,9 @@ cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=
 
 ## [set parameters]
 
-# setting the verbosity of the decomposition
-cDecompose.set_Verbose( 3 )
 
-# setting the debugfile name
-cDecompose.set_Debugfile( "debug" )
+
+
 
 ## [set parameters]
 
