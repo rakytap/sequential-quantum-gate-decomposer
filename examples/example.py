@@ -23,8 +23,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 ## [import]
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition 
-from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive       
 ## [import]
+## [import adaptive]
+from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive       
+## [import adaptive]
 
 print('******************** Decomposing general 3-qubit matrix *******************************')
 
