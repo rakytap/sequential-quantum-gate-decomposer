@@ -171,7 +171,7 @@ N_Qubit_Decomposition_adaptive_general::start_decomposition(bool prepare_export)
         cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
         cDecomp_custom.set_max_iteration( max_iterations );
         cDecomp_custom.set_verbose( 0 );
-        cDecomp_custom.set_debugfile( 0 );
+        cDecomp_custom.set_debugfile( "" );
         cDecomp_custom.set_iteration_loops( iteration_loops );
         cDecomp_custom.set_optimization_tolerance( optimization_tolerance );  
         cDecomp_custom.start_decomposition(true);

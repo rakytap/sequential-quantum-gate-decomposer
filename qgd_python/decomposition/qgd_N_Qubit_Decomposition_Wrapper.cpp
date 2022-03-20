@@ -857,15 +857,16 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition_Wrapper 
 debug: Set True to suppress the output messages of the decompostion into a file named debugfile_name, or False (deafult) otherwise.
 */
 static PyObject *
-qgd_N_Qubit_Decomposition_Wrapper_set_Debugfile(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
+qgd_N_Qubit_Decomposition_Wrapper_set_Debugfile(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args, PyObject *debugfile ) {
 
-    
 
     // determine the debugfile name type
-    PyObject* debugfile_name = PyObject_Str(debugfile_name);
+    PyObject* debugfile_name = PyObject_Str(debugfile);
     PyObject* debugfile_name_unicode = PyUnicode_AsEncodedString(debugfile_name, "utf-8", "~E~");
     const char* initial_debugfile_name = PyBytes_AS_STRING(debugfile_name_unicode);
     
+    Py_XDECREF(debugfile_name);
+    Py_XDECREF(debugfile_name_unicode);
  
     // parsing input arguments
     if (!PyArg_ParseTuple(args, "|O", &debugfile_name )) return Py_BuildValue("s", -1);
@@ -875,7 +876,7 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Debugfile(qgd_N_Qubit_Decomposition_Wrappe
     self->decomp->set_debugfile( initial_debugfile_name );
 
 
-    return Py_BuildValue("s", 0);
+    return Py_BuildValue("s", NULL);
 }
 
 /**
@@ -1074,7 +1075,7 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Wrapper_methods[] = {
     {"set_Verbose", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Verbose, METH_VARARGS,
      "Call to set the verbosity of the qgd_N_Qubit_Decomposition class."
     },
-    {"set_Debugfile", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Debugfile, METH_NOARGS,
+    {"set_Debugfile", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Debugfile, METH_VARARGS,
      "Set the debugfile name of the N_Qubit_Decomposition class."
     },
     {"set_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure, METH_VARARGS,

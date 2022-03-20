@@ -766,7 +766,7 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, u
         cdecomposition->set_verbose( false );
 
         // setting the debugfile name
-        //cdecomposition->set_debugfile( false );
+        cdecomposition->set_debugfile( debugfile_name );
 
         // starting the decomposition
         cdecomposition->start_decomposition(true, false);

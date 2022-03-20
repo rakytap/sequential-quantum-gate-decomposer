@@ -93,7 +93,7 @@ cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=
 cDecompose.set_Verbose( 3 )
 
 # setting the debugfile name
-cDecompose.set_Debugfile( "debug.txt" )
+cDecompose.set_Debugfile( "a" )
 
 ## [set parameters]
 
