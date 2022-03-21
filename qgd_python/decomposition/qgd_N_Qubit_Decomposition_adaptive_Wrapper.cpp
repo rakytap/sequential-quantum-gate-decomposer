@@ -953,22 +953,29 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition
 debug: Set True to suppress the output messages of the decompostion into a file named debugfile_name, or False (deafult) otherwise.
 */
 static PyObject *
-qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Debugfile(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args, PyObject *debugfile ) {
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Debugfile(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
   
 
-    // determine the debugfile name type
-    PyObject* debugfile_name = PyObject_Str(debugfile);
-    PyObject* debugfile_name_unicode = PyUnicode_AsEncodedString(debugfile_name, "utf-8", "~E~");
-    const char* initial_debugfile_name = PyBytes_AS_STRING(debugfile_name_unicode);
-
-    Py_XDECREF(debugfile_name);
-    Py_XDECREF(debugfile_name_unicode);
+    PyObject *debugfile = NULL;
  
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &debugfile_name )) return Py_BuildValue("s", -1);
+    if (!PyArg_ParseTuple(args, "|O", &debugfile )) return Py_BuildValue("s", -1);
+
+    // determine the debugfile name type
+    PyObject* debugfile_string = PyObject_Str(debugfile);
+    PyObject* debugfile_string_unicode = PyUnicode_AsEncodedString(debugfile_string, "utf-8", "~E~");
+    const char* debugfile_C = PyBytes_AS_STRING(debugfile_string_unicode);
+
+    
+    Py_XDECREF(debugfile_string);
+    Py_XDECREF(debugfile_string_unicode);
+
+    // determine the length of the filename and initialize C++ variant of the string
+    Py_ssize_t string_length = PyBytes_Size(debugfile_string_unicode);
+    std::string debugfile_Cpp(debugfile_C, string_length);
 
      // set the name of the debugfile on the C++ side
-    self->decomp_base->set_debugfile( initial_debugfile_name );
+    self->decomp_base->set_debugfile( debugfile_Cpp );
 
 
     return Py_BuildValue("s", NULL);
