@@ -80,6 +80,9 @@ Decomposition_Base::Decomposition_Base() {
     // method to guess initial values for the optimization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
     initial_guess = ZEROS;
 
+    // The convergence threshold in the optimization process
+    convergence_threshold = 1e-5;
+
 
 
 #if CBLAS==1
@@ -145,6 +148,8 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
     // method to guess initial values for the optimization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
     initial_guess = initial_guess_in;
 
+    // The convergence threshold in the optimization process
+    convergence_threshold = 1e-5;
 
 
 #if CBLAS==1
@@ -544,7 +549,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, min_vec_num, minvec_mean));
 
             // conditions to break the iteration cycles
-            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < 1e-5 ) {              
+            if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < convergence_threshold ) {              
 		std::stringstream sstream;
 	        sstream << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " iterations with " << layer_num << " layers" << std::endl;
 		print(sstream, 1);             
@@ -1430,6 +1435,17 @@ void Decomposition_Base::set_optimization_tolerance( double tolerance_in ) {
     return;
 }
 
+
+
+/**
+@brief Call to set the threshold of convergence in the optimization processes.
+@param convergence_threshold_in The value of the threshold. 
+*/
+void Decomposition_Base::set_convergence_threshold( double convergence_threshold_in ) {
+
+    convergence_threshold = convergence_threshold_in;
+    return;
+}
 
 /**
 @brief Call to get the error of the decomposition
