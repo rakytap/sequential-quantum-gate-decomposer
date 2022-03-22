@@ -948,7 +948,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition
 
 
 /**
-@brief Wrapper method to set the optimization tolerance of the optimization process during the decomposition. The final error of the decomposition would scale with the square root of this value.
+@brief Wrapper method to set the optimization tolerance of the optimization process during the decomposition. 
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
 @param args A tuple of the input arguments: tolerance (double)
 tolerance: The maximal allowed error of the optimization problem
@@ -970,6 +970,29 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Tolerance(qgd_N_Qubi
     return Py_BuildValue("i", 0);
 }
 
+
+
+/**
+@brief Wrapper method to set the threshold of convergence in the optimization processes.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
+@param args A tuple of the input arguments: tolerance (double)
+tolerance: The maximal allowed error of the optimization problem
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Convergence_Threshold(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    double threshold; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|d", &threshold )) return Py_BuildValue("i", -1);
+
+
+    // set maximal layer nums on the C++ side
+    self->decomp->set_convergence_threshold( threshold );
+
+    return Py_BuildValue("i", 0);
+}
 
 
 /**
@@ -1137,7 +1160,10 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
      "Wrapper method to reorder the qubits in the decomposition class."
     },
     {"set_Optimization_Tolerance", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Tolerance, METH_VARARGS,
-     "Wrapper method to set the optimization tolerance of the optimization process during the decomposition. The final error of the decomposition would scale with the square root of this value."
+     "Wrapper method to set the optimization tolerance of the optimization process during the decomposition."
+    },
+    {"set_Convergence_Threshold", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Convergence_Threshold, METH_VARARGS,
+     "Wrapper method to set the threshold of convergence in the optimization processes."
     },
     {"set_Optimization_Blocks", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Blocks, METH_VARARGS,
      "Wrapper method to to set the number of gate blocks to be optimized in one shot."

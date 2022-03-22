@@ -115,8 +115,11 @@ protected:
     /// type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
     guess_type initial_guess;
 
-    /// Number of outer OpenMP threads. (During the calculations OpenMP multithreading is turned off.)
+    /// Store the number of OpenMP threads. (During the calculations OpenMP multithreading is turned off.)
     int num_threads;
+
+    /// The convergence threshold in the optimization process
+    double convergence_threshold;
 
 public:
 
@@ -360,9 +363,16 @@ Gate* get_gate( int n );
 
 /**
 @brief Call to set the tolerance of the optimization processes.
-@param tolerance_in The value of the tolerance. The error of the decomposition would scale with the square root of this value.
+@param tolerance_in The value of the tolerance. 
 */
 void set_optimization_tolerance( double tolerance_in );
+
+
+/**
+@brief Call to set the threshold of convergence in the optimization processes.
+@param convergence_threshold_in The value of the threshold. 
+*/
+void set_convergence_threshold( double convergence_threshold_in );
 
 
 /**
