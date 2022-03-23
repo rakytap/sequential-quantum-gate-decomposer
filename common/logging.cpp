@@ -38,9 +38,9 @@ logging::logging() {
 
 
 
-	// Logical variable. Set true to write output messages to the 'debug.txt' file.
+	// Logical variable. Set true to write output messages to a user defined file. 
 	
-	debug=true;
+	debug=false;
 	
 
 }
@@ -55,8 +55,8 @@ logging::logging() {
 void logging::print(const std::stringstream& sstream, int verbose_level) {
 
 
-	if (debugfile_name=="<NULL>")
-		debug=false;
+	if (debugfile_name!="<NULL>")
+		debug=true;
  
 	if (debug) { 
 		std::ofstream debug_file; 
