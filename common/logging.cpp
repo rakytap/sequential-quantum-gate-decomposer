@@ -100,7 +100,7 @@ void logging::set_debugfile(std::string debugfile ) {
     
     debugfile_name = debugfile;
 
-    std::remove(debugfile_name.c_str());
+    if (debugfile_name.c_str()) std::remove(debugfile_name.c_str());
 
 }
 
