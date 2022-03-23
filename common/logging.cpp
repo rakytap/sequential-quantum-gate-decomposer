@@ -57,9 +57,11 @@ void logging::print(const std::stringstream& sstream, int verbose_level) {
 
 	if (debugfile_name!="<NULL>")
 		debug=true;
+		
  
 	if (debug) { 
-		std::ofstream debug_file; 
+		
+		std::ofstream debug_file;         
 		debug_file.open(debugfile_name, std::ios_base::app);
  		debug_file << sstream.str(); 
 		debug_file.close();		
@@ -95,8 +97,10 @@ void logging::set_verbose( int verbose_in ) {
 @param debugfile String variable. Set the debugfile name. 
 */
 void logging::set_debugfile(std::string debugfile ) {
-
+    
     debugfile_name = debugfile;
+
+    std::remove(debugfile_name.c_str());
 
 }
 
