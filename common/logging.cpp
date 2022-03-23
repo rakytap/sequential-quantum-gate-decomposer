@@ -39,13 +39,9 @@ logging::logging() {
 
 
 	// Logical variable. Set true to write output messages to the 'debug.txt' file.
-	if (!debugfile_name.empty()) {
+	
 	debug=true;
-	}
-	//else {
-	//debug=false;
-	//}
-
+	
 
 }
 
@@ -59,7 +55,9 @@ logging::logging() {
 void logging::print(const std::stringstream& sstream, int verbose_level) {
 
 
-
+	if (debugfile_name=="<NULL>")
+		debug=false;
+ 
 	if (debug) { 
 		std::ofstream debug_file; 
 		debug_file.open(debugfile_name, std::ios_base::app);

@@ -49,7 +49,7 @@ cDecompose = qgd_N_Qubit_Decomposition( Umtx.conj().T )
 # setting the verbosity of the decomposition
 cDecompose.set_Verbose( 3 )
 
-# setting the debugfile name
+# setting the debugfile name. If it is not set, the program will not debug. 
 cDecompose.set_Debugfile("debug.txt")
 
 # setting the tolerance of the optimization process. The final error of the decomposition would scale with the square root of this value.
