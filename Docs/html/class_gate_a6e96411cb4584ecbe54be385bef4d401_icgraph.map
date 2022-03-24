@@ -1,6 +1,0 @@
-<map id="Gate::apply_to_list" name="Gate::apply_to_list">
-<area shape="rect" id="node2" href="$class_gates__block.html#a4215cac0ddbe6e827340612436562022" title="??????????????? " alt="" coords="181,29,312,71"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="360,22,547,78"/>
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b" title="Call to solve layer by layer the optimization problem. " alt="" coords="861,22,1068,78"/>
-<area shape="rect" id="node5" href="$class_n___qubit___decomposition___base.html#ab8e063dc0433796b9eab2c026deba8a9" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="595,59,813,100"/>
-</map>

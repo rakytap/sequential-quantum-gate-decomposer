@@ -1,4 +1,0 @@
-<map id="zgemm_Task_serial" name="zgemm_Task_serial">
-<area shape="rect" id="node3" href="$classzgemm___task.html" title="Class to calculate a matrix product C=A*B in parallel. " alt="" coords="25,155,125,181"/>
-<area shape="rect" id="node2" href="$classlogging.html" title="A class containing basic methods for setting up the verbosity level. " alt="" coords="43,5,106,32"/>
-</map>

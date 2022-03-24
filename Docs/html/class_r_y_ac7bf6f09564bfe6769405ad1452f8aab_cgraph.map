@@ -1,5 +1,0 @@
-<map id="RY::clone" name="RY::clone">
-<area shape="rect" id="node2" href="$class_r_y.html#ae15c4b13bb2048513f105b29d2114f85" title="Nullary constructor of the class. " alt="" coords="198,5,262,32"/>
-<area shape="rect" id="node3" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="169,56,291,83"/>
-<area shape="rect" id="node4" href="$class_r_y.html#ad4efd47b5a629e67503c56dadaff7ecc" title="Call to set the final optimized parameters of the gate. " alt="" coords="131,107,329,133"/>
-</map>

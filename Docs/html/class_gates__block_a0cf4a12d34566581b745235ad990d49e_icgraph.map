@@ -1,5 +1,0 @@
-<map id="Gates_block::release_gate" name="Gates_block::release_gate">
-<area shape="rect" id="node2" href="$class_n___qubit___decomposition__adaptive.html#a5a70c5e495cf4e10754c50ce1082ad66" title="??????????????? " alt="" coords="228,5,401,61"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition__adaptive.html#a3e1ed43d6cbe798d887ec98b3e3b5b61" title="??????????????? " alt="" coords="233,85,397,141"/>
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition__adaptive.html#a486c74fb4056dea78878593180d1415e" title="Start the disentanglig process of the unitary. " alt="" coords="449,93,651,134"/>
-</map>

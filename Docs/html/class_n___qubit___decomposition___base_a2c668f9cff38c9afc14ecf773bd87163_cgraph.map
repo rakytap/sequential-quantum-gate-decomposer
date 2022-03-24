@@ -1,9 +1,0 @@
-<map id="N_Qubit_Decomposition_Base::add_finalyzing_layer" name="N_Qubit_Decomposition_Base::add_finalyzing_layer">
-<area shape="rect" id="node2" href="$class_gates__block.html#aeb0c08045470d7ecab12a33ce95d0292" title="Default constructor of the class. " alt="" coords="235,5,371,47"/>
-<area shape="rect" id="node3" href="$class_gates__block.html#aab1d786fdac42f2d290cc4888a3bcb81" title="Add a U3 gate to the front of the list of gates. " alt="" coords="232,71,375,98"/>
-<area shape="rect" id="node4" href="$class_gates__block.html#a10f7fd8b457b825449c16231b414258c" title="Add an gate to the front of the list of gates. " alt="" coords="423,97,577,123"/>
-<area shape="rect" id="node5" href="$class_gate.html#a9626b4134a82cbb7d62770393e5a6568" title="Set the number of qubits spanning the matrix of the operation. " alt="" coords="643,46,778,73"/>
-<area shape="rect" id="node7" href="$class_gate.html#afb0a0b5ffcc163f3326c964bf08a2bce" title="Call to get the number of free parameters. " alt="" coords="625,97,796,123"/>
-<area shape="rect" id="node8" href="$class_gate.html#a5498d67b28027022c72b8b15d47d55cc" title="Call to get the type of the operation. " alt="" coords="658,147,763,174"/>
-<area shape="rect" id="node6" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="844,46,935,73"/>
-</map>

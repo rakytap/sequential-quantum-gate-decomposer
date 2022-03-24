@@ -1,8 +1,0 @@
-<map id="U3::apply_to_list" name="U3::apply_to_list">
-<area shape="rect" id="node2" href="$class_u3.html#a8b1763d0ff3d7704288ff3abd0e207ac" title="Call to apply the gate on the input array/matrix by U3*input. " alt="" coords="171,43,264,69"/>
-<area shape="rect" id="node3" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="513,5,608,32"/>
-<area shape="rect" id="node4" href="$class_u3.html#a1de7cf3905f8e120636d29a811fd7ad0" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit ..." alt="" coords="312,43,465,69"/>
-<area shape="rect" id="node5" href="$class_u3.html#a00bf6e1353d834ea3febca8ea249e066" title="??????????? " alt="" coords="321,93,456,120"/>
-<area shape="rect" id="node6" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="515,87,606,113"/>
-<area shape="rect" id="node7" href="$common_8cpp.html#ac876ec30dbcade845af445eb50315653" title="Call to calculate the product of two complex scalars. " alt="" coords="537,137,584,164"/>
-</map>

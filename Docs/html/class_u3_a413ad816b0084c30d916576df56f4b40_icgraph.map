@@ -1,6 +1,0 @@
-<map id="U3::is_theta_parameter" name="U3::is_theta_parameter">
-<area shape="rect" id="node2" href="$class_decomposition___base.html#aa041b4828e5aeb487d898077e98041be" title="Call to prepare the optimized gates to export. " alt="" coords="209,5,380,47"/>
-<area shape="rect" id="node3" href="$class_gates__block.html#a2c4060bb8d4547f9f653ba14598a19d8" title="Call to print the list of gates stored in the block of gates for a specific set of parameters..." alt="" coords="216,95,373,122"/>
-<area shape="rect" id="node4" href="$class_decomposition___base.html#ad897530a73bb05de35e86bf28fe40fd5" title="Call to print the gates decomposing the initial unitary. " alt="" coords="428,88,573,129"/>
-<area shape="rect" id="node5" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="621,95,672,122"/>
-</map>

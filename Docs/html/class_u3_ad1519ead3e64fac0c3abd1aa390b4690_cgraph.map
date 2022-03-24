@@ -1,7 +1,0 @@
-<map id="U3::apply_from_right" name="U3::apply_from_right">
-<area shape="rect" id="node2" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="395,5,489,32"/>
-<area shape="rect" id="node3" href="$class_u3.html#a1de7cf3905f8e120636d29a811fd7ad0" title="Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit ..." alt="" coords="193,48,347,75"/>
-<area shape="rect" id="node4" href="$class_u3.html#a2d4b5cb4480c1bc8dd59f74a23ab3786" title="??????????? " alt="" coords="195,99,345,141"/>
-<area shape="rect" id="node5" href="$common_8cpp.html#a2085ad6d70ccf80dd353a70fe8262ff9" title="Calculates the n&#45;th power of 2. " alt="" coords="397,97,487,124"/>
-<area shape="rect" id="node6" href="$common_8cpp.html#ac876ec30dbcade845af445eb50315653" title="Call to calculate the product of two complex scalars. " alt="" coords="419,148,465,175"/>
-</map>
