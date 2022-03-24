@@ -54,10 +54,6 @@ logging::logging() {
 */
 void logging::print(const std::stringstream& sstream, int verbose_level) {
 
-
-	if (debugfile_name!="<NULL>")
-		debug=true;
-		
  
 	if (debug) { 
 		
@@ -99,6 +95,9 @@ void logging::set_verbose( int verbose_in ) {
 void logging::set_debugfile(std::string debugfile ) {
     
     debugfile_name = debugfile;
+
+    if (debugfile_name!="<NULL>")
+		debug=true;
 
     if (debugfile_name.c_str()) std::remove(debugfile_name.c_str());
 
