@@ -1,5 +1,0 @@
-<map id="CRY::clone" name="CRY::clone">
-<area shape="rect" id="node2" href="$class_c_r_y.html#a89fbdbd7beae56b2ad69a78eafc9861e" title="Nullary constructor of the class. " alt="" coords="166,5,249,32"/>
-<area shape="rect" id="node3" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="147,56,268,83"/>
-<area shape="rect" id="node4" href="$class_c_r_y.html#aea1929799cbdc0e5d7d233b85b5aa007" title="Call to set the final optimized parameters of the gate. " alt="" coords="140,107,275,149"/>
-</map>

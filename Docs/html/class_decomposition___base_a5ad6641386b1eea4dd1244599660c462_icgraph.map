@@ -1,7 +1,0 @@
-<map id="Decomposition_Base::get_Umtx" name="Decomposition_Base::get_Umtx">
-<area shape="rect" id="node2" href="$class_n___qubit___decomposition___base.html#ad1f069447411c81c1abe5f3826a78757" title="The optimization problem of the final optimization. " alt="" coords="199,5,385,47"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition___base.html#a369bfd5bee0031142b01680090f65509" title="Call to calculate both the cost function and the its gradient components. " alt="" coords="199,71,385,127"/>
-<area shape="rect" id="node6" href="$class_sub___matrix___decomposition.html#a850f0d87ca7132652ad6e973a0ef3816" title="The optimization problem of the final optimization. " alt="" coords="202,152,382,193"/>
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition___base.html#a5e7e1f1a55707e26e7eb3ea46676e14b" title="Call to solve layer by layer the optimization problem. " alt="" coords="700,71,907,127"/>
-<area shape="rect" id="node5" href="$class_n___qubit___decomposition___base.html#ab8e063dc0433796b9eab2c026deba8a9" title="Calculate the approximate derivative (f&#45;f0)/(x&#45;x0) of the cost function with respect to the free para..." alt="" coords="433,108,652,149"/>
-</map>

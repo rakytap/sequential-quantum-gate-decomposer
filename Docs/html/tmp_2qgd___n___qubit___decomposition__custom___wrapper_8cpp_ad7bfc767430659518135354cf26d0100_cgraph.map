@@ -1,5 +1,0 @@
-<map id="matrix_real_to_numpy" name="matrix_real_to_numpy">
-<area shape="rect" id="node2" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="201,5,349,32"/>
-<area shape="rect" id="node3" href="$tmp_2qgd___n___qubit___decomposition__custom___wrapper_8cpp.html#a95ccc69a20a228183a0a1b2ce5759719" title="Call to make a numpy array from data stored via void pointer. " alt="" coords="223,56,328,83"/>
-<area shape="rect" id="node4" href="$tmp_2qgd___n___qubit___decomposition__custom___wrapper_8cpp.html#a183d567e29c70b4d3219b726be4c145b" title="Method to cleanup the memory when the python object becomes released. " alt="" coords="397,56,516,83"/>
-</map>

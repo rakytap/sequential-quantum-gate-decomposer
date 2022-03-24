@@ -1,5 +1,0 @@
-<map id="Gates_block::get_involved_qubits" name="Gates_block::get_involved_qubits">
-<area shape="rect" id="node2" href="$class_gate.html#a676a838ffca280c7af7c1f9ad15cd2ec" title="Call to get the index of the target qubit. " alt="" coords="232,5,375,32"/>
-<area shape="rect" id="node3" href="$common_8cpp.html#aba6badd873191e752e949e21670e67be" title="Add an integer to a vector of integers if the integer is not already an element of the vector..." alt="" coords="228,56,379,83"/>
-<area shape="rect" id="node4" href="$class_gate.html#a7460c74e6969fa187237679879ccfe8d" title="Call to get the index of the control qubit. " alt="" coords="229,107,377,133"/>
-</map>

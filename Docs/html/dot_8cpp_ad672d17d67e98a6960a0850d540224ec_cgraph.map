@@ -1,5 +1,0 @@
-<map id="check_matrices" name="check_matrices">
-<area shape="rect" id="node2" href="$classmatrix__base.html#a0abeb2f3b66e33c1e44e3757524539be" title="Call to get whether the matrix should be conjugated in CBLAS functions or not. " alt="" coords="168,5,347,32"/>
-<area shape="rect" id="node3" href="$classlogging.html#a2cfde5a476c2b54c6b1ecbd396735cc2" title="Call to print output messages in the function of the verbosity level. " alt="" coords="210,56,305,83"/>
-<area shape="rect" id="node4" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="183,107,331,133"/>
-</map>

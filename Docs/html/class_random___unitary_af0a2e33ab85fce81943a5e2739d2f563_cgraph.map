@@ -1,6 +1,0 @@
-<map id="Random_Unitary::M" name="Random_Unitary::M">
-<area shape="rect" id="node2" href="$class_random___unitary.html#aa92670711ae881ab24f167495d2518d3" title="Implements Eq (9) of arXiv:1303:5904v1. " alt="" coords="222,5,357,32"/>
-<area shape="rect" id="node3" href="$class_random___unitary.html#a373e8500ab0e3e3db2600a7bb5eb6234" title="Implements matrix I below Eq (7) of arXiv:1303:5904v1. " alt="" coords="188,56,391,83"/>
-<area shape="rect" id="node5" href="$common_8cpp.html#ac876ec30dbcade845af445eb50315653" title="Call to calculate the product of two complex scalars. " alt="" coords="266,107,313,133"/>
-<area shape="rect" id="node4" href="$classmatrix__base.html#a0c31992f2fb6071552aae220a79e68cb" title="Call to get the pointer to the stored data. " alt="" coords="439,56,587,83"/>
-</map>

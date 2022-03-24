@@ -1,7 +1,0 @@
-<map id="Composite::clone" name="Composite::clone">
-<area shape="rect" id="node2" href="$class_composite.html#ad28832d957183a7f08dec72e6040db0a" title="Default constructor of the class. " alt="" coords="184,5,336,32"/>
-<area shape="rect" id="node3" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="199,56,321,83"/>
-<area shape="rect" id="node4" href="$class_composite.html#aa25c060457f9f98a3d1939f8f987c344" title="Call to set the final optimized parameters of the gate. " alt="" coords="175,107,345,149"/>
-<area shape="rect" id="node5" href="$class_matrix__real.html#ac271d98bbc41a8f5b0d98e108b3a9077" title="Call to create a copy of the matrix. " alt="" coords="393,115,512,141"/>
-<area shape="rect" id="node6" href="$class_matrix__real.html#a5fc12352da11cc214490dbad66d20899" title="Default constructor of the class. " alt="" coords="560,115,715,141"/>
-</map>

@@ -1,8 +1,0 @@
-<map id="Sub_Matrix_Decomposition_Cost_Function.h" name="Sub_Matrix_Decomposition_Cost_Function.h">
-<area shape="rect" id="node2" href="$common_8h.html" title="Header file for commonly used functions and wrappers to CBLAS functions. " alt="" coords="647,95,730,121"/>
-<area shape="rect" id="node16" href="$logging_8h.html" title="Header file for a class containing basic methods for setting up the verbosity level. " alt="" coords="755,244,828,271"/>
-<area shape="rect" id="node4" href="$_q_g_d_types_8h.html" title="Custom types for the SQUANDER package. " alt="" coords="82,393,178,420"/>
-<area shape="rect" id="node8" href="$dot_8h.html" title="dot.h" alt="" coords="467,169,518,196"/>
-<area shape="rect" id="node9" href="$matrix_8h.html" title="Header file of complex array storage array with automatic and thread safe reference counting..." alt="" coords="257,244,323,271"/>
-<area shape="rect" id="node10" href="$matrix__base_8h.html" title="Header file for the base class of Matrix. " alt="" coords="271,319,373,345"/>
-</map>

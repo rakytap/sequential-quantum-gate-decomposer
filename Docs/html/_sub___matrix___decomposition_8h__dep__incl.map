@@ -1,8 +1,0 @@
-<map id="Sub_Matrix_Decomposition.h" name="Sub_Matrix_Decomposition.h">
-<area shape="rect" id="node2" href="$_n___qubit___decomposition_8h.html" title="Header file for a class to determine the decomposition of an N&#45;qubit unitary into a sequence of CNOT ..." alt="" coords="324,80,497,107"/>
-<area shape="rect" id="node7" href="$_sub___matrix___decomposition_8cpp.html" title="Class responsible for the disentanglement of one qubit from the others. " alt="" coords="522,80,726,107"/>
-<area shape="rect" id="node3" href="$_n___qubit___decomposition_8cpp.html" title="Base class to determine the decomposition of a unitary into a sequence of two&#45;qubit and one&#45;qubit gat..." alt="" coords="5,162,192,189"/>
-<area shape="rect" id="node4" href="$qgd___n___qubit___decomposition___wrapper_8cpp.html" title="qgd_N_Qubit_Decomposition\l_Wrapper.cpp" alt="" coords="217,155,407,196"/>
-<area shape="rect" id="node5" href="$custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="432,155,587,196"/>
-<area shape="rect" id="node6" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="611,162,770,189"/>
-</map>

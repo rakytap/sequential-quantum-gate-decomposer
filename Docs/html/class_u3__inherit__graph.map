@@ -1,9 +1,0 @@
-<map id="U3" name="U3">
-<area shape="rect" id="node4" href="$class_r_x.html" title="A class representing a U3 gate. " alt="" coords="5,229,45,256"/>
-<area shape="rect" id="node5" href="$class_r_y.html" title="A class representing a U3 gate. " alt="" coords="69,229,109,256"/>
-<area shape="rect" id="node8" href="$class_r_z.html" title="A class representing a RZ gate. " alt="" coords="134,229,173,256"/>
-<area shape="rect" id="node2" href="$class_gate.html" title="Base class for the representation of general gate operations. " alt="" coords="64,80,115,107"/>
-<area shape="rect" id="node3" href="$classlogging.html" title="A class containing basic methods for setting up the verbosity level. " alt="" coords="58,5,121,32"/>
-<area shape="rect" id="node6" href="$class_c_r_y.html" title="A class representing a CRY gate. " alt="" coords="65,304,114,331"/>
-<area shape="rect" id="node7" href="$class_adaptive.html" title="A class representing a CRY gate. " alt="" coords="53,379,126,405"/>
-</map>

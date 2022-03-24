@@ -1,7 +1,0 @@
-<map id="Random_Unitary.h" name="Random_Unitary.h">
-<area shape="rect" id="node2" href="$_composite_8cpp.html" title="Class for the representation of general unitary operation on the first qbit_num&#45;1 qubits..." alt="" coords="5,87,113,114"/>
-<area shape="rect" id="node3" href="$_u_n_8cpp.html" title="Class for the representation of general unitary operation on the first qbit_num&#45;1 qubits..." alt="" coords="138,87,205,114"/>
-<area shape="rect" id="node4" href="$_random___unitary_8cpp.html" title="A class and methods to cerate random unitary matrices. " alt="" coords="229,87,372,114"/>
-<area shape="rect" id="node5" href="$custom__gate__structure__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries into custom structure of U3 and..." alt="" coords="397,80,551,121"/>
-<area shape="rect" id="node6" href="$decomposition__test_8cpp.html" title="A simple example file for a decomposition of general random unitaries. " alt="" coords="576,87,735,114"/>
-</map>

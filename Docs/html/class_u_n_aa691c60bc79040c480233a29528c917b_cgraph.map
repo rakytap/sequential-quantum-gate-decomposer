@@ -1,7 +1,0 @@
-<map id="UN::clone" name="UN::clone">
-<area shape="rect" id="node2" href="$class_u_n.html#a0ded0b9f5c13490f9c5f98844ad57770" title="Default constructor of the class. " alt="" coords="198,5,266,32"/>
-<area shape="rect" id="node3" href="$classmatrix__base.html#a16786b5d21406c60166fb118852f5f4a" title="Call to get the number of the allocated elements. " alt="" coords="171,56,293,83"/>
-<area shape="rect" id="node4" href="$class_u_n.html#a8ed0123832f74a1df7ff9442f7a37d28" title="Call to set the final optimized parameters of the gate. " alt="" coords="132,107,332,133"/>
-<area shape="rect" id="node5" href="$class_matrix__real.html#ac271d98bbc41a8f5b0d98e108b3a9077" title="Call to create a copy of the matrix. " alt="" coords="380,107,499,133"/>
-<area shape="rect" id="node6" href="$class_matrix__real.html#a5fc12352da11cc214490dbad66d20899" title="Default constructor of the class. " alt="" coords="547,107,701,133"/>
-</map>

@@ -1,9 +1,0 @@
-<map id="SX::set_qbit_num" name="SX::set_qbit_num">
-<area shape="rect" id="node2" href="$class_gates__block.html#ad1d8c9cd483808309155b0fa34de3d35" title="Set the number of qubits spanning the matrix of the gates stored in the block of gates. " alt="" coords="177,146,356,173"/>
-<area shape="rect" id="node3" href="$class_n___qubit___decomposition.html#a7d5519d19cc77f2d994e7f5674e233eb" title="Call to extract and store the calculated parameters and gates of the sub&#45;decomposition processes..." alt="" coords="404,57,583,113"/>
-<area shape="rect" id="node7" href="$class_n___qubit___decomposition.html#adf3feeb34e502da30a12c3ab46f492dc" title="Call to simplify the gate structure in a block of gates (i.e. " alt="" coords="841,173,1004,215"/>
-<area shape="rect" id="node4" href="$class_n___qubit___decomposition.html#a95c12334d80bb7f2ada67c536f503494" title="Start the disentanglig process of the unitary. " alt="" coords="631,64,793,105"/>
-<area shape="rect" id="node6" href="$class_n___qubit___decomposition.html#a7d01c357e16448fc65f0a4fa77a1d66e" title="Start the decompostion process to recursively decompose the submatrices. " alt="" coords="841,5,1004,47"/>
-<area shape="rect" id="node5" href="$custom__gate__structure__test_8cpp.html#ae66f6b31b5ad750f1fe042a706a4e3d4" title="Decomposition of general random unitary matrix into a custom structure of U3 and CNOT gates..." alt="" coords="897,71,948,98"/>
-<area shape="rect" id="node8" href="$class_n___qubit___decomposition.html#af768a6b3f20e1fd9909271941cf34b6f" title="Call to simplify the gate structure in the layers if possible (i.e. " alt="" coords="1052,144,1215,185"/>
-</map>
