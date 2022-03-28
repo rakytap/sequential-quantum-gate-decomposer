@@ -52,7 +52,6 @@ class Test_Decomposition:
         # creating an instance of the C++ class
         decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="random" )
 
-
     def test_N_Qubit_Decomposition_3qubit(self):
         r"""
         This method is called by pytest. 
@@ -102,6 +101,12 @@ class Test_Decomposition:
 
         # set the number of block to be optimized in one shot
         decomp.set_Optimization_Blocks( 20 )
+
+        # setting the verbosity of the decomposition
+        decomp.set_Verbose( 3 )
+
+        # setting the debugfile name. If it is not set, the program will not debug.
+        decomp.set_Debugfile( "debugfile.txt" )
 
         # start the decomposition
         decomp.Start_Decomposition()

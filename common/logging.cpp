@@ -36,9 +36,12 @@ logging::logging() {
 	// Number of the verbosity level in order to control the amount of the output messages. If this value is higher or equal than the local verbosity levels belongs to the messages, than the messages 	will be seen on the standart output screen.  
 	verbose=3;
 
-	// Logical variable. Set true to write output messages to the 'debug.txt' file.
-	debug=false;
 
+
+	// Logical variable. Set true to write output messages to a user defined file. 
+	
+	debug=false;
+	
 
 }
 
@@ -51,11 +54,11 @@ logging::logging() {
 */
 void logging::print(const std::stringstream& sstream, int verbose_level) {
 
-
-
+ 
 	if (debug) { 
-		std::ofstream debug_file; 
-		debug_file.open("debug.txt", std::ios_base::app);
+		
+		std::ofstream debug_file;         
+		debug_file.open(debugfile_name, std::ios_base::app);
  		debug_file << sstream.str(); 
 		debug_file.close();		
         }
@@ -84,3 +87,19 @@ void logging::set_verbose( int verbose_in ) {
     verbose = verbose_in;
 
 }
+
+/**
+@brief Call to set the debugfile name.
+@param debugfile String variable. Set the debugfile name. 
+*/
+void logging::set_debugfile(std::string debugfile ) {
+    
+    debugfile_name = debugfile;
+
+    if (debugfile_name!="<NULL>")
+		debug=true;
+
+    if (debugfile_name.c_str()) std::remove(debugfile_name.c_str());
+
+}
+

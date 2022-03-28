@@ -831,7 +831,7 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Iteration_Loops(qgd_N_Qubit_Decomposition_
 /**
 @brief Set the verbosity of the N_Qubit_Decomposition class
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
-@param args A tuple of the input arguments: verbose (bool)
+@param args A tuple of the input arguments: verbose (int)
 verbose: Set False to suppress the output messages of the decompostion, or True (deafult) otherwise.
 */
 static PyObject *
@@ -850,7 +850,40 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition_Wrapper 
     return Py_BuildValue("i", 0);
 }
 
+/**
+@brief Set the debugfile name of the N_Qubit_Decomposition class
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+@param args A tuple of the input arguments: debugfile_name (string)
+debug: Set True to suppress the output messages of the decompostion into a file named debugfile_name, or False (deafult) otherwise.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_set_Debugfile(qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args  ) {
 
+
+    PyObject *debugfile = NULL;
+ 
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &debugfile )) return Py_BuildValue("s", -1);
+
+    // determine the debugfile name type
+    PyObject* debugfile_string = PyObject_Str(debugfile);
+    PyObject* debugfile_string_unicode = PyUnicode_AsEncodedString(debugfile_string, "utf-8", "~E~");
+    const char* debugfile_C = PyBytes_AS_STRING(debugfile_string_unicode);
+
+    
+    Py_XDECREF(debugfile_string);
+    Py_XDECREF(debugfile_string_unicode);
+
+    // determine the length of the filename and initialize C++ variant of the string
+    Py_ssize_t string_length = PyBytes_Size(debugfile_string_unicode);
+    std::string debugfile_Cpp(debugfile_C, string_length);
+
+    // set the name of the debugfile on the C++ side
+    self->decomp->set_debugfile( debugfile_Cpp );
+
+
+    return Py_BuildValue("s", NULL);
+}
 
 /**
 @brief Wrapper method to set the optimization tolerance of the optimization process during the decomposition.
@@ -1070,6 +1103,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Wrapper_methods[] = {
     },
     {"set_Verbose", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Verbose, METH_VARARGS,
      "Call to set the verbosity of the qgd_N_Qubit_Decomposition class."
+    },
+    {"set_Debugfile", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Debugfile, METH_VARARGS,
+     "Set the debugfile name of the N_Qubit_Decomposition class."
     },
     {"set_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure, METH_VARARGS,
      "Call to set custom gate structure in the decomposition."
