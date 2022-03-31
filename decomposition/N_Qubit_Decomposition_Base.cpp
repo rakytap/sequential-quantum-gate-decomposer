@@ -244,7 +244,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
 
-            size_t iter = 0;
+            int iter = 0;
             int status;
 
             const gsl_multimin_fdfminimizer_type *T;

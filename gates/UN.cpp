@@ -193,7 +193,7 @@ UN::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     Matrix Transformed_Block1 = dot( Block1, Umtx );
 
     // put back the transformed data into input
-    for (size_t row_idx=0; row_idx<input.rows; row_idx++) {
+    for (int row_idx=0; row_idx<input.rows; row_idx++) {
         memcpy( input.get_data()+row_idx*input.stride, Transformed_Block0.get_data() + row_idx*Transformed_Block0.stride, Transformed_Block0.cols*sizeof(QGD_Complex16) );
         memcpy( input.get_data()+row_idx*input.stride + input.cols/2, Transformed_Block1.get_data() + row_idx*Transformed_Block1.stride, Transformed_Block1.cols*sizeof(QGD_Complex16) );
     }
@@ -208,7 +208,7 @@ Matrix
 UN::get_submatrix( Matrix_real& parameters ) {
 
     // create array of random parameters to construct random unitary
-    size_t matrix_size_loc = matrix_size/2;
+    int matrix_size_loc = matrix_size/2;
     double* vartheta = parameters.get_data();     
     double* varphi = parameters.get_data() + matrix_size_loc*(matrix_size_loc-1)/2;
     double* varkappa = parameters.get_data() + matrix_size_loc*(matrix_size_loc-1);

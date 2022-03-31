@@ -377,16 +377,16 @@ bool are_two_qubits_independent( Gates_block* two_qubit_gate, Matrix_real& param
     QGD_Complex16* mtx_new_data = mtx_new.get_data();
 
     int qbit = involved_qubits[0];
-    size_t dim_loc = (size_t)Power_of_2(qbit);
-    size_t dim_loc2 = (size_t)dim_loc*2;
+    int dim_loc = (int)Power_of_2(qbit);
+    int dim_loc2 = (int)dim_loc*2;
     int dim_over_2 = dim/2;
 
-    for ( size_t row_idx=0; row_idx<dim_over_2; row_idx++ ) {
+    for ( int row_idx=0; row_idx<dim_over_2; row_idx++ ) {
 
         int row_tmp  = row_idx % dim_loc;
         int row_tmp2 = (row_idx-row_tmp)/dim_loc;
 
-        for ( size_t col_idx=0; col_idx<dim_over_2; col_idx+=dim_loc ) {
+        for ( int col_idx=0; col_idx<dim_over_2; col_idx+=dim_loc ) {
 
             memcpy( mtx_new_data + row_idx*dim + col_idx,                             mtx_data + (row_tmp2*dim_loc2+row_tmp)*dim + (col_idx*2),                   dim_loc*sizeof(QGD_Complex16) );
             memcpy( mtx_new_data + row_idx*dim + col_idx + dim_over_2,                mtx_data + (row_tmp2*dim_loc2+row_tmp)*dim + (col_idx*2 + dim_loc),         dim_loc*sizeof(QGD_Complex16) );

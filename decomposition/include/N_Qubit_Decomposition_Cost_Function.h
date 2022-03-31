@@ -66,7 +66,7 @@ functor_cost_fnc( Matrix matrix_in,  tbb::combinable<double>* partial_cost_funct
 @brief Operator to calculate the partial cost function derived from the row of the matrix labeled by row_idx
 @param r A TBB range labeling the partial cost function to be calculated.
 */
-void operator()( tbb::blocked_range<size_t> r ) const;
+void operator()( tbb::blocked_range<int> r ) const;
 
 };
 

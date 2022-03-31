@@ -427,7 +427,7 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
 
-            size_t iter = 0;
+            int iter = 0;
             int status;
 
             const gsl_multimin_fdfminimizer_type *T;

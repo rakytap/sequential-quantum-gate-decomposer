@@ -77,23 +77,23 @@ void get_cblas_transpose( Matrix &A, CBLAS_TRANSPOSE &transpose );
 struct row_indices {
 
     /// The firs row in matrix A participating in the multiplication sub-problem.
-    size_t Arows_start;
+    int Arows_start;
     /// The last row in matrix A participating in the multiplication sub-problem. (The rows are picked from a closed-open range [Arows_start, Arows_end) )
-    size_t Arows_end;
+    int Arows_end;
     /// The number of rows in matrix A participating in the multiplication sub-problem.
-    size_t Arows;
+    int Arows;
     /// The firs row in matrix B participating in the multiplication sub-problem.
-    size_t Brows_start;
+    int Brows_start;
     /// The last row in matrix B participating in the multiplication sub-problem. (The rows are picked from a closed-open range [Brows_start, Brows_end) )
-    size_t Brows_end;
+    int Brows_end;
     /// The number of rows in matrix B participating in the multiplication sub-problem.
-    size_t Brows;
+    int Brows;
     /// The firs row in matrix C participating in the multiplication sub-problem.
-    size_t Crows_start;
+    int Crows_start;
     /// The last row in matrix C participating in the multiplication sub-problem. (The rows are picked from a closed-open range [Crows_start, Crows_end) )
-    size_t Crows_end;
+    int Crows_end;
     /// The number of rows in matrix C participating in the multiplication sub-problem.
-    size_t Crows;
+    int Crows;
 };
 
 /**
@@ -102,23 +102,23 @@ struct row_indices {
 */
 struct col_indices {
     /// The firs col in matrix A participating in the multiplication sub-problem.
-    size_t Acols_start;
+    int Acols_start;
     /// The last col in matrix A participating in the multiplication sub-problem. (The cols are picked from a closed-open range [Acols_start, Acols_end) )
-    size_t Acols_end;
+    int Acols_end;
     /// The number of cols in matrix A participating in the multiplication sub-problem.
-    size_t Acols;
+    int Acols;
     /// The firs col in matrix B participating in the multiplication sub-problem.
-    size_t Bcols_start;
+    int Bcols_start;
     /// The last col in matrix B participating in the multiplication sub-problem. (The cols are picked from a closed-open range [Bcols_start, Bcols_end) )
-    size_t Bcols_end;
+    int Bcols_end;
     /// The number of cols in matrix B participating in the multiplication sub-problem.
-    size_t Bcols;
+    int Bcols;
     /// The firs col in matrix C participating in the multiplication sub-problem.
-    size_t Ccols_start;
+    int Ccols_start;
     /// The last col in matrix C participating in the multiplication sub-problem. (The col are picked from a closed-open range [Ccols_start, Ccols_end) )
-    size_t Ccols_end;
+    int Ccols_end;
     /// The number of cols in matrix C participating in the multiplication sub-problem.
-    size_t Ccols;
+    int Ccols;
 };
 
 
