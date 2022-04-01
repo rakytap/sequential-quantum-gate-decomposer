@@ -1135,9 +1135,6 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
     //The stringstream input to store the output messages.
     std::stringstream sstream;
 
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
-
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );
 

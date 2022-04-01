@@ -208,9 +208,6 @@ Gates_block::get_matrix( Matrix_real& parameters ) {
     //The stringstream input to store the output messages.
     std::stringstream sstream;
 
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
-
     // create matrix representation of the gate operations
     Matrix block_mtx = create_identity(matrix_size);
     apply_to(parameters, block_mtx);
@@ -359,9 +356,6 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     //The stringstream input to store the output messages.
     std::stringstream sstream;
 
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
-
     double* parameters = parameters_mtx.get_data();
 
     for( int idx=0; idx<gates.size(); idx++) {
@@ -463,9 +457,6 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
-
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
   
     std::vector<Matrix> grad(parameter_num, Matrix(0,0));
 

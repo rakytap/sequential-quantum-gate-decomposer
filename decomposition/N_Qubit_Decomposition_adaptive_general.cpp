@@ -414,9 +414,6 @@ N_Qubit_Decomposition_adaptive_general::get_panelty( Gates_block* gate_structure
     //The stringstream input to store the output messages.
     std::stringstream sstream;
 
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
-
     int panelty = 0;
 
     // iterate over the elements of tha parameter array
@@ -459,9 +456,6 @@ N_Qubit_Decomposition_adaptive_general::remove_trivial_gates( Gates_block* gate_
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
-
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
 
     int layer_num = gate_structure->get_gate_num()-1;
     int parameter_idx = 0;
@@ -552,9 +546,6 @@ N_Qubit_Decomposition_adaptive_general::construct_gate_layer( const int& _target
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
-
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
 
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );

@@ -194,9 +194,6 @@ X::apply_from_right( Matrix& input ) {
     //The stringstream input to store the output messages.
     std::stringstream sstream;
 
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
-
     if (input.cols != matrix_size ) {
         std::stringstream sstream;
 	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;

@@ -348,9 +348,6 @@ Matrix Decomposition_Base::get_finalizing_gates( Matrix& mtx, Gates_block* final
 void  Decomposition_Base::solve_optimization_problem( double* solution_guess, int solution_guess_num ) {
 	
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
-
         if ( gates.size() == 0 ) {
             return;
         }
@@ -1300,10 +1297,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         }
         else if (gate->get_type() == UN_OPERATION) {
 
-            // definig the parameter of the rotational angle
-            double varphi;
-
-            // get the inverse parameters of the RZ rotation
+             // get the inverse parameters of the RZ rotation
             UN* un_gate = static_cast<UN*>(gate);
 
             Matrix_real optimized_parameters( parameters+parameter_idx, 1, (int)un_gate->get_parameter_num());
@@ -1316,9 +1310,6 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
         }
         else if (gate->get_type() == ON_OPERATION) {
-
-            // definig the parameter of the rotational angle
-            double varphi;
 
             // get the inverse parameters of the RZ rotation
             ON* on_gate = static_cast<ON*>(gate);
@@ -1333,9 +1324,6 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
         }
         else if (gate->get_type() == COMPOSITE_OPERATION) {
-
-            // definig the parameter of the rotational angle
-            double varphi;
 
             // get the inverse parameters of the RZ rotation
             Composite* com_gate = static_cast<Composite*>(gate);
