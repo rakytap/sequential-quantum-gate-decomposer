@@ -496,9 +496,9 @@ N_Qubit_Decomposition::simplify_layers() {
         Gates_block* gates_loc = new Gates_block( qbit_num );
         Matrix_real optimized_parameters_loc_mtx(1, parameter_num);
         double* optimized_parameters_loc = optimized_parameters_loc_mtx.get_data();
-        unsigned int parameter_num_loc = 0;
+        int parameter_num_loc = 0;
 
-        unsigned int layer_idx = 0;
+        int layer_idx = 0;
 
         while (layer_idx < gates.size()) {
 
@@ -553,7 +553,7 @@ N_Qubit_Decomposition::simplify_layers() {
             }
 
             //number of perations in the block
-            unsigned int parameter_num_block = block_to_simplify->get_parameter_num();
+            int parameter_num_block = block_to_simplify->get_parameter_num();
 
             // get the number of two-qubit gates and store the block gates if the number of CNOT gates cannot be reduced
             gates_num gate_nums = block_to_simplify->get_gate_nums();
@@ -587,7 +587,7 @@ N_Qubit_Decomposition::simplify_layers() {
             max_layer_num_loc.insert( std::pair<int, int>(2,  gate_nums.cnot+gate_nums.cz+gate_nums.ch-1 ) );
             Gates_block* simplified_layer = NULL;
             double* simplified_parameters = NULL;
-            unsigned int simplified_parameter_num=0;
+            int simplified_parameter_num=0;
 
             // Try to simplify the sequence of 2-qubit gates
             int simplification_status = simplify_layer( block_to_simplify, optimized_parameters_mtx.get_data()+parameter_idx, parameter_num_block, max_layer_num_loc, simplified_layer, simplified_parameters, simplified_parameter_num );
@@ -691,7 +691,7 @@ N_Qubit_Decomposition::simplify_layers() {
 @return Returns with 0 if the simplification wa ssuccessful.
 */
 int
-N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Gates_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num) {
+N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, int parameter_num_block, std::map<int,int> max_layer_num_loc, Gates_block* &simplified_layer, double* &simplified_parameters, int &simplified_parameter_num) {
 
         //The stringstream input to store the output messages.
     	std::stringstream sstream;

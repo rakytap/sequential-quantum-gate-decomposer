@@ -54,7 +54,7 @@ protected:
     /// The size N of the NxN matrix associated with the operations.
     int matrix_size;
     /// the number of free parameters of the operation
-    unsigned int parameter_num;
+    int parameter_num;
 
 private:
 
@@ -148,7 +148,7 @@ int get_control_qbit();
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */
-unsigned int get_parameter_num();
+int get_parameter_num();
 
 
 /**

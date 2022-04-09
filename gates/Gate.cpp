@@ -208,7 +208,7 @@ int Gate::get_control_qbit()  {
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */
-unsigned int Gate::get_parameter_num() {
+int Gate::get_parameter_num() {
     return parameter_num;
 }
 

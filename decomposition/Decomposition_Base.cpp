@@ -214,7 +214,7 @@ void Decomposition_Base::finalize_decomposition() {
         for (int idx=0; idx < finalizing_parameter_num; idx++) {
             optimized_parameters_tmp[idx] = finalizing_parameters[idx];
         }
-        for (unsigned int idx=0; idx < parameter_num-finalizing_parameter_num; idx++) {
+        for (int idx=0; idx < parameter_num-finalizing_parameter_num; idx++) {
             optimized_parameters_tmp[idx+finalizing_parameter_num] = optimized_parameters_mtx[idx];
         }
         qgd_free( finalizing_parameters);
@@ -384,17 +384,17 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
         // preparing solution guess for the iterations
         if ( initial_guess == ZEROS ) {
-            for(unsigned int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
+            for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = 0;
             }
         }
         else if ( initial_guess == RANDOM ) {
-            for(unsigned int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
+            for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
             }
         }
         else if ( initial_guess == CLOSE_TO_ZERO ) {
-            for(unsigned int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
+            for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
             }
         }
@@ -414,7 +414,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
         // defining temporary variables for iteration cycles
         int block_idx_end;
-        unsigned int block_idx_start = gates.size();
+        int block_idx_start = gates.size();
         gates.clear();
         int block_parameter_num;
         Gate* fixed_gate_post = new Gate( qbit_num );
@@ -490,7 +490,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
             // create a list of gates for the optimization process
             gates.push_back( fixed_gate_post ); 
-            for ( unsigned int idx=block_idx_end; idx<block_idx_start; idx++ ) {
+            for ( int idx=block_idx_end; idx<block_idx_start; idx++ ) {
                 gates.push_back( gates_loc[idx] );
             }
 

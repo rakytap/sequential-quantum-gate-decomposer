@@ -277,7 +277,7 @@ Matrix_real UN::get_optimized_parameters() {
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */
-unsigned int 
+int 
 UN::get_parameter_num() {
     return parameter_num;
 }
