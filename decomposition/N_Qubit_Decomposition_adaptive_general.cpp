@@ -205,7 +205,7 @@ N_Qubit_Decomposition_adaptive_general::start_decomposition(bool prepare_export)
     // find the best decomposition
     int idx_min = 0;
     double current_minimum = minimum_vec[0];
-    for (int idx=1; idx<minimum_vec.size(); idx++) {
+    for (int idx=1; idx<(int)minimum_vec.size(); idx++) {
         if( current_minimum > minimum_vec[idx] ) {
             idx_min = idx;
             current_minimum = minimum_vec[idx];
@@ -216,7 +216,7 @@ N_Qubit_Decomposition_adaptive_general::start_decomposition(bool prepare_export)
     optimized_parameters_mtx = optimized_parameters_vec[idx_min];
 
     // release unnecesarry data
-    for (int idx=0; idx<minimum_vec.size(); idx++) {
+    for (int idx=0; idx<(int)minimum_vec.size(); idx++) {
         if( idx == idx_min ) {
             continue;
         }

@@ -500,7 +500,7 @@ N_Qubit_Decomposition::simplify_layers() {
 
         int layer_idx = 0;
 
-        while (layer_idx < gates.size()) {
+        while (layer_idx < (int)gates.size()) {
 
             // generate a block of gates to be simplified
             // (containg only successive two-qubit gates)
@@ -513,7 +513,7 @@ N_Qubit_Decomposition::simplify_layers() {
             // get the successive gates involving the same qubits
             while (true) {
 
-                if (layer_idx >= gates.size() ) {
+                if (layer_idx >=(int)gates.size() ) {
                     break;
                 }
 

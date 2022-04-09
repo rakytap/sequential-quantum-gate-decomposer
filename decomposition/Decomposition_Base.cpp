@@ -449,7 +449,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
        
 
             // ***** get applied the fixed gates applied before the optimized gates *****
-            if (block_idx_start < gates_loc.size() ) {
+            if (block_idx_start < (int)gates_loc.size() ) {
                 std::vector<Gate*>::iterator fixed_gates_pre_it = gates.begin() + 1;
                 //Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
                 Umtx = get_transformed_matrix(optimized_parameters_mtx, fixed_gates_pre_it, gates.size()-1, Umtx);
@@ -470,7 +470,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
             // ***** get the fixed gates applied after the optimized gates *****
             // create a list of post gates matrices
-            if (block_idx_start == gates_loc.size() ) {
+            if (block_idx_start == (int)gates_loc.size() ) {
                 // matrix of the fixed gates aplied after the gates to be varied
                 double* fixed_parameters_post = optimized_parameters_gsl->data;
                 std::vector<Gate*>::iterator fixed_gates_post_it = gates_loc.begin();

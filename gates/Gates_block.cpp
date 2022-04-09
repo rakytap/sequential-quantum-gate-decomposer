@@ -187,7 +187,7 @@ Gates_block::release_gates() {
 void
 Gates_block::release_gate( int idx) {
 
-    if ( idx>= gates.size() ) return;
+    if ( idx>= (int)gates.size() ) return;
 
     // fist decrese the number of parameters
     Gate* gate = gates[idx];
@@ -358,7 +358,7 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
     double* parameters = parameters_mtx.get_data();
 
-    for( int idx=0; idx<gates.size(); idx++) {
+    for( int idx=0; idx<(int)gates.size(); idx++) {
 
         Gate* operation = gates[idx];
         Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
@@ -673,7 +673,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
             }
 
 
-            for ( int idx = 0; idx<grad_loc.size(); idx++ ) {
+            for ( int idx = 0; idx<(int)grad_loc.size(); idx++ ) {
                 grad[deriv_parameter_idx+idx] = grad_loc[idx];
             }
 
@@ -1731,7 +1731,7 @@ std::vector<Gate*> Gates_block::get_gates() {
 */
 Gate* Gates_block::get_gate(int idx) {
 
-    if (idx > gates.size() ) {
+    if (idx > (int)gates.size() ) {
         return NULL;
     }
 
