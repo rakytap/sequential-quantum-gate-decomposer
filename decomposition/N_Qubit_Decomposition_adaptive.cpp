@@ -58,7 +58,7 @@ Matrix_real create_random_paramaters( Gates_block* gate_structure ) {
 
 }
 
-static int limit_max=20;
+
 
 /**
 @brief Nullary constructor of the class.
@@ -1138,7 +1138,6 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );
 
-    int layer_num = (qbit_num*(qbit_num-1))/2;
     std::vector<Gates_block* > layers;
 
 
@@ -1207,7 +1206,6 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
 */
     while (layers.size()>0) { 
         int idx = std::rand() % layers.size();
-        Gates_block* layer = (Gates_block*)layers[idx];
         block->add_gate( layers[idx] );
         layers.erase( layers.begin() + idx );
     }

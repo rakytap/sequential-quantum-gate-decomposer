@@ -500,7 +500,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             if ( solution_guess_gsl == NULL ) {
                 solution_guess_gsl = gsl_vector_alloc (parameter_num);
             }
-            else if ( parameter_num != solution_guess_gsl->size ) {
+            else if ( parameter_num != (int)solution_guess_gsl->size ) {
                 gsl_vector_free(solution_guess_gsl);
                 solution_guess_gsl = gsl_vector_alloc (parameter_num);
             }

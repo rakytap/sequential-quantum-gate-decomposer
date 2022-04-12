@@ -550,7 +550,6 @@ N_Qubit_Decomposition_adaptive_general::construct_gate_layer( const int& _target
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );
 
-    int layer_num = (qbit_num*(qbit_num-1))/2;
     std::vector<Gates_block* > layers;
 
     if ( topology.size() > 0 ) {
@@ -621,7 +620,6 @@ N_Qubit_Decomposition_adaptive_general::construct_gate_layer( const int& _target
 */
     while (layers.size()>0) { 
         int idx = std::rand() % layers.size();
-        Gates_block* layer = (Gates_block*)layers[idx];
         block->add_gate( layers[idx] );
         layers.erase( layers.begin() + idx );
     }
