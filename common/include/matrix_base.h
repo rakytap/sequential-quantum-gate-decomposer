@@ -284,7 +284,7 @@ void transpose()  {
 /**
 @brief Call to get the pointer to the stored data
 */
-scalar* get_data() {
+scalar* get_data() const {
 
   return data;
 
@@ -403,7 +403,7 @@ void operator= (const matrix_base& mtx ) {
 @param idx the index of the element
 @return Returns with a reference to the idx-th element.
 */
-scalar& operator[](int idx)  const {
+scalar& operator[](int idx)  {
 
 #ifdef DEBUG
     if ( idx >= rows*stride || idx < 0) {
@@ -414,8 +414,6 @@ scalar& operator[](int idx)  const {
 
     return data[idx];
 }
-
-
 
 
 /**
