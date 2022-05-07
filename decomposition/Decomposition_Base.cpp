@@ -1357,7 +1357,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         }
         else if (gate->get_type() == BLOCK_OPERATION) {
             Gates_block* block_gate = static_cast<Gates_block*>(gate);
-            const double* parameters_layer = parameters + parameter_idx;
+            double* parameters_layer = parameters + parameter_idx;
 
             std::vector<Gate*> ops_loc = prepare_gates_to_export(block_gate, parameters_layer);
             parameter_idx = parameter_idx + block_gate->get_parameter_num();
