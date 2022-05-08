@@ -58,7 +58,7 @@ Matrix_real create_random_paramaters( Gates_block* gate_structure ) {
 
 }
 
-static int limit_max=20;
+
 
 /**
 @brief Nullary constructor of the class.
@@ -628,7 +628,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
     // find the best decomposition
     int idx_min = 0;
     double current_minimum = minimum_vec[0];
-    for (int idx=1; idx<minimum_vec.size(); idx++) {
+    for (int idx=1; idx<(int)minimum_vec.size(); idx++) {
         if( current_minimum > minimum_vec[idx] ) {
             idx_min = idx;
             current_minimum = minimum_vec[idx];
@@ -639,7 +639,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
     optimized_parameters_mtx_loc = optimized_parameters_vec[idx_min];
 
     // release unnecesarry data
-    for (int idx=0; idx<minimum_vec.size(); idx++) {
+    for (int idx=0; idx<(int)minimum_vec.size(); idx++) {
         if( idx == idx_min ) {
             continue;
         }
@@ -686,7 +686,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         layers_to_remove.push_back(idx+1);
     }   
 
-    while ( layers_to_remove.size() > layer_num_max ) {
+    while ( (int)layers_to_remove.size() > layer_num_max ) {
         int remove_idx = rand() % layers_to_remove.size();
         layers_to_remove.erase( layers_to_remove.begin() + remove_idx );
     }
@@ -1135,13 +1135,9 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
     //The stringstream input to store the output messages.
     std::stringstream sstream;
 
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
-
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );
 
-    int layer_num = (qbit_num*(qbit_num-1))/2;
     std::vector<Gates_block* > layers;
 
 
@@ -1210,7 +1206,6 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
 */
     while (layers.size()>0) { 
         int idx = std::rand() % layers.size();
-        Gates_block* layer = (Gates_block*)layers[idx];
         block->add_gate( layers[idx] );
         layers.erase( layers.begin() + idx );
     }

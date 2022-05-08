@@ -72,7 +72,7 @@ double activation_function( double Phi, int limit ) {
 @param size A size of one element (such as sizeof(double) )
 @param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
 */
-void* qgd_calloc( size_t element_num, size_t size, size_t alignment ) {
+void* qgd_calloc( int element_num, int size, int alignment ) {
 
     void* ret = scalable_aligned_malloc( size*element_num, CACHELINE);
     memset(ret, 0, element_num*size);
@@ -88,7 +88,7 @@ b) allocating a new memory block of size new_size bytes, copying memory area wit
 @param size A size of one element (such as sizeof(double) )
 @param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
 */
-void* qgd_realloc(void* aligned_ptr, size_t element_num, size_t size, size_t alignment ) {
+void* qgd_realloc(void* aligned_ptr, int element_num, int size, int alignment ) {
 
     void* ret = scalable_aligned_realloc(aligned_ptr, size*element_num, CACHELINE);
     return ret;
@@ -238,10 +238,10 @@ C.print_matrix();
 */
 void subtract_diag( Matrix& mtx, QGD_Complex16 scalar ) {
 
-    size_t matrix_size = mtx.rows;
+    int matrix_size = mtx.rows;
 
-    for(size_t idx = 0; idx < matrix_size; idx++)   {
-        size_t element_idx = idx*matrix_size+idx;
+    for(int idx = 0; idx < matrix_size; idx++)   {
+        int element_idx = idx*matrix_size+idx;
         mtx[element_idx].real = mtx[element_idx].real - scalar.real;
         mtx[element_idx].imag = mtx[element_idx].imag - scalar.imag;
     }
@@ -292,9 +292,9 @@ QGD_Complex16 mult( double a, QGD_Complex16 b ) {
 */
 void mult( QGD_Complex16 a, Matrix& b ) {
 
-    size_t element_num = b.size();
+    int element_num = b.size();
 
-    for (size_t idx=0; idx<element_num; idx++) {
+    for (int idx=0; idx<element_num; idx++) {
         QGD_Complex16 tmp = b[idx];
         b[idx].real = a.real*tmp.real - a.imag*tmp.imag;
         b[idx].imag = a.real*tmp.imag + a.imag*tmp.real;

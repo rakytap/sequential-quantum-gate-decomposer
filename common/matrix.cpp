@@ -44,7 +44,7 @@ Matrix::Matrix() : matrix_base<QGD_Complex16>() {
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
-Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in) : matrix_base<QGD_Complex16>(data_in, rows_in, cols_in) {
+Matrix::Matrix( QGD_Complex16* data_in, int rows_in, int cols_in) : matrix_base<QGD_Complex16>(data_in, rows_in, cols_in) {
 
 }
 
@@ -57,7 +57,7 @@ Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in) : matrix
 @param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
 @return Returns with the instance of the class.
 */
-Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in, size_t stride_in) : matrix_base<QGD_Complex16>(data_in, rows_in, cols_in, stride_in) {
+Matrix::Matrix( QGD_Complex16* data_in, int rows_in, int cols_in, int stride_in) : matrix_base<QGD_Complex16>(data_in, rows_in, cols_in, stride_in) {
 
 }
 
@@ -68,7 +68,7 @@ Matrix::Matrix( QGD_Complex16* data_in, size_t rows_in, size_t cols_in, size_t s
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
-Matrix::Matrix( size_t rows_in, size_t cols_in) : matrix_base<QGD_Complex16>(rows_in, cols_in) {
+Matrix::Matrix( int rows_in, int cols_in) : matrix_base<QGD_Complex16>(rows_in, cols_in) {
 
 
 }
@@ -81,7 +81,7 @@ Matrix::Matrix( size_t rows_in, size_t cols_in) : matrix_base<QGD_Complex16>(row
 @param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
 @return Returns with the instance of the class.
 */
-Matrix::Matrix( size_t rows_in, size_t cols_in, size_t stride_in) : matrix_base<QGD_Complex16>(rows_in, cols_in, stride_in) {
+Matrix::Matrix( int rows_in, int cols_in, int stride_in) : matrix_base<QGD_Complex16>(rows_in, cols_in, stride_in) {
 
 }
 
@@ -127,7 +127,7 @@ Matrix::copy() {
 bool
 Matrix::isnan() {
 
-    for (size_t idx=0; idx < rows*cols; idx++) {
+    for (int idx=0; idx < rows*cols; idx++) {
         if ( std::isnan(data[idx].real) || std::isnan(data[idx].imag) ) {
             return true;
         }
@@ -149,9 +149,9 @@ Matrix::print_matrix() {
 
     std::cout << std::endl << "The stored matrix:" << std::endl;
     
-    for ( size_t row_idx=0; row_idx < rows; row_idx++ ) {
-        for ( size_t col_idx=0; col_idx < cols; col_idx++ ) {
-            size_t element_idx = row_idx*stride + col_idx;
+    for ( int row_idx=0; row_idx < rows; row_idx++ ) {
+        for ( int col_idx=0; col_idx < cols; col_idx++ ) {
+            int element_idx = row_idx*stride + col_idx;
 	     std::cout << " (" << data[element_idx].real << ", " << data[element_idx].imag << "*i)";	              
         }
 

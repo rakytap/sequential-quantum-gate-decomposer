@@ -33,10 +33,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 double get_cost_function(Matrix matrix) {
 
-    size_t matrix_size = matrix.rows;
+    int matrix_size = matrix.rows;
 /*
     tbb::combinable<double> priv_partial_cost_functions{[](){return 0;}};
-    tbb::parallel_for( tbb::blocked_range<size_t>(0, matrix_size, 1), functor_cost_fnc( matrix, &priv_partial_cost_functions ));
+    tbb::parallel_for( tbb::blocked_range<int>(0, matrix_size, 1), functor_cost_fnc( matrix, &priv_partial_cost_functions ));
 */
 /*
     //sequential version
@@ -62,7 +62,7 @@ double get_cost_function(Matrix matrix) {
     double* matrix_data = (double*)matrix.get_data();
     int offset = 2*(matrix.stride+1);
 
-    for (size_t idx=0; idx<matrix_size; idx++) {
+    for (int idx=0; idx<matrix_size; idx++) {
         
         // get the diagonal element
         __m128d element_128 = _mm_load_pd(matrix_data);
@@ -84,7 +84,7 @@ double get_cost_function(Matrix matrix) {
     //trace.real = 0.0;
     //trace.imag = 0.0;
 
-    for (size_t idx=0; idx<matrix_size; idx++) {
+    for (int idx=0; idx<matrix_size; idx++) {
         
         trace.real += matrix[idx*matrix.stride + idx].real;
         trace.imag += matrix[idx*matrix.stride + idx].imag;
@@ -97,7 +97,7 @@ double get_cost_function(Matrix matrix) {
 
     double trace_real = 0.0;
 
-    for (size_t idx=0; idx<matrix_size; idx++) {
+    for (int idx=0; idx<matrix_size; idx++) {
         
         trace_real += matrix[idx*matrix.stride + idx].real;
     }
@@ -131,12 +131,12 @@ functor_cost_fnc::functor_cost_fnc( Matrix matrix_in, tbb::combinable<double>* p
 @brief Operator to calculate the partial cost function derived from the row of the matrix labeled by row_idx
 @param r A TBB range labeling the partial cost function to be calculated.
 */
-void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
+void functor_cost_fnc::operator()( tbb::blocked_range<int> r ) const {
 
-    size_t matrix_size = matrix.rows;
+    int matrix_size = matrix.rows;
     double &cost_function_priv = partial_cost_functions->local();
 
-    for ( size_t row_idx = r.begin(); row_idx != r.end(); row_idx++) {
+    for ( int row_idx = r.begin(); row_idx != r.end(); row_idx++) {
 
         if ( row_idx > matrix_size ) {
             std::stringstream sstream;
@@ -151,13 +151,13 @@ void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
 
         // Calculate the |x|^2 value of the elements of the matrix and summing them up to calculate the partial cost function
         double partial_cost_function = 0;
-        size_t idx_offset = row_idx*matrix_size;
-        size_t idx_max = idx_offset + row_idx;
-        for ( size_t idx=idx_offset; idx<idx_max; idx++ ) {
+        int idx_offset = row_idx*matrix_size;
+        int idx_max = idx_offset + row_idx;
+        for ( int idx=idx_offset; idx<idx_max; idx++ ) {
             partial_cost_function = partial_cost_function + data[idx].real*data[idx].real + data[idx].imag*data[idx].imag;
         }
 
-        size_t diag_element_idx = row_idx*matrix_size + row_idx;
+        int diag_element_idx = row_idx*matrix_size + row_idx;
         double diag_real = data[diag_element_idx].real - corner_element.real;
         double diag_imag = data[diag_element_idx].imag - corner_element.imag;
         partial_cost_function = partial_cost_function + diag_real*diag_real + diag_imag*diag_imag;
@@ -165,7 +165,7 @@ void functor_cost_fnc::operator()( tbb::blocked_range<size_t> r ) const {
 
         idx_offset = idx_max + 1;
         idx_max = row_idx*matrix_size + matrix_size;
-        for ( size_t idx=idx_offset; idx<idx_max; idx++ ) {
+        for ( int idx=idx_offset; idx<idx_max; idx++ ) {
             partial_cost_function = partial_cost_function + data[idx].real*data[idx].real + data[idx].imag*data[idx].imag;
         }
 

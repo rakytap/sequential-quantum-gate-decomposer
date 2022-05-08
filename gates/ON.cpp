@@ -194,7 +194,7 @@ ON::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     Matrix Transformed_Block1 = dot( Block1, Umtx );
 
     // put back the transformed data into input
-    for (size_t row_idx=0; row_idx<input.rows; row_idx++) {
+    for (int row_idx=0; row_idx<input.rows; row_idx++) {
         memcpy( input.get_data()+row_idx*input.stride, Transformed_Block0.get_data() + row_idx*Transformed_Block0.stride, Transformed_Block0.cols*sizeof(QGD_Complex16) );
         memcpy( input.get_data()+row_idx*input.stride + input.cols/2, Transformed_Block1.get_data() + row_idx*Transformed_Block1.stride, Transformed_Block1.cols*sizeof(QGD_Complex16) );
     }
@@ -209,7 +209,7 @@ Matrix
 ON::get_submatrix( Matrix_real& parameters ) {
 
     // create array of random parameters to construct random ONitary
-    size_t matrix_size_loc = matrix_size/2;
+    int matrix_size_loc = matrix_size/2;
 
     Random_Orthogonal ro( matrix_size_loc );
     Matrix Umtx = ro.Construct_Orthogonal_Matrix( parameters );
@@ -277,7 +277,7 @@ Matrix_real ON::get_optimized_parameters() {
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */
-unsigned int 
+int 
 ON::get_parameter_num() {
     return parameter_num;
 }

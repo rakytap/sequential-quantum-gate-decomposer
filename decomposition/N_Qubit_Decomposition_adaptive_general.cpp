@@ -205,7 +205,7 @@ N_Qubit_Decomposition_adaptive_general::start_decomposition(bool prepare_export)
     // find the best decomposition
     int idx_min = 0;
     double current_minimum = minimum_vec[0];
-    for (int idx=1; idx<minimum_vec.size(); idx++) {
+    for (int idx=1; idx<(int)minimum_vec.size(); idx++) {
         if( current_minimum > minimum_vec[idx] ) {
             idx_min = idx;
             current_minimum = minimum_vec[idx];
@@ -216,7 +216,7 @@ N_Qubit_Decomposition_adaptive_general::start_decomposition(bool prepare_export)
     optimized_parameters_mtx = optimized_parameters_vec[idx_min];
 
     // release unnecesarry data
-    for (int idx=0; idx<minimum_vec.size(); idx++) {
+    for (int idx=0; idx<(int)minimum_vec.size(); idx++) {
         if( idx == idx_min ) {
             continue;
         }
@@ -377,16 +377,16 @@ bool are_two_qubits_independent( Gates_block* two_qubit_gate, Matrix_real& param
     QGD_Complex16* mtx_new_data = mtx_new.get_data();
 
     int qbit = involved_qubits[0];
-    size_t dim_loc = (size_t)Power_of_2(qbit);
-    size_t dim_loc2 = (size_t)dim_loc*2;
+    int dim_loc = (int)Power_of_2(qbit);
+    int dim_loc2 = (int)dim_loc*2;
     int dim_over_2 = dim/2;
 
-    for ( size_t row_idx=0; row_idx<dim_over_2; row_idx++ ) {
+    for ( int row_idx=0; row_idx<dim_over_2; row_idx++ ) {
 
         int row_tmp  = row_idx % dim_loc;
         int row_tmp2 = (row_idx-row_tmp)/dim_loc;
 
-        for ( size_t col_idx=0; col_idx<dim_over_2; col_idx+=dim_loc ) {
+        for ( int col_idx=0; col_idx<dim_over_2; col_idx+=dim_loc ) {
 
             memcpy( mtx_new_data + row_idx*dim + col_idx,                             mtx_data + (row_tmp2*dim_loc2+row_tmp)*dim + (col_idx*2),                   dim_loc*sizeof(QGD_Complex16) );
             memcpy( mtx_new_data + row_idx*dim + col_idx + dim_over_2,                mtx_data + (row_tmp2*dim_loc2+row_tmp)*dim + (col_idx*2 + dim_loc),         dim_loc*sizeof(QGD_Complex16) );
@@ -413,9 +413,6 @@ N_Qubit_Decomposition_adaptive_general::get_panelty( Gates_block* gate_structure
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
-
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
 
     int panelty = 0;
 
@@ -459,9 +456,6 @@ N_Qubit_Decomposition_adaptive_general::remove_trivial_gates( Gates_block* gate_
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
-
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
 
     int layer_num = gate_structure->get_gate_num()-1;
     int parameter_idx = 0;
@@ -553,13 +547,9 @@ N_Qubit_Decomposition_adaptive_general::construct_gate_layer( const int& _target
     //The stringstream input to store the output messages.
     std::stringstream sstream;
 
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
-
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );
 
-    int layer_num = (qbit_num*(qbit_num-1))/2;
     std::vector<Gates_block* > layers;
 
     if ( topology.size() > 0 ) {
@@ -630,7 +620,6 @@ N_Qubit_Decomposition_adaptive_general::construct_gate_layer( const int& _target
 */
     while (layers.size()>0) { 
         int idx = std::rand() % layers.size();
-        Gates_block* layer = (Gates_block*)layers[idx];
         block->add_gate( layers[idx] );
         layers.erase( layers.begin() + idx );
     }

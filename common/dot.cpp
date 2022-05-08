@@ -374,9 +374,9 @@ zgemm_Task::execute(tbb::task_group& g) {
     if ( !A.is_transposed() && rows.Arows > A.rows/8 && rows.Arows > SERIAL_CUTOFF ) {
         // *********** divide rows of A into sub-tasks*********
 
-        size_t rows_start = rows.Arows_start;
-        size_t rows_end = rows.Arows_end;
-        size_t rows_mid = (rows_end+rows_start)/2;
+        int rows_start = rows.Arows_start;
+        int rows_end = rows.Arows_end;
+        int rows_mid = (rows_end+rows_start)/2;
 
 
         // dispatching task to divide the current task into two pieces
@@ -409,9 +409,9 @@ zgemm_Task::execute(tbb::task_group& g) {
     else if ( A.is_transposed() && cols.Acols > A.cols/8 && cols.Acols > SERIAL_CUTOFF  ) {
     // *********** divide cols of B into sub-tasks*********
 
-        size_t cols_start = cols.Acols_start;
-        size_t cols_end = cols.Acols_end;
-        size_t cols_mid = (cols_end+cols_start)/2;
+        int cols_start = cols.Acols_start;
+        int cols_end = cols.Acols_end;
+        int cols_mid = (cols_end+cols_start)/2;
 
 
         // dispatching task to divide the current task into two pieces
@@ -447,9 +447,9 @@ zgemm_Task::execute(tbb::task_group& g) {
     // *********** divide cols of B into sub-tasks*********
 
 
-        size_t cols_start = cols.Bcols_start;
-        size_t cols_end = cols.Bcols_end;
-        size_t cols_mid = (cols_end+cols_start)/2;
+        int cols_start = cols.Bcols_start;
+        int cols_end = cols.Bcols_end;
+        int cols_mid = (cols_end+cols_start)/2;
 
 
         // dispatching task to divide the current task into two pieces
@@ -482,9 +482,9 @@ zgemm_Task::execute(tbb::task_group& g) {
     else if ( B.is_transposed() && rows.Brows > B.rows/8 && rows.Brows > SERIAL_CUTOFF ) {
         // *********** divide rows of B into sub-tasks*********
 
-        size_t rows_start = rows.Brows_start;
-        size_t rows_end = rows.Brows_end;
-        size_t rows_mid = (rows_end+rows_start)/2;
+        int rows_start = rows.Brows_start;
+        int rows_end = rows.Brows_end;
+        int rows_mid = (rows_end+rows_start)/2;
 
         // dispatching task to divide the current task into two pieces
         zgemm_Task* calc_task = new zgemm_Task( A, B, C );

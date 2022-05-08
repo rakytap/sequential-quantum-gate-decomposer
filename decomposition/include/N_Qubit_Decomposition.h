@@ -146,7 +146,7 @@ void simplify_layers();
 @param simplified_parameter_num The number of parameters in the simplified block structure.
 @return Returns with 0 if the simplification wa ssuccessful.
 */
-int simplify_layer( Gates_block* layer, double* parameters, unsigned int parameter_num_block, std::map<int,int> max_layer_num_loc, Gates_block* &simplified_layer, double* &simplified_parameters, unsigned int &simplified_parameter_num);
+int simplify_layer( Gates_block* layer, double* parameters, int parameter_num_block, std::map<int,int> max_layer_num_loc, Gates_block* &simplified_layer, double* &simplified_parameters, int &simplified_parameter_num);
 
 
 /**

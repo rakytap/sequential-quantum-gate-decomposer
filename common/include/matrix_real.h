@@ -56,7 +56,7 @@ Matrix_real();
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
-Matrix_real( double* data_in, size_t rows_in, size_t cols_in);
+Matrix_real( double* data_in, int rows_in, int cols_in);
 
 
 /**
@@ -67,7 +67,7 @@ Matrix_real( double* data_in, size_t rows_in, size_t cols_in);
 @param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
 @return Returns with the instance of the class.
 */
-Matrix_real( double* data_in, size_t rows_in, size_t cols_in, size_t stride_in);
+Matrix_real( double* data_in, int rows_in, int cols_in, int stride_in);
 
 
 /**
@@ -76,7 +76,7 @@ Matrix_real( double* data_in, size_t rows_in, size_t cols_in, size_t stride_in);
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
-Matrix_real( size_t rows_in, size_t cols_in);
+Matrix_real( int rows_in, int cols_in);
 
 
 /**
@@ -86,7 +86,7 @@ Matrix_real( size_t rows_in, size_t cols_in);
 @param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
 @return Returns with the instance of the class.
 */
-Matrix_real( size_t rows_in, size_t cols_in, size_t stride_in);
+Matrix_real( int rows_in, int cols_in, int stride_in);
 
 
 

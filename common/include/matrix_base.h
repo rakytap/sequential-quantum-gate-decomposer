@@ -22,11 +22,11 @@ class matrix_base {
 
 public:
   /// The number of rows
-  size_t rows;
+  int rows;
   /// The number of columns
-  size_t cols;
+  int cols;
   /// The column stride of the array. (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
-  size_t stride;
+  int stride;
   /// pointer to the stored data
   scalar* data;
 
@@ -81,7 +81,7 @@ matrix_base() {
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
-matrix_base( scalar* data_in, size_t rows_in, size_t cols_in) {
+matrix_base( scalar* data_in, int rows_in, int cols_in) {
 
   // The number of rows
   rows = rows_in;
@@ -113,7 +113,7 @@ matrix_base( scalar* data_in, size_t rows_in, size_t cols_in) {
 @param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
 @return Returns with the instance of the class.
 */
-matrix_base( scalar* data_in, size_t rows_in, size_t cols_in, size_t stride_in) {
+matrix_base( scalar* data_in, int rows_in, int cols_in, int stride_in) {
 
   // The number of rows
   rows = rows_in;
@@ -143,7 +143,7 @@ matrix_base( scalar* data_in, size_t rows_in, size_t cols_in, size_t stride_in) 
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
-matrix_base( size_t rows_in, size_t cols_in) {
+matrix_base( int rows_in, int cols_in) {
 
   // The number of rows
   rows = rows_in;
@@ -176,7 +176,7 @@ matrix_base( size_t rows_in, size_t cols_in) {
 @param stride_in The column stride of the matrix array (The array elements in one row are a_0, a_1, ... a_{cols-1}, 0, 0, 0, 0. The number of zeros is stride-cols)
 @return Returns with the instance of the class.
 */
-matrix_base( size_t rows_in, size_t cols_in, size_t stride_in) {
+matrix_base( int rows_in, int cols_in, int stride_in) {
 
   // The number of rows
   rows = rows_in;
@@ -284,7 +284,7 @@ void transpose()  {
 /**
 @brief Call to get the pointer to the stored data
 */
-scalar* get_data() {
+scalar* get_data() const {
 
   return data;
 
@@ -403,7 +403,7 @@ void operator= (const matrix_base& mtx ) {
 @param idx the index of the element
 @return Returns with a reference to the idx-th element.
 */
-scalar& operator[](size_t idx) {
+scalar& operator[](int idx)  {
 
 #ifdef DEBUG
     if ( idx >= rows*stride || idx < 0) {
@@ -414,8 +414,6 @@ scalar& operator[](size_t idx) {
 
     return data[idx];
 }
-
-
 
 
 /**
@@ -445,7 +443,7 @@ matrix_base<scalar> copy() {
 @brief Call to get the number of the allocated elements
 @return Returns with the number of the allocated elements (rows*cols)
 */
-size_t size() {
+int size() {
 
   return rows*cols;
 
@@ -457,9 +455,9 @@ size_t size() {
 */
 void print_matrix() {
     std::cout << std::endl << "The stored matrix:" << std::endl;
-    for ( size_t row_idx=0; row_idx < rows; row_idx++ ) {
-        for ( size_t col_idx=0; col_idx < cols; col_idx++ ) {
-            size_t element_idx = row_idx*stride + col_idx;
+    for ( int row_idx=0; row_idx < rows; row_idx++ ) {
+        for ( int col_idx=0; col_idx < cols; col_idx++ ) {
+            int element_idx = row_idx*stride + col_idx;
               std::cout << " " << data[element_idx];
         }
         std::cout << std::endl;

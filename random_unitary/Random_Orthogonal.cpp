@@ -98,8 +98,8 @@ int verbose_level;
     Matrix_real vargamma_mtx(dim, dim);
     memset( vargamma_mtx.get_data(), 0.0, vargamma_mtx.size()*sizeof(double) );
     int gamma_index = 0;
-    for (size_t idx=0; idx<dim; idx++) {
-        for (size_t jdx=idx+1; jdx<dim; jdx++) {
+    for (int idx=0; idx<dim; idx++) {
+        for (int jdx=idx+1; jdx<dim; jdx++) {
             vargamma_mtx[idx*vargamma_mtx.stride + jdx] = vargamma[gamma_index];
             gamma_index++;
         }
@@ -199,7 +199,7 @@ sl.print_matrix();
 
 //Tn.print_matrix();
     Matrix ret(Tn.rows, Tn.cols);
-    for ( size_t idx=0; idx<ret.size(); idx++) {
+    for ( int idx=0; idx<ret.size(); idx++) {
         ret[idx].real = Tn[idx];
         ret[idx].imag = 0.0;
     }

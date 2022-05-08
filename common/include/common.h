@@ -76,7 +76,7 @@ double activation_function( double Phi, int limit );
 @param size A size of one element (such as sizeof(double) )
 @param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
 */
-void* qgd_calloc( size_t element_num, size_t size, size_t alignment );
+void* qgd_calloc( int element_num, int size, int alignment );
 
 /**
 @brief custom defined memory reallocation function. Memory allocated with aligned realloc *MUST* be freed using qgd_free. The reallocation is done by either:
@@ -87,7 +87,7 @@ b) allocating a new memory block of size new_size bytes, copying memory area wit
 @param size A size of one element (such as sizeof(double) )
 @param alignment The number of bytes to which memory must be aligned. This value *must* be <= 255.
 */
-void* qgd_realloc(void* aligned_ptr, size_t element_num, size_t size, size_t alignment );
+void* qgd_realloc(void* aligned_ptr, int element_num, int size, int alignment );
 
 /**
 @brief custom defined memory release function.
