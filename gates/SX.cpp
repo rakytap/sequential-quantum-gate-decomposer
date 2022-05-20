@@ -145,6 +145,10 @@ SX::apply_to( Matrix& input ) {
     sx_1qbit[2].real = 0.5; sx_1qbit[2].imag = -0.5;
     sx_1qbit[3].real = 0.5; sx_1qbit[3].imag = 0.5;
 
+   
+    //apply_kernel_to function to SX gate 
+    apply_kernel_to( sx_1qbit, input );
+   
     int index_step = Power_of_2(target_qbit);
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step;
@@ -197,6 +201,7 @@ SX::apply_to( Matrix& input ) {
 
 
 
+
 /**
 @brief Call to apply the gate on the input array/matrix by input*U3
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
@@ -220,6 +225,9 @@ SX::apply_from_right( Matrix& input ) {
     sx_1qbit[2].real = 0.5; sx_1qbit[2].imag = -0.5;
     sx_1qbit[3].real = 0.5; sx_1qbit[3].imag = 0.5;
 
+    
+    //apply_kernel_from_right function to SX gate 
+    apply_kernel_from_right(sx_1qbit, input);
 
     int index_step = Power_of_2(target_qbit);
     int current_idx = 0;
@@ -269,7 +277,6 @@ SX::apply_from_right( Matrix& input ) {
 
 
     }
-
 
 
 }
