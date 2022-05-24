@@ -214,10 +214,10 @@ X::apply_from_right( Matrix& input ) {
 
     // the X gate of one qubit
     Matrix x_1qbit(2,2);
-    x_1qbit[0].real = 0.0; x_1qbit[0].imag = 0.0;
-    x_1qbit[1].real = 1.0; x_1qbit[1].imag = -1.0;
-    x_1qbit[2].real = 1.0; x_1qbit[2].imag = -1.0;
-    x_1qbit[3].real = 0.0; x_1qbit[3].imag = 0.0;
+    x_1qbit[0].real = 0.0;
+    x_1qbit[1].real = 1.0;
+    x_1qbit[2].real = 1.0;
+    x_1qbit[3].real = 0.0;
 
    
     //apply_kernel_from_right function to X gate 
