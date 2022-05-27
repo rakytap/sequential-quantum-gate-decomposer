@@ -149,7 +149,7 @@ X::apply_to( Matrix& input ) {
    
 
 
-    int index_step = Power_of_2(target_qbit);
+ /*   int index_step = Power_of_2(target_qbit);
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step;
 
@@ -188,7 +188,7 @@ X::apply_to( Matrix& input ) {
 
 
     }
-
+*/
 
 }
 
