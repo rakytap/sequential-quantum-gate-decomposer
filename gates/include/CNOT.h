@@ -27,13 +27,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "matrix.h"
 #include "Gate.h"
 #include <math.h>
-
+#include <U3.h>
 
 
 /**
 @brief A class representing a CNOT operation.
 */
-class CNOT: public Gate {
+class CNOT: public U3 {
 
 protected:
 
