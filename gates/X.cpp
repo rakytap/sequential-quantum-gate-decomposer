@@ -137,12 +137,13 @@ X::apply_to( Matrix& input ) {
         exit(-1);
     }
 
+
     // the X gate of one qubit
     Matrix x_1qbit(2,2);
-    x_1qbit[0].real = 0.0;
-    x_1qbit[1].real = 1.0; 
-    x_1qbit[2].real = 1.0; 
-    x_1qbit[3].real = 0.0; 
+    x_1qbit[0].real = 0.0; x_1qbit[0].imag = 0.0; 
+    x_1qbit[1].real = 1.0; x_1qbit[1].imag = 0.0;
+    x_1qbit[2].real = 1.0; x_1qbit[2].imag = 0.0;
+    x_1qbit[3].real = 0.0; x_1qbit[3].imag = 0.0;
 
     //apply_kernel_to function to X gate 
     apply_kernel_to( x_1qbit, input );
@@ -214,11 +215,10 @@ X::apply_from_right( Matrix& input ) {
 
     // the X gate of one qubit
     Matrix x_1qbit(2,2);
-    x_1qbit[0].real = 0.0;
-    x_1qbit[1].real = 1.0;
-    x_1qbit[2].real = 1.0;
-    x_1qbit[3].real = 0.0;
-
+    x_1qbit[0].real = 0.0; x_1qbit[0].imag = 0.0; 
+    x_1qbit[1].real = 1.0; x_1qbit[1].imag = 0.0;
+    x_1qbit[2].real = 1.0; x_1qbit[2].imag = 0.0;
+    x_1qbit[3].real = 0.0; x_1qbit[3].imag = 0.0;
    
     //apply_kernel_from_right function to X gate 
     apply_kernel_from_right(x_1qbit, input);
