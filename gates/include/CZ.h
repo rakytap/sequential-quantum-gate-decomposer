@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief A class representing a CZ operation.
 */
-class CZ: public U3 {
+class CZ: public Gate {
 
 protected:
 

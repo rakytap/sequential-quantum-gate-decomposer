@@ -497,7 +497,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                         cnot_operation->apply_to( input_loc );    
                     }
                     else {
-                        cnot_operation->apply_to_list( parameters_mtx, grad_loc );
+                        cnot_operation->apply_to_list( grad_loc );
                     }
                 }
                 else if (operation->get_type() == CZ_OPERATION) {
@@ -506,7 +506,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                         cz_operation->apply_to( input_loc );    
                     }
                     else {
-                        cz_operation->apply_to_list( parameters_mtx, grad_loc );
+                        cz_operation->apply_to_list( grad_loc );
                     }
                 }
                 else if (operation->get_type() == CH_OPERATION) {
@@ -515,7 +515,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                         ch_operation->apply_to( input_loc );    
                     }
                     else {
-                        ch_operation->apply_to_list( parameters_mtx, grad_loc );
+                        ch_operation->apply_to_list( grad_loc );
                     }
                 }    
     
