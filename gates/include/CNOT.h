@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief A class representing a CNOT operation.
 */
-class CNOT: public Gate {
+class CNOT: public U3 {
 
 protected:
 

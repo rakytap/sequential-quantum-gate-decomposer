@@ -497,7 +497,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                         cnot_operation->apply_to( input_loc );    
                     }
                     else {
-                        cnot_operation->apply_to_list( grad_loc );
+                        cnot_operation->Gate::apply_to_list(grad_loc );
                     }
                 }
                 else if (operation->get_type() == CZ_OPERATION) {
@@ -506,7 +506,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                         cz_operation->apply_to( input_loc );    
                     }
                     else {
-                        cz_operation->apply_to_list( grad_loc );
+                        cz_operation->Gate::apply_to_list(grad_loc );
                     }
                 }
                 else if (operation->get_type() == CH_OPERATION) {
@@ -515,7 +515,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                         ch_operation->apply_to( input_loc );    
                     }
                     else {
-                        ch_operation->apply_to_list( grad_loc );
+                        ch_operation->Gate::apply_to_list(grad_loc );
                     }
                 }    
     
@@ -603,7 +603,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                         x_operation->apply_to( input_loc );    
                     }
                     else {
-                        x_operation->apply_to_list(parameters_mtx, grad_loc );
+                        x_operation->Gate::apply_to_list( grad_loc );
                     }
                 }
                 else if (operation->get_type() == SX_OPERATION) {
@@ -612,7 +612,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                         sx_operation->apply_to( input_loc );    
                     }
                     else {
-                        sx_operation->apply_to_list(parameters_mtx, grad_loc );
+                        sx_operation->Gate::apply_to_list(grad_loc );
                     }
                 }
                 else if (operation->get_type() == GENERAL_OPERATION) {
