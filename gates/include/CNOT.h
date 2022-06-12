@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief A class representing a CNOT operation.
 */
-class CNOT: public U3 {
+class CNOT: public Gate {
 
 protected:
 
@@ -70,6 +70,11 @@ Matrix get_matrix();
 @param input The input array on which the gate is applied
 */
 void apply_to( Matrix& input );
+
+/**
+@brief ???????????
+*/
+void apply_kernel_to( Matrix& c_2qbit, Matrix& input );
 
 
 /**
