@@ -243,7 +243,7 @@ CNOT::apply_kernel_to(Matrix& input) {
             int row_offset_pair = current_idx_pair_loc*input.stride;
 
             // determine the action according to the state of the control qubit
-           if ( (current_idx_loc/index_step_control) % 2 == 0 || (current_idx_pair_loc/index_step_control) % 2 == 0) {
+           if ( (current_idx_loc/index_step_control) % 2 == 0) {
 
                 return;
             }
