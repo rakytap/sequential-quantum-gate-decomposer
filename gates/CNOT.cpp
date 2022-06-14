@@ -256,7 +256,7 @@ CNOT::apply_kernel_to(Matrix& input) {
                     QGD_Complex16 element      = input[index];
                     QGD_Complex16 element_pair = input[index_pair];              
 
-                    input[index] = element_pair; CH-> OK, CZ nem OK
+                    input[index] = element_pair;
                     input[index_pair] = element;
 
 
