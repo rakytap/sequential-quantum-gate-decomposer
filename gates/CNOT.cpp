@@ -210,18 +210,18 @@ CNOT::apply_kernel_to(Matrix& input) {
     cnot_2qbit[1].real = 0.0; cnot_2qbit[1].imag = 0.0;
     cnot_2qbit[2].real = 0.0; cnot_2qbit[2].imag = 0.0;
     cnot_2qbit[3].real = 0.0; cnot_2qbit[3].imag = 0.0;
-    cnot_2qbit[4].real = 0.0; cnot_2qbit[0].imag = 0.0;
-    cnot_2qbit[5].real = 1.0; cnot_2qbit[1].imag = 0.0;
-    cnot_2qbit[6].real = 0.0; cnot_2qbit[2].imag = 0.0;
-    cnot_2qbit[7].real = 0.0; cnot_2qbit[3].imag = 0.0;
-    cnot_2qbit[8].real = 0.0; cnot_2qbit[0].imag = 0.0;
-    cnot_2qbit[9].real = 0.0; cnot_2qbit[1].imag = 0.0;
-    cnot_2qbit[10].real = 0.0; cnot_2qbit[2].imag = 0.0;
-    cnot_2qbit[11].real = 1.0; cnot_2qbit[3].imag = 0.0;
-    cnot_2qbit[12].real = 0.0; cnot_2qbit[0].imag = 0.0;
-    cnot_2qbit[13].real = 0.0; cnot_2qbit[1].imag = 0.0;
-    cnot_2qbit[14].real = 1.0; cnot_2qbit[2].imag = 0.0;
-    cnot_2qbit[15].real = 0.0; cnot_2qbit[3].imag = 0.0;
+    cnot_2qbit[4].real = 0.0; cnot_2qbit[4].imag = 0.0;
+    cnot_2qbit[5].real = 1.0; cnot_2qbit[5].imag = 0.0;
+    cnot_2qbit[6].real = 0.0; cnot_2qbit[6].imag = 0.0;
+    cnot_2qbit[7].real = 0.0; cnot_2qbit[7].imag = 0.0;
+    cnot_2qbit[8].real = 0.0; cnot_2qbit[8].imag = 0.0;
+    cnot_2qbit[9].real = 0.0; cnot_2qbit[9].imag = 0.0;
+    cnot_2qbit[10].real = 0.0; cnot_2qbit[10].imag = 0.0;
+    cnot_2qbit[11].real = 1.0; cnot_2qbit[11].imag = 0.0;
+    cnot_2qbit[12].real = 0.0; cnot_2qbit[12].imag = 0.0;
+    cnot_2qbit[13].real = 0.0; cnot_2qbit[13].imag = 0.0;
+    cnot_2qbit[14].real = 1.0; cnot_2qbit[14].imag = 0.0;
+    cnot_2qbit[15].real = 0.0; cnot_2qbit[15].imag = 0.0;
     */
 
     int index_step_target = Power_of_2(target_qbit);
@@ -243,11 +243,12 @@ CNOT::apply_kernel_to(Matrix& input) {
             int row_offset_pair = current_idx_pair_loc*input.stride;
 
             // determine the action according to the state of the control qubit
-            if ( (current_idx_loc/index_step_control) % 2 == 0) {
-                // leave the state as it is
+           if ( (current_idx_loc/index_step_control) % 2 == 0 || (current_idx_pair_loc/index_step_control) % 2 == 0) {
+
                 return;
             }
             else {
+               double sqrt2 = sqrt(2.0);
                 for ( int col_idx=0; col_idx<matrix_size; col_idx++) {
                     int index      = row_offset+col_idx;
                     int index_pair = row_offset_pair+col_idx;                
@@ -255,9 +256,13 @@ CNOT::apply_kernel_to(Matrix& input) {
                     QGD_Complex16 element      = input[index];
                     QGD_Complex16 element_pair = input[index_pair];              
 
-                    input[index] = element_pair;
-                    input[index_pair] = element;
+                    //input[index] = element_pair;
+                    //input[index_pair] = element;
 
+                    input[index].real = (element.real + element_pair.real)/sqrt2;
+                    input[index].imag = (element.imag + element_pair.imag)/sqrt2;
+                    input[index_pair].real = (element.real - element_pair.real)/sqrt2;
+                    input[index_pair].imag = (element.imag - element_pair.imag)/sqrt2;
                 }                     
 
             }
