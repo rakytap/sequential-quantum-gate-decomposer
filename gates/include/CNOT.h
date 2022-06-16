@@ -74,7 +74,7 @@ void apply_to( Matrix& input );
 /**
 @brief ???????????
 */
-void apply_kernel_to( Matrix& input );
+void apply_kernel_to( Matrix& u3_2qbit, Matrix& input );
 
 
 /**
