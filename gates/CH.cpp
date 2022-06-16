@@ -121,7 +121,27 @@ CH::get_matrix() {
 void 
 CH::apply_to( Matrix& input ) {
 
-    int index_step_target = Power_of_2(target_qbit);
+
+    // the cnh gate of two qubit
+    Matrix ch_2qbit(4,4);
+    ch_2qbit[0].real = 1.0; ch_2qbit[0].imag = 0.0;
+    ch_2qbit[1].real = 0.0; ch_2qbit[1].imag = 0.0;
+    ch_2qbit[2].real = 0.0; ch_2qbit[2].imag = 0.0;
+    ch_2qbit[3].real = 0.0; ch_2qbit[3].imag = 0.0;
+    ch_2qbit[4].real = 0.0; ch_2qbit[4].imag = 0.0;
+    ch_2qbit[5].real = 1.0; ch_2qbit[5].imag = 0.0;
+    ch_2qbit[6].real = 0.0; ch_2qbit[6].imag = 0.0;
+    ch_2qbit[7].real = 0.0; ch_2qbit[7].imag = 0.0;
+    ch_2qbit[8].real = 0.0; ch_2qbit[8].imag = 0.0;
+    ch_2qbit[9].real = 0.0; ch_2qbit[9].imag = 0.0;
+    ch_2qbit[10].real = 1/sqrt(2.0); ch_2qbit[10].imag = 0.0;
+    ch_2qbit[11].real = 1/sqrt(2.0); ch_2qbit[11].imag = 0.0;
+    ch_2qbit[12].real = 0.0; ch_2qbit[12].imag = 0.0;
+    ch_2qbit[13].real = 0.0; ch_2qbit[13].imag = 0.0;
+    ch_2qbit[14].real = 1/sqrt(2.0); ch_2qbit[14].imag = 0.0;
+    ch_2qbit[15].real = -1/sqrt(2.0); ch_2qbit[15].imag = 0.0;
+
+ /*   int index_step_target = Power_of_2(target_qbit);
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step_target;
 
@@ -175,8 +195,9 @@ CH::apply_to( Matrix& input ) {
         current_idx_pair = current_idx_pair + 2*index_step_target;
 
 
-    }
+    }*/
 
+CNOT::apply_kernel_to(ch_2qbit, input);
 
 }
 
