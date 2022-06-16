@@ -228,7 +228,7 @@ CNOT::apply_kernel_to(Matrix& u3_2qbit, Matrix& input) {
             else {
                double sqrt2 = sqrt(2.0);
                 for ( int col_idx=0; col_idx<matrix_size; col_idx++) {
-   			//CNOT
+   			
                     int index      = row_offset+col_idx;
                     int index_pair = row_offset_pair+col_idx;                
 
@@ -250,61 +250,12 @@ CNOT::apply_kernel_to(Matrix& u3_2qbit, Matrix& input) {
                     input[index_pair].real = tmp1.real + tmp2.real+tmp3.real+tmp4.real;
                     input[index_pair].imag = tmp1.imag + tmp2.imag+tmp3.imag+tmp4.imag;
 
-                    input[index] = element_pair; //felcsereli az elemeket
+                    input[index] = element_pair; 
                     input[index_pair] = element;
 
 
 
-/*			//CH  
-                    int index      = row_offset+col_idx;
-                    int index_pair = row_offset_pair+col_idx;                
 
-                    QGD_Complex16 element      = input[index];
-                    QGD_Complex16 element_pair = input[index_pair]; 
-
-                    input[index].real = (element.real + element_pair.real)/sqrt2; //felcsereli az elemeket
-                    input[index].imag = (element.imag + element_pair.imag)/sqrt2;
-                    input[index_pair].real = (element.real - element_pair.real)/sqrt2;
-                    input[index_pair].imag = (element.imag - element_pair.imag)/sqrt2;
-
-			//CZ
-                    int index_pair = row_offset_pair+col_idx;                
-
-                    QGD_Complex16 element_pair = input[index_pair];              
-
-                    input[index_pair].real = -element_pair.real;
-                    input[index_pair].imag = -element_pair.imag;
-
-                       //1qbit
-                int index      = row_offset+col_idx;
-                int index_pair = row_offset_pair+col_idx;
-
-                QGD_Complex16 element      = input[index];
-                QGD_Complex16 element_pair = input[index_pair];
-
-                QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
-                QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
-                input[index].real = tmp1.real + tmp2.real;
-                input[index].imag = tmp1.imag + tmp2.imag;
-
-                tmp1 = mult(u3_1qbit[2], element);
-                tmp2 = mult(u3_1qbit[3], element_pair);
-                input[index_pair].real = tmp1.real + tmp2.real;
-                input[index_pair].imag = tmp1.imag + tmp2.imag;
-
-
-
-
-
-
-
-
-
-
-
-
-
-*/
                 }                     
 
             }
