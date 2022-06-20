@@ -120,7 +120,18 @@ CNOT::get_matrix() {
 void 
 CNOT::apply_to( Matrix& input ) {
  
-    int index_step_target = Power_of_2(target_qbit);
+
+    // the not gate of one qubit
+    Matrix not_1qbit(2,2);
+    not_1qbit[0].real = 0.0; not_1qbit[0].imag = 0.0; 
+    not_1qbit[1].real = 1.0; not_1qbit[1].imag = 0.0;
+    not_1qbit[2].real = 1.0; not_1qbit[2].imag = 0.0;
+    not_1qbit[3].real = 0.0; not_1qbit[3].imag = 0.0;
+
+
+
+
+/*    int index_step_target = Power_of_2(target_qbit);
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step_target;
 
@@ -172,6 +183,11 @@ CNOT::apply_to( Matrix& input ) {
     }
 
 
+*/
+
+
+apply_kernel_to(not_1qbit, input);
+
 }
 
 
@@ -180,10 +196,10 @@ CNOT::apply_to( Matrix& input ) {
 @brief ???????????
 */
 void 
-CNOT::apply_kernel_to(Matrix& u3_2qbit, Matrix& input) {
+CNOT::apply_kernel_to(Matrix& u3_1qbit, Matrix& input) {
 
 
-    // the cnot gate of two qubit
+    /*// the cnot gate of two qubit
     Matrix cnot_2qbit(4,4);
     cnot_2qbit[0].real = 1.0; cnot_2qbit[0].imag = 0.0;
     cnot_2qbit[1].real = 0.0; cnot_2qbit[1].imag = 0.0;
@@ -200,9 +216,8 @@ CNOT::apply_kernel_to(Matrix& u3_2qbit, Matrix& input) {
     cnot_2qbit[12].real = 0.0; cnot_2qbit[12].imag = 0.0;
     cnot_2qbit[13].real = 0.0; cnot_2qbit[13].imag = 0.0;
     cnot_2qbit[14].real = 1.0; cnot_2qbit[14].imag = 0.0;
-    cnot_2qbit[15].real = 0.0; cnot_2qbit[15].imag = 0.0;
+    cnot_2qbit[15].real = 0.0; cnot_2qbit[15].imag = 0.0;*/
     
-
     int index_step_target = Power_of_2(target_qbit);
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step_target;
@@ -235,25 +250,20 @@ CNOT::apply_kernel_to(Matrix& u3_2qbit, Matrix& input) {
                     QGD_Complex16 element      = input[index];
                     QGD_Complex16 element_pair = input[index_pair];              
 
-                    QGD_Complex16 tmp1 = mult(cnot_2qbit[0], element);
-                    QGD_Complex16 tmp2 = mult(cnot_2qbit[1], element_pair);
-                    QGD_Complex16 tmp3 = mult(cnot_2qbit[2], element);
-                    QGD_Complex16 tmp4 = mult(cnot_2qbit[3], element_pair);
-
+                    QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
+                    QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
+ 
                     input[index].real = tmp1.real + tmp2.real;
                     input[index].imag = tmp1.imag + tmp2.imag;
 
-                    tmp1 = mult(cnot_2qbit[0], element);
-                    tmp2 = mult(cnot_2qbit[1], element_pair);
-                    tmp3 = mult(cnot_2qbit[2], element);
-                    tmp4 = mult(cnot_2qbit[3], element_pair);
-                    input[index_pair].real = tmp1.real + tmp2.real+tmp3.real+tmp4.real;
-                    input[index_pair].imag = tmp1.imag + tmp2.imag+tmp3.imag+tmp4.imag;
+                    tmp1 = mult(u3_1qbit[0], element);
+                    tmp2 = mult(u3_1qbit[1], element_pair);
+
+                    input[index_pair].real = tmp1.real + tmp2.real;
+                    input[index_pair].imag = tmp1.imag + tmp2.imag;
 
                     input[index] = element_pair; 
                     input[index_pair] = element;
-
-
 
 
                 }                     
