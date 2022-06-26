@@ -120,7 +120,6 @@ CNOT::get_matrix() {
 void 
 CNOT::apply_to( Matrix& input ) {
  
-
     // the not gate of one qubit
     Matrix not_1qbit(2,2);
     not_1qbit[0].real = 0.0; not_1qbit[0].imag = 0.0; 
@@ -129,7 +128,7 @@ CNOT::apply_to( Matrix& input ) {
     not_1qbit[3].real = 0.0; not_1qbit[3].imag = 0.0;
 
 
-
+apply_kernel_to(not_1qbit, input);
 
 /*    int index_step_target = Power_of_2(target_qbit);
     int current_idx = 0;
@@ -186,7 +185,7 @@ CNOT::apply_to( Matrix& input ) {
 */
 
 
-apply_kernel_to(not_1qbit, input);
+
 
 }
 
@@ -199,24 +198,6 @@ void
 CNOT::apply_kernel_to(Matrix& u3_1qbit, Matrix& input) {
 
 
-    /*// the cnot gate of two qubit
-    Matrix cnot_2qbit(4,4);
-    cnot_2qbit[0].real = 1.0; cnot_2qbit[0].imag = 0.0;
-    cnot_2qbit[1].real = 0.0; cnot_2qbit[1].imag = 0.0;
-    cnot_2qbit[2].real = 0.0; cnot_2qbit[2].imag = 0.0;
-    cnot_2qbit[3].real = 0.0; cnot_2qbit[3].imag = 0.0;
-    cnot_2qbit[4].real = 0.0; cnot_2qbit[4].imag = 0.0;
-    cnot_2qbit[5].real = 1.0; cnot_2qbit[5].imag = 0.0;
-    cnot_2qbit[6].real = 0.0; cnot_2qbit[6].imag = 0.0;
-    cnot_2qbit[7].real = 0.0; cnot_2qbit[7].imag = 0.0;
-    cnot_2qbit[8].real = 0.0; cnot_2qbit[8].imag = 0.0;
-    cnot_2qbit[9].real = 0.0; cnot_2qbit[9].imag = 0.0;
-    cnot_2qbit[10].real = 0.0; cnot_2qbit[10].imag = 0.0;
-    cnot_2qbit[11].real = 1.0; cnot_2qbit[11].imag = 0.0;
-    cnot_2qbit[12].real = 0.0; cnot_2qbit[12].imag = 0.0;
-    cnot_2qbit[13].real = 0.0; cnot_2qbit[13].imag = 0.0;
-    cnot_2qbit[14].real = 1.0; cnot_2qbit[14].imag = 0.0;
-    cnot_2qbit[15].real = 0.0; cnot_2qbit[15].imag = 0.0;*/
     
     int index_step_target = Power_of_2(target_qbit);
     int current_idx = 0;
@@ -241,7 +222,7 @@ CNOT::apply_kernel_to(Matrix& u3_1qbit, Matrix& input) {
                 return;
             }
             else {
-               double sqrt2 = sqrt(2.0);
+              
                 for ( int col_idx=0; col_idx<matrix_size; col_idx++) {
    			
                     int index      = row_offset+col_idx;
@@ -256,16 +237,13 @@ CNOT::apply_kernel_to(Matrix& u3_1qbit, Matrix& input) {
                     input[index].real = tmp1.real + tmp2.real;
                     input[index].imag = tmp1.imag + tmp2.imag;
 
-                    tmp1 = mult(u3_1qbit[0], element);
-                    tmp2 = mult(u3_1qbit[1], element_pair);
+                    tmp1 = mult(u3_1qbit[2], element);
+                    tmp2 = mult(u3_1qbit[3], element_pair);
 
                     input[index_pair].real = tmp1.real + tmp2.real;
                     input[index_pair].imag = tmp1.imag + tmp2.imag;
 
-                    input[index] = element_pair; 
-                    input[index_pair] = element;
-
-
+  
                 }                     
 
             }

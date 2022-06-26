@@ -122,7 +122,14 @@ CZ::get_matrix() {
 void 
 CZ::apply_to( Matrix& input ) {
 
-    int index_step_target = Power_of_2(target_qbit);
+    // the not gate of one qubit
+    Matrix z_1qbit(2,2);
+    z_1qbit[0].real = 1.0; z_1qbit[0].imag = 0.0; 
+    z_1qbit[1].real = 0.0; z_1qbit[1].imag = 0.0;
+    z_1qbit[2].real = 0.0; z_1qbit[2].imag = 0.0;
+    z_1qbit[3].real = -1.0; z_1qbit[3].imag = 0.0;
+
+  /*  int index_step_target = Power_of_2(target_qbit);
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step_target;
 
@@ -166,8 +173,9 @@ CZ::apply_to( Matrix& input ) {
         current_idx_pair = current_idx_pair + 2*index_step_target;
 
 
-    }
+    }*/
 
+CNOT::apply_kernel_to(z_1qbit, input);
 
 }
 
