@@ -197,9 +197,14 @@ CNOT::apply_kernel_to(h_1qbit, input);
 void 
 CH::apply_from_right( Matrix& input ) {
 
+    // the Hadamard gate of one qubit
+    Matrix h_1qbit(2,2);
+    h_1qbit[0].real = 1.0/sqrt(2); h_1qbit[0].imag = 0.0; 
+    h_1qbit[1].real = 1.0/sqrt(2); h_1qbit[1].imag = 0.0;
+    h_1qbit[2].real = 1.0/sqrt(2); h_1qbit[2].imag = 0.0;
+    h_1qbit[3].real = -1.0/sqrt(2); h_1qbit[3].imag = 0.0;
 
-
-    int index_step_target = Power_of_2(target_qbit);
+ /*   int index_step_target = Power_of_2(target_qbit);
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step_target;
 
@@ -258,9 +263,9 @@ CH::apply_from_right( Matrix& input ) {
 
 
 
+*/
 
-
-
+apply_kernel_from_right(h_1qbit, input);
 
 }
 

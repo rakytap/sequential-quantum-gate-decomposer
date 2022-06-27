@@ -74,7 +74,7 @@ void apply_to( Matrix& input );
 /**
 @brief ???????????
 */
-void apply_kernel_to( Matrix& u3_2qbit, Matrix& input );
+void apply_kernel_to( Matrix& u3_1qbit, Matrix& input );
 
 
 /**
@@ -82,6 +82,12 @@ void apply_kernel_to( Matrix& u3_2qbit, Matrix& input );
 @param input The input array on which the gate is applied
 */
 void apply_from_right( Matrix& input );
+
+/**
+@brief Call to apply the gate on the input array/matrix by input*CNOT
+@param input The input array on which the gate is applied
+*/
+void apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input );
 
 
 /**
