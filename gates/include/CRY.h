@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define CRZ_H
 
 #include "RY.h"
+#include "CNOT.h"
 #include "matrix.h"
 #include "matrix_real.h"
 #include <math.h>

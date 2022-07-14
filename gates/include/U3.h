@@ -99,15 +99,6 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& input, const d
 */
 virtual void apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 );
 
-protected:
-/**
-@brief ???????????
-*/
-void apply_kernel_to( Matrix& u3_1qbit, Matrix& input );
-
-
-public:
-
 
 /**
 @brief ???????????????
@@ -124,15 +115,6 @@ virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& 
 virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
 
 
-protected:
-
-/**
-@brief ???????????
-*/
-void apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input );
-
-
-public:
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the gate

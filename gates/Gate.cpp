@@ -245,3 +245,157 @@ Gate* Gate::clone() {
 }
 
 
+
+/**
+@brief ???????????
+*/
+void 
+Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
+
+
+    
+    int index_step_target = 1 << target_qbit;
+    int current_idx = 0;
+    int current_idx_pair = current_idx+index_step_target;
+
+//std::cout << "target qbit: " << target_qbit << std::endl;
+
+    while ( current_idx_pair < matrix_size ) {
+
+        for(int idx=0; idx<index_step_target; idx++) {  
+        //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            int row_offset = current_idx_loc*input.stride;
+            int row_offset_pair = current_idx_pair_loc*input.stride;
+
+           if ( control_qbit<0 || ((current_idx_loc >> control_qbit) & 1) ) {
+
+                for ( int col_idx=0; col_idx<matrix_size; col_idx++) {
+   			
+                    int index      = row_offset+col_idx;
+                    int index_pair = row_offset_pair+col_idx;                
+
+                    QGD_Complex16 element      = input[index];
+                    QGD_Complex16 element_pair = input[index_pair];              
+
+                    QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
+                    QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
+ 
+                    input[index].real = tmp1.real + tmp2.real;
+                    input[index].imag = tmp1.imag + tmp2.imag;
+
+                    tmp1 = mult(u3_1qbit[2], element);
+                    tmp2 = mult(u3_1qbit[3], element_pair);
+
+                    input[index_pair].real = tmp1.real + tmp2.real;
+                    input[index_pair].imag = tmp1.imag + tmp2.imag;
+
+                }
+
+            }
+            else if (deriv) {
+                // when calculating derivatives, the constant element should be zeros
+                memset( input.get_data()+row_offset, 0.0, matrix_size*sizeof(QGD_Complex16));
+                memset( input.get_data()+row_offset_pair, 0.0, matrix_size*sizeof(QGD_Complex16));
+            }
+            else {
+                // leave the state as it is
+                continue; 
+            }
+
+
+//std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
+
+        
+        //});
+        }
+
+
+        current_idx = current_idx + (index_step_target << 1);
+        current_idx_pair = current_idx_pair + (index_step_target << 1);
+
+
+    }
+
+
+}
+
+
+
+
+
+/**
+@brief Call to apply the gate on the input array/matrix by input*CNOT
+@param input The input array on which the gate is applied
+*/
+void 
+Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
+
+   
+    int index_step_target = 1 << target_qbit;
+    int current_idx = 0;
+    int current_idx_pair = current_idx+index_step_target;
+
+//std::cout << "target qbit: " << target_qbit << std::endl;
+
+    while ( current_idx_pair < matrix_size ) {
+
+        for(int idx=0; idx<index_step_target; idx++) { 
+        //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
+
+            int current_idx_loc = current_idx + idx;
+            int current_idx_pair_loc = current_idx_pair + idx;
+
+            // determine the action according to the state of the control qubit
+            if ( control_qbit<0 || ((current_idx_loc >> control_qbit) & 1) ) {
+
+                for ( int row_idx=0; row_idx<matrix_size; row_idx++) {
+
+                    int row_offset = row_idx*input.stride;
+
+
+                    int index      = row_offset+current_idx_loc;
+                    int index_pair = row_offset+current_idx_pair_loc;
+
+                    QGD_Complex16 element      = input[index];
+                    QGD_Complex16 element_pair = input[index_pair];
+
+                    QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
+                    QGD_Complex16 tmp2 = mult(u3_1qbit[2], element_pair);
+                    input[index].real = tmp1.real + tmp2.real;
+                    input[index].imag = tmp1.imag + tmp2.imag;
+
+                    tmp1 = mult(u3_1qbit[1], element);
+                    tmp2 = mult(u3_1qbit[3], element_pair);
+                    input[index_pair].real = tmp1.real + tmp2.real;
+                    input[index_pair].imag = tmp1.imag + tmp2.imag;
+
+                }
+
+            }
+            else {
+                // leave the state as it is
+                continue;
+            }        
+
+
+//std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
+
+
+        //});
+        }
+
+
+        current_idx = current_idx + (index_step_target << 1);
+        current_idx_pair = current_idx_pair + (index_step_target << 1);
+
+
+    }
+
+
+}
+
+

@@ -169,6 +169,19 @@ int get_qbit_num();
 */
 Gate* clone();
 
+protected:
+/**
+@brief ???????????
+*/
+void apply_kernel_to( Matrix& u3_1qbit, Matrix& input, bool deriv=false );
+
+/**
+@brief ???????????
+*/
+void apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input );
+
+
+
 };
 
 
