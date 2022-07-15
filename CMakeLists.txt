@@ -372,6 +372,12 @@ target_compile_options(qgd PUBLIC
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
 )
 
+# External libarray for calculating QFT on DFE
+add_library( qgddfe SHARED IMPORTED )
+# You can define two import-locations: one for debug and one for release.
+set_target_properties( qgddfe PROPERTIES IMPORTED_LOCATION /home/rakytap/qgd_DFE/qgdCPU/dist/release/lib/libqgdDFE.so )
+
+
 # adding linking options
 target_link_libraries( qgd PRIVATE
     ${BLAS_LIBRARIES}
@@ -381,6 +387,7 @@ target_link_libraries( qgd PRIVATE
     ${TBBMALLOC_PROXY_LIB}
     ${TBB_LIB}
     ${GSL_LIB}
+    qgddfe
 )
 
 target_include_directories(qgd PRIVATE
@@ -390,6 +397,8 @@ target_include_directories(qgd PRIVATE
                             ./decomposition/include
                             ./random_unitary/include
                             ${EXTRA_INCLUDES})
+
+
 
 set_target_properties(qgd PROPERTIES
     VERSION ${PROJECT_VERSION}

@@ -31,8 +31,90 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <stdlib.h>
 
 
+extern "C" {
+/**
+@brief ????????????
+@return ??????????
+*/
+int calcqgdKernelDFE();
+
+/**
+@brief ????????????
+@return ??????????
+*/
+int load2LMEM( float* data, int element_num );
+
+/**
+@brief ????????????
+@return ??????????
+*/
+void releive_DFE();
+
+/**
+@brief ????????????
+@return ??????????
+*/
+int initialize_DFE();
+
+/**
+ * \brief ???????????
+ * 
+ */
+int downloadFromLMEM( float* data, int element_num );
+
+}
 
 
+/**
+@brief ????????????
+@return ??????????
+*/
+void uploadMatrix2DFE( Matrix& input ) {
+
+    // first convert the input to float32
+    matrix_base<float> input32( input.rows, 2*input.cols ); // number of columns needed to be made larger due to complex -> real tranformation
+
+    int element_num = 2*input.size();
+    double* input_data = (double*)input.get_data();
+    float* input32_data = (float*)input32.get_data();
+    for ( size_t idx=0; idx<element_num; idx++) {
+        input32_data[idx] = (float)input_data[idx];
+    }
+
+    // load the data to LMEM
+    load2LMEM( input32_data, element_num );
+
+}
+
+
+
+/**
+@brief ????????????
+@return ??????????
+*/
+void DownloadMatrixFromDFE( Matrix& output ) {
+
+    // first convert the input to float32
+    int element_num = 2*output.size();
+    matrix_base<float> output32( output.rows, 2*output.cols ); // number of columns needed to be made larger due to complex -> real tranformation
+    float* output32_data = (float*)output32.get_data();
+
+    // load the data to LMEM
+    downloadFromLMEM( output32_data, element_num );
+
+    double* output_data = (double*)output.get_data();    
+    for ( size_t idx=0; idx<element_num; idx++) {
+        output_data[idx] = (double)output32_data[idx];
+    }
+
+
+
+}
+
+/**
+@brief Method to create random initial parameters for the optimization
+@return 
+*/
 Matrix_real create_random_paramaters( Gates_block* gate_structure ) {
 
     int parameter_num = gate_structure->get_parameter_num();
@@ -192,58 +274,16 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         exit(-1);
     }
 
-/*
-int qbit_num_loc = 2;
-int target_qbit = 0;
-int control_qbit = 1;
+////////////////////////////////
 
-                        RX*   rx_gate_1   = new RX(qbit_num_loc, target_qbit);
-                        Adaptive*   cz_gate     = new Adaptive(qbit_num_loc, target_qbit, control_qbit);
-                        RZ*   rz_gate     = new RZ(qbit_num_loc, control_qbit);
-                        RX*   rx_gate_2   = new RX(qbit_num_loc, target_qbit);
+    uploadMatrix2DFE( Umtx );
+    calcqgdKernelDFE();   
+
+    //releive_DFE(); 
+    //return;
 
 
-                        Gates_block* czr_gate = new Gates_block(qbit_num_loc);
-                        czr_gate->add_gate(rx_gate_1);
-                        czr_gate->add_gate(cz_gate);
-                        czr_gate->add_gate(rz_gate);
-                        czr_gate->add_gate(rx_gate_2);
-
-Matrix_real params(1,4);
-params[0] = -M_PI/2;
-params[1] = -M_PI/2;
-params[2] = M_PI;
-params[3] = M_PI/2;
-
-Matrix mtx = czr_gate->get_matrix( params );
-mtx.print_matrix();
-exit(-1);
-*/
-/*
-optimized_parameters_mtx.print_matrix();
-std::cout << gate_structure->get_parameter_num() << std::endl;
-Matrix mtx = gate_structure->get_matrix( optimized_parameters_mtx );
-mtx.print_matrix();
-
-*/
-
-//    combine( gate_structure );
-//std::cout << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
-
-
-//list_gates( 0);
-
-    // calculating the final error of the decomposition
- //   Matrix matrix_decomposed2 = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
-//matrix_decomposed2.print_matrix();
-
-//exit(-1);
-
-
-//iteration_loops[4] = 2;    
-//Gates_block* gate_structure_loc = gate_structure->clone();
-//insert_random_layers( gate_structure_loc, optimized_parameters_mtx );
-
+///////////////////////////////
 
     double optimization_tolerance_orig = optimization_tolerance;
     optimization_tolerance = 1e-4;
@@ -388,32 +428,20 @@ mtx.print_matrix();
             
                
     
+///////////////////////////////////////////
 
-/*
-Matrix_real param0 = optimized_parameters_mtx;
-std::cout << "gradient test "<< std::endl;
-std::vector<Matrix>&& Umtx_deriv = apply_derivate_to( param0, Umtx );
-std::cout << "parameter num: " << param0.size() << ", gradient num: " << Umtx_deriv.size() << std::endl;
+    Matrix outputMtx( Umtx.rows, Umtx.cols );
+    memset( outputMtx.get_data(), 0.0, outputMtx.size()*sizeof(QGD_Complex16) );
 
-int deriv_idx_test = 26;
+    DownloadMatrixFromDFE( outputMtx );
 
-Matrix mtx0 = Umtx.copy();
-Matrix mtx_delta = Umtx.copy();
+outputMtx.print_matrix();
+Umtx.print_matrix();
 
-apply_to(param0, mtx0 );
+    releive_DFE();
 
-Matrix_real param_delta =  param0.copy();
-param_delta[deriv_idx_test] += 1e-8;
-apply_to(param_delta, mtx_delta );
-for (int idx=0; idx<Umtx.size(); idx++ ) {
-    mtx_delta[idx].real = (mtx_delta[idx].real-mtx0[idx].real)/1e-8;
-    mtx_delta[idx].imag = (mtx_delta[idx].imag-mtx0[idx].imag)/1e-8;
-}
 
-mtx_delta.print_matrix();
-Umtx_deriv[deriv_idx_test].print_matrix();
-*/
-
+////////////////////////////////////////////
 
 
 #if BLAS==0 // undefined BLAS
