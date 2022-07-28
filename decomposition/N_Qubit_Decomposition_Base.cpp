@@ -420,6 +420,11 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
         }
     });
 
+std::cout << "N_Qubit_Decomposition_Base::optimization_problem_combined" << std::endl;
+std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
+        throw error;
+
+
 
 }
 

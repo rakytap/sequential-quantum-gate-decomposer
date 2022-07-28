@@ -87,7 +87,7 @@ int initialize_DFE();
  * \brief ???????????
  * 
  */
-int downloadFromLMEM( Complex8* data, size_t dim );
+int downloadFromLMEM( Complex8** data, size_t dim );
 
 }
 
@@ -122,21 +122,32 @@ std::cout << "size in bytes of uploading: " << element_num*sizeof(float) << std:
 @brief ????????????
 @return ??????????
 */
-void DownloadMatrixFromDFE( Matrix& output ) {
+void DownloadMatrixFromDFE( std::vector<Matrix>& output_vec ) {
 
     // first convert the input to float32
-    size_t element_num = output.size();
+    size_t element_num = output_vec[0].size();
 
-    matrix_base<Complex8> output32( output.rows, output.cols ); // number of columns needed to be made twice due to complex -> real tranformation
-    Complex8* output32_data = output32.get_data();
+    std::vector<matrix_base<Complex8>> output32_vec;
+    for( int idx=0; idx<4; idx++) {
+        output32_vec.push_back(matrix_base<Complex8>( output_vec[0].rows, output_vec[0].cols ));
+    }
+    
+    Complex8* output32_data[4];
+    for( int idx=0; idx<4; idx++) {
+        output32_data[idx] = output32_vec[idx].get_data();
+    }    
+    
 
     // load the data to LMEM
-    downloadFromLMEM( output32_data, output.rows );
+    downloadFromLMEM( output32_data, output_vec[0].rows );
 
-    QGD_Complex16* output_data = output.get_data();    
-    for ( size_t idx=0; idx<element_num; idx++) {
-        output_data[idx].real = (double)(output32_data[idx].real);
-        output_data[idx].imag = (double)(output32_data[idx].imag);
+    for( int idx=0; idx<4; idx++) {
+	QGD_Complex16* output_data = output_vec[idx].get_data();    
+	Complex8* output32_data_loc = output32_data[idx]; 	
+        for ( size_t jdx=0; jdx<element_num; jdx++) {
+            output_data[jdx].real = (double)(output32_data_loc[jdx].real);
+            output_data[jdx].imag = (double)(output32_data_loc[jdx].imag);
+        }
     }
 
 
@@ -307,7 +318,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     }
 
 ////////////////////////////////
-    int num_of_qbits_loc = 9;
+    int num_of_qbits_loc = qbit_num;
     int dim_loc = 1 << num_of_qbits_loc;//1024*4;
 /*
     Random_Unitary ru(dim_loc);
@@ -315,19 +326,16 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 */
 //    Matrix test_Umtx = create_identity( dim_loc );
 
+
+/*
     Matrix test_Umtx(dim_loc,dim_loc);
     for (size_t idx=0; idx<test_Umtx.size(); idx++) {
         test_Umtx[idx].real = (2*double(rand())/double(RAND_MAX)-1)*0.5;
         test_Umtx[idx].imag = (2*double(rand())/double(RAND_MAX)-1)*0.5;
     }
+*/
 
-
-    int target_qbit_loc_glob = 2;
-    int control_qbit_loc_glob = 1;
-
-
-    //test_Umtx = Umtx;
-
+    Matrix test_Umtx = Umtx.copy();
     uploadMatrix2DFE( test_Umtx );
 
     std::vector<Matrix_real> parameters_vec;
@@ -336,7 +344,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
     tbb::tick_count t0_DFE = tbb::tick_count::now(); /////////////////////////////
     
-    int gatesNum = 3;
+    int gatesNum = 6;
     for (int idx=0; idx<gatesNum; idx=idx+3 ) {
 
         int target_qbit_loc = rand() % num_of_qbits_loc;
@@ -366,22 +374,32 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         parameters_vec.push_back( parameters );
 
         Matrix_real parameters2(3,1);
-        parameters2[0] = (2*double(rand())/double(RAND_MAX)-1)*4*M_PI;;
+        parameters2[0] = (2*double(rand())/double(RAND_MAX)-1)*4*M_PI;
         parameters2[1] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
         parameters2[2] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
 
         parameters_vec.push_back( parameters2 );
 
+/*
+	// CNOT gate 
         Matrix_real parameters3(3,1);
         parameters3[0] = M_PI;
         parameters3[1] = 0.0;
         parameters3[2] = M_PI;
+*/
 
+	// CRY gate 
+        Matrix_real parameters3(3,1);
+        parameters3[0] = (2*double(rand())/double(RAND_MAX)-1)*4*M_PI;
+        parameters3[1] = 0.0;
+        parameters3[2] = 0.0;
         parameters_vec.push_back( parameters3 );
 
     }
 
 
+    
+    
     gate_kernel_type* gates_loc = new gate_kernel_type[gatesNum];
     for (int idx=0; idx<gatesNum; idx=idx+3 ) {
 
@@ -389,7 +407,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         gates_loc[idx].target_qbit = target_qbit_vec[idx];
         gates_loc[idx].control_qbit = -1;
         gates_loc[idx].gate_type = U3_OPERATION;
-        gates_loc[idx].ThetaOver2 = (int32_t)(std::fmod( parameters1[0]/2, 4*M_PI)*(1<<25));
+        gates_loc[idx].ThetaOver2 = (int32_t)(std::fmod( parameters1[0]/2, 2*M_PI)*(1<<25));
         gates_loc[idx].Phi = (int32_t)(std::fmod( parameters1[1], 2*M_PI)*(1<<25));
         gates_loc[idx].Lambda = (int32_t)(std::fmod( parameters1[2], 2*M_PI)*(1<<25)); 
 
@@ -397,7 +415,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         gates_loc[idx+1].target_qbit = target_qbit_vec[idx+1];
         gates_loc[idx+1].control_qbit = -1;
         gates_loc[idx+1].gate_type = U3_OPERATION;
-        gates_loc[idx+1].ThetaOver2 = (int32_t)(std::fmod( parameters2[0]/2, 4*M_PI)*(1<<25));
+        gates_loc[idx+1].ThetaOver2 = (int32_t)(std::fmod( parameters2[0]/2, 2*M_PI)*(1<<25));
         gates_loc[idx+1].Phi = (int32_t)(std::fmod( parameters2[1], 2*M_PI)*(1<<25));
         gates_loc[idx+1].Lambda = (int32_t)(std::fmod( parameters2[2], 2*M_PI)*(1<<25)); 
 
@@ -405,9 +423,16 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         gates_loc[idx+2].target_qbit = target_qbit_vec[idx+2];
         gates_loc[idx+2].control_qbit = control_qbit_vec[idx+2];
         gates_loc[idx+2].gate_type = CNOT_OPERATION;
-        gates_loc[idx+2].ThetaOver2 = (int32_t)(std::fmod( parameters3[0]/2, 4*M_PI)*(1<<25));
+        gates_loc[idx+2].ThetaOver2 = (int32_t)(std::fmod( parameters3[0]/2, 2*M_PI)*(1<<25));
         gates_loc[idx+2].Phi = (int32_t)(std::fmod( parameters3[1], 2*M_PI)*(1<<25));
         gates_loc[idx+2].Lambda = (int32_t)(std::fmod( parameters3[2], 2*M_PI)*(1<<25)); 
+
+        // adjust parameters to calculate the derivate
+        if (idx==0) {
+            // set the most significant bit on target_qbit to indicate derivate
+            gates_loc[idx+2].ThetaOver2 = (int32_t)(std::fmod( parameters3[0]/2 + M_PI/2, 2*M_PI)*(1<<25));
+            gates_loc[idx+2].target_qbit = gates_loc[idx+2].target_qbit + (1 << 7);
+        }
 
 
     }
@@ -416,32 +441,79 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     calcqgdKernelDFE( dim_loc, gates_loc, gatesNum );   
     delete[] gates_loc;
     tbb::tick_count t1_DFE = tbb::tick_count::now();/////////////////////////////////
-    std::cout << "time elapsed DFE: " << (t1_DFE-t0_DFE).seconds() << ", expected time: " << ((double)(dim_loc*dim_loc*gatesNum + 529))/350000000 << std::endl;
+    std::cout << "time elapsed DFE: " << (t1_DFE-t0_DFE).seconds() << ", expected time: " << ((double)(dim_loc*dim_loc*gatesNum/3 + 531))/350000000 + 0.001<< std::endl;
 
     // tranform the matrix on CPU
     
     //X X_gate(num_of_qbits_loc, target_qbit_loc);    
     tbb::tick_count t0_gate = tbb::tick_count::now();
     //X_gate.apply_to(test_Umtx);
+
     for (int idx=0; idx<gatesNum; idx=idx+3) {
-std::cout << idx << " " << target_qbit_vec[idx] << " " << std::endl;
-        Matrix_real parameters1 = parameters_vec[idx];
+
+        Matrix_real& parameters1 = parameters_vec[idx];
         U3 U3_gate(num_of_qbits_loc, target_qbit_vec[idx], true, true, true);
         U3_gate.apply_to(parameters1, test_Umtx);
 
-        Matrix_real parameters2 = parameters_vec[idx+1];
+        Matrix_real& parameters2 = parameters_vec[idx+1];
         U3 U3_gate2(num_of_qbits_loc, target_qbit_vec[idx+1], true, true, true);
         U3_gate2.apply_to(parameters2, test_Umtx);
-
+/*
         CNOT CNOT_gate(num_of_qbits_loc, target_qbit_vec[idx+2], control_qbit_vec[idx+2]);
         CNOT_gate.apply_to(test_Umtx);
+*/
+        Matrix_real& parameters3 = parameters_vec[idx+2];
+        CRY CRY_gate(num_of_qbits_loc, target_qbit_vec[idx+2], control_qbit_vec[idx+2]);
+        if (idx==0) {
+            std::vector<Matrix> res = CRY_gate.apply_derivate_to(parameters3, test_Umtx);
+            test_Umtx = res[0];
+        } 
+        else {
+            CRY_gate.apply_to(parameters3, test_Umtx);
+        }
 
     }
+    
     tbb::tick_count t1_gate = tbb::tick_count::now();
     std::cout << "time elapsed CPU: " << (t1_gate-t0_gate).seconds() << std::endl;
 
     //releive_DFE(); 
     //return;
+
+///////////////////////////////////////////
+
+    std::vector<Matrix> outputMtx_vec;
+    for ( int idx=0; idx<4; idx++) {
+	    outputMtx_vec.push_back( Matrix( test_Umtx.rows, test_Umtx.cols ) );
+	    memset( outputMtx_vec[idx].get_data(), 0.0, outputMtx_vec[idx].size()*sizeof(QGD_Complex16) );
+    }
+
+    DownloadMatrixFromDFE( outputMtx_vec );
+
+    for ( int kdx=0; kdx<4; kdx++) {
+        Matrix& outputMtx = outputMtx_vec[kdx];
+        for (size_t idx=0; idx<test_Umtx.size(); idx++) {
+            double diff = (test_Umtx[idx].real-outputMtx[idx].real)*(test_Umtx[idx].real-outputMtx[idx].real*0.5) + (test_Umtx[idx].imag-outputMtx[idx].imag)*(test_Umtx[idx].imag-outputMtx[idx].imag*0.5);
+            if ( diff > 1e-5 ) {
+                std::cout << "input and output matrices differs at index " << idx << ":(" << test_Umtx[idx].real << "+ i*" << test_Umtx[idx].imag<< ") and :(" << outputMtx[idx].real << "+ i*" << outputMtx[idx].imag<<")" << std::endl;
+            }
+        }
+    }
+
+    double trace = 0.0;
+    for( int idx=0; idx<test_Umtx.rows; idx++) {
+        trace += test_Umtx[idx+test_Umtx.rows*idx].real;
+    }
+std::cout << "trace CPU: " << trace << std::endl;
+
+//outputMtx.print_matrix();
+//test_Umtx.print_matrix();
+
+    releive_DFE();
+
+
+
+////////////////////////////////////////////
 
 
 ///////////////////////////////
@@ -463,7 +535,7 @@ std::cout << idx << " " << target_qbit_vec[idx] << " " << std::endl;
         print(sstream, 1);
         gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
     }
-
+return;
     sstream.str("");
     sstream << std::endl;
     sstream << std::endl;
@@ -589,27 +661,6 @@ std::cout << idx << " " << target_qbit_vec[idx] << " " << std::endl;
             
                
     
-///////////////////////////////////////////
-
-    Matrix outputMtx( test_Umtx.rows, test_Umtx.cols );
-    memset( outputMtx.get_data(), 0.0, outputMtx.size()*sizeof(QGD_Complex16) );
-
-    DownloadMatrixFromDFE( outputMtx );
-
-    for (size_t idx=0; idx<test_Umtx.size(); idx++) {
-        double diff = (test_Umtx[idx].real-outputMtx[idx].real)*(test_Umtx[idx].real-outputMtx[idx].real) + (test_Umtx[idx].imag-outputMtx[idx].imag)*(test_Umtx[idx].imag-outputMtx[idx].imag);
-        if ( diff > 1e-5 ) {
-            std::cout << "input and output matrices differs at index " << idx << ":(" << test_Umtx[idx].real << "+ i*" << test_Umtx[idx].imag<< ") and :(" << outputMtx[idx].real << "+ i*" << outputMtx[idx].imag<<")" << std::endl;
-        }
-    }
-
-//outputMtx.print_matrix();
-//test_Umtx.print_matrix();
-
-    releive_DFE();
-
-
-////////////////////////////////////////////
 
 
 #if BLAS==0 // undefined BLAS
@@ -720,10 +771,11 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
 
         N_Qubit_Decomposition_custom cDecomp_custom_random, cDecomp_custom_close_to_zero;
-
+/*
         // try the decomposition withrandom and with close to zero initial values
         tbb::parallel_invoke(
             [&]{            
+*/
                 // solve the optimization problem in isolated optimization process
                 cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, RANDOM);
                 cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
@@ -733,7 +785,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_debugfile("");
                 cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );  
                 cDecomp_custom_random.start_decomposition(true);
-            },
+/*            },
             [&]{
                 // solve the optimization problem in isolated optimization process
                 cDecomp_custom_close_to_zero = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, CLOSE_TO_ZERO);
@@ -746,9 +798,9 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_close_to_zero.start_decomposition(true);
                }
          );
-
+*/
          tbb::tick_count end_time_loc = tbb::tick_count::now();
-
+return NULL;
          double current_minimum_random         = cDecomp_custom_random.get_current_minimum();
          double current_minimum_close_to_zero = cDecomp_custom_close_to_zero.get_current_minimum();
          double current_minimum_loc;

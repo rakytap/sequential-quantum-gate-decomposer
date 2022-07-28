@@ -419,10 +419,16 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Start_Decomposition(qgd_N_Qubit_Decom
                                      &prepare_export))
         return Py_BuildValue("i", -1);
 
-
     // starting the decomposition
     if (  self->decomp != NULL ) {
-        self->decomp->start_decomposition(prepare_export);
+        try {
+            self->decomp->start_decomposition(prepare_export);
+        }
+        catch (std::string err) {
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            std::cout << err << std::endl;
+            return NULL;
+        }
     }
     else if(  self->decomp_general != NULL ) {
         self->decomp_general->start_decomposition(prepare_export);

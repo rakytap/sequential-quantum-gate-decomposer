@@ -112,7 +112,7 @@ Phi = Phi - M_PI;
 //Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda, scale );
 
 
     // apply the computing kernel on the matrix

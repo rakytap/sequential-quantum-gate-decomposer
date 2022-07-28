@@ -106,14 +106,13 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
     //measure the time for the decompositin
     tbb::tick_count start_time = tbb::tick_count::now();
-
     // setting the gate structure for optimization
     add_gate_layers();
-//std::cout << optimization_problem( optimized_parameters_mtx.get_data() ) << std::endl;
+
 
     // final tuning of the decomposition parameters
     final_optimization();
-
+return;
 
     // prepare gates to export
     if (prepare_export) {
