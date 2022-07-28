@@ -45,25 +45,13 @@ typedef struct {
   float imag;
 } Complex8;
 
-/**
- * \brief ???????????
- * 
- */
-typedef struct {
-	int32_t ThetaOver2;
-	int32_t Phi;
-	int32_t Lambda;
-	int8_t target_qbit;
-	int8_t control_qbit;
-	int8_t gate_type;
-	int8_t padding;
-} gate_kernel_type;
+
 
 /**
 @brief ????????????
 @return ??????????
 */
-int calcqgdKernelDFE(size_t dim, gate_kernel_type* gates, int gatesNum);
+int calcqgdKernelDFE(size_t dim, DFEgate_kernel_type* gates, int gatesNum);
 
 /**
 @brief ????????????
@@ -337,7 +325,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
     Matrix test_Umtx = Umtx.copy();
     uploadMatrix2DFE( test_Umtx );
-
+/*
     std::vector<Matrix_real> parameters_vec;
     std::vector<int> target_qbit_vec;
     std::vector<int> control_qbit_vec;
@@ -380,13 +368,13 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
         parameters_vec.push_back( parameters2 );
 
-/*
+
 	// CNOT gate 
-        Matrix_real parameters3(3,1);
-        parameters3[0] = M_PI;
-        parameters3[1] = 0.0;
-        parameters3[2] = M_PI;
-*/
+        //Matrix_real parameters3(3,1);
+        //parameters3[0] = M_PI;
+        //parameters3[1] = 0.0;
+        //parameters3[2] = M_PI;
+
 
 	// CRY gate 
         Matrix_real parameters3(3,1);
@@ -400,7 +388,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
     
     
-    gate_kernel_type* gates_loc = new gate_kernel_type[gatesNum];
+    DFEgate_kernel_type* gates_loc = new DFEgate_kernel_type[gatesNum];
     for (int idx=0; idx<gatesNum; idx=idx+3 ) {
 
         Matrix_real parameters1 = parameters_vec[idx];
@@ -458,10 +446,10 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         Matrix_real& parameters2 = parameters_vec[idx+1];
         U3 U3_gate2(num_of_qbits_loc, target_qbit_vec[idx+1], true, true, true);
         U3_gate2.apply_to(parameters2, test_Umtx);
-/*
-        CNOT CNOT_gate(num_of_qbits_loc, target_qbit_vec[idx+2], control_qbit_vec[idx+2]);
-        CNOT_gate.apply_to(test_Umtx);
-*/
+
+        //CNOT CNOT_gate(num_of_qbits_loc, target_qbit_vec[idx+2], control_qbit_vec[idx+2]);
+        //CNOT_gate.apply_to(test_Umtx);
+
         Matrix_real& parameters3 = parameters_vec[idx+2];
         CRY CRY_gate(num_of_qbits_loc, target_qbit_vec[idx+2], control_qbit_vec[idx+2]);
         if (idx==0) {
@@ -476,10 +464,10 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     
     tbb::tick_count t1_gate = tbb::tick_count::now();
     std::cout << "time elapsed CPU: " << (t1_gate-t0_gate).seconds() << std::endl;
-
+*/
     //releive_DFE(); 
     //return;
-
+/*
 ///////////////////////////////////////////
 
     std::vector<Matrix> outputMtx_vec;
@@ -505,11 +493,11 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         trace += test_Umtx[idx+test_Umtx.rows*idx].real;
     }
 std::cout << "trace CPU: " << trace << std::endl;
-
+*/
 //outputMtx.print_matrix();
 //test_Umtx.print_matrix();
 
-    releive_DFE();
+
 
 
 
@@ -535,6 +523,7 @@ std::cout << "trace CPU: " << trace << std::endl;
         print(sstream, 1);
         gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
     }
+releive_DFE();
 return;
     sstream.str("");
     sstream << std::endl;
@@ -756,6 +745,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
         // create gate structure to be optimized
         Gates_block* gate_structure_loc = new Gates_block(qbit_num);
+
         for (int idx=0; idx<level; idx++) {
 
             // create the new decomposing layer
@@ -1487,9 +1477,32 @@ N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structur
              block->add_u3(idx, Theta, Phi, Lambda);
 //        block->add_ry(idx);
     }
+/*
+    // creating block of gates
+    Gates_block* block1 = new Gates_block( qbit_num );
 
+block1->add_u3(3, true, false, true);
+block1->add_u3(3, true, false, true);
+block1->add_u3(3, true, false, true);
+block1->add_u3(2, true, false, true);
+block1->add_u3(0, true, false, true);
+block1->add_u3(3, true, false, true);
+*/
+/*
+    Gates_block* block2 = new Gates_block( qbit_num );
+
+block2->add_u3(4, true, false, true);
+block2->add_u3(2, true, false, true);
+block2->add_u3(5, true, false, true);
+block2->add_u3(2, true, false, true);
+block2->add_u3(4, true, false, true);
+block2->add_u3(3, true, false, true);
+*/
     // adding the opeartion block to the gates
     gate_structure->add_gate( block );
+
+    //gate_structure->add_gate( block1 );
+    //gate_structure->add_gate( block2 );
 
 }
 

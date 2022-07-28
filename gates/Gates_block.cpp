@@ -38,7 +38,15 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Composite.h"
 #include "Gates_block.h"
 
+//////////////////////////////////
 
+extern "C" {
+
+int get_chained_gates_num();
+
+}
+
+//////////////////
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -1271,6 +1279,7 @@ gates_num Gates_block::get_gate_nums() {
         gate_nums.com     = 0;
         gate_nums.general = 0;
         gate_nums.adap = 0;
+        gate_nums.total = 0;
 
         for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
             // get the specific gate or block of gates
@@ -1295,54 +1304,72 @@ gates_num Gates_block::get_gate_nums() {
                 gate_nums.on   = gate_nums.on + gate_nums_loc.on;
                 gate_nums.com  = gate_nums.com + gate_nums_loc.com;
                 gate_nums.adap = gate_nums.adap + gate_nums_loc.adap;
+                gate_nums.total = gate_nums.total + gate_nums_loc.total;
+
             }
             else if (gate->get_type() == U3_OPERATION) {
                 gate_nums.u3   = gate_nums.u3 + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == RX_OPERATION) {
                 gate_nums.rx   = gate_nums.rx + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == RY_OPERATION) {
                 gate_nums.ry   = gate_nums.ry + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == CRY_OPERATION) {
                 gate_nums.cry   = gate_nums.cry + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == RZ_OPERATION) {
                 gate_nums.rz   = gate_nums.rz + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == CNOT_OPERATION) {
                 gate_nums.cnot   = gate_nums.cnot + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == CZ_OPERATION) {
                 gate_nums.cz   = gate_nums.cz + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == CH_OPERATION) {
                 gate_nums.ch   = gate_nums.ch + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == X_OPERATION) {
                 gate_nums.x   = gate_nums.x + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == SX_OPERATION) {
                 gate_nums.sx   = gate_nums.sx + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == SYC_OPERATION) {
                 gate_nums.syc   = gate_nums.syc + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == GENERAL_OPERATION) {
                 gate_nums.general   = gate_nums.general + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == UN_OPERATION) {
                 gate_nums.un   = gate_nums.un + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == ON_OPERATION) {
                 gate_nums.on   = gate_nums.on + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == COMPOSITE_OPERATION) {
                 gate_nums.com   = gate_nums.com + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == ADAPTIVE_OPERATION) {
                 gate_nums.adap   = gate_nums.adap + 1;
+                gate_nums.total = gate_nums.total + 1;
             }
 
         }
@@ -2132,6 +2159,313 @@ bool Gates_block::contains_adaptive_gate(int idx) {
     }
 
     return false;
+
+}
+
+
+/**
+@brief Method to create random initial parameters for the optimization
+@return 
+*/
+DFEgate_kernel_type* Gates_block::convert_to_DFE_gates( Matrix_real& parameters_mtx, int& gatesNum ) {
+
+    int parameter_num = get_parameter_num();
+    if ( parameter_num != parameters_mtx.size() ) {
+        std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: wrong number of parameters");
+        throw error;
+    }
+
+
+    gates_num gate_nums   = get_gate_nums();
+    int gates_total_num   = gate_nums.total; 
+    int chained_gates_num = get_chained_gates_num();
+    int gate_padding      = chained_gates_num - (gates_total_num % chained_gates_num);
+    gatesNum              = gates_total_num+gate_padding;
+
+
+
+    DFEgate_kernel_type* DFEgates = new DFEgate_kernel_type[gates_total_num+gate_padding];
+    
+    int gate_idx = 0;
+    convert_to_DFE_gates( parameters_mtx, DFEgates, gate_idx );
+
+
+    // padding with identity gates
+    for (int idx=gate_idx; idx<gatesNum; idx++ ){
+
+        DFEgate_kernel_type& DFEGate = DFEgates[idx];
+
+        
+        DFEGate.target_qbit = 0;
+        DFEGate.control_qbit = -1;
+        DFEGate.gate_type = U3_OPERATION;
+        DFEGate.ThetaOver2 = (int32_t)(0);
+        DFEGate.Phi = (int32_t)(0);
+        DFEGate.Lambda = (int32_t)(0); 
+
+    }
+/*
+    for ( int idx=0; idx<gatesNum; idx++ ) {
+
+        std::cout << "target qubit: " << (int)DFEgates[idx].target_qbit << " control qubit: " << (int)DFEgates[idx].control_qbit << " gate type: " << (int)DFEgates[idx].gate_type << std::endl; 
+    }
+*/
+
+
+    return DFEgates;
+
+}
+
+
+
+/**
+@brief Method to create random initial parameters for the optimization
+@return 
+*/
+void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEgate_kernel_type* DFEgates, int& start_index ) {
+
+   	
+        int& gate_idx = start_index;
+        int parameter_idx = parameter_num;
+	double *parameters_data = parameters_mtx.get_data();
+	//const_cast <Matrix_real&>(parameters);
+
+
+        for(int op_idx = gates.size()-1; op_idx>=0; op_idx--) { 
+
+            Gate* gate = gates[op_idx];
+            DFEgate_kernel_type& DFEGate = DFEgates[gate_idx];
+
+            if (gate->get_type() == CNOT_OPERATION) {
+                CNOT* cnot_gate = static_cast<CNOT*>(gate);
+                DFEGate.target_qbit = cnot_gate->get_target_qbit();
+                DFEGate.control_qbit = cnot_gate->get_control_qbit();
+                DFEGate.gate_type = CNOT_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(M_PI/2*(1<<25));
+                DFEGate.Phi = (int32_t)(0);
+                DFEGate.Lambda = (int32_t)(M_PI*(1<<25)); 
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == CZ_OPERATION) {
+                CZ* cz_gate = static_cast<CZ*>(gate);    
+                DFEGate.target_qbit = cz_gate->get_target_qbit();
+                DFEGate.control_qbit = cz_gate->get_control_qbit();
+                DFEGate.gate_type = CZ_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Phi = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Lambda = (int32_t)(M_PI*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	             
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == CH_OPERATION) {
+                CH* ch_gate = static_cast<CH*>(gate);   
+                DFEGate.target_qbit = ch_gate->get_target_qbit();
+                DFEGate.control_qbit = ch_gate->get_control_qbit();
+                DFEGate.gate_type = CH_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(M_PI/4*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Phi = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Lambda = (int32_t)(M_PI*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	         	
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == SYC_OPERATION) {
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: SYC_gate not implemented");
+                throw error;
+            }
+            else if (gate->get_type() == U3_OPERATION) {
+
+                // definig the U3 parameters
+                double vartheta;
+                double varphi;
+                double varlambda;
+		
+                // get the inverse parameters of the U3 rotation
+
+                U3* u3_gate = static_cast<U3*>(gate);
+
+                if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
+		   
+                    varphi = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                    varphi = 0;
+                    varlambda =0;
+                    parameter_idx = parameter_idx - 1;
+
+                }
+                else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_phi_parameter()) {
+                    vartheta = 0;
+                    varphi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                    varlambda =0;
+                    parameter_idx = parameter_idx - 1;
+                }
+                else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_lambda_parameter()) {
+                    vartheta = 0;
+                    varphi =  0;
+                    varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                    parameter_idx = parameter_idx - 1;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_phi_parameter() ) {
+                    vartheta = std::fmod( parameters_data[parameter_idx-2], 4*M_PI);
+                    varphi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                    varlambda = 0;
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_lambda_parameter() ) {
+                    vartheta = std::fmod( parameters_data[parameter_idx-2], 4*M_PI);
+                    varphi = 0;
+                    varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
+                    vartheta = 0;
+                    varphi = std::fmod( parameters_data[parameter_idx-2], 2*M_PI);
+                    varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 3)) {
+                    vartheta = std::fmod( parameters_data[parameter_idx-3], 4*M_PI);
+                    varphi = std::fmod( parameters_data[parameter_idx-2], 2*M_PI);
+                    varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                    parameter_idx = parameter_idx - 3;
+                }
+
+                DFEGate.target_qbit = u3_gate->get_target_qbit();
+                DFEGate.control_qbit = -1;
+                DFEGate.gate_type = U3_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(vartheta/2*(1<<25)); 
+                DFEGate.Phi = (int32_t)(varphi*(1<<25)); 
+                DFEGate.Lambda = (int32_t)(varlambda*(1<<25));	
+                gate_idx = gate_idx + 1;
+
+            }
+            else if (gate->get_type() == RX_OPERATION) {
+	        // definig the rotation parameter
+                double vartheta;
+                // get the inverse parameters of the U3 rotation
+                RX* rx_gate = static_cast<RX*>(gate);		
+                vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                parameter_idx = parameter_idx - 1;
+
+                DFEGate.target_qbit = rx_gate->get_target_qbit();
+                DFEGate.control_qbit = -1;
+                DFEGate.gate_type = RX_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(vartheta/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Phi = (int32_t)(-M_PI/2*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Lambda = (int32_t)(M_PI/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	    
+	    	 
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == RY_OPERATION) {
+                // definig the rotation parameter
+                double vartheta;
+                // get the inverse parameters of the U3 rotation
+                RY* ry_gate = static_cast<RY*>(gate);
+                vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                parameter_idx = parameter_idx - 1;
+
+                DFEGate.target_qbit = ry_gate->get_target_qbit();
+                DFEGate.control_qbit = -1;
+                DFEGate.gate_type = RY_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(vartheta/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Phi = (int32_t)(0);  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Lambda = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	
+    	
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == CRY_OPERATION) {
+                // definig the rotation parameter
+                double Phi;
+                // get the inverse parameters of the U3 rotation
+                CRY* cry_gate = static_cast<CRY*>(gate);
+                double vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                parameter_idx = parameter_idx - 1;
+                DFEGate.target_qbit = cry_gate->get_target_qbit();
+                DFEGate.control_qbit = cry_gate->get_control_qbit();
+                DFEGate.gate_type = CRY_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(vartheta/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Phi = (int32_t)(0);  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Lambda = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+	    		                    
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == RZ_OPERATION) {
+                // definig the rotation parameter
+                double varphi;
+                // get the inverse parameters of the U3 rotation
+                RZ* rz_gate = static_cast<RZ*>(gate);
+                varphi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                parameter_idx = parameter_idx - 1;
+
+                DFEGate.target_qbit = rz_gate->get_target_qbit();
+                DFEGate.control_qbit = -1;
+                DFEGate.gate_type = RZ_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Phi = (int32_t)(varphi*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Lambda = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+	    	
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == X_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                X* x_gate = static_cast<X*>(gate);
+
+                DFEGate.target_qbit = x_gate->get_target_qbit();
+                DFEGate.control_qbit = -1;
+                DFEGate.gate_type = X_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(M_PI/2*(1<<25));
+                DFEGate.Phi = (int32_t)(0);
+                DFEGate.Lambda = (int32_t)(M_PI*(1<<25)); 
+	    	
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == SX_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                SX* sx_gate = static_cast<SX*>(gate);
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: SX_gate not implemented");
+                throw error;	    	
+            }
+            else if (gate->get_type() == BLOCK_OPERATION) {
+                Gates_block* block_gate = static_cast<Gates_block*>(gate);
+                const Matrix_real parameters_layer_mtx(parameters_mtx.get_data() + parameter_idx - gate->get_parameter_num(), 1, gate->get_parameter_num() );
+                block_gate->convert_to_DFE_gates( parameters_layer_mtx, DFEgates, gate_idx );
+                parameter_idx = parameter_idx - block_gate->get_parameter_num();
+            }
+            else if (gate->get_type() == UN_OPERATION) {
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: UN_gate not implemented");
+                throw error;
+            }
+            else if (gate->get_type() == ON_OPERATION) {
+
+                // THE LAST GATE IS A GENERAL GATE APPENDED IN THE BLOCK-WISE OPTIMISATION ROUTINE OF DECOMPOSITION_BASE
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: ON_gate not implemented");
+                throw error;
+            }
+            else if (gate->get_type() == COMPOSITE_OPERATION) {
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: Composite_gate not implemented");
+                throw error;
+            }
+            else if (gate->get_type() == GENERAL_OPERATION) {
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: general_gate not implemented");
+                throw error;
+            }
+            else if (gate->get_type() == ADAPTIVE_OPERATION) {
+                // definig the rotation parameter
+                double Phi;
+                // get the inverse parameters of the U3 rotation
+                Adaptive* ad_gate = static_cast<Adaptive*>(gate);
+                double vartheta = std::fmod( activation_function(parameters_data[parameter_idx-1], ad_gate->get_limit()), 4*M_PI);
+                parameter_idx = parameter_idx - 1;
+                DFEGate.target_qbit = ad_gate->get_target_qbit();
+                DFEGate.control_qbit = ad_gate->get_control_qbit();
+                DFEGate.gate_type = ADAPTIVE_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(vartheta/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Phi = (int32_t)(0);  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.Lambda = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+	    		                    
+                gate_idx = gate_idx + 1;
+            }
+
+        }
+
+
+    return;
 
 }
 

@@ -458,6 +458,18 @@ bool contains_adaptive_gate();
 */
 bool contains_adaptive_gate(int idx);
 
+/**
+@brief Method to create random initial parameters for the optimization
+@return 
+*/
+DFEgate_kernel_type* convert_to_DFE_gates( Matrix_real& parameters_mtx, int& gatesNum );
+
+/**
+@brief Method to create random initial parameters for the optimization
+@return 
+*/
+void convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEgate_kernel_type* DFEgates, int& start_index );
+
 };
 
 #endif //GATES_BLOCK

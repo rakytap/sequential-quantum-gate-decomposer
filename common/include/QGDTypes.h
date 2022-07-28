@@ -77,8 +77,25 @@ struct gates_num {
   int com;
   /// The number of adaptive gates
   int adap;
+  /// The total number of gates
+  int total;
 };
 
+
+
+/**
+ * \brief ???????????
+ * 
+ */
+typedef struct {
+	int32_t ThetaOver2;
+	int32_t Phi;
+	int32_t Lambda;
+	int8_t target_qbit;
+	int8_t control_qbit;
+	int8_t gate_type;
+	int8_t padding;
+} DFEgate_kernel_type;
 
 
 
