@@ -112,8 +112,10 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
     // final tuning of the decomposition parameters
     final_optimization();
-return;
 
+#ifdef __DFE__
+return;
+#endif
     // prepare gates to export
     if (prepare_export) {
         prepare_gates_to_export();

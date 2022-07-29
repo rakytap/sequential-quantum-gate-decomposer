@@ -25,30 +25,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Base.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
-extern "C" {
-
-/**
- * \brief ???????????
- * 
- */
-typedef struct {
-  float real;
-  float imag;
-} Complex8;
-
-/**
-@brief ????????????
-@return ??????????
-*/
-int calcqgdKernelDFE(size_t dim, DFEgate_kernel_type* gates, int gatesNum);
-
-/**
-@brief ????????????
-@return ??????????
-*/
-int load2LMEM( Complex8* data, size_t dim );
-
-}
+#ifdef __DFE__
+#include "common_DFE.h"
+#endif
 
 
 
@@ -423,17 +402,13 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
 
     int parameter_num_loc = instance->get_parameter_num();
 
-
+#ifdef __DFE__
 ///////////////////////////////////////
 tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////
     Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
-    Gates_block* gates_loc = new Gates_block( instance->get_qbit_num() );
-    instance->extract_gates(gates_loc);
-
-    gates_loc->release_gate( 0 ); // THE FIRST GATE IS A GENERAL GATE APPENDED IN THE BLOCK-WISE OPTIMISATION ROUTINE OF DECOMPOSITION_BASE -- need to be discarded
 
     int gatesNum;
-    DFEgate_kernel_type* DFEgates = gates_loc->convert_to_DFE_gates( parameters_mtx, gatesNum );
+    DFEgate_kernel_type* DFEgates = instance->convert_to_DFE_gates( parameters_mtx, gatesNum );
 
     Matrix&& Umtx_loc = instance->get_Umtx();
 
@@ -441,16 +416,18 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();////////////////////////////////
     calcqgdKernelDFE( Umtx_loc.rows, DFEgates, gatesNum );
 
 
-    delete gates_loc;
     delete[] DFEgates;
 tbb::tick_count t1_DFE = tbb::tick_count::now();/////////////////////////////////
 std::cout << "time elapsed DFE: " << (t1_DFE-t0_DFE).seconds() << ", expected time: " << ((double)(Umtx_loc.rows*Umtx_loc.rows*gatesNum/3 + 531))/350000000 + 0.001<< std::endl;
 ///////////////////////////////////////
+#endif
 
     // vector containing gradients of the transformed matrix
     std::vector<Matrix> Umtx_deriv;
 
+#ifdef __DFE__
 tbb::tick_count t0_CPU = tbb::tick_count::now();/////////////////////////////////
+#endif
     tbb::parallel_invoke(
         [&]{*f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance)); },
         [&]{
@@ -471,6 +448,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
         }
     });
 
+#ifdef __DFE__
 tbb::tick_count t1_CPU = tbb::tick_count::now();/////////////////////////////////
 std::cout << "time elapsed CPU: " << (t1_CPU-t0_CPU).seconds() << " number of parameters: " << parameter_num_loc << std::endl;
 std::cout << "cost function CPU: " << *f0 << std::endl;
@@ -479,7 +457,7 @@ std::cout << "cost function CPU: " << *f0 << std::endl;
 std::cout << "N_Qubit_Decomposition_Base::optimization_problem_combined" << std::endl;
 std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
         throw error;
-
+#endif
 
 
 }

@@ -34,113 +34,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <stdlib.h>
 
 
-extern "C" {
+#ifdef __DFE__
+#include "common_DFE.h"
+#endif
 
-/**
- * \brief ???????????
- * 
- */
-typedef struct {
-  float real;
-  float imag;
-} Complex8;
-
-
-
-/**
-@brief ????????????
-@return ??????????
-*/
-int calcqgdKernelDFE(size_t dim, DFEgate_kernel_type* gates, int gatesNum);
-
-/**
-@brief ????????????
-@return ??????????
-*/
-int load2LMEM( Complex8* data, size_t dim );
-
-/**
-@brief ????????????
-@return ??????????
-*/
-void releive_DFE();
-
-/**
-@brief ????????????
-@return ??????????
-*/
-int initialize_DFE();
-
-/**
- * \brief ???????????
- * 
- */
-int downloadFromLMEM( Complex8** data, size_t dim );
-
-}
-
-
-/**
-@brief ????????????
-@return ??????????
-*/
-void uploadMatrix2DFE( Matrix& input ) {
-
-    // first convert the input to float32
-    matrix_base<Complex8> input32( input.rows, input.cols ); // number of columns needed to be made twice due to complex -> real tranformation
-
-    size_t element_num = input.size();
-    QGD_Complex16* input_data = input.get_data();
-    Complex8* input32_data = input32.get_data();
-    for ( size_t idx=0; idx<element_num; idx++) {
-        input32_data[idx].real = (float)(input_data[idx].real);
-        input32_data[idx].imag = (float)(input_data[idx].imag);
-    }
-    
-std::cout << "size in bytes of uploading: " << element_num*sizeof(float) << std::endl;    
-
-    // load the data to LMEM
-    load2LMEM( input32_data, input.rows );
-
-}
-
-
-
-/**
-@brief ????????????
-@return ??????????
-*/
-void DownloadMatrixFromDFE( std::vector<Matrix>& output_vec ) {
-
-    // first convert the input to float32
-    size_t element_num = output_vec[0].size();
-
-    std::vector<matrix_base<Complex8>> output32_vec;
-    for( int idx=0; idx<4; idx++) {
-        output32_vec.push_back(matrix_base<Complex8>( output_vec[0].rows, output_vec[0].cols ));
-    }
-    
-    Complex8* output32_data[4];
-    for( int idx=0; idx<4; idx++) {
-        output32_data[idx] = output32_vec[idx].get_data();
-    }    
-    
-
-    // load the data to LMEM
-    downloadFromLMEM( output32_data, output_vec[0].rows );
-
-    for( int idx=0; idx<4; idx++) {
-	QGD_Complex16* output_data = output_vec[idx].get_data();    
-	Complex8* output32_data_loc = output32_data[idx]; 	
-        for ( size_t jdx=0; jdx<element_num; jdx++) {
-            output_data[jdx].real = (double)(output32_data_loc[jdx].real);
-            output_data[jdx].imag = (double)(output32_data_loc[jdx].imag);
-        }
-    }
-
-
-
-}
 
 /**
 @brief Method to create random initial parameters for the optimization
@@ -322,9 +219,10 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         test_Umtx[idx].imag = (2*double(rand())/double(RAND_MAX)-1)*0.5;
     }
 */
-
+#ifdef __DFE__
     Matrix test_Umtx = Umtx.copy();
     uploadMatrix2DFE( test_Umtx );
+#endif
 /*
     std::vector<Matrix_real> parameters_vec;
     std::vector<int> target_qbit_vec;
@@ -523,8 +421,12 @@ std::cout << "trace CPU: " << trace << std::endl;
         print(sstream, 1);
         gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
     }
+
+#ifdef __DFE__
 releive_DFE();
 return;
+#endif
+
     sstream.str("");
     sstream << std::endl;
     sstream << std::endl;
@@ -761,11 +663,12 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
 
         N_Qubit_Decomposition_custom cDecomp_custom_random, cDecomp_custom_close_to_zero;
-/*
+
+#ifndef __DFE__
         // try the decomposition withrandom and with close to zero initial values
         tbb::parallel_invoke(
             [&]{            
-*/
+#endif
                 // solve the optimization problem in isolated optimization process
                 cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, RANDOM);
                 cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
@@ -775,7 +678,8 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_debugfile("");
                 cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );  
                 cDecomp_custom_random.start_decomposition(true);
-/*            },
+#ifndef __DFE__
+            },
             [&]{
                 // solve the optimization problem in isolated optimization process
                 cDecomp_custom_close_to_zero = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, CLOSE_TO_ZERO);
@@ -788,9 +692,12 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_close_to_zero.start_decomposition(true);
                }
          );
-*/
+#endif
+
          tbb::tick_count end_time_loc = tbb::tick_count::now();
+#ifdef __DFE__
 return NULL;
+#endif
          double current_minimum_random         = cDecomp_custom_random.get_current_minimum();
          double current_minimum_close_to_zero = cDecomp_custom_close_to_zero.get_current_minimum();
          double current_minimum_loc;

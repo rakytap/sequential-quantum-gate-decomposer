@@ -481,6 +481,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // Create a general gate describing the cumulative effect of gates following the optimized gates
             if (block_idx_end > 0) {
                 fixed_gate_post->set_matrix( gates_mtxs_post[block_idx_end-1] );
+                gates.push_back( fixed_gate_post ); 
             }
             else {
                 // release gate products
@@ -489,7 +490,6 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             }
 
             // create a list of gates for the optimization process
-            gates.push_back( fixed_gate_post ); 
             for ( int idx=block_idx_end; idx<block_idx_start; idx++ ) {
                 gates.push_back( gates_loc[idx] );
             }
