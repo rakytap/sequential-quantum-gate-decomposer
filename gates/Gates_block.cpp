@@ -2162,7 +2162,7 @@ bool Gates_block::contains_adaptive_gate(int idx) {
 
 }
 
-
+#ifdef __DFE__
 /**
 @brief Method to create random initial parameters for the optimization
 @return 
@@ -2273,7 +2273,7 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
             else if (gate->get_type() == U3_OPERATION) {
 
                 // definig the U3 parameters
-                double vartheta;
+                double varthetaOver2;
                 double varphi;
                 double varlambda;
 		
@@ -2283,44 +2283,44 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
 
                 if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
 		   
-                    varphi = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                    varthetaOver2 = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                     varphi = 0;
                     varlambda =0;
                     parameter_idx = parameter_idx - 1;
 
                 }
                 else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_phi_parameter()) {
-                    vartheta = 0;
+                    varthetaOver2 = 0;
                     varphi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                     varlambda =0;
                     parameter_idx = parameter_idx - 1;
                 }
                 else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_lambda_parameter()) {
-                    vartheta = 0;
+                    varthetaOver2 = 0;
                     varphi =  0;
                     varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                     parameter_idx = parameter_idx - 1;
                 }
                 else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_phi_parameter() ) {
-                    vartheta = std::fmod( parameters_data[parameter_idx-2], 4*M_PI);
+                    varthetaOver2 = std::fmod( parameters_data[parameter_idx-2], 2*M_PI);
                     varphi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                     varlambda = 0;
                     parameter_idx = parameter_idx - 2;
                 }
                 else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_lambda_parameter() ) {
-                    vartheta = std::fmod( parameters_data[parameter_idx-2], 4*M_PI);
+                    varthetaOver2 = std::fmod( parameters_data[parameter_idx-2], 2*M_PI);
                     varphi = 0;
                     varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                     parameter_idx = parameter_idx - 2;
                 }
                 else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
-                    vartheta = 0;
+                    varthetaOver2 = 0;
                     varphi = std::fmod( parameters_data[parameter_idx-2], 2*M_PI);
                     varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                     parameter_idx = parameter_idx - 2;
                 }
                 else if ((u3_gate->get_parameter_num() == 3)) {
-                    vartheta = std::fmod( parameters_data[parameter_idx-3], 4*M_PI);
+                    varthetaOver2 = std::fmod( parameters_data[parameter_idx-3], 2*M_PI);
                     varphi = std::fmod( parameters_data[parameter_idx-2], 2*M_PI);
                     varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                     parameter_idx = parameter_idx - 3;
@@ -2329,7 +2329,7 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.target_qbit = u3_gate->get_target_qbit();
                 DFEGate.control_qbit = -1;
                 DFEGate.gate_type = U3_OPERATION;
-                DFEGate.ThetaOver2 = (int32_t)(vartheta/2*(1<<25)); 
+                DFEGate.ThetaOver2 = (int32_t)(varthetaOver2*(1<<25)); 
                 DFEGate.Phi = (int32_t)(varphi*(1<<25)); 
                 DFEGate.Lambda = (int32_t)(varlambda*(1<<25));	
                 gate_idx = gate_idx + 1;
@@ -2337,16 +2337,16 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
             }
             else if (gate->get_type() == RX_OPERATION) {
 	        // definig the rotation parameter
-                double vartheta;
+                double varthetaOver2;
                 // get the inverse parameters of the U3 rotation
                 RX* rx_gate = static_cast<RX*>(gate);		
-                vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                varthetaOver2 = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                 parameter_idx = parameter_idx - 1;
 
                 DFEGate.target_qbit = rx_gate->get_target_qbit();
                 DFEGate.control_qbit = -1;
                 DFEGate.gate_type = RX_OPERATION;
-                DFEGate.ThetaOver2 = (int32_t)(vartheta/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.ThetaOver2 = (int32_t)(varthetaOver2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Phi = (int32_t)(-M_PI/2*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Lambda = (int32_t)(M_PI/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	    
 	    	 
@@ -2354,16 +2354,16 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
             }
             else if (gate->get_type() == RY_OPERATION) {
                 // definig the rotation parameter
-                double vartheta;
+                double varthetaOver2;
                 // get the inverse parameters of the U3 rotation
                 RY* ry_gate = static_cast<RY*>(gate);
-                vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                varthetaOver2 = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                 parameter_idx = parameter_idx - 1;
 
                 DFEGate.target_qbit = ry_gate->get_target_qbit();
                 DFEGate.control_qbit = -1;
                 DFEGate.gate_type = RY_OPERATION;
-                DFEGate.ThetaOver2 = (int32_t)(vartheta/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.ThetaOver2 = (int32_t)(varthetaOver2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Phi = (int32_t)(0);  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Lambda = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	
     	
@@ -2374,12 +2374,12 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 double Phi;
                 // get the inverse parameters of the U3 rotation
                 CRY* cry_gate = static_cast<CRY*>(gate);
-                double vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                double varthetaOver2 = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                 parameter_idx = parameter_idx - 1;
                 DFEGate.target_qbit = cry_gate->get_target_qbit();
                 DFEGate.control_qbit = cry_gate->get_control_qbit();
                 DFEGate.gate_type = CRY_OPERATION;
-                DFEGate.ThetaOver2 = (int32_t)(vartheta/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.ThetaOver2 = (int32_t)(varthetaOver2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Phi = (int32_t)(0);  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Lambda = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
 	    		                    
@@ -2450,14 +2450,14 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 double Phi;
                 // get the inverse parameters of the U3 rotation
                 Adaptive* ad_gate = static_cast<Adaptive*>(gate);
-                double vartheta = std::fmod( activation_function(parameters_data[parameter_idx-1], ad_gate->get_limit()), 4*M_PI);
+                double varthetaOver2 = std::fmod( activation_function(parameters_data[parameter_idx-1], ad_gate->get_limit()), 2*M_PI);
                 parameter_idx = parameter_idx - 1;
                 DFEGate.target_qbit = ad_gate->get_target_qbit();
                 DFEGate.control_qbit = ad_gate->get_control_qbit();
                 DFEGate.gate_type = ADAPTIVE_OPERATION;
-                DFEGate.ThetaOver2 = (int32_t)(vartheta/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
-                DFEGate.Phi = (int32_t)(0);  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
-                DFEGate.Lambda = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.ThetaOver2 = (int32_t)(varthetaOver2*(1<<25)); 
+                DFEGate.Phi = (int32_t)(0);  
+                DFEGate.Lambda = (int32_t)(0); 
 	    		                    
                 gate_idx = gate_idx + 1;
             }
@@ -2468,5 +2468,5 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
     return;
 
 }
-
+#endif
 
