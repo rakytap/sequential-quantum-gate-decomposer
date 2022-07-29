@@ -38,6 +38,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Composite.h"
 #include "Gates_block.h"
 
+
+
 //////////////////////////////////
 
 extern "C" {
@@ -2163,6 +2165,308 @@ bool Gates_block::contains_adaptive_gate(int idx) {
 }
 
 #ifdef __DFE__
+
+/**
+@brief Method to create random initial parameters for the optimization
+@return 
+*/
+DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_real& parameters_mtx, int& gatesNum ) {
+
+    int parameter_num = get_parameter_num();
+    if ( parameter_num != parameters_mtx.size() ) {
+        std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: wrong number of parameters");
+        throw error;
+    }
+
+    gates_num gate_nums   = get_gate_nums();
+    int gates_total_num   = gate_nums.total; 
+    int chained_gates_num = get_chained_gates_num();
+    int gate_padding      = chained_gates_num - (gates_total_num % chained_gates_num);
+    gatesNum              = gates_total_num+gate_padding;
+
+
+
+    DFEgate_kernel_type* DFEgates = new DFEgate_kernel_type[gatesNum*(parameter_num+1)];
+    
+    int gate_idx = 0;
+    convert_to_DFE_gates( parameters_mtx, DFEgates, gate_idx );
+
+
+    // padding with identity gates
+    for (int idx=gate_idx; idx<gatesNum; idx++ ){
+
+        DFEgate_kernel_type& DFEGate = DFEgates[idx];
+
+        
+        DFEGate.target_qbit = 0;
+        DFEGate.control_qbit = -1;
+        DFEGate.gate_type = U3_OPERATION;
+        DFEGate.ThetaOver2 = (int32_t)(0);
+        DFEGate.Phi = (int32_t)(0);
+        DFEGate.Lambda = (int32_t)(0); 
+        DFEGate.metadata = 0;
+
+    }
+/*
+    for ( int idx=0; idx<gatesNum; idx++ ) {
+
+        std::cout << "target qubit: " << (int)DFEgates[idx].target_qbit << " control qubit: " << (int)DFEgates[idx].control_qbit << " gate type: " << (int)DFEgates[idx].gate_type << std::endl; 
+    }
+*/
+
+    // adjust parameters for derivation
+    for (int idx=0; idx<parameter_num; idx++) {
+        memcpy(DFEgates+(idx+1)*gatesNum, DFEgates, gatesNum*sizeof(DFEgate_kernel_type));
+    }
+
+    gate_idx = 0;
+    int gate_set_index = parameter_num-1;
+    adjust_parameters_for_derivation( DFEgates+gatesNum, gatesNum, gate_idx, gate_set_index );
+
+/*
+    for ( int idx=0; idx<gatesNum*(parameter_num+1); idx++ ) {
+
+        std::cout << "target qubit: " << (int)DFEgates[idx].target_qbit << " control qubit: " << (int)DFEgates[idx].control_qbit << " theta: " << (int)DFEgates[idx].ThetaOver2 << " lambda: " << (int)DFEgates[idx].Lambda << std::endl; 
+    }
+*/
+    return DFEgates;
+
+}
+
+
+/**
+@brief Method to create random initial parameters for the optimization
+@return 
+*/
+void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgates, const int gatesNum, int& gate_idx, int& gate_set_index) {
+
+        int parameter_idx = parameter_num;
+        //int gate_set_index = parameter_num-1;
+
+        int32_t parameter_shift = (int32_t)(M_PI/2*(1<<25));
+
+        for(int op_idx = gates.size()-1; op_idx>=0; op_idx--) { 
+
+            Gate* gate = gates[op_idx];
+std::cout <<   gate_idx << " " <<   gate_set_index << " " << gate->get_type() << std::endl;        
+
+            if (gate->get_type() == CNOT_OPERATION) {
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == CZ_OPERATION) {            
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == CH_OPERATION) {        	
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == SYC_OPERATION) {
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: SYC_gate not implemented");
+                throw error;
+            }
+            else if (gate->get_type() == U3_OPERATION) {
+
+                // definig the U3 parameters
+                double varthetaOver2;
+                double varphi;
+                double varlambda;
+		
+                // get the inverse parameters of the U3 rotation
+
+                U3* u3_gate = static_cast<U3*>(gate);
+
+                if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {		   
+                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
+                    DFEGate.metadata             = (1<<7); // the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+                    parameter_idx                = parameter_idx - 1;
+
+                }
+                else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_phi_parameter()) { // not checked
+                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate.Phi                  = DFEGate.Phi + parameter_shift;
+                    DFEGate.metadata             = 3 + (1<<7); // The 0th and 1st element in kernel matrix should be zero for derivates and 3 = 0011, plus the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+                    parameter_idx                = parameter_idx - 1;
+                }
+                else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_lambda_parameter()) { // not checked
+                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate.Lambda               = DFEGate.Lambda + parameter_shift;
+                    DFEGate.metadata             = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 6 = 0101, plus the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+                    parameter_idx                = parameter_idx - 1;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_phi_parameter() ) { //not checked
+
+                    DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate2.Phi                 = DFEGate2.Phi + parameter_shift;
+                    DFEGate2.metadata            = 3 + (1<<7); // The 0th and 1st element in kernel matrix should be zero for derivates and 3 = 0011, plus the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
+                    DFEGate.metadata             = (1<<7); // the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+
+
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_lambda_parameter() ) {
+//////////////////////////////////////////////////////
+std::cout << gate_set_index*gatesNum + gate_idx << std::endl;
+                    DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate2.Lambda              = DFEGate2.Lambda + parameter_shift;
+                    DFEGate2.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 6 = 0101, plus the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
+                    DFEGate.metadata             = (1<<7); // the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+
+
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) { // not checked
+
+                    DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate2.Lambda              = DFEGate2.Lambda + parameter_shift;
+                    DFEGate2.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 6 = 0101, plus the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate.Phi                  = DFEGate.Phi + parameter_shift;
+                    DFEGate.metadata             = 3 + (1<<7); // The 0th and 1st element in kernel matrix should be zero for derivates and 3 = 0011, plus the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 3)) {
+
+                    DFEgate_kernel_type& DFEGate3= DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate3.Lambda              = DFEGate3.Lambda + parameter_shift;
+                    DFEGate3.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 6 = 0101, plus the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+                    DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate2.Phi                 = DFEGate2.Phi + parameter_shift;
+                    DFEGate2.metadata            = 3 + (1<<7); // The 0th and 1st element in kernel matrix should be zero for derivates and 3 = 0011, plus the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+
+                    DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                    DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
+                    DFEGate.metadata             = (1<<7); // the leading bit indicates that derivate is processed
+                    gate_set_index               = gate_set_index - 1;
+
+                    parameter_idx = parameter_idx - 3;
+                }
+
+                gate_idx = gate_idx + 1;
+
+            }
+            else if (gate->get_type() == RX_OPERATION) { // Did not cehcked
+
+                DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
+                DFEGate.metadata             = (1<<7); // the leading bit indicates that derivate is processed
+                gate_set_index               = gate_set_index - 1;
+	
+                parameter_idx = parameter_idx - 1;    
+	    	 
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == RY_OPERATION) { // Did not cehcked
+
+                DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
+                DFEGate.metadata             = (1<<7); // the leading bit indicates that derivate is processed
+                gate_set_index               = gate_set_index - 1;
+
+                parameter_idx = parameter_idx - 1;
+
+    	
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == CRY_OPERATION) {
+
+                DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
+                DFEGate.metadata             = (1<<7); // the leading bit indicates that derivate is processed
+                gate_set_index               = gate_set_index - 1;
+
+                parameter_idx = parameter_idx - 1;
+	    		                    
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == RZ_OPERATION) { // Did not cehcked
+
+                DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                DFEGate.Phi                  = DFEGate.Phi + parameter_shift;
+                DFEGate.metadata             = 3 + (1<<7); // The 0th and 1st element in kernel matrix should be zero for derivates and 3 = 0011, plus the leading bit indicates that derivate is processed
+                gate_set_index               = gate_set_index - 1;
+
+                parameter_idx = parameter_idx - 1;
+	    	
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == X_OPERATION) {
+
+            }
+            else if (gate->get_type() == SX_OPERATION) {
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: SX_gate not implemented");
+                throw error;	    	
+            }
+            else if (gate->get_type() == BLOCK_OPERATION) {
+
+                Gates_block* block_gate = static_cast<Gates_block*>(gate);
+                block_gate->adjust_parameters_for_derivation( DFEgates, gatesNum, gate_idx, gate_set_index);         
+                //gate_set_index               = gate_set_index - block_gate->get_parameter_num();
+
+                parameter_idx = parameter_idx - block_gate->get_parameter_num();
+            }
+            else if (gate->get_type() == UN_OPERATION) {
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: UN_gate not implemented");
+                throw error;
+            }
+            else if (gate->get_type() == ON_OPERATION) {
+
+                // THE LAST GATE IS A GENERAL GATE APPENDED IN THE BLOCK-WISE OPTIMISATION ROUTINE OF DECOMPOSITION_BASE
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: ON_gate not implemented");
+                throw error;
+            }
+            else if (gate->get_type() == COMPOSITE_OPERATION) {
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: Composite_gate not implemented");
+                throw error;
+            }
+            else if (gate->get_type() == GENERAL_OPERATION) {
+                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: general_gate not implemented");
+                throw error;
+            }
+            else if (gate->get_type() == ADAPTIVE_OPERATION) {
+
+                DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
+                DFEGate.metadata              = (1<<7); // the leading bit indicates that derivate is processed
+                DFEGate.ThetaOver2           = DFEGate.ThetaOver2 + parameter_shift;
+                gate_set_index               = gate_set_index - 1;
+
+                parameter_idx = parameter_idx - 1;
+	    		                    
+                gate_idx = gate_idx + 1;
+            }
+
+        }
+
+
+}
+
+
 /**
 @brief Method to create random initial parameters for the optimization
 @return 
@@ -2202,6 +2506,7 @@ DFEgate_kernel_type* Gates_block::convert_to_DFE_gates( Matrix_real& parameters_
         DFEGate.ThetaOver2 = (int32_t)(0);
         DFEGate.Phi = (int32_t)(0);
         DFEGate.Lambda = (int32_t)(0); 
+        DFEGate.metadata = 0;
 
     }
 /*
@@ -2244,6 +2549,7 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.ThetaOver2 = (int32_t)(M_PI/2*(1<<25));
                 DFEGate.Phi = (int32_t)(0);
                 DFEGate.Lambda = (int32_t)(M_PI*(1<<25)); 
+                DFEGate.metadata = 0;
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == CZ_OPERATION) {
@@ -2253,7 +2559,8 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.gate_type = CZ_OPERATION;
                 DFEGate.ThetaOver2 = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Phi = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
-                DFEGate.Lambda = (int32_t)(M_PI*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	             
+                DFEGate.Lambda = (int32_t)(M_PI*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	
+                DFEGate.metadata = 0;             
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == CH_OPERATION) {
@@ -2263,7 +2570,8 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.gate_type = CH_OPERATION;
                 DFEGate.ThetaOver2 = (int32_t)(M_PI/4*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Phi = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
-                DFEGate.Lambda = (int32_t)(M_PI*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	         	
+                DFEGate.Lambda = (int32_t)(M_PI*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	 
+                DFEGate.metadata = 0;        	
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == SYC_OPERATION) {
@@ -2332,6 +2640,7 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.ThetaOver2 = (int32_t)(varthetaOver2*(1<<25)); 
                 DFEGate.Phi = (int32_t)(varphi*(1<<25)); 
                 DFEGate.Lambda = (int32_t)(varlambda*(1<<25));	
+                DFEGate.metadata = 0;
                 gate_idx = gate_idx + 1;
 
             }
@@ -2348,7 +2657,8 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.gate_type = RX_OPERATION;
                 DFEGate.ThetaOver2 = (int32_t)(varthetaOver2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Phi = (int32_t)(-M_PI/2*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
-                DFEGate.Lambda = (int32_t)(M_PI/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	    
+                DFEGate.Lambda = (int32_t)(M_PI/2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	
+                DFEGate.metadata = 0;    
 	    	 
                 gate_idx = gate_idx + 1;
             }
@@ -2366,6 +2676,7 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.ThetaOver2 = (int32_t)(varthetaOver2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Phi = (int32_t)(0);  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Lambda = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!	
+                DFEGate.metadata = 0;
     	
                 gate_idx = gate_idx + 1;
             }
@@ -2382,6 +2693,7 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.ThetaOver2 = (int32_t)(varthetaOver2*(1<<25)); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Phi = (int32_t)(0);  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Lambda = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.metadata = 0;
 	    		                    
                 gate_idx = gate_idx + 1;
             }
@@ -2399,6 +2711,7 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.ThetaOver2 = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Phi = (int32_t)(varphi*(1<<25));  // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
                 DFEGate.Lambda = (int32_t)(0); // TODO: check !!!!!!!!!!!!!!!!!!!!!!!!!!!
+                DFEGate.metadata = 0;
 	    	
                 gate_idx = gate_idx + 1;
             }
@@ -2412,6 +2725,7 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.ThetaOver2 = (int32_t)(M_PI/2*(1<<25));
                 DFEGate.Phi = (int32_t)(0);
                 DFEGate.Lambda = (int32_t)(M_PI*(1<<25)); 
+                DFEGate.metadata = 0;
 	    	
                 gate_idx = gate_idx + 1;
             }
@@ -2458,6 +2772,7 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.ThetaOver2 = (int32_t)(varthetaOver2*(1<<25)); 
                 DFEGate.Phi = (int32_t)(0);  
                 DFEGate.Lambda = (int32_t)(0); 
+                DFEGate.metadata = 0;
 	    		                    
                 gate_idx = gate_idx + 1;
             }

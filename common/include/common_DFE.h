@@ -52,12 +52,26 @@ typedef struct {
 } Complex8;
 
 
+/**
+ * \brief ???????????
+ * 
+ */
+typedef struct {
+	int32_t ThetaOver2;
+	int32_t Phi;
+	int32_t Lambda;
+	int8_t target_qbit;
+	int8_t control_qbit;
+	int8_t gate_type;
+	uint8_t metadata;
+} DFEgate_kernel_type;
+
 
 /**
 @brief ????????????
 @return ??????????
 */
-int calcqgdKernelDFE(size_t dim, DFEgate_kernel_type* gates, int gatesNum);
+int calcqgdKernelDFE(size_t dim, DFEgate_kernel_type* gates, int gatesNum, int gateSetNum);
 
 /**
 @brief ????????????

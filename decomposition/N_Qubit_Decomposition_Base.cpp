@@ -408,12 +408,12 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();////////////////////////////////
     Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
 
     int gatesNum;
-    DFEgate_kernel_type* DFEgates = instance->convert_to_DFE_gates( parameters_mtx, gatesNum );
+    DFEgate_kernel_type* DFEgates = instance->convert_to_DFE_gates_with_derivates( parameters_mtx, gatesNum );
 
     Matrix&& Umtx_loc = instance->get_Umtx();
 
 //uploadMatrix2DFE( Umtx_loc );
-    calcqgdKernelDFE( Umtx_loc.rows, DFEgates, gatesNum );
+    calcqgdKernelDFE( Umtx_loc.rows, DFEgates, gatesNum, parameter_num_loc+1 );
 
 
     delete[] DFEgates;
@@ -445,8 +445,25 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             //double grad_comp = (f*f - 1.0)/(*f0)/2;
             double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0);
             gsl_vector_set(grad, idx, grad_comp);
+
+
+
         }
     });
+
+
+for ( int idx=0; idx<parameter_num_loc; idx++ ) {
+
+double trace = 0.0;
+Matrix& Umtx_tmp = Umtx_deriv[idx];
+for (int kdx=0; kdx<Umtx_tmp.rows; kdx++) {
+   
+   trace = trace + Umtx_tmp[kdx*Umtx_tmp.rows+kdx].real;
+}
+
+std::cout << trace << " "  << gsl_vector_get(grad, idx) << std::endl;
+
+}
 
 #ifdef __DFE__
 tbb::tick_count t1_CPU = tbb::tick_count::now();/////////////////////////////////

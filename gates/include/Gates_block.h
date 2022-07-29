@@ -29,6 +29,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "matrix_real.h"
 #include "Gate.h"
 
+#ifdef __DFE__
+#include "common_DFE.h"
+#endif
 
 
 /**
@@ -459,6 +462,20 @@ bool contains_adaptive_gate();
 bool contains_adaptive_gate(int idx);
 
 #ifdef __DFE__
+
+/**
+@brief Method to create random initial parameters for the optimization
+@return 
+*/
+DFEgate_kernel_type* convert_to_DFE_gates_with_derivates( Matrix_real& parameters_mtx, int& gatesNum );
+
+/**
+@brief Method to create random initial parameters for the optimization
+@return 
+*/
+void adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgates, const int  gatesNum, int& gate_idx, int& gate_set_index );
+
+
 /**
 @brief Method to create random initial parameters for the optimization
 @return 
