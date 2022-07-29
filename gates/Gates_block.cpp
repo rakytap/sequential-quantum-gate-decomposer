@@ -1481,13 +1481,13 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                     parameter_idx = parameter_idx - 1;
                 }
                 else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_phi_parameter() ) {
-                    vartheta = std::fmod( parameters_data[parameter_idx-2], 4*M_PI);
+                    vartheta = std::fmod( 2*parameters_data[parameter_idx-2], 4*M_PI);
                     varphi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                     varlambda = 0;
                     parameter_idx = parameter_idx - 2;
                 }
                 else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_lambda_parameter() ) {
-                    vartheta = std::fmod( parameters_data[parameter_idx-2], 4*M_PI);
+                    vartheta = std::fmod( 2*parameters_data[parameter_idx-2], 4*M_PI);
                     varphi = 0;
                     varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                     parameter_idx = parameter_idx - 2;
@@ -1499,7 +1499,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                     parameter_idx = parameter_idx - 2;
                 }
                 else if ((u3_gate->get_parameter_num() == 3)) {
-                    vartheta = std::fmod( parameters_data[parameter_idx-3], 4*M_PI);
+                    vartheta = std::fmod( 2*parameters_data[parameter_idx-3], 4*M_PI);
                     varphi = std::fmod( parameters_data[parameter_idx-2], 2*M_PI);
                     varlambda = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                     parameter_idx = parameter_idx - 3;
@@ -1519,7 +1519,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 double vartheta;
                 // get the inverse parameters of the U3 rotation
                 RX* rx_gate = static_cast<RX*>(gate);		
-                vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                vartheta = std::fmod( 2*parameters_data[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		std::stringstream sstream;
@@ -1532,7 +1532,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 double vartheta;
                 // get the inverse parameters of the U3 rotation
                 RY* ry_gate = static_cast<RY*>(gate);
-                vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                vartheta = std::fmod( 2*parameters_data[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		std::stringstream sstream;

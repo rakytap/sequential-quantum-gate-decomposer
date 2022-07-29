@@ -73,7 +73,7 @@ CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in);
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-virtual void apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 );
+virtual void apply_to( Matrix_real& parameters, Matrix& input );
 
 
 /**

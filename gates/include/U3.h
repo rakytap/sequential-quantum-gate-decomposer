@@ -89,7 +89,7 @@ Matrix get_matrix( Matrix_real& parameters );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& input, const double scale=1.0 );
+void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& input );
 
 
 /**
@@ -97,7 +97,7 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& input, const d
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-virtual void apply_to( Matrix_real& parameters, Matrix& input, const double scale=1.0 );
+virtual void apply_to( Matrix_real& parameters, Matrix& input );
 
 
 /**
@@ -157,7 +157,7 @@ bool is_lambda_parameter();
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda, const double scale=1.0 );
+Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
 
 
 /**

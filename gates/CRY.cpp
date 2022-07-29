@@ -83,7 +83,7 @@ CRY::~CRY() {
 */
 
 void 
-CRY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
+CRY::apply_to( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.rows != matrix_size ) {
@@ -94,13 +94,13 @@ CRY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
     }
 
 
-    double Theta, Phi, Lambda;
+    double ThetaOver2, Phi, Lambda;
 
-    Theta = parameters[0];
+    ThetaOver2 = parameters[0];
     Phi = phi0;
     Lambda = lambda0;
 /*
-    Theta = theta0;
+    ThetaOver2 = theta0;
     Phi = parameters[0];
     Lambda = lambda0;
 */
@@ -112,7 +112,7 @@ Phi = Phi - M_PI;
 //Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda, scale );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
     // apply the computing kernel on the matrix
@@ -138,13 +138,13 @@ CRY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
         exit(-1);
     }
 
-    double Theta, Phi, Lambda;
+    double ThetaOver2, Phi, Lambda;
 
-    Theta = parameters[0];
+    ThetaOver2 = parameters[0];
     Phi = phi0;
     Lambda = lambda0;
 /*
-    Theta = theta0;
+    ThetaOver2 = theta0;
     Phi = parameters[0];
     Lambda = lambda0;
 */
@@ -157,7 +157,7 @@ Phi = Phi - M_PI;
 
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
     // apply the computing kernel on the matrix
     apply_kernel_from_right(u3_1qbit, input);
@@ -180,9 +180,9 @@ CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     std::vector<Matrix> ret;
 
-    double Theta, Phi, Lambda;
+    double ThetaOver2, Phi, Lambda;
 
-    Theta = parameters_mtx[0]+M_PI;
+    ThetaOver2 = parameters_mtx[0]+M_PI/2;
     Phi = phi0;
     Lambda = lambda0;
 
@@ -191,7 +191,7 @@ CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda, 0.5 );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
     // apply the computing kernel on the matrix
@@ -208,22 +208,22 @@ CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 /**
 @brief Call to set the final optimized parameters of the gate.
-@param Theta Real parameter standing for the parameter theta.
+@param ThetaOver2 Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.
 @param Lambda Real parameter standing for the parameter lambda.
 */
-void CRY::set_optimized_parameters(double Theta ) {
+void CRY::set_optimized_parameters(double ThetaOver2 ) {
 
     parameters = Matrix_real(1, parameter_num);
 
-    parameters[0] = Theta;
+    parameters[0] = ThetaOver2;
 
 }
 
 
 /**
 @brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
+@param parameters_in Preallocated pointer to store the parameters ThetaOver2, Phi and Lambda of the U3 gate.
 */
 Matrix_real CRY::get_optimized_parameters() {
 
