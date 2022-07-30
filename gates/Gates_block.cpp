@@ -2248,7 +2248,7 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
         for(int op_idx = gates.size()-1; op_idx>=0; op_idx--) { 
 
             Gate* gate = gates[op_idx];
-std::cout <<   gate_idx << " " <<   gate_set_index << " " << gate->get_type() << std::endl;        
+//std::cout <<   gate_idx << " " <<   gate_set_index << " " << gate->get_type() << std::endl;        
 
             if (gate->get_type() == CNOT_OPERATION) {
                 gate_idx = gate_idx + 1;
@@ -2317,7 +2317,6 @@ std::cout <<   gate_idx << " " <<   gate_set_index << " " << gate->get_type() <<
                 }
                 else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_lambda_parameter() ) {
 //////////////////////////////////////////////////////
-std::cout << gate_set_index*gatesNum + gate_idx << std::endl;
                     DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
                     DFEGate2.Lambda              = DFEGate2.Lambda + parameter_shift;
                     DFEGate2.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 6 = 0101, plus the leading bit indicates that derivate is processed
