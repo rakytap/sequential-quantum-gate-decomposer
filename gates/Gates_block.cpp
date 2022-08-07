@@ -40,15 +40,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 
-//////////////////////////////////
-
-extern "C" {
-
-int get_chained_gates_num();
-
-}
-
-//////////////////
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -2183,7 +2174,7 @@ DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_re
     int chained_gates_num = get_chained_gates_num();
     int gate_padding      = chained_gates_num - (gates_total_num % chained_gates_num);
     gatesNum              = gates_total_num+gate_padding;
-
+std::cout << "iiiiiiiiiiiiiiiiiiiiiI " << chained_gates_num << std::endl;
 
 
     DFEgate_kernel_type* DFEgates = new DFEgate_kernel_type[gatesNum*(parameter_num+1)];

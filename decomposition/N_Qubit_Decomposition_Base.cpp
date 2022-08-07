@@ -411,25 +411,24 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();////////////////////////////////
     DFEgate_kernel_type* DFEgates = instance->convert_to_DFE_gates_with_derivates( parameters_mtx, gatesNum );
 
     Matrix&& Umtx_loc = instance->get_Umtx();
-std::cout << parameter_num_loc+1 << " " <<(parameter_num_loc+1)%4 << std::endl;
+    
 
-int gateSetRemaining = (parameter_num_loc+1)%4;
-
-    int gateSetNum = (parameter_num_loc+1 - gateSetRemaining);
+    int gateSetNum = (parameter_num_loc+1);
     Matrix_real trace_DFE_mtx(1, gateSetNum);
 
 //uploadMatrix2DFE( Umtx_loc );
     calcqgdKernelDFE( Umtx_loc.rows, DFEgates, gatesNum, gateSetNum, trace_DFE_mtx.get_data() );
     
     double f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.rows;
-    Matrix_real grad_components_DFE_mtx(1, parameter_num_loc-gateSetRemaining);
-    for (int idx=0; idx<parameter_num_loc-gateSetRemaining; idx++) {
+    Matrix_real grad_components_DFE_mtx(1, parameter_num_loc);
+    for (int idx=0; idx<parameter_num_loc; idx++) {
         grad_components_DFE_mtx[idx] = -trace_DFE_mtx[idx+1]/Umtx_loc.rows;
     }
 
     delete[] DFEgates;
 tbb::tick_count t1_DFE = tbb::tick_count::now();/////////////////////////////////
-std::cout << "time elapsed DFE: " << (t1_DFE-t0_DFE).seconds() << ", expected time: " << ((double)(Umtx_loc.rows*Umtx_loc.rows*gatesNum*gateSetNum/3/4 + 531))/350000000 + 0.001<< std::endl;
+std::cout << "uploaded data to DFE: " << (int)(gatesNum*gateSetNum*sizeof(DFEgate_kernel_type)) << " bytes" << std::endl;
+std::cout << "time elapsed DFE: " << (t1_DFE-t0_DFE).seconds() << ", expected time: " << (((double)Umtx_loc.rows*(double)Umtx_loc.rows*gatesNum*gateSetNum/get_chained_gates_num()/4 + 531))/350000000 + 0.001<< std::endl;
 ///////////////////////////////////////
 #endif
 
@@ -468,7 +467,7 @@ tbb::tick_count t1_CPU = tbb::tick_count::now();////////////////////////////////
 std::cout << "time elapsed CPU: " << (t1_CPU-t0_CPU).seconds() << " number of parameters: " << parameter_num_loc << std::endl;
 std::cout << "cost function CPU: " << *f0 << " and DFE: " << f0_DFE << std::endl;
 
-for ( int idx=0; idx<parameter_num_loc-gateSetRemaining; idx++ ) {
+for ( int idx=0; idx<parameter_num_loc; idx++ ) {
 
     double diff = (grad_components_DFE_mtx[idx]-gsl_vector_get(grad, idx))*(grad_components_DFE_mtx[idx]-gsl_vector_get(grad, idx));
     if ( diff > 1e-5 ) {

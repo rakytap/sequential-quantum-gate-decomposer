@@ -57,6 +57,7 @@ std::cout << "size in bytes of uploading: " << element_num*sizeof(float) << std:
 @brief ????????????
 @return ??????????
 */
+/*
 void DownloadMatrixFromDFE( std::vector<Matrix>& output_vec ) {
 
     // first convert the input to float32
@@ -88,4 +89,4 @@ void DownloadMatrixFromDFE( std::vector<Matrix>& output_vec ) {
 
 
 }
-
+*/
