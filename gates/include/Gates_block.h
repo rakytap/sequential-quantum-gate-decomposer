@@ -467,7 +467,7 @@ bool contains_adaptive_gate(int idx);
 @brief Method to create random initial parameters for the optimization
 @return 
 */
-DFEgate_kernel_type* convert_to_DFE_gates_with_derivates( Matrix_real& parameters_mtx, int& gatesNum );
+DFEgate_kernel_type* convert_to_DFE_gates_with_derivates( Matrix_real& parameters_mtx, int& gatesNum, int& redundantGateSets );
 
 /**
 @brief Method to create random initial parameters for the optimization

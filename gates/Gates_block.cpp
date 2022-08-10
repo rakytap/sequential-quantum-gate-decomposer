@@ -2161,7 +2161,7 @@ bool Gates_block::contains_adaptive_gate(int idx) {
 @brief Method to create random initial parameters for the optimization
 @return 
 */
-DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_real& parameters_mtx, int& gatesNum ) {
+DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_real& parameters_mtx, int& gatesNum, int& redundantGateSets ) {
 
     int parameter_num = get_parameter_num();
     if ( parameter_num != parameters_mtx.size() ) {
@@ -2176,8 +2176,18 @@ DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_re
     gatesNum              = gates_total_num+gate_padding;
 std::cout << "iiiiiiiiiiiiiiiiiiiiiI " << chained_gates_num << std::endl;
 
+    int gateSetNum = parameter_num+1;
+    int rem = gateSetNum % 4;
+    if ( rem == 0 ) {
+        redundantGateSets = 0;
+    }
+    else {
+        redundantGateSets = 4 - (gateSetNum % 4);
+        gateSetNum = gateSetNum + redundantGateSets;
+    }
 
-    DFEgate_kernel_type* DFEgates = new DFEgate_kernel_type[gatesNum*(parameter_num+1)];
+
+    DFEgate_kernel_type* DFEgates = new DFEgate_kernel_type[gatesNum*gateSetNum];
     
     int gate_idx = 0;
     convert_to_DFE_gates( parameters_mtx, DFEgates, gate_idx );
@@ -2206,7 +2216,7 @@ std::cout << "iiiiiiiiiiiiiiiiiiiiiI " << chained_gates_num << std::endl;
 */
 
     // adjust parameters for derivation
-    for (int idx=0; idx<parameter_num; idx++) {
+    for (int idx=0; idx<(gateSetNum-1); idx++) {
         memcpy(DFEgates+(idx+1)*gatesNum, DFEgates, gatesNum*sizeof(DFEgate_kernel_type));
     }
 

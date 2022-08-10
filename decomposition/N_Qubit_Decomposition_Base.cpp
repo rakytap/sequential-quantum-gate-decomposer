@@ -407,13 +407,13 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
 tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
     Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
 
-    int gatesNum;
-    DFEgate_kernel_type* DFEgates = instance->convert_to_DFE_gates_with_derivates( parameters_mtx, gatesNum );
+    int gatesNum, redundantGateSets;
+    DFEgate_kernel_type* DFEgates = instance->convert_to_DFE_gates_with_derivates( parameters_mtx, gatesNum, redundantGateSets );
 
     Matrix&& Umtx_loc = instance->get_Umtx();
     
 
-    int gateSetNum = (parameter_num_loc+1);
+    int gateSetNum = (parameter_num_loc+1+redundantGateSets);
     Matrix_real trace_DFE_mtx(1, gateSetNum);
 
 //uploadMatrix2DFE( Umtx_loc );
