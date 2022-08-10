@@ -331,6 +331,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/common/matrix.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix_real.cpp
     ${PROJECT_SOURCE_DIR}/common/logging.cpp
+    ${PROJECT_SOURCE_DIR}/common/Adam.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
@@ -386,9 +387,8 @@ target_compile_options(qgd PUBLIC
 
 # External libarray for calculating QFT on DFE
 add_library( qgddfe SHARED IMPORTED )
-# You can define two import-locations: one for debug and one for release.
-set_target_properties( qgddfe PROPERTIES IMPORTED_LOCATION /home/rakytap/qgd_DFE/qgdCPU/dist/release/lib/libqgdDFE.so )
-
+if (DEFINED ENV{QGD_DFE})
+    set_target_properties( qgddfe PROPERTIES IMPORTED_LOCATION /home/rakytap/qgd_DFE/qgdCPU/dist/release/lib/libqgdDFE.so )
 
 # adding linking options
 target_link_libraries( qgd PRIVATE
@@ -401,6 +401,23 @@ target_link_libraries( qgd PRIVATE
     ${GSL_LIB}
     qgddfe
 )
+
+else()
+
+
+# adding linking options
+target_link_libraries( qgd PRIVATE
+    ${BLAS_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+    ${LAPACKE_LIBRARIES}
+    ${TBBMALLOC_LIB}
+    ${TBBMALLOC_PROXY_LIB}
+    ${TBB_LIB}
+    ${GSL_LIB}
+)
+
+endif()
+
 
 target_include_directories(qgd PRIVATE
                             .
