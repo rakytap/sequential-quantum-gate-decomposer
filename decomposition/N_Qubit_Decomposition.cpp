@@ -33,9 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
 
-    iter_max = 10;
-    gradient_threshold = 1e-1;
-    random_shift_count_max = 1;    
+    set_optimizer( BFGS );
 
 
 }
@@ -54,10 +52,7 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
 */
 N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, optimize_layer_num_in, initial_guess_in) {
 
-    iter_max = 10;
-    gradient_threshold = 1e-1;
-    random_shift_count_max = 1;    
-
+    set_optimizer( BFGS );
 }
 
 

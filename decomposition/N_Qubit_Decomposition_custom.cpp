@@ -36,19 +36,19 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom() : N_Qubit_Decomposi
     // initialize custom gate structure
     gate_structure = NULL;
 
-    gradient_threshold = 1e-8;
-
 
     // BFGS is better for smaller problems, while ADAM for larger ones
-    if ( qbit_num <= 2 ) {
-        alg = BFGS;
-        random_shift_count_max = 100;//10000;
-        iter_max = 1e3;
+    if ( qbit_num <= 5 ) {
+        set_optimizer( BFGS );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 4;
     }
     else {
-        alg = ADAM;
-        random_shift_count_max = 100;//10000;
-        iter_max = 1e5;
+        set_optimizer( ADAM );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 1;
     }
 
 }
@@ -66,18 +66,19 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int 
     // initialize custom gate structure
     gate_structure = NULL;
 
-    gradient_threshold = 1e-8; 
 
     // BFGS is better for smaller problems, while ADAM for larger ones
-    if ( qbit_num <= 2 ) {
-        alg = BFGS;
-        random_shift_count_max = 100;//10000;
-        iter_max = 1e3;
+    if ( qbit_num <= 5 ) {
+        set_optimizer( BFGS );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 4;
     }
     else {
-        alg = ADAM;
-        random_shift_count_max = 100;//10000;
-        iter_max = 1e5;
+        set_optimizer( ADAM );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 1;
     }
 
 }

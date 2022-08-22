@@ -82,16 +82,20 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
     // set the level limit
     level_limit = 0;
 
-    iter_max = 1e5;//1e7;
-    random_shift_count_max = 100;//10000;
-    gradient_threshold = 1e-8;
+
 
     // BFGS is better for smaller problems, while ADAM for larger ones
-    if ( qbit_num <= 2 ) {
-        alg = BFGS;
+    if ( qbit_num <= 5 ) {
+        set_optimizer( BFGS );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 4;
     }
     else {
-        alg = ADAM;
+        set_optimizer( ADAM );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 1;
     }
     
 
@@ -116,22 +120,23 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
     level_limit = level_limit_in;
     level_limit_min = level_limit_min_in;
 
-    // Maximal number of iteartions in the optimization process
-    max_iterations = 1;
 
 
-    gradient_threshold = 1e-8;
 
     // BFGS is better for smaller problems, while ADAM for larger ones
-    if ( qbit_num <= 2 ) {
-        alg = BFGS;
-        random_shift_count_max = 100;//10000;
-        iter_max = 1e3;
+    if ( qbit_num <= 5 ) {
+        set_optimizer( BFGS );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 4;
+
     }
     else {
-        alg = ADAM;
-        random_shift_count_max = 100;//10000;
-        iter_max = 1e5;
+        set_optimizer( ADAM );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 1;
+
     }
 
     srand(time(NULL));   // Initialization, should only be called once.
@@ -165,16 +170,21 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
     // setting the topology
     topology = topology_in;
 
+
+
+
     // BFGS is better for smaller problems, while ADAM for larger ones
-    if ( qbit_num <= 2 ) {
+    if ( qbit_num <= 5 ) {
         alg = BFGS;
-        random_shift_count_max = 100;//10000;
-        iter_max = 1e3;
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 4;
     }
     else {
         alg = ADAM;
-        random_shift_count_max = 100;//10000;
-        iter_max = 1e5;
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 1;
     }
 
     srand(time(NULL));   // Initialization, should only be called once.

@@ -234,6 +234,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
         case BFGS:
             solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess_gsl);
             return;
+        case BFGS2:
+            solve_layer_optimization_problem_BFGS2( num_of_parameters, solution_guess_gsl);
+            return;
         default:
             std::string error("N_Qubit_Decomposition_Base::solve_layer_optimization_problem: unimplemented optimization algorithm");
             throw error;
@@ -244,7 +247,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 
 
 /**
-@brief Call to solve layer by layer the optimization problem via ADAM algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@brief Call to solve layer by layer the optimization problem via ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
@@ -263,15 +266,6 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
         if (optimized_parameters_mtx.size() == 0) {
             optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
             memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
-        }
-
-        // maximal number of iteration loops
-        int iteration_loops_max;
-        try {
-            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
-        }
-        catch (...) {
-            iteration_loops_max = 1;
         }
 
 
@@ -392,11 +386,109 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
 
 
 /**
-@brief Call to solve layer by layer the optimization problem via BFGS algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+
+
+        if (gates.size() == 0 ) {
+            return;
+        }
+
+
+        if (solution_guess_gsl == NULL) {
+            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
+        }
+
+
+        if (optimized_parameters_mtx.size() == 0) {
+            optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+        }
+
+        // maximal number of iteration loops
+        int iteration_loops_max;
+        try {
+            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
+        }
+        catch (...) {
+            iteration_loops_max = 1;
+        }
+
+
+        // do the optimization loops
+        for (int idx=0; idx<iteration_loops_max; idx++) {
+
+            int iter = 0;
+            int status;
+
+            const gsl_multimin_fdfminimizer_type *T;
+            gsl_multimin_fdfminimizer *s;
+
+            N_Qubit_Decomposition_Base* par = this;
+
+
+            gsl_multimin_function_fdf my_func;
+
+
+            my_func.n = num_of_parameters;
+            my_func.f = optimization_problem;
+            my_func.df = optimization_problem_grad;
+            my_func.fdf = optimization_problem_combined;
+            my_func.params = par;
+
+
+            T = gsl_multimin_fdfminimizer_vector_bfgs2;
+            s = gsl_multimin_fdfminimizer_alloc (T, num_of_parameters);
+
+            gsl_multimin_fdfminimizer_set(s, &my_func, solution_guess_gsl, 0.01, 0.1);
+
+            do {
+                iter++;
+                gsl_set_error_handler_off();
+                status = gsl_multimin_fdfminimizer_iterate (s);
+
+                if (status) {
+                  break;
+                }
+
+                status = gsl_multimin_test_gradient (s->gradient, gradient_threshold);
+
+            } while (status == GSL_CONTINUE && iter < iter_max);
+
+            if (current_minimum > s->f) {
+                current_minimum = s->f;
+                memcpy( optimized_parameters_mtx.get_data(), s->x->data, num_of_parameters*sizeof(double) );
+                gsl_multimin_fdfminimizer_free (s);
+
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                }
+            }
+            else {
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
+                }
+                gsl_multimin_fdfminimizer_free (s);
+            }
+
+
+
+        }
+
+
+}
+
+
+
+/**
+@brief Call to solve layer by layer the optimization problem via BFGS algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS2( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
 
         if (gates.size() == 0 ) {
@@ -768,6 +860,44 @@ void N_Qubit_Decomposition_Base::set_iter_max( int iter_max_in  ) {
 void N_Qubit_Decomposition_Base::set_random_shift_count_max( int random_shift_count_max_in  ) {
 
     random_shift_count_max = random_shift_count_max_in;
+
+}
+
+
+/**
+@brief ?????????????
+*/
+void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in ) {
+
+    alg = alg_in;
+
+    switch ( alg ) {
+        case ADAM:
+            iter_max = 1e5;
+            random_shift_count_max = 100;
+            gradient_threshold = 1e-8;
+            max_iterations = 1;
+            return;
+
+        case BFGS:
+            iter_max = 10;
+            gradient_threshold = 1e-1;
+            random_shift_count_max = 1;   
+            return;
+
+        case BFGS2:
+            iter_max = 1e5;
+            random_shift_count_max = 100;
+            gradient_threshold = 1e-8;
+            max_iterations = 1;
+            return;
+
+        default:
+            std::string error("N_Qubit_Decomposition_Base::solve_layer_optimization_problem: unimplemented optimization algorithm");
+            throw error;
+    }
+
+
 
 }
 

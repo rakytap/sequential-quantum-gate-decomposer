@@ -54,7 +54,7 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 
 
 /// implemented optimization algorithms
-enum optimization_aglorithms{ ADAM, BFGS };
+enum optimization_aglorithms{ ADAM, BFGS, BFGS2 };
 
 
 /**
@@ -142,15 +142,27 @@ void final_optimization();
 void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 
+
+
 /**
-@brief Call to solve layer by layer the optimization problem via BBFG algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void solve_layer_optimization_problem_BFGS( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
+
+
 /**
-@brief Call to solve layer by layer the optimization problem via ADAM algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@brief Call to solve layer by layer the optimization problem via BBFG algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void solve_layer_optimization_problem_BFGS2( int num_of_parameters, gsl_vector *solution_guess_gsl);
+
+
+/**
+@brief Call to solve layer by layer the optimization problem via ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
@@ -222,6 +234,12 @@ void set_iter_max( int iter_max_in  );
 @brief ?????????????
 */
 void set_random_shift_count_max( int random_shift_count_max_in  );
+
+
+/**
+@brief ?????????????
+*/
+void set_optimizer( optimization_aglorithms alg_in );
 
 };
 
