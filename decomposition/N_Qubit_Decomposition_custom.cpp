@@ -36,8 +36,21 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom() : N_Qubit_Decomposi
     // initialize custom gate structure
     gate_structure = NULL;
 
-    iter_max = 10000;
     gradient_threshold = 1e-8;
+
+
+    // BFGS is better for smaller problems, while ADAM for larger ones
+    if ( qbit_num <= 2 ) {
+        alg = BFGS;
+        random_shift_count_max = 100;//10000;
+        iter_max = 1e3;
+    }
+    else {
+        alg = ADAM;
+        random_shift_count_max = 100;//10000;
+        iter_max = 1e5;
+    }
+
 }
 
 /**
@@ -53,8 +66,19 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int 
     // initialize custom gate structure
     gate_structure = NULL;
 
-    iter_max = 10000;
-    gradient_threshold = 1e-8;
+    gradient_threshold = 1e-8; 
+
+    // BFGS is better for smaller problems, while ADAM for larger ones
+    if ( qbit_num <= 2 ) {
+        alg = BFGS;
+        random_shift_count_max = 100;//10000;
+        iter_max = 1e3;
+    }
+    else {
+        alg = ADAM;
+        random_shift_count_max = 100;//10000;
+        iter_max = 1e5;
+    }
 
 }
 
@@ -110,11 +134,14 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     add_gate_layers();
 
 
+//std::cout << optimization_problem( optimized_parameters_mtx ) << std::endl;
+
+
     // final tuning of the decomposition parameters
     final_optimization();
 
 #ifdef __DFE__
-return;
+//return;
 #endif
     // prepare gates to export
     if (prepare_export) {
@@ -124,7 +151,6 @@ return;
     // calculating the final error of the decomposition
     Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
     calc_decomposition_error( matrix_decomposed );
-
 
     // get the number of gates used in the decomposition
     gates_num gates_num = get_gate_nums();
@@ -145,7 +171,7 @@ return;
     if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore opeartions," << std::endl;
     if ( gates_num.un>0 ) sstream << gates_num.un << " UN opeartions," << std::endl;
     if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive opeartions," << std::endl;
-    	
+
     	 
     sstream << std::endl;
     tbb::tick_count current_time = tbb::tick_count::now();
@@ -285,6 +311,9 @@ void N_Qubit_Decomposition_custom::set_custom_gate_structure( Gates_block* gate_
     gate_structure = gate_structure_in->clone();
 
 }
+
+
+
 
 
 

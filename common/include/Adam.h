@@ -53,13 +53,16 @@ protected:
     // learning rate of the Adam algorithm
     double eta;
     /// momentum parameter of the Adam algorithm
-    double mom;
+    Matrix_real mom;
     /// variance parameter of the Adam algorithm
-    double var;
+    Matrix_real var;
     /// iteration index
     int64_t iter_t;
 
-    
+    /// beta1^t
+    double beta1_t;
+    /// beta2^t
+    double beta2_t;    
 
 
 
@@ -84,6 +87,17 @@ Adam( double beta1_in, double beta2_in, double epsilon_in, double eta_in);
 */
 virtual ~Adam();
 
+
+/**
+@brief ?????????????
+*/
+void reset();
+
+
+/**
+@brief ?????????????
+*/
+void initialize_moment_and_variance(int parameter_num);
 
 /**
 @brief Call to set the number of gate blocks to be optimized in one shot

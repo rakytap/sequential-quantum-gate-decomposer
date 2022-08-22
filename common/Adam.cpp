@@ -22,26 +22,23 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 
 #include "Adam.h"
+#include "tbb/tbb.h"
 
 	
-
-
 
 /** Nullary constructor of the class
 @return An instance of the class
 */
 Adam::Adam() {
 
-    beta1 = 0.9;
-    beta2 = 0.999;
-    epsilon = 1e-8;
-    eta = 0.01;
+    beta1 = 0.68;
+    beta2 = 0.8;
+    epsilon = 1e-4;
+    eta = 0.001;
 
 
 
-    mom = 0.0;
-    var = 0.0;
-    iter_t = 0;
+    reset();
 	
 #if CBLAS==1
     num_threads = mkl_get_max_threads();
@@ -68,9 +65,7 @@ Adam::Adam( double beta1_in, double beta2_in, double epsilon_in, double eta_in )
     eta = eta_in;
 
 
-    mom = 0.0;
-    var = 0.0;
-    iter_t = 0;
+    reset();
 
 
 #if CBLAS==1
@@ -89,19 +84,91 @@ Adam::~Adam() {
 }
 
 
+
+/**
+@brief ?????????????
+*/
+void Adam::reset() {
+
+
+    mom = Matrix_real(0,0);
+    var = Matrix_real(0,0);
+
+    iter_t = 0;
+    beta1_t = 1.0;
+    beta2_t = 1.0;
+
+
+}
+
+
+/**
+@brief ?????????????
+*/
+void Adam::initialize_moment_and_variance(int parameter_num) {
+
+    mom = Matrix_real(parameter_num,1);
+    var = Matrix_real(parameter_num,1);  
+
+    memset( mom.get_data(), 0.0, mom.size()*sizeof(double) );
+    memset( var.get_data(), 0.0, var.size()*sizeof(double) );
+}
+
+
 /**
 @brief Call to set the number of gate blocks to be optimized in one shot
 @param optimization_block_in The number of gate blocks to be optimized in one shot
 */
 void Adam::update( Matrix_real& parameters, Matrix_real& grad ) {
 
+    int parameter_num = parameters.size();
+    if ( parameter_num != grad.size() ) {
+        std::string error("Adam::update: number of parameters shoulod be equal to the number of elements in gradient vector");
+        throw error;
+    }
 
-    //access the idx-th element of the parameters or grad:
-    size_t idx=2;
-    double par_value = parameters[idx];
+    if ( mom.size() == 0 ) {
+        initialize_moment_and_variance( parameter_num );
+    }
+
+    if ( parameter_num != mom.size() ) {
+        std::string error("Adam::update: number of parameters shoulod be equal to the number of elements in momentum vector");
+        throw error;
+    }
 
 
+    double* mom_data = mom.get_data();
+    double* var_data = var.get_data();
+    double* grad_data = grad.get_data();
+    double* param_data = parameters.get_data();
 
+tbb::task_arena ta(4);
+ta.execute( [&](){
+    tbb::parallel_for( 0, parameter_num, 1, [&](int idx) {
+    //for (int idx=0; idx<parameter_num; idx++) {
+        mom_data[idx] = beta1 * mom_data[idx] + (1-beta1) * grad_data[idx];
+        var_data[idx] = beta2 * var_data[idx] + (1-beta2) * grad_data[idx] * grad_data[idx];
 
+        // bias correction step
+        beta1_t = beta1_t * beta1;
+        double mom_bias_corr = mom_data[idx]/(1-beta1_t);
+
+        beta2_t = beta2_t * beta2;
+        double var_bias_corr = var_data[idx]/(1-beta2_t);
+
+        // update parameters
+        param_data[idx] = param_data[idx] - eta * mom_bias_corr/(sqrt(var_bias_corr) + epsilon);
+        /*
+        if ( std::abs(eta * mom_bias_corr/(sqrt(var_bias_corr) + epsilon)) > 1e-3 ) {
+            std::cout << std::abs(eta * mom_bias_corr/(sqrt(var_bias_corr) + epsilon)) << std::endl;
+        }
+        */
+        
+    //}
+    });
+
+});
+
+    iter_t++;
 }
 

@@ -53,6 +53,10 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 #endif
 
 
+/// implemented optimization algorithms
+enum optimization_aglorithms{ ADAM, BFGS };
+
+
 /**
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 This class contains the non-template implementation of the decomposition class.
@@ -62,9 +66,13 @@ class N_Qubit_Decomposition_Base : public Decomposition_Base {
 
 public:
 
-
+    ///
     int iter_max;
+    ///
     int gradient_threshold;
+    /// 
+    int random_shift_count_max;
+    ///    
 
 protected:
 
@@ -74,9 +82,8 @@ protected:
 
     /// A map of <int n: int num> indicating that how many identical successive blocks should be used in the disentanglement of the nth qubit from the others
     std::map<int,int> identical_blocks;
-
-
-
+    ///
+    optimization_aglorithms alg;
 
 
 
@@ -127,18 +134,27 @@ virtual void add_finalyzing_layer();
 */
 void final_optimization();
 
-
 /**
-@brief Call to solve layer by layer the optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
+@brief Call to solve layer by layer the optimization problem via calling one of the implemented algorithms. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
+
 /**
-@brief ??????????????????????????????
+@brief Call to solve layer by layer the optimization problem via BBFG algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-int gradient_descent_iteration( Matrix_real Optimized_parameter_loc, double& current_minimum_loc);
+void solve_layer_optimization_problem_BFGS( int num_of_parameters, gsl_vector *solution_guess_gsl);
+
+/**
+@brief Call to solve layer by layer the optimization problem via ADAM algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void solve_layer_optimization_problem_ADAM( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 
 /**
@@ -194,6 +210,18 @@ static void optimization_problem_combined( const gsl_vector* parameters, void* v
 */
 double optimization_problem_panelty( double* parameters, Gates_block* gates_block );
 
+
+
+/**
+@brief ?????????????
+*/
+void set_iter_max( int iter_max_in  );
+
+
+/**
+@brief ?????????????
+*/
+void set_random_shift_count_max( int random_shift_count_max_in  );
 
 };
 

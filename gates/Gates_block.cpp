@@ -2157,11 +2157,12 @@ bool Gates_block::contains_adaptive_gate(int idx) {
 
 #ifdef __DFE__
 
+
 /**
 @brief Method to create random initial parameters for the optimization
 @return 
 */
-DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_real& parameters_mtx, int& gatesNum, int& redundantGateSets ) {
+DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_real& parameters_mtx, int& gatesNum, int& redundantGateSets, bool only_derivates ) {
 
     int parameter_num = get_parameter_num();
     if ( parameter_num != parameters_mtx.size() ) {
@@ -2172,11 +2173,13 @@ DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_re
     gates_num gate_nums   = get_gate_nums();
     int gates_total_num   = gate_nums.total; 
     int chained_gates_num = get_chained_gates_num();
-    int gate_padding      = chained_gates_num - (gates_total_num % chained_gates_num);
+    int gate_padding      = gates_total_num % chained_gates_num == 0 ? 0 : chained_gates_num - (gates_total_num % chained_gates_num);
     gatesNum              = gates_total_num+gate_padding;
-std::cout << "iiiiiiiiiiiiiiiiiiiiiI " << chained_gates_num << std::endl;
-
-    int gateSetNum = parameter_num+1;
+/*
+std::cout << "chained gates num: " << chained_gates_num << std::endl;
+std::cout << "number of gates: " << gatesNum << std::endl;
+*/
+    int gateSetNum = only_derivates ? parameter_num : parameter_num+1;
     int rem = gateSetNum % 4;
     if ( rem == 0 ) {
         redundantGateSets = 0;
@@ -2216,13 +2219,25 @@ std::cout << "iiiiiiiiiiiiiiiiiiiiiI " << chained_gates_num << std::endl;
 */
 
     // adjust parameters for derivation
-    for (int idx=0; idx<(gateSetNum-1); idx++) {
-        memcpy(DFEgates+(idx+1)*gatesNum, DFEgates, gatesNum*sizeof(DFEgate_kernel_type));
+    if (only_derivates ) {
+        for (int idx=1; idx<(gateSetNum-1); idx++) {
+           memcpy(DFEgates+idx*gatesNum, DFEgates, gatesNum*sizeof(DFEgate_kernel_type));
+        }
+    }
+    else {
+        for (int idx=0; idx<(gateSetNum-1); idx++) {
+           memcpy(DFEgates+(idx+1)*gatesNum, DFEgates, gatesNum*sizeof(DFEgate_kernel_type));
+        }
     }
 
     gate_idx = 0;
     int gate_set_index = parameter_num-1;
-    adjust_parameters_for_derivation( DFEgates+gatesNum, gatesNum, gate_idx, gate_set_index );
+    if (only_derivates) {
+        adjust_parameters_for_derivation( DFEgates, gatesNum, gate_idx, gate_set_index );
+    } 
+    else {
+        adjust_parameters_for_derivation( DFEgates+gatesNum, gatesNum, gate_idx, gate_set_index );
+    }
 
 /*
     for ( int idx=0; idx<gatesNum*(parameter_num+1); idx++ ) {

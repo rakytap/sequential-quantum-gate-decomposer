@@ -49,8 +49,6 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( ) {
     // custom gate structure used in the decomposition
     unit_gate_structure = NULL;
 
-
-
 }
 
 
@@ -88,10 +86,6 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num
 
     // custom gate structure used in the decomposition
     unit_gate_structure = NULL;
-
-
-
-
 
 
 }

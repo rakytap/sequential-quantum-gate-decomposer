@@ -87,7 +87,7 @@ virtual void start_decomposition(bool prepare_export=true);
 /**
 @brief ???????????????
 */
-int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
+unsigned int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 
 /**

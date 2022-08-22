@@ -74,6 +74,7 @@ protected:
     ///
     std::vector<matrix_base<int>> topology;
     
+    
 
 public:
 
@@ -151,7 +152,7 @@ Gates_block* replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real
 /**
 @brief ???????????????
 */
-virtual int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
+virtual unsigned int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 
 /**

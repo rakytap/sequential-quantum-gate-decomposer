@@ -388,7 +388,7 @@ target_compile_options(qgd PUBLIC
 # External libarray for calculating QFT on DFE
 add_library( qgddfe SHARED IMPORTED )
 if (DEFINED ENV{QGD_DFE})
-    set_target_properties( qgddfe PROPERTIES IMPORTED_LOCATION /home/rakytap/qgd_DFE/qgdCPU/dist/release/lib/libqgdDFE.so )
+    set_target_properties( qgddfe PROPERTIES IMPORTED_LOCATION /home/rakyta.peter/qgd_DFE/qgdCPU/dist/release/lib/libqgdDFE.so )
 
 # adding linking options
 target_link_libraries( qgd PRIVATE

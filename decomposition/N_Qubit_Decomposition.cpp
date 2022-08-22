@@ -35,6 +35,8 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
 
     iter_max = 10;
     gradient_threshold = 1e-1;
+    random_shift_count_max = 1;    
+
 
 }
 
@@ -54,6 +56,7 @@ N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, b
 
     iter_max = 10;
     gradient_threshold = 1e-1;
+    random_shift_count_max = 1;    
 
 }
 

@@ -242,7 +242,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         qc = transpile(qc_in, optimization_level=0, basis_gates=['cz', 'u3'], layout_method='sabre')
         #print('Depth of imported Qiskit transpiled quantum circuit:', qc.depth())
-        #print('Gate counts in teh imported Qiskit transpiled quantum circuit:', qc.count_ops())
+        print('Gate counts in teh imported Qiskit transpiled quantum circuit:', qc.count_ops())
         #print(qc)
         
         # get the size of the register
@@ -293,6 +293,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                         params.reverse()
                         for param in params:
                             optimized_parameters = optimized_parameters + [float(param)]
+                        optimized_parameters[-1] = optimized_parameters[-1]/2                            
                         
 
                 if len(single_qubit_gates[qubit1])>0:
@@ -302,9 +303,10 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                     if gate1['type'] == 'u3':
                         Layer.add_U3( qubit1, True, True, True )
                         params = gate1['params']
-                        params.reverse()
+                        params.reverse()                      
                         for param in params:
                             optimized_parameters = optimized_parameters + [float(param)]
+                        optimized_parameters[-1] = optimized_parameters[-1]/2
 
                 ## add cz gate to the layer  
                 #Layer.add_CZ( qubit1, qubit0 )
@@ -314,7 +316,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                 Layer.add_adaptive( qubit0, qubit1 )
                 Layer.add_RZ( qubit1 )
                 Layer.add_RX( qubit0 )
-                optimized_parameters = optimized_parameters + [np.pi/2, np.pi, -np.pi/2, -np.pi/2]
+                optimized_parameters = optimized_parameters + [np.pi/4, np.pi/2, -np.pi/2, -np.pi/4]
                 #optimized_parameters = optimized_parameters + [np.pi]
 
                 Gates_Block_ret.add_Gates_Block( Layer )
@@ -336,6 +338,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                     params.reverse()
                     for param in params:
                         optimized_parameters = optimized_parameters + [float(param)]
+                    optimized_parameters[-1] = optimized_parameters[-1]/2                        
 
         Gates_Block_ret.add_Gates_Block( Layer )
 

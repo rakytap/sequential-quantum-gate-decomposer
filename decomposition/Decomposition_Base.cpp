@@ -433,7 +433,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         ////////////////////////////////////////
         // Start the iterations
         int iter_idx;
-        for ( iter_idx=0;  iter_idx<max_iterations+1; iter_idx++) {
+        for ( iter_idx=0; iter_idx<max_iterations; iter_idx++) {
 
             //determine the range of blocks to be optimalized togedther
             block_idx_end = block_idx_start - optimization_block;
@@ -563,7 +563,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
 
 
-        if (iter_idx == max_iterations ) {            
+        if (iter_idx == max_iterations && max_iterations>1) {            
 		std::stringstream sstream;
 		sstream << "Reached maximal number of iterations" << std::endl << std::endl;
 		print(sstream, 1);
