@@ -34,6 +34,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 static double adam_time = 0;
 static double bfgs_time = 0;
+static double pure_DFE_time = 0;
 
 
 /**
@@ -276,6 +277,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
 
         tbb::tick_count adam_start = tbb::tick_count::now();
         adam_time = 0.0;
+pure_DFE_time = 0.0;
         Adam optimizer;
         optimizer.initialize_moment_and_variance( num_of_parameters );
 
@@ -291,8 +293,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
         //solution_guess_tmp_mtx.print_matrix();
 
 
-        double f0;
-//std::cout << iter_max << std::endl;
+        double f0 = DBL_MAX;
+std::cout << "iter_max: " << iter_max << std::endl;
 
 
         for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
@@ -378,7 +380,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
         gsl_vector_free(solution_guess_tmp);
         tbb::tick_count adam_end = tbb::tick_count::now();
         adam_time  = adam_time + (adam_end-adam_start).seconds();
-        std::cout << "adam time: " << adam_time << " " << f0 << std::endl;
+        std::cout << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
         
 
 }
@@ -761,7 +763,10 @@ if ( instance->qbit_num >= 5 ) {
     Matrix_real trace_DFE_mtx(1, gateSetNum);
 
 //uploadMatrix2DFE( Umtx_loc );
+tbb::tick_count t0_DFE = tbb::tick_count::now();
     calcqgdKernelDFE( Umtx_loc.rows, DFEgates, gatesNum, gateSetNum, trace_DFE_mtx.get_data() );
+tbb::tick_count t1_DFE = tbb::tick_count::now();
+pure_DFE_time = pure_DFE_time + (t1_DFE-t0_DFE).seconds();
     
 //    double f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.rows;
     *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.rows;

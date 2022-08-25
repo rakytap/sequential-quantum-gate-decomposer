@@ -344,7 +344,8 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     	
     // reset the global minimum before final tuning
     current_minimum = DBL_MAX;
-
+std::cout << "iter_max: " << iter_max << std::endl;
+iter_max = 1e4;
     // final tuning of the decomposition parameters
     final_optimization();
 
@@ -429,9 +430,11 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     cDecomp_custom.set_verbose(0);
     cDecomp_custom.set_debugfile("");
     cDecomp_custom.set_iteration_loops( iteration_loops );
-    cDecomp_custom.set_optimization_tolerance( optimization_tolerance );  
-    cDecomp_custom.set_iter_max( 1e4 );  
-    cDecomp_custom.set_random_shift_count_max( 1 );          
+    cDecomp_custom.set_optimization_tolerance( optimization_tolerance ); 
+    if (alg==ADAM || alg==BFGS2) { 
+        cDecomp_custom.set_iter_max( 1e4 );  
+        cDecomp_custom.set_random_shift_count_max( 1 );          
+    }
     cDecomp_custom.start_decomposition(true);
     //cDecomp_custom.list_gates(0);
 
@@ -521,10 +524,9 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );
                 if ( alg == ADAM ) {
                     int param_num_loc = gate_structure_loc->get_parameter_num();
-                    int shift_count_max_loc = (double)param_num_loc/852 * 1e7;
-                    cDecomp_custom_random.set_iter_max( shift_count_max_loc );  
+                    int iter_max_loc = (double)param_num_loc/852 * 1e7;
+                    cDecomp_custom_random.set_iter_max( iter_max_loc );  
                     cDecomp_custom_random.set_random_shift_count_max( 10000 );                   
-std::cout << "ppppppppppppppppp " << param_num_loc << " "  << shift_count_max_loc << std::endl;
                 }
                 cDecomp_custom_random.start_decomposition(true);
 
@@ -825,7 +827,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     cDecomp_custom.set_iteration_loops( iteration_loops );
     cDecomp_custom.set_optimization_blocks( gate_structure_reduced->get_gate_num() ) ;
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance );
-    if ( alg == ADAM ) {
+    if ( alg == ADAM || alg==BFGS2) {
         cDecomp_custom.set_iter_max( 1e5 );  
         cDecomp_custom.set_random_shift_count_max( 10 );     
     }
@@ -1056,6 +1058,9 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
             if ( gate_tmp->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3  ) {
 
+                std::stringstream sstream;
+                sstream << "N_Qubit_Decomposition_adaptive::remove_trivial_gates: Removing trivial gateblock" << std::endl;
+                print(sstream, 3);
                
                 // remove gate from the structure
                 Gates_block* gate_structure_tmp = compress_gate_structure( gate_structure_loc, idx, optimized_parameters_loc, current_minimum_loc );
