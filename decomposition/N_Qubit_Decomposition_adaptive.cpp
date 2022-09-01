@@ -129,6 +129,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 
         // Maximal number of iteartions in the optimization process
         max_iterations = 4;
+        
+        iter_max = 10000;
+        gradient_threshold = 1e-8;
 
     }
     else {
