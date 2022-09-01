@@ -135,7 +135,10 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     add_gate_layers();
 
 
-//std::cout << optimization_problem( optimized_parameters_mtx ) << std::endl;
+if (optimized_parameters_mtx.size() > 0 ) {
+    std::cout << "cost function of the imported circuit: " << optimization_problem( optimized_parameters_mtx ) << std::endl;
+}   
+std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
 
 
     // final tuning of the decomposition parameters

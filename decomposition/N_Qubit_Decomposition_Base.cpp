@@ -296,6 +296,8 @@ pure_DFE_time = 0.0;
         double f0 = DBL_MAX;
 std::cout << "iter_max: " << iter_max << std::endl;
 
+        int sub_iter_max = iter_max > 1e5 ? 4000 : 2500;
+
 
         for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
 
@@ -303,7 +305,13 @@ std::cout << "iter_max: " << iter_max << std::endl;
             optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_gsl );
     
             if (sub_iter_idx == 1 ) {
-                current_minimum_hold = f0;    
+                current_minimum_hold = f0;  
+                if (iter_max > 1e5 )  { 
+                    optimizer.eta = optimizer.eta > 1e-4 ? optimizer.eta : 1e-4; 
+                } 
+                else {
+                    optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3;                 
+                }   
             }
 
 
@@ -316,6 +324,15 @@ std::cout << "iter_max: " << iter_max << std::endl;
             if (current_minimum > f0 ) {
                 current_minimum = f0;
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp->data, num_of_parameters*sizeof(double) );
+                //double new_eta = 1e-3 * f0 * f0;
+                if (iter_max > 1e5 )  {
+                    double new_eta = 1e-3 * f0 * f0;
+                    optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;
+                }
+                else {
+                    double new_eta = 1e-3 * f0;
+                    optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;                
+                }
             }
     
 
@@ -330,7 +347,9 @@ std::cout << "iter_max: " << iter_max << std::endl;
 
 
 //grad_mtx.print_matrix();
-            if ( sub_iter_idx>2500 ) {
+
+            
+            if ( sub_iter_idx> 2500 ) {
 
                 //random_shift_count++;
                 sub_iter_idx = 0;

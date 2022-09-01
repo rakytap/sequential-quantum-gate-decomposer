@@ -39,6 +39,9 @@ class Adam  {
 
 public:
   
+    // learning rate of the Adam algorithm
+    double eta;  
+
 
 protected:
 
@@ -50,8 +53,7 @@ protected:
     double beta2;
     // epsilon regularization parameter of the Adam algorithm
     double epsilon;
-    // learning rate of the Adam algorithm
-    double eta;
+  
     /// momentum parameter of the Adam algorithm
     Matrix_real mom;
     /// variance parameter of the Adam algorithm
@@ -106,5 +108,6 @@ void initialize_moment_and_variance(int parameter_num);
 void update( Matrix_real& parameters, Matrix_real& grad );
 
 };
+
 
 #endif //Adam

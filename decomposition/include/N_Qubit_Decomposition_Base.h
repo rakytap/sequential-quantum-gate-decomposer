@@ -73,6 +73,7 @@ public:
     /// 
     int random_shift_count_max;
     ///    
+    double eta;
 
 protected:
 
