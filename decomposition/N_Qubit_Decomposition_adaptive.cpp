@@ -1073,50 +1073,128 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
     Gates_block* gate_structure_loc = gate_structure->clone();
 
-    int idx = 0;
-    while (idx<layer_num ) {
+    for (int idx=0; idx<layer_num; idx++ ) {
 
         Gates_block* layer = static_cast<Gates_block*>( gate_structure_loc->get_gate(idx) );
 
-        for ( int jdx=0; jdx<layer->get_gate_num(); jdx++ ) {
+        int param_num = layer->get_parameter_num();
 
-            Gate* gate_tmp = layer->get_gate(jdx);
-            int param_num = gate_tmp->get_parameter_num();
-
-
-            double parameter = optimized_parameters[parameter_idx];
-            parameter = activation_function(parameter, 1);//limit_max);
-
-
-            if ( gate_tmp->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3  ) {
-
-                std::stringstream sstream;
-                sstream << "N_Qubit_Decomposition_adaptive::remove_trivial_gates: Removing trivial gateblock" << std::endl;
-                print(sstream, 3);
-               
-                // remove gate from the structure
-                Gates_block* gate_structure_tmp = compress_gate_structure( gate_structure_loc, idx, optimized_parameters_loc, current_minimum_loc );
-
-                optimized_parameters = optimized_parameters_loc;
-                delete( gate_structure_loc );
-                gate_structure_loc = gate_structure_tmp;
-                layer_num = gate_structure_loc->get_gate_num();   
-                break;            
-
-          
-            }
-
-
+        if ( layer->get_gate_num() != 3 ) {
+            // every adaptive layers contains a single adaptive gate ant two U3 gates
             parameter_idx += param_num;
-            
-
+            continue;
         }
 
+        Gate* gate_adaptive = layer->get_gate(0);
+        double parameter = optimized_parameters[parameter_idx];
+        parameter = activation_function(parameter, 1);//limit_max);
 
 
-        idx++;
 
 
+
+        if ( gate_adaptive->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3  ) {
+
+//////////////////////////////////////
+
+            U3* U_gate1 = static_cast<U3*>(layer->get_gate(1));
+            U3* U_gate2 = static_cast<U3*>(layer->get_gate(2));
+
+            Matrix_real param1( &optimized_parameters[parameter_idx+1], 1, U_gate1->get_parameter_num() );
+            Matrix_real param2( &optimized_parameters[parameter_idx+1+U_gate1->get_parameter_num()], 1, U_gate2->get_parameter_num() );
+
+            Matrix U3_matrix1 = U_gate1->calc_one_qubit_u3(param1[0], param1[1], param1[2] );
+//U3_matrix1.print_matrix();
+//param1.print_matrix();
+
+            int parameter_idx_to_be_removed = parameter_idx+1;
+
+
+            // find matching U3 gates
+            std::vector<int>&& involved_qbits = layer->get_involved_qubits();
+            for( int rdx=0; rdx<involved_qbits.size(); rdx++ ) {
+
+                int parameter_idx_loc = parameter_idx;
+
+std::cout << "qubit to be matched: " << involved_qbits[rdx] << std::endl;
+
+                int current_qbit = involved_qbits[rdx]; // qubit to be paired
+
+                bool found_match = false;
+                U3* matching_gate = NULL;
+
+                for ( int kdx=idx-1; kdx>=0; kdx-- ) {
+                    
+
+                    Gates_block* layer_test = static_cast<Gates_block*>( gate_structure_loc->get_gate(kdx) );
+
+                    int gate_num = layer_test->get_gate_num();
+                    for ( int hdx=0; hdx<gate_num; hdx++ ) {
+
+                        Gate* gate_test = layer_test->get_gate(hdx);
+
+                        parameter_idx_loc = parameter_idx_loc - gate_test->get_parameter_num();
+
+                        if ( gate_test->get_type() == U3_OPERATION ) {
+                            int target_qbit_loc = gate_test->get_target_qbit();
+
+                            if ( involved_qbits[rdx] == target_qbit_loc ) {
+                                found_match = true;
+                                matching_gate = static_cast<U3*>(gate_test);
+                                break;                             
+                            }
+
+                        }
+
+//std::cout << parameter_idx_loc << std::endl;
+                    }
+
+                    if ( found_match ) break;
+        
+
+                }
+
+
+                U3* U_gate_to_be_removed = static_cast<U3*>(layer->get_gate(rdx+1));
+std::cout << parameter_idx_to_be_removed << std::endl;
+                Matrix_real param1( &optimized_parameters[parameter_idx_to_be_removed], 1, U_gate_to_be_removed->get_parameter_num() );
+                Matrix U3_matrix1 = U_gate_to_be_removed->calc_one_qubit_u3(param1[0], param1[1], param1[2] );
+                parameter_idx_to_be_removed = parameter_idx_to_be_removed + U_gate_to_be_removed->get_parameter_num();
+
+                Matrix_real param2( &optimized_parameters[parameter_idx_loc], 1, matching_gate->get_parameter_num() );
+                Matrix U3_matrix2 = matching_gate->calc_one_qubit_u3(param2[0], param2[1], param2[2] );
+
+                Matrix U3_prod = dot(U3_matrix1, U3_matrix2);
+
+// TODO: calculate the new theta/2, phi, lambda parameters from U3_prod, and replace them in param2
+// TODO: apply global phase on Umtx
+                  
+
+            }
+
+/////////////////////////////////////
+
+            std::stringstream sstream;
+            sstream << "N_Qubit_Decomposition_adaptive::remove_trivial_gates: Removing trivial gateblock" << std::endl;
+            print(sstream, 3);
+               
+            // remove gate from the structure
+            Gates_block* gate_structure_tmp = compress_gate_structure( gate_structure_loc, idx, optimized_parameters_loc, current_minimum_loc );
+
+            optimized_parameters = optimized_parameters_loc;
+            delete( gate_structure_loc );
+            gate_structure_loc = gate_structure_tmp;
+            layer_num = gate_structure_loc->get_gate_num();   
+            break;            
+
+          
+            
+        }
+
+        parameter_idx += param_num;
+            
+
+        
     }
 //std::cout << "N_Qubit_Decomposition_adaptive::remove_trivial_gates :" << gate_structure->get_gate_num() << " reduced to " << gate_structure_loc->get_gate_num() << std::endl;
     return gate_structure_loc;
