@@ -461,6 +461,13 @@ bool contains_adaptive_gate();
 */
 bool contains_adaptive_gate(int idx);
 
+
+
+
+
+
+
+
 #ifdef __DFE__
 
 /**
@@ -489,6 +496,34 @@ DFEgate_kernel_type* convert_to_DFE_gates( Matrix_real& parameters_mtx, int& gat
 void convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEgate_kernel_type* DFEgates, int& start_index );
 #endif
 };
+
+
+
+/**
+@brief ?????????
+@return Return with ?????????
+*/
+void export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block);
+
+/**
+@brief ?????????
+@return Return with ?????????
+*/
+void export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FILE* pFile);
+
+
+/**
+@brief ?????????
+@return Return with ?????????
+*/
+Gates_block* import_gate_list_from_binary(Matrix_real& parameters);
+
+
+/**
+@brief ?????????
+@return Return with ?????????
+*/
+Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile);
 
 #endif //GATES_BLOCK
 

@@ -307,7 +307,7 @@ std::cout << "iter_max: " << iter_max << std::endl;
             if (sub_iter_idx == 1 ) {
                 current_minimum_hold = f0;  
                 if (iter_max > 1e5 )  { 
-                    optimizer.eta = optimizer.eta > 1e-4 ? optimizer.eta : 1e-4; 
+                    optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3; 
                 } 
                 else {
                     optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3;                 
@@ -326,7 +326,7 @@ std::cout << "iter_max: " << iter_max << std::endl;
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp->data, num_of_parameters*sizeof(double) );
                 //double new_eta = 1e-3 * f0 * f0;
                 if (iter_max > 1e5 )  {
-                    double new_eta = 1e-3 * f0 * f0;
+                    double new_eta = 1e-3 * f0;
                     optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;
                 }
                 else {
@@ -904,7 +904,7 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
             return;
 
         case BFGS:
-            iter_max = 10;
+            iter_max = 100;
             gradient_threshold = 1e-1;
             random_shift_count_max = 1;   
             return;

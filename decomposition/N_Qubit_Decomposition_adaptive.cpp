@@ -274,6 +274,16 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
     }
 
+
+    sstream.str("");
+    sstream << "Exporting circuit into binary format" << std::endl;
+    print(sstream, 3);	
+    export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc);
+/*
+Matrix_real parameters_imported;
+Gates_block* gate_structure_loc_imported = import_gate_list_from_binary(parameters_imported);
+*/
+
     sstream.str("");
     sstream << std::endl;
     sstream << std::endl;
@@ -435,8 +445,10 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     cDecomp_custom.set_iteration_loops( iteration_loops );
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance ); 
     if (alg==ADAM || alg==BFGS2) { 
-        cDecomp_custom.set_iter_max( 1e4 );  
-        cDecomp_custom.set_random_shift_count_max( 1 );          
+        int param_num_loc = gate_structure_loc->get_parameter_num();
+        int iter_max_loc = (double)param_num_loc/852 * 1e7;
+        cDecomp_custom.set_iter_max( iter_max_loc );  
+        cDecomp_custom.set_random_shift_count_max( 10000 );          
     }
     cDecomp_custom.start_decomposition(true);
     //cDecomp_custom.list_gates(0);

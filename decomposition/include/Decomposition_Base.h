@@ -389,6 +389,7 @@ double get_decomposition_error( );
 double get_current_minimum( );
 
 
+
 };
 
 #endif //DECOMPOSITION_BASE

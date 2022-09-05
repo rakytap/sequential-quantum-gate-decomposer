@@ -130,7 +130,7 @@ class Test_Decomposition:
 
 
         # setting the verbosity of the decomposition
-        cDecompose.set_Verbose( True )
+        cDecompose.set_Verbose( 3 )
 
         # starting the decomposition
         cDecompose.Start_Decomposition()
