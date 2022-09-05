@@ -721,6 +721,8 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         layers_to_remove.erase( layers_to_remove.begin() + remove_idx );
     }
 
+    // make a copy of the original unitary. (By removing trivial gates global phase might be added to the unitary)
+    Matrix&& Umtx_orig = Umtx.copy();
 
     int panelties_num = layer_num_max < layer_num_orig ? layer_num_max : layer_num_orig;
 
@@ -729,8 +731,11 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     std::vector<Gates_block*> gate_structures_vec(panelties_num, NULL);
     std::vector<Matrix_real> optimized_parameters_vec(panelties_num, Matrix_real(0,0));
     std::vector<double> current_minimum_vec(panelties_num, DBL_MAX);
+    std::vector<Matrix> Umtx_vec(panelties_num);
 
     for (int idx=0; idx<panelties_num; idx++) {
+
+        Umtx = Umtx_orig.copy();
 
         double current_minimum_loc = DBL_MAX;//current_minimum;
         Matrix_real optimized_parameters_loc = optimized_parameters_mtx.copy();
@@ -750,6 +755,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         gate_structures_vec[idx] = gate_structure_tmp;
         optimized_parameters_vec[idx] = optimized_parameters_loc;
         current_minimum_vec[idx] = current_minimum_loc;
+        Umtx_vec[idx] = Umtx;
         
 
         delete(gate_structure_reduced);
