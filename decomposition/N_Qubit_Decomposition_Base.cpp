@@ -52,6 +52,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     // The global minimum of the optimization problem
     global_target_minimum = 0;
 
+    // logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
+    adaptive_eta = true;
+
 }
 
 /**
@@ -82,6 +85,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
             max_layer_num.insert( std::pair<int, int>(it->first,  it->second) );
         }
     }
+
+    // logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
+    adaptive_eta = true;
 
 
 }
@@ -306,12 +312,9 @@ std::cout << "iter_max: " << iter_max << std::endl;
     
             if (sub_iter_idx == 1 ) {
                 current_minimum_hold = f0;  
-                if (iter_max > 1e5 )  { 
+                if ( adaptive_eta )  { 
                     optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3; 
-                } 
-                else {
-                    optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3;                 
-                }   
+                }  
             }
 
 
@@ -325,19 +328,17 @@ std::cout << "iter_max: " << iter_max << std::endl;
                 current_minimum = f0;
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp->data, num_of_parameters*sizeof(double) );
                 //double new_eta = 1e-3 * f0 * f0;
-                if (iter_max > 1e5 )  {
+                if ( adaptive_eta )  {
                     double new_eta = 1e-3 * f0;
                     optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;
-                }
-                else {
-                    double new_eta = 1e-3 * f0;
-                    optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;                
                 }
             }
     
 
             if ( iter_idx % 10000 == 0 ) {
                 std::cout << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                std::string filename("initial_circuit_iteration.binary");
+                export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
             }
 
 //std::cout << grad_norm  << std::endl;
@@ -922,6 +923,18 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
     }
 
 
+
+}
+
+
+
+/**
+@brief ?????????????
+*/
+void 
+N_Qubit_Decomposition_Base::set_adaptive_eta( bool adaptive_eta_in  ) {
+
+    adaptive_eta = adaptive_eta_in;
 
 }
 

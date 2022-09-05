@@ -2810,10 +2810,12 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
 @return Return with ?????????
 */
 void 
-export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block) {
+export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, const std::string& filename) {
 
     FILE* pFile;
-    pFile = fopen("circuit_squander.binary", "wb");
+    char* c_filename = filename.c_str();
+    
+    pFile = fopen(c_filename, "wb");
     if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
 
     export_gate_list_to_binary( parameters, gates_block, pFile );
@@ -2881,12 +2883,21 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
 
             
         }
-        else if (gt_type == RX_OPERATION || gt_type == RY_OPERATION || gt_type == CRY_OPERATION || gt_type == RZ_OPERATION ) {
+        else if (gt_type == RX_OPERATION || gt_type == RY_OPERATION || gt_type == RZ_OPERATION ) {
             int target_qbit = op->get_target_qbit();
             fwrite(&target_qbit, sizeof(int), 1, pFile);
 
             fwrite(parameters_data, sizeof(double), parameter_num, pFile);
         }
+        else if (gt_type == CRY_OPERATION) {
+            int target_qbit = op->get_target_qbit();
+            int control_qbit = op->get_control_qbit();
+            fwrite(&target_qbit, sizeof(int), 1, pFile);
+            fwrite(&control_qbit, sizeof(int), 1, pFile);
+
+            fwrite(parameters_data, sizeof(double), parameter_num, pFile);
+        }
+        
         else if (gt_type == X_OPERATION || gt_type == SX_OPERATION) {
             int target_qbit = op->get_target_qbit();
             fwrite(&target_qbit, sizeof(int), 1, pFile);
@@ -2918,10 +2929,12 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
 @brief ?????????
 @return Return with ?????????
 */
-Gates_block* import_gate_list_from_binary(Matrix_real& parameters) {
+Gates_block* import_gate_list_from_binary(Matrix_real& parameters, const std::string& filename) {
 
     FILE* pFile;
-    pFile = fopen("circuit_squander.binary", "rb");
+    char* c_filename = filename.c_str();
+    
+    pFile = fopen(c_filename, "rb");
     if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
 
     Gates_block* ret = import_gate_list_from_binary(parameters, pFile);
@@ -3075,7 +3088,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) 
             gate_block_level_gates_num[current_level]--;
 
         }
-        else if (gt_type == ADAPTIVE_OPERATION) {
+        else if (gt_type == CRY_OPERATION) {
 
             std::cout << "importing CRY gate" << std::endl;
 
@@ -3196,7 +3209,7 @@ std::cout << "finishing gates block" << std::endl;
         throw error;
     }
 
-    return NULL;
+    return gate_block;
 
 }
 

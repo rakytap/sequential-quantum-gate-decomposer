@@ -85,6 +85,8 @@ protected:
     std::map<int,int> identical_blocks;
     ///
     optimization_aglorithms alg;
+    /// logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
+    bool adaptive_eta;
 
 
 
@@ -241,6 +243,12 @@ void set_random_shift_count_max( int random_shift_count_max_in  );
 @brief ?????????????
 */
 void set_optimizer( optimization_aglorithms alg_in );
+
+
+/**
+@brief ?????????????
+*/
+void set_adaptive_eta( bool adaptive_eta_in  );
 
 };
 
