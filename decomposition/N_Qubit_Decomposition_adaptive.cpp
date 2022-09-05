@@ -730,12 +730,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     std::vector<Matrix_real> optimized_parameters_vec(panelties_num, Matrix_real(0,0));
     std::vector<double> current_minimum_vec(panelties_num, DBL_MAX);
 
-
-#ifndef __DFE__
-    tbb::parallel_for( 0, panelties_num, 1, [&](int idx) {
-#else
     for (int idx=0; idx<panelties_num; idx++) {
-#endif
 
         double current_minimum_loc = DBL_MAX;//current_minimum;
         Matrix_real optimized_parameters_loc = optimized_parameters_mtx.copy();
@@ -759,15 +754,12 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 
         delete(gate_structure_reduced);
 
-#ifndef __DFE__
-    });
-#else
-
+#ifdef __DFE__
         if ( current_minimum_vec[idx] < optimization_tolerance ) {
             break;
         }
-    }
 #endif
+    }
 
 
 //panelties.print_matrix();
