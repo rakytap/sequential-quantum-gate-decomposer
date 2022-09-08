@@ -134,6 +134,10 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     // setting the gate structure for optimization
     add_gate_layers();
 
+#ifdef __DFE__
+    uploadMatrix2DFE( Umtx );
+#endif
+
 /*
 if (optimized_parameters_mtx.size() > 0 ) {
     std::cout << "cost function of the imported circuit: " << optimization_problem( optimized_parameters_mtx ) << std::endl;

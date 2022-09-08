@@ -803,6 +803,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     gate_structure = gate_structures_vec[idx_min];
     optimized_parameters_mtx = optimized_parameters_vec[idx_min];
     current_minimum =  current_minimum_vec[idx_min];
+    Umtx = Umtx_vec[idx_min];
     
     int layer_num = gate_structure->get_gate_num();
 
@@ -1084,26 +1085,13 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
         }
 
         Gate* gate_adaptive = layer->get_gate(0);
-        double parameter = optimized_parameters[parameter_idx];
+        double parameter = optimized_parameters_loc[parameter_idx];
         parameter = activation_function(parameter, 1);//limit_max);
-
-
-
 
 
         if ( gate_adaptive->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3  ) {
 
 //////////////////////////////////////
-
-            U3* U_gate1 = static_cast<U3*>(layer->get_gate(1));
-            U3* U_gate2 = static_cast<U3*>(layer->get_gate(2));
-
-            Matrix_real param1( &optimized_parameters[parameter_idx+1], 1, U_gate1->get_parameter_num() );
-            Matrix_real param2( &optimized_parameters[parameter_idx+1+U_gate1->get_parameter_num()], 1, U_gate2->get_parameter_num() );
-
-            Matrix U3_matrix1 = U_gate1->calc_one_qubit_u3(param1[0], param1[1], param1[2] );
-//U3_matrix1.print_matrix();
-//param1.print_matrix();
 
             int parameter_idx_to_be_removed = parameter_idx+1;
 
@@ -1112,11 +1100,10 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
             std::vector<int>&& involved_qbits = layer->get_involved_qubits();
             for( int rdx=0; rdx<involved_qbits.size(); rdx++ ) {
 
+                U3* U_gate_to_be_removed = static_cast<U3*>(layer->get_gate(rdx+1));
+                int qbit_to_be_matched = U_gate_to_be_removed->get_target_qbit();
+
                 int parameter_idx_loc = parameter_idx;
-
-std::cout << "qubit to be matched: " << involved_qbits[rdx] << std::endl;
-
-                int current_qbit = involved_qbits[rdx]; // qubit to be paired
 
                 bool found_match = false;
                 U3* matching_gate = NULL;
@@ -1127,7 +1114,7 @@ std::cout << "qubit to be matched: " << involved_qbits[rdx] << std::endl;
                     Gates_block* layer_test = static_cast<Gates_block*>( gate_structure_loc->get_gate(kdx) );
 
                     int gate_num = layer_test->get_gate_num();
-                    for ( int hdx=0; hdx<gate_num; hdx++ ) {
+                    for ( int hdx=gate_num-1; hdx>=0; hdx-- ) {
 
                         Gate* gate_test = layer_test->get_gate(hdx);
 
@@ -1136,7 +1123,7 @@ std::cout << "qubit to be matched: " << involved_qbits[rdx] << std::endl;
                         if ( gate_test->get_type() == U3_OPERATION ) {
                             int target_qbit_loc = gate_test->get_target_qbit();
 
-                            if ( involved_qbits[rdx] == target_qbit_loc ) {
+                            if ( qbit_to_be_matched == target_qbit_loc ) {
                                 found_match = true;
                                 matching_gate = static_cast<U3*>(gate_test);
                                 break;                             
@@ -1144,7 +1131,6 @@ std::cout << "qubit to be matched: " << involved_qbits[rdx] << std::endl;
 
                         }
 
-//std::cout << parameter_idx_loc << std::endl;
                     }
 
                     if ( found_match ) break;
@@ -1153,21 +1139,22 @@ std::cout << "qubit to be matched: " << involved_qbits[rdx] << std::endl;
                 }
 
 
-                U3* U_gate_to_be_removed = static_cast<U3*>(layer->get_gate(rdx+1));
-std::cout << parameter_idx_to_be_removed << std::endl;
-                Matrix_real param1( &optimized_parameters[parameter_idx_to_be_removed], 1, U_gate_to_be_removed->get_parameter_num() );
-                Matrix U3_matrix1 = U_gate_to_be_removed->calc_one_qubit_u3(param1[0], param1[1], param1[2] );
-                parameter_idx_to_be_removed = parameter_idx_to_be_removed + U_gate_to_be_removed->get_parameter_num();
 
-                Matrix_real param2( &optimized_parameters[parameter_idx_loc], 1, matching_gate->get_parameter_num() );
+                Matrix_real param1( &optimized_parameters_loc[parameter_idx_to_be_removed], 1, U_gate_to_be_removed->get_parameter_num() );
+                Matrix U3_matrix1 = U_gate_to_be_removed->calc_one_qubit_u3(param1[0], param1[1], param1[2] );
+
+                Matrix_real param2( &optimized_parameters_loc[parameter_idx_loc], 1, matching_gate->get_parameter_num() );
                 Matrix U3_matrix2 = matching_gate->calc_one_qubit_u3(param2[0], param2[1], param2[2] );
 
-                Matrix U3_prod = dot(U3_matrix1, U3_matrix2);
+                Matrix U3_prod = dot(U3_matrix2, U3_matrix1);
+
+                optimized_parameters_loc[parameter_idx_to_be_removed] = 0.0;
+                optimized_parameters_loc[parameter_idx_to_be_removed+1] = 0.0;
+                optimized_parameters_loc[parameter_idx_to_be_removed+2] = 0.0;
+                parameter_idx_to_be_removed = parameter_idx_to_be_removed + U_gate_to_be_removed->get_parameter_num();
 
 // TODO: calculate the new theta/2, phi, lambda parameters from U3_prod, and replace them in param2
 // TODO: apply global phase on Umtx
-                  
-
             }
 
 /////////////////////////////////////
@@ -1349,7 +1336,7 @@ N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structur
 */
     for (int idx=0; idx<qbit_num; idx++) {
             bool Theta = true;
-            bool Phi = false;
+            bool Phi = true;
             bool Lambda = true;
              block->add_u3(idx, Theta, Phi, Lambda);
 //        block->add_ry(idx);
@@ -1395,6 +1382,7 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( Gates_block* gate_s
     gate_structure = gate_structure_in->clone();
 
 }
+
 
 
 
