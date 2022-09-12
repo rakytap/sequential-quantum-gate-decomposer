@@ -1087,8 +1087,11 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
         Gate* gate_adaptive = layer->get_gate(0);
         double parameter = optimized_parameters_loc[parameter_idx];
         parameter = activation_function(parameter, 1);//limit_max);
-
-
+       
+        N_Qubit_Decomposition_custom cDecomp_custom( Umtx.copy(), qbit_num, false, initial_guess);
+        cDecomp_custom.set_custom_gate_structure( gate_structure_loc );
+        cDecomp_custom.add_gate_layers();
+        std::cout << "bbbbbbbbbbbbbbbbbb 2: " << cDecomp_custom.optimization_problem( optimized_parameters_loc ) << std::endl;
         if ( gate_adaptive->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3  ) {
 
 //////////////////////////////////////
@@ -1155,6 +1158,37 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
 // TODO: calculate the new theta/2, phi, lambda parameters from U3_prod, and replace them in param2
 // TODO: apply global phase on Umtx
+                double ctheta3 = std::sqrt(U3_prod[0].real*U3_prod[0].real+U3_prod[0].imag*U3_prod[0].imag);
+                double stheta3 = std::sqrt(U3_prod[2].real*U3_prod[2].real+U3_prod[2].imag*U3_prod[2].imag);
+                double theta3 = std::atan2(stheta3,ctheta3);
+		double alpha = std::atan2(U3_prod[0].imag,U3_prod[0].real);
+		double lambda3;
+		double phi3;
+		if (std::abs(stheta3)<4e-8){
+		    	std::cout<<"szutyok"<<std::endl;
+			lambda3 = (std::atan2(U3_prod[3].imag,U3_prod[3].real)-alpha)/2;
+			phi3 = lambda3;
+		}
+		else {
+			lambda3 = std::atan2(-1*U3_prod[1].imag,-1*U3_prod[1].real)-alpha;
+			phi3 = std::atan2(U3_prod[2].imag,U3_prod[2].real)-alpha;
+		}
+		Matrix U3_new = matching_gate->calc_one_qubit_u3(theta3,phi3,lambda3);
+		QGD_Complex16 global_phase;
+		global_phase.real = std::cos(alpha);
+		global_phase.imag = std::sin(alpha);
+		apply_global_phase(global_phase, U3_new);
+		if (std::sqrt((U3_new[3].real-U3_prod[3].real)*(U3_new[3].real-U3_prod[3].real)) + std::sqrt((U3_new[3].imag-U3_prod[3].imag)*(U3_new[3].imag-U3_prod[3].imag)) < 1e-8 && (stheta3*stheta3+ctheta3*ctheta3) > 0.99){
+			param2[0] = theta3;
+			param2[1] = phi3;
+			param2[2] = lambda3;
+			apply_global_phase(global_phase, Umtx);
+		}
+	       N_Qubit_Decomposition_custom cDecomp_custom_( Umtx.copy(), qbit_num, false, initial_guess);
+               cDecomp_custom_.set_custom_gate_structure( gate_structure_loc );
+   	       cDecomp_custom_.add_gate_layers();
+	       std::cout << "aaaaaaaaaaaaaaaaaaaaa 2: " << cDecomp_custom_.optimization_problem( optimized_parameters_loc ) << std::endl;
+
             }
 
 /////////////////////////////////////

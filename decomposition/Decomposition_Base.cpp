@@ -1459,5 +1459,8 @@ double Decomposition_Base::get_current_minimum( ) {
 }
 
 
-
+void Decomposition_Base::apply_global_phase(QGD_Complex16 global_phase, Matrix& u3_gate){
+	mult(global_phase, u3_gate);
+	return;
+}
 
