@@ -1458,7 +1458,10 @@ double Decomposition_Base::get_current_minimum( ) {
 
 }
 
-
+/**
+@brief Call to apply global phase of U3 matrices to matrix
+@param global_phase The value of the phase
+*/
 void Decomposition_Base::apply_global_phase(QGD_Complex16 global_phase, Matrix& u3_gate){
 	mult(global_phase, u3_gate);
 	return;
