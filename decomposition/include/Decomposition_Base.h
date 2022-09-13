@@ -388,8 +388,11 @@ double get_decomposition_error( );
 */
 double get_current_minimum( );
 
-
-
+/**
+@brief Call to apply the global phase to a matrix
+@return Returns with the minimum of the cost function
+*/
+void apply_global_phase(QGD_Complex16 global_phase, Matrix& u3_gate);
 };
 
 #endif //DECOMPOSITION_BASE

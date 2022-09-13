@@ -343,7 +343,7 @@ pure_DFE_time = 0.0;
             if ( iter_idx % 10000 == 0 ) {
                 std::stringstream sstream;
                 sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
-                print(sstream, 2);   
+                print(sstream, 0);   
                 std::string filename("initial_circuit_iteration.binary");
                 export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
             }
@@ -367,7 +367,7 @@ pure_DFE_time = 0.0;
 
                 std::stringstream sstream;
                 sstream << "leaving local minimum " << f0 << std::endl;
-                print(sstream, 2);   
+                print(sstream, 0);   
         
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*std::sqrt(f0)/factor;
