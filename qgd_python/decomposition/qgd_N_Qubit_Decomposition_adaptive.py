@@ -348,4 +348,17 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         self.set_Gate_Structure(Gates_Block_ret)
         self.set_Optimized_Parameters( optimized_parameters )
           
+##
+# @brief Call to set custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
+# @param filename String containing the filename
+    def set_Gate_Structure_From_Binary( self, filename ):  
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Gate_Structure_From_Binary( filename )
+
+
+##
+# @brief Call to add an adaptive layer to the gate structure previously imported gate structure
+    def add_Layer_To_Imported_Gate_Structure( self ):  
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Layer_To_Imported_Gate_Structure()
 

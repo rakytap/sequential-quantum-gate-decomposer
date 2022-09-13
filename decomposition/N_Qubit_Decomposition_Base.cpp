@@ -52,6 +52,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     // The global minimum of the optimization problem
     global_target_minimum = 0;
 
+    // logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
+    adaptive_eta = true;
+
 }
 
 /**
@@ -82,6 +85,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
             max_layer_num.insert( std::pair<int, int>(it->first,  it->second) );
         }
     }
+
+    // logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
+    adaptive_eta = true;
 
 
 }
@@ -294,24 +300,26 @@ pure_DFE_time = 0.0;
 
 
         double f0 = DBL_MAX;
-std::cout << "iter_max: " << iter_max << std::endl;
+        std::stringstream sstream;
+        sstream << "iter_max: " << iter_max << std::endl;
+        print(sstream, 2);   
+
 
         int sub_iter_max = iter_max > 1e5 ? 4000 : 2500;
 
 
         for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
 
+            
+
 
             optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_gsl );
     
             if (sub_iter_idx == 1 ) {
                 current_minimum_hold = f0;  
-                if (iter_max > 1e5 )  { 
+                if ( adaptive_eta )  { 
                     optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3; 
-                } 
-                else {
-                    optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3;                 
-                }   
+                }  
             }
 
 
@@ -325,19 +333,19 @@ std::cout << "iter_max: " << iter_max << std::endl;
                 current_minimum = f0;
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp->data, num_of_parameters*sizeof(double) );
                 //double new_eta = 1e-3 * f0 * f0;
-                if (iter_max > 1e5 )  {
+                if ( adaptive_eta )  {
                     double new_eta = 1e-3 * f0;
                     optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;
-                }
-                else {
-                    double new_eta = 1e-3 * f0;
-                    optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;                
                 }
             }
     
 
             if ( iter_idx % 10000 == 0 ) {
-                std::cout << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                std::stringstream sstream;
+                sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                print(sstream, 2);   
+                std::string filename("initial_circuit_iteration.binary");
+                export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
             }
 
 //std::cout << grad_norm  << std::endl;
@@ -355,26 +363,16 @@ std::cout << "iter_max: " << iter_max << std::endl;
                 sub_iter_idx = 0;
                 random_shift_count++;
                 current_minimum_hold = current_minimum;        
-                int factor = rand() % 30 + 1;
-                std::cout << "leaving local minimum " << f0 << std::endl;
-        
-  
-  /*
-        std::ofstream myfile("local_minima_parameters.txt", std::ofstream::app);
-        myfile << f0;
-        for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-            myfile << " " << solution_guess_tmp->data[jdx];            
-        }
-        myfile << std::endl;
-        myfile.close();
-   */     
+                int factor = rand() % 10 + 1;
+
+                std::stringstream sstream;
+                sstream << "leaving local minimum " << f0 << std::endl;
+                print(sstream, 2);   
         
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/factor;
+                    solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*std::sqrt(f0)/factor;
                     //solution_guess_tmp->data[jdx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;            
                 }
-        
-        
         
                 optimizer.reset();
                 optimizer.initialize_moment_and_variance( num_of_parameters );       
@@ -390,8 +388,8 @@ std::cout << "iter_max: " << iter_max << std::endl;
 
 
 
-
-        std::cout << "current minimum: " << current_minimum << std::endl;
+        sstream.str("");
+        sstream << "obtained minimum: " << current_minimum << std::endl;
 
 
 
@@ -399,8 +397,9 @@ std::cout << "iter_max: " << iter_max << std::endl;
         gsl_vector_free(solution_guess_tmp);
         tbb::tick_count adam_end = tbb::tick_count::now();
         adam_time  = adam_time + (adam_end-adam_start).seconds();
-        std::cout << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
+        sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
         
+        print(sstream, 1); 
 
 }
 
@@ -577,17 +576,20 @@ bfgs_time = 0.0;
             do {
                 gsl_set_error_handler_off();
                 
-                if ( sub_iter_idx>1000 || status != GSL_CONTINUE ) {
-                    std::cout << "leaving local minimum " << s->f << std::endl;
+                if ( sub_iter_idx>2500 || status != GSL_CONTINUE ) {
+
+                    std::stringstream sstream;
+                    sstream << "leaving local minimum " << s->f << std::endl;
+                    print(sstream, 2); 
                     
                     sub_iter_idx = 0;
                     random_shift_count++;
                     current_minimum_hold = current_minimum;        
 
-                    int factor = rand() % 30 + 1;
+                    int factor = rand() % 10 + 1;
              
                     for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                        solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/factor;
+                        solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*std::sqrt(s->f)/factor;
                     } 
                     
                     status = 0;    
@@ -626,8 +628,13 @@ bfgs_time = 0.0;
                 }
     
 
-                if ( iter_idx % 10000 == 0 ) {
-                     std::cout << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum: " << current_minimum << std::endl;
+                if ( iter_idx % 100000 == 0 ) {
+                     std::stringstream sstream;
+                     sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                     print(sstream, 2);  
+
+                     std::string filename("initial_circuit_iteration.binary");
+                     export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
                 }
 
 
@@ -707,7 +714,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
 
 
     Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
-
+//matrix_new.print_matrix();
     return get_cost_function(matrix_new);
 
 }
@@ -922,6 +929,18 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
     }
 
 
+
+}
+
+
+
+/**
+@brief ?????????????
+*/
+void 
+N_Qubit_Decomposition_Base::set_adaptive_eta( bool adaptive_eta_in  ) {
+
+    adaptive_eta = adaptive_eta_in;
 
 }
 

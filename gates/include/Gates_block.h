@@ -503,27 +503,27 @@ void convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEgate_kernel_typ
 @brief ?????????
 @return Return with ?????????
 */
-void export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block);
+void export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, const std::string& filename, int verbosity=3);
 
 /**
 @brief ?????????
 @return Return with ?????????
 */
-void export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FILE* pFile);
-
-
-/**
-@brief ?????????
-@return Return with ?????????
-*/
-Gates_block* import_gate_list_from_binary(Matrix_real& parameters);
+void export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FILE* pFile, int verbosity=3);
 
 
 /**
 @brief ?????????
 @return Return with ?????????
 */
-Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile);
+Gates_block* import_gate_list_from_binary(Matrix_real& parameters, const std::string& filename, int verbosity=3);
+
+
+/**
+@brief ?????????
+@return Return with ?????????
+*/
+Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, int verbosity=3);
 
 #endif //GATES_BLOCK
 

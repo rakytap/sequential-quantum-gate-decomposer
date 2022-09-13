@@ -2810,13 +2810,21 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
 @return Return with ?????????
 */
 void 
-export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block) {
+export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, const std::string& filename, int verbosity) {
+
+    std::stringstream sstream;
+    sstream << "Exporting circuit into binary format. Filename: " << filename << std::endl;
+    logging log;
+    log.verbose = verbosity;
+    log.print(sstream, 2);	
 
     FILE* pFile;
-    pFile = fopen("circuit_squander.binary", "wb");
+    char* c_filename = filename.c_str();
+    
+    pFile = fopen(c_filename, "wb");
     if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
 
-    export_gate_list_to_binary( parameters, gates_block, pFile );
+    export_gate_list_to_binary( parameters, gates_block, pFile, verbosity );
 
     fclose(pFile);
     return;
@@ -2830,7 +2838,7 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block) {
 @return Return with ?????????
 */
 void 
-export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FILE* pFile) {
+export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FILE* pFile, int verbosity) {
 
     int qbit_num = gates_block->get_qbit_num();   
     fwrite(&qbit_num, sizeof(int), 1, pFile);
@@ -2881,12 +2889,21 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
 
             
         }
-        else if (gt_type == RX_OPERATION || gt_type == RY_OPERATION || gt_type == CRY_OPERATION || gt_type == RZ_OPERATION ) {
+        else if (gt_type == RX_OPERATION || gt_type == RY_OPERATION || gt_type == RZ_OPERATION ) {
             int target_qbit = op->get_target_qbit();
             fwrite(&target_qbit, sizeof(int), 1, pFile);
 
             fwrite(parameters_data, sizeof(double), parameter_num, pFile);
         }
+        else if (gt_type == CRY_OPERATION) {
+            int target_qbit = op->get_target_qbit();
+            int control_qbit = op->get_control_qbit();
+            fwrite(&target_qbit, sizeof(int), 1, pFile);
+            fwrite(&control_qbit, sizeof(int), 1, pFile);
+
+            fwrite(parameters_data, sizeof(double), parameter_num, pFile);
+        }
+        
         else if (gt_type == X_OPERATION || gt_type == SX_OPERATION) {
             int target_qbit = op->get_target_qbit();
             fwrite(&target_qbit, sizeof(int), 1, pFile);
@@ -2918,13 +2935,21 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
 @brief ?????????
 @return Return with ?????????
 */
-Gates_block* import_gate_list_from_binary(Matrix_real& parameters) {
+Gates_block* import_gate_list_from_binary(Matrix_real& parameters, const std::string& filename, int verbosity) {
+
+    std::stringstream sstream;
+    sstream << "Importing quantum circuit from binary file " << filename << std::endl;	
+    logging log;
+    log.verbose = verbosity;
+    log.print(sstream, 2);	
 
     FILE* pFile;
-    pFile = fopen("circuit_squander.binary", "rb");
+    char* c_filename = filename.c_str();
+    
+    pFile = fopen(c_filename, "rb");
     if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
 
-    Gates_block* ret = import_gate_list_from_binary(parameters, pFile);
+    Gates_block* ret = import_gate_list_from_binary(parameters, pFile, verbosity);
 
     fclose(pFile);
     return ret;
@@ -2934,28 +2959,32 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters) {
 @brief ?????????
 @return Return with ?????????
 */
-Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) {
+Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, int verbosity) {
+
+    std::stringstream sstream;
 
     int qbit_num;
     fread(&qbit_num, sizeof(int), 1, pFile);
-    std::cout << "qbit_num: " << qbit_num << std::endl;
+    sstream << "qbit_num: " << qbit_num << std::endl;
     Gates_block* gate_block = new Gates_block(qbit_num);
 
     int parameter_num;
     fread(&parameter_num, sizeof(int), 1, pFile);
-    std::cout << "parameter_num: " << parameter_num << std::endl;
+    sstream << "parameter_num: " << parameter_num << std::endl;
     parameters = Matrix_real(1, parameter_num);
     double* parameters_data = parameters.get_data();
 
     int gates_num;
     fread(&gates_num, sizeof(int), 1, pFile);
-    std::cout << "gates_num: " << gates_num << std::endl;
+    sstream << "gates_num: " << gates_num << std::endl;
 
     std::vector<int> gate_block_level_gates_num;
     std::vector<Gates_block*> gate_block_levels;
     gate_block_level_gates_num.push_back( gates_num );
     gate_block_levels.push_back(gate_block);
     int current_level = 0;
+
+    
 
     int iter_max = 1e5;
     int iter = 0;
@@ -2967,67 +2996,67 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) 
         //std::cout << "gate type: " << gt_type << std::endl;
 
         if (gt_type == CNOT_OPERATION) {
-            std::cout << "importing CNOT gate" << std::endl;
+            sstream << "importing CNOT gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
             fread(&control_qbit, sizeof(int), 1, pFile);
-            std::cout << "control_qbit: " << control_qbit << std::endl;
+            sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_cnot_to_end(target_qbit, control_qbit);
             gate_block_level_gates_num[current_level]--;
         }
         else if (gt_type == CZ_OPERATION) {
-            std::cout << "importing CZ gate" << std::endl;
+            sstream << "importing CZ gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
             fread(&control_qbit, sizeof(int), 1, pFile);
-            std::cout << "control_qbit: " << control_qbit << std::endl;
+            sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_cz_to_end(target_qbit, control_qbit);
             gate_block_level_gates_num[current_level]--;
         }
         else if (gt_type == CH_OPERATION) {
-            std::cout << "importing CH gate" << std::endl;
+            sstream << "importing CH gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
             fread(&control_qbit, sizeof(int), 1, pFile);
-            std::cout << "control_qbit: " << control_qbit << std::endl;
+            sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_ch_to_end(target_qbit, control_qbit);
             gate_block_level_gates_num[current_level]--;
         }
         else if (gt_type == SYC_OPERATION) {
-            std::cout << "importing SYCAMORE gate" << std::endl;
+            sstream << "importing SYCAMORE gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
             fread(&control_qbit, sizeof(int), 1, pFile);
-            std::cout << "control_qbit: " << control_qbit << std::endl;
+            sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_syc_to_end(target_qbit, control_qbit);
             gate_block_level_gates_num[current_level]--;
         }
         else if (gt_type == U3_OPERATION) {
-            std::cout << "importing U3 gate" << std::endl;
+            sstream << "importing U3 gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             int Theta;
             int Phi;
@@ -3047,11 +3076,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) 
         }
         else if (gt_type == RX_OPERATION) {
 
-            std::cout << "importing RX gate" << std::endl;
+            sstream << "importing RX gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
@@ -3062,11 +3091,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) 
         }
         else if (gt_type == RY_OPERATION) {
 
-            std::cout << "importing RY gate" << std::endl;
+            sstream << "importing RY gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
@@ -3075,17 +3104,17 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) 
             gate_block_level_gates_num[current_level]--;
 
         }
-        else if (gt_type == ADAPTIVE_OPERATION) {
+        else if (gt_type == CRY_OPERATION) {
 
-            std::cout << "importing CRY gate" << std::endl;
+            sstream << "importing CRY gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
             fread(&control_qbit, sizeof(int), 1, pFile);
-            std::cout << "control_qbit: " << control_qbit << std::endl;
+            sstream << "control_qbit: " << control_qbit << std::endl;
 
             fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
@@ -3096,11 +3125,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) 
         }
         else if (gt_type == RZ_OPERATION) {
 
-            std::cout << "importing RZ gate" << std::endl;
+            sstream << "importing RZ gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
@@ -3111,11 +3140,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) 
         }
         else if (gt_type == X_OPERATION) {
 
-            std::cout << "importing X gate" << std::endl;
+            sstream << "importing X gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_x_to_end(target_qbit);
             gate_block_level_gates_num[current_level]--;
@@ -3123,11 +3152,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) 
         }
         else if (gt_type == SX_OPERATION) {
 
-            std::cout << "importing SX gate" << std::endl;
+            sstream << "importing SX gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_sx_to_end(target_qbit);
             gate_block_level_gates_num[current_level]--;
@@ -3136,7 +3165,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) 
         else if (gt_type == BLOCK_OPERATION) {
 
 
-            std::cout << "******* importing gates block ********" << std::endl;
+            sstream << "******* importing gates block ********" << std::endl;
 
             int qbit_num_loc;
             fread(&qbit_num_loc, sizeof(int), 1, pFile);
@@ -3159,15 +3188,15 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) 
         }
         else if (gt_type == ADAPTIVE_OPERATION) {
 
-            std::cout << "importing adaptive gate" << std::endl;
+            sstream << "importing adaptive gate" << std::endl;
 
             int target_qbit;
             fread(&target_qbit, sizeof(int), 1, pFile);
-            std::cout << "target_qbit: " << target_qbit << std::endl;
+            sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
             fread(&control_qbit, sizeof(int), 1, pFile);
-            std::cout << "control_qbit: " << control_qbit << std::endl;
+            sstream << "control_qbit: " << control_qbit << std::endl;
 
             fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
@@ -3183,12 +3212,16 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile) 
             gate_block_level_gates_num.pop_back();
             current_level--;
             gate_block_level_gates_num[current_level]--;
-std::cout << "finishing gates block" << std::endl;
+            sstream << "finishing gates block" << std::endl;
         }
 
 
         iter++;
     }
+
+    logging log;
+    log.verbose = verbosity;
+    log.print(sstream, 3);	
 
   
     if ( iter == iter_max ) {
@@ -3196,7 +3229,7 @@ std::cout << "finishing gates block" << std::endl;
         throw error;
     }
 
-    return NULL;
+    return gate_block;
 
 }
 

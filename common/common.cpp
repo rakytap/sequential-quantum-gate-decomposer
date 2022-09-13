@@ -306,3 +306,43 @@ void mult( QGD_Complex16 a, Matrix& b ) {
 
 
 
+/**
+@brief ???????????????????
+@param a A complex numberr.
+*/
+double arg( const QGD_Complex16& a ) {
+
+
+    double angle;
+
+    if ( a.real > 0 && a.imag > 0 ) {
+        angle = std::atan(a.imag/a.real);
+        return angle;
+    }
+    else if ( a.real > 0 && a.imag <= 0 ) {
+        angle = std::atan(a.imag/a.real);
+        return angle;
+    }
+    else if ( a.real < 0 && a.imag > 0 ) {
+        angle = std::atan(a.imag/a.real) + M_PI;
+        return angle;
+    }
+    else if ( a.real < 0 && a.imag <= 0 ) {
+        angle = std::atan(a.imag/a.real) - M_PI;
+        return angle;
+    }
+    else if ( std::abs(a.real) < 1e-8 && a.imag > 0 ) {
+        angle = M_PI/2;
+        return angle;
+    }
+    else {
+        angle = -M_PI/2;
+        return angle;
+    }
+
+
+
+}
+
+
+

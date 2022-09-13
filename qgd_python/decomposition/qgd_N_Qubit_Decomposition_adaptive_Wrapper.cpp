@@ -444,6 +444,10 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Start_Decomposition(qgd_N_Qubit_Decom
 
 
 
+
+
+
+
 /**
 @brief Wrapper function to get the number of decomposing gates.
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
@@ -1098,6 +1102,38 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decom
 
 
 /**
+@brief Wrapper function to set custom layers to the gate structure that are intended to be used in the decomposition.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure_From_Binary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+
+
+
+    // initiate variables for input arguments
+    PyObject* filename_py=NULL; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &filename_py )) return Py_BuildValue("i", -1);
+
+    // determine the optimizaton method
+    PyObject* filename_string = PyObject_Str(filename_py);
+    PyObject* filename_string_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
+    const char* filename_C = PyBytes_AS_STRING(filename_string_unicode);
+    std::string filename_str( filename_C );
+
+    if (  self->decomp != NULL ) {
+        self->decomp->set_adaptive_gate_structure( filename_str );
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->set_adaptive_gate_structure( filename_str );
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+/**
 @brief Wrapper method to reorder the qubits in the decomposition class.
 @param 
 */
@@ -1148,6 +1184,28 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Reorder_Qubits(qgd_N_Qubit_Decomposit
 
 
     
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+
+
+/**
+@brief Wrapper method to reorder the qubits in the decomposition class.
+@param 
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+
+    if (  self->decomp != NULL ) {
+        self->decomp->add_layer_to_imported_gate_structure();
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->add_layer_to_imported_gate_structure();
+    }
 
     return Py_BuildValue("i", 0);
 }
@@ -1212,6 +1270,12 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Optimization_Blocks", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Blocks, METH_VARARGS,
      "Wrapper method to to set the number of gate blocks to be optimized in one shot."
+    },
+    {"set_Gate_Structure_From_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure_From_Binary, METH_VARARGS,
+     "Call to set custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER"
+    },
+    {"add_Layer_To_Imported_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure, METH_NOARGS,
+     "Call to add an adaptive layer to the gate structure previously imported gate structure"
     },
     {NULL}  /* Sentinel */
 };
