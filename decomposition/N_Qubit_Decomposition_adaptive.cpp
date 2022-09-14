@@ -445,6 +445,9 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     //measure the time for the decompositin
     tbb::tick_count start_time_loc = tbb::tick_count::now();
 
+    std::stringstream sstream;
+    sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+    print(sstream, 1);	
 
     // solve the optimization problem
     N_Qubit_Decomposition_custom cDecomp_custom;
@@ -493,7 +496,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
         optimization_tolerance = 1.5*current_minimum < 1e-2 ? 1.5*current_minimum : 1e-2;
     }
 
-    std::stringstream sstream;
+    sstream.str("");
     sstream << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
     print(sstream, 1);	
     return gate_structure_loc;
@@ -538,6 +541,10 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
 
         N_Qubit_Decomposition_custom cDecomp_custom_random, cDecomp_custom_close_to_zero;
+
+        std::stringstream sstream;
+        sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+        print(sstream, 1);	
 
 #ifndef __DFE__
         // try the decomposition withrandom and with close to zero initial values
@@ -1087,12 +1094,12 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
         Gate* gate_adaptive = layer->get_gate(0);
         double parameter = optimized_parameters_loc[parameter_idx];
         parameter = activation_function(parameter, 1);//limit_max);
-/*       
+       
         N_Qubit_Decomposition_custom cDecomp_custom( Umtx.copy(), qbit_num, false, initial_guess);
         cDecomp_custom.set_custom_gate_structure( gate_structure_loc );
         cDecomp_custom.add_gate_layers();
         std::cout << "bbbbbbbbbbbbbbbbbb 2: " << cDecomp_custom.optimization_problem( optimized_parameters_loc ) << std::endl;
-*/
+
         if ( gate_adaptive->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3  ) {
 
 
@@ -1193,12 +1200,12 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 		    param2[2] = lambda3;
 		    apply_global_phase(global_phase, Umtx);
 		}
-/*
+
 	        N_Qubit_Decomposition_custom cDecomp_custom_( Umtx.copy(), qbit_num, false, initial_guess);
                 cDecomp_custom_.set_custom_gate_structure( gate_structure_loc );
    	        cDecomp_custom_.add_gate_layers();
 	        std::cout << "aaaaaaaaaaaaaaaaaaaaa 2: " << cDecomp_custom_.optimization_problem( optimized_parameters_loc ) << std::endl;
-*/
+
             }
 
 
