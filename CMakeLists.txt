@@ -372,6 +372,10 @@ if (DEFINED ENV{QGD_DFE})
   list(APPEND CXX_FLAGS_DEBUG "-D__DFE__=1")
   list(APPEND CXX_FLAGS_RELEASE "-D__DFE__=1")
 
+  find_library(DFE_LIB qgdDFE
+               PATHS $ENV{DFE_LIB_DIR}
+               REQUIRED)
+
 endif()
 
 
@@ -385,24 +389,6 @@ target_compile_options(qgd PUBLIC
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
 )
 
-# External libarray for calculating QFT on DFE
-add_library( qgddfe SHARED IMPORTED )
-if (DEFINED ENV{QGD_DFE})
-    set_target_properties( qgddfe PROPERTIES IMPORTED_LOCATION /home/rakytap/qgd_DFE/qgdCPU/dist/release/lib/libqgdDFE.so )
-
-# adding linking options
-target_link_libraries( qgd PRIVATE
-    ${BLAS_LIBRARIES}
-    ${LAPACK_LIBRARIES}
-    ${LAPACKE_LIBRARIES}
-    ${TBBMALLOC_LIB}
-    ${TBBMALLOC_PROXY_LIB}
-    ${TBB_LIB}
-    ${GSL_LIB}
-    qgddfe
-)
-
-else()
 
 
 # adding linking options
@@ -414,9 +400,8 @@ target_link_libraries( qgd PRIVATE
     ${TBBMALLOC_PROXY_LIB}
     ${TBB_LIB}
     ${GSL_LIB}
-)
-
-endif()
+    ${DFE_LIB}
+    )
 
 
 target_include_directories(qgd PRIVATE
