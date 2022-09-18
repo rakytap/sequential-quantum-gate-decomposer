@@ -2165,7 +2165,7 @@ bool Gates_block::contains_adaptive_gate(int idx) {
 @brief Method to create random initial parameters for the optimization
 @return 
 */
-DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_real& parameters_mtx, int& gatesNum, int& redundantGateSets, bool only_derivates ) {
+DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_real& parameters_mtx, int& gatesNum, int& gateSetNum, int& redundantGateSets, bool only_derivates ) {
 
     int parameter_num = get_parameter_num();
     if ( parameter_num != parameters_mtx.size() ) {
@@ -2182,7 +2182,20 @@ DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_re
 std::cout << "chained gates num: " << chained_gates_num << std::endl;
 std::cout << "number of gates: " << gatesNum << std::endl;
 */
-    int gateSetNum = only_derivates ? parameter_num : parameter_num+1;
+
+
+    gateSetNum = only_derivates ? parameter_num : parameter_num+1;
+
+#ifdef __MPI__
+    int rem = gateSetNum % (4 * world_size );
+    if ( rem == 0 ) {
+        redundantGateSets = 0;
+    }
+    else {
+        redundantGateSets = (4 * world_size ) - (gateSetNum % (4 * world_size ));
+        gateSetNum = gateSetNum + redundantGateSets;
+    }
+#else
     int rem = gateSetNum % 4;
     if ( rem == 0 ) {
         redundantGateSets = 0;
@@ -2191,10 +2204,12 @@ std::cout << "number of gates: " << gatesNum << std::endl;
         redundantGateSets = 4 - (gateSetNum % 4);
         gateSetNum = gateSetNum + redundantGateSets;
     }
+#endif
 
 
     DFEgate_kernel_type* DFEgates = new DFEgate_kernel_type[gatesNum*gateSetNum];
     
+
     int gate_idx = 0;
     convert_to_DFE_gates( parameters_mtx, DFEgates, gate_idx );
 

@@ -121,6 +121,8 @@ protected:
     /// The convergence threshold in the optimization process
     double convergence_threshold;
 
+
+
 public:
 
 /** Nullary constructor of the class

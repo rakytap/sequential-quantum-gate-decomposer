@@ -23,7 +23,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Decomposition_Base.h"
 
-	
 
 
 // default layer numbers
@@ -91,6 +90,8 @@ Decomposition_Base::Decomposition_Base() {
     num_threads = openblas_get_num_threads();
 #endif
 
+
+
 }
 
 
@@ -156,6 +157,15 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
     num_threads = mkl_get_max_threads();
 #elif CBLAS==2
     num_threads = openblas_get_num_threads();
+#endif
+
+#ifdef __MPI__
+    // Get the number of processes
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    // Get the rank of the process
+    MPI_Comm_rank(MPI_COMM_WORLD, &current_rank);
+
 #endif
 
 }
@@ -392,11 +402,22 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
             }
+
+#ifdef __MPI__        
+            MPI_Bcast( (void*)optimized_parameters_gsl->data, parameter_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
+
         }
         else if ( initial_guess == CLOSE_TO_ZERO ) {
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
             }
+
+#ifdef __MPI__        
+            MPI_Bcast( (void*)optimized_parameters_gsl->data, parameter_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
         }
         else {
 	     std::stringstream sstream;

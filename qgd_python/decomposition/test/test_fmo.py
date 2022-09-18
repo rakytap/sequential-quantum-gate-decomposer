@@ -10,6 +10,11 @@ from qiskit.visualization import plot_histogram
 from qiskit import assemble,Aer
 from qiskit import execute
 
+try:
+    from mpi4py import MPI
+    MPI_imported = True
+except ModuleNotFoundError:
+    MPI_imported = False
 
 
 class Test_Decomposition:
