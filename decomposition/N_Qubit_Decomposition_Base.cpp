@@ -344,7 +344,7 @@ pure_DFE_time = 0.0;
             if ( iter_idx % 10000 == 0 ) {
                 std::stringstream sstream;
                 sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
-                print(sstream, 1);   
+                print(sstream, 0);   
                 std::string filename("initial_circuit_iteration.binary");
                 export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
             }
@@ -368,7 +368,7 @@ pure_DFE_time = 0.0;
 
                 std::stringstream sstream;
                 sstream << "leaving local minimum " << f0 << std::endl;
-                print(sstream, 1);   
+                print(sstream, 0);   
         
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*std::sqrt(f0)/factor;
@@ -404,7 +404,7 @@ pure_DFE_time = 0.0;
         adam_time  = adam_time + (adam_end-adam_start).seconds();
         sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
         
-        print(sstream, 1); 
+        print(sstream, 0); 
 
 }
 
@@ -791,9 +791,9 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
 
 #ifdef __DFE__
 ///////////////////////////////////////
-std::cout << "number of qubits: " << instance->qbit_num << std::endl;
-tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
-//if ( instance->qbit_num >= 5 ) {
+//std::cout << "number of qubits: " << instance->qbit_num << std::endl;
+//tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
+if ( instance->qbit_num >= 5 ) {
     Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
 
     int gatesNum, redundantGateSets, gateSetNum;
@@ -804,17 +804,12 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();////////////////////////////////
 
 #ifdef __MPI__
     // the number of decomposing layers are divided between the MPI processes
-std::cout << "current rank: " << instance->current_rank << " world size: " << instance->world_size << std::endl;
 
     int mpi_gateSetNum = gateSetNum / instance->world_size;
     int mpi_starting_gateSetIdx = gateSetNum/instance->world_size * instance->current_rank;
 
-std::cout << instance->current_rank << " mpi gateset: " << mpi_gateSetNum << std::endl;
-std::cout << instance->current_rank << " mpi_starting_gateSetIdx: " << mpi_starting_gateSetIdx << std::endl;
-
     Matrix_real mpi_trace_DFE_mtx(1, mpi_gateSetNum);
 
-std::cout << "zzzzzzzzzzzzzzzzzzzzzzzzzzz " << mpi_gateSetNum << std::endl;
 //uploadMatrix2DFE( Umtx_loc );
 //tbb::tick_count t0_DFE = tbb::tick_count::now();
     calcqgdKernelDFE( Umtx_loc.rows, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, mpi_trace_DFE_mtx.get_data() );
@@ -824,8 +819,6 @@ std::cout << "zzzzzzzzzzzzzzzzzzzzzzzzzzz " << mpi_gateSetNum << std::endl;
 
 #else
 
-
-std::cout << "zzzzzzzzzzzzzzzzzzzzzzzzzzz " << gateSetNum << std::endl;
 //uploadMatrix2DFE( Umtx_loc );
 //tbb::tick_count t0_DFE = tbb::tick_count::now();
     calcqgdKernelDFE( Umtx_loc.rows, DFEgates, gatesNum, gateSetNum, trace_DFE_mtx.get_data() );
@@ -834,23 +827,23 @@ std::cout << "zzzzzzzzzzzzzzzzzzzzzzzzzzz " << gateSetNum << std::endl;
 #endif  
 
   
-    double f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.rows;
-//    *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.rows;
+//    double f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.rows;
+    *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.rows;
     Matrix_real grad_components_DFE_mtx(1, parameter_num_loc);
     for (int idx=0; idx<parameter_num_loc; idx++) {
-        grad_components_DFE_mtx[idx] = -trace_DFE_mtx[idx+1]/Umtx_loc.rows;
-//        gsl_vector_set(grad, idx, -trace_DFE_mtx[idx+1]/Umtx_loc.rows);
+//        grad_components_DFE_mtx[idx] = -trace_DFE_mtx[idx+1]/Umtx_loc.rows;
+        gsl_vector_set(grad, idx, -trace_DFE_mtx[idx+1]/Umtx_loc.rows);
     }
 
     delete[] DFEgates;
 
-tbb::tick_count t1_DFE = tbb::tick_count::now();/////////////////////////////////
-std::cout << "uploaded data to DFE: " << (int)(gatesNum*gateSetNum*sizeof(DFEgate_kernel_type)) << " bytes" << std::endl;
-std::cout << "time elapsed DFE: " << (t1_DFE-t0_DFE).seconds() << ", expected time: " << (((double)Umtx_loc.rows*(double)Umtx_loc.rows*gatesNum*gateSetNum/get_chained_gates_num()/4 + 4578*3*get_chained_gates_num()))/350000000 + 0.001<< std::endl;
+//tbb::tick_count t1_DFE = tbb::tick_count::now();/////////////////////////////////
+//std::cout << "uploaded data to DFE: " << (int)(gatesNum*gateSetNum*sizeof(DFEgate_kernel_type)) << " bytes" << std::endl;
+//std::cout << "time elapsed DFE: " << (t1_DFE-t0_DFE).seconds() << ", expected time: " << (((double)Umtx_loc.rows*(double)Umtx_loc.rows*gatesNum*gateSetNumget_chained_gates_num()/4 + 4578*3*get_chained_gates_num()))/350000000 + 0.001<< std::endl;
 
 ///////////////////////////////////////
-//}
-//else {
+}
+else {
 
 #endif
 
@@ -883,10 +876,10 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
         }
     });
 
-#ifdef __DFE__
-//}
+//#ifdef __DFE__
+}
 
-
+/*
 tbb::tick_count t1_CPU = tbb::tick_count::now();/////////////////////////////////
 std::cout << "time elapsed CPU: " << (t1_CPU-t0_CPU).seconds() << " number of parameters: " << parameter_num_loc << std::endl;
 std::cout << "cost function CPU: " << *f0 << " and DFE: " << f0_DFE << std::endl;
@@ -908,7 +901,7 @@ std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
         throw error;
 
 #endif
-
+*/
 
 }
 
