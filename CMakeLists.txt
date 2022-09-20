@@ -108,7 +108,22 @@ find_package(PythonExtensions REQUIRED)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+#################################################################
+# find MPI libraries if MPI is enables by environment variable PIQUASSOBOOST_MPI
 
+if(DEFINED ENV{QGD_MPI})
+  find_package(MPI REQUIRED)
+
+  # openmpi which has a different c++ bindings
+  #add_definitions(-DOMPI_SKIP_MPICXX)
+
+  # setting basic compile flags
+  list(APPEND CXX_FLAGS_DEBUG "-D__MPI__")
+  list(APPEND CXX_FLAGS_RELEASE "-D__MPI__")
+
+  list(APPEND EXTRA_INCLUDES "${MPI_C_INCLUDE_PATH}") 
+
+endif()
 
 #################################################################
 # find CBLAS libraries. Hints are given by numpy library directory via variable BLAS_DIR
@@ -363,6 +378,14 @@ list(APPEND qgd_files
 )
 
 
+if(DEFINED ENV{QGD_MPI})
+
+    list(APPEND qgd_files 
+    ${PROJECT_SOURCE_DIR}/common/mpi_base.cpp
+    )
+
+endif()
+
 
 if (DEFINED ENV{QGD_DFE})
   list(APPEND qgd_files 
@@ -401,6 +424,7 @@ target_link_libraries( qgd PRIVATE
     ${TBB_LIB}
     ${GSL_LIB}
     ${DFE_LIB}
+    ${MPI_C_LIBRARIES}
     )
 
 

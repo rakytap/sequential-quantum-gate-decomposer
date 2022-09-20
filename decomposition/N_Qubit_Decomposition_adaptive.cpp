@@ -39,6 +39,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #endif
 
 
+
 /**
 @brief Method to create random initial parameters for the optimization
 @return 
@@ -725,6 +726,9 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 
     while ( (int)layers_to_remove.size() > layer_num_max ) {
         int remove_idx = rand() % layers_to_remove.size();
+#ifdef __MPI__        
+            MPI_Bcast( &remove_idx, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
         layers_to_remove.erase( layers_to_remove.begin() + remove_idx );
     }
 
@@ -789,8 +793,11 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 
             // randomly choose the solution between identical penalties
             if ( (rand() % 2) == 1 ) {
-                panelty_min = panelties[idx];
                 idx_min = idx;
+#ifdef __MPI__        
+                MPI_Bcast( &idx_min, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
+                panelty_min = panelties[idx];
             }
 
         }
@@ -1094,12 +1101,12 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
         Gate* gate_adaptive = layer->get_gate(0);
         double parameter = optimized_parameters_loc[parameter_idx];
         parameter = activation_function(parameter, 1);//limit_max);
-       
+/*       
         N_Qubit_Decomposition_custom cDecomp_custom( Umtx.copy(), qbit_num, false, initial_guess);
         cDecomp_custom.set_custom_gate_structure( gate_structure_loc );
         cDecomp_custom.add_gate_layers();
         std::cout << "bbbbbbbbbbbbbbbbbb 2: " << cDecomp_custom.optimization_problem( optimized_parameters_loc ) << std::endl;
-
+*/
         if ( gate_adaptive->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3  ) {
 
 
@@ -1200,12 +1207,12 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 		    param2[2] = lambda3;
 		    apply_global_phase(global_phase, Umtx);
 		}
-
+/*
 	        N_Qubit_Decomposition_custom cDecomp_custom_( Umtx.copy(), qbit_num, false, initial_guess);
                 cDecomp_custom_.set_custom_gate_structure( gate_structure_loc );
    	        cDecomp_custom_.add_gate_layers();
 	        std::cout << "aaaaaaaaaaaaaaaaaaaaa 2: " << cDecomp_custom_.optimization_problem( optimized_parameters_loc ) << std::endl;
-
+*/
             }
 
 
@@ -1358,6 +1365,9 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
 */
     while (layers.size()>0) { 
         int idx = std::rand() % layers.size();
+#ifdef __MPI__        
+        MPI_Bcast( &idx, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif
         block->add_gate( layers[idx] );
         layers.erase( layers.begin() + idx );
     }
