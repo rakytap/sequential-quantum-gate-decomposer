@@ -249,9 +249,18 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         std::stringstream sstream;
 	sstream << "please increase level limit" << std::endl;
         print(sstream, 0);	
-        exit(-1);
+        //exit(-1);
     }
-
+/*
+            FILE* pFile = fopen("unitary_compression_unitary", "rb");
+            if (pFile==NULL) {fputs ("File error to export unitary",stderr); exit (1);}
+int rows, cols;
+fread(&rows, sizeof(int), 1, pFile);
+fread(&cols, sizeof(int), 1, pFile);
+Umtx = Matrix(rows, cols );        
+fread(Umtx.get_data(), sizeof(QGD_Complex16), Umtx.size(), pFile);
+            fclose(pFile);
+*/
 #ifdef __DFE__
     uploadMatrix2DFE( Umtx );
 #endif
@@ -283,7 +292,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 Matrix_real parameters_imported;
 Gates_block* gate_structure_loc_imported = import_gate_list_from_binary(parameters_imported);
 */
-
+//exit(0);///////////////////
     sstream.str("");
     sstream << std::endl;
     sstream << std::endl;

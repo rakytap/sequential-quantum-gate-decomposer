@@ -3236,7 +3236,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
 
     logging log;
     log.verbose = verbosity;
-    log.print(sstream, 3);	
+    log.print(sstream, 4);	
 
   
     if ( iter == iter_max ) {
