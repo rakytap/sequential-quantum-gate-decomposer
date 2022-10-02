@@ -334,16 +334,15 @@ Gates_block* gate_structure_loc_imported = import_gate_list_from_binary(paramete
             gate_structure_loc = gate_structure_compressed;
             gate_structure_compressed = NULL;
             
+
             std::string filename("circuit_compression.binary");
             export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);    
-
-            FILE* pFile = fopen("unitary_compression.binary", "wb");
-            if (pFile==NULL) {fputs ("File error to export unitary",stderr); exit (1);}
-            fwrite(&Umtx.rows, sizeof(int), 1, pFile);
-            fwrite(&Umtx.cols, sizeof(int), 1, pFile);            
-            fwrite(Umtx.get_data(), sizeof(QGD_Complex16), Umtx.size(), pFile);
-            fclose(pFile);
-                        
+            std::string filename_unitary("unitary_compression_unitary");
+            std::cout<<"bbbbbbbbbbbbbbbbbbbbbb"<<std::endl;
+            export_unitary(Umtx, filename_unitary);
+            Umtx.print_matrix();
+            std::cout<<"aaaaaaaaaaaaaaaaaaaaaa"<<std::endl;
+            import_unitary_from_binary(filename_unitary).print_matrix();
         }
 
         iter++;
@@ -1207,7 +1206,6 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 		double phi3;
 
 		if (std::abs(stheta3_over2)<4e-8){
-		    std::cout<<"szutyok"<<std::endl;
 		    lambda3 = (std::atan2(U3_prod[3].imag,U3_prod[3].real)-alpha)/2;
 		    phi3 = lambda3;
 		}
@@ -1218,11 +1216,10 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
                 // the product U3 matrix
 		Matrix U3_new = matching_gate->calc_one_qubit_u3(theta3_over2,phi3,lambda3);
-		QGD_Complex16 global_phase;
-		global_phase.real = std::cos(alpha);
-		global_phase.imag = std::sin(alpha);
-		apply_global_phase(global_phase, U3_new);
-
+		QGD_Complex16 global_phase_new;
+		global_phase_new.real = std::cos(alpha);
+		global_phase_new.imag = std::sin(alpha);
+		apply_global_phase(global_phase_new, U3_new);
                 // test for the product U3 matrix
 		if (std::sqrt((U3_new[3].real-U3_prod[3].real)*(U3_new[3].real-U3_prod[3].real)) + std::sqrt((U3_new[3].imag-U3_prod[3].imag)*(U3_new[3].imag-U3_prod[3].imag)) < 1e-8 && (stheta3_over2*stheta3_over2+ctheta3_over2*ctheta3_over2) > 0.99) {
 
@@ -1230,7 +1227,8 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 		    param2[0] = theta3_over2;
 		    param2[1] = phi3;
 		    param2[2] = lambda3;
-		    apply_global_phase(global_phase, Umtx);
+		    apply_global_phase(global_phase_new, Umtx);
+		    calculate_new_global_phase(global_phase_new);
 		}
 /*
 	        N_Qubit_Decomposition_custom cDecomp_custom_( Umtx.copy(), qbit_num, false, initial_guess);
@@ -1488,7 +1486,16 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( std::string filenam
 
 }
 
+/**
+@brief set unitary matrix from binary file
+@param filename .binary file to import unitary from
+*/
+void 
+N_Qubit_Decomposition_adaptive::set_unitary( std::string filename ) {
 
+    Umtx = import_unitary_from_binary(filename);
+
+}
 
 /**
 @brief Call to append custom layers to the gate structure that are intended to be used in the decomposition.

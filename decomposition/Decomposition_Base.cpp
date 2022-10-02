@@ -81,6 +81,10 @@ Decomposition_Base::Decomposition_Base() {
 
     // The convergence threshold in the optimization process
     convergence_threshold = 1e-5;
+    
+    //global phase of the unitary matrix
+    global_phase.real = 1;
+    global_phase.imag = 1;
 
 
 
@@ -109,7 +113,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
    
     // the unitary operator to be decomposed
     Umtx = Umtx_in;
-
+   
     // logical value describing whether the decomposition was finalized or not
     decomposition_finalized = false;
 
@@ -151,6 +155,10 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
 
     // The convergence threshold in the optimization process
     convergence_threshold = 1e-5;
+    
+    //global phase of the unitary matrix
+    global_phase.real = 1;
+    global_phase.imag = 1;
 
 
 #if CBLAS==1
@@ -1480,11 +1488,58 @@ double Decomposition_Base::get_current_minimum( ) {
 }
 
 /**
-@brief Call to apply global phase of U3 matrices to matrix
+@brief Call to calculate new global phase 
 @param global_phase The value of the phase
 */
-void Decomposition_Base::apply_global_phase(QGD_Complex16 global_phase, Matrix& u3_gate){
-	mult(global_phase, u3_gate);
+void Decomposition_Base::calculate_new_global_phase(QGD_Complex16 global_phase_new){
+	global_phase = mult(global_phase, global_phase_new);
 	return;
 }
 
+/**
+@brief Call to calculate new global phase 
+@param global_phase The value of the phase
+*/
+QGD_Complex16 Decomposition_Base::get_global_phase( ){
+	return global_phase;
+}
+
+
+/**
+@brief Call to apply global phase of U3 matrices to matrix
+@param global_phase The value of the phase
+*/
+void Decomposition_Base::apply_global_phase(QGD_Complex16 global_phase_new, Matrix& u3_gate){
+	mult(global_phase_new, u3_gate);
+	return;
+}
+
+void Decomposition_Base::export_unitary(Matrix& Umtx, std::string& filename){
+	FILE* pFile;
+	char* c_filename = filename.c_str();
+	
+	pFile = fopen(c_filename, "wb");
+    	if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
+    	//std::cout << Umtx.rows << " " << Umtx.cols <<std::endl;
+    	fwrite(&Umtx.rows, sizeof(int), 1, pFile);
+   	fwrite(&Umtx.cols, sizeof(int), 1, pFile);            
+   	fwrite(Umtx.get_data(), sizeof(QGD_Complex16), Umtx.size(), pFile);
+    	fclose(pFile);
+	return;
+}
+
+Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
+	FILE* pFile;
+	char* c_filename = filename.c_str();
+	int cols;
+	int rows;
+	pFile = fopen(c_filename, "rb");
+    	if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
+	fread(&rows, sizeof(int), 1, pFile);
+	fread(&cols, sizeof(int), 1, pFile);
+	QGD_Complex16 data_in[rows*cols];
+    	fread(&data_in, sizeof(QGD_Complex16),rows*cols, pFile);
+    	fclose(pFile);
+  	Matrix Umtx_ = Matrix(&data_in[0], rows, cols);
+	return Umtx_;
+}

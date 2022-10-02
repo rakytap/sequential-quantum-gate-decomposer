@@ -189,7 +189,13 @@ void set_adaptive_gate_structure( Gates_block* gate_structure_in );
 @param filename
 */
 void set_adaptive_gate_structure( std::string filename );
-
+ 
+ 
+ /**
+ @brief Set unitary matrix 
+ @param filename file to read unitary from
+ */
+ void set_unitary( std::string filename );
 
 /**
 @brief Call to append custom layers to the gate structure that are intended to be used in the decomposition.
