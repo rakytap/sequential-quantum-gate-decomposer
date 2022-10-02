@@ -1132,6 +1132,28 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure_From_Binary( qgd_N
 
 }
 
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary_From_Binary(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ){
+    // initiate variables for input arguments
+    PyObject* filename_py=NULL; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &filename_py )) return Py_BuildValue("i", -1);
+    
+    PyObject* filename_string = PyObject_Str(filename_py);
+    PyObject* filename_string_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
+    const char* filename_C = PyBytes_AS_STRING(filename_string_unicode);
+    std::string filename_str( filename_C );
+    
+    if (  self->decomp != NULL ) {
+        self->decomp->set_unitary( filename_str );
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->set_unitary( filename_str );
+    }
+
+    return Py_BuildValue("i", 0);
+}
 
 /**
 @brief Wrapper method to reorder the qubits in the decomposition class.
@@ -1273,6 +1295,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Gate_Structure_From_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure_From_Binary, METH_VARARGS,
      "Call to set custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER"
+    },
+    {"set_Unitary_From_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary_From_Binary, METH_VARARGS,
+     "Call to set unitary matrix from a binary file created from SQUANDER"
     },
     {"add_Layer_To_Imported_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure, METH_NOARGS,
      "Call to add an adaptive layer to the gate structure previously imported gate structure"
