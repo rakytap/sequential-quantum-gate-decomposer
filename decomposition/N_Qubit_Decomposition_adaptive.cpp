@@ -338,11 +338,7 @@ Gates_block* gate_structure_loc_imported = import_gate_list_from_binary(paramete
             std::string filename("circuit_compression.binary");
             export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);    
             std::string filename_unitary("unitary_compression_unitary");
-            std::cout<<"bbbbbbbbbbbbbbbbbbbbbb"<<std::endl;
             export_unitary(Umtx, filename_unitary);
-            Umtx.print_matrix();
-            std::cout<<"aaaaaaaaaaaaaaaaaaaaaa"<<std::endl;
-            import_unitary_from_binary(filename_unitary).print_matrix();
         }
 
         iter++;

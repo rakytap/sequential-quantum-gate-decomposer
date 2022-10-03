@@ -1520,9 +1520,8 @@ void Decomposition_Base::export_unitary(Matrix& Umtx, std::string& filename){
 	
 	pFile = fopen(c_filename, "wb");
     	if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
-    	//std::cout << Umtx.rows << " " << Umtx.cols <<std::endl;
     	fwrite(&Umtx.rows, sizeof(int), 1, pFile);
-   	fwrite(&Umtx.cols, sizeof(int), 1, pFile);            
+   	fwrite(&Umtx.cols, sizeof(int), 1, pFile);          
    	fwrite(Umtx.get_data(), sizeof(QGD_Complex16), Umtx.size(), pFile);
     	fclose(pFile);
 	return;
@@ -1537,9 +1536,8 @@ Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
     	if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
 	fread(&rows, sizeof(int), 1, pFile);
 	fread(&cols, sizeof(int), 1, pFile);
-	QGD_Complex16 data_in[rows*cols];
-    	fread(&data_in, sizeof(QGD_Complex16),rows*cols, pFile);
+	Matrix Umtx_ = Matrix(rows, cols);
+	fread(Umtx_.get_data(), sizeof(QGD_Complex16), rows*cols, pFile);
     	fclose(pFile);
-  	Matrix Umtx_ = Matrix(&data_in[0], rows, cols);
 	return Umtx_;
 }
