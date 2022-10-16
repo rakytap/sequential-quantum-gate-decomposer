@@ -641,6 +641,19 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates( qgd_N_Qubit_Decomposition_
 
 }
 
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_Get_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+
+    // get the number of gates
+    QGD_Complex16 global_phase_C = self->decomp_base->get_global_phase();
+    PyObject* global_phase = PyTuple_New( (Py_ssize_t) 1 );
+    PyTuple_SetItem( global_phase, (Py_ssize_t) 0, PyFloat_FromDouble(global_phase_C.real));
+    PyTuple_SetItem( global_phase, (Py_ssize_t) 1, PyFloat_FromDouble(global_phase_C.imag));
+
+    return global_phase;
+
+}
 
 /**
 @brief Lists the gates decomposing the initial unitary. (These gates are the inverse gates of the gates bringing the intial matrix into unity.)
@@ -1284,6 +1297,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Unitary_From_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary_From_Binary, METH_VARARGS,
      "Call to set unitary matrix from a binary file created from SQUANDER"
+    },
+    {"Get_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Get_Global_Phase, METH_VARARGS,
+     "Call to get global phase"
     },
     {"add_Layer_To_Imported_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure, METH_NOARGS,
      "Call to add an adaptive layer to the gate structure previously imported gate structure"

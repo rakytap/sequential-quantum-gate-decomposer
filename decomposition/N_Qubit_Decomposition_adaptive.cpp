@@ -1191,7 +1191,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
                 parameter_idx_to_be_removed = parameter_idx_to_be_removed + U_gate_to_be_removed->get_parameter_num();
 
                 // calculate the new theta/2, phi, lambda parameters from U3_prod, and replace them in param2
-                // apply global phase on Umtx
+                //  global phase on Umtx
                 double ctheta3_over2 = std::sqrt(U3_prod[0].real*U3_prod[0].real+U3_prod[0].imag*U3_prod[0].imag); // cos( theta/2 )
                 double stheta3_over2 = std::sqrt(U3_prod[2].real*U3_prod[2].real+U3_prod[2].imag*U3_prod[2].imag); // sin( theta/2 )
                 double theta3_over2 = std::atan2(stheta3_over2,ctheta3_over2); // theta/2

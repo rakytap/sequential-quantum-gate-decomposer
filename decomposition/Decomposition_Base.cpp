@@ -1497,7 +1497,7 @@ void Decomposition_Base::calculate_new_global_phase(QGD_Complex16 global_phase_n
 }
 
 /**
-@brief Call to calculate new global phase 
+@brief Call to get global phase 
 @param global_phase The value of the phase
 */
 QGD_Complex16 Decomposition_Base::get_global_phase( ){
@@ -1517,7 +1517,6 @@ void Decomposition_Base::apply_global_phase(QGD_Complex16 global_phase_new, Matr
 void Decomposition_Base::export_unitary(Matrix& Umtx, std::string& filename){
 	FILE* pFile;
 	char* c_filename = filename.c_str();
-	
 	pFile = fopen(c_filename, "wb");
     	if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
     	fwrite(&Umtx.rows, sizeof(int), 1, pFile);
