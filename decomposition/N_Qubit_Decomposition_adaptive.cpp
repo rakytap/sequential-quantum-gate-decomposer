@@ -252,7 +252,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         //exit(-1);
     }
 /*
-            FILE* pFile = fopen("unitary_compression_unitary", "rb");
+            FILE* pFile = fopen("unitary_compression.binary", "rb");
             if (pFile==NULL) {fputs ("File error to export unitary",stderr); exit (1);}
 int rows, cols;
 fread(&rows, sizeof(int), 1, pFile);
@@ -261,6 +261,15 @@ Umtx = Matrix(rows, cols );
 fread(Umtx.get_data(), sizeof(QGD_Complex16), Umtx.size(), pFile);
             fclose(pFile);
 */
+
+
+/*
+apply_imported_gate_structure();
+set_adaptive_gate_structure( "initial_circuit_iteration_2_rd53_135_0.0049.binary" );
+add_layer_to_imported_gate_structure();
+*/
+//add_adaptive_gate_structure( "initial_circuit_iteration_2_rd53_135_0.0049.binary" );
+
 #ifdef __DFE__
     uploadMatrix2DFE( Umtx );
 #endif
@@ -328,7 +337,7 @@ Gates_block* gate_structure_loc_imported = import_gate_list_from_binary(paramete
             std::string filename("circuit_compression.binary");
             export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);    
 
-            FILE* pFile = fopen("unitary_compression_unitary", "wb");
+            FILE* pFile = fopen("unitary_compression.binary", "wb");
             if (pFile==NULL) {fputs ("File error to export unitary",stderr); exit (1);}
             fwrite(&Umtx.rows, sizeof(int), 1, pFile);
             fwrite(&Umtx.cols, sizeof(int), 1, pFile);            
@@ -476,7 +485,8 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
         int iter_max_loc = (double)param_num_loc/852 * 1e7;
         cDecomp_custom.set_iter_max( iter_max_loc );  
         cDecomp_custom.set_random_shift_count_max( 10000 );   
-        cDecomp_custom.set_adaptive_eta( true );                   
+        cDecomp_custom.set_adaptive_eta( true );      
+        cDecomp_custom.set_randomized_radius( radius );             
     }
     cDecomp_custom.start_decomposition(true);
     //cDecomp_custom.list_gates(0);
@@ -574,7 +584,8 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                     int iter_max_loc = (double)param_num_loc/852 * 1e7;
                     cDecomp_custom_random.set_iter_max( iter_max_loc );  
                     cDecomp_custom_random.set_random_shift_count_max( 10000 );       
-                    cDecomp_custom_random.set_adaptive_eta( true );            
+                    cDecomp_custom_random.set_adaptive_eta( true );    
+                    cDecomp_custom_random.set_randomized_radius( radius );          
                 }
                 cDecomp_custom_random.start_decomposition(true);
 
@@ -735,11 +746,13 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 
     while ( (int)layers_to_remove.size() > layer_num_max ) {
         int remove_idx = rand() % layers_to_remove.size();
-#ifdef __MPI__        
-            MPI_Bcast( &remove_idx, 1, MPI_INT, 0, MPI_COMM_WORLD);
-#endif
+       
         layers_to_remove.erase( layers_to_remove.begin() + remove_idx );
     }
+    
+#ifdef __MPI__        
+    MPI_Bcast( &layers_to_remove[0], layers_to_remove.size(), MPI_INT, 0, MPI_COMM_WORLD);
+#endif    
 
     // make a copy of the original unitary. (By removing trivial gates global phase might be added to the unitary)
     Matrix&& Umtx_orig = Umtx.copy();
@@ -803,14 +816,16 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
             // randomly choose the solution between identical penalties
             if ( (rand() % 2) == 1 ) {
                 idx_min = idx;
-#ifdef __MPI__        
-                MPI_Bcast( &idx_min, 1, MPI_INT, 0, MPI_COMM_WORLD);
-#endif
+
                 panelty_min = panelties[idx];
             }
 
         }
     }
+    
+#ifdef __MPI__        
+    MPI_Bcast( &idx_min, 1, MPI_INT, 0, MPI_COMM_WORLD);
+#endif    
 
     for (int idx=0; idx<panelties.size(); idx++) {
         if (idx==idx_min) continue;
@@ -882,8 +897,9 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance );
     if ( alg == ADAM || alg==BFGS2) {
         cDecomp_custom.set_iter_max( 1e5 );  
-        cDecomp_custom.set_random_shift_count_max( 10 );     
+        cDecomp_custom.set_random_shift_count_max( 1 );     
         cDecomp_custom.set_adaptive_eta( false );
+        cDecomp_custom.set_randomized_radius( radius );          
     }
     cDecomp_custom.start_decomposition(true);
     double current_minimum_tmp = cDecomp_custom.get_current_minimum();
@@ -919,7 +935,7 @@ N_Qubit_Decomposition_adaptive::get_panelty( Gates_block* gate_structure, Matrix
         
         if ( std::abs(std::sin(parameter)) < 0.999 && std::abs(std::cos(parameter)) < 1e-3 ) {
             // Condition of pure CNOT gate
-            panelty += 2;
+            panelty += 1;
         }
         else if ( std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3 ) {
             // Condition of pure Identity gate
@@ -927,7 +943,7 @@ N_Qubit_Decomposition_adaptive::get_panelty( Gates_block* gate_structure, Matrix
         }
         else {
             // Condition of controlled rotation gate
-            panelty += 4;
+            panelty += 1;
         }
 
         Gate* gate = gate_structure->get_gate( idx );
@@ -1454,6 +1470,8 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( Gates_block* gate_s
 
 
 
+
+
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
 @param filename
@@ -1461,10 +1479,70 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( Gates_block* gate_s
 void 
 N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( std::string filename ) {
 
+    if ( gate_structure ) {
+        delete gate_structure;
+        optimized_parameters_mtx = Matrix_real(0,0);
+    }
+
     gate_structure = import_gate_list_from_binary(optimized_parameters_mtx, filename, verbose);
 
 }
 
+
+
+/**
+@brief Call to append custom layers to the gate structure that are intended to be used in the decomposition.
+@param filename
+*/
+void 
+N_Qubit_Decomposition_adaptive::add_adaptive_gate_structure( std::string filename ) {
+
+
+
+    Matrix_real optimized_parameters_mtx_tmp;
+    Gates_block* gate_structure_tmp = import_gate_list_from_binary(optimized_parameters_mtx_tmp, filename, verbose);
+
+    if ( gate_structure ) {
+        gate_structure_tmp->combine( gate_structure );
+        delete gate_structure;
+        gate_structure = gate_structure_tmp;
+
+        Matrix_real optimized_parameters_mtx_tmp2( 1, optimized_parameters_mtx_tmp.size() + optimized_parameters_mtx.size() );
+        memcpy( optimized_parameters_mtx_tmp2.get_data(), optimized_parameters_mtx_tmp.get_data(), optimized_parameters_mtx_tmp.size()*sizeof(double) );
+        memcpy( optimized_parameters_mtx_tmp2.get_data()+optimized_parameters_mtx_tmp.size(), optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
+        optimized_parameters_mtx = optimized_parameters_mtx_tmp2;
+    }
+    else {
+        gate_structure = gate_structure_tmp;
+        optimized_parameters_mtx = optimized_parameters_mtx_tmp;
+    }
+
+}
+
+
+
+/**
+@brief Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gfate structure is released.
+*/
+void 
+N_Qubit_Decomposition_adaptive::apply_imported_gate_structure() {
+
+    if ( gate_structure==NULL ) return;
+
+    std::vector<Gate*> gates_loc = gate_structure->get_gates();
+    Matrix Umtx_new = get_transformed_matrix( optimized_parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx );
+
+    std::stringstream sstream;
+    sstream << "The cost function after applying the imported gate structure is:" << get_cost_function(Umtx_new) << std::endl;
+    print(sstream, 3);	
+
+    Umtx = Umtx_new;
+    delete gate_structure;
+    gate_structure = NULL;
+    optimized_parameters_mtx = Matrix_real(0,0);
+
+
+}
 
 
 /**

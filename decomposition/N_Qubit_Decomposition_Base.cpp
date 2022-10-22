@@ -56,6 +56,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     // logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     adaptive_eta = true;
 
+    // parameter to contron the radius of parameter randomization around the curren tminimum
+    radius = 1.0;
+
 }
 
 /**
@@ -89,6 +92,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 
     // logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     adaptive_eta = true;
+
+    // parameter to contron the radius of parameter randomization around the curren tminimum
+    radius = 1.0;
 
 
 }
@@ -305,10 +311,6 @@ pure_DFE_time = 0.0;
         sstream << "iter_max: " << iter_max << std::endl;
         print(sstream, 2);   
 
-
-        int sub_iter_max = iter_max > 1e5 ? 4000 : 2500;
-
-
         for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
 
             
@@ -341,7 +343,7 @@ pure_DFE_time = 0.0;
             }
     
 
-            if ( iter_idx % 10000 == 0 ) {
+            if ( iter_idx % 5000 == 0 ) {
                 std::stringstream sstream;
                 sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
                 print(sstream, 0);   
@@ -365,16 +367,15 @@ pure_DFE_time = 0.0;
                 random_shift_count++;
                 current_minimum_hold = current_minimum;        
                 int factor = rand() % 10 + 1;
-                double radius = 0.2;//2.5;
 
                 std::stringstream sstream;
-                sstream << "leaving local minimum " << f0 << std::endl;
+                sstream << "leaving local minimum " << f0 << ", radius of randomization: " << radius << std::endl;
                 print(sstream, 0);   
         
                 bool just_reset_optimizer = (rand() % 5) == 0; 
                 
                 if ( just_reset_optimizer ) {
-std::cout << "just resetting optimizer" << std::endl;
+
                 }
                 else {
         
@@ -390,7 +391,7 @@ std::cout << "just resetting optimizer" << std::endl;
                             solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx];
                         }
                     }
-                    std::cout << "changing " << double(changed_parameters)/num_of_parameters*100 << "\% of parameters in radius " << radius << std::endl;
+                    //std::cout << "changing " << double(changed_parameters)/num_of_parameters*100 << "\% of parameters in radius " << radius << std::endl;
                     
                 }
 
@@ -994,6 +995,18 @@ void
 N_Qubit_Decomposition_Base::set_adaptive_eta( bool adaptive_eta_in  ) {
 
     adaptive_eta = adaptive_eta_in;
+
+}
+
+
+
+/**
+@brief ?????????????
+*/
+void 
+N_Qubit_Decomposition_Base::set_randomized_radius( double radius_in  ) {
+
+    radius = radius_in;
 
 }
 

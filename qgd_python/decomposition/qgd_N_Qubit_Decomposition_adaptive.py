@@ -362,3 +362,27 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Layer_To_Imported_Gate_Structure()
 
+
+
+##
+# @brief Call to set the radius in which randomized parameters are generated around the current minimum duting the optimization process
+    def set_Randomized_Radius( self, radius ):  
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Randomized_Radius(radius)
+
+
+
+##
+# @brief Call to append custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
+    def add_Gate_Structure_From_Binary( self, filename ):  
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Gate_Structure_From_Binary( filename )
+
+
+
+##
+# @brief Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released.
+    def apply_Imported_Gate_Structure( self ):  
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Imported_Gate_Structure()
+

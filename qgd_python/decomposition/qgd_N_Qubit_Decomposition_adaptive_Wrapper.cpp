@@ -1092,10 +1092,49 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decom
     else if(  self->decomp_general != NULL ) {
         self->decomp_general->set_adaptive_gate_structure( qgd_op_block->gate );
     }
+    else {
+        return Py_BuildValue("i", 1);
+    }
 
 
     return Py_BuildValue("i", 0);
 
+
+}
+
+
+
+/**
+@brief Wrapper function to append custom layers to the gate structure that are intended to be used in the decomposition.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Gate_Structure_From_Binary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+
+
+
+    // initiate variables for input arguments
+    PyObject* filename_py=NULL; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &filename_py )) return Py_BuildValue("i", -1);
+
+    // determine the optimizaton method
+    PyObject* filename_string = PyObject_Str(filename_py);
+    PyObject* filename_string_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
+    const char* filename_C = PyBytes_AS_STRING(filename_string_unicode);
+    std::string filename_str( filename_C );
+
+    if (  self->decomp != NULL ) {
+        self->decomp->add_adaptive_gate_structure( filename_str );
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->add_adaptive_gate_structure( filename_str );
+    }
+    else {
+        return Py_BuildValue("i", 1);
+    }
+
+    return Py_BuildValue("i", 0);
 
 }
 
@@ -1126,6 +1165,32 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure_From_Binary( qgd_N
     }
     else if(  self->decomp_general != NULL ) {
         self->decomp_general->set_adaptive_gate_structure( filename_str );
+    }
+    else {
+        return Py_BuildValue("i", 1);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+/**
+@brief Wrapper function to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Imported_Gate_Structure( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+
+    if (  self->decomp != NULL ) {
+        self->decomp->apply_imported_gate_structure();
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->apply_imported_gate_structure();
+    }
+    else {
+        return Py_BuildValue("i", 1);
     }
 
     return Py_BuildValue("i", 0);
@@ -1206,9 +1271,47 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure(
     else if(  self->decomp_general != NULL ) {
         self->decomp_general->add_layer_to_imported_gate_structure();
     }
+    else {
+        return Py_BuildValue("i", 1);
+    }
 
     return Py_BuildValue("i", 0);
 }
+
+
+
+/**
+@brief Wrapper function to set the radius in which randomized parameters are generated around the current minimum duting the optimization process
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+@param args A tuple of the input arguments: gate_structure_dict (PyDict)
+@return Returns with zero on success.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    double radius = 1.0; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|d", &radius )) return Py_BuildValue("i", -1);
+
+
+    if (  self->decomp != NULL ) {
+        self->decomp->set_randomized_radius( radius );
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->set_randomized_radius( radius );
+    }
+    else {
+        return Py_BuildValue("i", 1);
+    }
+
+
+    return Py_BuildValue("i", 0);
+
+
+}
+
 
 
 
@@ -1274,8 +1377,17 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     {"set_Gate_Structure_From_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure_From_Binary, METH_VARARGS,
      "Call to set custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER"
     },
+    {"add_Gate_Structure_From_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Gate_Structure_From_Binary, METH_VARARGS,
+     "Call to append custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER"
+    },
     {"add_Layer_To_Imported_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure, METH_NOARGS,
      "Call to add an adaptive layer to the gate structure previously imported gate structure"
+    },
+    {"apply_Imported_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Imported_Gate_Structure, METH_NOARGS,
+     "Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released."
+    },
+    {"set_Randomized_Radius", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius, METH_VARARGS,
+     "Call to set the radius in which randomized parameters are generated around the current minimum duting the optimization process."
     },
     {NULL}  /* Sentinel */
 };

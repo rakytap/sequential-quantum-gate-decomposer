@@ -192,6 +192,18 @@ void set_adaptive_gate_structure( std::string filename );
 
 
 /**
+@brief Call to append custom layers to the gate structure that are intended to be used in the decomposition.
+@param filename
+*/
+void add_adaptive_gate_structure( std::string filename );
+
+/**
+@brief Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gfate structure is released.
+*/
+void apply_imported_gate_structure();
+
+
+/**
 @brief Call to add an adaptive layer to the gate structure previously imported gate structure
 @param filename
 */
