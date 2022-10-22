@@ -4,6 +4,7 @@ set(EXT_DIR ${PROJECT_SOURCE_DIR}/qgd_python/decomposition)
 
 add_library( qgd_N_Qubit_Decomposition_Wrapper MODULE
     ${EXT_DIR}/qgd_N_Qubit_Decomposition_Wrapper.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp        
 )
 
 
@@ -23,7 +24,7 @@ target_compile_options(qgd_N_Qubit_Decomposition_Wrapper PRIVATE
 )
 
 
-target_include_directories(qgd_N_Qubit_Decomposition_Wrapper PRIVATE
+target_include_directories(qgd_N_Qubit_Decomposition_Wrapper PRIVATE    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/decomposition/include
@@ -50,6 +51,7 @@ install(TARGETS qgd_N_Qubit_Decomposition_Wrapper LIBRARY
 
 add_library( qgd_N_Qubit_Decomposition_adaptive_Wrapper MODULE
     ${EXT_DIR}/qgd_N_Qubit_Decomposition_adaptive_Wrapper.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp    
 )
 
 
@@ -97,6 +99,7 @@ install(TARGETS qgd_N_Qubit_Decomposition_adaptive_Wrapper LIBRARY
 
 add_library( qgd_N_Qubit_Decomposition_custom_Wrapper MODULE
     ${EXT_DIR}/qgd_N_Qubit_Decomposition_custom_Wrapper.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp        
 )
 
 

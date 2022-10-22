@@ -876,7 +876,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
         }
     });
 
-//#ifdef __DFE__
+#ifdef __DFE__
 }
 
 /*
@@ -900,8 +900,9 @@ std::cout << "N_Qubit_Decomposition_Base::optimization_problem_combined" << std:
 std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
         throw error;
 
-#endif
 */
+#endif
+
 
 }
 

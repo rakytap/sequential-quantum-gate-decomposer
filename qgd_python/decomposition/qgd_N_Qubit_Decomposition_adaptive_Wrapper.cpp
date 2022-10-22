@@ -33,74 +33,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_adaptive_general.h"
 #include "Gates_block.h"
 
-#include <numpy/arrayobject.h>
-#include "matrix.h"
-#include "matrix_real.h"
+#include "numpy_interface.h"
 
-
-/**
-@brief Method to cleanup the memory when the python object becomes released
-@param capsule Pointer to the memory capsule
-*/
-void capsule_cleanup(PyObject* capsule) {
-
-    void *memory = PyCapsule_GetPointer(capsule, NULL);
-    // I'm going to assume your memory needs to be freed with free().
-    // If it needs different cleanup, perform whatever that cleanup is
-    // instead of calling free().
-    scalable_aligned_free(memory);
-
-
-}
-
-
-
-
-/**
-@brief Call to make a numpy array from data stored via void pointer.
-@param ptr pointer pointing to the data
-@param dim The number of dimensions
-@param shape array containing the dimensions.
-@param np_type The data type stored in the numpy array (see possible values at https://numpy.org/doc/1.17/reference/c-api.dtype.html)
-*/
-PyObject* array_from_ptr(void * ptr, int dim, npy_intp* shape, int np_type) {
-
-        if (PyArray_API == NULL) {
-            import_array();
-        }
-
-
-        // create numpy array
-        PyObject* arr = PyArray_SimpleNewFromData(dim, shape, np_type, ptr);
-
-        // set memory keeper for the numpy array
-        PyObject *capsule = PyCapsule_New(ptr, NULL, capsule_cleanup);
-        PyArray_SetBaseObject((PyArrayObject *) arr, capsule);
-
-        return arr;
-
-}
-
-
-
-/**
-@brief Call to make a numpy array from an instance of matrix class.
-@param mtx a matrix instance
-*/
-PyObject* matrix_real_to_numpy( matrix_base<double> &mtx ) {
-        // initialize Numpy API
-        import_array();
-
-
-        npy_intp shape[2];
-        shape[0] = (npy_intp) mtx.rows;
-        shape[1] = (npy_intp) mtx.cols;
-
-        double* data = mtx.get_data();
-        return array_from_ptr( (void*) data, 2, shape, NPY_DOUBLE);
-
-
-}
 
 
 
@@ -192,41 +126,6 @@ release_N_Qubit_Decomposition_adaptive_general( N_Qubit_Decomposition_adaptive_g
 
 
 
-/**
-@brief Call to create a PIC matrix representation of a numpy array
-*/
-Matrix
-numpy2matrix(PyObject *arr) {
-
-    // test C-style contiguous memory allocation of the arrays
-    if ( !PyArray_IS_C_CONTIGUOUS(arr) ) {
-        std::cout << "array is not memory contiguous" << std::endl;
-    }
-
-    // get the pointer to the data stored in the input matrices
-    QGD_Complex16* data = (QGD_Complex16*)PyArray_DATA(arr);
-
-    // get the dimensions of the array self->C
-    int dim_num = PyArray_NDIM( arr );
-    npy_intp* dims = PyArray_DIMS(arr);
-
-    // create PIC version of the input matrices
-    if (dim_num == 2) {
-        Matrix mtx = Matrix(data, dims[0], dims[1]);
-        return mtx;
-    }
-    else if (dim_num == 1) {
-        Matrix mtx = Matrix(data, dims[0], 1);
-        return mtx;
-    }
-    else {
-        std::cout << "numpy2matrix: Wrong matrix dimension was given" << std::endl;
-        return Matrix(0,0);
-    }
-
-
-
-}
 
 
 
@@ -772,7 +671,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Optimized_Parameters( qgd_N_Qubit
     self->decomp_base->get_optimized_parameters(parameters);
 
     // reversing the order
-    matrix_base<double> parameters_mtx_reversed(1, parameter_num);
+    Matrix_real parameters_mtx_reversed(1, parameter_num);
     double* parameters_reversed = parameters_mtx_reversed.get_data();
     for (int idx=0; idx<parameter_num; idx++ ) {
         parameters_reversed[idx] = parameters[parameter_num-1-idx];
