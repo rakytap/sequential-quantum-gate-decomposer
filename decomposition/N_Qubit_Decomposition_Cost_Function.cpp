@@ -33,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 double get_cost_function(Matrix matrix) {
 
-    int matrix_size = matrix.rows;
+    int matrix_size = matrix.cols ;
 /*
     tbb::combinable<double> priv_partial_cost_functions{[](){return 0;}};
     tbb::parallel_for( tbb::blocked_range<int>(0, matrix_size, 1), functor_cost_fnc( matrix, &priv_partial_cost_functions ));
@@ -100,6 +100,7 @@ double get_cost_function(Matrix matrix) {
     for (int idx=0; idx<matrix_size; idx++) {
         
         trace_real += matrix[idx*matrix.stride + idx].real;
+
     }
 
     //double cost_function = std::sqrt(1.0 - trace_real/matrix_size);

@@ -87,6 +87,8 @@ protected:
     optimization_aglorithms alg;
     /// logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     bool adaptive_eta;
+    /// parameter to contron the radius of parameter randomization around the curren tminimum
+    double radius;
 
 
 
@@ -249,6 +251,12 @@ void set_optimizer( optimization_aglorithms alg_in );
 @brief ?????????????
 */
 void set_adaptive_eta( bool adaptive_eta_in  );
+
+
+/**
+@brief ?????????????
+*/
+void set_randomized_radius( double radius_in  );
 
 };
 

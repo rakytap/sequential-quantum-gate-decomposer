@@ -47,7 +47,7 @@ void uploadMatrix2DFE( Matrix& input ) {
 std::cout << "size in bytes of uploading: " << element_num*sizeof(float) << std::endl;    
 
     // load the data to LMEM
-    load2LMEM( input32_data, input.rows );
+    load2LMEM( input32_data, input.rows, input.cols );
 
 }
 

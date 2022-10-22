@@ -56,6 +56,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     // logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     adaptive_eta = true;
 
+    // parameter to contron the radius of parameter randomization around the curren tminimum
+    radius = 1.0;
+
 }
 
 /**
@@ -89,6 +92,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 
     // logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     adaptive_eta = true;
+
+    // parameter to contron the radius of parameter randomization around the curren tminimum
+    radius = 1.0;
 
 
 }
@@ -305,10 +311,6 @@ pure_DFE_time = 0.0;
         sstream << "iter_max: " << iter_max << std::endl;
         print(sstream, 2);   
 
-
-        int sub_iter_max = iter_max > 1e5 ? 4000 : 2500;
-
-
         for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
 
             
@@ -341,7 +343,7 @@ pure_DFE_time = 0.0;
             }
     
 
-            if ( iter_idx % 10000 == 0 ) {
+            if ( iter_idx % 5000 == 0 ) {
                 std::stringstream sstream;
                 sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
                 print(sstream, 0);   
@@ -367,13 +369,32 @@ pure_DFE_time = 0.0;
                 int factor = rand() % 10 + 1;
 
                 std::stringstream sstream;
-                sstream << "leaving local minimum " << f0 << std::endl;
+                sstream << "leaving local minimum " << f0 << ", radius of randomization: " << radius << std::endl;
                 print(sstream, 0);   
         
-                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*std::sqrt(f0)/factor;
-                    //solution_guess_tmp->data[jdx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;            
+                bool just_reset_optimizer = (rand() % 5) == 0; 
+                
+                if ( just_reset_optimizer ) {
+
                 }
+                else {
+        
+                    int changed_parameters = 0;
+                    for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                        if ( rand() % 3 == 0 ) {
+                            solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*std::sqrt(f0)/factor*radius;
+//                            solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*f0/factor*radius;
+                            //solution_guess_tmp->data[jdx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;            
+                            changed_parameters++;
+                        }
+                        else {
+                            solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx];
+                        }
+                    }
+                    //std::cout << "changing " << double(changed_parameters)/num_of_parameters*100 << "\% of parameters in radius " << radius << std::endl;
+                    
+                }
+
 
 #ifdef __MPI__        
                 MPI_Bcast( (void*)solution_guess_tmp->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -812,7 +833,7 @@ if ( instance->qbit_num >= 5 ) {
 
 //uploadMatrix2DFE( Umtx_loc );
 //tbb::tick_count t0_DFE = tbb::tick_count::now();
-    calcqgdKernelDFE( Umtx_loc.rows, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, mpi_trace_DFE_mtx.get_data() );
+    calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, mpi_trace_DFE_mtx.get_data() );
 
     int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
     MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
@@ -821,25 +842,25 @@ if ( instance->qbit_num >= 5 ) {
 
 //uploadMatrix2DFE( Umtx_loc );
 //tbb::tick_count t0_DFE = tbb::tick_count::now();
-    calcqgdKernelDFE( Umtx_loc.rows, DFEgates, gatesNum, gateSetNum, trace_DFE_mtx.get_data() );
+    calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_DFE_mtx.get_data() );
 //tbb::tick_count t1_DFE = tbb::tick_count::now();
 //pure_DFE_time = pure_DFE_time + (t1_DFE-t0_DFE).seconds();
 #endif  
 
   
-//    double f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.rows;
-    *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.rows;
+//    double f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
+    *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
     Matrix_real grad_components_DFE_mtx(1, parameter_num_loc);
     for (int idx=0; idx<parameter_num_loc; idx++) {
-//        grad_components_DFE_mtx[idx] = -trace_DFE_mtx[idx+1]/Umtx_loc.rows;
-        gsl_vector_set(grad, idx, -trace_DFE_mtx[idx+1]/Umtx_loc.rows);
+//        grad_components_DFE_mtx[idx] = -trace_DFE_mtx[idx+1]/Umtx_loc.cols;
+        gsl_vector_set(grad, idx, -trace_DFE_mtx[idx+1]/Umtx_loc.cols);
     }
 
     delete[] DFEgates;
 
 //tbb::tick_count t1_DFE = tbb::tick_count::now();/////////////////////////////////
 //std::cout << "uploaded data to DFE: " << (int)(gatesNum*gateSetNum*sizeof(DFEgate_kernel_type)) << " bytes" << std::endl;
-//std::cout << "time elapsed DFE: " << (t1_DFE-t0_DFE).seconds() << ", expected time: " << (((double)Umtx_loc.rows*(double)Umtx_loc.rows*gatesNum*gateSetNumget_chained_gates_num()/4 + 4578*3*get_chained_gates_num()))/350000000 + 0.001<< std::endl;
+//std::cout << "time elapsed DFE: " << (t1_DFE-t0_DFE).seconds() << ", expected time: " << (((double)Umtx_loc.rows*(double)Umtx_loc.cols*gatesNum*gateSetNum/get_chained_gates_num()/4 + 4578*3*get_chained_gates_num()))/350000000 + 0.001<< std::endl;
 
 ///////////////////////////////////////
 }
@@ -899,7 +920,6 @@ for ( int idx=0; idx<parameter_num_loc; idx++ ) {
 std::cout << "N_Qubit_Decomposition_Base::optimization_problem_combined" << std::endl;
 std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
         throw error;
-
 */
 #endif
 
@@ -975,6 +995,18 @@ void
 N_Qubit_Decomposition_Base::set_adaptive_eta( bool adaptive_eta_in  ) {
 
     adaptive_eta = adaptive_eta_in;
+
+}
+
+
+
+/**
+@brief ?????????????
+*/
+void 
+N_Qubit_Decomposition_Base::set_randomized_radius( double radius_in  ) {
+
+    radius = radius_in;
 
 }
 

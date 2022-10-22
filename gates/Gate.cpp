@@ -273,7 +273,7 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
 
            if ( control_qbit<0 || ((current_idx_loc >> control_qbit) & 1) ) {
 
-                for ( int col_idx=0; col_idx<matrix_size; col_idx++) {
+                for ( int col_idx=0; col_idx<input.cols; col_idx++) {
    			
                     int index      = row_offset+col_idx;
                     int index_pair = row_offset_pair+col_idx;                
@@ -298,8 +298,8 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
             }
             else if (deriv) {
                 // when calculating derivatives, the constant element should be zeros
-                memset( input.get_data()+row_offset, 0.0, matrix_size*sizeof(QGD_Complex16));
-                memset( input.get_data()+row_offset_pair, 0.0, matrix_size*sizeof(QGD_Complex16));
+                memset( input.get_data()+row_offset, 0.0, input.cols*sizeof(QGD_Complex16));
+                memset( input.get_data()+row_offset_pair, 0.0, input.cols*sizeof(QGD_Complex16));
             }
             else {
                 // leave the state as it is
@@ -341,7 +341,7 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
 
 //std::cout << "target qbit: " << target_qbit << std::endl;
 
-    while ( current_idx_pair < matrix_size ) {
+    while ( current_idx_pair < input.cols ) {
 
         for(int idx=0; idx<index_step_target; idx++) { 
         //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
