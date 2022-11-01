@@ -927,7 +927,6 @@ std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
 
 
 
-
 /**
 @brief ?????????????
 */

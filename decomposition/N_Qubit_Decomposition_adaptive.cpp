@@ -1462,10 +1462,6 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( Gates_block* gate_s
 
 }
 
-
-
-
-
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
 @param filename

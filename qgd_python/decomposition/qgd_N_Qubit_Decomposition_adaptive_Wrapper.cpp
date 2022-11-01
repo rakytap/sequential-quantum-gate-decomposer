@@ -1091,6 +1091,24 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary_From_Binary(qgd_N_Qubit_D
     // initiate variables for input arguments
     PyObject* filename_py=NULL; 
 
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &filename_py )) return Py_BuildValue("i", -1);
+    
+    PyObject* filename_string = PyObject_Str(filename_py);
+    PyObject* filename_string_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
+    const char* filename_C = PyBytes_AS_STRING(filename_string_unicode);
+    std::string filename_str( filename_C );
+    
+    if (  self->decomp != NULL ) {
+        self->decomp->set_unitary( filename_str );
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->set_unitary( filename_str );
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
 /**
 @brief Wrapper function to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released.
 */
