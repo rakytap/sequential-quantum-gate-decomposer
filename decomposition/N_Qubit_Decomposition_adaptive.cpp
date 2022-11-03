@@ -1483,9 +1483,19 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( std::string filenam
 @param filename .binary file to import unitary from
 */
 void 
-N_Qubit_Decomposition_adaptive::set_unitary( std::string filename ) {
+N_Qubit_Decomposition_adaptive::set_unitary_from_file( std::string filename ) {
 
     Umtx = import_unitary_from_binary(filename);
+
+}
+/**
+@brief call to set Unitary from mtx
+@param matrix to set over
+*/
+void 
+N_Qubit_Decomposition_adaptive::set_unitary( Matrix& Umtx_new ) {
+
+    Umtx = Umtx_new;
 
 }
 

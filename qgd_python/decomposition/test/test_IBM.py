@@ -128,14 +128,13 @@ class Test_Decomposition:
         from scipy.io import loadmat
     
         # load the unitary from file
-        data = loadmat('Umtx.mat')  
+        data = loadmat('Umtx.mat')
         # The unitary to be decomposed  
         Umtx = data['Umtx']
-        
-
         # creating a class to decompose the unitary
         cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
-
+        Umtx_assert=cDecompose.get_Unitary()
+        assert(np.sum(np.abs(Umtx.conj().T-np.asarray(Umtx_assert)))<0.01)
 
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( 3 )
@@ -174,7 +173,9 @@ class Test_Decomposition:
         product_matrix = np.eye(16)*2 - product_matrix - product_matrix.conj().T
         # the error of the decomposition
         decomposition_error = (np.real(np.trace(product_matrix)))/2
-       
+        #print(cDecompose.get_Global_Phase())
+        #assert(np.abs(cDecompose.get_Global_Phase())<2*np.pi)
+
         print('The error of the decomposition is ' + str(decomposition_error))
 
         assert( decomposition_error < 1e-3 )
