@@ -133,8 +133,9 @@ class Test_Decomposition:
         Umtx = data['Umtx']
         # creating a class to decompose the unitary
         cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
-        Umtx_assert=cDecompose.get_Unitary()
-        assert(np.sum(np.abs(Umtx.conj().T-np.asarray(Umtx_assert)))<0.01)
+        Umtx_assert=np.asarray(cDecompose.get_Unitary())
+        #cDecompose.get_Unitary()
+        assert(np.sum(np.abs(Umtx.conj().T-cDecompose.get_Unitary()))<0.01)
 
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( 3 )

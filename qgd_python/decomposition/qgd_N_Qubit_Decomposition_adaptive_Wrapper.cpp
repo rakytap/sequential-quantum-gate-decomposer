@@ -1137,16 +1137,12 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Imported_Gate_Structure( qgd_N_
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self) {
 
-    //PyObject * parameters_arr = NULL;
 
-    Matrix Unitary_mtx = self->decomp->get_Umtx();
+    Matrix Unitary_mtx = self->decomp->get_Umtx().copy();
     
     // convert to numpy array
     Unitary_mtx.set_owner(false);
     PyObject *Unitary_py = matrix_to_numpy( Unitary_mtx );
-
-
-    //Py_DECREF(parameters_arr);
 
     return Unitary_py;
 }
