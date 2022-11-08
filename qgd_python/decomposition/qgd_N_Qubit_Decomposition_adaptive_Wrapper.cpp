@@ -220,9 +220,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
 
 
     // create QGD version of the Umtx
-    Matrix Umtx_mtx = numpy2matrix(self->Umtx);  
-
-
+    Matrix Umtx_mtx = numpy2matrix(self->Umtx);
 
 
     // determine the optimizaton method
@@ -641,18 +639,43 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates( qgd_N_Qubit_Decomposition_
 
 }
 
+/**
+@brief returns the angle of the global phase (the radius us always sqrt(2))
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+*/
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
+    QGD_Complex16 global_phase_C = self->decomp_base->get_global_phase();
+    PyObject* global_phase = PyFloat_FromDouble( std::atan2(global_phase_C.imag,global_phase_C.real));
+    return global_phase;
+    
+}
+
+/**
+@brief sets the global phase to the new angle given
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+@param arg Global_phase_new_angle the angle to be set
+*/
+static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args) {
+	double global_phase_new_angle;
+    if (!PyArg_ParseTuple(args, "|d", &global_phase_new_angle )) return Py_BuildValue("i", -1);
+    std::cout<<global_phase_new_angle<<std::endl;
+    self->decomp_base->set_global_phase(global_phase_new_angle);
+    return Py_BuildValue("i", 0);
+    
+}
+
+/**
+@brief applies the global phase to the Unitary matrix
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+*/
+static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
     // get the number of gates
-    QGD_Complex16 global_phase_C = self->decomp_base->get_global_phase();
-    PyObject* global_phase = PyTuple_New( (Py_ssize_t) 1 );
-    PyTuple_SetItem( global_phase, (Py_ssize_t) 0, PyFloat_FromDouble(global_phase_C.real));
-    PyTuple_SetItem( global_phase, (Py_ssize_t) 1, PyFloat_FromDouble(global_phase_C.imag));
-
-    return global_phase;
-
+    self->decomp_base->apply_global_phase();
+    return Py_BuildValue("i", 0);
+    
 }
 
 /**
@@ -1138,7 +1161,7 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self) {
 
 
-    Matrix Unitary_mtx = self->decomp->get_Umtx().copy();
+    Matrix&& Unitary_mtx = self->decomp->get_Umtx().copy();
     
     // convert to numpy array
     Unitary_mtx.set_owner(false);
@@ -1147,14 +1170,30 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary( qgd_N_Qubit_Decompositio
     return Unitary_py;
 }
 
-static void
+static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
-       PyObject * Umtx_arr = NULL;
+           if ( self->Umtx != NULL ) {
+        // release the unitary to be decomposed
+        Py_DECREF(self->Umtx);    
+        self->Umtx = NULL;
+       }
+       PyObject *Umtx_arg = NULL;
+       //Parse arguments 
+       if (!PyArg_ParseTuple(args, "|O", &Umtx_arg )) return Py_BuildValue("i", -1);
+	   // convert python object array to numpy C API array
+		if ( Umtx_arg == NULL ) return -1;
+		self->Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
-       Umtx_arr = PyArray_FROM_OTF(Umtx_arr, NPY_CDOUBLE, NPY_ARRAY_IN_ARRAY);
-       Matrix&& Umtx_new = numpy2matrix( Umtx_arr );
-       self->decomp->set_unitary(Umtx_new);
-	   return;
+		// test C-style contiguous memory allocation of the array
+		if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
+		    std::cout << "Umtx is not memory contiguous" << std::endl;
+		}
+
+
+		// create QGD version of the Umtx
+		Matrix Umtx_mtx = numpy2matrix(self->Umtx);
+       self->decomp->set_unitary(Umtx_mtx);
+       return Py_BuildValue("i", 0);
 }
 
 /**
@@ -1245,8 +1284,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure(
 @param args A tuple of the input arguments: gate_structure_dict (PyDict)
 @return Returns with zero on success.
 */
-static PyObject *
-qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
 
     // initiate variables for input arguments
     double radius = 1.0; 
@@ -1341,12 +1379,17 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     {"set_Unitary_From_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary_From_Binary, METH_VARARGS,
      "Call to set unitary matrix from a binary file created from SQUANDER"
     },
-        {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary, METH_VARARGS,
+    {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary, METH_VARARGS,
      "Call to set unitary matrix to a numpy matrix"
     },
     {"get_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase, METH_NOARGS,
      "Call to get global phase"
     },
+    {"set_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase, METH_VARARGS,
+     "Call to set global phase"
+    },
+    {"apply_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase, METH_NOARGS,
+     "Call to apply global phase on Unitary matrix"},
     {"get_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary, METH_NOARGS,
      "Call to get Unitary Matrix"
     },

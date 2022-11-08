@@ -404,12 +404,24 @@ void calculate_new_global_phase( QGD_Complex16 global_phase_new );
 */
 QGD_Complex16 get_global_phase( );
 
+/**
+@brief Call to set global phase 
+@param global_phase_new The value of the new phase
+*/
+void Decomposition_Base::set_global_phase(double global_phase_new_angle);
+
 
 /**
 @brief Call to apply the global phase to a matrix
 @return Returns with the minimum of the cost function
 */
-void apply_global_phase(QGD_Complex16 global_phase_new, Matrix& u3_gate);
+void apply_global_phase_to_u3(QGD_Complex16 global_phase_new, Matrix& u3_gate);
+
+/**
+@brief Call to apply the current global phase to the unitary matrix
+@param global_phase The value of the phase
+*/
+void Decomposition_Base::apply_global_phase();
 
 /**
 @brief   exports unitary matrix to binary file

@@ -1504,13 +1504,33 @@ QGD_Complex16 Decomposition_Base::get_global_phase( ){
 	return global_phase;
 }
 
+/**
+@brief Call to set global phase 
+@param global_phase_new The value of the new phase
+*/
+void Decomposition_Base::set_global_phase(double global_phase_new_angle){
+	global_phase.real = sqrt(2)*cos(global_phase_new_angle);
+	global_phase.imag = sqrt(2)*sin(global_phase_new_angle);
+	return;
+}
 
 /**
 @brief Call to apply global phase of U3 matrices to matrix
 @param global_phase The value of the phase
 */
-void Decomposition_Base::apply_global_phase(QGD_Complex16 global_phase_new, Matrix& u3_gate){
+void Decomposition_Base::apply_global_phase_to_u3(QGD_Complex16 global_phase_new, Matrix& u3_gate){
 	mult(global_phase_new, u3_gate);
+	return;
+}
+
+/**
+@brief Call to apply the current global phase to the unitary matrix
+@param global_phase The value of the phase
+*/
+void Decomposition_Base::apply_global_phase(){
+	mult(global_phase, Umtx);
+	global_phase.real = 1;
+	global_phase.imag = 1;
 	return;
 }
 
