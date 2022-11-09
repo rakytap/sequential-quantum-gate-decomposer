@@ -45,6 +45,7 @@ install(TARGETS qgd_U3 LIBRARY
 
 add_library( qgd_CNOT MODULE
     ${EXT_DIR}/qgd_CNOT.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
@@ -86,6 +87,7 @@ install(TARGETS qgd_CNOT LIBRARY
 
 add_library( qgd_CZ MODULE
     ${EXT_DIR}/qgd_CZ.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
@@ -129,6 +131,7 @@ install(TARGETS qgd_CZ LIBRARY
 
 add_library( qgd_CH MODULE
     ${EXT_DIR}/qgd_CH.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
@@ -215,6 +218,7 @@ install(TARGETS qgd_Gates_Block LIBRARY
 
 add_library( qgd_SYC MODULE
     ${EXT_DIR}/qgd_SYC.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
@@ -260,6 +264,7 @@ install(TARGETS qgd_SYC LIBRARY
 
 add_library( qgd_RY MODULE
     ${EXT_DIR}/qgd_RY.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
@@ -306,6 +311,7 @@ install(TARGETS qgd_RY LIBRARY
 
 add_library( qgd_RZ MODULE
     ${EXT_DIR}/qgd_RZ.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
@@ -352,6 +358,7 @@ install(TARGETS qgd_RZ LIBRARY
 
 add_library( qgd_RX MODULE
     ${EXT_DIR}/qgd_RX.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
@@ -398,6 +405,7 @@ install(TARGETS qgd_RX LIBRARY
 
 add_library( qgd_X MODULE
     ${EXT_DIR}/qgd_X.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
@@ -444,6 +452,7 @@ install(TARGETS qgd_X LIBRARY
 
 add_library( qgd_SX MODULE
     ${EXT_DIR}/qgd_SX.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
