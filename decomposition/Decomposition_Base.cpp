@@ -1529,8 +1529,7 @@ void Decomposition_Base::apply_global_phase_to_u3(QGD_Complex16 global_phase_new
 */
 void Decomposition_Base::apply_global_phase(){
 	mult(global_phase, Umtx);
-	global_phase.real = 1;
-	global_phase.imag = 1;
+	set_global_phase(3.141592653589793 / 4);
 	return;
 }
 

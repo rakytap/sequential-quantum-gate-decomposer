@@ -1223,9 +1223,8 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 		    param2[0] = theta3_over2;
 		    param2[1] = phi3;
 		    param2[2] = lambda3;
-		    calculate_new_global_phase(global_phase_new);
-	        std::cout << "aaaaaaaaaaaaaaaaaaaaa"<< std::endl;
-		    apply_global_phase();
+    		apply_global_phase_to_u3(global_phase_new, Umtx);
+
 		}
 /*
 	        N_Qubit_Decomposition_custom cDecomp_custom_( Umtx.copy(), qbit_num, false, initial_guess);

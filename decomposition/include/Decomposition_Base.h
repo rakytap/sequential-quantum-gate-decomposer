@@ -70,6 +70,9 @@ public:
 
     /// The maximal allowed error of the optimization problem (The error of the decomposition would scale with the square root of this value)
     double optimization_tolerance;
+    
+    ///The global phase
+    QGD_Complex16 global_phase;
 
 protected:
 
@@ -121,8 +124,7 @@ protected:
     /// The convergence threshold in the optimization process
     double convergence_threshold;
     
-    ///The global phase
-    QGD_Complex16 global_phase;
+
 
 
 
