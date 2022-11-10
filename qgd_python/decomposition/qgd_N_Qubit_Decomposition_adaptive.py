@@ -370,16 +370,46 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Randomized_Radius(radius)
 
-
-
 ##
 # @brief Call to append custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
     def add_Gate_Structure_From_Binary( self, filename ):  
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Gate_Structure_From_Binary( filename )
+        
+##
+# @brief Call to set unitary matrix from a binary file created from SQUANDER
+    def set_Unitary_From_Binary( self, filename ):  
 
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Unitary_From_Binary( filename )
+ 
+##
+# @brief Call to set unitary matrix from a numpy array
+    def set_Unitary( self, Umtx_arr ):  
 
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Unitary( Umtx_arr )
+        
+##
+# @brief Call to get unitary matrix
+    def get_Unitary( self ):
 
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Unitary()
+
+##
+# @brief Call to get global phase
+    def get_Global_Phase( self ):
+	
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Global_Phase()
+
+##
+# @brief Call to set global phase 
+    def set_Global_Phase( self, angle ):
+	
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Global_Phase(angle)
+##
+# @brief Call to apply global phase on Unitary matrix
+    def apply_Global_Phase( self ):
+	
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Global_Phase()
 ##
 # @brief Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released.
     def apply_Imported_Gate_Structure( self ):  

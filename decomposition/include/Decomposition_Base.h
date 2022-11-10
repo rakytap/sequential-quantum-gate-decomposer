@@ -70,6 +70,9 @@ public:
 
     /// The maximal allowed error of the optimization problem (The error of the decomposition would scale with the square root of this value)
     double optimization_tolerance;
+    
+    ///The global phase
+    QGD_Complex16 global_phase;
 
 protected:
 
@@ -120,6 +123,8 @@ protected:
 
     /// The convergence threshold in the optimization process
     double convergence_threshold;
+    
+
 
 
 
@@ -389,12 +394,46 @@ double get_decomposition_error( );
 @return Returns with the minimum of the cost function
 */
 double get_current_minimum( );
+/**
+@brief  Calculate the new global phase of the Unitary matrix after removing a trivial U3 matrix
+@param global_phase_new: global phase calculated from the product of two U3 matrices
+*/
+void calculate_new_global_phase( QGD_Complex16 global_phase_new );
+
+/**
+@brief Get the global phase of the Unitary matrix 
+@return The current global phase
+*/
+QGD_Complex16 get_global_phase( );
+
+/**
+@brief Call to set global phase 
+@param global_phase_new The value of the new phase
+*/
+void Decomposition_Base::set_global_phase(double global_phase_new_angle);
+
 
 /**
 @brief Call to apply the global phase to a matrix
 @return Returns with the minimum of the cost function
 */
-void apply_global_phase(QGD_Complex16 global_phase, Matrix& u3_gate);
-};
+void apply_global_phase_to_u3(QGD_Complex16 global_phase_new, Matrix& u3_gate);
 
+/**
+@brief Call to apply the current global phase to the unitary matrix
+@param global_phase The value of the phase
+*/
+void Decomposition_Base::apply_global_phase();
+
+/**
+@brief   exports unitary matrix to binary file
+@param  
+*/
+void export_unitary(Matrix& Umtx, std::string& filename);
+/**
+@brief Import a Unitary matrix from a file
+@param filename  .binary file to read
+*/
+Matrix import_unitary_from_binary(std::string& filename);
+};
 #endif //DECOMPOSITION_BASE
