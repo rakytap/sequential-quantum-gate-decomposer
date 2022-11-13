@@ -40,7 +40,7 @@ setup(
     maintainer_email="peter.rakyta@ttk.elte.hu",
     include_package_data=True,
     install_requires=[
-        "numpy>=1.19.4",
+        "numpy>=1.19.2",
 	"tbb-devel",
 	"qiskit",
     ],

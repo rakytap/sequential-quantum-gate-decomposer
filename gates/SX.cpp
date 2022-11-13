@@ -145,7 +145,11 @@ SX::apply_to( Matrix& input ) {
     sx_1qbit[2].real = 0.5; sx_1qbit[2].imag = -0.5;
     sx_1qbit[3].real = 0.5; sx_1qbit[3].imag = 0.5;
 
-    int index_step = Power_of_2(target_qbit);
+   
+    //apply_kernel_to function to SX gate 
+    apply_kernel_to( sx_1qbit, input );
+   
+  /*  int index_step = Power_of_2(target_qbit);
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step;
 
@@ -191,9 +195,10 @@ SX::apply_to( Matrix& input ) {
 
 
     }
-
+*/
 
 }
+
 
 
 
@@ -220,8 +225,11 @@ SX::apply_from_right( Matrix& input ) {
     sx_1qbit[2].real = 0.5; sx_1qbit[2].imag = -0.5;
     sx_1qbit[3].real = 0.5; sx_1qbit[3].imag = 0.5;
 
+    
+    //apply_kernel_from_right function to SX gate 
+    apply_kernel_from_right(sx_1qbit, input);
 
-    int index_step = Power_of_2(target_qbit);
+  /*  int index_step = Power_of_2(target_qbit);
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step;
 
@@ -269,8 +277,7 @@ SX::apply_from_right( Matrix& input ) {
 
 
     }
-
-
+*/
 
 }
 

@@ -271,6 +271,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                         params.reverse()
                         for param in params:
                             optimized_parameters = optimized_parameters + [float(param)]
+                        optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
                         
 
                 if len(single_qubit_gates[qubit1])>0:
@@ -283,6 +284,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                         params.reverse()
                         for param in params:
                             optimized_parameters = optimized_parameters + [float(param)]
+                        optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
 
                 ## add cz gate to the layer       
                 if name == 'cz':
@@ -309,6 +311,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                     params.reverse()
                     for param in params:
                         optimized_parameters = optimized_parameters + [float(param)]
+                    optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
 
         Gates_Block_ret.add_Gates_Block( Layer )
 

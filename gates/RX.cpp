@@ -127,7 +127,7 @@ RX::~RX() {
 @param input The input array on which the gate is applied
 */
 void 
-RX::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
+RX::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;
@@ -137,15 +137,15 @@ RX::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
     }
 
 
-    double Theta, Phi, Lambda;
+    double ThetaOver2, Phi, Lambda;
 
-    Theta = parameters[0];
+    ThetaOver2 = parameters[0];
     Phi = phi0;
     Lambda = lambda0;
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda, scale );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
     apply_kernel_to( u3_1qbit, input );
@@ -171,15 +171,15 @@ RX::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     }
 
 
-    double Theta, Phi, Lambda;
+    double ThetaOver2, Phi, Lambda;
 
-    Theta = parameters[0];
+    ThetaOver2 = parameters[0];
     Phi = phi0;
     Lambda = lambda0;
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
     apply_kernel_from_right(u3_1qbit, input);
@@ -209,7 +209,7 @@ RX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     parameters_tmp[0] = parameters_mtx[0] + M_PI;
     Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx, 0.5);
+    apply_to(parameters_tmp, res_mtx );
     ret.push_back(res_mtx);
 
     
@@ -223,23 +223,23 @@ RX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 /**
 @brief Call to set the final optimized parameters of the gate.
-@param Theta Real parameter standing for the parameter theta.
+@param ThetaOver2 Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.
 @param Lambda Real parameter standing for the parameter lambda.
 */
-void RX::set_optimized_parameters(double Theta ) {
+void RX::set_optimized_parameters(double ThetaOver2 ) {
 
     parameters = Matrix_real(1, parameter_num);
 
 
-    parameters[0] = Theta;
+    parameters[0] = ThetaOver2;
 
 }
 
 
 /**
 @brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
+@param parameters_in Preallocated pointer to store the parameters ThetaOver2, Phi and Lambda of the U3 gate.
 */
 Matrix_real RX::get_optimized_parameters() {
 

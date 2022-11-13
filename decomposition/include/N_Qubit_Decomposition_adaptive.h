@@ -74,6 +74,7 @@ protected:
     ///
     std::vector<matrix_base<int>> topology;
     
+    
 
 public:
 
@@ -151,7 +152,7 @@ Gates_block* replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real
 /**
 @brief ???????????????
 */
-virtual int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
+virtual unsigned int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 
 /**
@@ -177,12 +178,55 @@ void add_finalyzing_layer( Gates_block* gate_structure );
 
 
 /**
-@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
-@param gate_structure An <int, Gates_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
+@brief Call to set custom layers to the gate structure that are intended to be used in the decomposition.
+@param gate_structure_in
 */
 void set_adaptive_gate_structure( Gates_block* gate_structure_in );
 
+
+/**
+@brief Call to set custom layers to the gate structure that are intended to be used in the decomposition.
+@param filename
+*/
+void set_adaptive_gate_structure( std::string filename );
+ 
+ 
+ /**
+ @brief Set unitary matrix from file
+ @param filename file to read unitary from
+ */
+ void set_unitary_from_file( std::string filename );
+
+
+ /** 
+ @brief Set unitary matrix 
+ @param matrix to set unitary to
+ */
+ void set_unitary( Matrix& Umtx_new ) ;
+
+/**
+@brief Call to append custom layers to the gate structure that are intended to be used in the decomposition.
+@param filename
+*/
+void add_adaptive_gate_structure( std::string filename );
+
+/**
+@brief Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gfate structure is released.
+*/
+void apply_imported_gate_structure();
+
+
+/**
+@brief Call to add an adaptive layer to the gate structure previously imported gate structure
+@param filename
+*/
+void add_layer_to_imported_gate_structure();
+
+
 };
+
+
+
 
 
 

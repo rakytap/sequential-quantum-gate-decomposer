@@ -24,15 +24,18 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef SX_H
 #define SX_H
 
-#include "Gate.h"
+
+#include "U3.h"
+//#include "Gate.h"
 #include "matrix.h"
 #include <math.h>
+
 
 
 /**
 @brief A class representing a U3 gate.
 */
-class SX: public Gate {
+class SX: public U3 {
 
 
 public:

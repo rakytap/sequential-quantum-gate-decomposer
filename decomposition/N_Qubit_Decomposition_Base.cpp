@@ -24,7 +24,18 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "N_Qubit_Decomposition_Base.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
+#include "Adam.h"
 
+#include <fstream>
+
+#ifdef __DFE__
+#include "common_DFE.h"
+#endif
+
+
+static double adam_time = 0;
+static double bfgs_time = 0;
+static double pure_DFE_time = 0;
 
 
 /**
@@ -41,6 +52,12 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 
     // The global minimum of the optimization problem
     global_target_minimum = 0;
+
+    // logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
+    adaptive_eta = true;
+
+    // parameter to contron the radius of parameter randomization around the curren tminimum
+    radius = 1.0;
 
 }
 
@@ -72,6 +89,12 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
             max_layer_num.insert( std::pair<int, int>(it->first,  it->second) );
         }
     }
+
+    // logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
+    adaptive_eta = true;
+
+    // parameter to contron the radius of parameter randomization around the curren tminimum
+    radius = 1.0;
 
 
 }
@@ -208,13 +231,213 @@ void  N_Qubit_Decomposition_Base::final_optimization() {
 }
 
 
-
 /**
-// @brief Call to solve layer by layer the optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
-// @param num_of_parameters Number of parameters to be optimized
-// @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@brief Call to solve layer by layer the optimization problem via calling one of the implemented algorithms. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+
+
+    
+
+    switch ( alg ) {
+        case ADAM:
+            solve_layer_optimization_problem_ADAM( num_of_parameters, solution_guess_gsl);
+            return;
+        case BFGS:
+            solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess_gsl);
+            return;
+        case BFGS2:
+            solve_layer_optimization_problem_BFGS2( num_of_parameters, solution_guess_gsl);
+            return;
+        default:
+            std::string error("N_Qubit_Decomposition_Base::solve_layer_optimization_problem: unimplemented optimization algorithm");
+            throw error;
+    }
+
+
+}
+
+
+/**
+@brief Call to solve layer by layer the optimization problem via ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+
+        if (gates.size() == 0 ) {
+            return;
+        }
+
+
+        if (solution_guess_gsl == NULL) {
+            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
+        }
+
+
+        if (optimized_parameters_mtx.size() == 0) {
+            optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+        }
+
+
+        int random_shift_count = 0;
+        int sub_iter_idx = 0;
+        double current_minimum_hold = current_minimum;
+    
+
+        tbb::tick_count adam_start = tbb::tick_count::now();
+        adam_time = 0.0;
+pure_DFE_time = 0.0;
+        Adam optimizer;
+        optimizer.initialize_moment_and_variance( num_of_parameters );
+
+
+
+        // the array storing the optimized parameters
+        gsl_vector* grad_gsl = gsl_vector_alloc(num_of_parameters);
+        gsl_vector* solution_guess_tmp = gsl_vector_alloc(num_of_parameters);
+        memcpy(solution_guess_tmp->data, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+
+        Matrix_real solution_guess_tmp_mtx = Matrix_real( solution_guess_tmp->data, num_of_parameters, 1 );
+        Matrix_real grad_mtx = Matrix_real( grad_gsl->data, num_of_parameters, 1 );
+        //solution_guess_tmp_mtx.print_matrix();
+
+
+        double f0 = DBL_MAX;
+        std::stringstream sstream;
+        sstream << "iter_max: " << iter_max << std::endl;
+        print(sstream, 2);   
+
+        for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
+
+            
+
+
+            optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_gsl );
+    
+            if (sub_iter_idx == 1 ) {
+                current_minimum_hold = f0;  
+                if ( adaptive_eta )  { 
+                    optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3; 
+                }  
+            }
+
+
+            if (current_minimum_hold*0.95 > f0 || (current_minimum_hold*0.97 > f0 && f0 < 1e-3) ||  (current_minimum_hold*0.99 > f0 && f0 < 1e-4) ) {
+                sub_iter_idx = 0;
+                current_minimum_hold = f0;        
+            }
+    
+    
+            if (current_minimum > f0 ) {
+                current_minimum = f0;
+                memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp->data, num_of_parameters*sizeof(double) );
+                //double new_eta = 1e-3 * f0 * f0;
+                if ( adaptive_eta )  {
+                    double new_eta = 1e-3 * f0;
+                    optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;
+                }
+            }
+    
+
+            if ( iter_idx % 5000 == 0 ) {
+                std::stringstream sstream;
+                sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                print(sstream, 0);   
+                std::string filename("initial_circuit_iteration.binary");
+                export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
+            }
+
+//std::cout << grad_norm  << std::endl;
+            if (f0 < optimization_tolerance || random_shift_count > random_shift_count_max ) {
+                break;
+            }
+
+
+//grad_mtx.print_matrix();
+
+            
+            if ( sub_iter_idx> 2500 ) {
+
+                //random_shift_count++;
+                sub_iter_idx = 0;
+                random_shift_count++;
+                current_minimum_hold = current_minimum;        
+                int factor = rand() % 10 + 1;
+
+                std::stringstream sstream;
+                sstream << "leaving local minimum " << f0 << ", radius of randomization: " << radius << std::endl;
+                print(sstream, 0);   
+        
+                bool just_reset_optimizer = (rand() % 5) == 0; 
+                
+                if ( just_reset_optimizer ) {
+
+                }
+                else {
+        
+                    int changed_parameters = 0;
+                    for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                        if ( rand() % 3 == 0 ) {
+                            solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*std::sqrt(f0)/factor*radius;
+//                            solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*f0/factor*radius;
+                            //solution_guess_tmp->data[jdx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;            
+                            changed_parameters++;
+                        }
+                        else {
+                            solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx];
+                        }
+                    }
+                    //std::cout << "changing " << double(changed_parameters)/num_of_parameters*100 << "\% of parameters in radius " << radius << std::endl;
+                    
+                }
+
+
+#ifdef __MPI__        
+                MPI_Bcast( (void*)solution_guess_tmp->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+        
+                optimizer.reset();
+                optimizer.initialize_moment_and_variance( num_of_parameters );       
+        
+            }
+            else {
+                optimizer.update(solution_guess_tmp_mtx, grad_mtx);
+            }
+
+            sub_iter_idx++;
+
+        }
+
+
+
+        sstream.str("");
+        sstream << "obtained minimum: " << current_minimum << std::endl;
+
+
+
+        gsl_vector_free(grad_gsl);
+        gsl_vector_free(solution_guess_tmp);
+        tbb::tick_count adam_end = tbb::tick_count::now();
+        adam_time  = adam_time + (adam_end-adam_start).seconds();
+        sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
+        
+        print(sstream, 0); 
+
+}
+
+
+
+/**
+@brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+
 
         if (gates.size() == 0 ) {
             return;
@@ -297,9 +520,199 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
                 gsl_multimin_fdfminimizer_free (s);
             }
 
+#ifdef __MPI__        
+            MPI_Bcast( (void*)solution_guess_gsl->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
 
 
         }
+
+
+}
+
+
+
+/**
+@brief Call to solve layer by layer the optimization problem via BFGS algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS2( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+
+
+        if (gates.size() == 0 ) {
+            return;
+        }
+
+
+        if (solution_guess_gsl == NULL) {
+            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
+        }
+
+
+        if (optimized_parameters_mtx.size() == 0) {
+            optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+        }
+
+        // maximal number of iteration loops
+        int iteration_loops_max;
+        try {
+            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
+        }
+        catch (...) {
+            iteration_loops_max = 1;
+        }
+
+
+        int random_shift_count = 0;
+        int sub_iter_idx = 0;
+        double current_minimum_hold = current_minimum;
+
+
+tbb::tick_count bfgs_start = tbb::tick_count::now();
+bfgs_time = 0.0;
+
+
+
+        // do the optimization loops
+        for (int idx=0; idx<iteration_loops_max; idx++) {
+
+            int iter_idx = 0;
+            int status = GSL_CONTINUE;
+
+            const gsl_multimin_fdfminimizer_type *T;
+            gsl_multimin_fdfminimizer *s;
+
+            N_Qubit_Decomposition_Base* par = this;
+
+
+            gsl_multimin_function_fdf my_func;
+
+
+            my_func.n = num_of_parameters;
+            my_func.f = optimization_problem;
+            my_func.df = optimization_problem_grad;
+            my_func.fdf = optimization_problem_combined;
+            my_func.params = par;
+
+
+            T = gsl_multimin_fdfminimizer_vector_bfgs2;
+            s = gsl_multimin_fdfminimizer_alloc (T, num_of_parameters);
+
+            gsl_multimin_fdfminimizer_set(s, &my_func, solution_guess_gsl, 0.01, 0.1);
+
+            do {
+                gsl_set_error_handler_off();
+                
+                if ( sub_iter_idx>2500 || status != GSL_CONTINUE ) {
+
+                    std::stringstream sstream;
+                    sstream << "leaving local minimum " << s->f << std::endl;
+                    print(sstream, 2); 
+                    
+                    sub_iter_idx = 0;
+                    random_shift_count++;
+                    current_minimum_hold = current_minimum;        
+
+                    int factor = rand() % 10 + 1;
+             
+                    for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                        solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*std::sqrt(s->f)/factor;
+                    } 
+
+#ifdef __MPI__        
+                    MPI_Bcast( (void*)solution_guess_gsl->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+                    
+                    status = 0;    
+                    
+                    gsl_multimin_fdfminimizer_free (s);                     
+                    s = gsl_multimin_fdfminimizer_alloc (T, num_of_parameters);  
+                    gsl_multimin_fdfminimizer_set(s, &my_func, solution_guess_gsl, 0.01, 0.1);                             
+        
+                }
+                else {
+                    status = gsl_multimin_fdfminimizer_iterate (s);
+                }
+                                
+/*
+                if (status) {
+                  break;
+                }
+*/
+                status = gsl_multimin_test_gradient (s->gradient, gradient_threshold);
+                
+                
+                if (sub_iter_idx == 1 ) {
+                     current_minimum_hold = s->f;    
+                }
+
+
+                if (current_minimum_hold*0.95 > s->f || (current_minimum_hold*0.97 > s->f && s->f < 1e-3) ||  (current_minimum_hold*0.99 > s->f && s->f < 1e-4) ) {
+                     sub_iter_idx = 0;
+                     current_minimum_hold = s->f;        
+                }
+    
+    
+                if (current_minimum > s->f ) {
+                     current_minimum = s->f;
+                     memcpy( optimized_parameters_mtx.get_data(),  solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+                }
+    
+
+                if ( iter_idx % 100000 == 0 ) {
+                     std::stringstream sstream;
+                     sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                     print(sstream, 2);  
+
+                     std::string filename("initial_circuit_iteration.binary");
+                     export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
+                }
+
+
+                if (s->f < optimization_tolerance || random_shift_count > random_shift_count_max ) {
+                    break;
+                }
+
+
+                sub_iter_idx++;
+                iter_idx++;
+
+            } while (iter_idx < iter_max && s->f > optimization_tolerance);
+
+            if (current_minimum > s->f) {
+                current_minimum = s->f;
+                memcpy( optimized_parameters_mtx.get_data(), s->x->data, num_of_parameters*sizeof(double) );                
+
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                }
+            }
+            else {
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
+                }
+            }
+
+#ifdef __MPI__        
+            MPI_Bcast( (void*)solution_guess_gsl->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+            
+            gsl_multimin_fdfminimizer_free (s);
+            
+            if (current_minimum < optimization_tolerance ) {
+                break;
+            }
+
+
+
+        }
+
+tbb::tick_count bfgs_end = tbb::tick_count::now();
+bfgs_time  = bfgs_time + (bfgs_end-bfgs_start).seconds();
+std::cout << "bfgs time: " << bfgs_time << " " << current_minimum << std::endl;
 
 
 }
@@ -332,14 +745,14 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
     // get the transformed matrix with the gates in the list
     if ( parameters.size() != parameter_num ) {
         std::stringstream sstream;
-	sstream << "Number of free paramaters should be " << parameter_num << ", but got " << parameters.size() << std::endl;
+	sstream << "N_Qubit_Decomposition_Base::optimization_problem: Number of free paramaters should be " << parameter_num << ", but got " << parameters.size() << std::endl;
         print(sstream, 0);	  
         exit(-1);
     }
 
 
     Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
-
+//matrix_new.print_matrix();
     return get_cost_function(matrix_new);
 
 }
@@ -397,9 +810,70 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
 
     int parameter_num_loc = instance->get_parameter_num();
 
+#ifdef __DFE__
+///////////////////////////////////////
+//std::cout << "number of qubits: " << instance->qbit_num << std::endl;
+//tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
+if ( instance->qbit_num >= 5 ) {
+    Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
+
+    int gatesNum, redundantGateSets, gateSetNum;
+    DFEgate_kernel_type* DFEgates = instance->convert_to_DFE_gates_with_derivates( parameters_mtx, gatesNum, gateSetNum, redundantGateSets );
+
+    Matrix&& Umtx_loc = instance->get_Umtx();   
+    Matrix_real trace_DFE_mtx(1, gateSetNum);
+
+#ifdef __MPI__
+    // the number of decomposing layers are divided between the MPI processes
+
+    int mpi_gateSetNum = gateSetNum / instance->world_size;
+    int mpi_starting_gateSetIdx = gateSetNum/instance->world_size * instance->current_rank;
+
+    Matrix_real mpi_trace_DFE_mtx(1, mpi_gateSetNum);
+
+//uploadMatrix2DFE( Umtx_loc );
+//tbb::tick_count t0_DFE = tbb::tick_count::now();
+    calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, mpi_trace_DFE_mtx.get_data() );
+
+    int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
+    MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
+
+#else
+
+//uploadMatrix2DFE( Umtx_loc );
+//tbb::tick_count t0_DFE = tbb::tick_count::now();
+    calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_DFE_mtx.get_data() );
+//tbb::tick_count t1_DFE = tbb::tick_count::now();
+//pure_DFE_time = pure_DFE_time + (t1_DFE-t0_DFE).seconds();
+#endif  
+
+  
+//    double f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
+    *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
+    Matrix_real grad_components_DFE_mtx(1, parameter_num_loc);
+    for (int idx=0; idx<parameter_num_loc; idx++) {
+//        grad_components_DFE_mtx[idx] = -trace_DFE_mtx[idx+1]/Umtx_loc.cols;
+        gsl_vector_set(grad, idx, -trace_DFE_mtx[idx+1]/Umtx_loc.cols);
+    }
+
+    delete[] DFEgates;
+
+//tbb::tick_count t1_DFE = tbb::tick_count::now();/////////////////////////////////
+//std::cout << "uploaded data to DFE: " << (int)(gatesNum*gateSetNum*sizeof(DFEgate_kernel_type)) << " bytes" << std::endl;
+//std::cout << "time elapsed DFE: " << (t1_DFE-t0_DFE).seconds() << ", expected time: " << (((double)Umtx_loc.rows*(double)Umtx_loc.cols*gatesNum*gateSetNum/get_chained_gates_num()/4 + 4578*3*get_chained_gates_num()))/350000000 + 0.001<< std::endl;
+
+///////////////////////////////////////
+}
+else {
+
+#endif
+
     // vector containing gradients of the transformed matrix
     std::vector<Matrix> Umtx_deriv;
 
+#ifdef __DFE__
+tbb::tick_count t0_CPU = tbb::tick_count::now();/////////////////////////////////
+#endif
     tbb::parallel_invoke(
         [&]{*f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance)); },
         [&]{
@@ -417,9 +891,122 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
             //double grad_comp = (f*f - 1.0)/(*f0)/2;
             double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0);
             gsl_vector_set(grad, idx, grad_comp);
+
+
+
         }
     });
 
+#ifdef __DFE__
+}
+
+/*
+tbb::tick_count t1_CPU = tbb::tick_count::now();/////////////////////////////////
+std::cout << "time elapsed CPU: " << (t1_CPU-t0_CPU).seconds() << " number of parameters: " << parameter_num_loc << std::endl;
+std::cout << "cost function CPU: " << *f0 << " and DFE: " << f0_DFE << std::endl;
+
+for ( int idx=0; idx<parameter_num_loc; idx++ ) {
+
+    double diff = (grad_components_DFE_mtx[idx]-gsl_vector_get(grad, idx))*(grad_components_DFE_mtx[idx]-gsl_vector_get(grad, idx));
+    if ( diff > 1e-5 ) {
+        std::cout << "DFE and CPU cost functions differs at index " << idx << " " <<  grad_components_DFE_mtx[idx] << " and " <<  gsl_vector_get(grad, idx) << std::endl;
+        
+    }   
+
+}
+
+
+
+std::cout << "N_Qubit_Decomposition_Base::optimization_problem_combined" << std::endl;
+std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
+        throw error;
+*/
+#endif
+
+
+}
+
+
+
+/**
+@brief ?????????????
+*/
+void N_Qubit_Decomposition_Base::set_iter_max( int iter_max_in  ) {
+
+    iter_max = iter_max_in;
+    
+}
+
+
+
+/**
+@brief ?????????????
+*/
+void N_Qubit_Decomposition_Base::set_random_shift_count_max( int random_shift_count_max_in  ) {
+
+    random_shift_count_max = random_shift_count_max_in;
+
+}
+
+
+/**
+@brief ?????????????
+*/
+void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in ) {
+
+    alg = alg_in;
+
+    switch ( alg ) {
+        case ADAM:
+            iter_max = 1e5;
+            random_shift_count_max = 100;
+            gradient_threshold = 1e-8;
+            max_iterations = 1;
+            return;
+
+        case BFGS:
+            iter_max = 100;
+            gradient_threshold = 1e-1;
+            random_shift_count_max = 1;   
+            return;
+
+        case BFGS2:
+            iter_max = 1e5;
+            random_shift_count_max = 100;
+            gradient_threshold = 1e-8;
+            max_iterations = 1;
+            return;
+
+        default:
+            std::string error("N_Qubit_Decomposition_Base::solve_layer_optimization_problem: unimplemented optimization algorithm");
+            throw error;
+    }
+
+
+
+}
+
+
+
+/**
+@brief ?????????????
+*/
+void 
+N_Qubit_Decomposition_Base::set_adaptive_eta( bool adaptive_eta_in  ) {
+
+    adaptive_eta = adaptive_eta_in;
+
+}
+
+
+
+/**
+@brief ?????????????
+*/
+void 
+N_Qubit_Decomposition_Base::set_randomized_radius( double radius_in  ) {
+
+    radius = radius_in;
 
 }
 

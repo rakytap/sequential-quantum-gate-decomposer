@@ -64,6 +64,8 @@ extern "C"
 }
 #endif
 
+
+
 /**
 @brief ?????
 */
@@ -154,5 +156,16 @@ QGD_Complex16 mult( double a, QGD_Complex16 b );
 @param b A square shaped matrix.
 */
 void mult( QGD_Complex16 a, Matrix& b );
+
+
+
+/**
+@brief ???????????????????
+@param a A complex numberr.
+*/
+double arg( const QGD_Complex16& a );
+
+
+
 
 #endif

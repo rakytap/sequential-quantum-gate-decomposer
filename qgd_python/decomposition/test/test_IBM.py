@@ -28,6 +28,14 @@ from scipy.stats import unitary_group
 import numpy as np
 
 
+try:
+    from mpi4py import MPI
+    MPI_imported = True
+except ModuleNotFoundError:
+    MPI_imported = False
+
+
+
 class Test_Decomposition:
     """This is a test class of the python iterface to the decompsition classes of the QGD package"""
 
@@ -130,7 +138,7 @@ class Test_Decomposition:
 
 
         # setting the verbosity of the decomposition
-        cDecompose.set_Verbose( True )
+        cDecompose.set_Verbose( 3 )
 
         # starting the decomposition
         cDecompose.Start_Decomposition()
@@ -171,4 +179,5 @@ class Test_Decomposition:
 
         assert( decomposition_error < 1e-3 )
         
+
 

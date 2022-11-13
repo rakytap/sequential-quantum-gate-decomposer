@@ -27,13 +27,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "matrix.h"
 #include "Gate.h"
 #include <math.h>
-
+#include "CNOT.h"
 
 
 /**
 @brief A class representing a CZ operation.
 */
-class CZ: public Gate {
+class CZ: public CNOT {
 
 protected:
 

@@ -108,7 +108,22 @@ find_package(PythonExtensions REQUIRED)
 
 set(CMAKE_VERBOSE_MAKEFILE ON)
 
+#################################################################
+# find MPI libraries if MPI is enables by environment variable PIQUASSOBOOST_MPI
 
+if(DEFINED ENV{QGD_MPI})
+  find_package(MPI REQUIRED)
+
+  # openmpi which has a different c++ bindings
+  #add_definitions(-DOMPI_SKIP_MPICXX)
+
+  # setting basic compile flags
+  list(APPEND CXX_FLAGS_DEBUG "-D__MPI__")
+  list(APPEND CXX_FLAGS_RELEASE "-D__MPI__")
+
+  list(APPEND EXTRA_INCLUDES "${MPI_C_INCLUDE_PATH}") 
+
+endif()
 
 #################################################################
 # find CBLAS libraries. Hints are given by numpy library directory via variable BLAS_DIR
@@ -325,12 +340,13 @@ else()
 endif()
 
 
-add_library( qgd SHARED
+list(APPEND qgd_files 
     ${PROJECT_SOURCE_DIR}/common/common.cpp
     ${PROJECT_SOURCE_DIR}/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix_real.cpp
     ${PROJECT_SOURCE_DIR}/common/logging.cpp
+    ${PROJECT_SOURCE_DIR}/common/Adam.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
@@ -362,8 +378,32 @@ add_library( qgd SHARED
 )
 
 
+if(DEFINED ENV{QGD_MPI})
+
+    list(APPEND qgd_files 
+    ${PROJECT_SOURCE_DIR}/common/mpi_base.cpp
+    )
+
+endif()
 
 
+if (DEFINED ENV{QGD_DFE})
+  list(APPEND qgd_files 
+      ${PROJECT_SOURCE_DIR}/common/common_DFE.cpp
+  )
+
+  list(APPEND CXX_FLAGS_DEBUG "-D__DFE__=1")
+  list(APPEND CXX_FLAGS_RELEASE "-D__DFE__=1")
+
+  find_library(DFE_LIB qgdDFE
+               PATHS $ENV{DFE_LIB_DIR}
+               REQUIRED)
+
+endif()
+
+
+add_library(qgd SHARED
+    ${qgd_files})
 
 # adding compile options
 target_compile_options(qgd PUBLIC
@@ -371,6 +411,8 @@ target_compile_options(qgd PUBLIC
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
 )
+
+
 
 # adding linking options
 target_link_libraries( qgd PRIVATE
@@ -381,7 +423,10 @@ target_link_libraries( qgd PRIVATE
     ${TBBMALLOC_PROXY_LIB}
     ${TBB_LIB}
     ${GSL_LIB}
-)
+    ${DFE_LIB}
+    ${MPI_C_LIBRARIES}
+    )
+
 
 target_include_directories(qgd PRIVATE
                             .
@@ -390,6 +435,8 @@ target_include_directories(qgd PRIVATE
                             ./decomposition/include
                             ./random_unitary/include
                             ${EXTRA_INCLUDES})
+
+
 
 set_target_properties(qgd PROPERTIES
     VERSION ${PROJECT_VERSION}
@@ -430,6 +477,8 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Unitary.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Orthogonal.h
 )
+
+
 
 configure_file(${PROJECT_SOURCE_DIR}/common/include/Config.h.in
                ${PROJECT_SOURCE_DIR}/common/include/Config.h)

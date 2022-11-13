@@ -408,7 +408,7 @@ bool are_two_qubits_independent( Gates_block* two_qubit_gate, Matrix_real& param
 /**
 @brief ???????????????
 */
-int 
+unsigned int 
 N_Qubit_Decomposition_adaptive_general::get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters ) {
 
     //The stringstream input to store the output messages.

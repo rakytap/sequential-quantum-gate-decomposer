@@ -33,74 +33,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_adaptive_general.h"
 #include "Gates_block.h"
 
-#include <numpy/arrayobject.h>
-#include "matrix.h"
-#include "matrix_real.h"
+#include "numpy_interface.h"
 
-
-/**
-@brief Method to cleanup the memory when the python object becomes released
-@param capsule Pointer to the memory capsule
-*/
-void capsule_cleanup(PyObject* capsule) {
-
-    void *memory = PyCapsule_GetPointer(capsule, NULL);
-    // I'm going to assume your memory needs to be freed with free().
-    // If it needs different cleanup, perform whatever that cleanup is
-    // instead of calling free().
-    scalable_aligned_free(memory);
-
-
-}
-
-
-
-
-/**
-@brief Call to make a numpy array from data stored via void pointer.
-@param ptr pointer pointing to the data
-@param dim The number of dimensions
-@param shape array containing the dimensions.
-@param np_type The data type stored in the numpy array (see possible values at https://numpy.org/doc/1.17/reference/c-api.dtype.html)
-*/
-PyObject* array_from_ptr(void * ptr, int dim, npy_intp* shape, int np_type) {
-
-        if (PyArray_API == NULL) {
-            import_array();
-        }
-
-
-        // create numpy array
-        PyObject* arr = PyArray_SimpleNewFromData(dim, shape, np_type, ptr);
-
-        // set memory keeper for the numpy array
-        PyObject *capsule = PyCapsule_New(ptr, NULL, capsule_cleanup);
-        PyArray_SetBaseObject((PyArrayObject *) arr, capsule);
-
-        return arr;
-
-}
-
-
-
-/**
-@brief Call to make a numpy array from an instance of matrix class.
-@param mtx a matrix instance
-*/
-PyObject* matrix_real_to_numpy( matrix_base<double> &mtx ) {
-        // initialize Numpy API
-        import_array();
-
-
-        npy_intp shape[2];
-        shape[0] = (npy_intp) mtx.rows;
-        shape[1] = (npy_intp) mtx.cols;
-
-        double* data = mtx.get_data();
-        return array_from_ptr( (void*) data, 2, shape, NPY_DOUBLE);
-
-
-}
 
 
 
@@ -192,41 +126,6 @@ release_N_Qubit_Decomposition_adaptive_general( N_Qubit_Decomposition_adaptive_g
 
 
 
-/**
-@brief Call to create a PIC matrix representation of a numpy array
-*/
-Matrix
-numpy2matrix(PyObject *arr) {
-
-    // test C-style contiguous memory allocation of the arrays
-    if ( !PyArray_IS_C_CONTIGUOUS(arr) ) {
-        std::cout << "array is not memory contiguous" << std::endl;
-    }
-
-    // get the pointer to the data stored in the input matrices
-    QGD_Complex16* data = (QGD_Complex16*)PyArray_DATA(arr);
-
-    // get the dimensions of the array self->C
-    int dim_num = PyArray_NDIM( arr );
-    npy_intp* dims = PyArray_DIMS(arr);
-
-    // create PIC version of the input matrices
-    if (dim_num == 2) {
-        Matrix mtx = Matrix(data, dims[0], dims[1]);
-        return mtx;
-    }
-    else if (dim_num == 1) {
-        Matrix mtx = Matrix(data, dims[0], 1);
-        return mtx;
-    }
-    else {
-        std::cout << "numpy2matrix: Wrong matrix dimension was given" << std::endl;
-        return Matrix(0,0);
-    }
-
-
-
-}
 
 
 
@@ -321,9 +220,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
 
 
     // create QGD version of the Umtx
-    Matrix Umtx_mtx = numpy2matrix(self->Umtx);  
-
-
+    Matrix Umtx_mtx = numpy2matrix(self->Umtx);
 
 
     // determine the optimizaton method
@@ -419,10 +316,16 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Start_Decomposition(qgd_N_Qubit_Decom
                                      &prepare_export))
         return Py_BuildValue("i", -1);
 
-
     // starting the decomposition
     if (  self->decomp != NULL ) {
-        self->decomp->start_decomposition(prepare_export);
+        try {
+            self->decomp->start_decomposition(prepare_export);
+        }
+        catch (std::string err) {
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            std::cout << err << std::endl;
+            return NULL;
+        }
     }
     else if(  self->decomp_general != NULL ) {
         self->decomp_general->start_decomposition(prepare_export);
@@ -433,6 +336,10 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Start_Decomposition(qgd_N_Qubit_Decom
     return Py_BuildValue("i", 0);
 
 }
+
+
+
+
 
 
 
@@ -732,6 +639,44 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates( qgd_N_Qubit_Decomposition_
 
 }
 
+/**
+@brief returns the angle of the global phase (the radius us always sqrt(2))
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+    QGD_Complex16 global_phase_C = self->decomp_base->get_global_phase();
+    PyObject* global_phase = PyFloat_FromDouble( std::atan2(global_phase_C.imag,global_phase_C.real));
+    return global_phase;
+    
+}
+
+/**
+@brief sets the global phase to the new angle given
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+@param arg Global_phase_new_angle the angle to be set
+*/
+static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args) {
+	double global_phase_new_angle;
+    if (!PyArg_ParseTuple(args, "|d", &global_phase_new_angle )) return Py_BuildValue("i", -1);
+    std::cout<<global_phase_new_angle<<std::endl;
+    self->decomp_base->set_global_phase(global_phase_new_angle);
+    return Py_BuildValue("i", 0);
+    
+}
+
+/**
+@brief applies the global phase to the Unitary matrix
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+*/
+static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+    // get the number of gates
+    self->decomp_base->apply_global_phase();
+    return Py_BuildValue("i", 0);
+    
+}
 
 /**
 @brief Lists the gates decomposing the initial unitary. (These gates are the inverse gates of the gates bringing the intial matrix into unity.)
@@ -762,7 +707,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Optimized_Parameters( qgd_N_Qubit
     self->decomp_base->get_optimized_parameters(parameters);
 
     // reversing the order
-    matrix_base<double> parameters_mtx_reversed(1, parameter_num);
+    Matrix_real parameters_mtx_reversed(1, parameter_num);
     double* parameters_reversed = parameters_mtx_reversed.get_data();
     for (int idx=0; idx<parameter_num; idx++ ) {
         parameters_reversed[idx] = parameters[parameter_num-1-idx];
@@ -1082,6 +1027,9 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decom
     else if(  self->decomp_general != NULL ) {
         self->decomp_general->set_adaptive_gate_structure( qgd_op_block->gate );
     }
+    else {
+        return Py_BuildValue("i", 1);
+    }
 
 
     return Py_BuildValue("i", 0);
@@ -1090,6 +1038,163 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decom
 }
 
 
+
+/**
+@brief Wrapper function to append custom layers to the gate structure that are intended to be used in the decomposition.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Gate_Structure_From_Binary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+
+
+
+    // initiate variables for input arguments
+    PyObject* filename_py=NULL; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &filename_py )) return Py_BuildValue("i", -1);
+
+    // determine the optimizaton method
+    PyObject* filename_string = PyObject_Str(filename_py);
+    PyObject* filename_string_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
+    const char* filename_C = PyBytes_AS_STRING(filename_string_unicode);
+    std::string filename_str( filename_C );
+
+    if (  self->decomp != NULL ) {
+        self->decomp->add_adaptive_gate_structure( filename_str );
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->add_adaptive_gate_structure( filename_str );
+    }
+    else {
+        return Py_BuildValue("i", 1);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+/**
+@brief Wrapper function to set custom layers to the gate structure that are intended to be used in the decomposition.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure_From_Binary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+
+
+
+    // initiate variables for input arguments
+    PyObject* filename_py=NULL; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &filename_py )) return Py_BuildValue("i", -1);
+
+    // determine the optimizaton method
+    PyObject* filename_string = PyObject_Str(filename_py);
+    PyObject* filename_string_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
+    const char* filename_C = PyBytes_AS_STRING(filename_string_unicode);
+    std::string filename_str( filename_C );
+
+    if (  self->decomp != NULL ) {
+        self->decomp->set_adaptive_gate_structure( filename_str );
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->set_adaptive_gate_structure( filename_str );
+    }
+    else {
+        return Py_BuildValue("i", 1);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary_From_Binary(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ){
+    // initiate variables for input arguments
+    PyObject* filename_py=NULL; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &filename_py )) return Py_BuildValue("i", -1);
+    
+    PyObject* filename_string = PyObject_Str(filename_py);
+    PyObject* filename_string_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
+    const char* filename_C = PyBytes_AS_STRING(filename_string_unicode);
+    std::string filename_str( filename_C );
+    
+    if (  self->decomp != NULL ) {
+        self->decomp->set_unitary_from_file( filename_str );
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->set_unitary_from_file( filename_str );
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+/**
+@brief Wrapper function to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Imported_Gate_Structure( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+
+    if (  self->decomp != NULL ) {
+        self->decomp->apply_imported_gate_structure();
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->apply_imported_gate_structure();
+    }
+    else {
+        return Py_BuildValue("i", 1);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+/**
+@brief Extract the optimized parameters
+@param start_index The index of the first inverse gate
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self) {
+
+
+    Matrix&& Unitary_mtx = self->decomp->get_Umtx().copy();
+    
+    // convert to numpy array
+    Unitary_mtx.set_owner(false);
+    PyObject *Unitary_py = matrix_to_numpy( Unitary_mtx );
+
+    return Unitary_py;
+}
+
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+           if ( self->Umtx != NULL ) {
+        // release the unitary to be decomposed
+        Py_DECREF(self->Umtx);    
+        self->Umtx = NULL;
+       }
+       PyObject *Umtx_arg = NULL;
+       //Parse arguments 
+       if (!PyArg_ParseTuple(args, "|O", &Umtx_arg )) return Py_BuildValue("i", -1);
+	   // convert python object array to numpy C API array
+		if ( Umtx_arg == NULL ) return -1;
+		self->Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+		// test C-style contiguous memory allocation of the array
+		if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
+		    std::cout << "Umtx is not memory contiguous" << std::endl;
+		}
+
+
+		// create QGD version of the Umtx
+		Matrix Umtx_mtx = numpy2matrix(self->Umtx);
+       self->decomp->set_unitary(Umtx_mtx);
+       return Py_BuildValue("i", 0);
+}
 
 /**
 @brief Wrapper method to reorder the qubits in the decomposition class.
@@ -1145,6 +1250,64 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Reorder_Qubits(qgd_N_Qubit_Decomposit
 
     return Py_BuildValue("i", 0);
 }
+
+
+
+
+
+/**
+@brief Wrapper method to reorder the qubits in the decomposition class.
+@param 
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+
+    if (  self->decomp != NULL ) {
+        self->decomp->add_layer_to_imported_gate_structure();
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->add_layer_to_imported_gate_structure();
+    }
+    else {
+        return Py_BuildValue("i", 1);
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+/**
+@brief Wrapper function to set the radius in which randomized parameters are generated around the current minimum duting the optimization process
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+@param args A tuple of the input arguments: gate_structure_dict (PyDict)
+@return Returns with zero on success.
+*/
+static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    double radius = 1.0; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|d", &radius )) return Py_BuildValue("i", -1);
+
+
+    if (  self->decomp != NULL ) {
+        self->decomp->set_randomized_radius( radius );
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->set_randomized_radius( radius );
+    }
+    else {
+        return Py_BuildValue("i", 1);
+    }
+
+    return Py_BuildValue("i", 0);
+
+
+}
+
 
 
 
@@ -1206,6 +1369,38 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Optimization_Blocks", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Blocks, METH_VARARGS,
      "Wrapper method to to set the number of gate blocks to be optimized in one shot."
+    },
+    {"set_Gate_Structure_From_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure_From_Binary, METH_VARARGS,
+     "Call to set custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER"
+    },
+    {"add_Gate_Structure_From_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Gate_Structure_From_Binary, METH_VARARGS,
+     "Call to append custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER"
+    },
+    {"set_Unitary_From_Binary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary_From_Binary, METH_VARARGS,
+     "Call to set unitary matrix from a binary file created from SQUANDER"
+    },
+    {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary, METH_VARARGS,
+     "Call to set unitary matrix to a numpy matrix"
+    },
+    {"get_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase, METH_NOARGS,
+     "Call to get global phase"
+    },
+    {"set_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase, METH_VARARGS,
+     "Call to set global phase"
+    },
+    {"apply_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase, METH_NOARGS,
+     "Call to apply global phase on Unitary matrix"},
+    {"get_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary, METH_NOARGS,
+     "Call to get Unitary Matrix"
+    },
+    {"add_Layer_To_Imported_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure, METH_NOARGS,
+     "Call to add an adaptive layer to the gate structure previously imported gate structure"
+    },
+    {"apply_Imported_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Imported_Gate_Structure, METH_NOARGS,
+     "Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released."
+    },
+    {"set_Randomized_Radius", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius, METH_VARARGS,
+     "Call to set the radius in which randomized parameters are generated around the current minimum duting the optimization process."
     },
     {NULL}  /* Sentinel */
 };

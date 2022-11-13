@@ -4,6 +4,7 @@ set(EXT_DIR ${PROJECT_SOURCE_DIR}/qgd_python/gates)
 
 add_library( qgd_U3 MODULE
     ${EXT_DIR}/qgd_U3.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 

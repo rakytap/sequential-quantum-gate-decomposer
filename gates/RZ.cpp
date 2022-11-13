@@ -136,7 +136,7 @@ RZ::~RZ() {
 @param input The input array on which the gate is applied
 */
 void 
-RZ::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
+RZ::apply_to( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.rows != matrix_size ) {
@@ -154,7 +154,7 @@ RZ::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda, scale );
+    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
 
 
     apply_kernel_to( u3_1qbit, input );
@@ -222,7 +222,7 @@ RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda, 1.0 );
+    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
     memset(u3_1qbit.get_data(), 0.0, 2*sizeof(QGD_Complex16));
 
 

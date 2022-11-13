@@ -24,7 +24,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef X_H
 #define X_H
 
-#include "Gate.h"
+#include "U3.h"
+//#include "Gate.h"
 #include "matrix.h"
 #include <math.h>
 
@@ -32,7 +33,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief A class representing a U3 gate.
 */
-class X: public Gate {
+class X: public U3 {
 
 
 public:

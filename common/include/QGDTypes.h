@@ -77,7 +77,12 @@ struct gates_num {
   int com;
   /// The number of adaptive gates
   int adap;
+  /// The total number of gates
+  int total;
 };
+
+
+
 
 
 

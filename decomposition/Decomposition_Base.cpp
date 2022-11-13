@@ -23,7 +23,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Decomposition_Base.h"
 
-	
 
 
 // default layer numbers
@@ -82,6 +81,10 @@ Decomposition_Base::Decomposition_Base() {
 
     // The convergence threshold in the optimization process
     convergence_threshold = 1e-5;
+    
+    //global phase of the unitary matrix
+    global_phase.real = 1;
+    global_phase.imag = 1;
 
 
 
@@ -90,6 +93,8 @@ Decomposition_Base::Decomposition_Base() {
 #elif CBLAS==2
     num_threads = openblas_get_num_threads();
 #endif
+
+
 
 }
 
@@ -108,7 +113,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
    
     // the unitary operator to be decomposed
     Umtx = Umtx_in;
-
+   
     // logical value describing whether the decomposition was finalized or not
     decomposition_finalized = false;
 
@@ -150,12 +155,25 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
 
     // The convergence threshold in the optimization process
     convergence_threshold = 1e-5;
+    
+    //global phase of the unitary matrix
+    global_phase.real = 1;
+    global_phase.imag = 1;
 
 
 #if CBLAS==1
     num_threads = mkl_get_max_threads();
 #elif CBLAS==2
     num_threads = openblas_get_num_threads();
+#endif
+
+#ifdef __MPI__
+    // Get the number of processes
+    MPI_Comm_size(MPI_COMM_WORLD, &world_size);
+
+    // Get the rank of the process
+    MPI_Comm_rank(MPI_COMM_WORLD, &current_rank);
+
 #endif
 
 }
@@ -392,11 +410,22 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
             }
+
+#ifdef __MPI__        
+            MPI_Bcast( (void*)optimized_parameters_gsl->data, parameter_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
+
         }
         else if ( initial_guess == CLOSE_TO_ZERO ) {
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
                 optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
             }
+
+#ifdef __MPI__        
+            MPI_Bcast( (void*)optimized_parameters_gsl->data, parameter_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
         }
         else {
 	     std::stringstream sstream;
@@ -433,7 +462,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         ////////////////////////////////////////
         // Start the iterations
         int iter_idx;
-        for ( iter_idx=0;  iter_idx<max_iterations+1; iter_idx++) {
+        for ( iter_idx=0; iter_idx<max_iterations; iter_idx++) {
 
             //determine the range of blocks to be optimalized togedther
             block_idx_end = block_idx_start - optimization_block;
@@ -481,6 +510,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // Create a general gate describing the cumulative effect of gates following the optimized gates
             if (block_idx_end > 0) {
                 fixed_gate_post->set_matrix( gates_mtxs_post[block_idx_end-1] );
+                gates.push_back( fixed_gate_post ); 
             }
             else {
                 // release gate products
@@ -489,7 +519,6 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             }
 
             // create a list of gates for the optimization process
-            gates.push_back( fixed_gate_post ); 
             for ( int idx=block_idx_end; idx<block_idx_start; idx++ ) {
                 gates.push_back( gates_loc[idx] );
             }
@@ -563,7 +592,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
 
 
-        if (iter_idx == max_iterations ) {            
+        if (iter_idx == max_iterations && max_iterations>1) {            
 		std::stringstream sstream;
 		sstream << "Reached maximal number of iterations" << std::endl << std::endl;
 		print(sstream, 1);
@@ -1169,7 +1198,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             U3* u3_gate = static_cast<U3*>(gate);
 
             if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
-                vartheta = std::fmod( parameters[parameter_idx], 4*M_PI);
+                vartheta = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
                 varphi = 0;
                 varlambda =0;
                 parameter_idx = parameter_idx + 1;
@@ -1188,13 +1217,13 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
                 parameter_idx = parameter_idx + 1;
             }
             else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_phi_parameter() ) {
-                vartheta = std::fmod( parameters[ parameter_idx ], 4*M_PI);
+                vartheta = std::fmod( 2*parameters[ parameter_idx ], 4*M_PI);
                 varphi = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);
                 varlambda = 0;
                 parameter_idx = parameter_idx + 2;
             }
             else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_lambda_parameter() ) {
-                vartheta = std::fmod( parameters[ parameter_idx ], 4*M_PI);
+                vartheta = std::fmod( 2*parameters[ parameter_idx ], 4*M_PI);
                 varphi = 0;
                 varlambda = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);
                 parameter_idx = parameter_idx + 2;
@@ -1206,7 +1235,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
                 parameter_idx = parameter_idx + 2;
             }
             else if ((u3_gate->get_parameter_num() == 3)) {
-                vartheta = std::fmod( parameters[ parameter_idx ], 4*M_PI);
+                vartheta = std::fmod( 2*parameters[ parameter_idx ], 4*M_PI);
                 varphi = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);
                 varlambda = std::fmod( parameters[ parameter_idx+2 ], 2*M_PI);
                 parameter_idx = parameter_idx + 3;
@@ -1232,7 +1261,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
             RX* rx_gate = static_cast<RX*>(gate);
 
-            vartheta = std::fmod( parameters[parameter_idx], 4*M_PI);
+            vartheta = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
             parameter_idx = parameter_idx + 1;
 
 
@@ -1250,7 +1279,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
             RY* ry_gate = static_cast<RY*>(gate);
 
-            vartheta = std::fmod( parameters[parameter_idx], 4*M_PI);
+            vartheta = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
             parameter_idx = parameter_idx + 1;
 
 
@@ -1458,6 +1487,75 @@ double Decomposition_Base::get_current_minimum( ) {
 
 }
 
+/**
+@brief Call to calculate new global phase 
+@param global_phase The value of the phase
+*/
+void Decomposition_Base::calculate_new_global_phase(QGD_Complex16 global_phase_new){
+	global_phase = mult(global_phase, global_phase_new);
+	return;
+}
 
+/**
+@brief Call to get global phase 
+@param global_phase The value of the phase
+*/
+QGD_Complex16 Decomposition_Base::get_global_phase( ){
+	return global_phase;
+}
 
+/**
+@brief Call to set global phase 
+@param global_phase_new The value of the new phase
+*/
+void Decomposition_Base::set_global_phase(double global_phase_new_angle){
+	global_phase.real = sqrt(2)*cos(global_phase_new_angle);
+	global_phase.imag = sqrt(2)*sin(global_phase_new_angle);
+	return;
+}
 
+/**
+@brief Call to apply global phase of U3 matrices to matrix
+@param global_phase The value of the phase
+*/
+void Decomposition_Base::apply_global_phase_to_u3(QGD_Complex16 global_phase_new, Matrix& u3_gate){
+	mult(global_phase_new, u3_gate);
+	return;
+}
+
+/**
+@brief Call to apply the current global phase to the unitary matrix
+@param global_phase The value of the phase
+*/
+void Decomposition_Base::apply_global_phase(){
+	mult(global_phase, Umtx);
+	set_global_phase(3.141592653589793 / 4);
+	return;
+}
+
+void Decomposition_Base::export_unitary(Matrix& Umtx, std::string& filename){
+	FILE* pFile;
+	char* c_filename = filename.c_str();
+	pFile = fopen(c_filename, "wb");
+    	if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
+    	fwrite(&Umtx.rows, sizeof(int), 1, pFile);
+   	fwrite(&Umtx.cols, sizeof(int), 1, pFile);          
+   	fwrite(Umtx.get_data(), sizeof(QGD_Complex16), Umtx.size(), pFile);
+    	fclose(pFile);
+	return;
+}
+
+Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
+	FILE* pFile;
+	char* c_filename = filename.c_str();
+	int cols;
+	int rows;
+	pFile = fopen(c_filename, "rb");
+    	if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
+	fread(&rows, sizeof(int), 1, pFile);
+	fread(&cols, sizeof(int), 1, pFile);
+	Matrix Umtx_ = Matrix(rows, cols);
+	fread(Umtx_.get_data(), sizeof(QGD_Complex16), rows*cols, pFile);
+    	fclose(pFile);
+	return Umtx_;
+}

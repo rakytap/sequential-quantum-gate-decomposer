@@ -25,6 +25,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
 
 
+#ifdef __MPI__
+#include <mpi.h>
+#endif // MPI
 
 //tbb::spin_mutex my_mutex;
 
@@ -48,8 +51,6 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( ) {
 
     // custom gate structure used in the decomposition
     unit_gate_structure = NULL;
-
-
 
 }
 
@@ -88,10 +89,6 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num
 
     // custom gate structure used in the decomposition
     unit_gate_structure = NULL;
-
-
-
-
 
 
 }
@@ -484,6 +481,10 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
 
                 gsl_multimin_fdfminimizer_free (s);
             }
+
+#ifdef __MPI__        
+            MPI_Bcast( (void*)solution_guess_gsl->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
 
 
 

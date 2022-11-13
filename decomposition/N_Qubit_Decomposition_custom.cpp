@@ -36,8 +36,21 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom() : N_Qubit_Decomposi
     // initialize custom gate structure
     gate_structure = NULL;
 
-    iter_max = 10000;
-    gradient_threshold = 1e-8;
+
+    // BFGS is better for smaller problems, while ADAM for larger ones
+    if ( qbit_num <= 5 ) {
+        set_optimizer( BFGS );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 4;
+    }
+    else {
+        set_optimizer( ADAM );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 1;
+    }
+
 }
 
 /**
@@ -53,8 +66,20 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int 
     // initialize custom gate structure
     gate_structure = NULL;
 
-    iter_max = 10000;
-    gradient_threshold = 1e-8;
+
+    // BFGS is better for smaller problems, while ADAM for larger ones
+    if ( qbit_num <= 5 ) {
+        set_optimizer( BFGS );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 4;
+    }
+    else {
+        set_optimizer( ADAM );
+
+        // Maximal number of iteartions in the optimization process
+        max_iterations = 1;
+    }
 
 }
 
@@ -106,15 +131,26 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
     //measure the time for the decompositin
     tbb::tick_count start_time = tbb::tick_count::now();
-
     // setting the gate structure for optimization
     add_gate_layers();
-//std::cout << optimization_problem( optimized_parameters_mtx.get_data() ) << std::endl;
+
+#ifdef __DFE__
+    uploadMatrix2DFE( Umtx );
+#endif
+
+/*
+if (optimized_parameters_mtx.size() > 0 ) {
+    std::cout << "cost function of the imported circuit: " << optimization_problem( optimized_parameters_mtx ) << std::endl;
+}   
+std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
+*/
 
     // final tuning of the decomposition parameters
     final_optimization();
 
-
+#ifdef __DFE__
+//return;
+#endif
     // prepare gates to export
     if (prepare_export) {
         prepare_gates_to_export();
@@ -123,7 +159,6 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     // calculating the final error of the decomposition
     Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
     calc_decomposition_error( matrix_decomposed );
-
 
     // get the number of gates used in the decomposition
     gates_num gates_num = get_gate_nums();
@@ -144,7 +179,7 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore opeartions," << std::endl;
     if ( gates_num.un>0 ) sstream << gates_num.un << " UN opeartions," << std::endl;
     if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive opeartions," << std::endl;
-    	
+
     	 
     sstream << std::endl;
     tbb::tick_count current_time = tbb::tick_count::now();
@@ -284,6 +319,9 @@ void N_Qubit_Decomposition_custom::set_custom_gate_structure( Gates_block* gate_
     gate_structure = gate_structure_in->clone();
 
 }
+
+
+
 
 
 

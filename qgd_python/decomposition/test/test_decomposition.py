@@ -27,6 +27,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 from scipy.stats import unitary_group
 import numpy as np
 
+try:
+    from mpi4py import MPI
+    MPI_imported = True
+except ModuleNotFoundError:
+    MPI_imported = False
+
 
 class Test_Decomposition:
     """This is a test class of the python iterface to the decompsition classes of the QGD package"""

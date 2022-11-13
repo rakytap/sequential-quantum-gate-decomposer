@@ -27,7 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "matrix.h"
 #include "Gate.h"
 #include <math.h>
-
+#include <U3.h>
 
 
 /**
