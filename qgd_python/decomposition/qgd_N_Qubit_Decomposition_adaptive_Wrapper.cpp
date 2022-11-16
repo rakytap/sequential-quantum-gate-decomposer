@@ -1154,8 +1154,72 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Imported_Gate_Structure( qgd_N_
 }
 
 /**
-@brief Extract the optimized parameters
-@param start_index The index of the first inverse gate
+@brief get project name 
+@return string name of the project
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Project_Name( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self) {
+
+
+    std::string project_name = self->decomp->get_project_name();
+    
+    // convert to python string
+    PyObject* project_name_pyhton = PyUnicode_FromString(project_name.c_str());
+
+    return project_name_pyhton;
+}
+
+/**
+@brief set project name 
+@param project_name_new new string to be set as project name
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Project_Name( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+    // initiate variables for input arguments
+    PyObject* project_name_new=NULL; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &project_name_new)) return Py_BuildValue("i", -1);
+    
+    
+    PyObject* project_name_new_string = PyObject_Str(project_name_new);
+    PyObject* project_name_new_unicode = PyUnicode_AsEncodedString(project_name_new_string, "utf-8", "~E~");
+    const char* project_name_new_C = PyBytes_AS_STRING(project_name_new_unicode);
+    std::string project_name_new_str = ( project_name_new_C );
+    
+    // convert to python string
+    self->decomp->set_project_name(project_name_new_str);
+
+   return Py_BuildValue("i", 0);
+}
+
+/**
+@brief export unitary to binary file
+@param filename file to be exported to
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_export_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+    // initiate variables for input arguments
+    PyObject* filename=NULL; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &filename)) return Py_BuildValue("i", -1);
+    
+    
+    PyObject* filename_string = PyObject_Str(filename);
+    PyObject* filename_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
+    const char* filename_C = PyBytes_AS_STRING(filename_unicode);
+    std::string filename_str = ( filename_C );
+    
+    // convert to python string
+    self->decomp->export_unitary(filename_str);
+
+   return Py_BuildValue("i", 0);
+}
+
+/**
+@brief get Unitary
+@return Unitarty numpy matrix
 */
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self) {
@@ -1169,6 +1233,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary( qgd_N_Qubit_Decompositio
 
     return Unitary_py;
 }
+
+
 
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
@@ -1381,6 +1447,15 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary, METH_VARARGS,
      "Call to set unitary matrix to a numpy matrix"
+    },
+    {"export_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_export_Unitary, METH_VARARGS,
+     "Call to export unitary matrix to a binary file"
+    },
+    {"get_Project_Name", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Project_Name, METH_NOARGS,
+     "Call to get the name of SQUANDER project"
+    },
+    {"set_Project_Name", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Project_Name, METH_VARARGS,
+     "Call to set the name of SQUANDER project"
     },
     {"get_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase, METH_NOARGS,
      "Call to get global phase"
