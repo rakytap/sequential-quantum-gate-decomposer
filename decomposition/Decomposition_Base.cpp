@@ -1518,7 +1518,7 @@ void Decomposition_Base::set_global_phase(double global_phase_new_angle){
 @brief Call to apply global phase of U3 matrices to matrix
 @param global_phase The value of the phase
 */
-void Decomposition_Base::apply_global_phase_to_u3(QGD_Complex16 global_phase_new, Matrix& u3_gate){
+void Decomposition_Base::apply_global_phase(QGD_Complex16 global_phase_new, Matrix& u3_gate){
 	mult(global_phase_new, u3_gate);
 	return;
 }
