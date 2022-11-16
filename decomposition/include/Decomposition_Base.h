@@ -73,6 +73,9 @@ public:
     
     ///The global phase
     QGD_Complex16 global_phase;
+    
+    ///the name of the project
+    std::string project_name;
 
 protected:
 
@@ -394,6 +397,18 @@ double get_decomposition_error( );
 @return Returns with the minimum of the cost function
 */
 double get_current_minimum( );
+
+/**
+@brief Call to get the current name of the project
+@return Returns the name of the project
+*/
+std::string Decomposition_Base::get_project_name();
+/**
+@brief Call to set the name of the project
+@param project_name_new pointer to the new project name
+*/
+void Decomposition_Base::set_project_name(std::string& project_name_new);
+
 /**
 @brief  Calculate the new global phase of the Unitary matrix after removing a trivial U3 matrix
 @param global_phase_new: global phase calculated from the product of two U3 matrices
@@ -427,9 +442,9 @@ void Decomposition_Base::apply_global_phase();
 
 /**
 @brief   exports unitary matrix to binary file
-@param  
+@param  filename file to be exported to
 */
-void export_unitary(Matrix& Umtx, std::string& filename);
+void export_unitary(std::string& filename);
 /**
 @brief Import a Unitary matrix from a file
 @param filename  .binary file to read

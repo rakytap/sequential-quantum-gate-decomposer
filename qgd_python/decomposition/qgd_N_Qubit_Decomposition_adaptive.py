@@ -393,6 +393,12 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def get_Unitary( self ):
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Unitary()
+        
+##
+# @brief Call to export unitary matrix to binary file
+    def export_Unitary( self, filename ):
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).export_Unitary(filename)
 
 ##
 # @brief Call to get global phase
@@ -405,6 +411,17 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def set_Global_Phase( self, angle ):
 	
         return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Global_Phase(angle)
+##
+# @brief Call to get the name of the SQUANDER project
+    def get_Project_Name( self ):
+	
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Project_Name()
+
+##
+# @brief Call to set the name of the SQUANDER project ( recommended format : *new project name*_ ) 
+    def set_Project_Name( self, project_name_new ):
+	
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Project_Name(project_name_new)
 ##
 # @brief Call to apply global phase on Unitary matrix
     def apply_Global_Phase( self ):

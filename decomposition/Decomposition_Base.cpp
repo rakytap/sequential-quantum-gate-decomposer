@@ -85,6 +85,9 @@ Decomposition_Base::Decomposition_Base() {
     //global phase of the unitary matrix
     global_phase.real = 1;
     global_phase.imag = 1;
+    
+    //the name of the SQUANDER project
+    std::string projectname = "";
 
 
 
@@ -159,6 +162,9 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
     //global phase of the unitary matrix
     global_phase.real = 1;
     global_phase.imag = 1;
+    
+    //name of the SQUANDER project
+    std::string projectname = "";
 
 
 #if CBLAS==1
@@ -1488,6 +1494,24 @@ double Decomposition_Base::get_current_minimum( ) {
 }
 
 /**
+@brief Call to get the current name of the project
+@return Returns the name of the project
+*/
+std::string Decomposition_Base::get_project_name(){
+	return project_name;
+}
+
+/**
+@brief Call to set the name of the project
+@param project_name_new pointer to the new project name
+*/
+void Decomposition_Base::set_project_name(std::string& project_name_new){
+	project_name = project_name_new;
+	return;
+}
+
+
+/**
 @brief Call to calculate new global phase 
 @param global_phase The value of the phase
 */
@@ -1533,8 +1557,9 @@ void Decomposition_Base::apply_global_phase(){
 	return;
 }
 
-void Decomposition_Base::export_unitary(Matrix& Umtx, std::string& filename){
+void Decomposition_Base::export_unitary(std::string& filename){
 	FILE* pFile;
+	filename = project_name + filename;
 	char* c_filename = filename.c_str();
 	pFile = fopen(c_filename, "wb");
     	if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
@@ -1547,6 +1572,7 @@ void Decomposition_Base::export_unitary(Matrix& Umtx, std::string& filename){
 
 Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
 	FILE* pFile;
+	filename = project_name + filename;
 	char* c_filename = filename.c_str();
 	int cols;
 	int rows;
