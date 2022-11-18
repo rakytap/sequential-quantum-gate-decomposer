@@ -723,6 +723,18 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Optimized_Parameters( qgd_N_Qubit
 
 
 
+/**
+@brief Get the number of free parameters in the gate structure used for the decomposition
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Parameter_Num( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+    int parameter_num = self->decomp->get_parameter_num();
+
+    return Py_BuildValue("i", parameter_num);
+}
+
+
 
 /**
 @brief Extract the optimized parameters
@@ -1133,6 +1145,35 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary_From_Binary(qgd_N_Qubit_D
 }
 
 /**
+@brief Wrapper function to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Finalyzing_Layer_To_Gate_Structure( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+    try {
+        if (  self->decomp != NULL ) {
+        self->decomp->add_finalyzing_layer();
+        }
+        else if(  self->decomp_general != NULL ) {
+            self->decomp_general->add_finalyzing_layer();
+        }
+        else {
+            return Py_BuildValue("i", 1);
+        }
+
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+/**
 @brief Wrapper function to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released.
 */
 static PyObject *
@@ -1253,6 +1294,27 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Reorder_Qubits(qgd_N_Qubit_Decomposit
 
 
 
+/**
+@brief Wrapper method to add adaptive layers to the gate structure stored by the class.
+@param 
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Adaptive_Layers(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+
+    if (  self->decomp != NULL ) {
+        self->decomp->add_adaptive_layers();
+    }
+    else if(  self->decomp_general != NULL ) {
+        self->decomp_general->add_adaptive_layers();
+    }
+    else {
+        return Py_BuildValue("i", 1);
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
 
 
 /**
@@ -1328,6 +1390,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     {"get_Gate_Num", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gate_num, METH_NOARGS,
      "Method to get the number of decomposing gates."
     },
+    {"get_Parameter_Num", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Parameter_Num, METH_NOARGS,
+     "Call to get the number of free parameters in the gate structure used for the decomposition"
+    },
     {"get_Optimized_Parameters", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Optimized_Parameters, METH_NOARGS,
      "Method to get the array of optimized parameters."
     },
@@ -1388,10 +1453,16 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     {"set_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase, METH_VARARGS,
      "Call to set global phase"
     },
+    {"add_Finalyzing_Layer_To_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Finalyzing_Layer_To_Gate_Structure, METH_NOARGS,
+     "Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure."
+    },
     {"apply_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase, METH_NOARGS,
      "Call to apply global phase on Unitary matrix"},
     {"get_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary, METH_NOARGS,
      "Call to get Unitary Matrix"
+    },
+    {"add_Adaptive_Layers", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Adaptive_Layers, METH_NOARGS,
+     "Call to add adaptive layers to the gate structure stored by the class."
     },
     {"add_Layer_To_Imported_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure, METH_NOARGS,
      "Call to add an adaptive layer to the gate structure previously imported gate structure"

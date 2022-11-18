@@ -394,6 +394,13 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Unitary()
 
+
+##
+# @brief Call to get the number of free parameters in the gate structure used for the decomposition
+    def get_Parameter_Num( self ):
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Parameter_Num()
+
 ##
 # @brief Call to get global phase
     def get_Global_Phase( self ):
@@ -410,6 +417,20 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def apply_Global_Phase( self ):
 	
         return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Global_Phase()
+
+##
+# @brief Call to add adaptive layers to the gate structure stored by the class.
+    def add_Adaptive_Layers( self ):  
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Adaptive_Layers()
+
+##
+# @brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
+    def add_Finalyzing_Layer_To_Gate_Structure( self ):  
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Finalyzing_Layer_To_Gate_Structure()
+
+
 ##
 # @brief Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released.
     def apply_Imported_Gate_Structure( self ):  

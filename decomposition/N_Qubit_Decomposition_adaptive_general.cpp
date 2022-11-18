@@ -151,7 +151,7 @@ N_Qubit_Decomposition_adaptive_general::start_decomposition(bool prepare_export)
         for (int idx=0; idx<level; idx++) {
 
             // create the new decomposing layer
-            Gates_block* layer = construct_gate_layer(0,0);
+            Gates_block* layer = construct_adaptive_gate_layers();
             gate_structure_loc->combine( layer );
         }
            
@@ -531,6 +531,29 @@ N_Qubit_Decomposition_adaptive_general::create_reduced_parameters( Gates_block* 
 
 
 
+/**
+@brief Call to add adaptive layers to the gate structure stored by the class.
+*/
+void 
+N_Qubit_Decomposition_adaptive_general::add_adaptive_layers() {
+
+    add_adaptive_layers( this );
+
+}
+
+/**
+@brief Call to add adaptive layers to the gate structure.
+*/
+void 
+N_Qubit_Decomposition_adaptive_general::add_adaptive_layers( Gates_block* gate_structure ) {
+
+
+    // create the new decomposing layer and add to the gate staructure
+    Gates_block* layer = construct_adaptive_gate_layers();
+    gate_structure->combine( layer );
+
+
+}
 
 
 
@@ -542,7 +565,7 @@ N_Qubit_Decomposition_adaptive_general::create_reduced_parameters( Gates_block* 
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
 Gates_block* 
-N_Qubit_Decomposition_adaptive_general::construct_gate_layer( const int& _target_qbit, const int& _control_qbit) {
+N_Qubit_Decomposition_adaptive_general::construct_adaptive_gate_layers() {
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
@@ -632,13 +655,22 @@ N_Qubit_Decomposition_adaptive_general::construct_gate_layer( const int& _target
 
 
 
+/**
+@brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure stored by the class.
+*/
+void 
+N_Qubit_Decomposition_adaptive_general::add_finalyzing_layer() {
+
+    add_finalyzing_layer( gate_structure );
+
+}
+
 
 /**
-@brief ??????????????????
+@brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
 */
 void 
 N_Qubit_Decomposition_adaptive_general::add_finalyzing_layer( Gates_block* gate_structure ) {
-
 
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );
