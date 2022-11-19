@@ -437,3 +437,15 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Imported_Gate_Structure()
 
+
+##
+# @brief Call to retrieve the unitary of the circuit
+    def get_Matrix( self, parameters = None ):
+
+  
+        if parameters is None:
+            print( "get_Matrix: arary of input parameters is None")
+            return None
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Matrix( parameters )
+

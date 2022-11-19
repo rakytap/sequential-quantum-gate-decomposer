@@ -1374,6 +1374,61 @@ static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radi
 
 
 /**
+@brief Retrieve the unified unitary operation of the circuit.
+@param start_index The index of the first inverse gate
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Matrix( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
+
+    PyObject * parameters_arr = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
+    Matrix unitary_mtx;
+
+    if (  self->decomp != NULL ) {
+        unitary_mtx = self->decomp->get_matrix( parameters_mtx );
+    }
+    else if(  self->decomp_general != NULL ) {
+        unitary_mtx = self->decomp_general->get_matrix( parameters_mtx );
+    }
+    else {
+        std::string err("C++ decomposition class was not initialized");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    
+    // convert to numpy array
+    unitary_mtx.set_owner(false);
+    PyObject *unitary_py = matrix_to_numpy( unitary_mtx );
+
+
+    Py_DECREF(parameters_arr);
+
+    return unitary_py;
+}
+
+
+
+
+/**
 @brief Structure containing metadata about the members of class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
 */
 static PyMemberDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_members[] = {
@@ -1472,6 +1527,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Randomized_Radius", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius, METH_VARARGS,
      "Call to set the radius in which randomized parameters are generated around the current minimum duting the optimization process."
+    },
+    {"get_Matrix", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Matrix, METH_VARARGS,
+     "Method to retrieve the unitary of the circuit."
     },
     {NULL}  /* Sentinel */
 };
