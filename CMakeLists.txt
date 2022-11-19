@@ -368,7 +368,6 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive.cpp
-    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive_general.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_custom.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp

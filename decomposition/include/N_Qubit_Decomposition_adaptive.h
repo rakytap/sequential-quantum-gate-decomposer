@@ -67,12 +67,14 @@ protected:
 
     /// A gate structure describing custom gate structure to be used in the decomposition. 
     Gates_block* gate_structure;
-    ///
+    /// The maximal number of adaptive layers used in the decomposition
     int level_limit;
-    ///
+    /// The minimal number of adaptive layers used in the decomposition
     int level_limit_min;
-    ///
+    /// A vector of index pairs encoding the connectivity between the qubits
     std::vector<matrix_base<int>> topology;
+    /// Boolean variable to determine whether randomized adaptive layers are used or not
+    bool randomized_adaptive_layers;
     
     
 

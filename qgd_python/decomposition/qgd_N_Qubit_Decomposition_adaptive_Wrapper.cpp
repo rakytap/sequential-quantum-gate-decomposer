@@ -30,7 +30,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "structmember.h"
 #include <stdio.h>
 #include "N_Qubit_Decomposition_adaptive.h"
-#include "N_Qubit_Decomposition_adaptive_general.h"
 #include "Gates_block.h"
 
 #include "numpy_interface.h"
@@ -57,9 +56,6 @@ typedef struct qgd_N_Qubit_Decomposition_adaptive_Wrapper {
     /// An object to decompose the unitary
     N_Qubit_Decomposition_adaptive* decomp;
     /// An object to decompose the unitary
-    N_Qubit_Decomposition_adaptive_general* decomp_general;
-    /// a pointer to base class represented by the decomposing classes
-    N_Qubit_Decomposition_Base* decomp_base;
 
 } qgd_N_Qubit_Decomposition_adaptive_Wrapper;
 
@@ -81,20 +77,6 @@ create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_lim
 
 
 
-/**
-@brief Creates an instance of class N_Qubit_Decomposition and return with a pointer pointing to the class instance (C++ linking is needed)
-@param Umtx An instance of class Matrix containing the unitary to be decomposed
-@param qbit_num Number of qubits spanning the unitary
-@param level_limit The maximal number of layers used in the decomposition
-@param initial_guess Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
-@return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
-*/
-N_Qubit_Decomposition_adaptive_general* 
-create_N_Qubit_Decomposition_adaptive_general( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in ) {
-
-    return new N_Qubit_Decomposition_adaptive_general( Umtx, qbit_num, level_limit, level_limit_min, topology_in );
-}
-
 
 /**
 @brief Call to deallocate an instance of N_Qubit_Decomposition_adaptive class
@@ -102,21 +84,6 @@ create_N_Qubit_Decomposition_adaptive_general( Matrix& Umtx, int qbit_num, int l
 */
 void
 release_N_Qubit_Decomposition_adaptive( N_Qubit_Decomposition_adaptive*  instance ) {
-
-    if (instance != NULL ) {
-        delete instance;
-    }
-    return;
-}
-
-
-
-/**
-@brief Call to deallocate an instance of N_Qubit_Decomposition_adaptive_general class
-@param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
-*/
-void
-release_N_Qubit_Decomposition_adaptive_general( N_Qubit_Decomposition_adaptive_general*  instance ) {
 
     if (instance != NULL ) {
         delete instance;
@@ -147,13 +114,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_dealloc(qgd_N_Qubit_Decomposition_ada
         self->decomp = NULL;
     }
 
-    if ( self->decomp_general != NULL ) {
-        // deallocate the instance of class N_Qubit_Decomposition
-        release_N_Qubit_Decomposition_adaptive_general( self->decomp_general );
-        self->decomp_general = NULL;
-    }
-
-    self->decomp_base = NULL;
 
     if ( self->Umtx != NULL ) {
         // release the unitary to be decomposed
@@ -177,7 +137,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_new(PyTypeObject *type, PyObject *arg
     if (self != NULL) {}
 
     self->decomp = NULL;
-    self->decomp_general = NULL;
     self->Umtx = NULL;
 
     return (PyObject *) self;
@@ -194,19 +153,18 @@ static int
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit", (char*)"level_limit_min", (char*)"method", (char*)"topology", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit_min", (char*)"method", (char*)"topology", NULL};
  
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
     int  qbit_num = -1; 
     int level_limit = 0;
     int level_limit_min = 0;
-    PyObject *method = NULL;
     PyObject *topology = NULL;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiOO", kwlist,
-                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &method, &topology))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiO", kwlist,
+                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &topology))
         return -1;
 
     // convert python object array to numpy C API array
@@ -221,12 +179,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
 
     // create QGD version of the Umtx
     Matrix Umtx_mtx = numpy2matrix(self->Umtx);
-
-
-    // determine the optimizaton method
-    PyObject* method_string = PyObject_Str(method);
-    PyObject* method_string_unicode = PyUnicode_AsEncodedString(method_string, "utf-8", "~E~");
-    const char* method_C = PyBytes_AS_STRING(method_string_unicode);
 
     // elaborate connectivity topology
     bool is_None = topology == Py_None;
@@ -266,31 +218,14 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
 
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
-        if ( strcmp("limited", method_C)==0 or strcmp("LIMITED", method_C)==0) {
-            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp);
-            self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp;
-        }
-        else if ( strcmp("general", method_C)==0 or strcmp("GENERAL", method_C)==0) {
-            self->decomp_general = create_N_Qubit_Decomposition_adaptive_general( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp);    
-            self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp_general;
-        }
-        else {
-            std::cout << "Wrong optmimization method. Falling back to limited." << std::endl;
-            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp );
-            self->decomp_base = (N_Qubit_Decomposition_Base*)self->decomp;
-        }
+        self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;
-        Py_XDECREF(method_string);
-        Py_XDECREF(method_string_unicode);
         return -1;
     }
 
 
-
-    Py_XDECREF(method_string);
-    Py_XDECREF(method_string_unicode);
 
     return 0;
 }
@@ -317,18 +252,18 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Start_Decomposition(qgd_N_Qubit_Decom
         return Py_BuildValue("i", -1);
 
     // starting the decomposition
-    if (  self->decomp != NULL ) {
-        try {
-            self->decomp->start_decomposition(prepare_export);
-        }
-        catch (std::string err) {
-            PyErr_SetString(PyExc_Exception, err.c_str());
-            std::cout << err << std::endl;
-            return NULL;
-        }
+    try {
+        self->decomp->start_decomposition(prepare_export);
     }
-    else if(  self->decomp_general != NULL ) {
-        self->decomp_general->start_decomposition(prepare_export);
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
     
 
@@ -354,7 +289,7 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gate_num( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
     // get the number of gates
-    int ret = self->decomp_base->get_gate_num();
+    int ret = self->decomp->get_gate_num();
 
 
     return Py_BuildValue("i", ret);
@@ -370,7 +305,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gate_num( qgd_N_Qubit_Decompositi
 @return Returns with a python dictionary containing the metadata of the idx-th gate
 */
 static PyObject *
-get_gate( N_Qubit_Decomposition_Base* decomp, int &idx ) {
+get_gate( N_Qubit_Decomposition_adaptive* decomp, int &idx ) {
 
 
     // create dictionary conatining the gate data
@@ -593,7 +528,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gate( qgd_N_Qubit_Decomposition_a
     if (!PyArg_ParseTuple(args, "|i", &idx )) return Py_BuildValue("i", -1);
 
 
-    return get_gate( self->decomp_base, idx );
+    return get_gate( self->decomp, idx );
 
 
 }
@@ -616,7 +551,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates( qgd_N_Qubit_Decomposition_
 
 
     // get the number of gates
-    int op_num = self->decomp_base->get_gate_num();
+    int op_num = self->decomp->get_gate_num();
 
     // preallocate Python tuple for the output
     PyObject* ret = PyTuple_New( (Py_ssize_t) op_num );
@@ -627,7 +562,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates( qgd_N_Qubit_Decomposition_
     for (int idx = 0; idx < op_num; idx++ ) {
 
         // get metadata about the idx-th gate
-        PyObject* gate = get_gate( self->decomp_base, idx );
+        PyObject* gate = get_gate( self->decomp, idx );
 
         // adding gate information to the tuple
         PyTuple_SetItem( ret, (Py_ssize_t) idx, gate );
@@ -646,7 +581,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates( qgd_N_Qubit_Decomposition_
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
-    QGD_Complex16 global_phase_C = self->decomp_base->get_global_phase();
+    QGD_Complex16 global_phase_C = self->decomp->get_global_phase();
     PyObject* global_phase = PyFloat_FromDouble( std::atan2(global_phase_C.imag,global_phase_C.real));
     return global_phase;
     
@@ -661,7 +596,7 @@ static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase(qg
 	double global_phase_new_angle;
     if (!PyArg_ParseTuple(args, "|d", &global_phase_new_angle )) return Py_BuildValue("i", -1);
     std::cout<<global_phase_new_angle<<std::endl;
-    self->decomp_base->set_global_phase(global_phase_new_angle);
+    self->decomp->set_global_phase(global_phase_new_angle);
     return Py_BuildValue("i", 0);
     
 }
@@ -673,7 +608,7 @@ static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase(qg
 static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
     // get the number of gates
-    self->decomp_base->apply_global_phase();
+    self->decomp->apply_global_phase();
     return Py_BuildValue("i", 0);
     
 }
@@ -685,7 +620,7 @@ static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase(
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_List_Gates( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
-    self->decomp_base->list_gates( 0 );
+    self->decomp->list_gates( 0 );
 
     return Py_None;
 }
@@ -704,7 +639,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Optimized_Parameters( qgd_N_Qubit
 
     matrix_base<double> parameters_mtx(1, parameter_num);
     double* parameters = parameters_mtx.get_data();
-    self->decomp_base->get_optimized_parameters(parameters);
+    self->decomp->get_optimized_parameters(parameters);
 
     // reversing the order
     Matrix_real parameters_mtx_reversed(1, parameter_num);
@@ -772,7 +707,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimized_Parameters( qgd_N_Qubit
         parameters_reversed[idx] = parameters[param_num-1-idx];
     }
 
-    self->decomp_base->set_optimized_parameters(parameters_reversed, param_num);
+    self->decomp->set_optimized_parameters(parameters_reversed, param_num);
 
 
     Py_DECREF(parameters_arr);
@@ -820,7 +755,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Max_Layer_Num(qgd_N_Qubit_Decompo
         int key_int = (int) PyLong_AsLong(key);
 
         // set maximal layer nums on the C++ side
-        self->decomp_base->set_max_layer_num( key_int, value_int );
+        self->decomp->set_max_layer_num( key_int, value_int );
 
     }
 
@@ -870,7 +805,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Iteration_Loops(qgd_N_Qubit_Decom
         int key_int = (int) PyLong_AsLong(key);
 
         // set maximal layer nums on the C++ side
-        self->decomp_base->set_iteration_loops( key_int, value_int );
+        self->decomp->set_iteration_loops( key_int, value_int );
 
     }
 
@@ -896,7 +831,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Verbose(qgd_N_Qubit_Decomposition
 
 
     // set maximal layer nums on the C++ side
-    self->decomp_base->set_verbose( verbose );
+    self->decomp->set_verbose( verbose );
 
 
     return Py_BuildValue("i", 0);
@@ -932,7 +867,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Debugfile(qgd_N_Qubit_Decompositi
     std::string debugfile_Cpp(debugfile_C, string_length);
 
      // set the name of the debugfile on the C++ side
-    self->decomp_base->set_debugfile( debugfile_Cpp );
+    self->decomp->set_debugfile( debugfile_Cpp );
 
 
     return Py_BuildValue("s", NULL);
@@ -957,7 +892,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Tolerance(qgd_N_Qubi
 
 
     // set maximal layer nums on the C++ side
-    self->decomp_base->set_optimization_tolerance( tolerance );
+    self->decomp->set_optimization_tolerance( tolerance );
 
 
     return Py_BuildValue("i", 0);
@@ -1005,7 +940,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Blocks(qgd_N_Qubit_D
 
 
     // set maximal layer nums on the C++ side
-    self->decomp_base->set_optimization_blocks( optimization_block );
+    self->decomp->set_optimization_blocks( optimization_block );
 
 
     return Py_BuildValue("i", 0);
@@ -1033,16 +968,19 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decom
     // convert gate structure from PyObject to qgd_Gates_Block
     qgd_Gates_Block* qgd_op_block = (qgd_Gates_Block*) gate_structure_py;
 
-    if (  self->decomp != NULL ) {
+    try {
         self->decomp->set_adaptive_gate_structure( qgd_op_block->gate );
     }
-    else if(  self->decomp_general != NULL ) {
-        self->decomp_general->set_adaptive_gate_structure( qgd_op_block->gate );
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
-    else {
-        return Py_BuildValue("i", 1);
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
-
+    
 
     return Py_BuildValue("i", 0);
 
@@ -1071,15 +1009,20 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Gate_Structure_From_Binary( qgd_N
     const char* filename_C = PyBytes_AS_STRING(filename_string_unicode);
     std::string filename_str( filename_C );
 
-    if (  self->decomp != NULL ) {
+
+    try {
         self->decomp->add_adaptive_gate_structure( filename_str );
     }
-    else if(  self->decomp_general != NULL ) {
-        self->decomp_general->add_adaptive_gate_structure( filename_str );
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
-    else {
-        return Py_BuildValue("i", 1);
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
+
 
     return Py_BuildValue("i", 0);
 
@@ -1107,15 +1050,21 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure_From_Binary( qgd_N
     const char* filename_C = PyBytes_AS_STRING(filename_string_unicode);
     std::string filename_str( filename_C );
 
-    if (  self->decomp != NULL ) {
+
+    try {
         self->decomp->set_adaptive_gate_structure( filename_str );
     }
-    else if(  self->decomp_general != NULL ) {
-        self->decomp_general->set_adaptive_gate_structure( filename_str );
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
-    else {
-        return Py_BuildValue("i", 1);
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
+
+
 
     return Py_BuildValue("i", 0);
 
@@ -1133,13 +1082,21 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary_From_Binary(qgd_N_Qubit_D
     PyObject* filename_string_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
     const char* filename_C = PyBytes_AS_STRING(filename_string_unicode);
     std::string filename_str( filename_C );
-    
-    if (  self->decomp != NULL ) {
+
+
+    try {
         self->decomp->set_unitary_from_file( filename_str );
     }
-    else if(  self->decomp_general != NULL ) {
-        self->decomp_general->set_unitary_from_file( filename_str );
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
 
     return Py_BuildValue("i", 0);
 }
@@ -1150,22 +1107,21 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary_From_Binary(qgd_N_Qubit_D
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Finalyzing_Layer_To_Gate_Structure( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
-    try {
-        if (  self->decomp != NULL ) {
-        self->decomp->add_finalyzing_layer();
-        }
-        else if(  self->decomp_general != NULL ) {
-            self->decomp_general->add_finalyzing_layer();
-        }
-        else {
-            return Py_BuildValue("i", 1);
-        }
 
+    try {
+        self->decomp->add_finalyzing_layer();
     }
     catch (std::string err ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
 
     return Py_BuildValue("i", 0);
 
@@ -1180,15 +1136,22 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Imported_Gate_Structure( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
 
-    if (  self->decomp != NULL ) {
+
+    try {
         self->decomp->apply_imported_gate_structure();
     }
-    else if(  self->decomp_general != NULL ) {
-        self->decomp_general->apply_imported_gate_structure();
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
-    else {
-        return Py_BuildValue("i", 1);
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
     }
+
+
+
 
     return Py_BuildValue("i", 0);
 
@@ -1202,7 +1165,21 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self) {
 
 
-    Matrix&& Unitary_mtx = self->decomp->get_Umtx().copy();
+    Matrix Unitary_mtx;
+
+    try {
+        Unitary_mtx = self->decomp->get_Umtx().copy();
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
     
     // convert to numpy array
     Unitary_mtx.set_owner(false);
@@ -1211,30 +1188,55 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary( qgd_N_Qubit_Decompositio
     return Unitary_py;
 }
 
+
+
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
-           if ( self->Umtx != NULL ) {
+        
+
+    if ( self->Umtx != NULL ) {
         // release the unitary to be decomposed
         Py_DECREF(self->Umtx);    
         self->Umtx = NULL;
-       }
-       PyObject *Umtx_arg = NULL;
-       //Parse arguments 
-       if (!PyArg_ParseTuple(args, "|O", &Umtx_arg )) return Py_BuildValue("i", -1);
-	   // convert python object array to numpy C API array
-		if ( Umtx_arg == NULL ) return -1;
-		self->Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    }
+    
+    PyObject *Umtx_arg = NULL;
+    
+    //Parse arguments 
+    if (!PyArg_ParseTuple(args, "|O", &Umtx_arg )) return Py_BuildValue("i", -1);
 
-		// test C-style contiguous memory allocation of the array
-		if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
-		    std::cout << "Umtx is not memory contiguous" << std::endl;
-		}
+    // convert python object array to numpy C API array
+    if ( Umtx_arg == NULL ) return -1;
+
+    self->Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
+        std::cout << "Umtx is not memory contiguous" << std::endl;
+    }
 
 
-		// create QGD version of the Umtx
-		Matrix Umtx_mtx = numpy2matrix(self->Umtx);
-       self->decomp->set_unitary(Umtx_mtx);
-       return Py_BuildValue("i", 0);
+    // create QGD version of the Umtx
+    Matrix Umtx_mtx = numpy2matrix(self->Umtx);
+
+
+    try {
+        self->decomp->set_unitary(Umtx_mtx);
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    
+
+    return Py_BuildValue("i", 0);
 }
 
 /**
@@ -1284,7 +1286,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Reorder_Qubits(qgd_N_Qubit_Decomposit
 
 
     // reorder the qubits in the decomposition class
-    self->decomp_base->reorder_qubits( qbit_list_C );
+    self->decomp->reorder_qubits( qbit_list_C );
 
 
     
@@ -1302,15 +1304,8 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Adaptive_Layers(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
 
-    if (  self->decomp != NULL ) {
-        self->decomp->add_adaptive_layers();
-    }
-    else if(  self->decomp_general != NULL ) {
-        self->decomp_general->add_adaptive_layers();
-    }
-    else {
-        return Py_BuildValue("i", 1);
-    }
+    self->decomp->add_adaptive_layers();
+    
 
     return Py_BuildValue("i", 0);
 }
@@ -1325,15 +1320,8 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
 
-    if (  self->decomp != NULL ) {
-        self->decomp->add_layer_to_imported_gate_structure();
-    }
-    else if(  self->decomp_general != NULL ) {
-        self->decomp_general->add_layer_to_imported_gate_structure();
-    }
-    else {
-        return Py_BuildValue("i", 1);
-    }
+    self->decomp->add_layer_to_imported_gate_structure();
+    
 
     return Py_BuildValue("i", 0);
 }
@@ -1355,15 +1343,8 @@ static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radi
     if (!PyArg_ParseTuple(args, "|d", &radius )) return Py_BuildValue("i", -1);
 
 
-    if (  self->decomp != NULL ) {
-        self->decomp->set_randomized_radius( radius );
-    }
-    else if(  self->decomp_general != NULL ) {
-        self->decomp_general->set_randomized_radius( radius );
-    }
-    else {
-        return Py_BuildValue("i", 1);
-    }
+    self->decomp->set_randomized_radius( radius );
+    
 
     return Py_BuildValue("i", 0);
 
@@ -1402,18 +1383,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Matrix( qgd_N_Qubit_Decomposition
 
     Matrix unitary_mtx;
 
-    if (  self->decomp != NULL ) {
-        unitary_mtx = self->decomp->get_matrix( parameters_mtx );
-    }
-    else if(  self->decomp_general != NULL ) {
-        unitary_mtx = self->decomp_general->get_matrix( parameters_mtx );
-    }
-    else {
-        std::string err("C++ decomposition class was not initialized");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        std::cout << err << std::endl;
-        return NULL;
-    }
+    unitary_mtx = self->decomp->get_matrix( parameters_mtx );
+    
     
     // convert to numpy array
     unitary_mtx.set_owner(false);

@@ -100,6 +100,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
     }
     
 
+    // Boolean variable to determine whether randomized adaptive layers are used or not
+    randomized_adaptive_layers = false;
+
     srand(time(NULL));   // Initialization, should only be called once.
 }
 
@@ -142,6 +145,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         max_iterations = 1;
 
     }
+
+    // Boolean variable to determine whether randomized adaptive layers are used or not
+    randomized_adaptive_layers = false;
 
     srand(time(NULL));   // Initialization, should only be called once.
 }
@@ -190,6 +196,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         // Maximal number of iteartions in the optimization process
         max_iterations = 1;
     }
+
+    // Boolean variable to determine whether randomized adaptive layers are used or not
+    randomized_adaptive_layers = false;
 
     srand(time(NULL));   // Initialization, should only be called once.
 }
@@ -1404,13 +1413,26 @@ N_Qubit_Decomposition_adaptive::construct_adaptive_gate_layers() {
 
     }
 */
-    while (layers.size()>0) { 
-        int idx = std::rand() % layers.size();
+
+    // make difference between randomized adaptive layers and deterministic one
+    if (randomized_adaptive_layers) {
+
+        while (layers.size()>0) { 
+            int idx = std::rand() % layers.size();
 #ifdef __MPI__        
-        MPI_Bcast( &idx, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Bcast( &idx, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
-        block->add_gate( layers[idx] );
-        layers.erase( layers.begin() + idx );
+            block->add_gate( layers[idx] );
+            layers.erase( layers.begin() + idx );
+        }
+
+    }
+    else {
+        while (layers.size()>0) { 
+            block->add_gate( layers[0] );
+            layers.erase( layers.begin() );
+        }
+
     }
 
 
