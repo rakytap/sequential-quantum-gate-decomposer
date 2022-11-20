@@ -296,7 +296,7 @@ add_layer_to_imported_gate_structure();
 
 
     std::string filename("circuit_squander.binary");
-    filename = project_name+filename;
+    if (project_name != ""){filename = project_name+filename;}
     export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
 /*
 Matrix_real parameters_imported;
@@ -337,7 +337,7 @@ Gates_block* gate_structure_loc_imported = import_gate_list_from_binary(paramete
             
 
             std::string filename("circuit_compression.binary");
-            filename=project_name+filename;
+            if (project_name != ""){filename=project_name+filename;}
             export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);    
             std::string filename_unitary("unitary_compression_unitary");
             export_unitary(filename_unitary);
@@ -392,7 +392,7 @@ iter_max = 1e4;
     final_optimization();
 
     std::string filename2("circuit_final.binary");
-    filename2=project_name+filename2;
+	if (project_name != ""){filename2=project_name+filename2;}
     export_gate_list_to_binary(optimized_parameters_mtx, this, filename2, verbose);  
 
     // prepare gates to export
