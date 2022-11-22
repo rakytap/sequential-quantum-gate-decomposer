@@ -41,11 +41,11 @@ class Test_operations_squander:
         # creating an instance of the C++ class
         U3 = qgd_U3( qbit_num, target_qbit, Theta, Phi, Lambda )
         
-        parameters = np.array( [pi, pi, pi/2] )
+        parameters = np.array( [pi/2, pi, pi/2] )
         
         U3_matrix = U3.get_Matrix( parameters )
         
-        print(U3_matrix)
+        print(np.around(U3_matrix,2))
 
 #QISKIT
 class Test_operations_qiskit:
@@ -80,7 +80,11 @@ class Test_operations_qiskit:
         decomposed_matrix = np.asarray(decomposed_matrix)
         
         # Draw the circuit        
-        print(result.get_unitary(circuit,1))
+        print(result.get_unitary(circuit,2))
+        
+        #the difference between the SQUANDER and the qiskit result        
+        delta=U3_matrix-decomposed_matrix
+        print("The difference between the SQUANDER and the qiskit result is: " , np.around(delta,2))
         
  
 
