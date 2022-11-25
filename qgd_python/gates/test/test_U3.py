@@ -77,7 +77,7 @@ class Test_operations_squander:
         delta_matrix=U3_matrix-decomposed_matrix
         error=(np.real(np.trace(delta_matrix)))/2
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
-        
+        assert( error < 1e-3 )        
  
 
 
