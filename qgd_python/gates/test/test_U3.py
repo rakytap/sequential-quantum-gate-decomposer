@@ -15,14 +15,14 @@ pi=np.pi
 
 #SQUANDER
 class Test_operations_squander:
-    """This is a test class of the python iterface to the gates of the QGD package"""
+    """This is a test class of the python iterface to compare the SQUANDER and the qiskit decomposition"""
 
 
 
     def test_U3_squander(self):
         r"""
         This method is called by pytest. 
-        Test to create an instance of U3 gate.
+        Test to create an instance of U3 gate and compare with qiskit.
         """
 
         from qgd_python.gates.qgd_U3 import qgd_U3
@@ -48,16 +48,7 @@ class Test_operations_squander:
         print(np.around(U3_matrix,2))
 
 #QISKIT
-class Test_operations_qiskit:
-    """This is a test class of the python iterface to the gates of the QGD package"""
 
-
-
-    def test_U3_qiskit(self):
-        r"""
-        This method is called by pytest. 
-        Test to create an instance of U3 gate.
-        """
         backend = Aer.get_backend('unitary_simulator')
 
         q=QuantumRegister(3,'q')
@@ -83,8 +74,9 @@ class Test_operations_qiskit:
         print(result.get_unitary(circuit,2))
         
         #the difference between the SQUANDER and the qiskit result        
-        delta=U3_matrix-decomposed_matrix
-        print("The difference between the SQUANDER and the qiskit result is: " , np.around(delta,2))
+        delta_matrix=U3_matrix-decomposed_matrix
+        error=(np.real(np.trace(delta_matrix)))/2
+        print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
         
  
 
