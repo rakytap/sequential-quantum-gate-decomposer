@@ -77,7 +77,7 @@ class Test_operations_squander:
         delta_matrix=U3_matrix-decomposed_matrix
 
         # compute norm of matrix
-        error=mat_norm = np.linalg.norm(delta_matrix)
+        error=np.linalg.norm(delta_matrix)
 
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
         assert( error < 1e-3 )        
