@@ -1559,7 +1559,11 @@ void Decomposition_Base::apply_global_phase(){
 
 void Decomposition_Base::export_unitary(std::string& filename){
 	FILE* pFile;
+<<<<<<< HEAD
 	if (project_name != ""){filename = project_name + "_" + filename;}
+=======
+	if (project_name != ""){filename = project_name + filename;}
+>>>>>>> jn_project_name
 	char* c_filename = filename.c_str();
 	pFile = fopen(c_filename, "wb");
     	if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
@@ -1572,7 +1576,11 @@ void Decomposition_Base::export_unitary(std::string& filename){
 
 Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
 	FILE* pFile;
+<<<<<<< HEAD
 	if (project_name != ""){filename = project_name + "_"  + filename;}
+=======
+	if (project_name != ""){filename = project_name + filename;}
+>>>>>>> jn_project_name
 	char* c_filename = filename.c_str();
 	int cols;
 	int rows;
