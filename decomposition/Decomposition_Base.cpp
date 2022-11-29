@@ -1557,16 +1557,24 @@ void Decomposition_Base::apply_global_phase(){
 	return;
 }
 
+
+/**
+@brief ???????????
+@param ???????????
+*/
 void Decomposition_Base::export_unitary(std::string& filename){
 	FILE* pFile;
-<<<<<<< HEAD
 	if (project_name != ""){filename = project_name + "_" + filename;}
-=======
-	if (project_name != ""){filename = project_name + filename;}
->>>>>>> jn_project_name
-	char* c_filename = filename.c_str();
+
+	const char* c_filename = filename.c_str();
 	pFile = fopen(c_filename, "wb");
-    	if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
+    	if (pFile==NULL) {
+            fputs ("File error",stderr); 
+            std::string error("Cannot open file.");
+            throw error;
+        }
+
+
     	fwrite(&Umtx.rows, sizeof(int), 1, pFile);
    	fwrite(&Umtx.cols, sizeof(int), 1, pFile);          
    	fwrite(Umtx.get_data(), sizeof(QGD_Complex16), Umtx.size(), pFile);
@@ -1574,22 +1582,35 @@ void Decomposition_Base::export_unitary(std::string& filename){
 	return;
 }
 
+
+
+/**
+@brief ???????????
+@param ???????????
+*/
 Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
 	FILE* pFile;
-<<<<<<< HEAD
+
 	if (project_name != ""){filename = project_name + "_"  + filename;}
-=======
-	if (project_name != ""){filename = project_name + filename;}
->>>>>>> jn_project_name
-	char* c_filename = filename.c_str();
+
+	const char* c_filename = filename.c_str();
 	int cols;
 	int rows;
 	pFile = fopen(c_filename, "rb");
-    	if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
-	fread(&rows, sizeof(int), 1, pFile);
-	fread(&cols, sizeof(int), 1, pFile);
+    	if (pFile==NULL) {
+            fputs ("File error",stderr); 
+            exit (1);
+        }
+
+	size_t fread_status;
+        fread_status = fread(&rows, sizeof(int), 1, pFile);
+	fread_status = fread(&cols, sizeof(int), 1, pFile);
+
+        //TODO error handling for fread_status
+
 	Matrix Umtx_ = Matrix(rows, cols);
-	fread(Umtx_.get_data(), sizeof(QGD_Complex16), rows*cols, pFile);
+
+	fread_status = fread(Umtx_.get_data(), sizeof(QGD_Complex16), rows*cols, pFile);
     	fclose(pFile);
 	return Umtx_;
 }

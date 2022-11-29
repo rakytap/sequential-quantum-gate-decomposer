@@ -38,18 +38,26 @@ from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qu
 from scipy.io import loadmat
 
 def test_Project_Name():
+
 	# load the unitary from file
 	data = loadmat('Umtx.mat')
+
 	# The unitary to be decomposed  
 	Umtx = data['Umtx']
+
 	# creating a class to decompose the unitary
 	cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
+
+
 	project_name = cDecompose.get_Project_Name()
 	assert(project_name=="")
-	cDecompose.set_Project_Name("TEST_")
+
+	cDecompose.set_Project_Name("TEST")
 	project_name = cDecompose.get_Project_Name()
-	assert(project_name=="TEST_")
+
+	assert(project_name=="TEST")
+
 	cDecompose.export_Unitary("unitary_project_name_test.binary")
-	assert(os.path.exists(project_name+"unitary_project_name_test.binary"))
+	assert(os.path.exists(project_name + "_" + "unitary_project_name_test.binary") )
 	
 	

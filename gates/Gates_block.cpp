@@ -2834,7 +2834,7 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, co
     log.print(sstream, 2);	
 
     FILE* pFile;
-    char* c_filename = filename.c_str();
+    const char* c_filename = filename.c_str();
     
     pFile = fopen(c_filename, "wb");
     if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
@@ -2959,7 +2959,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, const std::st
     log.print(sstream, 2);	
 
     FILE* pFile;
-    char* c_filename = filename.c_str();
+    const char* c_filename = filename.c_str();
     
     pFile = fopen(c_filename, "rb");
     if (pFile==NULL) {fputs ("File error",stderr); exit (1);}
@@ -2979,18 +2979,20 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
     std::stringstream sstream;
 
     int qbit_num;
-    fread(&qbit_num, sizeof(int), 1, pFile);
+    size_t fread_status;
+
+    fread_status = fread(&qbit_num, sizeof(int), 1, pFile);
     sstream << "qbit_num: " << qbit_num << std::endl;
     Gates_block* gate_block = new Gates_block(qbit_num);
 
     int parameter_num;
-    fread(&parameter_num, sizeof(int), 1, pFile);
+    fread_status = fread(&parameter_num, sizeof(int), 1, pFile);
     sstream << "parameter_num: " << parameter_num << std::endl;
     parameters = Matrix_real(1, parameter_num);
     double* parameters_data = parameters.get_data();
 
     int gates_num;
-    fread(&gates_num, sizeof(int), 1, pFile);
+    fread_status = fread(&gates_num, sizeof(int), 1, pFile);
     sstream << "gates_num: " << gates_num << std::endl;
 
     std::vector<int> gate_block_level_gates_num;
@@ -3006,7 +3008,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
     while ( gate_block_level_gates_num[0] > 0 && iter < iter_max) {
 
         gate_type gt_type;
-        fread(&gt_type, sizeof(gate_type), 1, pFile);
+        fread_status = fread(&gt_type, sizeof(gate_type), 1, pFile);
 
         //std::cout << "gate type: " << gt_type << std::endl;
 
@@ -3014,11 +3016,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing CNOT gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_cnot_to_end(target_qbit, control_qbit);
@@ -3028,11 +3030,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing CZ gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_cz_to_end(target_qbit, control_qbit);
@@ -3042,11 +3044,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing CH gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_ch_to_end(target_qbit, control_qbit);
@@ -3056,11 +3058,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing SYCAMORE gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
             gate_block_levels[current_level]->add_syc_to_end(target_qbit, control_qbit);
@@ -3070,19 +3072,19 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing U3 gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int Theta;
             int Phi;
             int Lambda;
 
-            fread(&Theta, sizeof(int), 1, pFile);
-            fread(&Phi, sizeof(int), 1, pFile);
-            fread(&Lambda, sizeof(int), 1, pFile);
+            fread_status = fread(&Theta, sizeof(int), 1, pFile);
+            fread_status = fread(&Phi, sizeof(int), 1, pFile);
+            fread_status = fread(&Lambda, sizeof(int), 1, pFile);
 
             int parameter_num = Theta + Phi + Lambda;
-            fread(parameters_data, sizeof(double), parameter_num, pFile);
+            fread_status = fread(parameters_data, sizeof(double), parameter_num, pFile);
             parameters_data = parameters_data + parameter_num;
 
             gate_block_levels[current_level]->add_u3_to_end(target_qbit, Theta, Phi, Lambda);
@@ -3094,10 +3096,10 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing RX gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            fread(parameters_data, sizeof(double), 1, pFile);
+            fread_status = fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
             gate_block_levels[current_level]->add_rx_to_end(target_qbit);
@@ -3109,10 +3111,10 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing RY gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            fread(parameters_data, sizeof(double), 1, pFile);
+            fread_status = fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
             gate_block_levels[current_level]->add_ry_to_end(target_qbit);
@@ -3124,14 +3126,14 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing CRY gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
-            fread(parameters_data, sizeof(double), 1, pFile);
+            fread_status = fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
             gate_block_levels[current_level]->add_cry_to_end(target_qbit, control_qbit);
@@ -3143,10 +3145,10 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing RZ gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            fread(parameters_data, sizeof(double), 1, pFile);
+            fread_status = fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
             gate_block_levels[current_level]->add_rz_to_end(target_qbit);
@@ -3158,7 +3160,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing X gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_x_to_end(target_qbit);
@@ -3170,7 +3172,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing SX gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_sx_to_end(target_qbit);
@@ -3183,17 +3185,17 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "******* importing gates block ********" << std::endl;
 
             int qbit_num_loc;
-            fread(&qbit_num_loc, sizeof(int), 1, pFile);
+            fread_status = fread(&qbit_num_loc, sizeof(int), 1, pFile);
             //std::cout << "qbit_num_loc: " << qbit_num_loc << std::endl;
             Gates_block* gate_block_inner = new Gates_block(qbit_num_loc);
 
             int parameter_num_loc;
-            fread(&parameter_num_loc, sizeof(int), 1, pFile);
+            fread_status = fread(&parameter_num_loc, sizeof(int), 1, pFile);
             //std::cout << "parameter_num_loc: " << parameter_num_loc << std::endl;
         
 
             int gates_num_loc;
-            fread(&gates_num_loc, sizeof(int), 1, pFile);
+            fread_status = fread(&gates_num_loc, sizeof(int), 1, pFile);
             //std::cout << "gates_num_loc: " << gates_num_loc << std::endl;
             
             gate_block_levels[ current_level ]->add_gate_to_end( static_cast<Gate*>(gate_block_inner) );
@@ -3206,14 +3208,14 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "importing adaptive gate" << std::endl;
 
             int target_qbit;
-            fread(&target_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             int control_qbit;
-            fread(&control_qbit, sizeof(int), 1, pFile);
+            fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
-            fread(parameters_data, sizeof(double), 1, pFile);
+            fread_status = fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
             gate_block_levels[current_level]->add_adaptive_to_end(target_qbit, control_qbit);

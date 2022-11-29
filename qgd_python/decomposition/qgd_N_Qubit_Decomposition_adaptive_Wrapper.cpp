@@ -1210,7 +1210,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_export_Unitary( qgd_N_Qubit_Decomposi
     PyObject* filename_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
     const char* filename_C = PyBytes_AS_STRING(filename_unicode);
     std::string filename_str = ( filename_C );
-    
+
     // convert to python string
     self->decomp->export_unitary(filename_str);
 
@@ -1238,28 +1238,37 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary( qgd_N_Qubit_Decompositio
 
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
-           if ( self->Umtx != NULL ) {
-        // release the unitary to be decomposed
-        Py_DECREF(self->Umtx);    
-        self->Umtx = NULL;
+
+
+       if ( self->Umtx != NULL ) {
+           // release the unitary to be decomposed
+           Py_DECREF(self->Umtx);    
+           self->Umtx = NULL;
        }
+
        PyObject *Umtx_arg = NULL;
        //Parse arguments 
        if (!PyArg_ParseTuple(args, "|O", &Umtx_arg )) return Py_BuildValue("i", -1);
-	   // convert python object array to numpy C API array
-		if ( Umtx_arg == NULL ) return -1;
-		self->Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+	   
+       // convert python object array to numpy C API array
+       if ( Umtx_arg == NULL ) {
+           PyErr_SetString(PyExc_Exception, "Umtx argument in empty");
+           return NULL;
+       }
+	
+	self->Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
-		// test C-style contiguous memory allocation of the array
-		if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
-		    std::cout << "Umtx is not memory contiguous" << std::endl;
-		}
+	// test C-style contiguous memory allocation of the array
+	if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
+	    std::cout << "Umtx is not memory contiguous" << std::endl;
+	}
 
 
-		// create QGD version of the Umtx
-		Matrix Umtx_mtx = numpy2matrix(self->Umtx);
-       self->decomp->set_unitary(Umtx_mtx);
-       return Py_BuildValue("i", 0);
+	// create QGD version of the Umtx
+	Matrix Umtx_mtx = numpy2matrix(self->Umtx);
+        self->decomp->set_unitary(Umtx_mtx);
+
+        return Py_BuildValue("i", 0);
 }
 
 /**

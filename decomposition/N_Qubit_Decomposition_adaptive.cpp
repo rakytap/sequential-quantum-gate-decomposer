@@ -296,11 +296,10 @@ add_layer_to_imported_gate_structure();
 
 
     std::string filename("circuit_squander.binary");
-<<<<<<< HEAD
-    if (project_name != ""){filename = project_name+ "_" +filename;}
-=======
-    if (project_name != ""){filename = project_name+filename;}
->>>>>>> jn_project_name
+    if (project_name != "") {
+        filename = project_name+ "_" +filename;
+    }
+
     export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
 /*
 Matrix_real parameters_imported;
@@ -341,11 +340,10 @@ Gates_block* gate_structure_loc_imported = import_gate_list_from_binary(paramete
             
 
             std::string filename("circuit_compression.binary");
-<<<<<<< HEAD
-            if (project_name != ""){filename=project_name+ "_"  +filename;}
-=======
-            if (project_name != ""){filename=project_name+filename;}
->>>>>>> jn_project_name
+            if (project_name != "") { 
+                filename=project_name+ "_"  +filename;
+            }
+
             export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);    
             std::string filename_unitary("unitary_compression_unitary");
             export_unitary(filename_unitary);
@@ -400,11 +398,11 @@ iter_max = 1e4;
     final_optimization();
 
     std::string filename2("circuit_final.binary");
-<<<<<<< HEAD
-	if (project_name != ""){filename2=project_name+ "_"  +filename2;}
-=======
-	if (project_name != ""){filename2=project_name+filename2;}
->>>>>>> jn_project_name
+
+    if (project_name != "") {
+        filename2=project_name+ "_"  +filename2;
+    }
+
     export_gate_list_to_binary(optimized_parameters_mtx, this, filename2, verbose);  
 
     // prepare gates to export
@@ -814,9 +812,9 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 //panelties.print_matrix();
 
     // determine the reduction with the lowest penalty
-    int panelty_min = panelties[0];
-    int idx_min = 0;
-    for (int idx=0; idx<panelties.size(); idx++) {
+    unsigned int panelty_min = panelties[0];
+    unsigned int idx_min = 0;
+    for (size_t idx=0; idx<panelties.size(); idx++) {
         if ( panelty_min > panelties[idx] ) {
             panelty_min = panelties[idx];
             idx_min = idx;
@@ -834,10 +832,10 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     }
     
 #ifdef __MPI__        
-    MPI_Bcast( &idx_min, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast( &idx_min, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
 #endif    
 
-    for (int idx=0; idx<panelties.size(); idx++) {
+    for (size_t idx=0; idx<panelties.size(); idx++) {
         if (idx==idx_min) continue;
         if ( gate_structures_vec[idx] == gate_structure) continue;
         if ( gate_structures_vec[idx]  ) {
@@ -1150,7 +1148,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
             // find matching U3 gates
             std::vector<int>&& involved_qbits = layer->get_involved_qubits();
-            for( int rdx=0; rdx<involved_qbits.size(); rdx++ ) {
+            for( size_t rdx=0; rdx<involved_qbits.size(); rdx++ ) {
 
                 U3* U_gate_to_be_removed = static_cast<U3*>(layer->get_gate(rdx+1));
                 int qbit_to_be_matched = U_gate_to_be_removed->get_target_qbit();

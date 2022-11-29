@@ -402,12 +402,12 @@ double get_current_minimum( );
 @brief Call to get the current name of the project
 @return Returns the name of the project
 */
-std::string Decomposition_Base::get_project_name();
+std::string get_project_name();
 /**
 @brief Call to set the name of the project
 @param project_name_new pointer to the new project name
 */
-void Decomposition_Base::set_project_name(std::string& project_name_new);
+void set_project_name(std::string& project_name_new);
 
 /**
 @brief  Calculate the new global phase of the Unitary matrix after removing a trivial U3 matrix
@@ -425,7 +425,7 @@ QGD_Complex16 get_global_phase( );
 @brief Call to set global phase 
 @param global_phase_new The value of the new phase
 */
-void Decomposition_Base::set_global_phase(double global_phase_new_angle);
+void set_global_phase(double global_phase_new_angle);
 
 
 /**
@@ -438,7 +438,7 @@ void apply_global_phase(QGD_Complex16 global_phase_new, Matrix& u3_gate);
 @brief Call to apply the current global phase to the unitary matrix
 @param global_phase The value of the phase
 */
-void Decomposition_Base::apply_global_phase();
+void apply_global_phase();
 
 /**
 @brief   exports unitary matrix to binary file
