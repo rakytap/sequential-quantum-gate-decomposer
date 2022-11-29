@@ -239,7 +239,7 @@ TAB_SIZE               = 5
 # newlines.
 
 ALIASES                = QGD=SQUANDER \
-                         version=v1.6 \
+                         version=v1.7 \
                          "index=<a href=\"index.html\">Main Page</a>" \
                          "python_iface=<a href=\"group__python.html\">QGD Python Interface</a>" \
                          "example=<a href=\"group__examples.html\">Examples</a>"
