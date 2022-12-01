@@ -28,7 +28,7 @@ class Test_operations_squander:
         from qgd_python.gates.qgd_U3 import qgd_U3
 
         # number of qubits
-        qbit_num = 3
+        qbit_num = 2
 
         # target qbit
         target_qbit = 0
@@ -41,24 +41,22 @@ class Test_operations_squander:
         # creating an instance of the C++ class
         U3 = qgd_U3( qbit_num, target_qbit, Theta, Phi, Lambda )
         
-        parameters = np.array( [pi/2, pi, pi/2] )
+        parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
         
-        U3_matrix = U3.get_Matrix( parameters )
+        U3_squander = U3.get_Matrix( parameters )
         
-        print(np.around(U3_matrix,2))
+        print(U3_squander)
 
 #QISKIT
 
         backend = Aer.get_backend('unitary_simulator')
 
-        q=QuantumRegister(3,'q')
-        c=ClassicalRegister(3, 'c')
 
         # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(q, c)
+        circuit = QuantumCircuit(qbit_num)
 
         # Add the u3 gate on qubit pi, pi,
-        circuit.u(pi, pi, pi/2, q[0])
+        circuit.u(parameters[0]*2, parameters[1], parameters[2], target_qbit)
                 
         # job execution and getting the result as an object
         job = execute(circuit, backend)
@@ -67,14 +65,14 @@ class Test_operations_squander:
         result=job.result()  
         
         # the unitary matrix from the result object
-        decomposed_matrix = result.get_unitary(circuit,20)
-        decomposed_matrix = np.asarray(decomposed_matrix)
+        U3_qiskit = result.get_unitary(circuit)
+        U3_qiskit = np.asarray(U3_qiskit)
         
         # Draw the circuit        
-        print(result.get_unitary(circuit,2))
+        print(U3_qiskit)
         
         #the difference between the SQUANDER and the qiskit result        
-        delta_matrix=U3_matrix-decomposed_matrix
+        delta_matrix=U3_squander-U3_qiskit
 
         # compute norm of matrix
         error=np.linalg.norm(delta_matrix)
