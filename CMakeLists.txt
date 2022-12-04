@@ -364,6 +364,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/gates/RX.cpp
     ${PROJECT_SOURCE_DIR}/gates/RZ.cpp
     ${PROJECT_SOURCE_DIR}/gates/Composite.cpp
+    ${PROJECT_SOURCE_DIR}/nn/NN.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition.cpp
@@ -433,6 +434,7 @@ target_include_directories(qgd PRIVATE
                             ./gates/include
                             ./decomposition/include
                             ./random_unitary/include
+                            ./nn/include
                             ${EXTRA_INCLUDES})
 
 
@@ -463,6 +465,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Adaptive.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/RZ.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Composite.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/nn/include/NN.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Decomposition_Base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_Base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition.h
@@ -494,6 +497,7 @@ set_target_properties(
 # adding CMAKE files for Python extensions
 add_subdirectory (qgd_python/decomposition)
 add_subdirectory (qgd_python/gates)
+add_subdirectory (qgd_python/nn)
 
 
 if(DEFINED ENV{QGD_CTEST})

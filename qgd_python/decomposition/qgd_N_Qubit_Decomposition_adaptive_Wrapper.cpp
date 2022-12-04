@@ -134,10 +134,12 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_new(PyTypeObject *type, PyObject *arg
 {
     qgd_N_Qubit_Decomposition_adaptive_Wrapper *self;
     self = (qgd_N_Qubit_Decomposition_adaptive_Wrapper *) type->tp_alloc(type, 0);
-    if (self != NULL) {}
+    if (self != NULL) {
 
-    self->decomp = NULL;
-    self->Umtx = NULL;
+        self->decomp = NULL;
+        self->Umtx = NULL;
+
+    }
 
     return (PyObject *) self;
 }

@@ -1,0 +1,347 @@
+/*
+Created on Fri Jun 26 14:42:56 2020
+Copyright (C) 2020 Peter Rakyta, Ph.D.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see http://www.gnu.org/licenses/.
+
+@author: Peter Rakyta, Ph.D.
+*/
+/*
+\file qgd_nn_Wrapper.cpp
+\brief Python interface for the N_Qubit_Decomposition class
+*/
+
+#define PY_SSIZE_T_CLEAN
+
+
+#include <Python.h>
+#include <numpy/arrayobject.h>
+#include "structmember.h"
+#include <stdio.h>
+#include "NN.h"
+
+
+#include "numpy_interface.h"
+
+
+
+/**
+@brief Type definition of the qgd_nn_Wrapper Python class of the qgd_nn_Wrapper module
+*/
+typedef struct qgd_nn_Wrapper {
+    PyObject_HEAD
+    /// pointer to the C++ side NN component
+    NN* nn;
+
+} qgd_nn_Wrapper;
+
+
+
+
+/**
+@brief Creates an instance of class NN and return with a pointer pointing to the class instance (C++ linking is needed)
+@return Return with a void pointer pointing to an instance of NN class.
+*/
+NN* 
+create_NN() {
+
+    return new NN();
+}
+
+
+
+
+/**
+@brief Call to deallocate an instance of N_Qubit_Decomposition_adaptive class
+@param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
+*/
+void
+release_NN( NN*  instance ) {
+
+    if (instance != NULL ) {
+        delete instance;
+    }
+    return;
+}
+
+
+extern "C"
+{
+
+
+/**
+@brief Method called when a python instance of the class qgd_nn_Wrapper is destroyed
+@param self A pointer pointing to an instance of class qgd_nn_Wrapper.
+*/
+static void
+qgd_nn_Wrapper_dealloc(qgd_nn_Wrapper *self)
+{
+
+
+    if ( self->nn != NULL ) {
+        // deallocate the instance of class N_Qubit_Decomposition
+        release_NN( self->nn );
+        self->nn = NULL;
+    }
+    
+    Py_TYPE(self)->tp_free((PyObject *) self);
+
+}
+
+/**
+@brief Method called when a python instance of the class qgd_nn_Wrapper is allocated
+@param type A pointer pointing to a structure describing the type of the class qgd_nn_Wrapper.
+*/
+static PyObject *
+qgd_nn_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+{
+    qgd_nn_Wrapper *self;
+    self = (qgd_nn_Wrapper *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+
+        self->nn = NULL;
+
+    }
+
+
+    return (PyObject *) self;
+}
+
+
+/**
+@brief Method called when a python instance of the class qgd_nn_Wrapper is initialized
+@param self A pointer pointing to an instance of the class qgd_nn_Wrapper.
+@param args A tuple of the input arguments: Umtx (numpy array), qbit_num (integer), optimize_layer_num (bool), initial_guess (string PyObject 
+@param kwds A tuple of keywords
+*/
+static int
+qgd_nn_Wrapper_init(qgd_nn_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    // The tuple of expected keywords
+    static char *kwlist[] = {NULL};
+ 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|", kwlist ))
+        return -1;
+
+
+    try {
+        self->nn = create_NN();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return 1;
+    }
+   
+
+
+    return 0;
+}
+
+/**
+@brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
+@param self A pointer pointing to an instance of the class qgd_nn_Wrapper.
+@param args A tuple of the input arguments: finalize_decomp (bool), prepare_export (bool)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_nn_Wrapper_get_nn_chanels(qgd_nn_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"Umtx", NULL};
+
+    // initiate variables for input arguments
+    PyObject *Umtx_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &Umtx_arg) )
+        return Py_BuildValue("i", 1);
+
+    // convert python object array to numpy C API array
+    if ( Umtx_arg == NULL ) return Py_BuildValue("i", 1);
+
+    PyObject * Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(Umtx) ) {
+        std::cout << "Umtx is not memory contiguous" << std::endl;
+    }
+
+    // create QGD version of the Umtx
+    Matrix Umtx_mtx = numpy2matrix(Umtx);
+
+    
+
+    // starting the decomposition
+    try {
+        self->nn->get_nn_chanels(Umtx_mtx);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    
+
+    Py_DECREF(Umtx);
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+
+
+
+
+/**
+@brief Structure containing metadata about the members of class qgd_nn_Wrapper.
+*/
+static PyMemberDef qgd_nn_Wrapper_members[] = {
+    {NULL}  /* Sentinel */
+};
+
+/**
+@brief Structure containing metadata about the methods of class qgd_nn_Wrapper.
+*/
+static PyMethodDef qgd_nn_Wrapper_methods[] = {
+    {"get_NN_Chanels", (PyCFunction) qgd_nn_Wrapper_get_nn_chanels, METH_VARARGS | METH_KEYWORDS,
+     "Method to retrieve the data chanels for the neural network."
+    },
+    {NULL}  /* Sentinel */
+};
+
+/**
+@brief A structure describing the type of the class qgd_nn_Wrapper.
+*/
+static PyTypeObject qgd_nn_Wrapper_Type = {
+  PyVarObject_HEAD_INIT(NULL, 0)
+  "qgd_nn_Wrapper.qgd_nn_Wrapper", /*tp_name*/
+  sizeof(qgd_nn_Wrapper), /*tp_basicsize*/
+  0, /*tp_itemsize*/
+  (destructor) qgd_nn_Wrapper_dealloc, /*tp_dealloc*/
+  #if PY_VERSION_HEX < 0x030800b4
+  0, /*tp_print*/
+  #endif
+  #if PY_VERSION_HEX >= 0x030800b4
+  0, /*tp_vectorcall_offset*/
+  #endif
+  0, /*tp_getattr*/
+  0, /*tp_setattr*/
+  #if PY_MAJOR_VERSION < 3
+  0, /*tp_compare*/
+  #endif
+  #if PY_MAJOR_VERSION >= 3
+  0, /*tp_as_async*/
+  #endif
+  0, /*tp_repr*/
+  0, /*tp_as_number*/
+  0, /*tp_as_sequence*/
+  0, /*tp_as_mapping*/
+  0, /*tp_hash*/
+  0, /*tp_call*/
+  0, /*tp_str*/
+  0, /*tp_getattro*/
+  0, /*tp_setattro*/
+  0, /*tp_as_buffer*/
+  Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
+  "Object to represent a Gates_block class of the QGD package.", /*tp_doc*/
+  0, /*tp_traverse*/
+  0, /*tp_clear*/
+  0, /*tp_richcompare*/
+  0, /*tp_weaklistoffset*/
+  0, /*tp_iter*/
+  0, /*tp_iternext*/
+  qgd_nn_Wrapper_methods, /*tp_methods*/
+  qgd_nn_Wrapper_members, /*tp_members*/
+  0, /*tp_getset*/
+  0, /*tp_base*/
+  0, /*tp_dict*/
+  0, /*tp_descr_get*/
+  0, /*tp_descr_set*/
+  0, /*tp_dictoffset*/
+  (initproc) qgd_nn_Wrapper_init, /*tp_init*/
+  0, /*tp_alloc*/
+  qgd_nn_Wrapper_new, /*tp_new*/
+  0, /*tp_free*/
+  0, /*tp_is_gc*/
+  0, /*tp_bases*/
+  0, /*tp_mro*/
+  0, /*tp_cache*/
+  0, /*tp_subclasses*/
+  0, /*tp_weaklist*/
+  0, /*tp_del*/
+  0, /*tp_version_tag*/
+  #if PY_VERSION_HEX >= 0x030400a1
+  0, /*tp_finalize*/
+  #endif
+  #if PY_VERSION_HEX >= 0x030800b1
+  0, /*tp_vectorcall*/
+  #endif
+  #if PY_VERSION_HEX >= 0x030800b4 && PY_VERSION_HEX < 0x03090000
+  0, /*tp_print*/
+  #endif
+};
+
+/**
+@brief Structure containing metadata about the module.
+*/
+static PyModuleDef qgd_nn_Wrapper_Module = {
+    PyModuleDef_HEAD_INIT,
+    .m_name = "qgd_nn_Wrapper",
+    .m_doc = "Python binding for the neural network component of SQUANDER",
+    .m_size = -1,
+};
+
+
+/**
+@brief Method called when the Python module is initialized
+*/
+PyMODINIT_FUNC
+PyInit_qgd_nn_Wrapper(void)
+{
+    // initialize Numpy API
+    import_array();
+
+    PyObject *m;
+    if (PyType_Ready(&qgd_nn_Wrapper_Type) < 0)
+        return NULL;
+
+    m = PyModule_Create(&qgd_nn_Wrapper_Module);
+    if (m == NULL)
+        return NULL;
+
+    Py_INCREF(&qgd_nn_Wrapper_Type);
+    if (PyModule_AddObject(m, "qgd_nn_Wrapper", (PyObject *) &qgd_nn_Wrapper_Type) < 0) {
+        Py_DECREF(&qgd_nn_Wrapper_Type);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    return m;
+}
+
+
+} //extern C
+
