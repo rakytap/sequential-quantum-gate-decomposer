@@ -1,5 +1,8 @@
+import sys, os
+
 import numpy as np
 from scipy.stats import unitary_group
+
 import groq.api as g
 import groq.api.instruction as inst
 import groq.api.nn as nn
@@ -156,19 +159,18 @@ class UnitarySimulator(g.Component):
         u = [usplit[pairs[:,0],0], usplit[pairs[:,0],1], ucopysplit[pairs[:,1],0], ucopysplit[pairs[:,1],1]]
         revidx = np.argsort(pairs[:,0])
         revidx = revidx.tolist() + (revidx+(pow2qb//2)).tolist()
-        print(revidx)
         with g.ResourceScope(name="rungate", is_buffered=True, time=0 if pred is None else None, predecessors=None if pred is None else [pred]) as pred:
             #(a+bi)*(c+di)=(ac-bd)+(ad+bc)i
             #gate[0] * p[0] - gate[1] * p[1] + gate[2] * p[2] + gate[3] * p[3]
             #gate[0] * p[1] + gate[1] * p[0] + gate[2] * p[3] + gate[3] * p[2]
             gs = [g.concat_vectors([gatevals[i]]*(pow2qb//2)+[gatevals[i+4]]*(pow2qb//2), (pow2qb, pow2qb)).read(streams=g.SG4[2*i], time=0 if i == 0 else None) for i in range(4)]
             us = [g.concat_vectors(u[i].flatten().tolist()*2, (pow2qb, pow2qb)).read(streams=g.SG4[2*i+1]) for i in range(4)]
-            m1 = [g.mul(gs[i], us[i], alus=[4*i], output_streams=g.SG4_E[i*2]) for i in range(4)]
-            m2 = [g.mul(gs[i], us[i], alus=[4*i+1], output_streams=g.SG4_E[i*2+1]) for i in range(4)]
-            a1 = [(g.sub if i==0 else g.add)(m1[2*i], m1[2*i+1], alus=[2+8*i], output_streams=g.SG4[3+i]) for i in range(2)]
-            a2 = [g.add(m1[(2*i+1)%4], m1[(2*i+2)%4], alus=[6+8*i], output_streams=g.SG4[5+i]) for i in range(2)]
-            ri = [g.add(a1[0], a1[1], alus=[7], output_streams=g.SG4[2]),
-                  g.add(a2[0], a2[1], alus=[11], output_streams=g.SG4[4])]
+            m1 = [g.mul(gs[i], us[i], alus=[[0,4,8,12][i]], output_streams=g.SG4[[0,2,4,6][i]]) for i in range(4)]
+            m2 = [g.mul(gs[i], us[i^1], alus=[[2,3,10,11][i]], output_streams=g.SG4[[3,3,5,5][i]]) for i in range(4)]
+            a1 = [(g.sub if i==0 else g.add)(m1[2*i], m1[2*i+1], alus=[[1,9][i]], output_streams=g.SG4[[0,6][i]]) for i in range(2)]
+            a2 = [g.add(m2[i], m2[2+i], alus=[[5,6][i]], output_streams=g.SG4[[4,3][i]]) for i in range(2)]
+            ri = [g.add(a1[0], a1[1], alus=[15], output_streams=g.SG4[0]),
+                  g.add(a2[0], a2[1], alus=[7], output_streams=g.SG4[4])]
             ri = g.concat_vectors(np.hstack([np.array(g.split_vectors(ri[i], [1]*pow2qb))[revidx].reshape(pow2qb, 1) for i in range(2)]).flatten().tolist(), (pow2qb*2, pow2qb))
             result = ri.write(name="result", storage_req=self.eastinit)
             copy = ri.write(name="copy", storage_req=self.copystore[EAST])
@@ -181,7 +183,7 @@ class UnitarySimulator(g.Component):
         with g.ProgramContext() as pc:
             us = UnitarySimulator(num_qbits)
             unitary = g.input_tensor(shape=(pow2qb*2, pow2qb), dtype=g.float32, name="unitary", layout=get_slice8(WEST, s8range[0], s8range[-1], 0))
-            gate = g.input_tensor(shape=(1, 2*2*2, pow2qb), dtype=g.float32, name="gates", layout=get_slice16(WEST, list(range(16)), 0))#, broadcast=True)
+            gate = g.input_tensor(shape=(1, 2*2*2, pow2qb), dtype=g.float32, name="gates", layout=get_slice16(EAST, list(range(16)), 0))#, broadcast=True)
             output, _ = us.build(unitary, None, target_qbit, control_qbit, gate)
             output.set_program_output()
             iop_file, json_file = compile_unit_test("usunit")
@@ -190,18 +192,19 @@ class UnitarySimulator(g.Component):
         parameters = np.random.random(3)
         gateparams = make_u3(parameters) if control_qbit is None else make_cry(parameters)
         print_utils.infoc("\nRunning on HW ...")
+        oracleres, result = [None], [None]
         def oracle():
-            return qiskit_oracle(u, num_qbits, [control_qbit is None, target_qbit, control_qbit, parameters])
+            oracleres[0] = qiskit_oracle(u, num_qbits, [(control_qbit is None, target_qbit, control_qbit, parameters)])
         def actual():
             inputs = {}
-            for i in range(parallel):
-                inputs[unitary.name] = u.astype(np.complex32).view(np.float32).reshape(pow2qb, pow2qb, 2).transpose(0, 2, 1).reshape(pow2qb*2, poq2qb)
-                inputs[gate.name] = gateparams
+            inputs[unitary.name] = np.ascontiguousarray(u.astype(np.complex64)).view(np.float32).reshape(pow2qb, pow2qb, 2).transpose(0, 2, 1).reshape(pow2qb*2, pow2qb)
+            inputs[gate.name] = np.repeat(gateparams.astype(np.complex64).view(np.float32).flatten(), pow2qb)
             res = runner(**inputs)
-            result[0] = res[output.name].reshape(pow2qb, 2, pow2qb).transpose(0, 2, 1)
+            result[0] = np.ascontiguousarray(res[output.name].reshape(pow2qb, 2, pow2qb).transpose(0, 2, 1)).view(np.complex64)
         oracle()
         actual()
         oracleres, result = oracleres[0], result[0]
+        print(oracleres.shape, result.shape)
         np.set_printoptions(formatter={'int':hex}, threshold=sys.maxsize, floatmode='unique')
         if np.all(oracleres == result):
             print_utils.success("\nQuantum Simulator Unit Test Success ...")
@@ -234,7 +237,7 @@ class UnitarySimulator(g.Component):
 
 def main():
     #test()
-    num_qbits, max_gates = 8, 20
+    num_qbits, max_gates = 3, 20
     UnitarySimulator.unit_test(num_qbits)
     #UnitarySimulator.chain_test(num_qbits, max_gates)
 if __name__ == "__main__":
