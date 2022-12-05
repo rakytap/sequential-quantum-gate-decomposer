@@ -162,34 +162,94 @@ qgd_nn_Wrapper_get_nn_chanels(qgd_nn_Wrapper *self, PyObject *args, PyObject *kw
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"levels", NULL};
 
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
+    int qbit_num = -1;
+    int levels = -1;    
+    
 
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &Umtx_arg) )
-        return Py_BuildValue("i", 1);
-
-    // convert python object array to numpy C API array
-    if ( Umtx_arg == NULL ) return Py_BuildValue("i", 1);
-
-    PyObject * Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
-
-    // test C-style contiguous memory allocation of the array
-    if ( !PyArray_IS_C_CONTIGUOUS(Umtx) ) {
-        std::cout << "Umtx is not memory contiguous" << std::endl;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oii", kwlist, &Umtx_arg, &qbit_num, &levels) ) {
+        std::string err( "Invalid parameters" );
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;         
     }
 
-    // create QGD version of the Umtx
-    Matrix Umtx_mtx = numpy2matrix(Umtx);
+
+    PyObject * Umtx = NULL;
+    Matrix Umtx_mtx(0,0);
+    // convert python object array to numpy C API array
+    if ( Umtx_arg != NULL ) {
+    
+        try {
+            Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+        }
+        catch (...) {
+            std::string err( "Cannot elaborate numpy array. Check it!");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;        
+        
+        }
+        
+        // test C-style contiguous memory allocation of the array
+        if ( !PyArray_IS_C_CONTIGUOUS(Umtx) ) {
+            std::string err( "Umtx is not memory contiguous" );
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            std::cout << err << std::endl;
+            return NULL;            
+        } 
+        
+        
+        try {
+            // create QGD version of the Umtx
+            Umtx_mtx = numpy2matrix(Umtx);
+        }
+        catch (std::string err) {
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            std::cout << err << std::endl;
+            return NULL;
+        }        
+        catch (...) {
+            std::string err( "Cannot create C++ wrapper around numpy input array!");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;        
+        
+        }
+                       
+        
+    }
+
 
     
 
-    // starting the decomposition
+    // calculate the neural network chanels 
     try {
-        self->nn->get_nn_chanels(Umtx_mtx);
+        if ( Umtx_mtx.size() > 0 ) {
+        
+            // preallocate output variables
+            Matrix_real chanels(0,0);
+            
+            self->nn->get_nn_chanels(Umtx_mtx, chanels);
+        } 
+        else if ( qbit_num > 0 && levels >= 0 ) {
+            std::cout << "qbit_num: " << qbit_num << ", levels: " << levels << std::endl;
+            
+            // preallocate output variables
+            Matrix_real chanels(0,0);
+            Matrix_real parameters(0,0);
+            
+            self->nn->get_nn_chanels(qbit_num, levels, chanels, parameters);
+            
+        }
+        else {
+            std::string err( "Not enough input parameters");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;        
+        }
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -202,8 +262,9 @@ qgd_nn_Wrapper_get_nn_chanels(qgd_nn_Wrapper *self, PyObject *args, PyObject *kw
         return NULL;
     }
     
-
-    Py_DECREF(Umtx);
+    if ( Umtx != NULL ) {
+        Py_DECREF(Umtx);
+    }
 
     return Py_BuildValue("i", 0);
 

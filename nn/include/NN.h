@@ -27,6 +27,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "matrix.h"
 #include "matrix_real.h"
 
+#include <time.h>
+#include <stdlib.h>
+
 
 #include "Gates_block.h"
 #include "CZ.h"
@@ -79,18 +82,34 @@ public:
 */
 NN();
 
+/** 
+@brief Call to construct random parameter, with limited number of non-trivial adaptive layers
+@param num_of_parameters The number of parameters
+*/
+void create_randomized_parameters( int num_of_parameters, int qbit_num, int levels, Matrix_real& parameters );
+
 
 /** 
 @brief call retrieve the channels for the neural network associated with a single 2x2 kernel
 @return return with an 1x4 array containing the chanels prepared for the neural network. (dimension 4 stands for theta_up, phi, theta_down , lambda)
 */
-void get_nn_chanels_from_kernel( Matrix& Umtx, Matrix_real& chanels);
+void get_nn_chanels_from_kernel( Matrix& kernel_up, Matrix& kernel_down, Matrix_real& chanels);
 
 /** 
 @brief call retrieve the channels for the neural network associated with a single unitary
-@return return with an array containing the chanels prepared for th eneural network. The array has dimensions [ dim/2, dim/2, 4 ] (dimension 4 stands for theta_up, phi, theta_down , lambda)
+@param Umtx A unitary of dimension dim x dim, where dim is a power of 2.
+@param chanels output array containing the chanels prepared for th eneural network. The array has dimensions [ dim/2, dim/2, 4 ] (dimension "4" stands for theta_up, phi, theta_down , lambda)
 */
-Matrix_real get_nn_chanels( Matrix& Umtx);
+void get_nn_chanels( const Matrix& Umtx, Matrix_real& chanels);
+
+/** 
+@brief call retrieve the channels for the neural network associated with a single, randomly generated unitary
+@param qbit_num The number of qubits
+@param levels The number of adaptive levels to be randomly constructed
+@param chanles output argument to return with an array containing the chanels prepared for the neural network. The array has dimensions [ dim/2, dim/2, 4 ] (dimension "4" stands for theta_up, phi, theta_down , lambda)
+@param parameters output argument of the randomly created parameters
+*/
+void get_nn_chanels(int qbit_num, int levels, Matrix_real& chanels, Matrix_real& parameters);
 
 
 };

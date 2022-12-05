@@ -128,8 +128,8 @@ numpy2matrix(PyObject *arr) {
         return mtx;
     }
     else {
-        std::cerr << "numpy2matrix: Wrong matrix dimension was given" << std::endl;
-        exit(EXIT_FAILURE);
+        std::string err( "numpy2matrix: Wrong matrix dimension was given");
+        throw err;
     }
 
 
@@ -171,8 +171,8 @@ numpy2matrix_real(PyObject *arr) {
         return mtx;
     }
     else {
-        std::cerr << "numpy2matrix_real: Wrong matrix dimension was given" << std::endl;
-        exit(EXIT_FAILURE);
+        std::string err( "numpy2matrix: Wrong matrix dimension was given");
+        throw err;
     }
 
 

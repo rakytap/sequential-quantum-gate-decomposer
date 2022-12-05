@@ -47,8 +47,9 @@ def create_randomized_parameters( num_of_parameters, qbit_num, levels ):
     # the number of adaptive layers in one level
     num_of_adaptive_layers = int(qbit_num*(qbit_num-1)/2 * levels)
 
-    parameters[0:qbit_num*3] = (2*np.random.rand(qbit_num*3)-1)*2*np.pi
+    parameters[0:qbit_num*3] = np.random.rand(qbit_num*3)*2*np.pi
     #parameters[2*qbit_num:3*qbit_num] = np.random.rand(qbit_num)*2*np.pi/4
+    #parameters[qbit_num:2*qbit_num] = np.random.rand(qbit_num)*2*np.pi/4
     #parameters[3*qbit_num-1] = 0
     #parameters[3*qbit_num-2] = 0
     
@@ -118,4 +119,5 @@ class Test_Decomposition:
 
         # retrieve the chanels
         qgd_nn().get_NN_Chanels( unitary )
+        qgd_nn().get_NN_Chanels( qbit_num=qbit_num, levels=levels )        
         

@@ -46,8 +46,14 @@ class qgd_nn(qgd_nn_Wrapper):
 
 ##
 # @brief Wrapper function to retrieve the data chanels for the neural network
-    def get_nn_chanels(self ):
+    def get_nn_chanels(self, Umtx=None, qbit_num=-1, levels=-1 ):
 
 	# call the C wrapper function
-        super(qgd_nn, self).get_nn_chanels()
+        if not(Umtx in None):
+            super(qgd_nn, self).get_nn_chanels( Umtx=Umtx )
+        elif qbit_num > 0 and levels >= 0:
+            print( Umtx )
+            super(qgd_nn, self).get_nn_chanels( qbit_num=qbit_num, levels=levels )            
+        else:
+            print( "invalid parameters were given")
 

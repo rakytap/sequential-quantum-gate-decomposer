@@ -115,7 +115,7 @@ bool isnan();
 /**
 @brief Call to prints the stored matrix on the standard output
 */
-void print_matrix();
+void print_matrix() const;
 
 
 }; //matrix
