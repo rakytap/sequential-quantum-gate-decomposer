@@ -132,23 +132,37 @@ def invoke(devices, iop, pgm_num, ep_num, tensors, lastouts=None, buffers=None):
                 output_tensor.to_host(output_buffers[idx], result_tensor)
                 outs[idx][output_tensor.name] = result_tensor
     return outs, [input_buffers, output_buffers]
+def generateCurveOffsetMap(offsets):
+    superlane_size = 16
+    superlane_count = 20
+    bytes_per_element = superlane_size * superlane_count
+    curveOffsetMap = []
+    for offset in offsets:
+        offsetMapEntry = [ 255 ]*bytes_per_element
+        splitOffset = (offset & 255, offset >> 8)
+        for s in range(superlane_count):
+            slot = s*superlane_size
+            offsetMapEntry[slot:slot+2] = splitOffset
+        ofsetMap.append(offsetMapEntry)
+    return np.asarray(offsetMap, dtype=np.uint8)
 class UnitarySimulator(g.Component):
-    def __init__(self, num_qbits, **kwargs):
+    def __init__(self, num_qbits, reversedir=False, lastus=None, **kwargs):
         super().__init__(**kwargs)
         self.num_qbits = num_qbits
-        self.copystore = []
-        self.eastinit = tensor.create_storage_request(layout=get_slice8(EAST, s8range[0], s8range[-1], 0))
+        self.otherinit = (lastus.uinit if reversedir else lastus.otherinit) if not lastus is None else tensor.create_storage_request(layout=get_slice8(EAST, s8range[0], s8range[-1], 0))
         #more efficient to just directly copy on the controlled rotation rather than doing unnecessary identity gate computations
-        self.identity2x2 = [g.from_data(np.zeros((1), dtype=np.float32), layout=get_slice1(WEST, 0, 0), broadcast=True),
-                            g.from_data(np.ones((1), dtype=np.float32), layout=get_slice1(WEST, 0, 0), broadcast=True)]
-        for hemi in (WEST, EAST):
-            self.copystore.append(tensor.create_storage_request(layout=get_slice8(hemi, s8range2[0], s8range2[-1], 0)))
+        #self.identity2x2 = [g.from_data(np.zeros((1), dtype=np.float32), layout=get_slice1(WEST, 0, 0), broadcast=True),
+        #                    g.from_data(np.ones((1), dtype=np.float32), layout=get_slice1(WEST, 0, 0), broadcast=True)]
+        self.copystore = []
+        for hemi in (EAST, WEST) if reversedir else (WEST, EAST):
+            self.copystore.append(lastus.copystore[hemi] if not lastus is None else tensor.create_storage_request(layout=get_slice8(hemi, s8range2[0], s8range2[-1], 0)))
     def copymatrix(self, unitary):        
         return unitary.read(streams=g.SG8[0]).write(name="initcopy", storage_req=self.copystore[WEST], time=0)
     def build(self, unitary, copy, target_qbit, control_qbit, gate, inittime=0):
         if copy is None:
             with g.ResourceScope(name="initcopy", is_buffered=True, time=0) as pred:
                 copy = self.copymatrix(unitary)
+        self.uinit = unitary.storage_request
         pow2qb = 1 << self.num_qbits
         t = np.roll(np.arange(self.num_qbits), target_qbit)
         idxs = np.arange(pow2qb).reshape(*([2]*self.num_qbits)).transpose(t).reshape(-1, 2)
@@ -174,19 +188,19 @@ class UnitarySimulator(g.Component):
                 usb = [g.vxm_identity(usb[i], alus=[[13,14][i]], time=0, output_streams=g.SG4[[1,7][i]]) for i in range(2)]
             m1 = [g.mul(gs[i], us[i], alus=[[0,4,8,12][i]], output_streams=g.SG4[[0,2,4,6][i]], time=pow2qb if i==0 else None) for i in range(4)]
             m2 = [g.mul(gs[i], us[i^1], alus=[[2,3,10,11][i]], output_streams=g.SG4[[3,3,5,5][i]]) for i in range(4)]
-            a1 = [(g.sub if i==0 else g.add)(m1[2*i], m1[2*i+1], alus=[[1,9][i]], output_streams=g.SG4[[0,6][i]]) for i in range(2)]
+            a1 = [g.sub(m1[2*i], m1[2*i+1], alus=[[1,9][i]], output_streams=g.SG4[[0,6][i]]) for i in range(2)]
             a2 = [g.add(m2[i], m2[2+i], alus=[[5,6][i]], output_streams=g.SG4[[4,3][i]]) for i in range(2)]
             ri = [g.add(a1[0], a1[1], alus=[15], output_streams=g.SG4[0]),
                   g.add(a2[0], a2[1], alus=[7], output_streams=g.SG4[4])]
             ri = g.concat_vectors(np.hstack([np.array(g.split_vectors(ri[i] if control_qbit is None else g.concat_vectors([usb[i], ri[i]], (pow2qb, pow2qb)), [1]*(pow2qb)))[revidx].reshape(pow2qb, 1) for i in range(2)]).flatten().tolist(), (pow2qb*2, pow2qb))
-            result = ri.write(name="result", storage_req=self.eastinit)
+            result = ri.write(name="result", storage_req=self.otherinit)
             copy = ri.write(name="copy", storage_req=self.copystore[EAST])
         return result, copy
     def unit_test(num_qbits):
         pow2qb = 1 << num_qbits
-        use_identity = True
+        use_identity = False
         target_qbit = np.random.randint(num_qbits)
-        control_qbit = None #np.random.randint(num_qbits)
+        control_qbit = np.random.randint(num_qbits)
         if target_qbit == control_qbit: control_qbit = None
         print(target_qbit, control_qbit)
         with g.ProgramContext() as pc:
@@ -217,42 +231,87 @@ class UnitarySimulator(g.Component):
         if np.allclose(oracleres, result):
             print_utils.success("\nQuantum Simulator Unit Test Success ...")
         else:
-            print_utils.err("\nQuantum Simulator Test Failure")
-            print_utils.infoc(str(oracleres) + " " + str(result))
+            print_utils.err("\nQuantum Simulator Unit Test Failure")
+            print_utils.infoc(str(oracleres - result))
         
     def chain_test(num_qbits, max_gates):
+        num_gates = 10
         pow2qb = 1 << num_qbits
+        pgm_pkg = g.ProgramPackage(name="us", output_dir="us")
         with pgm_pkg.create_program_context("init_us") as pcinit:
             us = UnitarySimulator(num_qbits)
             unitary = g.input_tensor(shape=(pow2qb, pow2qb), dtype=g.float32, name="unitary", layout=get_slice8(WEST, s8range[0], s8range[-1], 0))
-            gates = g.input_tensor(shape=(max_gates, 2*2*2, 1), dtype=g.float32, name="gate", layout=get_slice16(WEST, list(range(16)), 0), broadcast=True)
+            gates = g.input_tensor(shape=(1, 2*2*2, 1), dtype=g.float32, name="gate", layout=get_slice16(EAST, list(range(16)), 0)) #, broadcast=True)
+            othergates = g.input_tensor(shape=(1, 2*2*2, 1), dtype=g.float32, name="othergate", layout=get_slice16(WEST, list(range(16)), 0)) #, broadcast=True)
             with g.ResourceScope(name="makecopy", is_buffered=True, time=0) as pred:
                 copy = us.copymatrix(unitary)
-        for op in (True, False):
-            for target_qbit in range(num_qbits):
-                for control_qbit in [None] if op else range(num_qbits):
-                    with pgm_pkg.create_program_context("us_gate") as pc:
-                        g.reserve_tensor(pcinit, pc, unitary)
-                        g.reserve_tensor(pcinit, pc, unitary)
-                        #gate = g.mem_gather()
-                        us.build(unitary, target_qbit, control_qbit, gate)
+        for reversedir in (False, True):
+            for op in (True, False):
+                for target_qbit in range(num_qbits):
+                    for control_qbit in [None] if op else range(num_qbits):
+                        with pgm_pkg.create_program_context("us_gate") as pc:
+                            newus = UnitarySimulator(num_qbits, reversedir, us)
+                            g.reserve_tensor(pcinit, pc, otherunitary if reversedir else unitary)
+                            g.reserve_tensor(pcinit, pc, othercopy if reversedir else copy)
+                            g.reserve_tensor(pcinit, pc, othergates if reversedir else gates)
+                            #gate = g.mem_gather()
+                            if reversedir:
+                                newus.build(otherunitary, othercopy, target_qbit, control_qbit, othergates)
+                            else:
+                                otherunitary, othercopy = newus.build(unitary, copy, target_qbit, control_qbit, gates)
         with pgm_pkg.create_program_context("final_us") as pcfinal:
+            g.reserve_tensor(pcinit, pcfinal, unitary)
             unitary.set_program_output()
+        with pgm_pkg.create_program_context("finalrev_us") as pcfinal:
+            g.reserve_tensor(pcinit, pcfinal, otherunitary)
+            otherunitary.set_program_output()
         print_utils.infoc("\nAssembling model ...")
         iops = pgm_pkg.assemble()
         iop = runtime.IOProgram(iops[0])
-        #device = runtime.devices[0]
         driver = runtime.Driver()
         device = driver.next_available_device()
-
+        u = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
+        target_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
+        control_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
+        parameters = np.random.random((num_gates, 3))
+        gateparams = [make_u3(parameters[i]) if control_qbit is None else make_cry(parameters[i]) for i in range(num_gates)]
+        oracleres, result = [None], [None]
+        def oracle():
+            oracleres[0] = qiskit_oracle(u, num_qbits, [(control_qbits[i] == target_qbits[i], target_qbits[i], controls_qbits[i], parameters[i,:]) for i in range(num_gates)])
+        with device:
+            runfunc = [None]
+            def loaddata():
+                for i in range(1+2*num_qbits+2*num_qbits*num_qbits+2):
+                    device.load(iop[i], unsafe_keep_entry_points=True)
+                def actual():
+                    inputs = {}
+                    inputs[unitary.name] = np.ascontiguousarray(u.astype(np.complex64)).view(np.float32).reshape(pow2qb, pow2qb, 2).transpose(0, 2, 1).reshape(pow2qb*2, pow2qb)
+                    inputs[gates.name] = np.repeat(gateparams.astype(np.complex64).view(np.float32).flatten(), pow2qb)
+                    inputs[othergates.name] = np.repeat(gateparams.astype(np.complex64).view(np.float32).flatten(), pow2qb)
+                    invoke(devices, iop, 0, 0, inputs)
+                    for i in range(num_gates):
+                        progidx = 1+(num_qbits*2+(num_qbits*num_qbits if (i&1)!=0 else 0)+target_qbits[i]*num_qbits+control_qbits[i] if target_qbits[i]!=control_qbits[i] else (num_qbits if (i&1)!=0 else 0)+target_qbits[i])
+                        invoke(devices, iop, progidx, 0, None, None, None)
+                    res, _ = invoke(devices, iop, 1+2*num_qbits+2*num_qbits*num_qbits+1-(num_gates&1), 0, None, None, None)
+                    result[0] = res[unitary.name if (num_gates&1)!=0 else otherunitary.name]
+                runfunc[0] = actual
+        actual = runfunc[0]
+        actual()
+        oracle()
+        if np.allclose(oracleres, result):
+            print_utils.success("\nQuantum Simulator Chain Test Success ...")
+        else:
+            print_utils.err("\nQuantum Simulator Chain Test Failure")
+            print_utils.infoc(str(oracleres - result))
+        
 def main():
     #test()
     #import math; [4*(1<<x)*int(math.ceil((1<<x)/320)) for x in range(12)]
     #[4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 57344]
     #10 qbits max for single bank, 11 qbits for dual bank solutions
-    num_qbits, max_levels = 5, 5
+    num_qbits, max_levels = 8, 5
     max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
-    UnitarySimulator.unit_test(num_qbits)
-    #UnitarySimulator.chain_test(num_qbits, max_gates)
+    #UnitarySimulator.unit_test(num_qbits)
+    UnitarySimulator.chain_test(num_qbits, max_gates)
 if __name__ == "__main__":
     main()
