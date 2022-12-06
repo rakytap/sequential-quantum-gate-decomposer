@@ -162,17 +162,18 @@ qgd_nn_Wrapper_get_nn_chanels(qgd_nn_Wrapper *self, PyObject *args, PyObject *kw
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"levels", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"levels", (char*)"samples_num", NULL};
 
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
     int qbit_num = -1;
     int levels = -1;    
+    int samples_num = -1;    
     
 
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oii", kwlist, &Umtx_arg, &qbit_num, &levels) ) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|Oiii", kwlist, &Umtx_arg, &qbit_num, &levels, &samples_num) ) {
         std::string err( "Invalid parameters" );
         PyErr_SetString(PyExc_Exception, err.c_str());
         std::cout << err << std::endl;
@@ -224,25 +225,34 @@ qgd_nn_Wrapper_get_nn_chanels(qgd_nn_Wrapper *self, PyObject *args, PyObject *kw
     }
 
 
+    // preallocate output variables
+    Matrix_real chanels(0,0);
+    matrix_base<int8_t> nontrivial_adaptive_layers;
     
 
     // calculate the neural network chanels 
     try {
         if ( Umtx_mtx.size() > 0 ) {
-        
-            // preallocate output variables
-            Matrix_real chanels(0,0);
             
             self->nn->get_nn_chanels(Umtx_mtx, chanels);
         } 
-        else if ( qbit_num > 0 && levels >= 0 ) {
+        else if ( qbit_num > 0 && levels >= 0 && samples_num <= 1) {
             std::cout << "qbit_num: " << qbit_num << ", levels: " << levels << std::endl;
             
             // preallocate output variables
-            Matrix_real chanels(0,0);
-            Matrix_real parameters(0,0);
+            //Matrix_real parameters(0,0);
+
             
-            self->nn->get_nn_chanels(qbit_num, levels, chanels, parameters);
+            self->nn->get_nn_chanels(qbit_num, levels, chanels, nontrivial_adaptive_layers);
+            
+        }
+        else if ( qbit_num > 0 && levels >= 0 && samples_num > 1) {
+            std::cout << "qbit_num: " << qbit_num << ", levels: " << levels << ", samples num:" << samples_num << std::endl;
+            
+            // preallocate output variables
+            //Matrix_real parameters(0,0);
+            
+            self->nn->get_nn_chanels(qbit_num, levels, samples_num, chanels, nontrivial_adaptive_layers);
             
         }
         else {
@@ -266,7 +276,25 @@ qgd_nn_Wrapper_get_nn_chanels(qgd_nn_Wrapper *self, PyObject *args, PyObject *kw
         Py_DECREF(Umtx);
     }
 
-    return Py_BuildValue("i", 0);
+
+    PyObject* chanels_py = matrix_real_to_numpy( chanels );
+    chanels.set_owner( false );      
+
+    PyObject* nontrivial_adaptive_layers_py;
+    if ( nontrivial_adaptive_layers.size() > 0 ) {
+        nontrivial_adaptive_layers_py = matrix_int8_to_numpy( nontrivial_adaptive_layers );   
+        nontrivial_adaptive_layers.set_owner( false );  
+    }
+    else {
+        nontrivial_adaptive_layers_py = Py_None;
+    }
+
+
+
+    return Py_BuildValue("(OO)", chanels_py, nontrivial_adaptive_layers_py);
+    //return chanels_py;
+
+
 
 }
 

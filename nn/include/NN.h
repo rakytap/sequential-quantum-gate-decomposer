@@ -29,7 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include <time.h>
 #include <stdlib.h>
-
+#include <random>
 
 #include "Gates_block.h"
 #include "CZ.h"
@@ -72,6 +72,10 @@ public:
 protected:
 
 
+std::random_device rd;  //Will be used to obtain a seed for the random number engine
+    std::mt19937 gen; //Standard mersenne_twister_engine seeded with rd()
+
+
 
 
 public:
@@ -86,7 +90,7 @@ NN();
 @brief Call to construct random parameter, with limited number of non-trivial adaptive layers
 @param num_of_parameters The number of parameters
 */
-void create_randomized_parameters( int num_of_parameters, int qbit_num, int levels, Matrix_real& parameters );
+void create_randomized_parameters( int num_of_parameters, int qbit_num, int levels, Matrix_real& parameters, matrix_base<int8_t>& nontrivial_adaptive_layers );
 
 
 /** 
@@ -109,8 +113,18 @@ void get_nn_chanels( const Matrix& Umtx, Matrix_real& chanels);
 @param chanles output argument to return with an array containing the chanels prepared for the neural network. The array has dimensions [ dim/2, dim/2, 4 ] (dimension "4" stands for theta_up, phi, theta_down , lambda)
 @param parameters output argument of the randomly created parameters
 */
-void get_nn_chanels(int qbit_num, int levels, Matrix_real& chanels, Matrix_real& parameters);
+void get_nn_chanels(int qbit_num, int levels, Matrix_real& chanels, matrix_base<int8_t>& nontrivial_adaptive_layers);
 
+
+/** 
+@brief call retrieve the channels for the neural network associated with a single, randomly generated unitary
+@param qbit_num The number of qubits
+@param levels The number of adaptive levels to be randomly constructed
+@param samples_num The number of samples
+@param chanles output argument to return with an array containing the chanels prepared for the neural network. The array has dimensions [ samples_num, dim/2, dim/2, 4 ] (dimension "4" stands for theta_up, phi, theta_down , lambda)
+@param parameters output argument of the randomly created parameters
+*/
+void get_nn_chanels(int qbit_num, int levels, int samples_num, Matrix_real& chanels, matrix_base<int8_t>& nontrivial_adaptive_layers);
 
 };
 

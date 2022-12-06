@@ -24,7 +24,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "NN.h"
 #include "N_Qubit_Decomposition_adaptive.h"
 #include <cstdlib>
+#include <time.h>
 
+#include "tbb/tbb.h"
 
 
 /** Nullary constructor of the class
@@ -32,9 +34,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 NN::NN() {
 
+    // seedign the random generator
+    gen = std::mt19937(rd());
 
-
-    srand(time(NULL));   // Initialization, should only be called once.
     
 #if CBLAS==1
     num_threads = mkl_get_max_threads();
@@ -52,15 +54,20 @@ NN::NN() {
 @param num_of_parameters The number of parameters
 */
 void
-NN::create_randomized_parameters( int num_of_parameters, int qbit_num, int levels, Matrix_real& parameters ) {
+NN::create_randomized_parameters( int num_of_parameters, int qbit_num, int levels, Matrix_real& parameters, matrix_base<int8_t>& nontrivial_adaptive_layers ) {
 
-
-
-    parameters = Matrix_real( 1, num_of_parameters );
+    if ( parameters.size() != num_of_parameters ) {
+        parameters = Matrix_real( 1, num_of_parameters );
+        memset( parameters.get_data(), 0.0, parameters.size()*sizeof(double) );
+    }
 
 
     // the number of adaptive layers in one level
     int num_of_adaptive_layers = qbit_num*(qbit_num-1)/2 * levels;
+
+    if ( nontrivial_adaptive_layers.size() != num_of_adaptive_layers ) {
+        nontrivial_adaptive_layers = matrix_base<int8_t>( num_of_adaptive_layers, 1);
+    }
 
     
     //parameters[0:qbit_num*3] = np.random.rand(qbit_num*3)*2*np.pi
@@ -68,17 +75,27 @@ NN::create_randomized_parameters( int num_of_parameters, int qbit_num, int level
     //parameters[qbit_num:2*qbit_num] = np.random.rand(qbit_num)*2*np.pi/4
     //parameters[3*qbit_num-1] = 0
     //parameters[3*qbit_num-2] = 0
+
+    std::uniform_int_distribution<int8_t> distrib(0, 1);    
+    std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);    
+    std::uniform_real_distribution<> distrib_real2(0.0, M_PI);    
+
     
-    matrix_base<int> nontrivial_adaptive_layers( num_of_adaptive_layers, 1);
-    
+
+
     for(int idx = 0; idx < 3*qbit_num; idx++) {
-        parameters[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;         
+        if ( idx % 3 == 0 ) {
+            parameters[idx] = distrib_real2(gen);  // values for theta/2 of U3 can be reduced to [0,PI], since 2PI phase shift can be agregated into Phi and Lambda
+        }
+        else {
+            parameters[idx] = distrib_real(gen);
+        }        
     }   
-     
+
 
     for( int layer_idx=0; layer_idx<num_of_adaptive_layers; layer_idx++) {
 
-        int nontrivial_adaptive_layer = rand() % 2;
+        int8_t nontrivial_adaptive_layer = distrib(gen);
         nontrivial_adaptive_layers[layer_idx] = nontrivial_adaptive_layer;
 
         if (nontrivial_adaptive_layer) {
@@ -90,7 +107,12 @@ NN::create_randomized_parameters( int num_of_parameters, int qbit_num, int level
         
         
             for(int jdx = start_idx; jdx < end_idx; jdx++) {
-                parameters[jdx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;         
+                if ( (jdx-start_idx) % 3 == 0 ) {
+                    parameters[jdx] = distrib_real2(gen);  // values for theta/2 of U3 can be reduced to [0,PI], since 2PI phase shift can be agregated into Phi and Lambda
+                }
+                else {
+                    parameters[jdx] = distrib_real(gen);
+                }
             }       
             
             
@@ -134,25 +156,27 @@ NN::get_nn_chanels_from_kernel( Matrix& kernel_up, Matrix& kernel_down, Matrix_r
     double Y0 = (element00.real*element10.imag - element00.imag*element10.real - element10.real*element00.imag + element10.imag*element00.real);
     double Y1 = (element01.real*element11.imag - element01.imag*element11.real - element11.real*element01.imag + element11.imag*element01.real);   
     
-    double phi1   = std::fmod( std::atan2( Y0, X0 ), 2*M_PI); 
-    double phi2   = std::fmod( std::atan2( Y1, X1 ) + M_PI, 2*M_PI);
+    double phi1   = std::atan2( Y0, X0 ); 
+    phi1 = phi1 < 0 ? 2*M_PI + phi1 : phi1;
+    double phi2   = std::atan2( Y1, X1 ) + M_PI;
+    phi2 = phi2 < 0 ? 2*M_PI + phi2 : phi2;
 
     
     double theta1;
     if ( std::abs(X0) > 1e-8 ) {
-        theta1 = std::fmod( std::atan2( X0/cos(phi1), Z0 )/2, 2*M_PI) ;
+        theta1 = std::atan2( X0/cos(phi1), Z0 )/2 ;
     }
     else {
-        theta1 = std::fmod( std::atan2( Y0/sin(phi1), Z0 )/2, 2*M_PI);    
+        theta1 = std::atan2( Y0/sin(phi1), Z0 )/2;    
     }
     
 
     double theta2;
     if ( std::abs(X1) > 1e-8 ) {
-        theta2 = std::fmod( (M_PI + atan2( X1/cos(phi2), Z1 ))/2, 2*M_PI);
+        theta2 = (M_PI + atan2( X1/cos(phi2), Z1 ))/2;
     }
     else {
-        theta2 = std::fmod( (M_PI + atan2( Y1/sin(phi2), Z1 ))/2, 2*M_PI);    
+        theta2 = (M_PI + atan2( Y1/sin(phi2), Z1 ))/2;    
     }    
     
     chanels[0] = theta1;
@@ -160,7 +184,7 @@ NN::get_nn_chanels_from_kernel( Matrix& kernel_up, Matrix& kernel_down, Matrix_r
     chanels[2] = theta2;
     chanels[3] = phi2;            
        
-std::cout << theta1 << " " << phi1 << " " << theta2 << " " << phi2 << std::endl;
+//std::cout << theta1 << " " << phi1 << " " << theta2 << " " << phi2 << std::endl;
 
 }
 
@@ -173,8 +197,6 @@ std::cout << theta1 << " " << phi1 << " " << theta2 << " " << phi2 << std::endl;
 */
 void NN::get_nn_chanels( const Matrix& Umtx, Matrix_real& chanels) {
 
-std::cout << "pppppppppppppppp " << std::endl;
-Umtx.print_matrix();
 
     if ( Umtx.rows != Umtx.cols ) {
         std::string err("The unitary must be a square matrix.");
@@ -191,12 +213,18 @@ Umtx.print_matrix();
     int dim = Umtx.rows;
     int dim_over_2 = dim/2;
 
-    chanels = Matrix_real( dim_over_2, dim_over_2*4 );
+    if ( chanels.size() != dim_over_2*dim_over_2*4 ) {
+        chanels = Matrix_real( dim_over_2, dim_over_2*4 );
+    }
+    
+    Matrix_real chanels_reshaped( chanels.get_data(), dim_over_2, dim_over_2*4 );
+
+
     
     int target_qbit = 1;
     int index_pair_distance = 1 << target_qbit;
     
-    std::cout << "target_qbit: " << target_qbit << " index pair distance: " << index_pair_distance << std::endl;
+    //std::cout << "target_qbit: " << target_qbit << " index pair distance: " << index_pair_distance << std::endl;
     
 
 
@@ -233,8 +261,7 @@ Umtx.print_matrix();
             Matrix kernel_up   = Matrix(Umtx.get_data() + row_idx*Umtx.stride + col_idx, 2, 1, stride_kernel );
             Matrix kernel_down = Matrix(Umtx.get_data() + row_idx*Umtx.stride + col_idx_pair, 2, 1, stride_kernel );            
             
-            
-            Matrix_real chanels_kernel( chanels.get_data() + idx*chanels.stride + 4*jdx, 1, 4, chanels.stride);
+            Matrix_real chanels_kernel( chanels_reshaped.get_data() + idx*chanels_reshaped.stride + 4*jdx, 1, 4, chanels_reshaped.stride);
             get_nn_chanels_from_kernel( kernel_up, kernel_down, chanels_kernel);
 
             
@@ -257,7 +284,7 @@ Umtx.print_matrix();
 @param parameters output argument of the randomly created parameters
 */
 void
-NN::get_nn_chanels(int qbit_num, int levels, Matrix_real& chanels, Matrix_real& parameters) {
+NN::get_nn_chanels(int qbit_num, int levels, Matrix_real& chanels, matrix_base<int8_t>& nontrivial_adaptive_layers) {
 
 
 
@@ -280,21 +307,20 @@ NN::get_nn_chanels(int qbit_num, int levels, Matrix_real& chanels, Matrix_real& 
     //get the number of free parameters
     int num_of_parameters = cDecompose.get_parameter_num();
     
-std::cout << "number of free parameters: " << num_of_parameters << std::endl;    
+//std::cout << "number of free parameters: " << num_of_parameters << std::endl;    
 
 
     // create randomized parameters having number of nontrivial adaptive blocks determined by the parameter nontrivial_ratio
-    //parameters, nontrivial_adaptive_layers = 
-    create_randomized_parameters( num_of_parameters, qbit_num, levels, parameters );
+    Matrix_real parameters;
+    create_randomized_parameters( num_of_parameters, qbit_num, levels, parameters, nontrivial_adaptive_layers );
     
-    parameters.print_matrix();
+//parameters.print_matrix();
 
     // getting the unitary corresponding to quantum circuit
     Matrix&& Umtx = cDecompose.get_matrix( parameters );
 
-
     // generate chanels
-    get_nn_chanels( Umtx, chanels ); 
+    get_nn_chanels( Umtx, chanels );
 
 
 
@@ -304,5 +330,83 @@ std::cout << "number of free parameters: " << num_of_parameters << std::endl;
 }
 
 
+
+
+/** 
+@brief call retrieve the channels for the neural network associated with a single, randomly generated unitary
+@param qbit_num The number of qubits
+@param levels The number of adaptive levels to be randomly constructed
+@param samples_num The number of samples
+@param chanles output argument to return with an array containing the chanels prepared for the neural network. The array has dimensions [ samples_num, dim/2, dim/2, 4 ] (dimension "4" stands for theta_up, phi, theta_down , lambda)
+@param parameters output argument of the randomly created parameters
+*/
+void
+NN::get_nn_chanels(int qbit_num, int levels, int samples_num, Matrix_real& chanels, matrix_base<int8_t>& nontrivial_adaptive_layers) {
+
+
+Matrix_real parameters;
+
+    if ( samples_num == 1 ) {
+        get_nn_chanels(qbit_num, levels, chanels, nontrivial_adaptive_layers);
+        return;
+    }
+
+    if ( samples_num < 1 ) {
+        std::string err("Number of samples must be greater than 0.");
+        throw err;
+    }
+
+
+    // query the first sample to infer the memory needed to be allocated
+    Matrix_real chanels_1;
+    matrix_base<int8_t> nontrivial_adaptive_layers_1;
+
+    get_nn_chanels(qbit_num, levels, chanels_1, nontrivial_adaptive_layers_1);
+
+
+    // allocate memory for the outputs
+    chanels    = Matrix_real(1, samples_num*chanels_1.size());
+    //parameters = Matrix_real(samples_num, parameters_1.size());
+    nontrivial_adaptive_layers = matrix_base<int8_t>( 1, samples_num*nontrivial_adaptive_layers_1.size() );
+    memset( chanels.get_data(), 0.0, chanels.size()*sizeof(double) );
+    memset( nontrivial_adaptive_layers.get_data(), 0, nontrivial_adaptive_layers.size()*sizeof(int8_t) );
+
+    // copy the result of the first iteration into the output
+    memcpy( chanels.get_data(), chanels_1.get_data(), chanels_1.size()*sizeof(double) );
+    //memcpy( parameters.get_data(), parameters_1.get_data(), parameters_1.size()*sizeof(double) );
+    memcpy( nontrivial_adaptive_layers.get_data(), nontrivial_adaptive_layers_1.get_data(), nontrivial_adaptive_layers_1.size()*sizeof(int8_t) );
+
+    // do the remaining cycles
+    tbb::parallel_for( tbb::blocked_range<int>(1,samples_num), [&](tbb::blocked_range<int> r) {
+
+        for (int idx=r.begin(); idx<r.end(); idx++) {
+
+    //for (int idx=1; idx<samples_num; idx++) {
+            Matrix_real chanels_idx( chanels.get_data()+idx*chanels_1.size(), 1, chanels_1.size() );
+
+            //Matrix_real parameters_idx;// parameters.get_data()+idx*parameters_1.size(), 1, parameters_1.size() );
+            matrix_base<int8_t> nontrivial_adaptive_layers_idx( nontrivial_adaptive_layers.get_data()+idx*nontrivial_adaptive_layers_1.size(), 1, nontrivial_adaptive_layers_1.size() );
+
+            get_nn_chanels(qbit_num, levels, chanels_idx, nontrivial_adaptive_layers_idx);
+    //}
+
+        }
+
+    });
+
+
+
+//Matrix_real chanels_reshaped(chanels.get_data(), chanels.size()/4, 4);
+//chanels_reshaped.print_matrix();
+
+
+//matrix_base<int8_t> nontrivial_adaptive_layers_reshaped(nontrivial_adaptive_layers.get_data(), nontrivial_adaptive_layers.size()/nontrivial_adaptive_layers_1.size(), nontrivial_adaptive_layers_1.size());
+//nontrivial_adaptive_layers_reshaped.print_matrix();
+
+//std::cout << chanels_1.size() << " " << parameters_1.size() << std::endl;
+
+
+
+}
 
 

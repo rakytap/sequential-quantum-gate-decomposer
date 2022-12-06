@@ -46,14 +46,33 @@ class qgd_nn(qgd_nn_Wrapper):
 
 ##
 # @brief Wrapper function to retrieve the data chanels for the neural network
-    def get_nn_chanels(self, Umtx=None, qbit_num=-1, levels=-1 ):
+    def get_NN_Chanels(self, Umtx=None, qbit_num=-1, levels=-1, samples_num=-1 ):
 
 	# call the C wrapper function
-        if not(Umtx in None):
-            super(qgd_nn, self).get_nn_chanels( Umtx=Umtx )
-        elif qbit_num > 0 and levels >= 0:
-            print( Umtx )
-            super(qgd_nn, self).get_nn_chanels( qbit_num=qbit_num, levels=levels )            
+        if not(Umtx is None):
+            dim_over_2 = int(len(Umtx)/2)
+            samples_num = 1
+            chanels, nontrivial_adaptive_layers = super(qgd_nn, self).get_NN_Chanels( Umtx=Umtx )
+
+        elif qbit_num > 0 and levels >= 0 and samples_num < 2:
+            dim_over_2 = int(pow(2, qbit_num-1))
+            samples_num = 1
+            chanels, nontrivial_adaptive_layers = super(qgd_nn, self).get_NN_Chanels( qbit_num=qbit_num, levels=levels )
+
+        elif qbit_num > 0 and levels >= 0 and samples_num > 1:
+            dim_over_2 = int(pow(2, qbit_num-1))
+            chanels, nontrivial_adaptive_layers = super(qgd_nn, self).get_NN_Chanels( qbit_num=qbit_num, levels=levels, samples_num=samples_num ) 
+           
         else:
             print( "invalid parameters were given")
+
+
+        chanels = chanels.reshape( [samples_num, dim_over_2, dim_over_2, 4] )
+
+        if ( not nontrivial_adaptive_layers is None ) :
+            nontrivial_adaptive_layers = nontrivial_adaptive_layers.reshape( [samples_num, -1] )
+
+        return chanels, nontrivial_adaptive_layers
+
+       
 

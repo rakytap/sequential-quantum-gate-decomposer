@@ -94,6 +94,27 @@ PyObject* matrix_real_to_numpy( Matrix_real &mtx ) {
 
 
 
+/**
+@brief Call to make a numpy array from an instance of matrix_base<int8_t> class.
+@param mtx a matrix instance
+*/
+PyObject* matrix_int8_to_numpy( matrix_base<int8_t> &mtx ) {
+        // initialize Numpy API
+        import_array();
+
+
+        npy_intp shape[2];
+        shape[0] = (npy_intp) mtx.rows;
+        shape[1] = (npy_intp) mtx.cols;
+
+        int8_t* data = mtx.get_data();
+        return array_from_ptr( (void*) data, 2, shape, NPY_INT8);
+
+
+}
+
+
+
 
 /**
 @brief Call to create a matrix representation of a numpy array

@@ -94,7 +94,7 @@ class Test_Decomposition:
         matrix_size = pow(2, qbit_num )
 
         # number of adaptive levels
-        levels = 0
+        levels = 2
 
         # creating a class to decompose the unitary
         cDecompose = qgd_N_Qubit_Decomposition_adaptive( np.eye(matrix_size), level_limit_max=5, level_limit_min=0 )
@@ -118,6 +118,13 @@ class Test_Decomposition:
         print(parameters)
 
         # retrieve the chanels
-        qgd_nn().get_NN_Chanels( unitary )
-        qgd_nn().get_NN_Chanels( qbit_num=qbit_num, levels=levels )        
+        nn_class = qgd_nn()
+        #nn_class.get_NN_Chanels( unitary )
+        #nn_class.get_NN_Chanels( qbit_num=qbit_num, levels=levels )        
+        chanels, nontrivial_adaptive_layers = nn_class.get_NN_Chanels( qbit_num=qbit_num, levels=levels, samples_num=4 )   
+
+        print( chanels.shape )
+        print( chanels )
+        print( nontrivial_adaptive_layers )
+
         
