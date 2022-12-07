@@ -440,6 +440,6 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def set_Optimizer( self, optimizer="BFGS" ):
 
         # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_custom, self).set_Optimizer(optimizer)  
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Optimizer(optimizer)  
 
 
