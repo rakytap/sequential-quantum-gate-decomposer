@@ -245,36 +245,36 @@ class UnitarySimulator(g.Component):
             us.uinit = unitary.storage_request
             gates = g.input_tensor(shape=(1, 2*2*2, pow2qb), dtype=g.float32, name="gate", layout=get_slice16(EAST, list(range(16)), 0)) #, broadcast=True)
             othergates = g.input_tensor(shape=(1, 2*2*2, pow2qb), dtype=g.float32, name="othergate", layout=get_slice16(WEST, list(range(16)), 0)) #, broadcast=True)
+            #gatemap = g.address_map(g.split_vectors(gates, [1])[0], [0]*16, index_map_layout=)
             with g.ResourceScope(name="makecopy", is_buffered=True, time=0) as pred:
                 copy = us.copymatrix(unitary)
         for reversedir in (False, True):
-            for op in (True, False):
-                for target_qbit in range(num_qbits):
-                    for control_qbit in [None] if op else range(num_qbits):
-                        if control_qbit == target_qbit: continue                    
-                        suffix = ("rev" if reversedir else "") + str(target_qbit) + "_" + str(control_qbit)
-                        with pgm_pkg.create_program_context("us_gate"+suffix) as pc:
-                            newus = UnitarySimulator(num_qbits, reversedir, us)
-                            g.reserve_tensor(pcrev if reversedir else pcinit, pc, otherunitary if reversedir else unitary)
-                            g.reserve_tensor(pcrev if reversedir else pcinit, pc, othercopy if reversedir else copy)
-                            g.reserve_tensor(pcinit, pc, othergates if reversedir else gates)
-                            unitaryctxt = g.from_addresses(np.array((otherunitary if reversedir else unitary).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "unitary" + suffix)
-                            copyctxt = g.from_addresses(np.array((othercopy if reversedir else copy).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "copy" + suffix)
-                            gatesctxt = g.from_addresses(np.array((othergates if reversedir else gates).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "gates" + suffix)
-                            #gate = g.mem_gather()
-                            if not reversedir and op and target_qbit==0 and control_qbit is None:
-                                otherunitary, othercopy = newus.build(unitaryctxt, copyctxt, target_qbit, control_qbit, gatesctxt)
-                                pcrev = pc
-                            else:
-                                newus.build(unitaryctxt, copyctxt, target_qbit, control_qbit, gatesctxt)
+            for target_qbit in range(num_qbits):
+                for control_qbit in range(num_qbits):
+                    if control_qbit == target_qbit: control_qbit = None                    
+                    suffix = ("rev" if reversedir else "") + str(target_qbit) + "_" + str(control_qbit)
+                    with pgm_pkg.create_program_context("us_gate"+suffix) as pc:
+                        newus = UnitarySimulator(num_qbits, reversedir, us)
+                        g.reserve_tensor(pcrev if reversedir else pcinit, pc, otherunitary if reversedir else unitary)
+                        g.reserve_tensor(pcrev if reversedir else pcinit, pc, othercopy if reversedir else copy)
+                        g.reserve_tensor(pcinit, pc, othergates if reversedir else gates)
+                        unitaryctxt = g.from_addresses(np.array((otherunitary if reversedir else unitary).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "unitary" + suffix)
+                        copyctxt = g.from_addresses(np.array((othercopy if reversedir else copy).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "copy" + suffix)
+                        gatesctxt = g.from_addresses(np.array((othergates if reversedir else gates).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "gates" + suffix)
+                        #gate = g.mem_gather()
+                        if not reversedir and target_qbit==0 and control_qbit is None:
+                            otherunitary, othercopy = newus.build(unitaryctxt, copyctxt, target_qbit, control_qbit, gatesctxt)
+                            pcrev = pc
+                        else:
+                            newus.build(unitaryctxt, copyctxt, target_qbit, control_qbit, gatesctxt)
         with pgm_pkg.create_program_context("final_us") as pcfinal:
             g.reserve_tensor(pcinit, pcfinal, unitary)
-            unitaryctxt = g.from_addresses(np.array(unitary.storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "unitaryfin")
-            unitaryctxt.set_program_output()
+            unitaryres = g.from_addresses(np.array(unitary.storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "unitaryfin")
+            unitaryres.set_program_output()
         with pgm_pkg.create_program_context("finalrev_us") as pcfinal:
             g.reserve_tensor(pcrev, pcfinal, otherunitary)
-            unitaryctxt = g.from_addresses(np.array(otherunitary.storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "unitaryrevfin")
-            unitaryctxt.set_program_output()
+            unitaryrevres = g.from_addresses(np.array(otherunitary.storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "unitaryrevfin")
+            unitaryrevres.set_program_output()
         print_utils.infoc("\nAssembling model ...")
         iops = pgm_pkg.assemble()
         iop = runtime.IOProgram(iops[0])
@@ -283,32 +283,33 @@ class UnitarySimulator(g.Component):
         u = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
         target_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
         control_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
-        parameters = np.random.random((num_gates, 3))
-        gateparams = [make_u3(parameters[i]) if control_qbit is None else make_cry(parameters[i]) for i in range(num_gates)]
+        parameters = np.array([[np.random.random(1)[0], 0, 0]*num_gates]).reshape(num_gates,3) # np.random.random((num_gates, 3))
+        gateparams = [make_u3(parameters[i]) if target_qbits[i] == control_qbits[i] else make_cry(parameters[i]) for i in range(num_gates)]
         oracleres, result = [None], [None]
         def oracle():
-            oracleres[0] = qiskit_oracle(u, num_qbits, [(control_qbits[i] == target_qbits[i], target_qbits[i], controls_qbits[i], parameters[i,:]) for i in range(num_gates)])
+            oracleres[0] = qiskit_oracle(u, num_qbits, [(control_qbits[i] == target_qbits[i], target_qbits[i], control_qbits[i], parameters[i,:]) for i in range(num_gates)])
         with device:
             runfunc = [None]
             def loaddata():
-                for i in range(1+2*num_qbits+2*num_qbits*(num_qbits-1)+2):
+                for i in range(1+2*num_qbits*num_qbits+2):
                     device.load(iop[i], unsafe_keep_entry_points=True)
                 def actual():
                     inputs = {}
                     inputs[unitary.name] = np.ascontiguousarray(u.astype(np.complex64)).view(np.float32).reshape(pow2qb, pow2qb, 2).transpose(0, 2, 1).reshape(pow2qb*2, pow2qb)
-                    inputs[gates.name] = np.repeat(gateparams.astype(np.complex64).view(np.float32).flatten(), pow2qb)
-                    inputs[othergates.name] = np.repeat(gateparams.astype(np.complex64).view(np.float32).flatten(), pow2qb)
-                    invoke(devices, iop, 0, 0, inputs)
+                    inputs[gates.name] = np.repeat(gateparams[0].astype(np.complex64).view(np.float32).flatten(), pow2qb)
+                    inputs[othergates.name] = np.repeat(gateparams[0].astype(np.complex64).view(np.float32).flatten(), pow2qb)
+                    invoke([device], iop, 0, 0, [inputs])
                     for i in range(num_gates):
-                        progidx = 1+(num_qbits*2+(num_qbits*num_qbits if (i&1)!=0 else 0)+target_qbits[i]*num_qbits+control_qbits[i] if target_qbits[i]!=control_qbits[i] else (num_qbits if (i&1)!=0 else 0)+target_qbits[i])
-                        invoke(devices, iop, progidx, 0, None, None, None)
-                    res, _ = invoke(devices, iop, 1+2*num_qbits+2*num_qbits*num_qbits+1-(num_gates&1), 0, None, None, None)
-                    result[0] = res[unitary.name if (num_gates&1)!=0 else otherunitary.name]
+                        progidx = 1+(num_qbits*num_qbits if (i&1)!=0 else 0)+target_qbits[i]*num_qbits+control_qbits[i]
+                        invoke([device], iop, progidx, 0, None, None, None)
+                    res, _ = invoke([device], iop, 1+2*num_qbits*num_qbits+(num_gates&1), 0, None, None, None)
+                    result[0] = np.ascontiguousarray(res[0][unitaryres.name if (num_gates&1)==0 else unitaryrevres.name].reshape(pow2qb, 2, pow2qb).transpose(0, 2, 1)).view(np.complex64).reshape(pow2qb, pow2qb).astype(np.complex128)
                 runfunc[0] = actual
         loaddata()
         actual = runfunc[0]
         actual()
         oracle()
+        oracleres, result = oracleres[0], result[0]
         if np.allclose(oracleres, result):
             print_utils.success("\nQuantum Simulator Chain Test Success ...")
         else:
