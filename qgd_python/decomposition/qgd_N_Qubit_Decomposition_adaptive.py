@@ -433,3 +433,13 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Imported_Gate_Structure()
 
+## 
+# @brief Call to set the optimizer used in the gate synthesis process
+# @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2".
+# @return An instance of the class
+    def set_Optimizer( self, optimizer="BFGS" ):
+
+        # Set the optimizer
+        super(qgd_N_Qubit_Decomposition_custom, self).set_Optimizer(optimizer)  
+
+

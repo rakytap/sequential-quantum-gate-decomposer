@@ -319,7 +319,18 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
         # setting gate structure and optimized initial parameters
         self.set_Gate_Structure(Gates_Block_ret)
-        self.set_Optimized_Parameters( optimized_parameters )        
-            
+        self.set_Optimized_Parameters( optimized_parameters )      
+
+
+
+## 
+# @brief Call to set the optimizer used in the gate synthesis process
+# @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2".
+# @return An instance of the class
+    def set_Optimizer( self, optimizer="BFGS" ):
+
+        # Set the optimizer
+        super(qgd_N_Qubit_Decomposition_custom, self).set_Optimizer(optimizer)  
+
 
 
