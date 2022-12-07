@@ -94,28 +94,7 @@ class Test_Decomposition:
         matrix_size = pow(2, qbit_num )
 
         # number of adaptive levels
-        levels = 2
-
-        # creating a class to decompose the unitary
-        cDecompose = qgd_N_Qubit_Decomposition_adaptive( np.eye(matrix_size), level_limit_max=5, level_limit_min=0 )
-        
-        # adding decomposing layers to the gat structure
-        for idx in range(levels):
-            cDecompose.add_Adaptive_Layers()        
-
-        cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
-
-
-        # get the number of free parameters
-        num_of_parameters = cDecompose.get_Parameter_Num()
-
-        # create randomized parameters having number of nontrivial adaptive blocks determined by the parameter nontrivial_ratio
-        parameters, nontrivial_adaptive_layers = create_randomized_parameters( num_of_parameters, qbit_num, levels )
-
-        # getting the unitary corresponding to quantum circuit
-        unitary = cDecompose.get_Matrix( parameters )
-        
-        print(parameters)
+        levels = 1
 
         # retrieve the chanels
         nn_class = qgd_nn()
@@ -123,8 +102,8 @@ class Test_Decomposition:
         #nn_class.get_NN_Chanels( qbit_num=qbit_num, levels=levels )        
         chanels, nontrivial_adaptive_layers = nn_class.get_NN_Chanels( qbit_num=qbit_num, levels=levels, samples_num=4 )   
 
-        print( chanels.shape )
-        print( chanels )
-        print( nontrivial_adaptive_layers )
+        #print( chanels.shape )
+        #print( chanels )
+        #print( nontrivial_adaptive_layers )
 
         

@@ -188,14 +188,13 @@ NN::get_nn_chanels_from_kernel( Matrix& kernel_up, Matrix& kernel_down, Matrix_r
 
 }
 
-
-
 /** 
 @brief call retrieve the channels for the neural network associated with a single unitary
 @param Umtx A unitary of dimension dim x dim, where dim is a power of 2.
+@param target_qbit The target qubit for which the chanels are calculated
 @param chanels output array containing the chanels prepared for th eneural network. The array has dimensions [ dim/2, dim/2, 4 ] (dimension "4" stands for theta_up, phi, theta_down , lambda)
 */
-void NN::get_nn_chanels( const Matrix& Umtx, Matrix_real& chanels) {
+void NN::get_nn_chanels( const Matrix& Umtx, const int& target_qbit, Matrix_real& chanels) {
 
 
     if ( Umtx.rows != Umtx.cols ) {
@@ -221,7 +220,6 @@ void NN::get_nn_chanels( const Matrix& Umtx, Matrix_real& chanels) {
 
 
     
-    int target_qbit = 1;
     int index_pair_distance = 1 << target_qbit;
     
     //std::cout << "target_qbit: " << target_qbit << " index pair distance: " << index_pair_distance << std::endl;
@@ -274,6 +272,36 @@ void NN::get_nn_chanels( const Matrix& Umtx, Matrix_real& chanels) {
 
 }
 
+/** 
+@brief call retrieve the channels for the neural network associated with a single unitary
+@param qbit_num Th number of qubites
+@param Umtx A unitary of dimension dim x dim, where dim is a power of 2.
+@param chanels output array containing the chanels prepared for th eneural network. The array has dimensions [ dim/2, dim/2, 4 ] (dimension "4" stands for theta_up, phi, theta_down , lambda)
+*/
+void NN::get_nn_chanels( int qbit_num, const Matrix& Umtx, Matrix_real& chanels) {
+
+    int dim = Umtx.rows;
+    int dim_over_2 = dim/2;
+
+    if ( chanels.size() != qbit_num*dim_over_2*dim_over_2*4 ) {
+        chanels = Matrix_real( qbit_num*dim_over_2, dim_over_2*4 );
+    }
+
+    int chanels_idx_size = dim_over_2*dim_over_2*4;
+
+    for( int target_qbit=0; target_qbit<qbit_num; target_qbit++ ) {
+
+        Matrix_real chanels_idx( chanels.get_data() + target_qbit*chanels_idx_size, dim_over_2, dim_over_2*4 );
+        get_nn_chanels( Umtx, target_qbit, chanels_idx);
+
+    }
+ 
+    
+
+    return;
+
+}
+
 
 
 /** 
@@ -320,7 +348,7 @@ NN::get_nn_chanels(int qbit_num, int levels, Matrix_real& chanels, matrix_base<i
     Matrix&& Umtx = cDecompose.get_matrix( parameters );
 
     // generate chanels
-    get_nn_chanels( Umtx, chanels );
+    get_nn_chanels( qbit_num, Umtx, chanels );
 
 
 

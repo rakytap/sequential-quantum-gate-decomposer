@@ -102,9 +102,17 @@ void get_nn_chanels_from_kernel( Matrix& kernel_up, Matrix& kernel_down, Matrix_
 /** 
 @brief call retrieve the channels for the neural network associated with a single unitary
 @param Umtx A unitary of dimension dim x dim, where dim is a power of 2.
+@param target_qbit The target qubit for which the chanels are calculated
 @param chanels output array containing the chanels prepared for th eneural network. The array has dimensions [ dim/2, dim/2, 4 ] (dimension "4" stands for theta_up, phi, theta_down , lambda)
 */
-void get_nn_chanels( const Matrix& Umtx, Matrix_real& chanels);
+void get_nn_chanels( const Matrix& Umtx, const int& target_qbit, Matrix_real& chanels);
+
+/** 
+@brief call retrieve the channels for the neural network associated with a single unitary
+@param Umtx A unitary of dimension dim x dim, where dim is a power of 2.
+@param chanels output array containing the chanels prepared for th eneural network. The array has dimensions [ dim/2, dim/2, 4 ] (dimension "4" stands for theta_up, phi, theta_down , lambda)
+*/
+void get_nn_chanels( int qbit_num, const Matrix& Umtx, Matrix_real& chanels);
 
 /** 
 @brief call retrieve the channels for the neural network associated with a single, randomly generated unitary
