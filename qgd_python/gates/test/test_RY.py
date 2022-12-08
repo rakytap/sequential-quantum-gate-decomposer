@@ -16,13 +16,13 @@ class Test_operations:
 
 
 
-    def test_RX_creation(self):
+    def test_RY_creation(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of RX gate.
         """
 
-        from qgd_python.gates.qgd_RX import qgd_RX
+        from qgd_python.gates.qgd_RY import qgd_RY
 
         # number of qubits
         qbit_num = 3
@@ -31,13 +31,14 @@ class Test_operations:
         target_qbit = 0
 
         # creating an instance of the C++ class
-        RX = qgd_RX( qbit_num, target_qbit )
+        RY = qgd_RY( qbit_num, target_qbit )
 
         parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
         
-        RX_squander = RX.get_Matrix( parameters )
+        RY_squander= RY.get_Matrix( parameters )
         
-        print(RX_squander)
+        print(RY_squander)
+
 
 #QISKIT
 
@@ -48,7 +49,7 @@ class Test_operations:
         circuit = QuantumCircuit(qbit_num)
 
         # Add the u3 gate on qubit pi, pi,
-        circuit.rx(parameters[0]*2, target_qbit)
+        circuit.ry(parameters[0]*2, target_qbit)
                 
         # job execution and getting the result as an object
         job = execute(circuit, backend)
@@ -57,19 +58,17 @@ class Test_operations:
         result=job.result()  
         
         # the unitary matrix from the result object
-        RX_qiskit = result.get_unitary(circuit)
-        RX_qiskit = np.asarray(RX_qiskit)
+        RY_qiskit = result.get_unitary(circuit)
+        RY_qiskit = np.asarray(RY_qiskit)
         
         # Draw the circuit        
-        print(RX_qiskit)
+        print(RY_qiskit)
         
         #the difference between the SQUANDER and the qiskit result        
-        delta_matrix=RX_squander-RX_qiskit
+        delta_matrix=RY_squander-RY_qiskit
 
         # compute norm of matrix
         error=np.linalg.norm(delta_matrix)
 
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
-        assert( error < 1e-3 )        
- 
-
+        assert( error < 1e-3 ) 
