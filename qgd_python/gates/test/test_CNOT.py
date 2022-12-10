@@ -34,14 +34,11 @@ class Test_operations_squander:
 
         # control qbit
         control_qbit = 1
-
-        # creating an instance of the C++ class
-        parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
-      
+     
         # creating an instance of the C++ class
         CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
                 
-        CNOT_squander = CNOT.get_Matrix( parameters )
+        CNOT_squander = CNOT.get_Matrix( )
         
         print(CNOT_squander)
 
