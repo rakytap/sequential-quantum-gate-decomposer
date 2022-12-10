@@ -27,7 +27,7 @@ class Test_operations_squander:
         from qgd_python.gates.qgd_CNOT import qgd_CNOT
 
         # number of qubits
-        qbit_num = 3
+        qbit_num = 2
 
         # target qbit
         target_qbit = 0
@@ -51,7 +51,7 @@ class Test_operations_squander:
         circuit = QuantumCircuit(qbit_num)
 
         # Add the u3 gate on qubit pi, pi,
-        circuit.cx( target_qbit, control_qbit )
+        circuit.cx( control_qbit, target_qbit )
                 
         # job execution and getting the result as an object
         job = execute(circuit, backend)
@@ -74,6 +74,5 @@ class Test_operations_squander:
 
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
         assert( error < 1e-3 ) 
-
 
 
