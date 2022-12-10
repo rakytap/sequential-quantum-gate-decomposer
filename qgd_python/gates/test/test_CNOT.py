@@ -50,7 +50,7 @@ class Test_operations_squander:
         # Create a Quantum Circuit acting on the q register
         circuit = QuantumCircuit(qbit_num)
 
-        # Add the u3 gate on qubit pi, pi,
+        # Add the CNOT gate on control qbit and target qbit
         circuit.cx( control_qbit, target_qbit )
                 
         # job execution and getting the result as an object
@@ -74,5 +74,6 @@ class Test_operations_squander:
 
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
         assert( error < 1e-3 ) 
+
 
 
