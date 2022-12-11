@@ -128,28 +128,9 @@ static int
 @brief Extract the optimized parameters
 @param start_index The index of the first inverse gate
 */
+
 static PyObject *
-qgd_CZ_get_Matrix( qgd_CZ *self, PyObject *args ) {
-
-    PyObject * parameters_arr = NULL;
-
-
-    // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
-        return Py_BuildValue("i", -1);
-
-    
-    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
-        Py_INCREF(parameters_arr);
-    }
-    else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-    }
-
-
-    // get the C++ wrapper around the data
-    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
-
+qgd_CZ_get_Matrix( qgd_CZ *self ) {
 
     Matrix CZ_mtx = self->gate->get_matrix(  );
     
@@ -157,11 +138,10 @@ qgd_CZ_get_Matrix( qgd_CZ *self, PyObject *args ) {
     CZ_mtx.set_owner(false);
     PyObject *CZ_py = matrix_to_numpy( CZ_mtx );
 
-
-    Py_DECREF(parameters_arr);
-
     return CZ_py;
 }
+
+
 
 /**
 @brief Structure containing metadata about the members of class  qgd_CZ.
@@ -176,7 +156,7 @@ static PyMemberDef  qgd_CZ_members[] = {
 @brief Structure containing metadata about the methods of class  qgd_CZ.
 */
 static PyMethodDef  qgd_CZ_methods[] = {
-    {"get_Matrix", (PyCFunction) qgd_CZ_get_Matrix, METH_VARARGS,
+    {"get_Matrix", (PyCFunction) qgd_CZ_get_Matrix, METH_NOARGS,
      "Method to get the matrix of the operation."
     },
     {NULL}  /* Sentinel */

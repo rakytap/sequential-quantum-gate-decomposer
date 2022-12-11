@@ -6,41 +6,41 @@ from qiskit import QuantumCircuit, execute, IBMQ, transpile
 from qiskit.providers.aer import QasmSimulator
 from qiskit.visualization import plot_histogram
 from qiskit import Aer
-from qgd_python.gates.qgd_CNOT import qgd_CNOT
-
 
 from scipy.stats import unitary_group
 
 pi=np.pi
 
+#SQUANDER
 
 class Test_operations_squander:
-    """This is a test class of the python iterface to compare the SQUANDER and the qiskit decomposition"""
-#SQUANDER#
+    """This is a test class of the python iterface to the gates of the QGD package"""
 
-    def test_CNOT_squander(self):
+
+
+    def test_CH_squander(self):
         r"""
         This method is called by pytest. 
-        Test to create an instance of U3 gate and compare with qiskit.
+        Test to create an instance of RX gate.
         """
 
-        from qgd_python.gates.qgd_CNOT import qgd_CNOT
+        from qgd_python.gates.qgd_CH import qgd_CH
 
         # number of qubits
-        qbit_num = 2
+        qbit_num = 3
 
         # target qbit
         target_qbit = 0
 
-        # control qbit
+        # control_qbit
         control_qbit = 1
-     
+
         # creating an instance of the C++ class
-        CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
-                
-        CNOT_squander = CNOT.get_Matrix( )
+        CH = qgd_CH( qbit_num, target_qbit, control_qbit )
+
+        CH_squander = CH.get_Matrix(  )
         
-        print(CNOT_squander)
+        print(CH_squander)
 
 #QISKIT
 
@@ -50,8 +50,8 @@ class Test_operations_squander:
         # Create a Quantum Circuit acting on the q register
         circuit = QuantumCircuit(qbit_num)
 
-        # Add the CNOT gate on control qbit and target qbit
-        circuit.cx( control_qbit, target_qbit )
+        # Add the CH gate 
+        circuit.ch(control_qbit, target_qbit)
                 
         # job execution and getting the result as an object
         job = execute(circuit, backend)
@@ -60,22 +60,20 @@ class Test_operations_squander:
         result=job.result()  
         
         # the unitary matrix from the result object
-        CNOT_qiskit = result.get_unitary(circuit)
-        CNOT_qiskit = np.asarray(CNOT_qiskit)
+        CH_qiskit = result.get_unitary(circuit)
+        CH_qiskit = np.asarray(CH_qiskit)
         
         # Draw the circuit        
-        print(CNOT_qiskit)
+        print(CH_qiskit)
         
         #the difference between the SQUANDER and the qiskit result        
-        delta_matrix=CNOT_squander-CNOT_qiskit
+        delta_matrix=CH_squander-CH_qiskit
 
         # compute norm of matrix
         error=np.linalg.norm(delta_matrix)
 
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
-        assert( error < 1e-3 ) 
-
-
+        assert( error < 1e-3 )
 
 
 

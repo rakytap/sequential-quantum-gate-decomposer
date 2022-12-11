@@ -156,7 +156,7 @@ static PyMemberDef  qgd_CNOT_members[] = {
 @brief Structure containing metadata about the methods of class  qgd_CNOT.
 */
 static PyMethodDef  qgd_CNOT_methods[] = {
-    {"get_Matrix", (PyCFunction) qgd_CNOT_get_Matrix, METH_VARARGS,
+    {"get_Matrix", (PyCFunction) qgd_CNOT_get_Matrix, METH_NOARGS,
      "Method to get the matrix of the operation."
     },
     {NULL}  /* Sentinel */

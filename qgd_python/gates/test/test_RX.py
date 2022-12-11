@@ -10,13 +10,15 @@ from qiskit import Aer
 
 from scipy.stats import unitary_group
 
+pi=np.pi
+
 #SQUANDER
-class Test_operations:
+class Test_operations_squander:
     """This is a test class of the python iterface to the gates of the QGD package"""
 
 
 
-    def test_RX_creation(self):
+    def test_RX_squander(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of RX gate.
@@ -72,4 +74,5 @@ class Test_operations:
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
         assert( error < 1e-3 )        
  
+
 
