@@ -32,6 +32,11 @@ class Test_operations_squander:
         # target qbit
         target_qbit = 0
 
+        # set the free parameters
+        Theta = True
+        Phi = False
+        Lambda = False     
+
         # creating an instance of the C++ class
         RX = qgd_RX( qbit_num, target_qbit )
 
@@ -74,5 +79,6 @@ class Test_operations_squander:
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
         assert( error < 1e-3 )        
  
-
+a=Test_operations_squander()
+a.test_RX_squander()
 

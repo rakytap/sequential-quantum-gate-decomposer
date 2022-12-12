@@ -32,6 +32,11 @@ class Test_operations_squander:
         # target qbit
         target_qbit = 0
 
+        # set the free parameters
+        Theta = True
+        Phi = False
+        Lambda = False   
+
         # creating an instance of the C++ class
         RY = qgd_RY( qbit_num, target_qbit )
 
