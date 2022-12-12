@@ -248,6 +248,7 @@ class UnitarySimulator(g.Component):
             print_utils.infoc(str(oracleres - result))
         
     def chain_test(num_qbits, max_gates):
+        max_gates = 301
         num_gates, use_identity = max_gates, True
         pow2qb = 1 << num_qbits
         pgm_pkg = g.ProgramPackage(name="us", output_dir="us")
@@ -264,6 +265,7 @@ class UnitarySimulator(g.Component):
             gateinc = [g.from_data(np.array(([1*2]+[0]*15)*20, dtype=np.uint8), layout=get_slice1(hemi, 0, 1)) for hemi in (EAST, WEST)] #gather map is little endian byte order
             gateinc256 = [g.zeros((320,), layout=get_slice1(hemi, 1, 1), dtype=g.uint8) for hemi in (EAST, WEST)]
             gateinccount = [g.from_data(np.array(([0, 1*2]+[0]*14)*20, dtype=np.uint8), layout=get_slice1(hemi, 2, 1)) for hemi in (EAST, WEST)]
+            gateincmask = [g.from_data(np.array(([0, 1]+[0]*14)*20, dtype=np.uint8), layout=get_slice1(hemi, 3, 1)) for hemi in (EAST, WEST)]
             g.add_mem_constraints(gateinc + gateinc256 + gateinccount, [gates, othergates], g.MemConstraintType.NOT_MUTUALLY_EXCLUSIVE)
             with g.ResourceScope(name="makecopy", is_buffered=True, time=0) as pred:
                 copy = us.copymatrix(unitary)
@@ -283,6 +285,7 @@ class UnitarySimulator(g.Component):
                         ginc = tensor.shared_memory_tensor(mem_tensor=gateinc[reversedir], name="gateinc" + suffix)
                         ginc256 = tensor.shared_memory_tensor(mem_tensor=gateinc256[reversedir], name="gateinc256" + suffix)
                         ginccount = tensor.shared_memory_tensor(mem_tensor=gateinccount[reversedir], name="gateinccount" + suffix)
+                        gincmask = tensor.shared_memory_tensor(mem_tensor=gateincmask[reversedir], name="gateincmask" + suffix)
                         g.add_mem_constraints([ginc, ginc256, ginccount], [othergates if reversedir else gates], g.MemConstraintType.NOT_MUTUALLY_EXCLUSIVE)
                         unitaryctxt = g.from_addresses(np.array((otherunitary if reversedir else unitary).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), innerdim, g.float32, "unitary" + suffix)
                         copyctxt = g.from_addresses(np.array((othercopy if reversedir else copy).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), innerdim, g.float32, "copy" + suffix)
@@ -294,13 +297,13 @@ class UnitarySimulator(g.Component):
                             else:
                                 newus.build(unitaryctxt, copyctxt, target_qbit, control_qbit, gatesctxt, gmap)
                         with g.ResourceScope(name="incgate", is_buffered=True, time=None, predecessors=[pred]) as pred:
-                            updinc = g.stack([ginccount]*2, 0).add(g.stack([ginc256]*2, 0), time=0, alus=[0])
+                            updinc = g.stack([ginc256]*2, 0).add(g.stack([ginccount]*2, 0), time=0, alus=[0], overflow_mode=g.OverflowMode.MODULAR)
                             updmap = g.stack([g.split_vectors(gmap[0].reinterpret(g.uint8), [1]*4)[0],
-                                            g.split_vectors(gmap[1].reinterpret(g.uint8), [1]*4)[0]], 0).add(g.stack([ginc]*2, 0), alus=[4]).add(g.mask_bar(updinc, g.stack([ginc256]*2, 0)))
+                                              g.split_vectors(gmap[1].reinterpret(g.uint8), [1]*4)[0]], 0).add(g.stack([ginc]*2, 0), alus=[4], overflow_mode=g.OverflowMode.MODULAR).add(g.mask_bar(updinc, g.stack([gincmask]*2, 0)))
                             updmap = g.split_vectors(updmap, [1]*2)
                             g.concat_vectors([updmap[0]]*4, (4, 320)).write(storage_req=gmap[0].storage_request, name="nextgatemap" + suffix)
                             g.concat_vectors([updmap[1]]*4, (4, 320)).write(storage_req=gmap[1].storage_request, name="nextgatemappair" + suffix)
-                            g.split_vectors(updinc, [1]*2)[0].vxm_identity().write(storage_req=ginccount.storage_request, name="nextgateinc256" + suffix)
+                            g.split_vectors(updinc, [1]*2)[0].vxm_identity().write(storage_req=ginc256.storage_request, name="nextgateinc256" + suffix)
         with pgm_pkg.create_program_context("final_us") as pcfinal:
             g.reserve_tensor(pcinit, pcfinal, unitary)
             unitaryres = g.from_addresses(np.array(unitary.storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "unitaryfin")
