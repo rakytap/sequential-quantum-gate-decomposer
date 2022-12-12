@@ -188,7 +188,7 @@ class UnitarySimulator(g.Component):
             else:
                 #gate = g.from_addresses(np.array(gate.addrs).reshape(-1, g.float32.size), pow2qb, g.float32, "gatedim")
                 gatevals = np.array(g.split_vectors(gate, [1]*(gate.shape[0]))).reshape(gate.shape[0]//8, 2*2*2)
-                gatesel_st = g.concat_vectors([gatesel.reshape(1,innerdim)]*(pow2qb//r), (pow2qb//r, innerdim)).read(streams=g.SG4[1])
+                gatesel_st = g.concat_vectors([gatesel[0].reshape(1,innerdim)]*(pow2qb//2//r)+[gatesel[1].reshape(1,innerdim)]*(pow2qb//2//r), (pow2qb//r, innerdim)).read(streams=g.SG4[1])
                 gs = [g.mem_gather(g.concat_vectors(gatevals[:,i].tolist()*(pow2qb//2//r)+gatevals[:,i+4].tolist()*(pow2qb//2//r), (gate.shape[0]//8, pow2qb//r, innerdim)),
                                     gatesel_st, output_streams=[g.SG4[2*i]]) for i in range(4)]
                 #gatesel_st = g.split_vectors(g.concat_vectors([gatesel.reshape(1,innerdim)]*(pow2qb//r), (pow2qb//r, innerdim)).read(streams=g.SG4[1]), [1]*(pow2qb//r))
@@ -248,7 +248,7 @@ class UnitarySimulator(g.Component):
             print_utils.infoc(str(oracleres - result))
         
     def chain_test(num_qbits, max_gates):
-        num_gates, use_identity = 1, True
+        num_gates, use_identity = max_gates, True
         pow2qb = 1 << num_qbits
         pgm_pkg = g.ProgramPackage(name="us", output_dir="us")
         print("Number of gates:", num_gates, "Maximum gates:", max_gates)
@@ -259,10 +259,11 @@ class UnitarySimulator(g.Component):
             #gatescomb = g.input_tensor(shape=(max_gates+1)//2*2, 2*2*2, pow2qb), dtype=g.float32, name="gate", layout="-1, H2, S16(" + str(min(slices)) + "-" + str(max(slices)) + ")")
             gates = g.input_tensor(shape=((max_gates+1)//2, 2*2*2, pow2qb), dtype=g.float32, name="gate", layout=get_slice16(EAST, list(range(16)), 0)) #, broadcast=True)
             othergates = g.input_tensor(shape=((max_gates+1)//2, 2*2*2, pow2qb), dtype=g.float32, name="othergate", layout=get_slice16(WEST, list(range(16)), 0)) #, broadcast=True)
-            gatemap = [g.address_map(g.split_vectors(gates if hemi==EAST else othergates, [1]*((max_gates+1)//2*2*2*2))[0], np.array([0]*20), index_map_layout=get_slice4(hemi, 17, 21, 1)) for hemi in (EAST, WEST)]
-            gateinc = [g.from_data(np.array(([1]+[0]*15)*20, dtype=np.uint8), layout=get_slice1(hemi, 0, 1)) for hemi in (EAST, WEST)] #gather map is little endian byte order
+            gatemap = [[g.address_map(g.split_vectors(gates if hemi==EAST else othergates, [4]*((max_gates+1)//2*2))[0], np.array([0]*20), index_map_layout=get_slice4(hemi, 17, 21, 1)),
+                        g.address_map(g.split_vectors(gates if hemi==EAST else othergates, [4]*((max_gates+1)//2*2))[1], np.array([0]*20), index_map_layout=get_slice4(hemi, 17, 21, 1))] for hemi in (EAST, WEST)]
+            gateinc = [g.from_data(np.array(([1*2]+[0]*15)*20, dtype=np.uint8), layout=get_slice1(hemi, 0, 1)) for hemi in (EAST, WEST)] #gather map is little endian byte order
             gateinc256 = [g.zeros((320,), layout=get_slice1(hemi, 1, 1), dtype=g.uint8) for hemi in (EAST, WEST)]
-            gateinccount = [g.from_data(np.array(([0, 1]+[0]*14)*20, dtype=np.uint8), layout=get_slice1(hemi, 2, 1)) for hemi in (EAST, WEST)]
+            gateinccount = [g.from_data(np.array(([0, 1*2]+[0]*14)*20, dtype=np.uint8), layout=get_slice1(hemi, 2, 1)) for hemi in (EAST, WEST)]
             g.add_mem_constraints(gateinc + gateinc256 + gateinccount, [gates, othergates], g.MemConstraintType.NOT_MUTUALLY_EXCLUSIVE)
             with g.ResourceScope(name="makecopy", is_buffered=True, time=0) as pred:
                 copy = us.copymatrix(unitary)
@@ -278,7 +279,7 @@ class UnitarySimulator(g.Component):
                         g.reserve_tensor(pcrev if reversedir else pcinit, pc, otherunitary if reversedir else unitary)
                         g.reserve_tensor(pcrev if reversedir else pcinit, pc, othercopy if reversedir else copy)
                         g.reserve_tensor(pcinit, pc, othergates if reversedir else gates)
-                        gmap = tensor.shared_memory_tensor(mem_tensor=gatemap[reversedir], name="gatemap" + suffix)
+                        gmap = [tensor.shared_memory_tensor(mem_tensor=gatemap[reversedir][i], name="gatemap" + suffix) for i in range(2)]
                         ginc = tensor.shared_memory_tensor(mem_tensor=gateinc[reversedir], name="gateinc" + suffix)
                         ginc256 = tensor.shared_memory_tensor(mem_tensor=gateinc256[reversedir], name="gateinc256" + suffix)
                         ginccount = tensor.shared_memory_tensor(mem_tensor=gateinccount[reversedir], name="gateinccount" + suffix)
@@ -293,10 +294,13 @@ class UnitarySimulator(g.Component):
                             else:
                                 newus.build(unitaryctxt, copyctxt, target_qbit, control_qbit, gatesctxt, gmap)
                         with g.ResourceScope(name="incgate", is_buffered=True, time=None, predecessors=[pred]) as pred:
-                            updinc = ginccount.add(ginc256, time=0, alus=[0])
-                            updmap = g.split_vectors(gmap.reinterpret(g.uint8), [1]*4)[0].add(ginc, alus=[4]).add(g.mask_bar(updinc, ginc256))
-                            g.concat_vectors([updmap]*4, (4, 320)).write(storage_req=gmap.storage_request, name="nextgatemap" + suffix)
-                            updinc.vxm_identity().write(storage_req=ginccount.storage_request, name="nextgateinc256" + suffix)
+                            updinc = g.stack([ginccount]*2, 0).add(g.stack([ginc256]*2, 0), time=0, alus=[0])
+                            updmap = g.stack([g.split_vectors(gmap[0].reinterpret(g.uint8), [1]*4)[0],
+                                            g.split_vectors(gmap[1].reinterpret(g.uint8), [1]*4)[0]], 0).add(g.stack([ginc]*2, 0), alus=[4]).add(g.mask_bar(updinc, g.stack([ginc256]*2, 0)))
+                            updmap = g.split_vectors(updmap, [1]*2)
+                            g.concat_vectors([updmap[0]]*4, (4, 320)).write(storage_req=gmap[0].storage_request, name="nextgatemap" + suffix)
+                            g.concat_vectors([updmap[1]]*4, (4, 320)).write(storage_req=gmap[1].storage_request, name="nextgatemappair" + suffix)
+                            g.split_vectors(updinc, [1]*2)[0].vxm_identity().write(storage_req=ginccount.storage_request, name="nextgateinc256" + suffix)
         with pgm_pkg.create_program_context("final_us") as pcfinal:
             g.reserve_tensor(pcinit, pcfinal, unitary)
             unitaryres = g.from_addresses(np.array(unitary.storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "unitaryfin")
@@ -311,8 +315,8 @@ class UnitarySimulator(g.Component):
         driver = runtime.Driver()
         device = driver.next_available_device()
         u = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
-        target_qbits = [0] #[np.random.randint(num_qbits) for _ in range(num_gates)]
-        control_qbits = target_qbits # [np.random.randint(num_qbits) for _ in range(num_gates)]
+        target_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
+        control_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
         parameters = np.random.random((num_gates, 3))
         gateparams = [make_u3(parameters[i,:]) if target_qbits[i] == control_qbits[i] else make_cry(parameters[i,:]) for i in range(num_gates)]
         oracleres, result = [None], [None]
@@ -327,7 +331,6 @@ class UnitarySimulator(g.Component):
                     inputs = {}
                     inputs[unitary.name] = np.ascontiguousarray(u.astype(np.complex64)).view(np.float32).reshape(pow2qb, pow2qb, 2).transpose(0, 2, 1).reshape(pow2qb*2, pow2qb)
                     inputs[gates.name] = np.concatenate([np.repeat(gateparams[i].astype(np.complex64).view(np.float32).flatten(), pow2qb) for i in range(0, num_gates, 2)] + [np.zeros((2*2*2*pow2qb), dtype=np.float32)]*((max_gates+1)//2-(num_gates-num_gates//2)))
-                    print(inputs[gates.name])
                     inputs[othergates.name] = np.concatenate([np.repeat(gateparams[i].astype(np.complex64).view(np.float32).flatten(), pow2qb) for i in range(1, num_gates, 2)] + [np.zeros((2*2*2*pow2qb), dtype=np.float32)]*((max_gates+1)//2-num_gates//2))
                     invoke([device], iop, 0, 0, [inputs])
                     for i in range(num_gates):
