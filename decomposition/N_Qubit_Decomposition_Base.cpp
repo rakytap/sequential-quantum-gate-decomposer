@@ -239,8 +239,6 @@ void  N_Qubit_Decomposition_Base::final_optimization() {
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
 
-    
-
     switch ( alg ) {
         case ADAM:
             solve_layer_optimization_problem_ADAM( num_of_parameters, solution_guess_gsl);
@@ -345,7 +343,7 @@ pure_DFE_time = 0.0;
 
             if ( iter_idx % 5000 == 0 ) {
                 std::stringstream sstream;
-                sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                sstream << "ADAM: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
                 print(sstream, 0);   
                 std::string filename("initial_circuit_iteration.binary");
                 export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
@@ -369,7 +367,7 @@ pure_DFE_time = 0.0;
                 int factor = rand() % 10 + 1;
 
                 std::stringstream sstream;
-                sstream << "leaving local minimum " << f0 << ", radius of randomization: " << radius << std::endl;
+                sstream << "ADAM: leaving local minimum " << f0 << ", radius of randomization: " << radius << std::endl;
                 print(sstream, 0);   
         
                 bool just_reset_optimizer = (rand() % 5) == 0; 
@@ -609,7 +607,7 @@ bfgs_time = 0.0;
                 if ( sub_iter_idx>2500 || status != GSL_CONTINUE ) {
 
                     std::stringstream sstream;
-                    sstream << "leaving local minimum " << s->f << std::endl;
+                    sstream << "BFGS2: leaving local minimum " << s->f << std::endl;
                     print(sstream, 2); 
                     
                     sub_iter_idx = 0;
@@ -664,7 +662,7 @@ bfgs_time = 0.0;
 
                 if ( iter_idx % 5000 == 0 ) {
                      std::stringstream sstream;
-                     sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                     sstream << "BFGS2: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
                      print(sstream, 2);  
 
                      std::string filename("initial_circuit_iteration.binary");
