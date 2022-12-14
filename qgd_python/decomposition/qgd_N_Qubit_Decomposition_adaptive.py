@@ -408,9 +408,9 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 ##
 # @brief Call to set global phase 
-    def set_Global_Phase( self, angle ):
+    def set_Global_Phase( self, new_global_phase ):
 	
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Global_Phase(angle)
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Global_Phase(new_global_phase)
 ##
 # @brief Call to get the name of the SQUANDER project
     def get_Project_Name( self ):
@@ -424,9 +424,9 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Project_Name(project_name_new)
 ##
 # @brief Call to apply global phase on Unitary matrix
-    def apply_Global_Phase( self ):
+    def apply_Global_Phase_Factor( self ):
 	
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Global_Phase()
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Global_Phase_Factor()
 ##
 # @brief Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released.
     def apply_Imported_Gate_Structure( self ):  

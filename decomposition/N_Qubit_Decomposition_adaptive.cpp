@@ -1225,10 +1225,10 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
                 // the product U3 matrix
 		Matrix U3_new = matching_gate->calc_one_qubit_u3(theta3_over2,phi3,lambda3);
-		QGD_Complex16 global_phase_new;
-		global_phase_new.real = std::cos(alpha);
-		global_phase_new.imag = std::sin(alpha);
-		apply_global_phase(global_phase_new, U3_new);
+		QGD_Complex16 global_phase_factor_new;
+		global_phase_factor_new.real = std::cos(alpha);
+		global_phase_factor_new.imag = std::sin(alpha);
+		apply_global_phase_factor(global_phase_factor_new, U3_new);
                 // test for the product U3 matrix
 		if (std::sqrt((U3_new[3].real-U3_prod[3].real)*(U3_new[3].real-U3_prod[3].real)) + std::sqrt((U3_new[3].imag-U3_prod[3].imag)*(U3_new[3].imag-U3_prod[3].imag)) < 1e-8 && (stheta3_over2*stheta3_over2+ctheta3_over2*ctheta3_over2) > 0.99) {
 
@@ -1236,8 +1236,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 		    param2[0] = theta3_over2;
 		    param2[1] = phi3;
 		    param2[2] = lambda3;
-    		apply_global_phase(global_phase_new, Umtx);
-
+    		apply_global_phase_factor(global_phase_factor_new, Umtx);
 		}
 /*
 	        N_Qubit_Decomposition_custom cDecomp_custom_( Umtx.copy(), qbit_num, false, initial_guess);

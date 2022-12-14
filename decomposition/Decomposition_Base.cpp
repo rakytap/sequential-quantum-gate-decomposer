@@ -83,8 +83,8 @@ Decomposition_Base::Decomposition_Base() {
     convergence_threshold = 1e-5;
     
     //global phase of the unitary matrix
-    global_phase.real = 1;
-    global_phase.imag = 1;
+    global_phase_factor.real = 1;
+    global_phase_factor.imag = 0;
     
     //the name of the SQUANDER project
     std::string projectname = "";
@@ -160,8 +160,8 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
     convergence_threshold = 1e-5;
     
     //global phase of the unitary matrix
-    global_phase.real = 1;
-    global_phase.imag = 1;
+    global_phase_factor.real = 1;
+    global_phase_factor.imag = 0;
     
     //name of the SQUANDER project
     std::string projectname = "";
@@ -1513,47 +1513,47 @@ void Decomposition_Base::set_project_name(std::string& project_name_new){
 
 /**
 @brief Call to calculate new global phase 
-@param global_phase The value of the phase
+@param global_phase_factor The value of the phase
 */
-void Decomposition_Base::calculate_new_global_phase(QGD_Complex16 global_phase_new){
-	global_phase = mult(global_phase, global_phase_new);
+void Decomposition_Base::calculate_new_global_phase_factor(QGD_Complex16 global_phase_factor_new){
+	global_phase_factor = mult(global_phase_factor, global_phase_factor_new);
 	return;
 }
 
 /**
 @brief Call to get global phase 
-@param global_phase The value of the phase
+@param global_phase_factor The value of the phase
 */
-QGD_Complex16 Decomposition_Base::get_global_phase( ){
-	return global_phase;
+QGD_Complex16 Decomposition_Base::get_global_phase_factor( ){
+	return global_phase_factor;
 }
 
 /**
 @brief Call to set global phase 
-@param global_phase_new The value of the new phase
+@param global_phase_factor_new The value of the new phase
 */
-void Decomposition_Base::set_global_phase(double global_phase_new_angle){
-	global_phase.real = sqrt(2)*cos(global_phase_new_angle);
-	global_phase.imag = sqrt(2)*sin(global_phase_new_angle);
+void Decomposition_Base::set_global_phase(double new_global_phase){
+	global_phase_factor.real = sqrt(2)*cos(new_global_phase);
+	global_phase_factor.imag = sqrt(2)*sin(new_global_phase);
 	return;
 }
 
 /**
 @brief Call to apply global phase of U3 matrices to matrix
-@param global_phase The value of the phase
+@param global_phase_factor The value of the phase
 */
-void Decomposition_Base::apply_global_phase(QGD_Complex16 global_phase_new, Matrix& u3_gate){
-	mult(global_phase_new, u3_gate);
+void Decomposition_Base::apply_global_phase_factor(QGD_Complex16 global_phase_factor, Matrix& u3_gate){
+	mult(global_phase_factor, u3_gate);
 	return;
 }
 
 /**
 @brief Call to apply the current global phase to the unitary matrix
-@param global_phase The value of the phase
+@param global_phase_factor The value of the phase
 */
-void Decomposition_Base::apply_global_phase(){
-	mult(global_phase, Umtx);
-	set_global_phase(3.141592653589793 / 4);
+void Decomposition_Base::apply_global_phase_factor(){
+	mult(global_phase_factor, Umtx);
+	set_global_phase(0);
 	return;
 }
 

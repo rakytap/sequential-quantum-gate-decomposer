@@ -49,10 +49,10 @@ def test_global_phase():
 	assert(np.abs(angl)<2*np.pi)
 	angl_new = np.pi/3
 	cDecompose.set_Global_Phase(angl_new)
-	global_phase = np.sqrt(2)*np.cos(angl_new)+1j*np.sqrt(2)*np.sin(angl_new)
-	cDecompose.apply_Global_Phase()
+	global_phase_factor = np.sqrt(2)*np.cos(angl_new)+1j*np.sqrt(2)*np.sin(angl_new)
+	cDecompose.apply_Global_Phase_Factor()
 	angl_assert = cDecompose.get_Global_Phase()
-	assert(np.abs(angl_assert-np.pi/4)<1e-5)
+	assert(np.abs(angl_assert)<1e-8)
 	Umtx_assert_new=cDecompose.get_Unitary()
-	assert(np.sum(np.abs(Umtx_assert*global_phase-Umtx_assert_new))<0.00001)
+	assert(np.sum(np.abs(Umtx_assert*global_phase_factor-Umtx_assert_new))<0.00001)
 	   

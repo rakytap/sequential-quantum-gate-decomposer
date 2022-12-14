@@ -646,8 +646,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates( qgd_N_Qubit_Decomposition_
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
-    QGD_Complex16 global_phase_C = self->decomp_base->get_global_phase();
-    PyObject* global_phase = PyFloat_FromDouble( std::atan2(global_phase_C.imag,global_phase_C.real));
+    QGD_Complex16 global_phase_factor_C = self->decomp_base->get_global_phase_factor();
+    PyObject* global_phase = PyFloat_FromDouble( std::atan2(global_phase_factor_C.imag,global_phase_factor_C.real));
     return global_phase;
     
 }
@@ -655,13 +655,12 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase(qgd_N_Qubit_Decompos
 /**
 @brief sets the global phase to the new angle given
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
-@param arg Global_phase_new_angle the angle to be set
+@param arg global_phase_factor_new_angle the angle to be set
 */
 static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args) {
-	double global_phase_new_angle;
-    if (!PyArg_ParseTuple(args, "|d", &global_phase_new_angle )) return Py_BuildValue("i", -1);
-    std::cout<<global_phase_new_angle<<std::endl;
-    self->decomp_base->set_global_phase(global_phase_new_angle);
+	double new_global_phase;
+    if (!PyArg_ParseTuple(args, "|d", &new_global_phase )) return Py_BuildValue("i", -1);
+    self->decomp_base->set_global_phase(new_global_phase);
     return Py_BuildValue("i", 0);
     
 }
@@ -670,10 +669,10 @@ static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase(qg
 @brief applies the global phase to the Unitary matrix
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
 */
-static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase_Factor(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
     // get the number of gates
-    self->decomp_base->apply_global_phase();
+    self->decomp_base->apply_global_phase_factor();
     return Py_BuildValue("i", 0);
     
 }
@@ -1472,7 +1471,7 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     {"set_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase, METH_VARARGS,
      "Call to set global phase"
     },
-    {"apply_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase, METH_NOARGS,
+    {"apply_Global_Phase_Factor", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase_Factor, METH_NOARGS,
      "Call to apply global phase on Unitary matrix"},
     {"get_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Unitary, METH_NOARGS,
      "Call to get Unitary Matrix"

@@ -72,7 +72,7 @@ public:
     double optimization_tolerance;
     
     ///The global phase
-    QGD_Complex16 global_phase;
+    QGD_Complex16 global_phase_factor;
     
     ///the name of the project
     std::string project_name;
@@ -411,34 +411,34 @@ void set_project_name(std::string& project_name_new);
 
 /**
 @brief  Calculate the new global phase of the Unitary matrix after removing a trivial U3 matrix
-@param global_phase_new: global phase calculated from the product of two U3 matrices
+@param global_phase_factor_new: global phase calculated from the product of two U3 matrices
 */
-void calculate_new_global_phase( QGD_Complex16 global_phase_new );
+void calculate_new_global_phase_factor( QGD_Complex16 global_phase_factor_new );
 
 /**
 @brief Get the global phase of the Unitary matrix 
 @return The current global phase
 */
-QGD_Complex16 get_global_phase( );
+QGD_Complex16 get_global_phase_factor( );
 
 /**
 @brief Call to set global phase 
-@param global_phase_new The value of the new phase
+@param global_phase_factor_new The value of the new phase
 */
-void set_global_phase(double global_phase_new_angle);
+void set_global_phase(double new_global_phase);
 
 
 /**
 @brief Call to apply the global phase to a matrix
 @return Returns with the minimum of the cost function
 */
-void apply_global_phase(QGD_Complex16 global_phase_new, Matrix& u3_gate);
+void apply_global_phase_factor(QGD_Complex16 global_phase_factor, Matrix& u3_gate);
 
 /**
 @brief Call to apply the current global phase to the unitary matrix
-@param global_phase The value of the phase
+@param global_phase_factor The value of the phase
 */
-void apply_global_phase();
+void apply_global_phase_factor();
 
 /**
 @brief   exports unitary matrix to binary file
