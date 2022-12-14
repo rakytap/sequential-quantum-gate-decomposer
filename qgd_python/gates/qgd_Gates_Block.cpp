@@ -28,7 +28,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "structmember.h"
 #include "Gates_block.h"
 
-
+#ifdef __DFE__
+#include <numpy/arrayobject.h>
+#include "numpy_interface.h"
+#endif
 
 /**
 @brief Type definition of the qgd_Operation_Block Python class of the qgd_Operation_Block module
@@ -532,6 +535,130 @@ qgd_Gates_Block_add_Gates_Block(qgd_Gates_Block *self, PyObject *args)
 
 }
 
+#ifdef __DFE__
+
+static PyObject*
+DFEgateQGD_to_Python(DFEgate_kernel_type* DFEgates, int gatesNum)
+{
+    PyObject* o = PyList_New(0);
+    for (int i = 0; i < gatesNum; i++) {
+        PyList_Append(o, Py_BuildValue("iiibbbb", DFEgates[i].ThetaOver2, DFEgates[i].Phi,
+            DFEgates[i].Lambda, DFEgates[i].target_qbit, DFEgates[i].control_qbit,
+            DFEgates[i].gate_type, DFEgates[i].metadata));
+    }
+    delete [] DFEgates;
+    return o;
+}
+
+static DFEgate_kernel_type*
+DFEgatePython_to_QGD(PyObject* obj)
+{
+    Py_ssize_t gatesNum = PyList_Size(obj); //assert type is list
+    DFEgate_kernel_type* DFEgates = new DFEgate_kernel_type[gatesNum];
+    for (Py_ssize_t i = 0; i < gatesNum; i++) {
+        PyObject* t = PyList_GetItem(obj, i);
+        //assert type is tuple and PyTuple_Size(t) == 7
+        DFEgates[i].ThetaOver2 = PyLong_AsLong(PyTuple_GetItem(t, 0));
+        DFEgates[i].Phi = PyLong_AsLong(PyTuple_GetItem(t, 1));
+        DFEgates[i].Lambda = PyLong_AsLong(PyTuple_GetItem(t, 2));
+        DFEgates[i].target_qbit = PyLong_AsLong(PyTuple_GetItem(t, 3));
+        DFEgates[i].control_qbit = PyLong_AsLong(PyTuple_GetItem(t, 4));
+        DFEgates[i].gate_type = PyLong_AsLong(PyTuple_GetItem(t, 5));
+        DFEgates[i].metadata = PyLong_AsLong(PyTuple_GetItem(t, 6));
+    }
+    return DFEgates;
+}
+
+static PyObject *
+qgd_Gates_Block_convert_to_DFE_gates_with_derivates(qgd_Gates_Block *self, PyObject *args)
+{
+    bool only_derivates = false;
+    PyObject* parameters_mtx_np = NULL;
+    if (!PyArg_ParseTuple(args, "|Ob",
+                                     &parameters_mtx_np, &only_derivates))
+        return Py_BuildValue("");
+
+    if ( parameters_mtx_np == NULL ) return Py_BuildValue("");
+    PyObject* parameters_mtx = PyArray_FROM_OTF(parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(parameters_mtx) ) {
+        std::cout << "parameters_mtx is not memory contiguous" << std::endl;
+    }
+
+    // create QGD version of the parameters_mtx
+    Matrix_real parameters_mtx_mtx = numpy2matrix_real(parameters_mtx);
+        
+    int gatesNum = -1, gateSetNum = -1, redundantGateSets = -1;
+    DFEgate_kernel_type* ret = self->gate->convert_to_DFE_gates_with_derivates(parameters_mtx_mtx, gatesNum, gateSetNum, redundantGateSets, only_derivates);
+    return Py_BuildValue("Oii", DFEgateQGD_to_Python(ret, gatesNum), gateSetNum, redundantGateSets);
+}
+
+static PyObject *
+qgd_Gates_Block_adjust_parameters_for_derivation(qgd_Gates_Block *self, PyObject *args)
+{
+    int gatesNum = -1;
+    PyObject* dfegates = NULL;
+    if (!PyArg_ParseTuple(args, "|Oi",    
+                                     &dfegates, &gatesNum))
+        return Py_BuildValue("");
+    int gate_idx = -1, gate_set_index = -1;
+    DFEgate_kernel_type* dfegates_qgd = DFEgatePython_to_QGD(dfegates);
+    self->gate->adjust_parameters_for_derivation(dfegates_qgd, gatesNum, gate_idx, gate_set_index);    
+    return Py_BuildValue("Oii", DFEgateQGD_to_Python(dfegates_qgd, gatesNum), gate_idx, gate_set_index);
+}
+
+static PyObject *
+qgd_Gates_Block_convert_to_DFE_gates(qgd_Gates_Block *self, PyObject *args)
+{
+    PyObject* parameters_mtx_np = NULL;
+    if (!PyArg_ParseTuple(args, "|O",
+                                     &parameters_mtx_np))
+        return Py_BuildValue("");
+
+    if ( parameters_mtx_np == NULL ) return Py_BuildValue("");
+    PyObject* parameters_mtx = PyArray_FROM_OTF(parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(parameters_mtx) ) {
+        std::cout << "parameters_mtx is not memory contiguous" << std::endl;
+    }
+
+    // create QGD version of the parameters_mtx
+    Matrix_real parameters_mtx_mtx = numpy2matrix_real(parameters_mtx);
+        
+    int gatesNum = -1;
+    DFEgate_kernel_type* ret = self->gate->convert_to_DFE_gates(parameters_mtx_mtx, gatesNum);
+    return DFEgateQGD_to_Python(ret, gatesNum);
+}
+
+static PyObject *
+qgd_Gates_block_convert_to_DFE_gates(qgd_Gates_Block *self, PyObject *args)
+{
+    int start_index = -1;
+    PyObject* parameters_mtx_np = NULL, *dfegates = NULL;
+    if (!PyArg_ParseTuple(args, "|OOi",
+                                     &parameters_mtx_np, &dfegates, &start_index))
+        return Py_BuildValue("");
+
+    if ( parameters_mtx_np == NULL ) return Py_BuildValue("");
+    PyObject* parameters_mtx = PyArray_FROM_OTF(parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(parameters_mtx) ) {
+        std::cout << "parameters_mtx is not memory contiguous" << std::endl;
+    }
+
+    // create QGD version of the parameters_mtx
+    Matrix_real parameters_mtx_mtx = numpy2matrix_real(parameters_mtx);
+    DFEgate_kernel_type* dfegates_qgd = DFEgatePython_to_QGD(dfegates);
+    Py_ssize_t gatesNum = PyList_Size(dfegates);
+    self->gate->convert_to_DFE_gates(parameters_mtx_mtx, dfegates_qgd, start_index);
+    return DFEgateQGD_to_Python(dfegates_qgd, gatesNum);
+}
+
+#endif
+
 static PyMethodDef qgd_Gates_Block_Methods[] = {
     {"add_U3", (PyCFunction) qgd_Gates_Block_add_U3, METH_VARARGS | METH_KEYWORDS,
      "Call to add a U3 gate to the front of the gate structure"
@@ -569,6 +696,20 @@ static PyMethodDef qgd_Gates_Block_Methods[] = {
     {"add_Gates_Block", (PyCFunction) qgd_Gates_Block_add_Gates_Block, METH_VARARGS,
      "Call to add a block of operations to the front of the gate structure."
     },
+#ifdef __DFE__
+    {"convert_to_DFE_gates_with_derivates", (PyCFunction) qgd_Gates_Block_convert_to_DFE_gates_with_derivates, METH_VARARGS,
+     "Call to convert to DFE gates with derivates."
+    },
+    {"adjust_parameters_for_derivation", (PyCFunction) qgd_Gates_Block_adjust_parameters_for_derivation, METH_VARARGS,
+     "Call to adjust parameters for derivation."
+    },
+    {"convert_to_DFE_gates", (PyCFunction) qgd_Gates_Block_convert_to_DFE_gates, METH_VARARGS,
+     "Call to convert to DFE gates."
+    },
+    {"convert_to_DFE_gates", (PyCFunction) qgd_Gates_block_convert_to_DFE_gates, METH_VARARGS,
+     "Call to convert to DFE gates."
+    },
+#endif
     {NULL}  /* Sentinel */
 };
 
