@@ -402,15 +402,15 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 ##
 # @brief Call to get global phase
-    def get_Global_Phase_Factor( self ):
+    def get_Global_Phase( self ):
 	
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Global_Phase_Factor()
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Global_Phase()
 
 ##
 # @brief Call to set global phase 
-    def set_Global_Phase_Factor( self, angle ):
+    def set_Global_Phase( self, new_global_phase ):
 	
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Global_Phase_Factor(angle)
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Global_Phase(new_global_phase)
 ##
 # @brief Call to get the name of the SQUANDER project
     def get_Project_Name( self ):

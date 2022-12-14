@@ -644,11 +644,11 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates( qgd_N_Qubit_Decomposition_
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
 */
 static PyObject *
-qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase_Factor(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
     QGD_Complex16 global_phase_factor_C = self->decomp_base->get_global_phase_factor();
-    PyObject* global_phase_factor = PyFloat_FromDouble( std::atan2(global_phase_factor_C.imag,global_phase_factor_C.real));
-    return global_phase_factor;
+    PyObject* global_phase = PyFloat_FromDouble( std::atan2(global_phase_factor_C.imag,global_phase_factor_C.real));
+    return global_phase;
     
 }
 
@@ -657,11 +657,10 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase_Factor(qgd_N_Qubit_D
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
 @param arg global_phase_factor_new_angle the angle to be set
 */
-static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase_Factor(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args) {
-	double global_phase_factor_new_angle;
-    if (!PyArg_ParseTuple(args, "|d", &global_phase_factor_new_angle )) return Py_BuildValue("i", -1);
-    std::cout<<global_phase_factor_new_angle<<std::endl;
-    self->decomp_base->set_global_phase_factor(global_phase_factor_new_angle);
+static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args) {
+	double new_global_phase;
+    if (!PyArg_ParseTuple(args, "|d", &new_global_phase )) return Py_BuildValue("i", -1);
+    self->decomp_base->set_global_phase(new_global_phase);
     return Py_BuildValue("i", 0);
     
 }
@@ -1466,10 +1465,10 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     {"set_Project_Name", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Project_Name, METH_VARARGS,
      "Call to set the name of SQUANDER project"
     },
-    {"get_Global_Phase_Factor", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase_Factor, METH_NOARGS,
+    {"get_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Global_Phase, METH_NOARGS,
      "Call to get global phase"
     },
-    {"set_Global_Phase_Factor", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase_Factor, METH_VARARGS,
+    {"set_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Global_Phase, METH_VARARGS,
      "Call to set global phase"
     },
     {"apply_Global_Phase_Factor", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase_Factor, METH_NOARGS,

@@ -425,14 +425,14 @@ QGD_Complex16 get_global_phase_factor( );
 @brief Call to set global phase 
 @param global_phase_factor_new The value of the new phase
 */
-void set_global_phase_factor(double global_phase_factor_new_angle);
+void set_global_phase(double new_global_phase);
 
 
 /**
 @brief Call to apply the global phase to a matrix
 @return Returns with the minimum of the cost function
 */
-void apply_global_phase_factor(QGD_Complex16 global_phase_factor_new, Matrix& u3_gate);
+void apply_global_phase_factor(QGD_Complex16 global_phase_factor, Matrix& u3_gate);
 
 /**
 @brief Call to apply the current global phase to the unitary matrix

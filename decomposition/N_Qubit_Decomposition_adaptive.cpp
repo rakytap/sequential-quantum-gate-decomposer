@@ -1237,7 +1237,6 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 		    param2[1] = phi3;
 		    param2[2] = lambda3;
     		apply_global_phase_factor(global_phase_factor_new, Umtx);
-
 		}
 /*
 	        N_Qubit_Decomposition_custom cDecomp_custom_( Umtx.copy(), qbit_num, false, initial_guess);
