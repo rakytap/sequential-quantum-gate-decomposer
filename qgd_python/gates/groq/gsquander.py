@@ -161,6 +161,35 @@ class UnitarySimulator(g.Component):
             self.copystore.append(lastus.copystore[hemi] if not lastus is None else tensor.create_storage_request(layout=get_slice8(hemi, s8range2[0], s8range2[-1], 0)))
     def copymatrix(self, unitary):        
         return unitary.read(streams=g.SG8[0]).write(name="initcopy", storage_req=self.copystore[WEST], time=0)
+    def cmppairs(a, b):
+        return a[0].tolist() == b[0].tolist() and ((a[1] is None) and (b[1] is None) or a[1].tolist() == b[1].tolist())
+    def idxmapgather(num_qbits):
+        pow2qb = 1 << num_qbits
+        idxmap = [np.arange(pow2qb).reshape(*([2]*num_qbits)).transpose(np.roll(np.arange(num_qbits), target_qbit)).reshape(-1, 2) for target_qbit in range(num_qbits)]
+        idxmapsort = [x[x[:,0].argsort()] for x in idxmap]
+        idxmapm1 = [np.arange(1 << (num_qbits-1)).reshape(*([2]*(num_qbits-1))).transpose(np.roll(np.arange(num_qbits-1), target_qbit)).reshape(-1, 2) for target_qbit in range(num_qbits-1)]
+        idxmapm1 = [x[x[:,0].argsort()] for x in idxmapm1]
+        for target_qbit in range(num_qbits):
+            for control_qbit in range(num_qbits):
+                if target_qbit == control_qbit: assert UnitarySimulator.cmppairs(UnitarySimulator.idxmap(num_qbits, target_qbit, None), (idxmap[target_qbit], None))
+                else:
+                    idxs = idxmap[target_qbit]
+                    oracle = UnitarySimulator.idxmap(num_qbits, target_qbit, control_qbit)
+                    assert UnitarySimulator.cmppairs(oracle, (idxs[(idxs[:,0] & (1<<control_qbit)) != 0,:], idxs[(idxs[:,0] & (1<<control_qbit)) == 0,:]))
+                    idxs = idxmapsort[target_qbit]
+                    oracle = (oracle[0][oracle[0][:,0].argsort()], oracle[1][oracle[1][:,0].argsort()])
+                    actual = (np.array(idxs[idxmapm1[(control_qbit - (control_qbit > target_qbit)) % (num_qbits-1)][:,1]]), np.array(idxs[idxmapm1[(control_qbit - (control_qbit > target_qbit)) % (num_qbits-1)][:,0]]))
+                    assert UnitarySimulator.cmppairs(oracle, actual), (target_qbit, control_qbit, actual, oracle)
+        return idxmapsort, idxmapm1 #target_qbit and control_qbit gather maps
+    def idxmap(num_qbits, target_qbit, control_qbit):
+        pow2qb = 1 << num_qbits
+        t = np.roll(np.arange(num_qbits), target_qbit)
+        idxs = np.arange(pow2qb).reshape(*([2]*num_qbits)).transpose(t).reshape(-1, 2)
+        pairs = idxs if control_qbit is None else idxs[(idxs[:,0] & (1<<control_qbit)) != 0,:]
+        if not control_qbit is None: bypasspairs = idxs[(idxs[:,0] & (1<<control_qbit)) == 0,:]
+        else: bypasspairs = None
+        #print(pairs, bypasspairs)
+        return pairs, bypasspairs
     def build(self, unitary, copy, target_qbit, control_qbit, gate, gatesel=None, inittime=0):
         if copy is None:
             with g.ResourceScope(name="initcopy", is_buffered=True, time=0) as pred:
@@ -168,13 +197,10 @@ class UnitarySimulator(g.Component):
         else: pred = None
         pow2qb = 1 << self.num_qbits
         innerdim = pow2qb if gatesel is None else ((pow2qb+320-1)//320)*320
-        t = np.roll(np.arange(self.num_qbits), target_qbit)
-        idxs = np.arange(pow2qb).reshape(*([2]*self.num_qbits)).transpose(t).reshape(-1, 2)
+        pairs, bypasspairs = UnitarySimulator.idxmap(self.num_qbits, target_qbit, control_qbit)
         usplit = np.array(g.split_vectors(unitary, [1] * (2*pow2qb))).reshape(pow2qb, 2)
         ucopysplit = np.array(g.split_vectors(copy, [1] * (2*pow2qb))).reshape(pow2qb, 2)
-        pairs = idxs if control_qbit is None else idxs[(idxs[:,0] & (1<<control_qbit)) != 0,:]
         u = [usplit[pairs[:,0],0], usplit[pairs[:,0],1], ucopysplit[pairs[:,1],0], ucopysplit[pairs[:,1],1]]
-        if not control_qbit is None: bypasspairs = idxs[(idxs[:,0] & (1<<control_qbit)) == 0,:]
         ub = [np.array([])]*4 if control_qbit is None else [usplit[bypasspairs[:,0],0], usplit[bypasspairs[:,0],1], ucopysplit[bypasspairs[:,1],0], ucopysplit[bypasspairs[:,1],1]]
         revidx = np.argsort((pairs if control_qbit is None else np.hstack([bypasspairs, pairs])).transpose().flatten()).tolist() 
         r = 1 if control_qbit is None else 2
@@ -191,7 +217,7 @@ class UnitarySimulator(g.Component):
                 gatesel_st = g.concat_vectors([gatesel[0].reshape(1,innerdim)]*(pow2qb//2//r)+[gatesel[1].reshape(1,innerdim)]*(pow2qb//2//r), (pow2qb//r, innerdim)).read(streams=g.SG4[1])
                 gs = [g.mem_gather(g.concat_vectors(gatevals[:,i].tolist()*(pow2qb//2//r)+gatevals[:,i+4].tolist()*(pow2qb//2//r), (gate.shape[0]//8, pow2qb//r, innerdim)),
                                     gatesel_st, output_streams=[g.SG4[2*i]]) for i in range(4)]
-                #gatesel_st = g.split_vectors(g.concat_vectors([gatesel.reshape(1,innerdim)]*(pow2qb//r), (pow2qb//r, innerdim)).read(streams=g.SG4[1]), [1]*(pow2qb//r))
+                #gatesel_st = g.split_vectors(g.concat_vectors([gatesel[0].reshape(1,innerdim)]*(pow2qb//2//r)+[gatesel[1].reshape(1,innerdim)]*(pow2qb//2//r), (pow2qb//r, innerdim)).read(streams=g.SG4[1]), [1]*(pow2qb//r))
                 #gs = [g.concat_vectors([g.mem_gather(g.concat_vectors(gatevals[:,i+k*4].tolist(), (gate.shape[0]//8, innerdim)), gatesel_st[j+k*pow2qb//2//r], output_streams=[g.SG4[2*i]]) for j in range(pow2qb//2//r) for k in range(2)], (pow2qb//r, innerdim)) for i in range(4)]
             us = [g.concat_vectors((ub[i%2].flatten().tolist() + ub[i%2+2].flatten().tolist() if i in [0,3] else []) + u[i].flatten().tolist()*2, (pow2qb if control_qbit is None or i in [0,3] else pow2qb//2, innerdim)).read(streams=g.SG4[2*i+1]) for i in range(4)]
             usb = [[]]*2
@@ -248,10 +274,9 @@ class UnitarySimulator(g.Component):
             print_utils.infoc(str(oracleres - result))
         
     def chain_test(num_qbits, max_gates):
-        max_gates = 301
         num_gates, use_identity = max_gates, True
         pow2qb = 1 << num_qbits
-        pgm_pkg = g.ProgramPackage(name="us", output_dir="us")
+        pgm_pkg = g.ProgramPackage(name="us", output_dir="us", gen_vis_data=False)
         print("Number of gates:", num_gates, "Maximum gates:", max_gates)
         with pgm_pkg.create_program_context("init_us") as pcinit:
             us = UnitarySimulator(num_qbits)
@@ -297,9 +322,9 @@ class UnitarySimulator(g.Component):
                             else:
                                 newus.build(unitaryctxt, copyctxt, target_qbit, control_qbit, gatesctxt, gmap)
                         with g.ResourceScope(name="incgate", is_buffered=True, time=None, predecessors=[pred]) as pred:
-                            updinc = g.stack([ginc256]*2, 0).add(g.stack([ginccount]*2, 0), time=0, alus=[0], overflow_mode=g.OverflowMode.MODULAR)
+                            updinc = g.stack([ginc256]*2, 0).add(g.stack([ginccount]*2, 0), time=0, alus=[3 if reversedir else 0], overflow_mode=g.OverflowMode.MODULAR)
                             updmap = g.stack([g.split_vectors(gmap[0].reinterpret(g.uint8), [1]*4)[0],
-                                              g.split_vectors(gmap[1].reinterpret(g.uint8), [1]*4)[0]], 0).add(g.stack([ginc]*2, 0), alus=[4], overflow_mode=g.OverflowMode.MODULAR).add(g.mask_bar(updinc, g.stack([gincmask]*2, 0)))
+                                              g.split_vectors(gmap[1].reinterpret(g.uint8), [1]*4)[0]], 0).add(g.stack([ginc]*2, 0), alus=[7 if reversedir else 4], overflow_mode=g.OverflowMode.MODULAR).add(g.mask_bar(updinc, g.stack([gincmask]*2, 0)))
                             updmap = g.split_vectors(updmap, [1]*2)
                             g.concat_vectors([updmap[0]]*4, (4, 320)).write(storage_req=gmap[0].storage_request, name="nextgatemap" + suffix)
                             g.concat_vectors([updmap[1]]*4, (4, 320)).write(storage_req=gmap[1].storage_request, name="nextgatemappair" + suffix)
@@ -355,6 +380,7 @@ class UnitarySimulator(g.Component):
         
 def main():
     #test()
+    [UnitarySimulator.idxmapgather(x) for x in range(10)]; assert False
     #import math; [4*(1<<x)*int(math.ceil((1<<x)/320)) for x in range(12)]
     #[4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 57344]
     #10 qbits max for single bank, 11 qbits for dual bank solutions
