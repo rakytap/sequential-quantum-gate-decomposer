@@ -795,7 +795,6 @@ void N_Qubit_Decomposition_Base::optimization_problem_grad( const gsl_vector* pa
 
 }
 
-
 /**
 @brief Call to calculate both the cost function and the its gradient components.
 @param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
@@ -804,13 +803,44 @@ void N_Qubit_Decomposition_Base::optimization_problem_grad( const gsl_vector* pa
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
 
+void N_Qubit_Decomposition_Base::optimization_problem_combined_CPU( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+    int parameter_num_loc = instance->get_parameter_num();
+
+    // vector containing gradients of the transformed matrix
+    std::vector<Matrix> Umtx_deriv;
+
+    tbb::parallel_invoke(
+        [&]{*f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance)); },
+        [&]{
+            Matrix Umtx_loc = instance->get_Umtx();
+            Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
+            Umtx_deriv = instance->apply_derivate_to( parameters_mtx, Umtx_loc );
+        });
+
+    tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+            // This is approximate derivate giving a good approximation when f0->0. Helps to avoid higher barren plateaus
+            //double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0)/(*f0);  
+
+            //double f = get_cost_function(Umtx_deriv[idx]);
+            //double grad_comp = (f*f - 1.0)/(*f0)/2;
+            double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0);
+            gsl_vector_set(grad, idx, grad_comp);
+
+
+
+        }
+    });
+}
+
 void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
 
+#ifdef __DFE__
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
 
     int parameter_num_loc = instance->get_parameter_num();
 
-#ifdef __DFE__
 ///////////////////////////////////////
 //std::cout << "number of qubits: " << instance->qbit_num << std::endl;
 //tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
@@ -868,34 +898,11 @@ else {
 
 #endif
 
-    // vector containing gradients of the transformed matrix
-    std::vector<Matrix> Umtx_deriv;
-
 #ifdef __DFE__
 tbb::tick_count t0_CPU = tbb::tick_count::now();/////////////////////////////////
 #endif
-    tbb::parallel_invoke(
-        [&]{*f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance)); },
-        [&]{
-            Matrix Umtx_loc = instance->get_Umtx();
-            Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
-            Umtx_deriv = instance->apply_derivate_to( parameters_mtx, Umtx_loc );
-        });
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
-        for (int idx=r.begin(); idx<r.end(); ++idx) { 
-            // This is approximate derivate giving a good approximation when f0->0. Helps to avoid higher barren plateaus
-            //double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0)/(*f0);  
-
-            //double f = get_cost_function(Umtx_deriv[idx]);
-            //double grad_comp = (f*f - 1.0)/(*f0)/2;
-            double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0);
-            gsl_vector_set(grad, idx, grad_comp);
-
-
-
-        }
-    });
+    optimization_problem_combined_CPU(parameters, void_instance, f0, grad); 
 
 #ifdef __DFE__
 }
