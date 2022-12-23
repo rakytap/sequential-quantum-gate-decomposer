@@ -119,6 +119,7 @@ class Test_Decomposition:
 
         # get the decomposing operations
         quantum_circuit = decomp.get_Quantum_Circuit()
+        quantum_circuit.save_unitary()
 
         # print the list of decomposing operations
         decomp.List_Gates()
@@ -132,7 +133,7 @@ class Test_Decomposition:
     
         # test the decomposition of the matrix
         # Qiskit backend for simulator
-        backend = Aer.get_backend('unitary_simulator')
+        backend = Aer.get_backend('aer_simulator')
      
         # job execution and getting the result as an object
         job = execute(quantum_circuit, backend)

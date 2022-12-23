@@ -239,8 +239,6 @@ void  N_Qubit_Decomposition_Base::final_optimization() {
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
 
-    
-
     switch ( alg ) {
         case ADAM:
             solve_layer_optimization_problem_ADAM( num_of_parameters, solution_guess_gsl);
@@ -345,7 +343,7 @@ pure_DFE_time = 0.0;
 
             if ( iter_idx % 5000 == 0 ) {
                 std::stringstream sstream;
-                sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                sstream << "ADAM: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
                 print(sstream, 0);   
                 std::string filename("initial_circuit_iteration.binary");
                 export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
@@ -369,7 +367,7 @@ pure_DFE_time = 0.0;
                 int factor = rand() % 10 + 1;
 
                 std::stringstream sstream;
-                sstream << "leaving local minimum " << f0 << ", radius of randomization: " << radius << std::endl;
+                sstream << "ADAM: leaving local minimum " << f0 << ", radius of randomization: " << radius << std::endl;
                 print(sstream, 0);   
         
                 bool just_reset_optimizer = (rand() % 5) == 0; 
@@ -609,7 +607,7 @@ bfgs_time = 0.0;
                 if ( sub_iter_idx>2500 || status != GSL_CONTINUE ) {
 
                     std::stringstream sstream;
-                    sstream << "leaving local minimum " << s->f << std::endl;
+                    sstream << "BFGS2: leaving local minimum " << s->f << std::endl;
                     print(sstream, 2); 
                     
                     sub_iter_idx = 0;
@@ -658,13 +656,13 @@ bfgs_time = 0.0;
     
                 if (current_minimum > s->f ) {
                      current_minimum = s->f;
-                     memcpy( optimized_parameters_mtx.get_data(),  solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+                     memcpy( optimized_parameters_mtx.get_data(),  s->x->data, num_of_parameters*sizeof(double) );
                 }
     
 
-                if ( iter_idx % 100000 == 0 ) {
+                if ( iter_idx % 5000 == 0 ) {
                      std::stringstream sstream;
-                     sstream << "processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                     sstream << "BFGS2: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
                      print(sstream, 2);  
 
                      std::string filename("initial_circuit_iteration.binary");
@@ -687,12 +685,12 @@ bfgs_time = 0.0;
                 memcpy( optimized_parameters_mtx.get_data(), s->x->data, num_of_parameters*sizeof(double) );                
 
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                    solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
                 }
             }
             else {
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
+                    solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
                 }
             }
 
@@ -712,8 +710,8 @@ bfgs_time = 0.0;
 
 tbb::tick_count bfgs_end = tbb::tick_count::now();
 bfgs_time  = bfgs_time + (bfgs_end-bfgs_start).seconds();
-std::cout << "bfgs time: " << bfgs_time << " " << current_minimum << std::endl;
-
+std::cout << "bfgs2 time: " << bfgs_time << " " << current_minimum << std::endl;
+std::cout << "cost function of the imported circuit: " << optimization_problem( optimized_parameters_mtx ) << std::endl;
 
 }
 
@@ -974,7 +972,8 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
         case BFGS:
             iter_max = 100;
             gradient_threshold = 1e-1;
-            random_shift_count_max = 1;   
+            random_shift_count_max = 1;  
+            max_iterations = 1e8; 
             return;
 
         case BFGS2:

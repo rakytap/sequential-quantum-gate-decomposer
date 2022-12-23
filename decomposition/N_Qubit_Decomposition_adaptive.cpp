@@ -489,6 +489,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     cDecomp_custom.set_iteration_loops( iteration_loops );
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance ); 
     if (alg==ADAM || alg==BFGS2) { 
+        cDecomp_custom.set_optimizer( alg );  
         int param_num_loc = gate_structure_loc->get_parameter_num();
         int iter_max_loc = (double)param_num_loc/852 * 1e7;
         cDecomp_custom.set_iter_max( iter_max_loc );  
@@ -588,12 +589,13 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_debugfile("");
                 cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );
                 if ( alg == ADAM || alg == BFGS2 ) {
+                    cDecomp_custom_random.set_optimizer( alg );  
                     int param_num_loc = gate_structure_loc->get_parameter_num();
                     int iter_max_loc = (double)param_num_loc/852 * 1e7;
                     cDecomp_custom_random.set_iter_max( iter_max_loc );  
                     cDecomp_custom_random.set_random_shift_count_max( 10000 );       
                     cDecomp_custom_random.set_adaptive_eta( true );    
-                    cDecomp_custom_random.set_randomized_radius( radius );          
+                    cDecomp_custom_random.set_randomized_radius( radius );
                 }
                 cDecomp_custom_random.start_decomposition(true);
 
@@ -904,10 +906,11 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     cDecomp_custom.set_optimization_blocks( gate_structure_reduced->get_gate_num() ) ;
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance );
     if ( alg == ADAM || alg==BFGS2) {
+        cDecomp_custom.set_optimizer( alg );      
         cDecomp_custom.set_iter_max( 1e5 );  
         cDecomp_custom.set_random_shift_count_max( 1 );     
         cDecomp_custom.set_adaptive_eta( false );
-        cDecomp_custom.set_randomized_radius( radius );          
+        cDecomp_custom.set_randomized_radius( radius );        
     }
     cDecomp_custom.start_decomposition(true);
     double current_minimum_tmp = cDecomp_custom.get_current_minimum();

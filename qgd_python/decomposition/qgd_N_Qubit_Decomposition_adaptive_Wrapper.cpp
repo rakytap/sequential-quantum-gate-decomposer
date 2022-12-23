@@ -1002,7 +1002,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Blocks(qgd_N_Qubit_D
 
 /**
 @brief Wrapper function to set custom gate structure for the decomposition.
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
 @param args A tuple of the input arguments: gate_structure_dict (PyDict)
 gate_structure_dict: ?????????????????????????????
 @return Returns with zero on success.
@@ -1354,7 +1354,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure(
 
 /**
 @brief Wrapper function to set the radius in which randomized parameters are generated around the current minimum duting the optimization process
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
 @param args A tuple of the input arguments: gate_structure_dict (PyDict)
 @return Returns with zero on success.
 */
@@ -1382,6 +1382,79 @@ static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radi
 
 }
 
+
+
+/**
+@brief Wrapper function to set custom gate structure for the decomposition.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+@return Returns with zero on success.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimizer( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"optimizer", NULL};
+
+    PyObject* optimizer_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &optimizer_arg)) {
+
+        std::string err( "Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;       
+ 
+    }
+
+
+    if ( optimizer_arg == NULL ) {
+        std::string err( "optimizer argument not set");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;        
+    }
+
+   
+
+    PyObject* optimizer_string = PyObject_Str(optimizer_arg);
+    PyObject* optimizer_string_unicode = PyUnicode_AsEncodedString(optimizer_string, "utf-8", "~E~");
+    const char* optimizer_C = PyBytes_AS_STRING(optimizer_string_unicode);
+
+    optimization_aglorithms qgd_optimizer;
+    if ( strcmp("bfgs", optimizer_C) == 0 or strcmp("BFGS", optimizer_C) == 0) {
+        qgd_optimizer = BFGS;        
+    }
+    else if ( strcmp("adam", optimizer_C)==0 or strcmp("ADAM", optimizer_C)==0) {
+        qgd_optimizer = ADAM;        
+    }
+    else if ( strcmp("bfgs2", optimizer_C)==0 or strcmp("BFGS2", optimizer_C)==0) {
+        qgd_optimizer = BFGS2;        
+    }
+    else {
+        std::cout << "Wrong optimizer. Using default: BFGS rrrrrrrrrrrrrrr" << std::endl; 
+        qgd_optimizer = BFGS;     
+    }
+
+
+    try {
+        self->decomp->set_optimizer(qgd_optimizer);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("i", 0);
+
+}
 
 
 
@@ -1484,6 +1557,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Randomized_Radius", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius, METH_VARARGS,
      "Call to set the radius in which randomized parameters are generated around the current minimum duting the optimization process."
+    },
+    {"set_Optimizer", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimizer, METH_VARARGS | METH_KEYWORDS,
+     "Wrapper method to to set the optimizer method for the gate synthesis."
     },
     {NULL}  /* Sentinel */
 };
