@@ -146,20 +146,45 @@ def generateOffsetMap(offsets):
         for s in range(superlane_count):
             slot = s*superlane_size
             offsetMapEntry[slot:slot+2] = splitOffset
-        offsetMap.append(offsetMapEntry)
+        offsetMap.append(offsetMapEntry)]
     return np.asarray(offsetMap, dtype=np.uint8)
+def to_graphviz(g, labels=None, ranks=None, constraints=None, reverse_constraints=None):
+    return ("digraph {" + ";".join(str(x)+"->"+str(y) + ("[constraint=false]" if not constraints is None and (not x in constraints or not y in constraints[x]) else "")
+        + (";"+str(y)+"->"+str(x) + "[style=invis]" if not reverse_constraints is None and x in reverse_constraints and y in reverse_constraints[x] else "") for x in g for y in g[x]) + ";" +
+        ("" if labels is None else ";".join(str(x) + "[label=\"" + labels[x] + "\"]" for x in labels) + ";") +
+        ("" if ranks is None else "".join("{rank=same; " + "; ".join(str(x) for x in rank) + ";}" for rank in ranks)) +
+        "}")
+def gate_op_finder():
+    h, w = {}, {}
+    for i in range(8): #entries are mtx: [a+bi e+fi] gate; [c+di g+hi] and (a+bi)*(c+di)=(ac-bd)+(cb+da)i
+        h[i] = [8+i//4*4+i%4, 8+i//4*4+[3,2,0,1][i%4]]
+    for i in range(8):
+        h[8+i] = [8+8+i//2]
+        w[8+i] = 1
+    for i in range(6): #6 adders, last 2 adders are exits
+        h[8+8+i] = [] if i >= 4 else [8+8+4+i%2]
+        w[8+8+i] = 1
+    print(to_graphviz(h, labels={**{i: ("u" if i%4<2 else "g") + "_" + ("r" if i&1==0 else "i") + "_" + str(i//4) for i in range(8)},
+            **{8+i: "g.mul" for i in range(8)}, **{8+8+i: "g.add" if not i in [0,2] else "g.sub" for i in range(6)}}))
+    return groq_alu_finder(h, w)
 def groq_alu_finder(h, w):
     g, weight = {}, {} #construct the Groq VXM graph
-    for hemi in (EAST, WEST):
+    for hemi in (WEST, EAST):
         for stage in range(8):
-            for sg in range(8):
+            for sg in range(8): #stream group
                 g[hemi*8*8+stage*8+sg] = [] if stage==8-1 else [hemi*8*8+(stage+1)*8+sg]
-                if (stage & 1) == 0: g[hemi*8*8+stage*8+sg].extend([2*8*8+(sg//4)*8 + (3-stage//2 if hemi else stage//2), 2*8*8+((sg-2)//4)*8+4 + (3-stage//2 if hemi else stage//2)])                
+                if (stage & 1) == 0: g[hemi*8*8+stage*8+sg].extend([2*8*8+(sg//4)*8 + (3-stage//2 if hemi else stage//2), 2*8*8+((sg-2)%8//4)*8+4 + (3-stage//2 if hemi else stage//2)])                
     for alu in range(16):
-        g[alu] = [hemi*8*8+(3-alu % 4 if hemi else alu % 4)*8 + (((alu // 4) * 2 + i) % 8) for i in range(4) for hemi in (EAST, WEST)]
-        weight[alu] = (alu % 8) in [0,5,2,7]
+        g[2*8*8+alu] = [hemi*8*8+(2*((alu % 4))+1 if hemi else 2*(alu % 4)+1)*8 + (((alu // 4) * 2 + i) % 8) for i in range(4) for hemi in (WEST, EAST)]
+        weight[2*8*8+alu] = 1+((alu % 8) in [0,5,2,7]) #2 for large ALU, 1 otherwise, vxm_identity is a special effectively 0 weight use case during traversal
     entries = list(range(8)) + list(range(8*8, 8*8+8))
     exits = list(range(8*7, 8*8)) + list(range(8*(8+7), 8*8*2))
+    print(g, weight, entries, exits)    
+    ranks = [list(range(8*stage, 8*(stage+1)))+list(range(8*(8+7-stage), 8*(8+8-stage))) for stage in range(8)] + [[2*8*8+j*4+i for j in range(4)] for i in range(4)]
+    ranks = [ranks[i] for i in [0, 8, 1, 2, 9, 3, 4, 10, 5, 6, 11, 7]]
+    print(to_graphviz(g, labels={**{hemi*8*8+stage*8+sg: "SG1[" + str(sg) + "]_" + ("W" if hemi==WEST else "E") + "@" + str(stage) for sg in range(8) for stage in range(8) for hemi in (EAST, WEST)}, **{2*8*8+alu: "ALU" + str(alu) for alu in range(16)}}, ranks=ranks,
+        constraints={x: set(g[x]) & set(ranks[i+1]) for i in range(len(ranks)-1) for x in ranks[i]},
+        reverse_constraints={x: set(g[x]) & set(ranks[i-1]) for i in range(1, len(ranks)) for x in ranks[i]}))
 class UnitarySimulator(g.Component):
     def __init__(self, num_qbits, reversedir=False, lastus=None, **kwargs):
         super().__init__(**kwargs)
@@ -215,7 +240,7 @@ class UnitarySimulator(g.Component):
         innerdim = pow2qb if gatesel is None else ((pow2qb+320-1)//320)*320
         usplit = np.array(g.split_vectors(unitary, [1] * (2*pow2qb))).reshape(pow2qb, 2)
         ucopysplit = np.array(g.split_vectors(copy, [1] * (2*pow2qb))).reshape(pow2qb, 2)        
-        if True or tcqbitsel is None:
+        if tcqbitsel is None:
             pairs, bypasspairs = UnitarySimulator.idxmap(self.num_qbits, target_qbit, control_qbit)
             u = [usplit[pairs[:,0],0], usplit[pairs[:,0],1], ucopysplit[pairs[:,1],0], ucopysplit[pairs[:,1],1]]
             ub = [np.array([])]*4 if control_qbit is None else [usplit[bypasspairs[:,0],0], usplit[bypasspairs[:,0],1], ucopysplit[bypasspairs[:,1],0], ucopysplit[bypasspairs[:,1],1]]
@@ -274,7 +299,7 @@ class UnitarySimulator(g.Component):
             a2 = [g.add(m2[i], m2[2+i], alus=[[rev_alu(5, self.rev),rev_alu(6, self.rev)][i]], output_streams=g.SG4[[4,3][i]]) for i in range(2)]
             ri = [g.add(a1[0], a1[1], alus=[rev_alu(15, self.rev)], output_streams=g.SG4[1]),
                   g.add(a2[0], a2[1], alus=[rev_alu(7, self.rev)], output_streams=g.SG4[5])]
-            if True or tcqbitsel is None:
+            if tcqbitsel is None:
                 ri = g.concat_vectors(np.hstack([np.array(g.split_vectors(ri[i] if control_qbit is None else g.concat_vectors([usb[i], ri[i]], (pow2qb, innerdim)), [1]*(pow2qb)))[revidx].reshape(pow2qb, 1) for i in range(2)]).flatten().tolist(), (pow2qb*2, innerdim))
                 result = ri.write(name="result", storage_req=self.otherinit)
                 copy = ri.write(name="copy", storage_req=self.copystore[EAST])
@@ -284,15 +309,15 @@ class UnitarySimulator(g.Component):
                     tqbitdistro, tqbitpairs0, tqbitpairs1, cqbitdistro, cqbitpairs0, cqbitpairs1 = tcqbitsel
                     cdistro = g.stack(pow2qb*[cqbitdistro[0]], 0).read(streams=g.SG1[16+12])
                     writecontrols = g.distribute_8(g.concat_vectors([cqbitpairs1[0], cqbitpairs0[0], cqbitpairs1[0], cqbitpairs0[0]], (pow2qb, innerdim)).read(streams=g.SG1[16+8]), cdistro, bypass8=0b11111110, distributor_req=3 if self.rev else 7)
-                    delay = 0 #12
-                    #ri[1] = g.concat_vectors([g.zeros((delay, innerdim), dtype=ri[1].dtype).read(streams=g.SG4[5]), ri[1]], (delay + pow2qb, innerdim))
-                    #writecontrols = g.concat_vectors([writecontrols, g.zeros((delay, innerdim), dtype=writecontrols.dtype).read(streams=g.SG1[8])], (pow2qb + delay, innerdim))
-                    #ri[1], writecontrols = g.split(g.transpose_null(g.concat([ri[1].reinterpret(g.uint8), writecontrols.reshape(pow2qb+delay, 1, innerdim)], 1), transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7, 8]), dim=1, splits=[4, 1])
-                    writecontrols = g.transpose_null(writecontrols.reshape(pow2qb+delay, 1, innerdim), transposer_req=1 if self.rev else 3, stream_order=[8])
+                    delay = 18 #1+4+1+2+4+1+4+1
+                    ri[1] = g.concat_vectors([g.zeros((delay, innerdim), dtype=ri[1].dtype).read(streams=g.SG4[5]), ri[1]], (delay + pow2qb, innerdim))
+                    writecontrols = g.concat_vectors([writecontrols, g.zeros((delay, innerdim), dtype=writecontrols.dtype).read(streams=g.SG1[8])], (pow2qb + delay, innerdim))
+                    ri[1], writecontrols = g.split(g.transpose_null(g.concat([ri[1].reinterpret(g.uint8), writecontrols.reshape(pow2qb+delay, 1, innerdim)], 1), transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7, 8]), dim=1, splits=[4, 1])
+                    #writecontrols = g.transpose_null(writecontrols.reshape(pow2qb+delay, innerdim), transposer_req=1 if self.rev else 3, stream_order=[8])
                     print(ri[1], writecontrols)
                     ri[1] = ri[1].reinterpret(g.float32).reshape(delay + pow2qb, innerdim)
-                    #ri[1] = g.split_vectors(ri[1], [delay, pow2qb])[1]
-                    #writecontrols = g.split_vectors(writecontrols, [pow2qb, delay])[0]
+                    ri[1] = g.split_vectors(ri[1], [delay, pow2qb])[1]
+                    writecontrols = g.split_vectors(writecontrols, [pow2qb, delay])[0]
                     dist_st = g.distribute_lowest(g.mem_gather(g.concat_vectors([tqbitpairs0[0], tqbitpairs1[0]], (pow2qb, innerdim)), writecontrols.reshape(pow2qb, innerdim), output_streams=[g.SG1[8]]), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=1 if self.rev else 5)
                 else:
                     tqbitdistro, tqbitpairs0, tqbitpairs1 = tcqbitsel
@@ -304,7 +329,7 @@ class UnitarySimulator(g.Component):
                 copy = g.from_addresses(np.array(self.copystore[EAST].addresses).reshape(-1, g.float32.size), innerdim, g.float32, "copy")
                 writeaddrs = [x.reshape(pow2qb, innerdim) for x in g.split(writeaddrs, dim=2, num_splits=4)]
                 ri = [[x.reshape(pow2qb, innerdim) for x in g.split(ri[i].reinterpret(g.uint8), dim=1, num_splits=4)] for i in range(2)]
-                for i in range(2):
+                for i in range(2 if control_qbit is None else 1):
                     for j in range(4):
                         g.mem_scatter(ri[i][j], g.split(g.split(copy.reshape(pow2qb, 2, innerdim), dim=1, num_splits=2)[i].reinterpret(g.uint8).reshape(pow2qb, 4, innerdim), dim=1, num_splits=4)[j], index_tensor=writeaddrs[j])
                         g.mem_scatter(ri[i][j], g.split(g.split(result.reshape(pow2qb, 2, innerdim), dim=1, num_splits=2)[i].reinterpret(g.uint8).reshape(pow2qb, 4, innerdim), dim=1, num_splits=4)[j], index_tensor=writeaddrs[j])
