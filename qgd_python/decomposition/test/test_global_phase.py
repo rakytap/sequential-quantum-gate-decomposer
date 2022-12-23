@@ -46,13 +46,18 @@ def test_global_phase():
 	cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
 	angl = cDecompose.get_Global_Phase()
 	Umtx_assert = cDecompose.get_Unitary()
+
 	assert(np.abs(angl)<2*np.pi)
+
 	angl_new = np.pi/3
 	cDecompose.set_Global_Phase(angl_new)
 	global_phase = np.sqrt(2)*np.cos(angl_new)+1j*np.sqrt(2)*np.sin(angl_new)
 	cDecompose.apply_Global_Phase()
 	angl_assert = cDecompose.get_Global_Phase()
+
 	assert(np.abs(angl_assert-np.pi/4)<1e-5)
+
 	Umtx_assert_new=cDecompose.get_Unitary()
+
 	assert(np.sum(np.abs(Umtx_assert*global_phase-Umtx_assert_new))<0.00001)
 	   

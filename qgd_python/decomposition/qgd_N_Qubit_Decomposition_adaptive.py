@@ -245,10 +245,12 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         print('Gate counts in teh imported Qiskit transpiled quantum circuit:', qc.count_ops())
         #print(qc)
         
+
+        # get the register of qubits
+        q_register = qc.qubits
+
         # get the size of the register
-        gate = qc.data[0]
-        qubits = gate[1]
-        register_size = qubits[0].register.size
+        register_size = qc.num_qubits
 
         # prepare dictionary for single qubit gates
         single_qubit_gates = dict()
@@ -268,16 +270,21 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             if name == 'u3':
                 # add u3 gate 
                 qubits = gate[1]
-                qubit = qubits[0].index
+
+                qubit = q_register.index( qubits[0] )   # qubits[0].index
                 single_qubit_gates[qubit].append( {'params': gate[0].params, 'type': 'u3'} )
 
             elif name == 'cz':
                 # add cz gate 
                 qubits = gate[1]
-                two_qubit_gate = {'type': 'cz', 'qubits': [qubits[0].index, qubits[1].index]}
 
-                qubit0 = qubits[0].index
-                qubit1 = qubits[1].index
+                qubit0 = q_register.index( qubits[0] ) #qubits[0].index
+                qubit1 = q_register.index( qubits[1] ) #qubits[1].index
+
+
+                two_qubit_gate = {'type': 'cz', 'qubits': [qubit0, qubit1]}
+
+
 
                 # creating an instance of the wrapper class qgd_Gates_Block
                 Layer = qgd_Gates_Block( register_size )

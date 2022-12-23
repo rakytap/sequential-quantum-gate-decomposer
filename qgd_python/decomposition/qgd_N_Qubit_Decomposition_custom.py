@@ -222,11 +222,12 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
         #print('Depth of Qiskit transpiled quantum circuit:', qc.depth())
         #print('Gate counts in Qiskit transpiled quantum circuit:', qc.count_ops())
 
-        # get the size of the register
-        gate = qc.data[0]
-        qubits = gate[1]
-        register_size = qubits[0].register.size
+        # get the register of qubits
+        q_register = qc.qubits
 
+        # get the size of the register
+        register_size = qc.num_qubits
+        
         # prepare dictionary for single qubit gates
         single_qubit_gates = dict()
         for idx in range(register_size):
@@ -239,23 +240,28 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
         Gates_Block_ret = qgd_Gates_Block(register_size)
         optimized_parameters = list()
 
+
         for gate in qc.data:
 
-            name = gate[0].name
+            name = gate[0].name            
 
             if name == 'u3':
                 # add u3 gate 
                 qubits = gate[1]
-                qubit = qubits[0].index
+                
+                qubit = q_register.index( qubits[0] )   # qubits[0].index
                 single_qubit_gates[qubit].append( {'params': gate[0].params, 'type': 'u3'} )
 
             elif name == 'cz' or name == 'cx':
                 # add cz gate 
                 qubits = gate[1]
-                two_qubit_gate = {'type': name, 'qubits': [qubits[0].index, qubits[1].index]}
 
-                qubit0 = qubits[0].index
-                qubit1 = qubits[1].index
+                qubit0 = q_register.index( qubits[0] ) #qubits[0].index
+                qubit1 = q_register.index( qubits[1] ) #qubits[1].index
+
+
+                two_qubit_gate = {'type': name, 'qubits': [qubit0, qubit1]}
+
 
                 # creating an instance of the wrapper class qgd_Gates_Block
                 Layer = qgd_Gates_Block( register_size )
@@ -271,6 +277,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                         params.reverse()
                         for param in params:
                             optimized_parameters = optimized_parameters + [float(param)]
+
                         optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
                         
 
@@ -320,7 +327,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
         # setting gate structure and optimized initial parameters
         self.set_Gate_Structure(Gates_Block_ret)
         self.set_Optimized_Parameters( optimized_parameters )      
-
+        
 
 
 ## 

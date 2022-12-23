@@ -26,7 +26,7 @@ except ModuleNotFoundError:
 
 
 ## Qiskit backend for simulator
-backend = Aer.get_backend('unitary_simulator')
+backend = Aer.get_backend('aer_simulator')
 
 
 
@@ -105,6 +105,8 @@ def pauli_exponent( alpha=0.6217*np.pi ):
 # @return Numpy array containing the unitary
 def get_unitary_from_circuit( qc ):
 
+	qc.save_unitary()
+
 	## job execution and getting the result as an object
 	job = execute(qc, backend)
 	## the result of the Qiskit job
@@ -149,10 +151,11 @@ def get_optimized_circuit( alpha, optimizer='BFGS' ):
 	#print('global phase: ', qc_orig.global_phase)
 
 	Umtx_orig = get_unitary_from_circuit( qc_orig )
-
+        
 	iteration_max = 10
+	
 	for jdx in range(iteration_max):
-
+        
 		cDecompose = qgd_N_Qubit_Decomposition_custom( Umtx_orig.conj().T )
 
 		# setting the tolerance of the optimization process. The final error of the decomposition would scale with the square root of this value.
@@ -160,7 +163,7 @@ def get_optimized_circuit( alpha, optimizer='BFGS' ):
 
 		# importing the quantum circuit
 		cDecompose.import_Qiskit_Circuit(qc_trial)
-
+		
 		# set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
 		cDecompose.set_Optimization_Blocks( 200 )
 
@@ -187,12 +190,13 @@ def get_optimized_circuit( alpha, optimizer='BFGS' ):
 
 		if decomposition_error < 1e-3:
 			break
-
+		
+	            
 	if decomposition_error < 1e-3:
 		return qc_final, optimized_parameters_loc
 	else:
 		return None, None
-
+	
 
 
 

@@ -45,8 +45,11 @@ def test_unitary():
 	# creating a class to decompose the unitary
 	cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
 	Umtx_assert = cDecompose.get_Unitary()
+
 	assert(np.sum(np.abs(Umtx_assert-Umtx.conj().T))<0.00001)
+
 	Umtx_assert[0,0]=1
 	cDecompose.set_Unitary(Umtx_assert)
 	Umtx_assert_new=cDecompose.get_Unitary()
+
 	assert(Umtx_assert_new[0,0]==1)
