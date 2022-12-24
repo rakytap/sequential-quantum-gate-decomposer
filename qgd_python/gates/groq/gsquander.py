@@ -146,7 +146,7 @@ def generateOffsetMap(offsets):
         for s in range(superlane_count):
             slot = s*superlane_size
             offsetMapEntry[slot:slot+2] = splitOffset
-        offsetMap.append(offsetMapEntry)]
+        offsetMap.append(offsetMapEntry)
     return np.asarray(offsetMap, dtype=np.uint8)
 def to_graphviz(g, labels=None, ranks=None, constraints=None, reverse_constraints=None):
     return ("digraph {" + ";".join(str(x)+"->"+str(y) + ("[constraint=false]" if not constraints is None and (not x in constraints or not y in constraints[x]) else "")
@@ -154,6 +154,12 @@ def to_graphviz(g, labels=None, ranks=None, constraints=None, reverse_constraint
         ("" if labels is None else ";".join(str(x) + "[label=\"" + labels[x] + "\"]" for x in labels) + ";") +
         ("" if ranks is None else "".join("{rank=same; " + "; ".join(str(x) for x in rank) + ";}" for rank in ranks)) +
         "}")
+def succ_to_pred(succ):
+  pred = {x: set() for x in succ}
+  for x in succ:
+    for y in succ[x]:
+      pred[y].add(x)
+  return pred
 def gate_op_finder():
     h, w = {}, {}
     for i in range(8): #entries are mtx: [a+bi e+fi] gate; [c+di g+hi] and (a+bi)*(c+di)=(ac-bd)+(cb+da)i
@@ -162,29 +168,84 @@ def gate_op_finder():
         h[8+i] = [8+8+i//2]
         w[8+i] = 1
     for i in range(6): #6 adders, last 2 adders are exits
-        h[8+8+i] = [] if i >= 4 else [8+8+4+i%2]
+        h[8+8+i] = [8+8+2+i] if i >= 4 else [8+8+4+i%2]
         w[8+8+i] = 1
+    for i in range(2):
+        h[8+8+6+i] = []
     print(to_graphviz(h, labels={**{i: ("u" if i%4<2 else "g") + "_" + ("r" if i&1==0 else "i") + "_" + str(i//4) for i in range(8)},
-            **{8+i: "g.mul" for i in range(8)}, **{8+8+i: "g.add" if not i in [0,2] else "g.sub" for i in range(6)}}))
-    return groq_alu_finder(h, w)
-def groq_alu_finder(h, w):
+            **{8+i: "g.mul" for i in range(8)}, **{8+8+i: "g.add" if not i in [0,2] else "g.sub" for i in range(6)}, 8+8+6: "real", 8+8+6+1: "imag"}))
+    #first a proof that constraining matrix/gates to single hemisphere will not work
+    impossible_entry_constraints = {i: list(range(8)) for i in range(8)}
+    #groq_alu_finder(h, w, impossible_entry_constraints)
+    entry_constraints = {i: list(range(8)) if i%4<2 else list(range(8*8, 8*8+8)) for i in range(8)}
+    exit_constraints = {8+8+6+i: [8*(8+7)+i] for i in range(2)}
+    return groq_alu_finder(h, w, entry_constraints, exit_constraints)
+def groq_alu_finder(h, w, entry_constraints=None, exit_constraints=None):
     g, weight = {}, {} #construct the Groq VXM graph
     for hemi in (WEST, EAST):
         for stage in range(8):
             for sg in range(8): #stream group
                 g[hemi*8*8+stage*8+sg] = [] if stage==8-1 else [hemi*8*8+(stage+1)*8+sg]
-                if (stage & 1) == 0: g[hemi*8*8+stage*8+sg].extend([2*8*8+(sg//4)*8 + (3-stage//2 if hemi else stage//2), 2*8*8+((sg-2)%8//4)*8+4 + (3-stage//2 if hemi else stage//2)])                
+                if (stage & 1) == 0: g[hemi*8*8+stage*8+sg][:0] = [2*8*8+(sg//4)*8 + (3-stage//2 if hemi else stage//2), 2*8*8+((sg-2)%8//4)*8+4 + (3-stage//2 if hemi else stage//2)]                
     for alu in range(16):
-        g[2*8*8+alu] = [hemi*8*8+(2*((alu % 4))+1 if hemi else 2*(alu % 4)+1)*8 + (((alu // 4) * 2 + i) % 8) for i in range(4) for hemi in (WEST, EAST)]
+        g[2*8*8+alu] = [hemi*8*8+(((3-(alu % 4)) if hemi else alu % 4)*2+1)*8 + (((alu // 4) * 2 + i) % 8) for i in range(4) for hemi in (WEST, EAST)]
         weight[2*8*8+alu] = 1+((alu % 8) in [0,5,2,7]) #2 for large ALU, 1 otherwise, vxm_identity is a special effectively 0 weight use case during traversal
     entries = list(range(8)) + list(range(8*8, 8*8+8))
     exits = list(range(8*7, 8*8)) + list(range(8*(8+7), 8*8*2))
-    print(g, weight, entries, exits)    
+    pred, hpred = succ_to_pred(g), succ_to_pred(h)
+    #print(g, weight, entries, exits)    
     ranks = [list(range(8*stage, 8*(stage+1)))+list(range(8*(8+7-stage), 8*(8+8-stage))) for stage in range(8)] + [[2*8*8+j*4+i for j in range(4)] for i in range(4)]
     ranks = [ranks[i] for i in [0, 8, 1, 2, 9, 3, 4, 10, 5, 6, 11, 7]]
     print(to_graphviz(g, labels={**{hemi*8*8+stage*8+sg: "SG1[" + str(sg) + "]_" + ("W" if hemi==WEST else "E") + "@" + str(stage) for sg in range(8) for stage in range(8) for hemi in (EAST, WEST)}, **{2*8*8+alu: "ALU" + str(alu) for alu in range(16)}}, ranks=ranks,
         constraints={x: set(g[x]) & set(ranks[i+1]) for i in range(len(ranks)-1) for x in ranks[i]},
-        reverse_constraints={x: set(g[x]) & set(ranks[i-1]) for i in range(1, len(ranks)) for x in ranks[i]}))
+        reverse_constraints={x: set(pred[x]) & set(ranks[i+1]) for i in range(len(ranks)-1) for x in ranks[i]}))
+    hentries, hexits = {x for x in h if len(hpred[x]) == 0}, {x for x in h if len(h[x]) == 0}
+    key = next(iter(hentries))
+    if entry_constraints is None: entry_constraints = {x: entries for x in hentries}
+    if exit_constraints is None: exit_constraints = {x: exits for x in hexits}
+    s = [(False, key, None, None, iter(h[key]), None, {key: next(iter(entry_constraints[key]))}, {next(iter(entries)): []}, {next(iter(entries)): []})] #stack for recursive DFS-based routine
+    max_vxm_ident = 16 - len(w)
+    #for num_vxm_ident in range(max_vxm_ident+1):
+    bestmapping, bestsz = None, None
+    while len(s) != 0:
+        #print(s[-1])
+        dir, k, subk, gk, it, git, d, sg, sgpred = s.pop()
+        if len(d) == len(h):
+            if bestsz is None or len(sg) < bestsz:
+                bestmapping, bestsz = d.copy(), len(sg)
+                print("ALU Path ( Length=", bestsz, ") found: ", bestmapping); continue
+        if git is None:
+            gk = d[k]
+            git = iter((g if not dir else pred)[gk])
+            for x in it:
+                if x in d: continue
+                subk = x; break
+            else:
+                chk = {x for x in d if not set((h if not dir else hpred)[x]) <= set(d)}
+                if k in chk: continue #search failed
+                if len(chk) == 0:
+                    dir = not dir
+                    chk = {x for x in d if not set((h if not dir else hpred)[x]) <= set(d)}
+                if len(chk) != 0:
+                    k = next(iter(chk))
+                    s.append((dir, k, None, None, iter((h if not dir else hpred)[k]), None, d, sg, sgpred)) #continue target graph search from prior node or change direction
+                continue
+        for x in git:
+            if x in (sg if not dir else sgpred)[gk] or x in (sg if not dir else sgpred): continue
+            s.append((dir, k, subk, gk, it, git, d, sg, sgpred))
+            dc, sgc, sgpredc = d.copy(), {z: sg[z].copy() for z in sg}, {z: sgpred[z].copy() for z in sgpred}
+            (sgc if not dir else sgpredc)[gk].append(x)
+            (sgpredc if not dir else sgc)[x] = [gk]
+            if not x in (sgc if not dir else sgpredc): (sgc if not dir else sgpredc)[x] = []
+            #if not gk in (sgpredc if not dir else sgc): (sgpredc if not dir else sgc)[gk] = [] 
+            if subk in hentries and x in entry_constraints[subk] or subk in hexits and x in exit_constraints[subk] or subk in w and x in weight and weight[x] >= w[subk]:
+                dc[subk] = x
+                s.append((dir, subk, None, None, iter((h if not dir else hpred)[subk]), None, dc, sgc, sgpredc))
+            else: s.append((dir, k, subk, x, it, iter((g if not dir else pred)[x]), dc, sgc, sgpredc))
+            break
+        #else: pass #graph search failed so backtracking
+    if bestsz is None: print("No ALU path possible")
+gate_op_finder(); assert False
 class UnitarySimulator(g.Component):
     def __init__(self, num_qbits, reversedir=False, lastus=None, **kwargs):
         super().__init__(**kwargs)
