@@ -27,26 +27,18 @@ class Test_operations_squander:
         from qgd_python.gates.qgd_RZ import qgd_RZ
 
         # number of qubits
-        qbit_num = 3
+        qbit_num = 1
 
         # target qbit
         target_qbit = 0
 
-        # set the free parameters
-        Theta = False
-        Phi = True
-        Lambda = False   
-
         # creating an instance of the C++ class
         RZ = qgd_RZ( qbit_num, target_qbit )
 
-        parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
+        parameters = np.array( [pi/2*0.32 ] )
         
         RZ_squander= RZ.get_Matrix( parameters )
         
-        print(RZ_squander)
-
-
 #QISKIT
 
         backend = Aer.get_backend('unitary_simulator')
@@ -56,7 +48,7 @@ class Test_operations_squander:
         circuit = QuantumCircuit(qbit_num)
 
         # Add the u3 gate on qubit pi, pi,
-        circuit.rz(parameters[1], target_qbit)
+        circuit.rz(parameters[0], target_qbit)
                 
         # job execution and getting the result as an object
         job = execute(circuit, backend)
@@ -68,16 +60,17 @@ class Test_operations_squander:
         RZ_qiskit = result.get_unitary(circuit)
         RZ_qiskit = np.asarray(RZ_qiskit)
         
-        # Draw the circuit        
-        print(RZ_qiskit)
-        
-        #the difference between the SQUANDER and the qiskit result        
-        delta_matrix=RZ_squander-RZ_qiskit
 
-        # compute norm of matrix
-        error=np.linalg.norm(delta_matrix)
-
-        print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
-        assert( error < 1e-3 ) 
+        # the unitary matrix from the result object
+        product_matrix = np.dot(RZ_squander, RZ_qiskit.conj().T)
+        phase = np.angle(product_matrix[0,0])
+        product_matrix = product_matrix*np.exp(-1j*phase)
+    
+        product_matrix = np.eye(2)*2 - product_matrix - product_matrix.conj().T
+        # the error of the decomposition
+        error = (np.real(np.trace(product_matrix)))/2
+       
+        #print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+        assert( error < 1e-3 )
 
 
