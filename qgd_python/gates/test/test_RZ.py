@@ -41,7 +41,7 @@ class Test_operations_squander:
         
 #QISKIT
 
-        backend = Aer.get_backend('unitary_simulator')
+        backend = Aer.get_backend('aer_simulator')
 
 
         # Create a Quantum Circuit acting on the q register
@@ -49,6 +49,7 @@ class Test_operations_squander:
 
         # Add the u3 gate on qubit pi, pi,
         circuit.rz(parameters[0], target_qbit)
+        circuit.save_unitary()
                 
         # job execution and getting the result as an object
         job = execute(circuit, backend)
