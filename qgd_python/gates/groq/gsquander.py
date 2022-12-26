@@ -215,7 +215,7 @@ def groq_alu_finder(h, w, entry_constraints=None, exit_constraints=None, gviz_fu
     key = next(iter(hentries))
     if entry_constraints is None: entry_constraints = {x: set(entries) for x in set(hentries)}
     if exit_constraints is None: exit_constraints = {x: set(exits) for x in set(hexits)}
-    d, dg, dgpred, sg, sgpred = {key: next(iter(entry_constraints[key]))}, {key: set()}, {key: set()}, {next(iter(entries)): set()}, {next(iter(entries)): set()}
+    d, dg, dgpred, sg, sgpred = {key: next(iter(entry_constraints[key]))}, {x: set() for x in h}, {x: set() for x in hpred}, {x: set() for x in g}, {x: set() for x in pred}
     s = [(False, key, None, None, iter(h[key]), None, None)] #stack for recursive DFS-based routine
     max_vxm_ident = 16 - len(w)
     #for num_vxm_ident in range(max_vxm_ident+1):
@@ -226,58 +226,54 @@ def groq_alu_finder(h, w, entry_constraints=None, exit_constraints=None, gviz_fu
         if not undo is None:
             (sg if not dir else sgpred)[gk].remove(undo)
             (sgpred if not dir else sg)[undo].remove(gk)
-            if len((sgpred if not dir else sg)[undo]) == 0: del (sgpred if not dir else sg)[undo] 
-            if len((sg if not dir else sgpred)[undo]) == 0: del (sg if not dir else sgpred)[undo]
             if subk in d and d[subk] == undo:
-                del d[subk]
                 (dg if not dir else dgpred)[k].remove(subk)
                 (dgpred if not dir else dg)[subk].remove(k)
-                if len((dgpred if not dir else dg)[subk]) == 0: del (dgpred if not dir else dg)[subk]
-                if len((dg if not dir else dgpred)[subk]) == 0: del (dg if not dir else dgpred)[subk]
-        if len(d) == len(h):
-            #print(bestmapping, len(s), sg)
-            if bestsz is None or len(sg) < bestsz:
-                bestmapping, bestsz = d.copy(), len(sg)
-                if not gviz_func is None: print(gviz_func({x: labels[bestmapping[x]] for x in bestmapping}, {(x, next(iter(h[x]))): labels[next(iter(sg[bestmapping[x]]))] for x in bestmapping if bestmapping[x] >= 2*8*8}))
-                print("ALU Path ( Length=", bestsz, ") found: ", bestmapping, sg); continue
+                if len(dg[subk]) == 0 and len(dgpred[subk]) == 0: del d[subk]
         if git is None:
             gk = d[k]
             git = iter((g if not dir else pred)[gk])
             for x in it:
-                if x in d: continue
+                if x in (dg if not dir else dgpred)[k]: continue
                 subk = x; break
             else:
-                chk = {x for x in (dg if not dir else dgpred) if not (h if not dir else hpred)[x] <= (dg if not dir else dgpred)[x]}
+                #print(k, d)
+                chk = {x for x in d if not (h if not dir else hpred)[x] <= (dg if not dir else dgpred)[x]}
                 if k in chk: continue #search failed
                 if len(chk) == 0:
                     dir = not dir
-                    chk = {x for x in (dg if not dir else dgpred) if not (h if not dir else hpred)[x] <= (dg if not dir else dgpred)[x]}
+                    chk = {x for x in d if not (h if not dir else hpred)[x] <= (dg if not dir else dgpred)[x]}
                 if len(chk) != 0:
                     k = next(iter(chk))
                     s.append((dir, k, None, None, iter((h if not dir else hpred)[k]), None, None)) #continue target graph search from prior node or change direction
+                else:
+                    #print(bestmapping, len(s), sg)
+                    if bestsz is None or len(sg) < bestsz:
+                        bestmapping, bestsz = d.copy(), len(sg)
+                        if not gviz_func is None: print(gviz_func({x: labels[bestmapping[x]] for x in bestmapping}, {(x, next(iter(h[x]))): labels[next(iter(sg[bestmapping[x]]))] for x in bestmapping if bestmapping[x] >= 2*8*8}))
+                        print("ALU Path ( Length=", bestsz, ") found: ", bestmapping, sg); continue
                 continue
         for x in git:
             #cannot have the same stream group in both directions, rather than add a joiner node to the graph, constraint added here
-            if x in (sg if not dir else sgpred)[gk] or x in (sg if not dir else sgpred): continue
-            if (((x, gk) if not dir else (gk, x)) in dual_edge_constraints) and ((x in sgpred and dual_edge_constraints[(x, gk)] in sgpred[x]) if not dir else (dual_edge_constraints[(gk, x)] in sgpred[gk])): continue
+            #ALU allowed 2 inbound edges, 1 outbound edge, other nodes 1 inbound edge only but any of up to 3 outbound edges
+            if x in (sg if not dir else sgpred)[gk] or len((sgpred if not dir else sg)[x]) >= ((2 if not dir else 1) if x >= 8*8*2 else (1 if not dir else 3)): continue
+            if (((x, gk) if not dir else (gk, x)) in dual_edge_constraints) and ((dual_edge_constraints[(x, gk)] in sgpred[x]) if not dir else (dual_edge_constraints[(gk, x)] in sgpred[gk])): continue
             assignsubk = subk in hentries and x in entry_constraints[subk] or subk in hexits and (exit_constraints(d, subk, x) if callable(exit_constraints) else x in exit_constraints[subk]) or subk in w and x in weight and weight[x] >= w[subk]
+            if assignsubk and subk in d and d[subk] != x: continue
+            if not assignsubk and x >= 8*8*2: continue #vxm identity allowance possible here
             s.append((dir, k, subk, gk, it, git, x))
             (sg if not dir else sgpred)[gk].add(x)
-            if not x in (sgpred if not dir else sg): (sgpred if not dir else sg)[x] = set()
             (sgpred if not dir else sg)[x].add(gk)
-            if not x in (sg if not dir else sgpred): (sg if not dir else sgpred)[x] = set()
             if assignsubk:
                 d[subk] = x
                 (dg if not dir else dgpred)[k].add(subk)
-                if not subk in (dgpred if not dir else dg): (dgpred if not dir else dg)[subk] = set()
                 (dgpred if not dir else dg)[subk].add(k)
-                if not subk in (dg if not dir else dgpred): (dg if not dir else dgpred)[subk] = set()
                 s.append((dir, subk, None, None, iter((h if not dir else hpred)[subk]), None, None))
             else: s.append((dir, k, subk, x, it, iter((g if not dir else pred)[x]), None))
             break
         #else: pass #graph search failed so backtracking
     if bestsz is None: print("No ALU path possible")
-gate_op_finder(); assert False
+#gate_op_finder(); assert False
 class UnitarySimulator(g.Component):
     def __init__(self, num_qbits, reversedir=False, lastus=None, **kwargs):
         super().__init__(**kwargs)
@@ -397,33 +393,63 @@ class UnitarySimulator(g.Component):
                 result = ri.write(name="result", storage_req=self.otherinit)
                 copy = ri.write(name="copy", storage_req=self.copystore[EAST])
             else:
-                ri = [ri[i] if control_qbit is None else g.concat_vectors([usb[i], ri[i]], (pow2qb, innerdim)) for i in range(2)]
                 if len(tcqbitsel) == 6:
+                    ri = [g.concat_vectors([usb[i], ri[i]], (pow2qb, innerdim)) for i in range(2)]
                     tqbitdistro, tqbitpairs0, tqbitpairs1, cqbitdistro, cqbitpairs0, cqbitpairs1 = tcqbitsel
                     cdistro = g.stack(pow2qb*[cqbitdistro[0]], 0).read(streams=g.SG1[16+12])
                     writecontrols = g.distribute_8(g.concat_vectors([cqbitpairs1[0], cqbitpairs0[0], cqbitpairs1[0], cqbitpairs0[0]], (pow2qb, innerdim)).read(streams=g.SG1[16+8]), cdistro, bypass8=0b11111110, distributor_req=3 if self.rev else 7)
-                    delay = 18 #1+4+1+2+4+1+4+1
-                    writecontrols = [writecontrols, None] if delay >= pow2qb else writecontrols.split_vectors([delay, pow2qb-delay])
-                    ri[1] = [None, ri[1]] if delay >= pow2qb else ri[1].split_vectors([pow2qb-delay, delay])
-                    with g.ResourceScope(name="startdist", is_buffered=False, time=0) as innerpred:
-                        writecontrols[0] = g.transpose_null(writecontrols[0], transposer_req=1 if self.rev else 3, stream_order=[8])
-                    if delay < pow2qb:
-                        with g.ResourceScope(name="middledist", is_buffered=False, time=delay) as innerpred:
-                            ri[1][0], writecontrols[1] = g.split(g.transpose_null(g.concat([ri[1][0].reinterpret(g.uint8), writecontrols[1].reshape(pow2qb-delay, 1, innerdim)], 1), transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7, 8]), dim=1, splits=[4,1])
-                            ri[1][0] = ri[1][0].reinterpret(g.float32).reshape(pow2qb-delay, innerdim)
-                            writecontrols[1] = writecontrols[1].reshape(pow2qb-delay, innerdim)
-                    with g.ResourceScope(name="enddist", is_buffered=False, time=delay if delay >= pow2qb else pow2qb-delay) as innerpred:
-                        ri[1][1] = g.transpose_null(ri[1][1], transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7])
-                    writecontrols = writecontrols[0] if delay >= pow2qb else g.concat_vectors(writecontrols, (pow2qb, innerdim))
-                    ri[1] = ri[1][1] if delay >= pow2qb else g.concat_vectors(ri[1], (pow2qb, innerdim))                    
-                    #ri[1] = g.concat_vectors([g.zeros((delay, innerdim), dtype=ri[1].dtype).read(streams=g.SG4[5]), ri[1]], (delay + pow2qb, innerdim))
-                    #writecontrols = g.concat_vectors([writecontrols, g.zeros((delay, innerdim), dtype=writecontrols.dtype).read(streams=g.SG1[8])], (pow2qb + delay, innerdim))
-                    #ri[1], writecontrols = g.split(g.transpose_null(g.concat([ri[1].reinterpret(g.uint8), writecontrols.reshape(pow2qb+delay, 1, innerdim)], 1), transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7, 8]), dim=1, splits=[4, 1])
-                    #writecontrols = g.transpose_null(writecontrols.reshape(pow2qb+delay, innerdim), transposer_req=1 if self.rev else 3, stream_order=[8])
-                    print(ri[1], writecontrols)
-                    #ri[1] = ri[1].reinterpret(g.float32).reshape(delay + pow2qb, innerdim)
-                    #ri[1] = g.split_vectors(ri[1], [delay, pow2qb])[1]
-                    #writecontrols = g.split_vectors(writecontrols, [pow2qb, delay])[0]
+                    rigap, delay = 6, 15 #4+4+1+4+2 #3 cycle ALU time and transposer time, IO crossing time, gather time, IO crossing time, distributor crossing time
+                    scheduleri = [(delay, delay+pow2qb//2), (delay+pow2qb//2+rigap, delay+rigap+pow2qb)]
+                    schedulewrite = [(0, pow2qb//2), (pow2qb//2+rigap, rigap+pow2qb)]
+                    risplits, writesplits, gaps = [], [], {delay+pow2qb//2, pow2qb//2}
+                    while len(scheduleri) != 0 or len(schedulewrite) != 0:
+                        if len(scheduleri) == 0 or len(schedulewrite) != 0 and schedulewrite[0][0] < scheduleri[0][0] and schedulewrite[0][1] <= scheduleri[0][0]:
+                            writesplits.append(schedulewrite[0][1]-schedulewrite[0][0]); risplits.append(None)
+                            del schedulewrite[0]
+                        elif len(schedulewrite) == 0 or scheduleri[0][0] < schedulewrite[0][0] and scheduleri[0][1] <= schedulewrite[0][0]:
+                            writesplits.append(None); risplits.append(scheduleri[0][1]-scheduleri[0][0])
+                            del scheduleri[0]
+                        elif schedulewrite[0][0] == scheduleri[0][0]:
+                            if schedulewrite[0][1] == scheduleri[0][1]:
+                                writesplits.append(schedulewrite[0][1]-schedulewrite[0][0]); risplits.append(scheduleri[0][1]-scheduleri[0][0])
+                                del schedulewrite[0]; del scheduleri[0]
+                            elif schedulewrite[0][1] < scheduleri[0][1]:
+                                writesplits.append(schedulewrite[0][1]-schedulewrite[0][0]); risplits.append(schedulewrite[0][1]-scheduleri[0][0])
+                                scheduleri[0] = (schedulewrite[0][1], scheduleri[0][1]); del schedulewrite[0]
+                            else:
+                                writesplits.append(scheduleri[0][1]-schedulewrite[0][0]); risplits.append(scheduleri[0][1]-scheduleri[0][0])
+                                schedulewrite[0] = (scheduleri[0][1], schedulewrite[0][1]); del scheduleri[0]                            
+                        elif schedulewrite[0][0] < scheduleri[0][0]:
+                            writesplits.append(scheduleri[0][0]-schedulewrite[0][0]); risplits.append(None)
+                            schedulewrite[0] = (scheduleri[0][0], schedulewrite[0][1])
+                        else:
+                            writesplits.append(None); risplits.append(schedulewrite[0][0]-scheduleri[0][0])
+                            scheduleri[0] = (schedulewrite[0][0], scheduleri[0][1])
+                    print(risplits, writesplits)
+                    writecontrols = writecontrols.split_vectors([x for x in writesplits if not x is None])
+                    ri[1] = ri[1].split_vectors([x for x in risplits if not x is None])
+                    t, x, y = 0, 0, 0
+                    for i, splits in enumerate(zip(writesplits, risplits)):
+                        with g.ResourceScope(name="dist" + str(i), is_buffered=False, time=95-51+t) as innerpred: #t=51 when gather transpose_null resource scope bases from but we are relative again to parent here
+                            if splits[1] is None:
+                                writecontrols[x] = g.transpose_null(writecontrols[x], transposer_req=1 if self.rev else 3, stream_order=[8])
+                                x += 1
+                            elif splits[0] is None:
+                                ri[1][y] = g.transpose_null(ri[1][y], transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7])
+                                y += 1
+                            else:
+                                ri[1][y], writecontrols[x] = g.split(g.transpose_null(g.concat([ri[1][y].reinterpret(g.uint8), writecontrols[x].reshape(splits[0], 1, innerdim)], 1), transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7, 8], time=0), dim=1, splits=[4,1])
+                                writecontrols[x] = writecontrols[x].reshape(splits[0], innerdim)
+                                ri[1][y] = ri[1][y].reinterpret(g.float32).reshape(splits[1], innerdim)
+                                x += 1; y += 1
+                        t += splits[0] if not splits[0] is None else splits[1]
+                        if t in gaps: t += rigap
+                    print(writecontrols, ri[1])
+                    writecontrols = g.concat_vectors(writecontrols, (pow2qb, innerdim))
+                    ri[1] = g.concat_vectors(ri[1], (pow2qb, innerdim))
+                    #ri[1], writecontrols = g.split(g.transpose_null(g.stack([ri[1].reinterpret(g.uint8), writecontrols], 1), transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7, 8]), dim=1, num_splits=2)
+                    #ri[1] = ri[1].reinterpret(g.float32).reshape(pow2qb, innerdim)
+                    #writecontrols = writecontrols.split(dim=-2, num_splits=4)[0].reshape(pow2qb, innerdim)
                     dist_st = g.distribute_lowest(g.mem_gather(g.concat_vectors([tqbitpairs0[0], tqbitpairs1[0]], (pow2qb, innerdim)), writecontrols, output_streams=[g.SG1[8]]), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=1 if self.rev else 5)
                 else:
                     tqbitdistro, tqbitpairs0, tqbitpairs1 = tcqbitsel
@@ -640,7 +666,7 @@ def main():
     #[4, 8, 16, 32, 64, 128, 256, 512, 1024, 4096, 16384, 57344]
     #10 qbits max for single bank, 11 qbits for dual bank solutions
     #import math; [math.ceil((4*(1<<x)*int(math.ceil((1<<x)/320))//8)/8192) for x in range(15)]
-    num_qbits, max_levels = 5, 6
+    num_qbits, max_levels = 4, 6
     max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
     UnitarySimulator.unit_test(num_qbits)
     UnitarySimulator.chain_test(num_qbits, max_gates)
