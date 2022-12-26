@@ -32,19 +32,14 @@ class Test_operations_squander:
         # target qbit
         target_qbit = 0
 
-        # set the free parameters
-        Theta = True
-        Phi = False
-        Lambda = False   
-
         # creating an instance of the C++ class
         RY = qgd_RY( qbit_num, target_qbit )
 
-        parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
+        parameters = np.array( [pi/2*0.32] )
         
         RY_squander= RY.get_Matrix( parameters )
         
-        print(RY_squander)
+        #print(RY_squander)
 
 
 #QISKIT
@@ -69,7 +64,7 @@ class Test_operations_squander:
         RY_qiskit = np.asarray(RY_qiskit)
         
         # Draw the circuit        
-        print(RY_qiskit)
+        #print(RY_qiskit)
         
         #the difference between the SQUANDER and the qiskit result        
         delta_matrix=RY_squander-RY_qiskit
