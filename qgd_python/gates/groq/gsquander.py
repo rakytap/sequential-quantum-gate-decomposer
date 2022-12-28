@@ -15,17 +15,18 @@ except ImportError:
     # raise ModuleNotFoundError("groq.runtime")
     print('Error: ModuleNotFoundError("groq.runtime")')
 
-def qiskit_oracle(unitary, qbit_num, gates):
+def qiskit_oracle(unitary, qbit_num, parameters, target_qbits, control_qbits):
     from qiskit import Aer
     from qiskit import QuantumCircuit, execute
     backend = Aer.get_backend('unitary_simulator')
+    backend.set_option("precision", "single")
     circuit = QuantumCircuit(qbit_num)
     circuit.unitary(unitary, [i for i in range(qbit_num)])
-    for op, target_qbit, control_qbit, parameters in gates:
-        if op:
-            circuit.u(parameters[0]*2, parameters[1], parameters[2], target_qbit)
+    for param, target_qbit, control_qbit in zip(parameters, target_qbits, control_qbits):
+        if control_qbit is None or target_qbit == control_qbit:
+            circuit.u(param[0]*2, param[1], param[2], target_qbit)
         else:
-            circuit.cry(parameters[0]*2, control_qbit, target_qbit)
+            circuit.cry(param[0]*2, control_qbit, target_qbit)
     job = execute(circuit, backend)
     result=job.result()
     U3_qiskit = result.get_unitary(circuit)
@@ -47,7 +48,7 @@ def make_cry(parameters):
 def apply_to_qbit(unitary, num_qbits, target_qbit, control_qbit, gate):
     pow2qb = 1 << num_qbits
     t = np.arange(num_qbits)
-    if not control_qbit is None:
+    if not control_qbit is None and control_qbit != target_qbit:
         t[:-1] = np.roll(t[:-1], (target_qbit - control_qbit) % num_qbits)
         gate = make_controlled(gate)
     t = np.roll(t, -target_qbit)
@@ -60,10 +61,10 @@ def apply_to_qbit_loop(unitary, num_qbits, target_qbit, control_qbit, gate):
     for pair in (idxs if control_qbit is None else idxs[(idxs[:,0] & (1<<control_qbit)) != 0,:]).tolist():
         unitary[pair,:] = gate @ unitary[pair,:]
     return unitary
-def process_gates(unitary, num_qbits, gates):
+def process_gates(unitary, num_qbits, parameters, target_qbits, control_qbits):
     unitary = np.copy(unitary)
-    for op, target_qbit, control_qbit, parameters in gates:
-        unitary = apply_to_qbit(unitary, num_qbits, target_qbit, control_qbit, make_u3(parameters) if op else make_cry(parameters))
+    for param, target_qbit, control_qbit in zip(parameters, target_qbits, control_qbits):
+        unitary = apply_to_qbit_loop(unitary, num_qbits, target_qbit, control_qbit, make_u3(param) if control_qbit is None or control_qbit==target_qbit else make_cry(param))
     return unitary
 def test():
     num_qbits, use_identity = 5, False
@@ -73,11 +74,11 @@ def test():
     for i in range(num_qbits):
         for j in range(num_qbits):
             if i == j: continue
-            gates = [(True, i, None, parameters), (True, (i+1)%num_qbits, None, parameters),
-                (False, i, j, parameters)
-                ]
-            actual, oracle = qiskit_oracle(unitary, num_qbits, gates), process_gates(unitary, num_qbits, gates)
+            target_qbits, control_qbits = [i, (i+1)%num_qbits, i], [None, None, j]
+            gateparams = [parameters]*3
+            actual, oracle = qiskit_oracle(unitary, num_qbits, gateparams, target_qbits, control_qbits), process_gates(unitary, num_qbits, gateparams, target_qbits, control_qbits)
             assert np.allclose(actual, oracle), (i, j, actual, oracle)
+#test()
 WEST, EAST = 0, 1
 s16rangeW = list(range(25, 27+1))+list(range(29, 37+1))+list(range(39,42+1))
 s16rangeE = list(range(26, 27+1))+list(range(29,42+1))
@@ -405,7 +406,6 @@ class UnitarySimulator(g.Component):
                     rigap, delay = 3*2, 4+4+1+4+2 #3 cycle ALU time and transposer time=4, IO crossing time=4, gather time=1, IO crossing time=4, distributor crossing time=2
                     scheduleri = [(delay, delay+pow2qb//2), (delay+pow2qb//2+rigap, delay+rigap+pow2qb)]
                     schedulewrite = [(0, pow2qb//2), (pow2qb//2+rigap, rigap+pow2qb)]
-                    print(schedulewrite, scheduleri)
                     risplits, writesplits, gaps = [], [], {pow2qb//2: rigap, delay+pow2qb//2: rigap} if pow2qb//2 <= delay else {}
                     while len(scheduleri) != 0 or len(schedulewrite) != 0:
                         if len(scheduleri) == 0 or len(schedulewrite) != 0 and schedulewrite[0][0] < scheduleri[0][0] and schedulewrite[0][1] <= scheduleri[0][0]:
@@ -430,7 +430,6 @@ class UnitarySimulator(g.Component):
                         else:
                             writesplits.append(None); risplits.append(schedulewrite[0][0]-scheduleri[0][0])
                             scheduleri[0] = (schedulewrite[0][0], scheduleri[0][1])
-                    print(writesplits, risplits, gaps)
                     writecontrols = writecontrols.split_vectors([x for x in writesplits if not x is None])
                     ri[1] = ri[1].split_vectors([x for x in risplits if not x is None])
                     t, x, y = 0, 0, 0
@@ -492,7 +491,7 @@ class UnitarySimulator(g.Component):
         print_utils.infoc("\nRunning on HW ...")
         oracleres, result = [None], [None]
         def oracle():
-            oracleres[0] = qiskit_oracle(u, num_qbits, [(control_qbit is None, target_qbit, control_qbit, parameters)])
+            oracleres[0] = qiskit_oracle(u, num_qbits, [parameters], [target_qbit], [control_qbit])
         def actual():
             inputs = {}
             inputs[unitary.name] = np.ascontiguousarray(u.astype(np.complex64)).view(np.float32).reshape(pow2qb, pow2qb, 2).transpose(0, 2, 1).reshape(pow2qb*2, pow2qb)
@@ -517,13 +516,12 @@ class UnitarySimulator(g.Component):
         target_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
         control_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)] #target_qbits
         parameters = np.random.random((num_gates, 3))
-        gateparams = [make_u3(parameters[i,:]) if target_qbits[i] == control_qbits[i] else make_cry(parameters[i,:]) for i in range(num_gates)]
         oracleres = [None]
         def oracle():
-            oracleres[0] = qiskit_oracle(u, num_qbits, [(control_qbits[i] == target_qbits[i], target_qbits[i], control_qbits[i], parameters[i,:]) for i in range(num_gates)])
-        actual, result = UnitarySimulator.get_unitary_sim(num_qbits, max_gates, u, gateparams, target_qbits, control_qbits)
+            oracleres[0] = qiskit_oracle(u, num_qbits, parameters, target_qbits, control_qbits)
+        actual, result = UnitarySimulator.get_unitary_sim(num_qbits, max_gates)
         oracle()
-        actual()
+        actual(u, num_qbits, parameters, target_qbits, control_qbits)
         oracleres, result = oracleres[0], result[0]
         if np.allclose(oracleres, result):
             print_utils.success("\nQuantum Simulator Chain Test Success ...")
@@ -533,7 +531,7 @@ class UnitarySimulator(g.Component):
         #print(oracleres, result)
     def build_chain(num_qbits, max_gates):
         pow2qb = 1 << num_qbits
-        pgm_pkg = g.ProgramPackage(name="us" + str(num_qbits), output_dir="us", gen_vis_data=True)
+        pgm_pkg = g.ProgramPackage(name="us" + str(num_qbits) + "-" + str(max_gates), output_dir="us", gen_vis_data=True)
         print("Number of qbits:", num_qbits, "Maximum gates:", max_gates)
         with pgm_pkg.create_program_context("init_us") as pcinit:
             us = UnitarySimulator(num_qbits)
@@ -573,8 +571,20 @@ class UnitarySimulator(g.Component):
             qbitinc256 = g.zeros((320,), layout=get_slice1(WEST, 1, 1), dtype=g.uint8)
             qbitinccount = g.from_data(np.array(([0, 1]+[0]*14)*20, dtype=np.uint8), layout=get_slice1(WEST, 2, 1))
             qbitmap = g.address_map(targetqbits, np.array([0]*20), index_map_layout=get_slice1(WEST, 1, 1))
-           
-            g.add_mem_constraints(gateinc + gateinc256 + gateinccount, [gates, othergates], g.MemConstraintType.NOT_MUTUALLY_EXCLUSIVE)
+            
+            with g.ResourceScope(name="resetgathercounts", is_buffered=True, time=None, predecessors=[pred]) as pred:
+                #must reset ginc256, gatemap, qbitinc256, qbitmap or GFAULTs will occur due to bad addresses gathered/scattered
+                resetzeros = g.zeros((320,), dtype=g.uint8, layout=get_slice1(WEST, 2, 1))
+                resetqbitmap = g.address_map(targetqbits, np.array([0]*20), index_map_layout=get_slice1(WEST, 2, 1))
+                resetgatemaps = [[g.address_map(g.split_vectors(gates if hemi==EAST else othergates, [4]*((max_gates+1)//2*2))[0].reinterpret(g.uint8).split(dim=1, num_splits=4)[0], np.array([0]*20), index_map_layout=get_slice1(hemi, 22, 1)),
+                        g.address_map(g.split_vectors(gates if hemi==EAST else othergates, [4]*((max_gates+1)//2*2))[1].reinterpret(g.uint8).split(dim=1, num_splits=4)[0], np.array([0]*20), index_map_layout=get_slice1(hemi, 23, 1))] for hemi in (EAST, WEST)]
+                tsrs = [resetzeros.read(streams=g.SG1[0], time=1).write(storage_req=qbitinc256.storage_request),
+                    resetqbitmap.read(streams=g.SG1[0], time=2).write(storage_req=qbitmap.storage_request)]
+                z = resetzeros.read(streams=g.SG1[0], time=0)
+                tsrs += [z.write(storage_req=gateinc256[i].storage_request) for i in range(2)]
+                tsrs += [g.concat([resetgatemaps[hemi][i].read(streams=g.SG1[0], time=i*4)]*4, 0).write(storage_req=gatemap[hemi][i].storage_request) for hemi in (EAST, WEST) for i in range(2)]
+                g.add_mem_constraints(tsrs, tsrs, g.MemConstraintType.NOT_MUTUALLY_EXCLUSIVE)
+            g.add_mem_constraints(gateinc + gateinc256 + gateinccount + [resetzeros, resetqbitmap], [gates, othergates, resetzeros, resetqbitmap], g.MemConstraintType.NOT_MUTUALLY_EXCLUSIVE)
         innerdim = ((pow2qb + 320-1) // 320) * 320
         for reversedir in (False, True):
             for target_qbit, control_qbit in ((0, None), (0, 1)):
@@ -630,6 +640,20 @@ class UnitarySimulator(g.Component):
                         updinc = qinc256.add(qinccount, time=0, alus=[0], overflow_mode=g.OverflowMode.MODULAR)
                         qmap.add(qinc, alus=[4], overflow_mode=g.OverflowMode.MODULAR).add(g.mask_bar(updinc, gincmask)).write(storage_req=qmap.storage_request, name="nextqmap" + suffix)
                         updinc.vxm_identity().write(storage_req=qinc256.storage_request, name="nextqinc256" + suffix)                            
+        #must validate all addresses are contiguous, and gather/scatter addresses are all on 0-address alignment by checking storage requests, should likely malloc to avoid
+        assert {(x.hemi, x.slice, x.offset) for x in unitary.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in s8range for i in range(pow2qb)}
+        assert {(x.hemi, x.slice, x.offset) for x in otherunitary.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.EAST, x, i) for x in s8range for i in range(pow2qb)}
+        assert {(x.hemi, x.slice, x.offset) for x in copy.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in s8range2 for i in range(pow2qb)}
+        assert {(x.hemi, x.slice, x.offset) for x in othercopy.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.EAST, x, i) for x in s8range2 for i in range(pow2qb)}
+        
+        assert {(x.hemi, x.slice, x.offset) for x in targetqbits.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in (37,) for i in range(max_gates)}
+        assert {(x.hemi, x.slice, x.offset) for x in controlqbits.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in (36,) for i in range(max_gates)}
+        assert {(x.hemi, x.slice, x.offset) for x in gates.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.EAST, x, i) for x in range(16) for i in range((max_gates+1)//2*2)}
+        assert {(x.hemi, x.slice, x.offset) for x in othergates.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in range(16) for i in range((max_gates+1)//2*2)}
+        for i, hemi in enumerate((EAST, WEST)):
+            assert {(x.hemi, x.slice, x.offset) for x in targetqbitpairs0[i].storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST if hemi==WEST else g.Hemisphere.EAST, x, i) for x in (43,) for i in range(pow2qb//2)}
+            assert {(x.hemi, x.slice, x.offset) for x in targetqbitpairs1[i].storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST if hemi==WEST else g.Hemisphere.EAST, x, i) for x in (42,) for i in range(pow2qb//2)}
+
         with pgm_pkg.create_program_context("final_us") as pcfinal:
             g.reserve_tensor(pcinit, pcfinal, unitary)
             unitaryres = g.from_addresses(np.array(unitary.storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "unitaryfin")
@@ -640,18 +664,26 @@ class UnitarySimulator(g.Component):
             unitaryrevres.set_program_output()
         print_utils.infoc("\nAssembling model ...")
         iops = pgm_pkg.assemble()
-        iop = runtime.IOProgram(iops[0])
-        return iop, {"unitary": unitary.name, "gates": gates.name, "othergates": othergates.name,
+        return {"iop": iops[0], "unitary": unitary.name, "gates": gates.name, "othergates": othergates.name,
             "targetqbits": targetqbits.name, "controlqbits": controlqbits.name,
             "unitaryres": unitaryres.name, "unitaryrevres": unitaryrevres.name}
-    def build_all(if_exists=False):
+    def build_all(max_levels, if_exists=False):
+        import os, pickle
+        if not if_exists and os.path.exists("us/usdata"):
+            with open("us/usdata", 'rb') as f:
+                d = pickle.load(f)
+        else: d = {}
         for num_qbits in range(2, 8+1):
             max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
-            build_chain(num_qbits, max_gates)
-    def get_unitary_sim(num_qbits, max_gates, u, gateparams, target_qbits, control_qbits):
-        pow2qb, num_gates = 1 << num_qbits, len(gateparams)
-        iop, tensornames = UnitarySimulator.build_chain(num_qbits, max_gates)
-        print(iop)
+            if not (num_qbits, max_gates) in d:
+                d[(num_qbits, max_gates)] = UnitarySimulator.build_chain(num_qbits, max_gates)
+                with open("us/usdata", 'wb') as f:
+                    pickle.dump(d, f)
+        return d
+    def get_unitary_sim(num_qbits, max_gates, tensornames=None):
+        pow2qb = 1 << num_qbits
+        if tensornames is None: tensornames = UnitarySimulator.build_chain(num_qbits, max_gates)
+        iop = runtime.IOProgram(tensornames["iop"])
         driver = runtime.Driver()
         device = driver.next_available_device()
         result = [None]
@@ -660,7 +692,9 @@ class UnitarySimulator(g.Component):
             def loaddata():
                 for i in range(1+2*2+2):
                     device.load(iop[i], unsafe_keep_entry_points=True)
-                def actual():
+                def actual(u, num_qbits, parameters, target_qbits, control_qbits):
+                    num_gates = len(parameters)
+                    gateparams = [make_u3(parameters[i,:]) if target_qbits[i] == control_qbits[i] else make_cry(parameters[i,:]) for i in range(num_gates)]
                     inputs = {}
                     inputs[tensornames["unitary"]] = np.ascontiguousarray(u.astype(np.complex64)).view(np.float32).reshape(pow2qb, pow2qb, 2).transpose(0, 2, 1).reshape(pow2qb*2, pow2qb)
                     inputs[tensornames["gates"]] = np.concatenate([np.repeat(gateparams[i].astype(np.complex64).view(np.float32).flatten(), pow2qb) for i in range(0, num_gates, 2)] + [np.zeros((2*2*2*pow2qb), dtype=np.float32)]*((max_gates+1)//2-(num_gates-num_gates//2)))
@@ -679,6 +713,33 @@ class UnitarySimulator(g.Component):
         loaddata()
         actual = runfunc[0]
         return actual, result
+    def perfcompare():
+        import timeit
+        max_levels = 6
+        d = UnitarySimulator.build_all(max_levels)
+        use_identity, max_levels = False, 6
+        initfuncs = {"Groq": lambda nqb, ng: UnitarySimulator.get_unitary_sim(nqb, ng, d[(nqb, ng)])[0]}
+        testfuncs = {"Groq": None, "numpy": process_gates, "qiskit": qiskit_oracle}
+        times = {k: {} for k in testfuncs}
+        for num_qbits in range(2, 4+1):
+            max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
+            num_gates = max_gates
+            pow2qb = 1 << num_qbits
+            u = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
+            target_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
+            control_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
+            parameters = np.random.random((num_gates, 3))
+            for testfunc in testfuncs:
+                if testfunc in initfuncs: testfuncs[testfunc] = initfuncs[testfunc](num_qbits, max_gates)
+                times[testfunc][num_qbits] = timeit.timeit(lambda: testfuncs[testfunc](u, num_qbits, parameters, target_qbits, control_qbits), number=2)
+        import matplotlib.pyplot as plt
+        fig, ax = plt.subplots()
+        ax.set_title("Unitary Simulator Performance")
+        ax.set(xlabel="# of qbits", ylabel="Time (seconds)")
+        for x in times:
+            ax.plot(times[x].keys(), times[x].values())
+        fig.savefig("us.svg", format='svg')
+        print(times)
 def main():
     #test()
     #[UnitarySimulator.idxmapgather(x) for x in range(10)]; assert False
@@ -686,9 +747,11 @@ def main():
     #[1, 2, 4, 8, 16, 32, 64, 128, 256, 1024, 4096, 14336]
     #10 qbits max for single bank, 11 qbits requires dual chips [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 7, 26, 104]
     #import math; [math.ceil(((1<<x)*int(math.ceil((1<<x)/320)))/8192) for x in range(15)]
-    num_qbits, max_levels = 8, 6
+    num_qbits, max_levels = 3, 6
     max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
     #UnitarySimulator.unit_test(num_qbits)
     UnitarySimulator.chain_test(num_qbits, max_gates)
+    UnitarySimulator.build_all(max_levels)
+    UnitarySimulator.perfcompare()
 if __name__ == "__main__":
     main()
