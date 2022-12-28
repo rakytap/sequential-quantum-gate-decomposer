@@ -715,13 +715,13 @@ class UnitarySimulator(g.Component):
         return actual, result
     def perfcompare():
         import timeit
-        max_levels = 6
+        max_levels, batch_size = 6, 20
         d = UnitarySimulator.build_all(max_levels)
         use_identity, max_levels = False, 6
         initfuncs = {"Groq": lambda nqb, ng: UnitarySimulator.get_unitary_sim(nqb, ng, d[(nqb, ng)])[0]}
-        testfuncs = {"Groq": None, "numpy": process_gates, "qiskit": qiskit_oracle}
+        testfuncs = {"Groq": None, "numpy": process_gates} #, "qiskit": qiskit_oracle}
         times = {k: {} for k in testfuncs}
-        for num_qbits in range(2, 4+1):
+        for num_qbits in range(2, 8+1):
             max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
             num_gates = max_gates
             pow2qb = 1 << num_qbits
@@ -731,13 +731,14 @@ class UnitarySimulator(g.Component):
             parameters = np.random.random((num_gates, 3))
             for testfunc in testfuncs:
                 if testfunc in initfuncs: testfuncs[testfunc] = initfuncs[testfunc](num_qbits, max_gates)
-                times[testfunc][num_qbits] = timeit.timeit(lambda: testfuncs[testfunc](u, num_qbits, parameters, target_qbits, control_qbits), number=2)
+                times[testfunc][num_qbits] = timeit.timeit(lambda: testfuncs[testfunc](u, num_qbits, parameters, target_qbits, control_qbits), number=batch_size) / batch_size
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
         ax.set_title("Unitary Simulator Performance")
         ax.set(xlabel="# of qbits", ylabel="Time (seconds)")
         for x in times:
-            ax.plot(times[x].keys(), times[x].values())
+            ax.plot(times[x].keys(), times[x].values(), label=x)
+        ax.legend()
         fig.savefig("us.svg", format='svg')
         print(times)
 def main():
@@ -750,7 +751,7 @@ def main():
     num_qbits, max_levels = 3, 6
     max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
     #UnitarySimulator.unit_test(num_qbits)
-    UnitarySimulator.chain_test(num_qbits, max_gates)
+    #UnitarySimulator.chain_test(num_qbits, max_gates)
     UnitarySimulator.build_all(max_levels)
     UnitarySimulator.perfcompare()
 if __name__ == "__main__":
