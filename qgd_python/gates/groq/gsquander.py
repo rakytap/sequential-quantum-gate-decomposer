@@ -35,9 +35,9 @@ def qiskit_oracle(unitary, qbit_num, parameters, target_qbits, control_qbits):
 def make_u3(parameters):
     return np.array(
         [[np.cos(parameters[0]*2/2), -np.exp(parameters[2]*1j)*np.sin(parameters[0]*2/2)],
-         [np.exp(parameters[1]*1j)*np.sin(parameters[0]*2/2), np.exp((parameters[1]+parameters[2])*1j)*np.cos(parameters[0]*2/2)]])
+         [np.exp(parameters[1]*1j)*np.sin(parameters[0]*2/2), np.exp((parameters[1]+parameters[2])*1j)*np.cos(parameters[0]*2/2)]]).astype(np.complex64)
 def make_ry(parameters):
-    return make_u3([parameters[0], 0, 0])
+    return make_u3([parameters[0], 0, 0]).astype(np.complex64)
     #return np.array(
     #    [[np.cos(parameters[0]*2/2), -np.sin(parameters[0]*2/2)],
     #     [np.sin(parameters[0]*2/2), np.cos(parameters[0]*2/2)]])
@@ -48,7 +48,7 @@ def make_cry(parameters):
 def apply_to_qbit(unitary, num_qbits, target_qbit, control_qbit, gate):
     pow2qb = 1 << num_qbits
     t = np.arange(num_qbits)
-    if not control_qbit is None and control_qbit != target_qbit:
+    if not control_qbit is None:
         t[:-1] = np.roll(t[:-1], (target_qbit - control_qbit) % num_qbits)
         gate = make_controlled(gate)
     t = np.roll(t, -target_qbit)
@@ -62,10 +62,10 @@ def apply_to_qbit_loop(unitary, num_qbits, target_qbit, control_qbit, gate):
         unitary[pair,:] = gate @ unitary[pair,:]
     return unitary
 def process_gates(unitary, num_qbits, parameters, target_qbits, control_qbits):
-    unitary = np.copy(unitary)
+    unitary = unitary.astype(np.complex64) #np.copy(unitary)
     for param, target_qbit, control_qbit in zip(parameters, target_qbits, control_qbits):
-        unitary = apply_to_qbit_loop(unitary, num_qbits, target_qbit, control_qbit, make_u3(param) if control_qbit is None or control_qbit==target_qbit else make_cry(param))
-    return unitary
+        unitary = apply_to_qbit_loop(unitary, num_qbits, target_qbit, None if control_qbit == target_qbit else control_qbit, make_u3(param) if control_qbit is None or control_qbit==target_qbit else make_cry(param))
+    return unitary.astype(np.complex128)
 def test():
     num_qbits, use_identity = 5, False
     pi = np.pi; parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89])
@@ -73,7 +73,6 @@ def test():
     unitary = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
     for i in range(num_qbits):
         for j in range(num_qbits):
-            if i == j: continue
             target_qbits, control_qbits = [i, (i+1)%num_qbits, i], [None, None, j]
             gateparams = [parameters]*3
             actual, oracle = qiskit_oracle(unitary, num_qbits, gateparams, target_qbits, control_qbits), process_gates(unitary, num_qbits, gateparams, target_qbits, control_qbits)
@@ -519,9 +518,10 @@ class UnitarySimulator(g.Component):
         oracleres = [None]
         def oracle():
             oracleres[0] = qiskit_oracle(u, num_qbits, parameters, target_qbits, control_qbits)
-        actual, result = UnitarySimulator.get_unitary_sim(num_qbits, max_gates)
+        actual, result, closefunc = UnitarySimulator.get_unitary_sim(num_qbits, max_gates)
         oracle()
         actual(u, num_qbits, parameters, target_qbits, control_qbits)
+        closefunc()
         oracleres, result = oracleres[0], result[0]
         if np.allclose(oracleres, result):
             print_utils.success("\nQuantum Simulator Chain Test Success ...")
@@ -686,8 +686,12 @@ class UnitarySimulator(g.Component):
         iop = runtime.IOProgram(tensornames["iop"])
         driver = runtime.Driver()
         device = driver.next_available_device()
+        print(device)
         result = [None]
-        with device:
+        import contextlib
+        with contextlib.ExitStack() as exitstack:
+            device_ = exitstack.enter_context(device)
+            def closedevice(): exitstack.close()
             runfunc = [None]
             def loaddata():
                 for i in range(1+2*2+2):
@@ -712,15 +716,15 @@ class UnitarySimulator(g.Component):
                 runfunc[0] = actual
         loaddata()
         actual = runfunc[0]
-        return actual, result
+        return actual, result, closedevice
     def perfcompare():
         import timeit
         max_levels, batch_size = 6, 20
         d = UnitarySimulator.build_all(max_levels)
         use_identity, max_levels = False, 6
-        initfuncs = {"Groq": lambda nqb, ng: UnitarySimulator.get_unitary_sim(nqb, ng, d[(nqb, ng)])[0]}
+        initfuncs = {"Groq": lambda nqb, ng: UnitarySimulator.get_unitary_sim(nqb, ng, d[(nqb, ng)])}
         testfuncs = {"Groq": None, "numpy": process_gates} #, "qiskit": qiskit_oracle}
-        times = {k: {} for k in testfuncs}
+        times, accuracy = {k: {} for k in testfuncs}, {k: {} for k in testfuncs}
         for num_qbits in range(2, 8+1):
             max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
             num_gates = max_gates
@@ -730,17 +734,25 @@ class UnitarySimulator(g.Component):
             control_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
             parameters = np.random.random((num_gates, 3))
             for testfunc in testfuncs:
-                if testfunc in initfuncs: testfuncs[testfunc] = initfuncs[testfunc](num_qbits, max_gates)
-                times[testfunc][num_qbits] = timeit.timeit(lambda: testfuncs[testfunc](u, num_qbits, parameters, target_qbits, control_qbits), number=batch_size) / batch_size
+                if testfunc in initfuncs: func, result, closefunc = initfuncs[testfunc](num_qbits, max_gates)
+                else:
+                    result = [None]
+                    def tf(u, n, p, t, c):
+                        result[0] = testfuncs[testfunc](u, n, p, t, c)
+                    func, closefunc = tf, None
+                times[testfunc][num_qbits] = timeit.timeit(lambda: func(u, num_qbits, parameters, target_qbits, control_qbits), number=batch_size) / batch_size
+                accuracy[testfunc][num_qbits] = np.trace(result[0]) 
+                print(testfunc, num_qbits, times[testfunc][num_qbits], accuracy[testfunc][num_qbits])
+                if not closefunc is None: closefunc()
         import matplotlib.pyplot as plt
         fig, ax = plt.subplots()
-        ax.set_title("Unitary Simulator Performance")
+        ax.set_title("Unitary Simulator Performance (Average over Batch=" + str(batch_size) + ")")
         ax.set(xlabel="# of qbits", ylabel="Time (seconds)")
         for x in times:
             ax.plot(times[x].keys(), times[x].values(), label=x)
         ax.legend()
-        fig.savefig("us.svg", format='svg')
-        print(times)
+        fig.savefig("us_time.svg", format='svg')
+        print(times, accuracy)
 def main():
     #test()
     #[UnitarySimulator.idxmapgather(x) for x in range(10)]; assert False
