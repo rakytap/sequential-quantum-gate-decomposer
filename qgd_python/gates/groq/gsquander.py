@@ -326,9 +326,10 @@ class UnitarySimulator(g.Component):
                 copy, _, _ = self.copymatrix(unitary)
         else: pred = None
         pow2qb = 1 << self.num_qbits
-        innerdim = pow2qb if gatesel is None else ((pow2qb+320-1)//320)*320
-        usplit = np.array(g.split_vectors(unitary, [1] * (2*pow2qb))).reshape(pow2qb, 2)
-        ucopysplit = np.array(g.split_vectors(copy, [1] * (2*pow2qb))).reshape(pow2qb, 2)        
+        num_inner_splits = 1 if gatesel is None else (pow2qb+320-1)//320
+        innerdim = pow2qb if gatesel is None else 320
+        usplit = np.array(g.split_vectors(unitary, [1] * (2*pow2qb*num_inner_splits))).reshape(pow2qb*num_inner_splits, 2)
+        ucopysplit = np.array(g.split_vectors(copy, [1] * (2*pow2qb*num_inner_splits))).reshape(pow2qb*num_inner_splits, 2)
         if tcqbitsel is None:
             pairs, bypasspairs = UnitarySimulator.idxmap(self.num_qbits, target_qbit, control_qbit)
             u = [usplit[pairs[:,0],0], usplit[pairs[:,0],1], ucopysplit[pairs[:,1],0], ucopysplit[pairs[:,1],1]]
@@ -341,71 +342,71 @@ class UnitarySimulator(g.Component):
             #gate[0] * p[1] + gate[1] * p[0] + gate[2] * p[3] + gate[3] * p[2]
             if gatesel is None:
                 gatevals = g.split_vectors(gate, [1]*(2*2*2))
-                gs = [g.concat_vectors([gatevals[i]]*(pow2qb//2//r)+[gatevals[i+4]]*(pow2qb//2//r), (pow2qb//r, pow2qb)).read(streams=g.SG4[2*i]) for i in range(4)] #, time=0 if i == 0 else None                
+                gs = [g.concat_vectors([gatevals[i]]*(pow2qb//2*num_inner_splits//r)+[gatevals[i+4]]*(pow2qb//2*num_inner_splits//r), (pow2qb//r, pow2qb)).read(streams=g.SG4[2*i]) for i in range(4)] #, time=0 if i == 0 else None                
             else:
                 #gate = g.from_addresses(np.array(gate.addrs).reshape(-1, g.float32.size), pow2qb, g.float32, "gatedim")
                 gatevals = np.array(g.split_vectors(gate, [1]*(gate.shape[0]))).reshape(gate.shape[0]//8, 2*2*2)
-                gatesel_st = g.concat_vectors([gatesel[0].reshape(1,innerdim)]*(pow2qb//2//r)+[gatesel[1].reshape(1,innerdim)]*(pow2qb//2//r), (pow2qb//r, innerdim)).read(streams=g.SG4[1])
-                gs = [g.mem_gather(g.concat_vectors(gatevals[:,i].tolist()*(pow2qb//2//r)+gatevals[:,i+4].tolist()*(pow2qb//2//r), (gate.shape[0]//8, pow2qb//r, innerdim)),
-                                    gatesel_st, output_streams=[g.SG4[2*i]]) for i in range(4)]
-                #gs = [g.mem_gather(g.concat_vectors(gatevals[:,i].tolist()*1+gatevals[:,i+4].tolist()*1, (gate.shape[0]//8, 2, innerdim)),
-                #                    gatesel_st, output_streams=[g.SG4[2*i]]) for i in range(4)]
-                #gatesel_st = g.split_vectors(g.concat_vectors([gatesel[0].reshape(1,innerdim)]*(pow2qb//2//r)+[gatesel[1].reshape(1,innerdim)]*(pow2qb//2//r), (pow2qb//r, innerdim)).read(streams=g.SG4[1]), [1]*(pow2qb//r))
-                #gs = [g.concat_vectors([g.mem_gather(g.concat_vectors(gatevals[:,i+k*4].tolist(), (gate.shape[0]//8, innerdim)), gatesel_st[j+k*pow2qb//2//r], output_streams=[g.SG4[2*i]]) for j in range(pow2qb//2//r) for k in range(2)], (pow2qb//r, innerdim)) for i in range(4)]
+                gatesel_st = g.concat_vectors([gatesel[0].reshape(1,innerdim)]*(pow2qb//2*num_inner_splits//r)+[gatesel[1].reshape(1,innerdim)]*(pow2qb//2*num_inner_splits//r), (pow2qb*num_inner_splits//r, innerdim)).read(streams=g.SG4[1])
+                gs = [g.mem_gather(g.concat_vectors(gatevals[:,i], (gate.shape[0]//8, innerdim)), gatesel_st, output_streams=[g.SG4[2*i]]) for i in range(4)]
             with g.ResourceScope(name="ident", is_buffered=False, time=0) as innerpred:
                 if tcqbitsel is None:
-                    us = [g.concat_vectors((ub[i%2].flatten().tolist() + ub[i%2+2].flatten().tolist() if i in [0,3] else []) + u[i].flatten().tolist()*2, (pow2qb if control_qbit is None or i in [0,3] else pow2qb//2, innerdim)).read(streams=g.SG4[2*i+1]) for i in range(4)]
+                    us = [g.concat_vectors((ub[i%2].flatten().tolist() + ub[i%2+2].flatten().tolist() if i in [0,3] else []) + u[i].flatten().tolist()*2, (pow2qb*num_inner_splits if control_qbit is None or i in [0,3] else pow2qb//2*num_inner_splits, innerdim)).read(streams=g.SG4[2*i+1]) for i in range(4)]
                 else:
                     if len(tcqbitsel) == 6:
                         tqbitdistro, tqbitpairs0, tqbitpairs1, cqbitdistro, cqbitpairs0, cqbitpairs1 = tcqbitsel
-                        cdistro = g.stack(pow2qb*[cqbitdistro[1]], 0).read(streams=g.SG1[16+4])
-                        readcontrols = g.distribute_8(g.stack([cqbitpairs0[1], cqbitpairs0[1], cqbitpairs1[1], cqbitpairs1[1]], 0).reshape(pow2qb, innerdim).read(streams=g.SG1[16]), cdistro, bypass8=0b11111110, distributor_req=2+(4 if self.rev else 0))
+                        if self.num_qbits > 8:
+                            for x, t in ((tqbitpairs0, target_qbit//8), (tqbitpairs1, target_qbit//8), (cqbitpairs0, control_qbit//8), (cqbitpairs1, control_qbit//8)):
+                                for i in range(2): x[i] = g.split(x[i], num_splits=2)[t]
+                        cdistro = g.stack(pow2qb*num_inner_splits*[cqbitdistro[1]], 0).read(streams=g.SG1[16+4])
+                        readcontrols = g.distribute_8(g.stack([cqbitpairs0[1]]*2*num_inner_splits + [cqbitpairs1[1]]*2*num_inner_splits, 0).reshape(pow2qb*num_inner_splits, innerdim).read(streams=g.SG1[16]), cdistro, bypass8=0b11111110, distributor_req=2+(4 if self.rev else 0))
                         readcontrols = g.transpose_null(readcontrols, transposer_req=3 if self.rev else 1, stream_order=[0], time=0)
                         tqb = g.mem_gather(tqbitpairs0[1], readcontrols, output_streams=[g.SG1[0]])
                         tqbp = g.mem_gather(tqbitpairs1[1], readcontrols, output_streams=[g.SG1[8]])
                     else:
                         tqbitdistro, tqbitpairs0, tqbitpairs1 = tcqbitsel
-                        tqb = g.concat_vectors([tqbitpairs0[1], tqbitpairs0[1]], (pow2qb, innerdim)).read(streams=g.SG1[0])
-                        tqbp = g.concat_vectors([tqbitpairs1[1], tqbitpairs1[1]], (pow2qb, innerdim)).read(streams=g.SG1[8])
-                    distro = g.stack(pow2qb*[tqbitdistro[1]], 0).read(streams=g.SG1[4])
+                        if self.num_qbits > 8:
+                            for x, t in ((tqbitpairs0, target_qbit//8), (tqbitpairs1, target_qbit//8)):
+                                for i in range(2): x[i] = g.split(x[i], num_splits=2)[t]
+                        tqb = g.concat_vectors([tqbitpairs0[1], tqbitpairs0[1]], (pow2qb*num_inner_splits, innerdim)).read(streams=g.SG1[0])
+                        tqbp = g.concat_vectors([tqbitpairs1[1], tqbitpairs1[1]], (pow2qb*num_inner_splits, innerdim)).read(streams=g.SG1[8])
+                    distro = g.stack(pow2qb*num_inner_splits*[tqbitdistro[1]], 0).read(streams=g.SG1[4])
                     readaddrs = g.distribute_lowest(tqb, distro, bypass8=0b11110000, distributor_req=0+(4 if self.rev else 0)) #.reinterpret(g.uint32)
                     readaddrpairs = g.distribute_lowest(tqbp, distro, bypass8=0b11110000, distributor_req=1+(4 if self.rev else 0)) #.reinterpret(g.uint32)
                     readaddrs, readaddrpairs = g.split(g.transpose_null(g.stack([readaddrs, readaddrpairs], 1), transposer_req=2 if self.rev else 0, stream_order=[0, 1, 2, 3, 8, 9, 10, 11]), dim=1, num_splits=2)
                     if len(tcqbitsel) == 6:
-                        readaddrs = readaddrs.split(dim=0, num_splits=pow2qb)
-                        readaddrpairs = readaddrpairs.split(dim=0, num_splits=pow2qb)
-                        readaddrs, readaddrpairs = g.concat_vectors([(readaddrs if (i & (pow2qb//4)) == 0 else readaddrpairs)[i] for i in range(pow2qb//2)] + readaddrs[pow2qb//2:], (pow2qb, 1, 4, innerdim)), g.concat_vectors([(readaddrs if (i & (pow2qb//4)) == 0 else readaddrpairs)[i] for i in range(pow2qb//2)] + readaddrpairs[pow2qb//2:], (pow2qb, 1, 4, innerdim))
-                    readaddrs, readaddrpairs = [x.reshape(pow2qb, innerdim) for x in g.split(readaddrs, dim=2, num_splits=4)], [x.reshape(pow2qb, innerdim) for x in g.split(readaddrpairs, dim=2, num_splits=4)]                    
+                        readaddrs = readaddrs.split(dim=0, num_splits=pow2qb*num_inner_splits)
+                        readaddrpairs = readaddrpairs.split(dim=0, num_splits=pow2qb*num_inner_splits)
+                        readaddrs, readaddrpairs = g.concat_vectors([(readaddrs if (i & (pow2qb//num_inner_splits//4)) == 0 else readaddrpairs)[i] for i in range(pow2qb//2*num_inner_splits)] + readaddrs[pow2qb//2*num_inner_splits:], (pow2qb*num_inner_splits, 1, 4, innerdim)), g.concat_vectors([(readaddrs if (i & (pow2qb//num_inner_splits//4)) == 0 else readaddrpairs)[i] for i in range(pow2qb//2*num_inner_splits)] + readaddrpairs[pow2qb//2*num_inner_splits:], (pow2qb*num_inner_splits, 1, 4, innerdim))
+                    readaddrs, readaddrpairs = [x.reshape(pow2qb*num_inner_splits, innerdim) for x in g.split(readaddrs, dim=2, num_splits=4)], [x.reshape(pow2qb*num_inner_splits, innerdim) for x in g.split(readaddrpairs, dim=2, num_splits=4)]                    
                     #s8range
-                    us = [g.stack([g.mem_gather(g.split_vectors(g.concat_vectors(x, (pow2qb, innerdim)).reinterpret(g.uint8).transpose(1, 0, 2), [pow2qb]*4)[j],
-                                    *[z if control_qbit is None or i in [0,3] else g.split_vectors(z, [pow2qb//2]*2)[1] for z in (readaddrs[j] if i<2 else readaddrpairs[j],)], output_streams=[g.SG1[4*(2*i+1)+j]]) for j in range(4)], 1).reinterpret(g.float32)
+                    us = [g.stack([g.mem_gather(g.split_vectors(g.concat_vectors(x, (pow2qb*num_inner_splits, innerdim)).reinterpret(g.uint8).transpose(1, 0, 2), [pow2qb*num_inner_splits]*4)[j],
+                                    *[z if control_qbit is None or i in [0,3] else g.split_vectors(z, [pow2qb//2*num_inner_splits]*2)[1] for z in (readaddrs[j] if i<2 else readaddrpairs[j],)], output_streams=[g.SG1[4*(2*i+1)+j]]) for j in range(4)], 1).reinterpret(g.float32)
                             for i, x in enumerate((usplit[:,0], usplit[:,1], ucopysplit[:,0], ucopysplit[:,1]))]
                 usb = [[]]*2
                 if not control_qbit is None:
                     for i in [0,3]:
-                        usb[i%2], us[i] = g.split_vectors(us[i], [pow2qb//2, pow2qb//2])
+                        usb[i%2], us[i] = g.split_vectors(us[i], [pow2qb//2*num_inner_splits, pow2qb//2*num_inner_splits])
                     #usb = [g.vxm_identity(usb[i], alus=[[rev_alu(13, self.rev),rev_alu(14, self.rev)][i]], time=0, output_streams=g.SG4[[1,7][i]]) for i in range(2)]
                     usb = [g.vxm_identity(usb[i], alus=[[rev_alu(15, self.rev),rev_alu(11, self.rev)][i]], time=0 if tcqbitsel is None or control_qbit is None else None, output_streams=g.SG4[[1,5][i]]) for i in range(2)]
-            m1 = [g.mul(gs[i], us[i], alus=[[rev_alu(0, self.rev),rev_alu(4, self.rev),rev_alu(8, self.rev),rev_alu(12, self.rev)][i]], output_streams=g.SG4[[0,2,4,6][i]], time=(0 if control_qbit is None else pow2qb) if i==0 and (tcqbitsel is None or control_qbit is None) else None) for i in range(4)]
+            m1 = [g.mul(gs[i], us[i], alus=[[rev_alu(0, self.rev),rev_alu(4, self.rev),rev_alu(8, self.rev),rev_alu(12, self.rev)][i]], output_streams=g.SG4[[0,2,4,6][i]], time=(0 if control_qbit is None else pow2qb*num_inner_splits) if i==0 and (tcqbitsel is None or control_qbit is None) else None) for i in range(4)]
             m2 = [g.mul(gs[i], us[i^1], alus=[[rev_alu(2, self.rev),rev_alu(3, self.rev),rev_alu(10, self.rev),rev_alu(11, self.rev)][i]], output_streams=g.SG4[[3,3,5,5][i]]) for i in range(4)]
             a1 = [g.sub(m1[2*i], m1[2*i+1], alus=[[rev_alu(1, self.rev),rev_alu(9, self.rev)][i]], output_streams=g.SG4[[0,6][i]]) for i in range(2)]
             a2 = [g.add(m2[i], m2[2+i], alus=[[rev_alu(5, self.rev),rev_alu(6, self.rev)][i]], output_streams=g.SG4[[4,3][i]]) for i in range(2)]
             ri = [g.add(a1[0], a1[1], alus=[rev_alu(15, self.rev)], output_streams=g.SG4[1]),
                   g.add(a2[0], a2[1], alus=[rev_alu(7, self.rev)], output_streams=g.SG4[5])]
             if tcqbitsel is None:
-                ri = g.concat_vectors(np.hstack([np.array(g.split_vectors(ri[i] if control_qbit is None else g.concat_vectors([usb[i], ri[i]], (pow2qb, innerdim)), [1]*(pow2qb)))[revidx].reshape(pow2qb, 1) for i in range(2)]).flatten().tolist(), (pow2qb*2, innerdim))
+                ri = g.concat_vectors(np.hstack([np.array(g.split_vectors(ri[i] if control_qbit is None else g.concat_vectors([usb[i], ri[i]], (pow2qb*num_inner_splits, innerdim)), [1]*(pow2qb*num_inner_splits)))[revidx].reshape(pow2qb*num_inner_splits, 1) for i in range(2)]).flatten().tolist(), (pow2qb*num_inner_splits*2, innerdim))
                 result = ri.write(name="result", storage_req=self.otherinit)
                 copy = ri.write(name="copy", storage_req=self.copystore[EAST])
             else:
                 if len(tcqbitsel) == 6:
-                    ri = [g.concat_vectors([usb[i], ri[i]], (pow2qb, innerdim)) for i in range(2)]
-                    tqbitdistro, tqbitpairs0, tqbitpairs1, cqbitdistro, cqbitpairs0, cqbitpairs1 = tcqbitsel
-                    cdistro = g.stack(pow2qb*[cqbitdistro[0]], 0).read(streams=g.SG1[16+12])
-                    writecontrols = g.distribute_8(g.stack([cqbitpairs0[0], cqbitpairs0[0], cqbitpairs1[0], cqbitpairs1[0]], 0).read(streams=g.SG1[16+8]), cdistro, bypass8=0b11111110, distributor_req=3 if self.rev else 7)
+                    ri = [g.concat_vectors([usb[i], ri[i]], (pow2qb*num_inner_splits, innerdim)) for i in range(2)]
+                    cdistro = g.stack(pow2qb*num_inner_splits*[cqbitdistro[0]], 0).read(streams=g.SG1[16+12])
+                    writecontrols = g.distribute_8(g.stack([cqbitpairs0[0]]*2*num_inner_splits + [cqbitpairs1[0]]*2*num_inner_splits, 0).read(streams=g.SG1[16+8]), cdistro, bypass8=0b11111110, distributor_req=3 if self.rev else 7)
                     rigap, delay = 3*2, 4+4+1+4+2 #3 cycle ALU time and transposer time=4, IO crossing time=4, gather time=1, IO crossing time=4, distributor crossing time=2
-                    scheduleri = [(delay, delay+pow2qb//2), (delay+pow2qb//2+rigap, delay+rigap+pow2qb)]
-                    schedulewrite = [(0, pow2qb//2), (pow2qb//2+rigap, rigap+pow2qb)]
-                    risplits, writesplits, gaps = [], [], {pow2qb//2: rigap, delay+pow2qb//2: rigap} if pow2qb//2 <= delay else {}
+                    scheduleri = [(delay, delay+pow2qb//2*num_inner_splits), (delay+pow2qb//2*num_inner_splits+rigap, delay+rigap+pow2qb*num_inner_splits)]
+                    schedulewrite = [(0, pow2qb//2*num_inner_splits), (pow2qb//2*num_inner_splits+rigap, rigap+pow2qb*num_inner_splits)]
+                    risplits, writesplits, gaps = [], [], {pow2qb//2*num_inner_splits: rigap, delay+pow2qb//2*num_inner_splits: rigap} if pow2qb//2*num_inner_splits <= delay else {}
                     while len(scheduleri) != 0 or len(schedulewrite) != 0:
                         if len(scheduleri) == 0 or len(schedulewrite) != 0 and schedulewrite[0][0] < scheduleri[0][0] and schedulewrite[0][1] <= scheduleri[0][0]:
                             writesplits.append(schedulewrite[0][1]-schedulewrite[0][0]); risplits.append(None)
@@ -447,27 +448,27 @@ class UnitarySimulator(g.Component):
                                 x += 1; y += 1
                         t += splits[0] if not splits[0] is None else splits[1]
                         if t in gaps: t += gaps[t]
-                    writecontrols = g.concat_vectors(writecontrols, (pow2qb, innerdim))
-                    ri[1] = g.concat_vectors(ri[1], (pow2qb, innerdim))
+                    writecontrols = g.concat_vectors(writecontrols, (pow2qb*num_inner_splits, innerdim))
+                    ri[1] = g.concat_vectors(ri[1], (pow2qb*num_inner_splits, innerdim))
                     #ri[1], writecontrols = g.split(g.transpose_null(g.stack([ri[1].reinterpret(g.uint8), writecontrols], 1), transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7, 8]), dim=1, num_splits=2)
-                    #ri[1] = ri[1].reinterpret(g.float32).reshape(pow2qb, innerdim)
-                    #writecontrols = writecontrols.split(dim=-2, num_splits=4)[0].reshape(pow2qb, innerdim)
-                    dist_st = g.distribute_lowest(g.concat_vectors([g.mem_gather((tqbitpairs0 if (i & (pow2qb//4)) == 0 else tqbitpairs1)[0], x, output_streams=[g.SG1[8]]) for i, x in enumerate(writecontrols.split_vectors([1]*pow2qb))], (pow2qb, innerdim)), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=1 if self.rev else 5)
-                    #dist_st = g.distribute_lowest(g.mem_gather(g.stack([tqbitpairs0[0], tqbitpairs1[0]], dim=0).reshape(2, pow2qb//4, 2, innerdim).transpose(0,2,1,3), writecontrols, output_streams=[g.SG1[8]]), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=1 if self.rev else 5)
+                    #ri[1] = ri[1].reinterpret(g.float32).reshape(pow2qb*num_inner_splits, innerdim)
+                    #writecontrols = writecontrols.split(dim=-2, num_splits=4)[0].reshape(pow2qb*num_inner_splits, innerdim)
+                    dist_st = g.distribute_lowest(g.concat_vectors([g.mem_gather((tqbitpairs0 if (i & (pow2qb//num_inner_splits//4)) == 0 else tqbitpairs1)[0], x, output_streams=[g.SG1[8]]) for i, x in enumerate(writecontrols.split_vectors([1]*pow2qb*num_inner_splits))], (pow2qb*num_inner_splits, innerdim)), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=1 if self.rev else 5)
+                    #dist_st = g.distribute_lowest(g.mem_gather(g.stack([tqbitpairs0[0], tqbitpairs1[0]], dim=0).reshape(2, pow2qb//4*num_inner_splits, 2, innerdim).transpose(0,2,1,3), writecontrols, output_streams=[g.SG1[8]]), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=1 if self.rev else 5)
                 else:
                     tqbitdistro, tqbitpairs0, tqbitpairs1 = tcqbitsel
-                    dist_st = g.distribute_lowest(g.concat_vectors([tqbitpairs0[0], tqbitpairs1[0]], (pow2qb, innerdim)), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=1 if self.rev else 5)
+                    dist_st = g.distribute_lowest(g.concat_vectors([tqbitpairs0[0], tqbitpairs1[0]], (pow2qb*num_inner_splits, innerdim)), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=1 if self.rev else 5)
                     ri[1] = g.transpose_null(ri[1], transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7])
                 ri[0], writeaddrs = g.split(g.transpose_null(g.stack([ri[0].reinterpret(g.uint8), dist_st], 1), transposer_req=0 if self.rev else 2, stream_order=[4, 5, 6, 7, 8, 9, 10, 11]), dim=1, num_splits=2)
-                ri[0] = ri[0].reinterpret(g.float32).reshape(pow2qb, innerdim)
+                ri[0] = ri[0].reinterpret(g.float32).reshape(pow2qb*num_inner_splits, innerdim)
                 result = g.from_addresses(np.array(self.otherinit.addresses).reshape(-1, g.float32.size), innerdim, g.float32, "result")
                 copy = g.from_addresses(np.array(self.copystore[EAST].addresses).reshape(-1, g.float32.size), innerdim, g.float32, "copy")
-                writeaddrs = [x.reshape(pow2qb, innerdim) for x in g.split(writeaddrs, dim=2, num_splits=4)]
-                ri = [[x.reshape(pow2qb, innerdim) for x in g.split(ri[i].reinterpret(g.uint8), dim=1, num_splits=4)] for i in range(2)]
+                writeaddrs = [x.reshape(pow2qb*num_inner_splits, innerdim) for x in g.split(writeaddrs, dim=2, num_splits=4)]
+                ri = [[x.reshape(pow2qb*num_inner_splits, innerdim) for x in g.split(ri[i].reinterpret(g.uint8), dim=1, num_splits=4)] for i in range(2)]
                 for i in range(2):
                     for j in range(4):
-                        g.mem_scatter(ri[i][j], g.split(g.split(copy.reshape(pow2qb, 2, innerdim), dim=1, num_splits=2)[i].reinterpret(g.uint8).reshape(pow2qb, 4, innerdim), dim=1, num_splits=4)[j], index_tensor=writeaddrs[j])
-                        g.mem_scatter(ri[i][j], g.split(g.split(result.reshape(pow2qb, 2, innerdim), dim=1, num_splits=2)[i].reinterpret(g.uint8).reshape(pow2qb, 4, innerdim), dim=1, num_splits=4)[j], index_tensor=writeaddrs[j])
+                        g.mem_scatter(ri[i][j], g.split(g.split(copy.reshape(pow2qb*num_inner_splits, 2, innerdim), dim=1, num_splits=2)[i].reinterpret(g.uint8).reshape(pow2qb*num_inner_splits, 4, innerdim), dim=1, num_splits=4)[j], index_tensor=writeaddrs[j])
+                        g.mem_scatter(ri[i][j], g.split(g.split(result.reshape(pow2qb*num_inner_splits, 2, innerdim), dim=1, num_splits=2)[i].reinterpret(g.uint8).reshape(pow2qb*num_inner_splits, 4, innerdim), dim=1, num_splits=4)[j], index_tensor=writeaddrs[j])
         return result, copy
     def unit_test(num_qbits):
         pow2qb = 1 << num_qbits
@@ -509,7 +510,7 @@ class UnitarySimulator(g.Component):
         
     def chain_test(num_qbits, max_gates):
         pow2qb = 1 << num_qbits
-        num_gates, use_identity = max_gates, False #max_gates, True
+        num_gates, use_identity = 1, False #max_gates, True
 
         u = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
         target_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
@@ -527,11 +528,12 @@ class UnitarySimulator(g.Component):
             print_utils.success("\nQuantum Simulator Chain Test Success ...")
         else:
             print_utils.err("\nQuantum Simulator Chain Test Failure")
+            print(result[0,:10], oracleres[0,:10])
             print_utils.infoc(str(oracleres[~np.isclose(oracleres, result)]) + " " + str(result[~np.isclose(oracleres, result)]))
         #print(oracleres, result)
     def build_chain(num_qbits, max_gates):
         pow2qb = 1 << num_qbits
-        pgm_pkg = g.ProgramPackage(name="us" + str(num_qbits) + "-" + str(max_gates), output_dir="us", gen_vis_data=True)
+        pgm_pkg = g.ProgramPackage(name="us" + str(num_qbits) + "-" + str(max_gates), output_dir="us", inspect_raw=False, gen_vis_data=False, check_stream_conflicts=False, check_tensor_timing_conflicts=False)
         print("Number of qbits:", num_qbits, "Maximum gates:", max_gates)
         with pgm_pkg.create_program_context("init_us") as pcinit:
             us = UnitarySimulator(num_qbits)
@@ -541,8 +543,8 @@ class UnitarySimulator(g.Component):
             with g.ResourceScope(name="makecopy", is_buffered=True, time=0) as pred:
                 copy, otherunitary, othercopy = us.copymatrix(unitary)
             #gatescomb = g.input_tensor(shape=(max_gates+1)//2*2, 2*2*2, pow2qb), dtype=g.float32, name="gate", layout="-1, H2, S16(" + str(min(slices)) + "-" + str(max(slices)) + ")")
-            gates = g.input_tensor(shape=((max_gates+1)//2, 2*2*2, pow2qb), dtype=g.float32, name="gate", layout=get_slice16(EAST, list(range(16)), 0)) #, broadcast=True)
-            othergates = g.input_tensor(shape=((max_gates+1)//2, 2*2*2, pow2qb), dtype=g.float32, name="othergate", layout=get_slice16(WEST, list(range(16)), 0)) #, broadcast=True)
+            gates = g.input_tensor(shape=((max_gates+1)//2, 2*2*2, min(320, pow2qb)), dtype=g.float32, name="gate", layout=get_slice16(EAST, list(range(16)), 0)) #, broadcast=True)
+            othergates = g.input_tensor(shape=((max_gates+1)//2, 2*2*2, min(320, pow2qb)), dtype=g.float32, name="othergate", layout=get_slice16(WEST, list(range(16)), 0)) #, broadcast=True)
             gatemap = [[g.address_map(g.split_vectors(gates if hemi==EAST else othergates, [4]*((max_gates+1)//2*2))[0], np.array([0]*20), index_map_layout=get_slice4(hemi, 17, 21, 1)),
                         g.address_map(g.split_vectors(gates if hemi==EAST else othergates, [4]*((max_gates+1)//2*2))[1], np.array([0]*20), index_map_layout=get_slice4(hemi, 17, 21, 1))] for hemi in (EAST, WEST)]
             gateinc = [g.from_data(np.array(([1*2]+[0]*15)*20, dtype=np.uint8), layout=get_slice1(hemi, 0, 1)) for hemi in (EAST, WEST)] #gather map is little endian byte order
@@ -555,13 +557,21 @@ class UnitarySimulator(g.Component):
             targetqbits = g.input_tensor(shape=(max_gates, 320), dtype=g.uint8, name="target_qbits", layout=get_slice1(WEST, 37, 0))
             controlqbits = g.input_tensor(shape=(max_gates, 320), dtype=g.uint8, name="control_qbits", layout=get_slice1(WEST, 36, 0))
             idxmapsort, idxmapm1 = UnitarySimulator.idxmapgather(num_qbits)
-            #need to handle inner splits for >=9 qbits!!!
-            idxmapsort = np.stack(((np.stack(idxmapsort) & 255).astype(np.uint8), (np.stack(idxmapsort) >> 8).astype(np.uint8))).transpose(3, 2, 1, 0).reshape(2, -1, num_qbits*2)
+            num_inner_splits = (pow2qb+320-1)//320
+            #handle inner splits for >=9 qbits
+            idxmapsort = (np.repeat(np.stack(idxmapsort), num_inner_splits, axis=1).reshape(num_qbits, -1, num_inner_splits, 2) * num_inner_splits + np.arange(num_inner_splits).reshape(1, 1, num_inner_splits, 1)).reshape(num_qbits, -1, 2)
+            idxmapm1 = (np.repeat(np.stack(idxmapm1), num_inner_splits, axis=1).reshape(num_qbits-1, -1, num_inner_splits, 2) * num_inner_splits + np.arange(num_inner_splits).reshape(1, 1, num_inner_splits, 1)).reshape(num_qbits-1, -1, 2)
+            
+            idxmapsort = np.stack(((idxmapsort & 255).astype(np.uint8), (idxmapsort >> 8).astype(np.uint8))).transpose(3, 2, 1, 0).reshape(2, -1, num_qbits*2)
             if num_qbits % 8 != 0: idxmapsort = np.concatenate((idxmapsort, np.zeros((2, idxmapsort.shape[-2], 2*(8-num_qbits % 8)), dtype=np.uint8)), axis=2)
             idxmapsort = np.repeat(idxmapsort, 20, axis=1).reshape(2, -1, 320)
             idxmapm1 = np.stack(((np.stack(idxmapm1) & 255).astype(np.uint8), (np.stack(idxmapm1) >> 8).astype(np.uint8))).transpose(3, 2, 1, 0).reshape(2, -1, (num_qbits-1)*2)
             if (num_qbits-1) % 8 != 0: idxmapm1 = np.concatenate((idxmapm1, np.zeros((2, idxmapm1.shape[-2], 2*(8-(num_qbits-1) % 8)), dtype=np.uint8)), axis=2)
             idxmapm1 = np.repeat(idxmapm1, 20, axis=1).reshape(2, -1, 320)
+            
+            idxmapsort = idxmapsort.reshape(2, -1, num_inner_splits, 320).transpose(0, 2, 1, 3).reshape(2, -1, 320)
+            idxmapm1 = idxmapm1.reshape(2, -1, num_inner_splits, 320).transpose(0, 2, 1, 3).reshape(2, -1, 320)
+            
             targetqbitpairs0 = [g.from_data(idxmapsort[0,:], layout=get_slice1(hemi, 43, 0)) for hemi in (EAST, WEST)]
             targetqbitpairs1 = [g.from_data(idxmapsort[1,:], layout=get_slice1(hemi, 42, 0)) for hemi in (EAST, WEST)]
             controlqbitpairs0 = [g.from_data(idxmapm1[0,:], layout=get_slice1(hemi, 41, 0)) for hemi in (EAST, WEST)]
@@ -585,9 +595,8 @@ class UnitarySimulator(g.Component):
                 tsrs += [g.concat([resetgatemaps[hemi][i].read(streams=g.SG1[0], time=i*4)]*4, 0).write(storage_req=gatemap[hemi][i].storage_request) for hemi in (EAST, WEST) for i in range(2)]
                 g.add_mem_constraints(tsrs, tsrs, g.MemConstraintType.NOT_MUTUALLY_EXCLUSIVE)
             g.add_mem_constraints(gateinc + gateinc256 + gateinccount + [resetzeros, resetqbitmap], [gates, othergates, resetzeros, resetqbitmap], g.MemConstraintType.NOT_MUTUALLY_EXCLUSIVE)
-        innerdim = ((pow2qb + 320-1) // 320) * 320
         for reversedir in (False, True):
-            for target_qbit, control_qbit in ((0, None), (0, 1)):
+            for target_qbit, control_qbit in ((0, None), (0, 1)) + (((8, None),) if num_qbits >= 9 else ()) + (((0, 8), (8, 0), (8, 9)) if num_qbits >= 10 else ()):
                 suffix = ("rev" if reversedir else "") + str(target_qbit) + "_" + str(control_qbit)
                 with pgm_pkg.create_program_context("us_gate"+suffix) as pc:
                     #if not reversedir and target_qbit == 0 and control_qbit is None: print(gatemap[0].data, gatemap[1].data)
@@ -616,11 +625,11 @@ class UnitarySimulator(g.Component):
                     qinc256 = tensor.shared_memory_tensor(mem_tensor=qbitinc256, name="qinc256" + suffix)
                     qinccount = tensor.shared_memory_tensor(mem_tensor=qbitinccount, name="qinccount" + suffix)
                     
-                    unitaryctxt = g.from_addresses(np.array((otherunitary if reversedir else unitary).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), innerdim, g.float32, "unitary" + suffix)
-                    copyctxt = g.from_addresses(np.array((othercopy if reversedir else copy).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), innerdim, g.float32, "copy" + suffix)
-                    gatesctxt = g.from_addresses(np.array((othergates if reversedir else gates).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), innerdim, g.float32, "gates" + suffix)
-                    tqbits = g.from_addresses(np.array(targetqbits.storage_request.addresses.reshape(-1, g.uint8.size), dtype=object), innerdim, g.uint8, "targetqbits" + suffix)
-                    cqbits = g.from_addresses(np.array(controlqbits.storage_request.addresses.reshape(-1, g.uint8.size), dtype=object), innerdim, g.uint8, "controlqbits" + suffix)
+                    unitaryctxt = g.from_addresses(np.array((otherunitary if reversedir else unitary).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), 320, g.float32, "unitary" + suffix)
+                    copyctxt = g.from_addresses(np.array((othercopy if reversedir else copy).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), 320, g.float32, "copy" + suffix)
+                    gatesctxt = g.from_addresses(np.array((othergates if reversedir else gates).storage_request.addresses.reshape(-1, g.float32.size), dtype=object), 320, g.float32, "gates" + suffix)
+                    tqbits = g.from_addresses(np.array(targetqbits.storage_request.addresses.reshape(-1, g.uint8.size), dtype=object), 320, g.uint8, "targetqbits" + suffix)
+                    cqbits = g.from_addresses(np.array(controlqbits.storage_request.addresses.reshape(-1, g.uint8.size), dtype=object), 320, g.uint8, "controlqbits" + suffix)
                     with g.ResourceScope(name="setgatherdistros", is_buffered=True, time=0, predecessors=None) as pred:
                         for i in range(2):
                             g.mem_gather(tqbits, qmap, time=i).write(name="targetqbitdistro" + suffix, storage_req=tqbitdistro[i].storage_request)
@@ -639,28 +648,28 @@ class UnitarySimulator(g.Component):
                     with g.ResourceScope(name="incqbit", is_buffered=True, time=None, predecessors=[pred]) as pred:
                         updinc = qinc256.add(qinccount, time=0, alus=[0], overflow_mode=g.OverflowMode.MODULAR)
                         qmap.add(qinc, alus=[4], overflow_mode=g.OverflowMode.MODULAR).add(g.mask_bar(updinc, gincmask)).write(storage_req=qmap.storage_request, name="nextqmap" + suffix)
-                        updinc.vxm_identity().write(storage_req=qinc256.storage_request, name="nextqinc256" + suffix)                            
+                        updinc.vxm_identity().write(storage_req=qinc256.storage_request, name="nextqinc256" + suffix)
         #must validate all addresses are contiguous, and gather/scatter addresses are all on 0-address alignment by checking storage requests, should likely malloc to avoid
-        assert {(x.hemi, x.slice, x.offset) for x in unitary.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in s8range for i in range(pow2qb)}
-        assert {(x.hemi, x.slice, x.offset) for x in otherunitary.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.EAST, x, i) for x in s8range for i in range(pow2qb)}
-        assert {(x.hemi, x.slice, x.offset) for x in copy.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in s8range2 for i in range(pow2qb)}
-        assert {(x.hemi, x.slice, x.offset) for x in othercopy.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.EAST, x, i) for x in s8range2 for i in range(pow2qb)}
+        assert {(x.hemi, x.slice, x.offset) for x in unitary.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in s8range for i in range(pow2qb*num_inner_splits)}
+        assert {(x.hemi, x.slice, x.offset) for x in otherunitary.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.EAST, x, i) for x in s8range for i in range(pow2qb*num_inner_splits)}
+        assert {(x.hemi, x.slice, x.offset) for x in copy.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in s8range2 for i in range(pow2qb*num_inner_splits)}
+        assert {(x.hemi, x.slice, x.offset) for x in othercopy.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.EAST, x, i) for x in s8range2 for i in range(pow2qb*num_inner_splits)}
         
         assert {(x.hemi, x.slice, x.offset) for x in targetqbits.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in (37,) for i in range(max_gates)}
         assert {(x.hemi, x.slice, x.offset) for x in controlqbits.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in (36,) for i in range(max_gates)}
         assert {(x.hemi, x.slice, x.offset) for x in gates.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.EAST, x, i) for x in range(16) for i in range((max_gates+1)//2*2)}
         assert {(x.hemi, x.slice, x.offset) for x in othergates.storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST, x, i) for x in range(16) for i in range((max_gates+1)//2*2)}
         for i, hemi in enumerate((EAST, WEST)):
-            assert {(x.hemi, x.slice, x.offset) for x in targetqbitpairs0[i].storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST if hemi==WEST else g.Hemisphere.EAST, x, i) for x in (43,) for i in range(pow2qb//2)}
-            assert {(x.hemi, x.slice, x.offset) for x in targetqbitpairs1[i].storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST if hemi==WEST else g.Hemisphere.EAST, x, i) for x in (42,) for i in range(pow2qb//2)}
+            assert {(x.hemi, x.slice, x.offset) for x in targetqbitpairs0[i].storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST if hemi==WEST else g.Hemisphere.EAST, x, i) for x in (43,) for i in range(pow2qb//2*num_inner_splits*(2 if num_qbits > 8 else 1))}
+            assert {(x.hemi, x.slice, x.offset) for x in targetqbitpairs1[i].storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST if hemi==WEST else g.Hemisphere.EAST, x, i) for x in (42,) for i in range(pow2qb//2*num_inner_splits*(2 if num_qbits > 8 else 1))}
 
         with pgm_pkg.create_program_context("final_us") as pcfinal:
             g.reserve_tensor(pcinit, pcfinal, unitary)
-            unitaryres = g.from_addresses(np.array(unitary.storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "unitaryfin")
+            unitaryres = g.from_addresses(np.array(unitary.storage_request.addresses.reshape(-1, g.float32.size), dtype=object), min(256, pow2qb), g.float32, "unitaryfin")
             unitaryres.set_program_output()
         with pgm_pkg.create_program_context("finalrev_us") as pcfinal:
             g.reserve_tensor(pcinit, pcfinal, otherunitary)
-            unitaryrevres = g.from_addresses(np.array(otherunitary.storage_request.addresses.reshape(-1, g.float32.size), dtype=object), pow2qb, g.float32, "unitaryrevfin")
+            unitaryrevres = g.from_addresses(np.array(otherunitary.storage_request.addresses.reshape(-1, g.float32.size), dtype=object), min(256, pow2qb), g.float32, "unitaryrevfin")
             unitaryrevres.set_program_output()
         print_utils.infoc("\nAssembling model ...")
         iops = pgm_pkg.assemble()
@@ -686,7 +695,6 @@ class UnitarySimulator(g.Component):
         iop = runtime.IOProgram(tensornames["iop"])
         driver = runtime.Driver()
         device = driver.next_available_device()
-        print(device)
         result = [None]
         import contextlib
         with contextlib.ExitStack() as exitstack:
@@ -694,24 +702,24 @@ class UnitarySimulator(g.Component):
             def closedevice(): exitstack.close()
             runfunc = [None]
             def loaddata():
-                for i in range(1+2*2+2):
-                    device.load(iop[i], unsafe_keep_entry_points=True)
+                #for i in range(1+2*2+2):
+                #    device.load(iop[i], unsafe_keep_entry_points=True)
+                device.load_all(iop, unsafe_keep_entry_points=True)
                 def actual(u, num_qbits, parameters, target_qbits, control_qbits):
                     num_gates = len(parameters)
                     gateparams = [make_u3(parameters[i,:]) if target_qbits[i] == control_qbits[i] else make_cry(parameters[i,:]) for i in range(num_gates)]
                     inputs = {}
                     inputs[tensornames["unitary"]] = np.ascontiguousarray(u.astype(np.complex64)).view(np.float32).reshape(pow2qb, pow2qb, 2).transpose(0, 2, 1).reshape(pow2qb*2, pow2qb)
-                    inputs[tensornames["gates"]] = np.concatenate([np.repeat(gateparams[i].astype(np.complex64).view(np.float32).flatten(), pow2qb) for i in range(0, num_gates, 2)] + [np.zeros((2*2*2*pow2qb), dtype=np.float32)]*((max_gates+1)//2-(num_gates-num_gates//2)))
-                    inputs[tensornames["othergates"]] = np.concatenate([np.repeat(gateparams[i].astype(np.complex64).view(np.float32).flatten(), pow2qb) for i in range(1, num_gates, 2)] + [np.zeros((2*2*2*pow2qb), dtype=np.float32)]*((max_gates+1)//2-num_gates//2))
+                    inputs[tensornames["gates"]] = np.concatenate([np.repeat(gateparams[i].astype(np.complex64).view(np.float32).flatten(), min(320, pow2qb)) for i in range(0, num_gates, 2)] + [np.zeros((2*2*2*min(320, pow2qb)), dtype=np.float32)]*((max_gates+1)//2-(num_gates-num_gates//2)))
+                    inputs[tensornames["othergates"]] = np.concatenate([np.repeat(gateparams[i].astype(np.complex64).view(np.float32).flatten(), min(320, pow2qb)) for i in range(1, num_gates, 2)] + [np.zeros((2*2*2*min(320, pow2qb)), dtype=np.float32)]*((max_gates+1)//2-num_gates//2))
                     inputs[tensornames["targetqbits"]] = np.concatenate((np.repeat(np.hstack((np.array(target_qbits, dtype=np.uint8)[:,np.newaxis]%8*2, np.array(target_qbits, dtype=np.uint8)[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
                     adjcontrolqbits = [x-(x>target_qbits[i]) for i, x in enumerate(control_qbits)]
                     inputs[tensornames["controlqbits"]] = np.concatenate((np.repeat(np.hstack((np.array(adjcontrolqbits, dtype=np.uint8)[:,np.newaxis]%8*2, np.array(adjcontrolqbits, dtype=np.uint8)[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
-                    inputs[tensornames["controlqbits"]][0]
                     invoke([device], iop, 0, 0, [inputs])
                     for i in range(num_gates):
-                        progidx = 1+(2 if (i&1)!=0 else 0) + (0 if target_qbits[i] == control_qbits[i] else 1)
+                        progidx = 1+(2+(1 if num_qbits >= 9 else 0)+(3 if num_qbits >= 10 else 0) if (i&1)!=0 else 0) + (target_qbits[i]//8*2 if target_qbits[i] == control_qbits[i] else 1)
                         invoke([device], iop, progidx, 0, None, None, None)
-                    res, _ = invoke([device], iop, 1+2*2+(num_gates&1), 0, None, None, None)
+                    res, _ = invoke([device], iop, 1+(2+(1 if num_qbits >= 9 else 0)+(3 if num_qbits >= 10 else 0))*2+(num_gates&1), 0, None, None, None)
                     result[0] = np.ascontiguousarray(res[0][tensornames["unitaryres" if (num_gates&1)==0 else "unitaryrevres"]].reshape(pow2qb, 2, pow2qb).transpose(0, 2, 1)).view(np.complex64).reshape(pow2qb, pow2qb).astype(np.complex128)
                 runfunc[0] = actual
         loaddata()
@@ -760,11 +768,11 @@ def main():
     #[1, 2, 4, 8, 16, 32, 64, 128, 256, 1024, 4096, 14336]
     #10 qbits max for single bank, 11 qbits requires dual chips [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 7, 26, 104]
     #import math; [math.ceil(((1<<x)*int(math.ceil((1<<x)/320)))/8192) for x in range(15)]
-    num_qbits, max_levels = 3, 6
+    num_qbits, max_levels = 9, 6
     max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
-    #UnitarySimulator.unit_test(num_qbits)
-    #UnitarySimulator.chain_test(num_qbits, max_gates)
-    UnitarySimulator.build_all(max_levels)
-    UnitarySimulator.perfcompare()
+    UnitarySimulator.unit_test(num_qbits)
+    UnitarySimulator.chain_test(num_qbits, max_gates)
+    #UnitarySimulator.build_all(max_levels)
+    #UnitarySimulator.perfcompare()
 if __name__ == "__main__":
     main()
