@@ -479,6 +479,15 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def apply_Imported_Gate_Structure( self ):  
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Imported_Gate_Structure()
+        
+        
+class qgd_N_qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive): #Decomposition nem kell a nevbe 
+	def __init__( self, State, level_limit_max=8, level_limit_min=0, method='LIMITED', topology=None ):
+		if ( (type(State) == np.ndarray) and (len(State.shape)==1) ):
+			super().__init__( State, level_limit_max, level_limit_min, method, topology )
+		else:
+			raise Exception("Initial state not properly formatted. Input state must be a column vector")
+	def get_Quantum_Circuit( self ):
 
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
