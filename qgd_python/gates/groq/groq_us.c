@@ -187,43 +187,47 @@ int initialize_groq()
         return 1;
       }
 
-      printf("device %d %p, %s, %d, %d\n",
-              i, device[devidx], bus_addr, curr_proc_id, numa_node);
+      //printf("device %d %p, %s, %d, %d\n",
+      //        i, device[devidx], bus_addr, curr_proc_id, numa_node);
       /***** END DEVICE OBJECT TESTING *****/
-
+      devidx++;
+    }
+    if (devidx != NUM_DEVICE) {
+        printf("ERROR: number of requested devices not acquired\n");
+        return 1;
     }
     status = groq_iop_init(binary_groq_program, prog_size, &prog);
     if (status) {
         printf("ERROR: IOP init %d\n", status);
         return 1;
     }
-    printf("prog %p\n", prog);
+    //printf("prog %p\n", prog);
     unsigned int num_programs = 0;
     status = groq_iop_get_number_of_programs(prog, &num_programs);
     if (status) {
       printf("ERROR: iop get number of programs error %d\n", status);
       return 1;
     }
-    for (unsigned int i = 0; i < NUM_DEVICE; ++i) {
-      printf("number of programs: %u\n", num_programs);
-      inputBuffers[i] = (IOBufferArray*)malloc(sizeof(IOBufferArray)*num_programs);
-      outputBuffers[i] = (IOBufferArray*)malloc(sizeof(IOBufferArray)*num_programs);
+    for (unsigned int d = 0; d < NUM_DEVICE; ++d) {
+      //printf("number of programs: %u\n", num_programs);
+      inputBuffers[d] = (IOBufferArray*)malloc(sizeof(IOBufferArray)*num_programs);
+      outputBuffers[d] = (IOBufferArray*)malloc(sizeof(IOBufferArray)*num_programs);
 
       for (unsigned int j = 0; j < num_programs; j++) {
-        status = groq_load_program(device[i], prog, j, true);
+        status = groq_load_program(device[d], prog, j, true);
         if (status) {
             printf("ERROR: load program %d\n", status);
             return 1;
         }    
                   
-        printf("loaded program: %u\n", j);
+        //printf("loaded program: %u\n", j);
         char* name = NULL;
         status = groq_program_name(prog, j, &name);
         if (status) {
           printf("ERROR: program name error %d\n", status);
           return 1;
         }
-        printf("program %u name: %s\n", j, name);
+        //printf("program %u name: %s\n", j, name);
         Program p;
         status = groq_get_nth_program(prog, j, &p);
         if (status) {
@@ -248,7 +252,8 @@ int initialize_groq()
         if (status) {
             printf("ERROR: program get number of entrypoints %d\n", status);
             return 1;
-        }            
+        }
+        
         //for (size_t i = 0; i < n; i++) {
         for (size_t i = 0; i < 1; i++) {//only need the first entrypoint, there are 4 all with identical inputs/outputs
             EntryPoint ep;
@@ -263,7 +268,7 @@ int initialize_groq()
                 printf("ERROR: entrypoint get ptindex %d\n", status);
                 return 1;
             }                        
-            printf("entrypoint %lu ptindex %u\n", i, ptindex);
+            //printf("entrypoint %lu ptindex %u\n", i, ptindex);
             IODescriptor iod;
             size_t inpSize, outpSize;
             for (size_t inpoutp = 0; inpoutp < 2; inpoutp++) {
@@ -345,13 +350,13 @@ int initialize_groq()
                     }
                 }*/
             }
-            printf("input size %lu output size %lu\n", inpSize, outpSize);
-            status = groq_allocate_iobuffer_array(driver, inpSize, 1, ptindex, &inputBuffers[i][j]);
+            //printf("input size %lu output size %lu\n", inpSize, outpSize);
+            status = groq_allocate_iobuffer_array(driver, inpSize, 1, ptindex, &inputBuffers[d][j]);
             if (status) {
                 printf("ERROR: allocate iobuffer array %d\n", status);
                 return 1;
             }                                            
-            status = groq_allocate_iobuffer_array(driver, outpSize, 1, ptindex, &outputBuffers[i][j]);
+            status = groq_allocate_iobuffer_array(driver, outpSize, 1, ptindex, &outputBuffers[d][j]);
             if (status) {
                 printf("ERROR: allocate iobuffer array %d\n", status);
                 return 1;
@@ -395,7 +400,6 @@ int load2groq(Complex8* data, size_t rows, size_t cols)
         //int num_inner_splits = (rows+320-1)/320;
         for (size_t i = 0; i < rows; i++) { 
             for (size_t j = 0; j < cols; j++) {
-                //inputs[tensornames["unitary"]] = np.ascontiguousarray(u.astype(np.complex64)).view(np.float32).reshape(pow2qb, pow2qb, 2).transpose(0, 2, 1).reshape(pow2qb*2, pow2qb)
                 char* re = floatToBytes(&data[i*cols+j].real), *im = floatToBytes(&data[i*cols+j].imag);
                 size_t innerdim = j % maxinnerdim;
                 size_t innersplit = j / maxinnerdim;
@@ -444,7 +448,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
     Completion completion[NUM_DEVICE];
     unsigned long completionCode;
     for (size_t d = 0; d < NUM_DEVICE; d++) {
-        status = groq_invoke(device[d], inputBuffers[0], 0, outputBuffers[0], 0, &completion[d]);
+        status = groq_invoke(device[d], inputBuffers[d][0], 0, outputBuffers[d][0], 0, &completion[d]);
         if (status) {
             printf("ERROR: invoke %d\n", status);
             return 1;
@@ -505,7 +509,6 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
         double curtrace = 0.0;
         for (size_t i = 0; i < rows; i++) {
             for (size_t j = 0; j < cols; j++) {
-                //result[0] = np.ascontiguousarray(res[0][tensornames["unitaryres" if (num_gates&1)==0 else "unitaryrevres"]].reshape(num_inner_splits, pow2qb, 2, min(256, pow2qb)).transpose(1, 0, 3, 2)).view(np.complex64).reshape(pow2qb, pow2qb).astype(np.complex128)
                 size_t innerdim = j % maxinnerdim;
                 size_t innersplit = j / maxinnerdim;
                 char rb[sizeof(float)], ib[sizeof(float)];
@@ -541,9 +544,9 @@ int main(int argc, char* argv[])
     Complex8* data = (Complex8*)malloc(sizeof(Complex8)*rows*cols);
     load2groq(data, rows, cols);
     int gatesNum = MAX_GATES, gateSetNum = 4;
-    gate_kernel_type* gates = (gate_kernel_type*)calloc(sizeof(gate_kernel_type), gatesNum);
-    double trace = 0.0;
-    calcqgdKernelGroq(rows, cols, gates, gatesNum, gateSetNum, &trace);
+    gate_kernel_type* gates = (gate_kernel_type*)calloc(gatesNum * gateSetNum, sizeof(gate_kernel_type));
+    double* trace = (double*)calloc(gateSetNum, sizeof(double));
+    calcqgdKernelGroq(rows, cols, gates, gatesNum, gateSetNum, trace);
     free(data);
     free(gates);
     releive_groq();
