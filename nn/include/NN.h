@@ -72,8 +72,14 @@ public:
 protected:
 
 
-std::random_device rd;  //Will be used to obtain a seed for the random number engine
-    std::mt19937 gen; //Standard mersenne_twister_engine seeded with rd()
+    /// Will be used to obtain a seed for the random number engine
+    std::random_device rd;  
+    /// Standard mersenne_twister_engine seeded with rd()
+    std::mt19937 gen; 
+    /// connectivity between the wubits
+    std::vector<matrix_base<int>> topology;
+    /// Store the number of OpenMP threads. (During the calculations OpenMP multithreading is turned off.)
+    int num_threads;
 
 
 
@@ -85,6 +91,15 @@ public:
 @return An instance of the class
 */
 NN();
+
+
+/** Constructor of the class
+@param The list of conenctions between the qubits
+@return An instance of the class
+*/
+NN( std::vector<matrix_base<int>> topology_in );
+
+
 
 /** 
 @brief Call to construct random parameter, with limited number of non-trivial adaptive layers

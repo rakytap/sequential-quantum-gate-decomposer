@@ -49,6 +49,32 @@ NN::NN() {
 }
 
 
+
+/** Constructor of the class
+@param The list of conenctions between the qubits
+@return An instance of the class
+*/
+NN::NN( std::vector<matrix_base<int>> topology_in ) {
+
+    // seedign the random generator
+    gen = std::mt19937(rd());
+
+
+    // setting the topology
+    topology = topology_in;
+
+    
+#if CBLAS==1
+    num_threads = mkl_get_max_threads();
+#elif CBLAS==2
+    num_threads = openblas_get_num_threads();
+#endif
+
+
+
+}
+
+
 /** 
 @brief Call to construct random parameter, with limited number of non-trivial adaptive layers
 @param num_of_parameters The number of parameters
@@ -280,25 +306,87 @@ void NN::get_nn_chanels( const Matrix& Umtx, const int& target_qbit, Matrix_real
 */
 void NN::get_nn_chanels( int qbit_num, const Matrix& Umtx, Matrix_real& chanels) {
 
+
+    if ( Umtx.rows != Umtx.cols ) {
+        std::string err("The unitary must be a square matrix.");
+        throw err;
+    }
+
+    if ( Umtx.rows <= 0 ) {
+        std::string err("The unitary must be larger than 0x0.");
+        throw err;
+    }
+
+    
+
     int dim = Umtx.rows;
     int dim_over_2 = dim/2;
 
-    if ( chanels.size() != qbit_num*dim_over_2*dim_over_2*4 ) {
-        chanels = Matrix_real( qbit_num*dim_over_2, dim_over_2*4 );
+    if ( chanels.size() != dim_over_2*dim_over_2*4*qbit_num ) {
+        chanels = Matrix_real( dim_over_2, dim_over_2*4*qbit_num );
     }
+    
+    Matrix_real chanels_reshaped( chanels.get_data(), dim_over_2, dim_over_2*4*qbit_num );
 
-    int chanels_idx_size = dim_over_2*dim_over_2*4;
-
-    for( int target_qbit=0; target_qbit<qbit_num; target_qbit++ ) {
-
-        Matrix_real chanels_idx( chanels.get_data() + target_qbit*chanels_idx_size, dim_over_2, dim_over_2*4 );
-        get_nn_chanels( Umtx, target_qbit, chanels_idx);
-
-    }
- 
     
 
+    
+    //std::cout << "target_qbit: " << target_qbit << " index pair distance: " << index_pair_distance << std::endl;
+    
+
+
+
+    // calculate the individual chanels
+    for (int idx = 0; idx<dim_over_2; idx++ ) {
+    
+        for (int jdx = 0; jdx<dim_over_2; jdx++ ) {
+
+            for (int target_qbit=0; target_qbit<qbit_num; target_qbit++) {
+
+                int index_pair_distance = 1 << target_qbit;
+
+                // row index pairs
+                int row_idx = idx >> target_qbit; // higher bits of idx
+                row_idx = row_idx << (target_qbit+1); 
+        
+                int tmp_idx = (idx & ( (1 << (target_qbit)) - 1 ) ); // lower target_bit bits from idx
+
+        
+                row_idx = row_idx + tmp_idx; // the index corresponding to state 0 of the target qbit
+        
+                int row_idx_pair = row_idx ^ index_pair_distance;
+            //std::cout << idx << " " << row_idx << " " << row_idx_pair << " " << tmp << std::endl;
+        
+                int stride_kernel = index_pair_distance * Umtx.stride;
+
+
+
+                // column index pairs
+                int col_idx = jdx >> target_qbit; // higher bits of idx
+                col_idx = col_idx << (target_qbit+1); 
+        
+                int tmp_jdx = (jdx & ( (1 << (target_qbit)) - 1 ) ); // lower target_bit bits from idx
+
+        
+                col_idx = col_idx + tmp_jdx; // the index corresponding to state 0 of the target qbit
+        
+                int col_idx_pair = col_idx ^ index_pair_distance;
+
+
+                Matrix kernel_up   = Matrix(Umtx.get_data() + row_idx*Umtx.stride + col_idx, 2, 1, stride_kernel );
+                Matrix kernel_down = Matrix(Umtx.get_data() + row_idx*Umtx.stride + col_idx_pair, 2, 1, stride_kernel );            
+            
+                Matrix_real chanels_kernel( chanels_reshaped.get_data() + idx*chanels_reshaped.stride + 4*qbit_num*jdx + 4*target_qbit, 1, 4, chanels_reshaped.stride);
+                get_nn_chanels_from_kernel( kernel_up, kernel_down, chanels_kernel);
+
+            }
+
+        }
+    }
+
+
     return;
+
 
 }
 
@@ -321,8 +409,9 @@ NN::get_nn_chanels(int qbit_num, int levels, Matrix_real& chanels, matrix_base<i
     //matrix size of the unitary
     int matrix_size = 1 << qbit_num;
 
+
     // creating a class to decompose the unitary
-    N_Qubit_Decomposition_adaptive cDecompose( Matrix(0,0), qbit_num, 0, 0 );
+    N_Qubit_Decomposition_adaptive cDecompose( Matrix(0,0), qbit_num, 0, 0, topology );
         
     //adding decomposing layers to the gat structure
     for( int idx=0; idx<levels; idx++) {
@@ -372,7 +461,19 @@ void
 NN::get_nn_chanels(int qbit_num, int levels, int samples_num, Matrix_real& chanels, matrix_base<int8_t>& nontrivial_adaptive_layers) {
 
 
-Matrix_real parameters;
+    // temporarily turn off OpenMP parallelism
+#if BLAS==0 // undefined BLAS
+    num_threads = omp_get_max_threads();
+    omp_set_num_threads(1);
+#elif BLAS==1 // MKL
+    num_threads = mkl_get_max_threads();
+    MKL_Set_Num_Threads(1);
+#elif BLAS==2 //OpenBLAS
+    num_threads = openblas_get_num_threads();
+    openblas_set_num_threads(1);
+#endif
+
+//Matrix_real parameters;
 
     if ( samples_num == 1 ) {
         get_nn_chanels(qbit_num, levels, chanels, nontrivial_adaptive_layers);
@@ -391,7 +492,6 @@ Matrix_real parameters;
 
     get_nn_chanels(qbit_num, levels, chanels_1, nontrivial_adaptive_layers_1);
 
-
     // allocate memory for the outputs
     chanels    = Matrix_real(1, samples_num*chanels_1.size());
     //parameters = Matrix_real(samples_num, parameters_1.size());
@@ -405,22 +505,27 @@ Matrix_real parameters;
     memcpy( nontrivial_adaptive_layers.get_data(), nontrivial_adaptive_layers_1.get_data(), nontrivial_adaptive_layers_1.size()*sizeof(int8_t) );
 
     // do the remaining cycles
+
     tbb::parallel_for( tbb::blocked_range<int>(1,samples_num), [&](tbb::blocked_range<int> r) {
 
         for (int idx=r.begin(); idx<r.end(); idx++) {
 
-    //for (int idx=1; idx<samples_num; idx++) {
+//    for (int idx=1; idx<samples_num; idx++) {
+
             Matrix_real chanels_idx( chanels.get_data()+idx*chanels_1.size(), 1, chanels_1.size() );
 
             //Matrix_real parameters_idx;// parameters.get_data()+idx*parameters_1.size(), 1, parameters_1.size() );
             matrix_base<int8_t> nontrivial_adaptive_layers_idx( nontrivial_adaptive_layers.get_data()+idx*nontrivial_adaptive_layers_1.size(), 1, nontrivial_adaptive_layers_1.size() );
 
             get_nn_chanels(qbit_num, levels, chanels_idx, nontrivial_adaptive_layers_idx);
-    //}
+//    }
+
 
         }
 
     });
+
+
 
 
 
@@ -433,6 +538,14 @@ Matrix_real parameters;
 
 //std::cout << chanels_1.size() << " " << parameters_1.size() << std::endl;
 
+
+#if BLAS==0 // undefined BLAS
+    omp_set_num_threads(num_threads);
+#elif BLAS==1 //MKL
+    MKL_Set_Num_Threads(num_threads);
+#elif BLAS==2 //OpenBLAS
+    openblas_set_num_threads(num_threads);
+#endif
 
 
 }
