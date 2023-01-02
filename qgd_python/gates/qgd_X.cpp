@@ -115,6 +115,10 @@ qgd_X_init(qgd_X *self, PyObject *args, PyObject *kwds)
     int  qbit_num = -1; 
     int target_qbit = -1;
 
+    if (PyArray_API == NULL) {
+        import_array();
+    }
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
                                      &qbit_num, &target_qbit))
         return -1;
@@ -122,6 +126,10 @@ qgd_X_init(qgd_X *self, PyObject *args, PyObject *kwds)
     if (qbit_num != -1 && target_qbit != -1) {
         self->gate = create_X( qbit_num, target_qbit );
     }
+
+
+
+
     return 0;
 }
 
@@ -130,28 +138,9 @@ qgd_X_init(qgd_X *self, PyObject *args, PyObject *kwds)
 @param start_index The index of the first inverse gate
 */
 static PyObject *
-qgd_X_get_Matrix( qgd_X *self, PyObject *args ) {
+qgd_X_get_Matrix( qgd_X *self ) {
 
-    PyObject * parameters_arr = NULL;
-
-
-    // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
-        return Py_BuildValue("i", -1);
-
-    
-    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
-        Py_INCREF(parameters_arr);
-    }
-    else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-    }
-
-
-    // get the C++ wrapper around the data
-    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
-
-
+   
     Matrix X_mtx = self->gate->get_matrix(  );
     
     // convert to numpy array
@@ -159,9 +148,50 @@ qgd_X_get_Matrix( qgd_X *self, PyObject *args ) {
     PyObject *X_py = matrix_to_numpy( X_mtx );
 
 
-    Py_DECREF(parameters_arr);
-
     return X_py;
+}
+
+
+
+/**
+@brief Call to apply the gate operation on the inut matrix
+*/
+static PyObject *
+qgd_X_apply_to( qgd_X *self, PyObject *args ) {
+
+    PyObject * unitary_arg = NULL;
+
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &unitary_arg )) 
+        return Py_BuildValue("i", -1);
+
+
+    // convert python object array to numpy C API array
+    if ( unitary_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+
+    if ( PyArray_Check(unitary_arg) && PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
+        Py_INCREF(unitary_arg);
+    }
+    else {
+        unitary_arg = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    }
+
+
+
+    // create QGD version of the input matrix
+    Matrix unitary_mtx = numpy2matrix(unitary_arg);
+
+    self->gate->apply_to( unitary_mtx );
+    
+    Py_DECREF(unitary_arg);
+
+    return Py_BuildValue("i", 0);
 }
 
 
@@ -177,8 +207,11 @@ static PyMemberDef qgd_X_members[] = {
 @brief Structure containing metadata about the methods of class qgd_X.
 */
 static PyMethodDef qgd_X_methods[] = {
-    {"get_Matrix", (PyCFunction) qgd_X_get_Matrix, METH_VARARGS,
+    {"get_Matrix", (PyCFunction) qgd_X_get_Matrix, METH_NOARGS,
      "Method to get the matrix of the operation."
+    },
+    {"apply_to", (PyCFunction) qgd_X_apply_to, METH_VARARGS,
+     "Call to apply the gate on the input matrix."
     },
     {NULL}  /* Sentinel */
 };

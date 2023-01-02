@@ -356,6 +356,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/gates/ON.cpp
     ${PROJECT_SOURCE_DIR}/gates/Gates_block.cpp
     ${PROJECT_SOURCE_DIR}/gates/X.cpp
+    ${PROJECT_SOURCE_DIR}/gates/Y.cpp
+    ${PROJECT_SOURCE_DIR}/gates/Z.cpp
     ${PROJECT_SOURCE_DIR}/gates/SX.cpp
     ${PROJECT_SOURCE_DIR}/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/gates/RY.cpp

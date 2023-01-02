@@ -811,6 +811,14 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
             X* x_gate = static_cast<X*>( gate );
             x_gate->apply_to( ret_matrix );            
         }
+        else if (gate->get_type() == Y_OPERATION ) {
+            Y* y_gate = static_cast<Y*>( gate );
+            y_gate->apply_to( ret_matrix );            
+        }
+        else if (gate->get_type() == Z_OPERATION ) {
+            Z* z_gate = static_cast<Z*>( gate );
+            z_gate->apply_to( ret_matrix );            
+        }
         else if (gate->get_type() == SX_OPERATION ) {
             SX* sx_gate = static_cast<SX*>( gate );
             sx_gate->apply_to( ret_matrix );            
@@ -835,6 +843,11 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
             Adaptive* ad_gate = static_cast<Adaptive*>( gate );
             ad_gate->apply_to( parameters_mtx, ret_matrix);            
         }
+        else {
+            std::string err("Decomposition_Base::get_transformed_matrix: unimplemented gate");
+            throw err;
+        }
+
 
     }
 
@@ -931,6 +944,14 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
             X* x_gate = static_cast<X*>(gate);
             x_gate->apply_from_right(mtx);
         }
+        else if (gate->get_type() == Y_OPERATION ) {
+            Y* y_gate = static_cast<Y*>(gate);
+            y_gate->apply_from_right(mtx);
+        }
+        else if (gate->get_type() == Z_OPERATION ) {
+            Z* z_gate = static_cast<Z*>(gate);
+            z_gate->apply_from_right(mtx);
+        }
         else if (gate->get_type() == SX_OPERATION ) {
             SX* sx_gate = static_cast<SX*>(gate);
             sx_gate->apply_from_right(mtx);
@@ -954,6 +975,10 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         else if (gate->get_type() == ADAPTIVE_OPERATION ) {
             Adaptive* ad_gate = static_cast<Adaptive*>(gate);
             ad_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else {
+            std::string err("Decomposition_Base::get_gate_products: unimplemented gate");
+            throw err;
         }
 
         parameters_loc = parameters_loc + gate->get_parameter_num();
@@ -1183,6 +1208,12 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         else if (gate->get_type() == X_OPERATION) {
             ops_ret.push_back( gate );
         }
+        else if (gate->get_type() == Y_OPERATION) {
+            ops_ret.push_back( gate );
+        }
+        else if (gate->get_type() == Z_OPERATION) {
+            ops_ret.push_back( gate );
+        }
         else if (gate->get_type() == SX_OPERATION) {
             ops_ret.push_back( gate );
         }
@@ -1392,6 +1423,10 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             parameter_idx = parameter_idx + block_gate->get_parameter_num();
 
             ops_ret.insert( ops_ret.end(), ops_loc.begin(), ops_loc.end() );
+        }
+        else {
+            std::string err("Decomposition_Base::prepare_gates_to_export: unimplemented gate");
+            throw err;
         }
 
     }

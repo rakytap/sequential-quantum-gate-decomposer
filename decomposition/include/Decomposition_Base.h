@@ -32,6 +32,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "U3.h"
 #include "RX.h"
 #include "X.h"
+#include "Y.h"
+#include "Z.h"
 #include "SX.h"
 #include "RY.h"
 #include "CRY.h"

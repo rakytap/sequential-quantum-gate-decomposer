@@ -173,6 +173,7 @@ install(TARGETS qgd_CH LIBRARY
 
 add_library( qgd_Gates_Block MODULE
     ${EXT_DIR}/qgd_Gates_Block.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
@@ -440,6 +441,99 @@ set_target_properties( qgd_X PROPERTIES
 
 
 install(TARGETS qgd_X LIBRARY 
+         DESTINATION qgd_python/gates)
+
+
+
+
+
+###################################################################
+
+
+
+add_library( qgd_Y MODULE
+    ${EXT_DIR}/qgd_Y.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_Y qgd)
+
+target_link_libraries (qgd_Y qgd ${BLAS_LIBRARIES})
+
+
+python_extension_module(qgd_Y)
+
+# adding compile options
+target_compile_options(qgd_Y PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
+)
+
+
+target_include_directories(qgd_Y PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/gates/include
+                            ${PROJECT_SOURCE_DIR}/common/include
+                            ${EXTRA_INCLUDES})
+
+
+set_target_properties( qgd_Y PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_Y LIBRARY 
+         DESTINATION qgd_python/gates)
+
+
+
+
+###################################################################
+
+
+
+add_library( qgd_Z MODULE
+    ${EXT_DIR}/qgd_Z.cpp
+    ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_Z qgd)
+
+target_link_libraries (qgd_Z qgd ${BLAS_LIBRARIES})
+
+
+python_extension_module(qgd_Z)
+
+# adding compile options
+target_compile_options(qgd_Z PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
+)
+
+
+target_include_directories(qgd_Z PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/gates/include
+                            ${PROJECT_SOURCE_DIR}/common/include
+                            ${EXTRA_INCLUDES})
+
+
+set_target_properties( qgd_Z PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_Z LIBRARY 
          DESTINATION qgd_python/gates)
 
 

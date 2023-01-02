@@ -27,6 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <Python.h>
 #include "structmember.h"
 #include "Gates_block.h"
+#include "numpy_interface.h"
 
 
 
@@ -532,6 +533,47 @@ qgd_Gates_Block_add_Gates_Block(qgd_Gates_Block *self, PyObject *args)
 
 }
 
+
+/**
+@brief Extract the optimized parameters
+@param start_index The index of the first inverse gate
+*/
+static PyObject *
+qgd_Gates_Block_get_Matrix( qgd_Gates_Block *self, PyObject *args ) {
+
+    PyObject * parameters_arr = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
+    Matrix mtx = self->gate->get_matrix( parameters_mtx );
+    
+    // convert to numpy array
+    mtx.set_owner(false);
+    PyObject *mtx_py = matrix_to_numpy( mtx );
+
+
+    Py_DECREF(parameters_arr);
+
+    return mtx_py;
+}
+
+
 static PyMethodDef qgd_Gates_Block_Methods[] = {
     {"add_U3", (PyCFunction) qgd_Gates_Block_add_U3, METH_VARARGS | METH_KEYWORDS,
      "Call to add a U3 gate to the front of the gate structure"
@@ -568,6 +610,9 @@ static PyMethodDef qgd_Gates_Block_Methods[] = {
     },
     {"add_Gates_Block", (PyCFunction) qgd_Gates_Block_add_Gates_Block, METH_VARARGS,
      "Call to add a block of operations to the front of the gate structure."
+    },
+    {"get_Matrix", (PyCFunction) qgd_Gates_Block_get_Matrix, METH_VARARGS,
+     "Method to get the matrix of the operation."
     },
     {NULL}  /* Sentinel */
 };

@@ -115,6 +115,10 @@ qgd_RZ_init(qgd_RZ *self, PyObject *args, PyObject *kwds)
     int  qbit_num = -1; 
     int target_qbit = -1;
 
+    if (PyArray_API == NULL) {
+        import_array();
+    }
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
                                      &qbit_num, &target_qbit))
         return -1;

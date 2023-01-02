@@ -252,6 +252,31 @@ void add_x(int target_qbit);
 
 
 /**
+@brief Append a Y gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_y_to_end(int target_qbit);
+
+/**
+@brief Add a Y gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_y(int target_qbit);
+
+
+/**
+@brief Append a Z gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_z_to_end(int target_qbit);
+
+/**
+@brief Add a Z gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_z(int target_qbit);
+
+/**
 @brief Append a SX gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */

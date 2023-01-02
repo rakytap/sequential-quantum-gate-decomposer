@@ -63,6 +63,10 @@ struct gates_num {
   int ch;
   /// The number of X gates
   int x;
+  /// The number of Y gates
+  int y;
+  /// The number of Z gates
+  int z;
   /// The number of SX gates
   int sx;
   /// The number of Sycamore gates
