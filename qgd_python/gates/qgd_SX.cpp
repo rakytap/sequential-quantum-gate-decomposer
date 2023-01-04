@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <Python.h>
 #include "structmember.h"
 #include "SX.h"
-
+#include "numpy_interface.h"
 
 
 
@@ -125,12 +125,29 @@ qgd_SX_init(qgd_SX *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
+/**
+@brief Extract the optimized parameters
+@param start_index The index of the first inverse gate
+*/
+
+static PyObject *
+qgd_SX_get_Matrix( qgd_SX *self ) {
+
+    Matrix SX_mtx = self->gate->get_matrix(  );
+    
+    // convert to numpy array
+    SX_mtx.set_owner(false);
+    PyObject *SX_py = matrix_to_numpy( SX_mtx );
+
+    return SX_py;
+}
+
 
 /**
 @brief Structure containing metadata about the members of class qgd_SX.
 */
 static PyMemberDef qgd_SX_members[] = {
-    {NULL}  /* Sentinel */
+   {NULL}  /* Sentinel */
 };
 
 
@@ -138,7 +155,10 @@ static PyMemberDef qgd_SX_members[] = {
 @brief Structure containing metadata about the methods of class qgd_SX.
 */
 static PyMethodDef qgd_SX_methods[] = {
-    {NULL}  /* Sentinel */
+    {"get_Matrix", (PyCFunction) qgd_SX_get_Matrix, METH_NOARGS,
+     "Method to get the matrix of the operation."
+    },   
+  {NULL}  /* Sentinel */
 };
 
 

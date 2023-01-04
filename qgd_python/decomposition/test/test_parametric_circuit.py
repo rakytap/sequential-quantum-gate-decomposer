@@ -12,8 +12,8 @@ import numpy as np
 
 
 from qiskit import execute
-from qiskit import Aer
 
+from qgd_python.utils import get_unitary_from_qiskit_circuit
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition_custom import qgd_N_Qubit_Decomposition_custom
 
 
@@ -23,11 +23,6 @@ try:
     MPI_imported = True
 except ModuleNotFoundError:
     MPI_imported = False
-
-
-## Qiskit backend for simulator
-backend = Aer.get_backend('aer_simulator')
-
 
 
 ##
@@ -99,25 +94,6 @@ def pauli_exponent( alpha=0.6217*np.pi ):
 	return qc_orig
 
 
-##
-# @brief Retrieve a unitary matrix from a QISKIT quantum circuit
-# @param qc A QISKIT circuit
-# @return Numpy array containing the unitary
-def get_unitary_from_circuit( qc ):
-
-	qc.save_unitary()
-
-	## job execution and getting the result as an object
-	job = execute(qc, backend)
-	## the result of the Qiskit job
-	result = job.result()
-    
-	## the unitary matrix from the result object
-	Umtx = result.get_unitary(qc)
-	Umtx = np.asarray(Umtx)
-
-	return Umtx
-
 
 ##
 # @brief Calcuates the distance between two unitaries according to Eq.(3) of Ref. ....
@@ -150,7 +126,7 @@ def get_optimized_circuit( alpha, optimizer='BFGS' ):
 	qc_orig = transpile(qc_orig, optimization_level=3, basis_gates=['cx', 'u3'], layout_method='sabre')
 	#print('global phase: ', qc_orig.global_phase)
 
-	Umtx_orig = get_unitary_from_circuit( qc_orig )
+	Umtx_orig = get_unitary_from_qiskit_circuit( qc_orig )
         
 	iteration_max = 10
 	
@@ -182,7 +158,7 @@ def get_optimized_circuit( alpha, optimizer='BFGS' ):
 		qc_final = cDecompose.get_Quantum_Circuit()
 
 		# get the unitary of the final circuit
-		Umtx_recheck = get_unitary_from_circuit( qc_final )
+		Umtx_recheck = get_unitary_from_qiskit_circuit( qc_final )
 
 		# get the decomposition error
 		decomposition_error =  get_unitary_distance(Umtx_orig, Umtx_recheck)

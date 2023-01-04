@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <Python.h>
 #include "structmember.h"
 #include "SYC.h"
-
+#include "numpy_interface.h"
 
 
 
@@ -124,6 +124,24 @@ static int
     return 0;
 }
 
+/**
+@brief Extract the optimized parameters
+@param start_index The index of the first inverse gate
+*/
+
+static PyObject *
+qgd_SYC_get_Matrix( qgd_SYC *self ) {
+
+    Matrix SYC_mtx = self->gate->get_matrix(  );
+    
+    // convert to numpy array
+    SYC_mtx.set_owner(false);
+    PyObject *SYC_py = matrix_to_numpy( SYC_mtx );
+
+    return SYC_py;
+}
+
+
 
 /**
 @brief Structure containing metadata about the members of class  qgd_SYC.
@@ -138,6 +156,9 @@ static PyMemberDef  qgd_SYC_members[] = {
 @brief Structure containing metadata about the methods of class  qgd_SYC.
 */
 static PyMethodDef  qgd_SYC_methods[] = {
+    {"get_Matrix", (PyCFunction) qgd_SYC_get_Matrix, METH_NOARGS,
+     "Method to get the matrix of the operation."
+    },
     {NULL}  /* Sentinel */
 };
 

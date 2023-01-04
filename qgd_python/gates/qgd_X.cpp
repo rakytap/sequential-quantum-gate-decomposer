@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <Python.h>
 #include "structmember.h"
 #include "X.h"
-
+#include "numpy_interface.h"
 
 
 
@@ -125,6 +125,24 @@ qgd_X_init(qgd_X *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
+/**
+@brief Extract the optimized parameters
+@param start_index The index of the first inverse gate
+*/
+
+static PyObject *
+qgd_X_get_Matrix( qgd_X *self ) {
+
+    Matrix X_mtx = self->gate->get_matrix(  );
+    
+    // convert to numpy array
+    X_mtx.set_owner(false);
+    PyObject *X_py = matrix_to_numpy( X_mtx );
+
+    return X_py;
+}
+
+
 
 /**
 @brief Structure containing metadata about the members of class qgd_X.
@@ -138,6 +156,9 @@ static PyMemberDef qgd_X_members[] = {
 @brief Structure containing metadata about the methods of class qgd_X.
 */
 static PyMethodDef qgd_X_methods[] = {
+    {"get_Matrix", (PyCFunction) qgd_X_get_Matrix, METH_NOARGS,
+     "Method to get the matrix of the operation."
+    },
     {NULL}  /* Sentinel */
 };
 

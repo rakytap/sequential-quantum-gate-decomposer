@@ -7,6 +7,7 @@ from qiskit import execute
 from qiskit import Aer
 
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition_custom import qgd_N_Qubit_Decomposition_custom
+from qgd_python.utils import get_unitary_from_qiskit_circuit
 
 from scipy.interpolate import interp1d
 
@@ -33,24 +34,6 @@ def load_preconstructed_data( filename1, filename2 ):
 	alpha_vec = np.loadtxt(filename2)
 
 
-
-
-##
-# @brief Retrieve a unitary matrix from a QISKIT quantum circuit
-# @param qc A QISKIT circuit
-# @return Numpy array containing the unitary
-def get_unitary_from_circuit( qc ):
-
-	## job execution and getting the result as an object
-	job = execute(qc, backend)
-	## the result of the Qiskit job
-	result = job.result()
-    
-	## the unitary matrix from the result object
-	Umtx = result.get_unitary(qc)
-	Umtx = np.asarray(Umtx)
-
-	return Umtx
 
 
 ##
@@ -84,7 +67,7 @@ def get_optimized_circuit( alpha, optimized_parameters_in=None ):
 	qc_orig = transpile(qc_orig, optimization_level=3, basis_gates=['cx', 'u3'], layout_method='sabre')
 	#print('global phase: ', qc_orig.global_phase)
 
-	Umtx_orig = get_unitary_from_circuit( qc_orig )
+	Umtx_orig = get_unitary_from_qiskit_circuit( qc_orig )
 
 	iteration_max = 10
 	for jdx in range(iteration_max):
@@ -115,7 +98,7 @@ def get_optimized_circuit( alpha, optimized_parameters_in=None ):
 		qc_final = cDecompose.get_Quantum_Circuit()
 
 		# get the unitary of the final circuit
-		Umtx_recheck = get_unitary_from_circuit( qc_final )
+		Umtx_recheck = get_unitary_from_qiskit_circuit( qc_final )
 
 		# get the decomposition error
 		decomposition_error =  get_unitary_distance(Umtx_orig, Umtx_recheck)
