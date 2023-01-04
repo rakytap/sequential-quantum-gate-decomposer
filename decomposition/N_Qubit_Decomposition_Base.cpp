@@ -28,6 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include <fstream>
 
+
 #ifdef __DFE__
 #include "common_DFE.h"
 #endif
@@ -58,6 +59,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 
     // parameter to contron the radius of parameter randomization around the curren tminimum
     radius = 1.0;
+    randomization_rate = 0.3;
 
 }
 
@@ -95,6 +97,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 
     // parameter to contron the radius of parameter randomization around the curren tminimum
     radius = 1.0;
+    randomization_rate = 0.3;
 
 
 }
@@ -273,7 +276,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
         if (solution_guess_gsl == NULL) {
             solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
         }
-
+//memset( solution_guess_gsl->data, 0.0, solution_guess_gsl->size*sizeof(double) );
 
         if (optimized_parameters_mtx.size() == 0) {
             optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
@@ -307,7 +310,11 @@ pure_DFE_time = 0.0;
         double f0 = DBL_MAX;
         std::stringstream sstream;
         sstream << "iter_max: " << iter_max << std::endl;
-        print(sstream, 2);   
+        print(sstream, 2); 
+
+        int ADAM_status = 0;
+
+        int randomization_successful = 0;
 
         for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
 
@@ -315,12 +322,12 @@ pure_DFE_time = 0.0;
 
 
             optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_gsl );
-    
+  
             if (sub_iter_idx == 1 ) {
-                current_minimum_hold = f0;  
+                current_minimum_hold = f0;                  
                 if ( adaptive_eta )  { 
                     optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3; 
-                }  
+                }                 
             }
 
 
@@ -334,10 +341,14 @@ pure_DFE_time = 0.0;
                 current_minimum = f0;
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp->data, num_of_parameters*sizeof(double) );
                 //double new_eta = 1e-3 * f0 * f0;
+                
                 if ( adaptive_eta )  {
                     double new_eta = 1e-3 * f0;
                     optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;
+                    optimizer.eta = new_eta < 1e-1 ? new_eta : 1e-1;
                 }
+                
+                randomization_successful = 1;
             }
     
 
@@ -358,52 +369,41 @@ pure_DFE_time = 0.0;
 //grad_mtx.print_matrix();
 
             
-            if ( sub_iter_idx> 2500 ) {
+            if ( sub_iter_idx> 2500 || ADAM_status != 0 ) {
 
                 //random_shift_count++;
                 sub_iter_idx = 0;
                 random_shift_count++;
-                current_minimum_hold = current_minimum;        
-                int factor = rand() % 10 + 1;
+                current_minimum_hold = current_minimum;   
 
-                std::stringstream sstream;
-                sstream << "ADAM: leaving local minimum " << f0 << ", radius of randomization: " << radius << std::endl;
-                print(sstream, 0);   
-        
-                bool just_reset_optimizer = (rand() % 5) == 0; 
+                // calculate the gradient norm
+                double norm = 0.0;
+                for ( int grad_idx=0; grad_idx<num_of_parameters; grad_idx++ ) {
+                    norm += grad_gsl->data[grad_idx]*grad_gsl->data[grad_idx];
+                }
+                norm = std::sqrt(norm);
                 
-                if ( just_reset_optimizer ) {
-
+                std::stringstream sstream;
+                if ( ADAM_status == 0 ) {
+                    sstream << "ADAM: leaving barren plateau at " << f0 << ", gradient norm " << norm << std::endl;
                 }
                 else {
-        
-                    int changed_parameters = 0;
-                    for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                        if ( rand() % 3 == 0 ) {
-                            solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*std::sqrt(f0)/factor*radius;
-//                            solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*f0/factor*radius;
-                            //solution_guess_tmp->data[jdx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;            
-                            changed_parameters++;
-                        }
-                        else {
-                            solution_guess_tmp->data[jdx] = optimized_parameters_mtx[jdx];
-                        }
-                    }
-                    //std::cout << "changing " << double(changed_parameters)/num_of_parameters*100 << "\% of parameters in radius " << radius << std::endl;
-                    
+                    sstream << "ADAM: leaving local minimum " << f0 << ", gradient norm " << norm << std::endl;
                 }
-
-
-#ifdef __MPI__        
-                MPI_Bcast( (void*)solution_guess_tmp->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
+                print(sstream, 0);   
+                    
+                randomize_parameters(optimized_parameters_mtx, solution_guess_tmp, randomization_successful, f0 );
+                randomization_successful = 0;
         
                 optimizer.reset();
-                optimizer.initialize_moment_and_variance( num_of_parameters );       
+                optimizer.initialize_moment_and_variance( num_of_parameters );   
+
+                ADAM_status = 0;   
         
             }
+
             else {
-                optimizer.update(solution_guess_tmp_mtx, grad_mtx);
+                ADAM_status = optimizer.update(solution_guess_tmp_mtx, grad_mtx, f0);
             }
 
             sub_iter_idx++;
@@ -414,7 +414,6 @@ pure_DFE_time = 0.0;
 
         sstream.str("");
         sstream << "obtained minimum: " << current_minimum << std::endl;
-
 
 
         gsl_vector_free(grad_gsl);
@@ -460,6 +459,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
         catch (...) {
             iteration_loops_max = 1;
         }
+
+        // random generator of real numbers   
+        std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
 
 
         // do the optimization loops
@@ -508,12 +510,12 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
                 gsl_multimin_fdfminimizer_free (s);
 
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen)/100;
                 }
             }
             else {
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen);
                 }
                 gsl_multimin_fdfminimizer_free (s);
             }
@@ -573,6 +575,11 @@ tbb::tick_count bfgs_start = tbb::tick_count::now();
 bfgs_time = 0.0;
 
 
+        // random generator of real numbers   
+        std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
+
+        // random generator of integers   
+        std::uniform_int_distribution<> distrib_int(0, 5000);  
 
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
@@ -614,10 +621,10 @@ bfgs_time = 0.0;
                     random_shift_count++;
                     current_minimum_hold = current_minimum;        
 
-                    int factor = rand() % 10 + 1;
+                    int factor = distrib_int(gen) % 10 + 1;
              
                     for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                        solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI*std::sqrt(s->f)/factor;
+                        solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*2*M_PI*std::sqrt(s->f)/factor;
                     } 
 
 #ifdef __MPI__        
@@ -685,12 +692,12 @@ bfgs_time = 0.0;
                 memcpy( optimized_parameters_mtx.get_data(), s->x->data, num_of_parameters*sizeof(double) );                
 
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                    solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*2*M_PI/100;
                 }
             }
             else {
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
+                    solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*2*M_PI;
                 }
             }
 
@@ -715,6 +722,83 @@ std::cout << "cost function of the imported circuit: " << optimization_problem( 
 
 }
 
+
+/**
+@brief ?????????????
+*/
+void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, gsl_vector* output, const int randomization_succesful, const double& f0  ) {
+
+    // random generator of real numbers   
+    std::uniform_real_distribution<> distrib_prob(0.0, 1.0);
+    std::uniform_real_distribution<> distrib_real(-2*M_PI, 2*M_PI);
+
+
+    const int num_of_parameters = input.size();
+
+    if (randomization_probs.size() != num_of_parameters) {
+        randomization_probs = Matrix_real(1, num_of_parameters);
+        for ( int idx=0; idx<num_of_parameters; idx++ ) {
+            randomization_probs[idx] = 0.1;
+        }
+        
+        randomized_probs = matrix_base<int>(1, num_of_parameters);
+    }
+    else {
+
+        int prob_num = 20;
+
+        if ( randomization_succesful ) {
+            for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                if ( randomized_probs[jdx] == 1 ) {
+                    randomization_probs[jdx] = randomization_probs[jdx] + 1.0/50;
+                    randomization_probs[jdx] = randomization_probs[jdx] < 1.0 ? randomization_probs[jdx] : 1.0;
+                }
+                else {
+                    randomization_probs[jdx] = randomization_probs[jdx] - 1.0/50;
+                    randomization_probs[jdx] = randomization_probs[jdx] > 0.0 ? randomization_probs[jdx] : 0.01;
+                }
+            }
+        }
+        else {
+            for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                if ( randomized_probs[jdx] == 1 ) {
+                    randomization_probs[jdx] = randomization_probs[jdx] - 1.0/50;
+                    randomization_probs[jdx] = randomization_probs[jdx] > 0.0 ? randomization_probs[jdx] : 0.01;
+                }
+                else {
+                    randomization_probs[jdx] = randomization_probs[jdx] + 1.0/50;
+                    randomization_probs[jdx] = randomization_probs[jdx] < 1.0 ? randomization_probs[jdx] : 1.0;
+                }                
+            }
+        }
+
+
+    }
+ 
+    int changed_parameters = 0;
+    for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+        if ( distrib_prob(gen) <= randomization_probs[jdx] ) {
+            output->data[jdx] = input[jdx] + distrib_real(gen)*std::sqrt(f0)*radius;
+
+            randomized_probs[jdx] = 1;
+            changed_parameters++;
+        }
+        else {
+            output->data[jdx] = input[jdx];
+            randomized_probs[jdx] = 0;
+        }
+    }
+
+#ifdef __MPI__  
+        MPI_Bcast( (void*)output->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+   
+if ( current_rank == 0 ) { 
+    std::cout << "Randomized parameters: " << changed_parameters << std::endl;
+}
+
+
+}
 
 
 /**

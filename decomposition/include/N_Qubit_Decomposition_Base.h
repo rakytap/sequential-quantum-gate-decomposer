@@ -89,6 +89,13 @@ protected:
     bool adaptive_eta;
     /// parameter to contron the radius of parameter randomization around the curren tminimum
     double radius;
+    /// randomization rate
+    double randomization_rate;
+
+    Matrix_real randomization_probs;
+    matrix_base<int> randomized_probs;
+
+    
 
 
 
@@ -173,6 +180,10 @@ void solve_layer_optimization_problem_BFGS2( int num_of_parameters, gsl_vector *
 */
 void solve_layer_optimization_problem_ADAM( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
+/**
+@brief ?????????????
+*/
+void randomize_parameters( Matrix_real& input, gsl_vector* output, const int randomization_succesful, const double& f0 );
 
 /**
 @brief The optimization problem of the final optimization

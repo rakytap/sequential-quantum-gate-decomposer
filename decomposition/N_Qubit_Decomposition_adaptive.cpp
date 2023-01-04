@@ -40,35 +40,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 
-/**
-@brief Method to create random initial parameters for the optimization
-@return 
-*/
-Matrix_real create_random_paramaters( Gates_block* gate_structure ) {
-
-    int parameter_num = gate_structure->get_parameter_num();
-
-    Matrix_real parameters(1, parameter_num);
-
-    for(int idx = 0; idx < parameter_num; idx++) {
-         if ( idx % 5 == 0 ) {
-             if ( rand() % 2 == 0 ) {
-                 parameters[idx] = 0.0;
-             }
-             else {
-                 parameters[idx] = M_PI;
-             }
-         }
-         else {
-             parameters[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
-         }
-    }
-
-    return parameters;
-
-
-}
-
 
 
 /**
@@ -100,7 +71,6 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
     }
     
 
-    srand(time(NULL));   // Initialization, should only be called once.
 }
 
 /**
@@ -143,7 +113,6 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 
     }
 
-    srand(time(NULL));   // Initialization, should only be called once.
 }
 
 
@@ -191,7 +160,6 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         max_iterations = 1;
     }
 
-    srand(time(NULL));   // Initialization, should only be called once.
 }
 
 
@@ -754,8 +722,11 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         layers_to_remove.push_back(idx+1);
     }   
 
+    // random generator of integers   
+    std::uniform_int_distribution<> distrib_int(0, 5000);  
+
     while ( (int)layers_to_remove.size() > layer_num_max ) {
-        int remove_idx = rand() % layers_to_remove.size();
+        int remove_idx = distrib_int(gen) % layers_to_remove.size();
        
         layers_to_remove.erase( layers_to_remove.begin() + remove_idx );
     }
@@ -824,7 +795,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         else if ( panelty_min == panelties[idx] ) {
 
             // randomly choose the solution between identical penalties
-            if ( (rand() % 2) == 1 ) {
+            if ( (distrib_int(gen) % 2) == 1 ) {
                 idx_min = idx;
 
                 panelty_min = panelties[idx];
@@ -1398,8 +1369,11 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
 
     }
 */
+
+    std::uniform_int_distribution<> distrib_int(0, 5000);
+
     while (layers.size()>0) { 
-        int idx = std::rand() % layers.size();
+        int idx = distrib_int(gen) % layers.size();
 #ifdef __MPI__        
         MPI_Bcast( &idx, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif

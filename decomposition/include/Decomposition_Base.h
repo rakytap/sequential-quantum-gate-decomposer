@@ -49,6 +49,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "gsl/gsl_statistics.h"
 #include <tbb/cache_aligned_allocator.h>
 
+#include <random>
 
 /// @brief Type definition of the types of the initial guess
 typedef enum guess_type {ZEROS, RANDOM, CLOSE_TO_ZERO} guess_type;
@@ -128,6 +129,8 @@ protected:
     double convergence_threshold;
     
 
+    /// Standard mersenne_twister_engine seeded with rd()
+    std::mt19937 gen; 
 
 
 

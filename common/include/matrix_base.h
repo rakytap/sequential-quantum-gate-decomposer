@@ -443,7 +443,7 @@ matrix_base<scalar> copy() {
 @brief Call to get the number of the allocated elements
 @return Returns with the number of the allocated elements (rows*cols)
 */
-int size() {
+int size() const {
 
   return rows*cols;
 

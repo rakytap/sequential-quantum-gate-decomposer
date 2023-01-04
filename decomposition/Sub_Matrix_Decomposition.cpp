@@ -420,6 +420,8 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
             iteration_loops_max = 1;
         }
 
+        // random generator of real numbers   
+        std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
 
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
@@ -471,12 +473,12 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
                 gsl_multimin_fdfminimizer_free (s);
 
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen)/100;
                 }
             }
             else {
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen);
                 }
 
                 gsl_multimin_fdfminimizer_free (s);

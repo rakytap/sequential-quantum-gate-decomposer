@@ -90,6 +90,11 @@ Decomposition_Base::Decomposition_Base() {
     std::string projectname = "";
 
 
+    // Will be used to obtain a seed for the random number engine
+    std::random_device rd;  
+
+    // seedign the random generator
+    gen = std::mt19937(rd());
 
 #if CBLAS==1
     num_threads = mkl_get_max_threads();
@@ -166,6 +171,12 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
     //name of the SQUANDER project
     std::string projectname = "";
 
+
+    // Will be used to obtain a seed for the random number engine
+    std::random_device rd;  
+
+    // seedign the random generator
+    gen = std::mt19937(rd());
 
 #if CBLAS==1
     num_threads = mkl_get_max_threads();
@@ -400,8 +411,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         // storing the initial computational parameters
         int optimization_block_loc = optimization_block;
 
-        // initialize random seed:
-        srand (time(NULL));
+        // random generator of real numbers   
+        std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
 
         // the array storing the optimized parameters
         gsl_vector* optimized_parameters_gsl = gsl_vector_alloc (parameter_num_loc);
@@ -414,7 +425,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
         else if ( initial_guess == RANDOM ) {
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
-                optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
+                optimized_parameters_gsl->data[idx] = distrib_real(gen);
             }
 
 #ifdef __MPI__        
@@ -425,7 +436,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
         else if ( initial_guess == CLOSE_TO_ZERO ) {
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
-                optimized_parameters_gsl->data[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI/100;
+                optimized_parameters_gsl->data[idx] = distrib_real(gen)/100;
             }
 
 #ifdef __MPI__        
