@@ -5,7 +5,7 @@ from qiskit import QuantumRegister, ClassicalRegister, BasicAer
 from qiskit import QuantumCircuit, execute, IBMQ, transpile
 from qiskit.providers.aer import QasmSimulator
 from qiskit.visualization import plot_histogram
-from qiskit import Aer
+import qiskit_aer as Aer
 
 
 from scipy.stats import unitary_group
@@ -41,7 +41,7 @@ class Test_operations_squander:
         
 #QISKIT
 
-        backend = Aer.get_backend('aer_simulator')
+        backend = Aer.AerSimulator(method='unitary')
 
 
         # Create a Quantum Circuit acting on the q register
