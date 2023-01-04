@@ -18,14 +18,14 @@ LIBS = $(GROQ_DIR)/lib/groqruntime/lib/libgroqruntime.a -lrt
 SRCS = groq_us.c
 
 geniop:
-	#python gsquander.py
+	python gsquander.py
 	for FILE in us*.0.iop; do xxd -i $$FILE $$FILE.h; done
 
 us%:
 	$(CC) $(CFLAGS) $(INCLUDES) -ous$*.0.iop $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -shared
 
 testus%:
-	$(CC) $(CFLAGS) $(INCLUDES) -otestus$* $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -g
+	$(CC) $(CFLAGS) $(INCLUDES) -otestus$* $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -DTEST -g
  
 all: geniop us2 us3 us4 us5 us6 us7 us8 us9 us10
 
