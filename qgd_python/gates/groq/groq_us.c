@@ -40,41 +40,61 @@ unsigned int loaded = 0;
 extern "C" void releive_groq()
 {
     if (!loaded) return;
-    unsigned int num_programs = 0;
-    Status status = groq_iop_get_number_of_programs(prog, &num_programs);
-    for (size_t i = 0; i < NUM_DEVICE; i++) {
-        for (unsigned int j = 0; j < num_programs; j++) {  
-            status = groq_deallocate_iobuffer_array(inputBuffers[i][j]);
-            if (status) {
-                printf("ERROR: groq deallocate iobuffer error %d\n", status);
+    Status status;
+    if (prog) {
+        unsigned int num_programs = 0;
+        status = groq_iop_get_number_of_programs(prog, &num_programs);
+        
+        for (size_t i = 0; i < NUM_DEVICE; i++) {
+            for (unsigned int j = 0; j < num_programs; j++) {  
+                if (inputBuffers[i] && inputBuffers[i][j]) {
+                    status = groq_deallocate_iobuffer_array(inputBuffers[i][j]);
+                    if (status) {
+                        printf("ERROR: groq deallocate iobuffer error %d\n", status);
+                    }
+                }
+                if (outputBuffers[i] && outputBuffers[i][j]) {
+                    status = groq_deallocate_iobuffer_array(outputBuffers[i][j]);
+                    if (status) {
+                        printf("ERROR: groq deallocate iobuffer error %d\n", status);
+                    }
+                }
             }
-            status = groq_deallocate_iobuffer_array(outputBuffers[i][j]);
-            if (status) {
-                printf("ERROR: groq deallocate iobuffer error %d\n", status);
+            if (inputBuffers[i]) {
+                free(inputBuffers[i]);
+                inputBuffers[i] = NULL;
+            }
+            if (outputBuffers[i]) {            
+                free(outputBuffers[i]);
+                outputBuffers[i] = NULL;
             }
         }
-        free(inputBuffers[i]);
-        free(outputBuffers[i]);
-    }
-
-    status = groq_iop_deinit(prog);
-    if (status) {
-        printf("ERROR: IOP deinit error %d\n", status);
+    
+        status = groq_iop_deinit(prog);
+        if (status) {
+            printf("ERROR: IOP deinit error %d\n", status);
+        }
+        prog = NULL;
     }
 
     for (size_t i = 0; i < NUM_DEVICE; i++) {
-        status = groq_device_close(device[i]);
+        if (device[i]) {
+            status = groq_device_close(device[i]);
+            if (status) {
+                printf("ERROR: close device error %d\n", status);
+            }
+            device[i] = NULL;
+        }
+    }
+
+    if (driver) {
+        status = groq_deinit(&driver);
         if (status) {
             printf("ERROR: close device error %d\n", status);
         }
+    
+        driver = NULL;
     }
-
-    status = groq_deinit(&driver);
-    if (status) {
-        printf("ERROR: close device error %d\n", status);
-    }
-
-    driver = NULL;
     loaded = 0;
 }
 
@@ -419,8 +439,10 @@ int initialize_groq(unsigned int num_qbits)
   }
 #ifdef NUM_QBITS
   loaded = NUM_QBITS;
+  printf("Initialized Groq for %d qbits\n", NUM_QBITS);
 #else  
   loaded = num_qbits;
+  printf("Initialized Groq for %d qbits\n", num_qbits);
 #endif
   return 0;
 }
@@ -468,6 +490,7 @@ extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
     if ( initialize_groq(num_qbits) ) {
 #endif
         printf("Failed to initialize the Groq engine\n");
+        releive_groq();
         return 1;
     }
     //data type e.g. FLOAT32 along the -2 dimension
@@ -523,6 +546,7 @@ extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
 
 int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates, int gatesNum, int gateSetNum, double* trace )
 {
+    //printf("oneShot with %d gates and %d gate sets\n", gatesNum, gateSetNum);
 #ifdef NUM_QBITS
     int num_qbits = NUM_QBITS;
     size_t mx_gates = MAX_GATES;
@@ -676,7 +700,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
             return 1;
         }        
         //output format when unitary returned: FLOAT32 (2*rows, cols) where inner splits are outermost dimension
-        Complex8* data = (Complex8*)malloc(sizeof(Complex8)*rows*cols);
+        //Complex8* data = (Complex8*)malloc(sizeof(Complex8)*rows*cols);
         /*for (size_t i = 0; i < 32; i++) {
             for (size_t j = 0; j < 320; j++) {
                 printf("%X ", output[i*320+j]);
@@ -691,29 +715,30 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
         }*/
         double curtrace = 0.0;
         for (size_t i = 0; i < rows; i++) {
-            for (size_t j = 0; j < cols; j++) {
+            size_t j = i;
+            //for (size_t j = 0; j < cols; j++) {
                 size_t innerdim = j % maxinnerdim;
                 size_t innersplit = j / maxinnerdim;
-                unsigned char rb[sizeof(float)], ib[sizeof(float)];
+                unsigned char rb[sizeof(float)]; //, ib[sizeof(float)];
                 //unsigned char* vrb = floatToBytes(&buf[innersplit*rows*2*maxinnerdim+i*2*maxinnerdim+innerdim]), *vib = floatToBytes(&buf[innersplit*rows*2*maxinnerdim+i*2*maxinnerdim+maxinnerdim+innerdim]);
                 for (size_t byteidx = 0; byteidx < sizeof(float); byteidx++) {
                     rb[byteidx] = output[((gatesNum & 1) != 0 ? 4+3-byteidx : byteidx)*num_inner_splits*rows*320+innersplit*rows*320+i*320+innerdim]; 
-                    ib[byteidx] = output[((gatesNum & 1) != 0 ? 3-byteidx : 4+byteidx)*num_inner_splits*rows*320+innersplit*rows*320+i*320+innerdim];
+                    //ib[byteidx] = output[((gatesNum & 1) != 0 ? 3-byteidx : 4+byteidx)*num_inner_splits*rows*320+innersplit*rows*320+i*320+innerdim];
                     //if (vrb[byteidx] != rb[byteidx] || vib[byteidx] != ib[byteidx]) printf("bad output format %lu %lu %lu\n", i, j, byteidx);
                 }
-                float re = *bytesToFloat(rb), im = *bytesToFloat(ib);
-                data[i*cols+j].real = re;
-                data[i*cols+j].imag = im;
+                float re = *bytesToFloat(rb); //, im = *bytesToFloat(ib);
+                //data[i*cols+j].real = re;
+                //data[i*cols+j].imag = im;
                 //printf("%f+%fj ", re, im);
                 //printf("%X+%Xj ", *((unsigned int*)floatToBytes(&re)), *((unsigned int*)floatToBytes(&im)));
                 if (i == j) curtrace += re;
-            }
+            //}
             //printf("\n");
         }
         //free(buf);
         //printf("\n");
         trace[d] = curtrace;
-        free(data);
+        //free(data);
     }
     return 0;
 }
