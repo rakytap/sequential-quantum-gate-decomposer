@@ -6,7 +6,7 @@ CC = g++
 CFLAGS = -Wall -g -fPIC
 
 # define any directories containing header files other than /usr/include
-INCLUDES = -I$(GROQ_DIR)/include
+INCLUDES = -I$(GROQ_DIR)/include -I./build
 
 # define library paths in addition to /usr/lib
 LFLAGS = 
@@ -19,7 +19,7 @@ SRCS = groq_us.c
 
 geniop:
 	python gsquander.py
-	for FILE in us*.0.iop; do xxd -i $$FILE $$FILE.h; done
+	for FILE in build/us*.0.iop; do xxd -i $$FILE $$FILE.h; done
 
 us%:
 	$(CC) $(CFLAGS) $(INCLUDES) -ous$*.0.iop $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -shared
