@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 from qiskit import execute
+import numpy as np
 
 try:
     import qiskit_aer as Aer
@@ -54,5 +55,5 @@ def get_unitary_from_qiskit_circuit( circuit ):
     result=job.result()  
 
 
-    return result.get_unitary(circuit)
+    return np.asarray( result.get_unitary(circuit) )
 
