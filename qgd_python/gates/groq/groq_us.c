@@ -78,31 +78,31 @@ void releive_groq()
 //xxd -i us2-20.0.iop us2-20.0.iop.h
 #if NUM_QBITS==2
 #include "us2-20.0.iop.h"
-#define binary_groq_program build_us2_20_0_iop
+#define binary_groq_program usiop_us2_20_0_iop
 #elif NUM_QBITS==3
 #include "us3-57.0.iop.h"
-#define binary_groq_program build_us3_57_0_iop
+#define binary_groq_program usiop_us3_57_0_iop
 #elif NUM_QBITS==4
 #include "us4-112.0.iop.h"
-#define binary_groq_program build_us4_112_0_iop
+#define binary_groq_program usiop_us4_112_0_iop
 #elif NUM_QBITS==5
 #include "us5-185.0.iop.h"
-#define binary_groq_program build_us5_185_0_iop
+#define binary_groq_program usiop_us5_185_0_iop
 #elif NUM_QBITS==6
 #include "us6-276.0.iop.h"
-#define binary_groq_program build_us6_276_0_iop
+#define binary_groq_program usiop_us6_276_0_iop
 #elif NUM_QBITS==7
 #include "us7-385.0.iop.h"
-#define binary_groq_program build_us7_385_0_iop
+#define binary_groq_program usiop_us7_385_0_iop
 #elif NUM_QBITS==8
 #include "us8-512.0.iop.h"
-#define binary_groq_program build_us8_512_0_iop
+#define binary_groq_program usiop_us8_512_0_iop
 #elif NUM_QBITS==9
 #include "us9-657.0.iop.h"
-#define binary_groq_program build_us9_657_0_iop
+#define binary_groq_program usiop_us9_657_0_iop
 #elif NUM_QBITS==10
 #include "us10-820.0.iop.h"
-#define binary_groq_program build_us10_820_0_iop
+#define binary_groq_program usiop_us10_820_0_iop
 #endif
 
 const int MAX_LEVELS = 6;
