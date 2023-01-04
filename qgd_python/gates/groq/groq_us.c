@@ -21,8 +21,8 @@ typedef struct {
 } gate_kernel_type;
 
 Driver driver = NULL;
-//#define NUM_DEVICE 2
-#define NUM_DEVICE 1
+#define NUM_DEVICE 2
+//#define NUM_DEVICE 1
 Device device[NUM_DEVICE] = {NULL};
 IOP prog = NULL;
 IOBufferArray* inputBuffers[NUM_DEVICE] = {NULL};
