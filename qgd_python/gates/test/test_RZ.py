@@ -1,14 +1,15 @@
 import numpy as np
 import random
 
-from qiskit import QuantumRegister, ClassicalRegister, BasicAer
-from qiskit import QuantumCircuit, execute, IBMQ, transpile
-from qiskit.providers.aer import QasmSimulator
+from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
-import qiskit_aer as Aer
+
+from qgd_python.utils import get_unitary_from_qiskit_circuit
 
 
-from scipy.stats import unitary_group
+    
+ 
+
 
 pi=np.pi
 
@@ -41,24 +42,15 @@ class Test_operations_squander:
         
 #QISKIT
 
-        backend = Aer.AerSimulator(method='unitary')
-
 
         # Create a Quantum Circuit acting on the q register
         circuit = QuantumCircuit(qbit_num)
 
         # Add the u3 gate on qubit pi, pi,
         circuit.rz(parameters[0], target_qbit)
-        circuit.save_unitary()
-                
-        # job execution and getting the result as an object
-        job = execute(circuit, backend)
-        
-        # the result of the Qiskit job
-        result=job.result()  
         
         # the unitary matrix from the result object
-        RZ_qiskit = result.get_unitary(circuit)
+        RZ_qiskit = get_unitary_from_qiskit_circuit( circuit )
         RZ_qiskit = np.asarray(RZ_qiskit)
         
 
