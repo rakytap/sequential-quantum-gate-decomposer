@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-#include <tgmath.h>
+#include <string.h>
 #include <complex.h>
 
 typedef struct {
@@ -21,11 +21,14 @@ typedef struct {
 } gate_kernel_type;
 
 Driver driver = NULL;
-#define NUM_DEVICE 2
+//#define NUM_DEVICE 2
+#define NUM_DEVICE 1
 Device device[NUM_DEVICE] = {NULL};
 IOP prog = NULL;
 IOBufferArray* inputBuffers[NUM_DEVICE] = {NULL};
 IOBufferArray* outputBuffers[NUM_DEVICE] = {NULL};
+TensorLayout inpLayouts[5] = {NULL};
+TensorLayout outpLayouts[2] = {NULL};
 
 #define releive_groq releive_DFE 
 #define initialize_groq initialize_DFE 
@@ -218,8 +221,8 @@ int initialize_groq()
         if (status) {
             printf("ERROR: load program %d\n", status);
             return 1;
-        }    
-                  
+        }
+
         //printf("loaded program: %u\n", j);
         char* name = NULL;
         status = groq_program_name(prog, j, &name);
@@ -233,27 +236,28 @@ int initialize_groq()
         if (status) {
             printf("ERROR: get nth program %d\n", status);
             return 1;
-        }            
+        }
         size_t n;
         /*status = groq_program_get_metadata_count(p, &n);
         if (status) {
             printf("ERROR: program get metadata count %d\n", status);
             return 1;
-        }            
+        }
         for (size_t i = 0; i < n; i++) {
             const char* key, *value;
             status = groq_program_get_nth_metadata(p, i, &key, &value);
             if (status) {
                 printf("ERROR: program get nth metadata %d\n", status);
                 return 1;
-            }            
+            }
         }*/
         status = groq_get_number_of_entrypoints(p, &n);
         if (status) {
             printf("ERROR: program get number of entrypoints %d\n", status);
             return 1;
         }
-        
+        size_t inpSize, outpSize;
+        uint32_t ptindex;
         //for (size_t i = 0; i < n; i++) {
         for (size_t i = 0; i < 1; i++) {//only need the first entrypoint, there are 4 all with identical inputs/outputs
             EntryPoint ep;
@@ -261,23 +265,21 @@ int initialize_groq()
             if (status) {
                 printf("ERROR: get nth entrypoint %d\n", status);
                 return 1;
-            }            
-            uint32_t ptindex;
+            }
             status = groq_entrypoint_get_ptindex(ep, &ptindex);
             if (status) {
                 printf("ERROR: entrypoint get ptindex %d\n", status);
                 return 1;
-            }                        
+            }
             //printf("entrypoint %lu ptindex %u\n", i, ptindex);
             IODescriptor iod;
-            size_t inpSize, outpSize;
             for (size_t inpoutp = 0; inpoutp < 2; inpoutp++) {
                 if (inpoutp == 0) {
                     status = groq_entrypoint_get_input_iodescriptor(ep, &iod);
                     if (status) {
                         printf("ERROR: entrypoint get input iodescriptor %d\n", status);
                         return 1;
-                    }                                            
+                    }        
                     status = groq_iodescriptor_get_size(iod, &inpSize);
                     if (status) {
                         printf("ERROR: iodescriptor get size %d\n", status);
@@ -295,20 +297,20 @@ int initialize_groq()
                         return 1;
                     }                                            
                 }
-                /*size_t l;
+                size_t l;
                 status = groq_iodescriptor_get_number_of_tensor_layouts(iod, &l);
                 if (status) {
                     printf("ERROR: iodescriptor get number of tensor layouts %d\n", status);
                     return 1;
                 }                                            
                 for (size_t k = 0; k < l; k++) {
-                    TensorLayout tl;
-                    status = groq_iodescriptor_get_nth_tensor_layout(iod, k, &tl);
+                    //TensorLayout tl;
+                    status = groq_iodescriptor_get_nth_tensor_layout(iod, k, inpoutp == 0 ? &inpLayouts[k] : &outpLayouts[j-(num_programs-2)]);
                     if (status) {
                         printf("ERROR: iodescriptor get nth tensor layout %d\n", status);
                         return 1;
                     }                                                                
-                    char* name;
+                    /*char* name;
                     status = groq_tensor_layout_get_name(tl, &name);
                     if (status) {
                         printf("ERROR: tensor layout get name %d\n", status);
@@ -347,32 +349,34 @@ int initialize_groq()
                             return 1;
                         }                                                                
                         printf(m == ndim-1 ? "%u)\n" : "%u, ", dimSize); 
-                    }
-                }*/
+                    }*/
+                }
             }
-            //printf("input size %lu output size %lu\n", inpSize, outpSize);
-            status = groq_allocate_iobuffer_array(driver, inpSize, 1, ptindex, &inputBuffers[d][j]);
-            if (status) {
-                printf("ERROR: allocate iobuffer array %d\n", status);
-                return 1;
-            }                                            
-            status = groq_allocate_iobuffer_array(driver, outpSize, 1, ptindex, &outputBuffers[d][j]);
-            if (status) {
-                printf("ERROR: allocate iobuffer array %d\n", status);
-                return 1;
-            }
+        }
+        inpSize = groq_program_get_input_size(prog, j);
+        outpSize = groq_program_get_output_size(prog, j);
+        //printf("input size %lu output size %lu\n", inpSize, outpSize);
+        status = groq_allocate_iobuffer_array(driver, inpSize, 1, ptindex, &inputBuffers[d][j]);
+        if (status) {
+            printf("ERROR: allocate iobuffer array %d\n", status);
+            return 1;
+        }                                            
+        status = groq_allocate_iobuffer_array(driver, outpSize, 1, ptindex, &outputBuffers[d][j]);
+        if (status) {
+            printf("ERROR: allocate iobuffer array %d\n", status);
+            return 1;
         }
       }
   }
   return 0;
 }
 
-char* floatToBytes(float* f) //endianness dependent method
+unsigned char* floatToBytes(float* f) //endianness dependent method
 {
-    return (char*)f;
+    return (unsigned char*)f;
 }
 
-float* bytesToFloat(char* c) //endianness dependent method
+float* bytesToFloat(unsigned char* c) //endianness dependent method
 {
     return (float*)c;
 }
@@ -383,29 +387,49 @@ int load2groq(Complex8* data, size_t rows, size_t cols)
 {
     //data type e.g. FLOAT32 along the -2 dimension
     //input format:
-    //gate FLOAT32 ((MAX_GATES+1)/2, 8, min(320, cols))
-    //othergate FLOAT32 ((MAX_GATES+1)/2, 8, min(320, cols))
+    //gate FLOAT32 ((MAX_GATES+1)/2, 8, gatecols)
+    //othergate FLOAT32 ((MAX_GATES+1)/2, 8, gatecols)
     //target_qbits UINT8 (MAX_GATES, 320)
     //control_qbits UINT8 (MAX_GATES, 320)
-    //unitary FLOAT32 (2*rows, cols) 
+    //unitary FLOAT32 (2*rows, cols)
+    //Python source order is unitary, gate, othergate, target_qbits, control_qbits
+    //however the host order is address sorted so by hemisphere, slice then offset EASTERNMOST to WESTERNMOST initialization order so E43->E0 then W0->W43, little endian matching CPU endianness
+    //making order othergate, gate, unitary, control_qbits, target_qbits
     u_int8_t* input;
-    size_t offset = (MAX_GATES+1)/2*2*8*4*320 + MAX_GATES * 320 * 2;
+    size_t offset = (MAX_GATES+1)/2*2*8*4*320;// + MAX_GATES * 320 * 2;
+    size_t num_inner_splits = (cols+320-1)/320;
     size_t maxinnerdim = cols > 320 ? 256 : cols; //real chip shape is (num_inner_splits, rows, 2, min(cols, 256)) as inner splits are 256 for 9 and 10 qbits (not for 11)
-    for (size_t d = 0; d < NUM_DEVICE; d++) {
+    for (size_t d = 0; d < NUM_DEVICE; d++) {        
         Status status = groq_get_data_handle(inputBuffers[d][0], 0, &input);
+        //memset(input, 0, (MAX_GATES+1)/2*2*8*4*320+MAX_GATES*2*320+num_inner_splits*2*rows*4*320);
         if (status) {
             printf("ERROR: get data handle %d\n", status);
             return 1;
         }
-        //int num_inner_splits = (rows+320-1)/320;
-        for (size_t i = 0; i < rows; i++) { 
+        /*float* buf = (float*)malloc(sizeof(float)*2*rows*cols);
+        for (size_t i = 0; i < rows; i++) {
             for (size_t j = 0; j < cols; j++) {
-                char* re = floatToBytes(&data[i*cols+j].real), *im = floatToBytes(&data[i*cols+j].imag);
+                buf[i*cols*2+j] = data[i*cols+j].real;
+                buf[i*cols*2+cols+j] = data[i*cols+j].imag;
+            }
+        }
+        status = groq_tensor_layout_from_host(inpLayouts[4], (unsigned char*)buf, sizeof(float)*2*rows*cols, input, (MAX_GATES+1)/2*2*8*4*320+MAX_GATES*2*320+num_inner_splits*2*rows*4*320);
+        if (status) {
+            printf("ERROR: tensor layout from host %d\n", status);
+            return 1;
+        }
+        free(buf);*/
+        for (size_t i = 0; i < rows; i++) { //effective address order dimension as S8 is (2, 4, num_inner_splits, rows, 320)
+            for (size_t j = 0; j < cols; j++) {
+                unsigned char* re = floatToBytes(&data[i*cols+j].real), *im = floatToBytes(&data[i*cols+j].imag);
                 size_t innerdim = j % maxinnerdim;
                 size_t innersplit = j / maxinnerdim;
                 for (size_t byteidx = 0; byteidx < sizeof(float); byteidx++) {
-                    input[offset+innersplit*rows*2*320+i*2*320+byteidx*320+innerdim] = re[byteidx];
-                    input[offset+innersplit*rows*2*320+(i*2+1)*320+byteidx*320+innerdim] = im[byteidx];
+                    //if (input[offset+byteidx*num_inner_splits*rows*320+innersplit*rows*320+i*320+innerdim] != re[byteidx] ||
+                    //    input[offset+4*num_inner_splits*rows*320+byteidx*num_inner_splits*rows*320+innersplit*rows*320+i*320+innerdim] != im[byteidx])
+                    //    printf("bad unitary data format %lu %lu %lu\n", i, j, byteidx);
+                    input[offset+byteidx*num_inner_splits*rows*320+innersplit*rows*320+i*320+innerdim] = re[byteidx];
+                    input[offset+4*num_inner_splits*rows*320+byteidx*num_inner_splits*rows*320+innersplit*rows*320+i*320+innerdim] = im[byteidx];
                 }
             }
         }
@@ -415,7 +439,8 @@ int load2groq(Complex8* data, size_t rows, size_t cols)
 
 int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates, int gatesNum, int gateSetNum, double* trace )
 {
-    size_t offset_qbit = (MAX_GATES+1)/2*2*8*4*320;
+    size_t num_inner_splits = (cols+320-1)/320;
+    size_t offset_qbit = num_inner_splits*2*rows*4*320+(MAX_GATES+1)/2*2*8*4*320;
     size_t gatecols = cols < 320 ? cols : 320;
     Status status;
     for (int d = 0; d < gateSetNum; d++) {
@@ -424,25 +449,81 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
         if (status) {
             printf("ERROR: get data handle %d\n", status);
             return 1;
-        }        
+        }
+        /*float* gbuf1 = (float*)calloc((MAX_GATES+1)/2*8*gatecols, sizeof(float));
+        float* gbuf2 = (float*)calloc((MAX_GATES+1)/2*8*gatecols, sizeof(float));
+        unsigned char* tbuf = (unsigned char*)malloc(MAX_GATES*320);
+        unsigned char* cbuf = (unsigned char*)malloc(MAX_GATES*320);
         for (int i = 0; i < gatesNum; i++) {
             long double c = cosl(gates[i+d*gatesNum].Theta), s = sinl(gates[i+d*gatesNum].Theta);
-            float _Complex g[] = { c, -cexpl(I*gates[i+d*gatesNum].Lambda)*s, cexp(I*gates[i+d*gatesNum].Phi)*s, cexpl(I*(gates[i+d*gatesNum].Phi+gates[i+d*gatesNum].Lambda))*c };
-            size_t offset = ((i & 1) != 0 ? (MAX_GATES+1)/2*8*4*320 : 0) + (i / 2)*4*320;
+            float _Complex g[] = { c, -cexpl(I*gates[i+d*gatesNum].Lambda)*s, cexpl(I*gates[i+d*gatesNum].Phi)*s, cexpl(I*(gates[i+d*gatesNum].Phi+gates[i+d*gatesNum].Lambda))*c };
             for (size_t goffs = 0; goffs < 4; goffs++) {
-                float fr = crealf(g[goffs]), fi = cimagf(g[goffs]);
-                char* re = floatToBytes(&fr), *im = floatToBytes(&fi);
-                for (size_t byteidx = 0; byteidx < sizeof(float); byteidx++) {
-                    for (size_t innerdim = 0; innerdim < gatecols; innerdim++) {
-                        input[offset+goffs*2*4*320+byteidx*320+innerdim] = re[byteidx];
-                        input[offset+(goffs*2+1)*4*320+byteidx*320+innerdim] = im[byteidx];
+                for (size_t innerdim = 0; innerdim < gatecols; innerdim++) {
+                    if ((i & 1) == 0) {
+                        gbuf1[i/2*8*gatecols+goffs*2*gatecols+innerdim] = crealf(g[goffs]);
+                        gbuf1[i/2*8*gatecols+(goffs*2+1)*gatecols+innerdim] = cimagf(g[goffs]);
+                    } else {
+                        gbuf2[i/2*8*gatecols+goffs*2*gatecols+innerdim] = crealf(g[goffs]);
+                        gbuf2[i/2*8*gatecols+(goffs*2+1)*gatecols+innerdim] = cimagf(g[goffs]);
                     }
                 }
             }
+            for (size_t j = 0; j < 320; j++) tbuf[320*i+j] = (j & 15) <= 1 ? gates[i+d*gatesNum].target_qbit%8*2 + (j & 15) : 16;
+            for (size_t j = 0; j < 320; j++) cbuf[320*i+j] = (j & 15) <= 1 ? (gates[i+d*gatesNum].control_qbit - (gates[i+d*gatesNum].control_qbit > gates[i+d*gatesNum].target_qbit ? 1 : 0))%8*2 + (j & 15) : 16;
+        }
+        status = groq_tensor_layout_from_host(inpLayouts[0], (unsigned char*)gbuf1, (MAX_GATES+1)/2*8*gatecols*sizeof(float), input, (MAX_GATES+1)/2*2*8*4*320+MAX_GATES*2*320+num_inner_splits*2*rows*4*320);
+        if (status) {
+            printf("ERROR: tensor layout from host %d\n", status);
+            return 1;
+        }
+        status = groq_tensor_layout_from_host(inpLayouts[1], (unsigned char*)gbuf2, (MAX_GATES+1)/2*8*gatecols*sizeof(float), input, (MAX_GATES+1)/2*2*8*4*320+MAX_GATES*2*320+num_inner_splits*2*rows*4*320);
+        if (status) {
+            printf("ERROR: tensor layout from host %d\n", status);
+            return 1;
+        }
+        status = groq_tensor_layout_from_host(inpLayouts[2], tbuf, MAX_GATES*320, input, (MAX_GATES+1)/2*2*8*4*320+MAX_GATES*2*320+num_inner_splits*2*rows*4*320);
+        if (status) {
+            printf("ERROR: tensor layout from host %d\n", status);
+            return 1;
+        }
+        status = groq_tensor_layout_from_host(inpLayouts[3], cbuf, MAX_GATES*320, input, (MAX_GATES+1)/2*2*8*4*320+MAX_GATES*2*320+num_inner_splits*2*rows*4*320);
+        if (status) {
+            printf("ERROR: tensor layout from host %d\n", status);
+            return 1;
+        }
+        free(gbuf1); free(gbuf2); free(tbuf); free(cbuf);*/
+        for (int i = 0; i < gatesNum; i++) {
+            long double c = cosl(gates[i+d*gatesNum].Theta), s = sinl(gates[i+d*gatesNum].Theta);
+            float _Complex g[] = { c, -cexpl(I*gates[i+d*gatesNum].Lambda)*s, cexpl(I*gates[i+d*gatesNum].Phi)*s, cexpl(I*(gates[i+d*gatesNum].Phi+gates[i+d*gatesNum].Lambda))*c };
+            size_t offset = (i & 1) != 0 ? (MAX_GATES+1)/2*8*4*320 : 0;
+            for (size_t goffs = 0; goffs < 4; goffs++) { //effective address order dimension as S16 is (4, 4, (MAX_GATES+1)/2, 2, min(320, cols))
+                float fr = crealf(g[goffs]), fi = cimagf(g[goffs]);
+                //printf("%f+%fj ", fr, fi);
+                //printf("%X+%Xj ", *((unsigned int*)floatToBytes(&fr)), *((unsigned int*)floatToBytes(&fi)));  
+                unsigned char* re = floatToBytes(&fr), *im = floatToBytes(&fi);
+                for (size_t byteidx = 0; byteidx < sizeof(float); byteidx++) {
+                    for (size_t innerdim = 0; innerdim < gatecols; innerdim++) {
+                        //if (input[offset+(((i & 1) == 0 ? 15-(goffs%2*2*4+byteidx) : goffs%2*2*4+byteidx))*((MAX_GATES+1)/2*2*320)+i/2*2*320+goffs/2*320+innerdim] != re[byteidx] ||
+                        //    input[offset+(((i & 1) == 0 ? 15-((goffs%2*2+1)*4+byteidx) : (goffs%2*2+1)*4+byteidx))*((MAX_GATES+1)/2*2*320)+i/2*2*320+goffs/2*320+innerdim] != im[byteidx])
+                        //    printf("bad gate format %d %lu %lu %lu\n", i, goffs, byteidx, innerdim);
+                        input[offset+(((i & 1) == 0 ? 15-(goffs%2*2*4+byteidx) : goffs%2*2*4+byteidx))*((MAX_GATES+1)/2*2*320)+i/2*2*320+goffs/2*320+innerdim] = re[byteidx];
+                        input[offset+(((i & 1) == 0 ? 15-((goffs%2*2+1)*4+byteidx) : (goffs%2*2+1)*4+byteidx))*((MAX_GATES+1)/2*2*320)+i/2*2*320+goffs/2*320+innerdim] = im[byteidx];
+                    }
+                }
+            }
+            //printf("\n");
             offset = offset_qbit + i * 320;
-            for (size_t j = 0; j < 320; j++) input[offset+j] = (j & 15) <= 1 ? gates[i+d*gatesNum].target_qbit%8*2 + (j & 15) : 16;
+            for (size_t j = 0; j < 320; j++) {
+                //if (input[offset+j] != ((j & 15) <= 1 ? (gates[i+d*gatesNum].control_qbit - (gates[i+d*gatesNum].control_qbit > gates[i+d*gatesNum].target_qbit ? 1 : 0))%8*2 + (j & 15) : 16))
+                //    printf("bad control qbit format\n"); 
+                input[offset+j] = (j & 15) <= 1 ? (gates[i+d*gatesNum].control_qbit - (gates[i+d*gatesNum].control_qbit > gates[i+d*gatesNum].target_qbit ? 1 : 0))%8*2 + (j & 15) : 16;
+            }
             offset += MAX_GATES * 320;
-            for (size_t j = 0; j < 320; j++) input[offset+j] = (j & 15) <= 1 ? (gates[i+d*gatesNum].control_qbit - (gates[i+d*gatesNum].control_qbit > gates[i+d*gatesNum].target_qbit ? 1 : 0))%8*2 + (j & 15) : 16;
+            for (size_t j = 0; j < 320; j++) {
+                //if (input[offset+j] != ((j & 15) <= 1 ? gates[i+d*gatesNum].target_qbit%8*2 + (j & 15) : 16))
+                //    printf("bad target qbit format\n");
+                input[offset+j] = (j & 15) <= 1 ? gates[i+d*gatesNum].target_qbit%8*2 + (j & 15) : 16;
+            }
         }
     }
     Completion completion[NUM_DEVICE];
@@ -466,7 +547,6 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
     for (int i = 0; i < gatesNum; i++) {
         for (size_t d = 0; d < NUM_DEVICE; d++) {
             progidx = 1+((i&1)!=0 ? 2+(NUM_QBITS >= 9 ? 2 : 0)+(NUM_QBITS >= 10 ? 2 : 0) : 0) + gates[i+d*gatesNum].target_qbit/8*2 + (gates[i+d*gatesNum].target_qbit == gates[i+d*gatesNum].control_qbit ? 0 : 1+(2+(gates[i+d*gatesNum].target_qbit/8==0))*((gates[i+d*gatesNum].control_qbit-(gates[i+d*gatesNum].control_qbit > gates[i+d*gatesNum].target_qbit ? 1 : 0))/8));
-            printf("%lu %d %d\n", d, i, progidx);
             status = groq_invoke(device[d], inputBuffers[d][progidx], 0, outputBuffers[d][progidx], 0, &completion[d]);
             if (status) {
                 printf("ERROR: invoke %d\n", status);
@@ -503,25 +583,44 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
         if (status) {
             printf("ERROR: get data handle %d\n", status);
             return 1;
-        }    
-        //output format if unitary returned: FLOAT32 (2*rows, cols) where inner splits are outermost dimension
+        }        
+        //output format when unitary returned: FLOAT32 (2*rows, cols) where inner splits are outermost dimension
         Complex8* data = (Complex8*)malloc(sizeof(Complex8)*rows*cols);
+        /*for (size_t i = 0; i < 32; i++) {
+            for (size_t j = 0; j < 320; j++) {
+                printf("%X ", output[i*320+j]);
+            }
+            printf("\n");
+        }*/
+        /*float* buf = (float*)malloc(2*rows*cols*sizeof(float)); //logical shape of result is (num_inner_splits, rows, 2, min(256, cols))
+        status = groq_tensor_layout_to_host(outpLayouts[gatesNum&1], output, num_inner_splits*2*rows*4*320, (unsigned char*)buf, 2*rows*cols*sizeof(float)); 
+        if (status) {
+            printf("ERROR: tensor layout to host %d\n", status);
+            return 1;
+        }*/
         double curtrace = 0.0;
         for (size_t i = 0; i < rows; i++) {
             for (size_t j = 0; j < cols; j++) {
                 size_t innerdim = j % maxinnerdim;
                 size_t innersplit = j / maxinnerdim;
-                char rb[sizeof(float)], ib[sizeof(float)];
+                unsigned char rb[sizeof(float)], ib[sizeof(float)];
+                //unsigned char* vrb = floatToBytes(&buf[innersplit*rows*2*maxinnerdim+i*2*maxinnerdim+innerdim]), *vib = floatToBytes(&buf[innersplit*rows*2*maxinnerdim+i*2*maxinnerdim+maxinnerdim+innerdim]);
                 for (size_t byteidx = 0; byteidx < sizeof(float); byteidx++) {
-                    rb[byteidx] = output[innersplit*rows*2*320+i*2*320+byteidx*320+innerdim]; 
-                    ib[byteidx] = output[innersplit*rows*2*320+(i*2+1)*320+byteidx*320+innerdim];
+                    rb[byteidx] = output[((gatesNum & 1) != 0 ? 4+3-byteidx : byteidx)*num_inner_splits*rows*320+innersplit*rows*320+i*320+innerdim]; 
+                    ib[byteidx] = output[((gatesNum & 1) != 0 ? 3-byteidx : 4+byteidx)*num_inner_splits*rows*320+innersplit*rows*320+i*320+innerdim];
+                    //if (vrb[byteidx] != rb[byteidx] || vib[byteidx] != ib[byteidx]) printf("bad output format %lu %lu %lu\n", i, j, byteidx);
                 }
                 float re = *bytesToFloat(rb), im = *bytesToFloat(ib);
                 data[i*cols+j].real = re;
                 data[i*cols+j].imag = im;
-                if (i == j) curtrace += sqrt((double)re * (double)re + (double)im * (double)im);
+                //printf("%f+%fj ", re, im);
+                //printf("%X+%Xj ", *((unsigned int*)floatToBytes(&re)), *((unsigned int*)floatToBytes(&im)));
+                if (i == j) curtrace += re;
             }
+            //printf("\n");
         }
+        //free(buf);
+        //printf("\n");
         trace[d] = curtrace;
         free(data);
     }
@@ -536,15 +635,32 @@ int calcqgdKernelGroq(size_t rows, size_t cols, gate_kernel_type* gates, int gat
     return 0;
 }
 
+#ifdef TEST
 int main(int argc, char* argv[])
 {
     if (initialize_groq()) exit(1);
-    int num_qbits = 2;
-    int rows = 1 << num_qbits, cols = 1 << num_qbits;
-    Complex8* data = (Complex8*)malloc(sizeof(Complex8)*rows*cols);
+    int rows = 1 << NUM_QBITS, cols = 1 << NUM_QBITS;
+    Complex8* data = (Complex8*)calloc(rows*cols, sizeof(Complex8));
+    for (int i = 0; i < rows; i++) {
+        for (int j = 0; j < cols; j++) {
+            //data[i*cols+j].real = i*cols*2+j;
+            //data[i*cols+j].imag = i*cols*2+cols+j;
+            if (i==j) data[i*cols+j].real = 1.0;
+        }
+    }
     load2groq(data, rows, cols);
-    int gatesNum = MAX_GATES, gateSetNum = 4;
+    int gatesNum = 1,//MAX_GATES,
+        gateSetNum = 1;
     gate_kernel_type* gates = (gate_kernel_type*)calloc(gatesNum * gateSetNum, sizeof(gate_kernel_type));
+    for (int i = 0; i < gatesNum; i++) {
+        for (int d = 0; d < gateSetNum; d++) {
+            gates[i+d*gatesNum].Theta = 25+i;
+            gates[i+d*gatesNum].Lambda = 50+i;
+            gates[i+d*gatesNum].Phi = 55+i;
+            gates[i+d*gatesNum].target_qbit = i % NUM_QBITS;
+            gates[i+d*gatesNum].control_qbit = i % NUM_QBITS;
+        } 
+    }
     double* trace = (double*)calloc(gateSetNum, sizeof(double));
     calcqgdKernelGroq(rows, cols, gates, gatesNum, gateSetNum, trace);
     free(data);
@@ -552,3 +668,4 @@ int main(int argc, char* argv[])
     releive_groq();
     return 0;
 }
+#endif
