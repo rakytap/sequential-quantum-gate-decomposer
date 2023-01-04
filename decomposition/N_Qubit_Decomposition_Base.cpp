@@ -745,8 +745,6 @@ void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, gsl_v
     }
     else {
 
-        int prob_num = 20;
-
         if ( randomization_succesful ) {
             for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                 if ( randomized_probs[jdx] == 1 ) {
@@ -791,11 +789,14 @@ void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, gsl_v
 
 #ifdef __MPI__  
         MPI_Bcast( (void*)output->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif
+
    
 if ( current_rank == 0 ) { 
+#endif
     std::cout << "Randomized parameters: " << changed_parameters << std::endl;
+#ifdef __MPI__  
 }
+#endif
 
 
 }
