@@ -1,15 +1,10 @@
 import numpy as np
 import random
 
-from qiskit import QuantumRegister, ClassicalRegister, BasicAer
-from qiskit import QuantumCircuit, execute, IBMQ, transpile
-from qiskit.providers.aer import QasmSimulator
+from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
-from qiskit import Aer
-from qgd_python.gates.qgd_U3 import qgd_U3
 
-
-from scipy.stats import unitary_group
+from qgd_python.utils import get_unitary_from_qiskit_circuit
 
 pi=np.pi
 
@@ -45,31 +40,24 @@ class Test_operations_squander:
         
         U3_squander = U3.get_Matrix( parameters )
         
-        print(U3_squander)
+        #print(U3_squander)
 
 #QISKIT
 
-        backend = Aer.get_backend('unitary_simulator')
-
+        
 
         # Create a Quantum Circuit acting on the q register
         circuit = QuantumCircuit(qbit_num)
 
         # Add the u3 gate on qubit pi, pi,
-        circuit.u(parameters[0]*2, parameters[1], parameters[2], target_qbit)
-                
-        # job execution and getting the result as an object
-        job = execute(circuit, backend)
-        
-        # the result of the Qiskit job
-        result=job.result()  
-        
+        circuit.u(parameters[0]*2, parameters[1], parameters[2], target_qbit)             
+      
         # the unitary matrix from the result object
-        U3_qiskit = result.get_unitary(circuit)
+        U3_qiskit = get_unitary_from_qiskit_circuit( circuit )
         U3_qiskit = np.asarray(U3_qiskit)
         
         # Draw the circuit        
-        print(U3_qiskit)
+        #print(U3_qiskit)
         
         #the difference between the SQUANDER and the qiskit result        
         delta_matrix=U3_squander-U3_qiskit
@@ -80,6 +68,8 @@ class Test_operations_squander:
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
         assert( error < 1e-3 )        
  
+
+
 
 
 

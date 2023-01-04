@@ -1,13 +1,10 @@
 import numpy as np
 import random
 
-from qiskit import QuantumRegister, ClassicalRegister, BasicAer
-from qiskit import QuantumCircuit, execute, IBMQ, transpile
-from qiskit.providers.aer import QasmSimulator
+from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
-from qiskit import Aer
 
-from scipy.stats import unitary_group
+from qgd_python.utils import get_unitary_from_qiskit_circuit
 
 pi=np.pi
 
@@ -35,31 +32,22 @@ class Test_operations_squander:
                 
         X_squander = X.get_Matrix( )
         
-        print(X_squander)
+        #print(X_squander)
 
 #QISKIT
-
-        backend = Aer.get_backend('unitary_simulator')
-
 
         # Create a Quantum Circuit acting on the q register
         circuit = QuantumCircuit(qbit_num)
 
         # Add the CNOT gate on control qbit and target qbit
         circuit.x( target_qbit )
-                
-        # job execution and getting the result as an object
-        job = execute(circuit, backend)
-        
-        # the result of the Qiskit job
-        result=job.result()  
-        
+
         # the unitary matrix from the result object
-        X_qiskit = result.get_unitary(circuit)
+        X_qiskit = get_unitary_from_qiskit_circuit( circuit )
         X_qiskit = np.asarray(X_qiskit)
         
         # Draw the circuit        
-        print(X_qiskit)
+        #print(X_qiskit)
         
         #the difference between the SQUANDER and the qiskit result        
         delta_matrix=X_squander-X_qiskit
