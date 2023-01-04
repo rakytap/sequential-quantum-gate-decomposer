@@ -821,12 +821,12 @@ def main():
     #[1, 2, 4, 8, 16, 32, 64, 128, 256, 1024, 4096, 14336]
     #10 qbits max for single bank, 11 qbits requires dual chips [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 7, 26, 104]
     #import math; [math.ceil(((1<<x)*int(math.ceil((1<<x)/320)))/8192) for x in range(15)]
-    num_qbits, max_levels = 5, 6
-    max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
+    #num_qbits, max_levels = 5, 6
+    #max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
     #UnitarySimulator.unit_test(num_qbits)
     #UnitarySimulator.chain_test(num_qbits, max_gates)
-    #UnitarySimulator.build_all(max_levels)
-    UnitarySimulator.checkacc()
+    UnitarySimulator.build_all(max_levels)
+    #UnitarySimulator.checkacc()
     #UnitarySimulator.perfcompare()
 if __name__ == "__main__":
     main()
