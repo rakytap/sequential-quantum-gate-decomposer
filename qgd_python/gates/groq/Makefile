@@ -6,7 +6,7 @@ CC = g++
 CFLAGS = -Wall -g -fPIC
 
 # define any directories containing header files other than /usr/include
-INCLUDES = -I$(GROQ_DIR)/include -I./build
+INCLUDES = -I$(GROQ_DIR)/include -I./usiop
 
 # define library paths in addition to /usr/lib
 LFLAGS = 
@@ -18,14 +18,15 @@ LIBS = $(GROQ_DIR)/lib/groqruntime/lib/libgroqruntime.a -lrt
 SRCS = groq_us.c
 
 geniop:
+	mkdir -p build
 	python gsquander.py
-	for FILE in build/us*.0.iop; do xxd -i $$FILE $$FILE.h; done
+	for FILE in usiop/us*.0.iop; do xxd -i $$FILE $$FILE.h; done
 
 us%:
-	$(CC) $(CFLAGS) $(INCLUDES) -ous$*.0.iop $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -shared
+	$(CC) $(CFLAGS) $(INCLUDES) -obuild/us$*.so $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -shared
 
 testus%:
-	$(CC) $(CFLAGS) $(INCLUDES) -otestus$* $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -DTEST -g
+	$(CC) $(CFLAGS) $(INCLUDES) -obuild/testus$* $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -DTEST -g
  
 all: geniop us2 us3 us4 us5 us6 us7 us8 us9 us10
 
