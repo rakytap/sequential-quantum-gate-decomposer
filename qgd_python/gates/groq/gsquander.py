@@ -475,7 +475,7 @@ class UnitarySimulator(g.Component):
         return result, copy
     def build_chain(num_qbits, max_gates):
         pow2qb = 1 << num_qbits
-        pgm_pkg = g.ProgramPackage(name="us" + str(num_qbits) + "-" + str(max_gates), output_dir="build", inspect_raw=False, gen_vis_data=False, check_stream_conflicts=False, check_tensor_timing_conflicts=False)
+        pgm_pkg = g.ProgramPackage(name="us" + str(num_qbits) + "-" + str(max_gates), output_dir="usiop", inspect_raw=False, gen_vis_data=False, check_stream_conflicts=False, check_tensor_timing_conflicts=False)
         print("Number of qbits:", num_qbits, "Maximum gates:", max_gates)
         with pgm_pkg.create_program_context("init_us") as pcinit:
             us = UnitarySimulator(num_qbits)
@@ -623,15 +623,15 @@ class UnitarySimulator(g.Component):
             "unitaryres": unitaryres.name, "unitaryrevres": unitaryrevres.name}
     def build_all(max_levels, if_exists=False):
         import os, pickle
-        if not if_exists and os.path.exists("build/usdata"):
-            with open("build/usdata", 'rb') as f:
+        if not if_exists and os.path.exists("usiop/usdata"):
+            with open("usiop/usdata", 'rb') as f:
                 d = pickle.load(f)
         else: d = {}
         for num_qbits in range(2, 10+1):
             max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
             if not (num_qbits, max_gates) in d:
                 d[(num_qbits, max_gates)] = UnitarySimulator.build_chain(num_qbits, max_gates)
-                with open("build/usdata", 'wb') as f:
+                with open("usiop/usdata", 'wb') as f:
                     pickle.dump(d, f)
         return d
     def get_unitary_sim(num_qbits, max_gates, tensornames=None):
