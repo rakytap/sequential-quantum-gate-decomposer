@@ -425,12 +425,12 @@ int initialize_groq(unsigned int num_qbits)
         inpSize = groq_program_get_input_size(prog, j);
         outpSize = groq_program_get_output_size(prog, j);
         //printf("input size %lu output size %lu\n", inpSize, outpSize);
-        status = groq_allocate_iobuffer_array(driver, inpSize, 1, ptindex, &inputBuffers[d][j]);
+        status = groq_allocate_iobuffer_array(driver, inpSize, 1, ptindex+3, &inputBuffers[d][j]);
         if (status) {
             printf("ERROR: allocate iobuffer array %d\n", status);
             return 1;
         }                                            
-        status = groq_allocate_iobuffer_array(driver, outpSize, 1, ptindex, &outputBuffers[d][j]);
+        status = groq_allocate_iobuffer_array(driver, outpSize, 1, ptindex+3, &outputBuffers[d][j]);
         if (status) {
             printf("ERROR: allocate iobuffer array %d\n", status);
             return 1;
@@ -555,7 +555,6 @@ extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
             return 1;
         }
     }
-    printf("loaded\n");
     return 0;
 }
 
@@ -598,7 +597,10 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                 unsigned char* cbuf = (unsigned char*)malloc(mx_gates*320);
                 for (int i = 0; i < gatesNum; i++) {
                     long double c = cosl(gates[i+d*gatesNum].Theta), s = sinl(gates[i+d*gatesNum].Theta);
-                    float _Complex g[] = { c, -cexpl(I*gates[i+d*gatesNum].Lambda)*s, cexpl(I*gates[i+d*gatesNum].Phi)*s, cexpl(I*(gates[i+d*gatesNum].Phi+gates[i+d*gatesNum].Lambda))*c };
+                    float _Complex g[] = { (gates[i+d*gatesNum].metadata & 1) ? 0.0 : c,
+                        (gates[i+d*gatesNum].metadata & 2) ? 0.0 : -cexpl(I*gates[i+d*gatesNum].Lambda)*s,
+                        (gates[i+d*gatesNum].metadata & 4) ? 0.0 : cexpl(I*gates[i+d*gatesNum].Phi)*s,
+                        (gates[i+d*gatesNum].metadata & 8) ? 0.0 : cexpl(I*(gates[i+d*gatesNum].Phi+gates[i+d*gatesNum].Lambda))*c };
                     for (size_t goffs = 0; goffs < 4; goffs++) {
                         for (size_t innerdim = 0; innerdim < gatecols; innerdim++) {
                             if ((i & 1) == 0) {
@@ -637,7 +639,11 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                 for (int i = 0; i < gatesNum; i++) {
                     int idx = i+curGateSet[d]*gatesNum;
                     long double c = cosl(gates[idx].Theta), s = sinl(gates[idx].Theta);
-                    float _Complex g[] = { c, -cexpl(I*gates[idx].Lambda)*s, cexpl(I*gates[idx].Phi)*s, cexpl(I*(gates[idx].Phi+gates[idx].Lambda))*c };
+                    int deriv = (gates[idx].metadata & 0x80) != 0;
+                    float _Complex g[] = { (gates[idx].metadata & 1) != 0 ? 0.0 : c,
+                        (gates[idx].metadata & 2) != 0 ? 0.0 : -cexpl(I*gates[idx].Lambda)*s,
+                        (gates[idx].metadata & 4) != 0 ? 0.0 : cexpl(I*gates[idx].Phi)*s,
+                        (gates[idx].metadata & 8) != 0 ? 0.0 : cexpl(I*(gates[idx].Phi+gates[idx].Lambda))*c };
                     size_t offset = (i & 1) != 0 ? (mx_gates+1)/2*8*4*320 : 0;
                     for (size_t goffs = 0; goffs < 4; goffs++) { //effective address order dimension as S16 is (4, 4, (mx_gates+1)/2, 2, min(320, cols))
                         float fr = crealf(g[goffs]), fi = cimagf(g[goffs]);
