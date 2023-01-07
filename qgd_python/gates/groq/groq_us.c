@@ -439,10 +439,10 @@ int initialize_groq(unsigned int num_qbits)
   }
 #ifdef NUM_QBITS
   loaded = NUM_QBITS;
-  printf("Initialized Groq for %d qbits\n", NUM_QBITS);
+  printf("Initialized Groq for %d qbits on %d devices\n", NUM_QBITS, NUM_DEVICE);
 #else  
   loaded = num_qbits;
-  printf("Initialized Groq for %d qbits\n", num_qbits);
+  printf("Initialized Groq for %d qbits on %d devices\n", num_qbits, NUM_DEVICE);
 #endif
   return 0;
 }
@@ -482,11 +482,11 @@ extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
 {
     // test whether the DFE engine can be initialized
 #ifdef NUM_QBITS
-    size_t mx_gates = MAX_GATES;
+    //size_t mx_gates = MAX_GATES;
     if ( initialize_groq() ) { //cols must equal rows and be a power of 2 from 4 to 1024 for 2 to 10 qbits
 #else
     int num_qbits = log2(cols);
-    size_t mx_gates = max_gates[num_qbits-2];
+    //size_t mx_gates = max_gates[num_qbits-2];
     if ( initialize_groq(num_qbits) ) {
 #endif
         printf("Failed to initialize the Groq engine\n");
@@ -504,10 +504,11 @@ extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
     //however the host order is address sorted so by hemisphere, slice then offset EASTERNMOST to WESTERNMOST initialization order so E43->E0 then W0->W43, little endian matching CPU endianness
     //making order othergate, gate, unitary, control_qbits, target_qbits
     u_int8_t* input;
-    size_t offset = (mx_gates+1)/2*2*8*4*320;
+    size_t offset = 0; //(mx_gates+1)/2*2*8*4*320;
     size_t num_inner_splits = (cols+320-1)/320;
     size_t maxinnerdim = cols > 320 ? 256 : cols; //real chip shape is (num_inner_splits, rows, 2, min(cols, 256)) as inner splits are 256 for 9 and 10 qbits (not for 11)
-    for (size_t d = 0; d < NUM_DEVICE; d++) {        
+    Completion completion[NUM_DEVICE];
+    for (size_t d = 0; d < NUM_DEVICE; d++) {
         Status status = groq_get_data_handle(inputBuffers[d][0], 0, &input);
         if (status) {
             printf("ERROR: get data handle %d\n", status);
@@ -540,7 +541,21 @@ extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
                 }
             }
         }
+        status = groq_invoke(device[d], inputBuffers[d][0], 0, outputBuffers[d][0], 0, &completion[d]);
+        if (status) {
+            printf("ERROR: invoke %d\n", status);
+            return 1;
+        }
     }
+    for (size_t d = 0; d < NUM_DEVICE; d++) {
+        int completionCode;
+        while (!(completionCode = groq_poll_completion(completion[d])));
+        if (completionCode != GROQ_COMPLETION_SUCCESS) {
+            printf("ERROR: %s\n", completionCode == GROQ_COMPLETION_GFAULT ? "GFAULT" : "DMA FAULT");
+            return 1;
+        }
+    }
+    printf("loaded\n");
     return 0;
 }
 
@@ -559,8 +574,8 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
     int num_qbits = log2(cols);
     size_t mx_gates = max_gates[num_qbits-2];
 #endif
-    size_t num_inner_splits = (cols+320-1)/320;
-    size_t offset_qbit = num_inner_splits*2*rows*4*320+(mx_gates+1)/2*2*8*4*320;
+    //size_t num_inner_splits = (cols+320-1)/320;
+    size_t offset_qbit = (mx_gates+1)/2*2*8*4*320; //num_inner_splits*2*rows*4*320
     size_t gatecols = cols < 320 ? cols : 320;
     size_t maxinnerdim = cols > 320 ? 256 : cols; //real chip shape is (num_inner_splits, rows, 2, min(cols, 256)) as inner splits are 256 for 9 and 10 qbits (not for 11)
     Status status;
@@ -572,7 +587,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                 curGateSet[d] = nextGateSet++;
                 curStep[d] = 0;
                 u_int8_t* input;
-                status = groq_get_data_handle(inputBuffers[d][0], 0, &input);
+                status = groq_get_data_handle(inputBuffers[d][1], 0, &input);
                 if (status) {
                     printf("ERROR: get data handle %d\n", status);
                     return 1;
@@ -653,7 +668,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                         input[offset+j] = (j & 15) <= 1 ? gates[idx].target_qbit%8*2 + (j & 15) : 16;
                     }
                 }
-                status = groq_invoke(device[d], inputBuffers[d][0], 0, outputBuffers[d][0], 0, &completion[d]);
+                status = groq_invoke(device[d], inputBuffers[d][1], 0, outputBuffers[d][1], 0, &completion[d]);
                 if (status) {
                     printf("ERROR: invoke %d\n", status);
                     return 1;
@@ -666,7 +681,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                         return 1;
                     }
                     if (curStep[d] == gatesNum+1) {
-                        int progidx = 1+(2+(num_qbits >= 9 ? 2 : 0)+(num_qbits >= 10 ? 2 : 0))*2+(gatesNum&1);
+                        int progidx = 1+1+(2+(num_qbits >= 9 ? 2 : 0)+(num_qbits >= 10 ? 2 : 0))*2+(gatesNum&1);
                         u_int8_t *output;
                         status = groq_get_data_handle(outputBuffers[d][progidx], 0, &output);
                         if (status) {
@@ -688,7 +703,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                             return 1;
                         }*/
                         double curtrace = 0.0;
-                        for (size_t i = 0; i < rows; i++) {
+                        /*for (size_t i = 0; i < rows; i++) {
                             size_t j = i;
                             //for (size_t j = 0; j < cols; j++) {
                                 size_t innerdim = j % maxinnerdim;
@@ -708,15 +723,29 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                                 if (i == j) curtrace += re;
                             //}
                             //printf("\n");
-                        }
+                        }*/
                         //free(buf);
+                        float* buf = (float*)malloc(maxinnerdim*sizeof(float));
+                        status = groq_tensor_layout_to_host(outpLayouts[gatesNum&1], output, 320*sizeof(float), (unsigned char*)buf, maxinnerdim*sizeof(float));
+                        if (status) {
+                            printf("ERROR: tensor layout to host %d\n", status);
+                            return 1;
+                        } 
+                        for (size_t i = 0; i < maxinnerdim; i++) {
+                            curtrace += buf[i];
+                            //hemisphere placement unclear currently for result after sum reduction so use to_host or better yet assign this in layout
+                            //unsigned char rb[sizeof(float)];
+                            //for (size_t byteidx = 0; byteidx < sizeof(float); byteidx++) {
+                            //}
+                        }
+                        free(buf);
                         //printf("\n");
                         trace[curGateSet[d]] = curtrace;
                         //free(data);
                         
                         curGateSet[d] = -1;
                     } else if (curStep[d] == gatesNum) {
-                        int progidx = 1+(2+(num_qbits >= 9 ? 2 : 0)+(num_qbits >= 10 ? 2 : 0))*2+(gatesNum&1);
+                        int progidx = 1+1+(2+(num_qbits >= 9 ? 2 : 0)+(num_qbits >= 10 ? 2 : 0))*2+(gatesNum&1);
                         status = groq_invoke(device[d], inputBuffers[d][progidx], 0, outputBuffers[d][progidx], 0, &completion[d]);
                         if (status) {
                             printf("ERROR: invoke %d\n", status);
