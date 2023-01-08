@@ -525,10 +525,10 @@ class UnitarySimulator(g.Component):
         with g.ResourceScope(name="mask", is_buffered=True, time=0) as pred:
             rows = g.mul(rows, g.concat_vectors([ident]*num_inner_splits, (pow2qb, min(256, pow2qb))), time=0)
             rows = g.sum(rows, dims=[0])
-            rows = rows.write(name="singledim", layout="-1, S4")
+            rows = rows.write(name="singledim", layout="-1, S4, H1(W)")
         #with g.ResourceScope(name="innerred", is_buffered=True, time=None, predecessors=[pred]) as pred:
         #    #rows = g.sum(g.concat_vectors([rows.reshape(pow2qb, min(256, pow2qb)), *([g.zeros((3, min(256, pow2qb)), dtype=g.float32, layout="-1, S12")]*pow2qb)], (4, pow2qb, min(256, pow2qb))).transpose(1,0,2), dims=None, time=0).write(name="trace", layout="-1, S4")
-        #    rows = g.sum(g.concat_vectors([rows.reshape(1, min(256, pow2qb)), g.zeros((3, min(256, pow2qb)), dtype=g.float32, layout="-1, S12")], (4, min(256, pow2qb))), dims=[0,1], time=0).write(name="trace", layout="-1, S4")
+        #    rows = g.sum(g.concat_vectors([rows.reshape(1, min(256, pow2qb)), g.zeros((3, min(256, pow2qb)), dtype=g.float32, layout="-1, S12")], (4, min(256, pow2qb))), dims=[0,1], time=0).write(name="trace", layout="-1, S4, H1(W)")
         return rows
     def build_chain(num_qbits, max_gates):
         pow2qb = 1 << num_qbits
@@ -646,7 +646,7 @@ class UnitarySimulator(g.Component):
                         for i in range(2):
                             g.mem_gather(tqbits, qmap, time=i).write(name="targetqbitdistro" + suffix, storage_req=tqbitdistro[i].storage_request)
                             g.mem_gather(cqbits, qmap, time=2+i).write(name="controlqbitdistro" + suffix, storage_req=cqbitdistro[i].storage_request)
-                        g.concat_vectors([g.zeros((3,320), dtype=g.uint8, layout="-1, S3").read(streams=g.SG1[1:4]), g.mem_gather(derivs, qmap, output_streams=g.SG1[:1]).reshape(1, 320)], (4,320)).reinterpret(g.uint32).mask_bar(g.full((320,), 1.0, dtype=g.float32), time=4).write(name="derivatedistro" + suffix, storage_req=ddistro.storage_request, program_output=True)
+                        g.concat_vectors([g.zeros((3,320), dtype=g.uint8, layout="-1, S3").read(streams=g.SG1[1:4]), g.mem_gather(derivs, qmap, output_streams=g.SG1[:1]).reshape(1, 320)], (4,320)).reinterpret(g.uint32).mask_bar(g.full((320,), 1.0, dtype=g.float32), time=4).write(name="derivatedistro" + suffix, storage_req=ddistro.storage_request)
                     
                     tcmap = [list(reversed(x)) if reversedir else x for x in ((tqbitdistro, tqbitpairs0, tqbitpairs1, cqbitdistro, cqbitpairs0, cqbitpairs1) if not control_qbit is None else (tqbitdistro, tqbitpairs0, tqbitpairs1))]
                     with g.ResourceScope(name="rungate", is_buffered=True, time=None, predecessors=[pred]) as pred:
@@ -743,7 +743,7 @@ class UnitarySimulator(g.Component):
                     invoke([device], iop, 1, 0, [inputs])
                     for i in range(num_gates):
                         progidx = 1+1+(2+(2 if num_qbits >= 9 else 0)+(2 if num_qbits >= 10 else 0) if (i&1)!=0 else 0) + target_qbits[i]//8*2 + (0 if target_qbits[i] == control_qbits[i] else 1+(2+(target_qbits[i]//8==0))*(adjcontrolqbits[i]//8))
-                        print(invoke([device], iop, progidx, 0, None, None, None))
+                        invoke([device], iop, progidx, 0, None, None, None)
                     res, _ = invoke([device], iop, 1+1+(2+(2 if num_qbits >= 9 else 0)+(2 if num_qbits >= 10 else 0))*2+(num_gates&1), 0, None, None, None)
                     #result[0] = np.ascontiguousarray(res[0][tensornames["unitaryres" if (num_gates&1)==0 else "unitaryrevres"]].reshape(num_inner_splits, pow2qb, 2, min(256, pow2qb)).transpose(1, 0, 3, 2)).view(np.complex64).reshape(pow2qb, pow2qb).astype(np.complex128)
                     result[0] = np.sum(res[0][tensornames["unitaryres" if (num_gates&1)==0 else "unitaryrevres"]])
