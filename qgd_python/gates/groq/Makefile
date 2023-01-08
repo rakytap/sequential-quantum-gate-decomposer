@@ -26,7 +26,7 @@ us%:
 	$(CC) $(CFLAGS) $(INCLUDES) -obuild/us$*.so $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -shared
 
 usall:
-	$(CC) $(CFLAGS) $(INCLUDES) -obuild/libqgdDFE.so $(SRCS) $(LFLAGS) $(LIBS) -shared
+	$(CC) $(CFLAGS) $(INCLUDES) -obuild/libqgdDFE.so $(SRCS) $(LFLAGS) $(LIBS) -shared -O3
 
 testus%:
 	$(CC) $(CFLAGS) $(INCLUDES) -obuild/testus$* $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -DTEST -g
