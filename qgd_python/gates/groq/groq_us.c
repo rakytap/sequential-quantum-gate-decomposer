@@ -4,6 +4,9 @@
 #include <math.h>
 #include <string.h>
 #include <complex.h>
+#ifdef TEST
+#include <time.h>
+#endif
 
 typedef struct {
   float real;
@@ -497,7 +500,7 @@ unsigned int log2(unsigned int v)
     return r;
 }
 
-#define USE_GROQ_HOST_FUNCS
+//#define USE_GROQ_HOST_FUNCS
 
 extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
 {
@@ -529,8 +532,8 @@ extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
 #ifndef USE_GROQ_HOST_FUNCS
     size_t offset = 0; //(mx_gates+1)/2*2*8*4*320;
     size_t maxinnerdim = cols > 320 ? 256 : cols; //real chip shape is (num_inner_splits, rows, 2, min(cols, 256)) as inner splits are 256 for 9 and 10 qbits (not for 11)
-    size_t imag_offset = offset+4*rowinner;
     size_t rowinner = num_inner_splits*rows*320;
+    size_t imag_offset = offset+4*rowinner;
 #endif
     Completion completion[NUM_DEVICE];
     for (size_t d = 0; d < NUM_DEVICE; d++) {
@@ -596,6 +599,11 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
     for (int d = 0; d < NUM_DEVICE; d++) { curGateSet[d] = -1; }
     int curStep[NUM_DEVICE] = {0};
     int nextGateSet = 0;
+#ifdef TEST
+    struct timespec times[NUM_DEVICE];
+    double totalinvoketime = 0.0;
+    int totalinvokes = 0;
+#endif
     Completion completion[NUM_DEVICE];
 #ifdef NUM_QBITS
     int num_qbits = NUM_QBITS;
@@ -605,16 +613,17 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
     size_t mx_gates = max_gates[num_qbits-2];
 #endif
     //size_t num_inner_splits = (cols+320-1)/320;
-    size_t mx_gates320 = mx_gates*320;
     size_t hemigates = (mx_gates+1)/2;
-#ifndef USE_GROQ_HOST_FUNCS
+    size_t mx_gates320 = mx_gates*320;
+    size_t gatecols = cols < 320 ? cols : 320;
+#ifdef USE_GROQ_HOST_FUNCS
+    size_t hemigatessz = hemigates*8*gatecols*sizeof(float);
+    size_t gateinputsz = hemigates*2*8*4*320+mx_gates*3*320;
+#else
     size_t hemigates16 = hemigates*2*320;
     size_t offset_qbit = hemigates*2*8*4*320; //num_inner_splits*2*rows*4*320
 #endif
-    size_t gatecols = cols < 320 ? cols : 320;
     size_t maxinnerdim = cols > 320 ? 256 : cols; //real chip shape is (num_inner_splits, rows, 2, min(cols, 256)) as inner splits are 256 for 9 and 10 qbits (not for 11)
-    size_t hemigatessz = hemigates*8*gatecols*sizeof(float);
-    size_t gateinputsz = hemigates*2*8*4*320+mx_gates*3*320;
     Status status;
     if (gateSetNum == 0) return 0;
     while (true) {
@@ -637,12 +646,17 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                 unsigned char* dbuf = (unsigned char*)malloc(mx_gates320);
                 for (int i = 0; i < gatesNum; i++) {
                     int idx = i+curGateSet[d]*gatesNum;
+                    gate_kernel_type* curgate = &gates[idx];
                     size_t ioffs = i/2*8*gatecols;
-                    long double c = cosl(gates[idx].Theta), s = sinl(gates[idx].Theta);
-                    float _Complex g[] = { (gates[idx].metadata & 1) ? 0.0 : c,
-                        (gates[idx].metadata & 2) ? 0.0 : -cexpl(I*gates[idx].Lambda)*s,
-                        (gates[idx].metadata & 4) ? 0.0 : cexpl(I*gates[idx].Phi)*s,
-                        (gates[idx].metadata & 8) ? 0.0 : cexpl(I*(gates[idx].Phi+gates[idx].Lambda))*c };
+                    //Theta (actually ThetaOver2), Phi and Lambda are (32, -25) encoded fix points
+                    long double theta = ldexpl((long double)curgate->Theta, -25),
+                        phi = ldexpl((long double)curgate->Phi, -25),
+                        lambda = ldexpl((long double)curgate->Lambda, -25);
+                    long double c = cosl(theta), s = sinl(theta);
+                    float _Complex g[] = { (curgate->metadata & 1) ? 0.0 : c,
+                        (curgate->metadata & 2) ? 0.0 : -cexpl(I*lambda)*s,
+                        (curgate->metadata & 4) ? 0.0 : cexpl(I*phi)*s,
+                        (curgate->metadata & 8) ? 0.0 : cexpl(I*(phi+lambda))*c };
                     for (size_t goffs = 0; goffs < 4; goffs++) {
                         size_t baseoffs = ioffs+goffs*2*gatecols,
                             baseoffsimag = ioffs+(goffs*2+1)*gatecols;
@@ -656,12 +670,13 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                             }
                         }*/
                         float re = crealf(g[goffs]), im = cimagf(g[goffs]);
+                        printf("%f %f ", re, im);                        
                         wmemset((wchar_t*)((i & 1) == 0 ? &gbuf1[baseoffs] : &gbuf2[baseoffs]), *((wchar_t*)floatToBytes(&re)), gatecols);
                         wmemset((wchar_t*)((i & 1) == 0 ? &gbuf1[baseoffsimag] : &gbuf2[baseoffsimag]), *((wchar_t*)floatToBytes(&im)), gatecols);
                     }
-                    for (size_t j = 0; j < 320; j++) tbuf[320*i+j] = (j & 15) <= 1 ? gates[idx].target_qbit%8*2 + (j & 15) : 16;
-                    for (size_t j = 0; j < 320; j++) cbuf[320*i+j] = (j & 15) <= 1 ? (gates[idx].control_qbit - (gates[idx].control_qbit > gates[idx].target_qbit ? 1 : 0))%8*2 + (j & 15) : 16;
-                    int deriv = (gates[idx].metadata & 0x80) != 0;
+                    for (size_t j = 0; j < 320; j++) tbuf[320*i+j] = (j & 15) <= 1 ? curgate->target_qbit%8*2 + (j & 15) : 16;
+                    for (size_t j = 0; j < 320; j++) cbuf[320*i+j] = (j & 15) <= 1 ? (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0))%8*2 + (j & 15) : 16;
+                    int deriv = (curgate->metadata & 0x80) != 0;
                     memset(&dbuf[320*i], deriv, 320);
                 }
                 status = groq_tensor_layout_from_host(inpLayouts[1], (unsigned char*)gbuf1, hemigatessz, input, gateinputsz);
@@ -695,11 +710,14 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                     int idx = i+curGateSet[d]*gatesNum;
                     size_t ioffs = i/2*2*320;
                     gate_kernel_type* curgate = &gates[idx];
-                    long double c = cosl(curgate->Theta), s = sinl(curgate->Theta);
+                    long double theta = ldexpl((long double)curgate->Theta, -25),
+                        phi = ldexpl((long double)curgate->Phi, -25),
+                        lambda = ldexpl((long double)curgate->Lambda, -25);
+                    long double c = cosl(theta), s = sinl(theta);
                     float _Complex g[] = { (curgate->metadata & 1) != 0 ? 0.0 : c,
-                        (curgate->metadata & 2) != 0 ? 0.0 : -cexpl(I*curgate->Lambda)*s,
-                        (curgate->metadata & 4) != 0 ? 0.0 : cexpl(I*curgate->Phi)*s,
-                        (curgate->metadata & 8) != 0 ? 0.0 : cexpl(I*(curgate->Phi+curgate->Lambda))*c };
+                        (curgate->metadata & 2) != 0 ? 0.0 : -cexpl(I*lambda)*s,
+                        (curgate->metadata & 4) != 0 ? 0.0 : cexpl(I*phi)*s,
+                        (curgate->metadata & 8) != 0 ? 0.0 : cexpl(I*(phi+lambda))*c };
                     size_t offset = (i & 1) != 0 ? hemigates*8*4*320 : 0;
                     for (size_t goffs = 0; goffs < 4; goffs++) { //effective address order dimension as S16 is (4, 4, hemigates, 2, min(320, cols))
                         size_t gioffs = offset+ioffs+goffs/2*320;
@@ -722,17 +740,20 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                         //    printf("bad control qbit format\n"); 
                         input[offset+j] = (j & 15) <= 1 ? (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0))%8*2 + (j & 15) : 16;
                     }
-                    offset += mx_gates * 320;
+                    offset += mx_gates320;
                     for (size_t j = 0; j < 320; j++) {
                         //if (input[offset+j] != ((j & 15) <= 1 ? curgate->target_qbit%8*2 + (j & 15) : 16))
                         //    printf("bad target qbit format\n");
                         input[offset+j] = (j & 15) <= 1 ? curgate->target_qbit%8*2 + (j & 15) : 16;
                     }
-                    offset += mx_gates * 320;
+                    offset += mx_gates320;
                     int deriv = (curgate->metadata & 0x80) != 0;
                     memset(&input[offset], deriv, 320);
                 }
 #endif
+#ifdef TEST
+                timespec_get(&times[d], TIME_UTC);
+#endif                
                 status = groq_invoke(device[d], inputBuffers[d][1], 0, outputBuffers[d][1], 0, &completion[d]);
                 if (status) {
                     printf("ERROR: invoke %d\n", status);
@@ -741,6 +762,13 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
             } else {
                 int completionCode=groq_poll_completion(completion[d]);
                 if (completionCode) {
+#ifdef TEST
+                    struct timespec t;
+                    timespec_get(&t, TIME_UTC);
+                    //printf("%.9f\n", (t.tv_sec - times[d].tv_sec) + (t.tv_nsec - times[d].tv_nsec) / 1e9);
+                    totalinvoketime += (t.tv_sec - times[d].tv_sec) + (t.tv_nsec - times[d].tv_nsec) / 1e9; totalinvokes++;
+#endif                
+
                     if (completionCode != GROQ_COMPLETION_SUCCESS) {
                         printf("ERROR: %s\n", completionCode == GROQ_COMPLETION_GFAULT ? "GFAULT" : "DMA FAULT");
                         return 1;
@@ -816,14 +844,14 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
 #endif
                         //printf("\n");
                         trace[curGateSet[d]] = curtrace;
-#ifdef TEST
-                        printf("%f\n", curtrace);
-#endif
                         //free(data);
                         
                         curGateSet[d] = -1;
                     } else if (curStep[d] == gatesNum) {
                         int progidx = 1+1+(2+(num_qbits >= 9 ? 2 : 0)+(num_qbits >= 10 ? 2 : 0))*2+(gatesNum&1);
+#ifdef TEST
+                        timespec_get(&times[d], TIME_UTC);
+#endif                
                         status = groq_invoke(device[d], inputBuffers[d][progidx], 0, outputBuffers[d][progidx], 0, &completion[d]);
                         if (status) {
                             printf("ERROR: invoke %d\n", status);
@@ -832,7 +860,10 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                         curStep[d]++;
                     } else {
                         int idx = curStep[d]+curGateSet[d]*gatesNum;
-                        int progidx = 1+((curStep[d]&1)!=0 ? 2+(num_qbits >= 9 ? 2 : 0)+(num_qbits >= 10 ? 2 : 0) : 0) + gates[idx].target_qbit/8*2 + (gates[idx].target_qbit == gates[idx].control_qbit ? 0 : 1+(2+(gates[idx].target_qbit/8==0))*((gates[idx].control_qbit-(gates[idx].control_qbit > gates[idx].target_qbit ? 1 : 0))/8));
+                        int progidx = 1+1+((curStep[d]&1)!=0 ? 2+(num_qbits >= 9 ? 2 : 0)+(num_qbits >= 10 ? 2 : 0) : 0) + gates[idx].target_qbit/8*2 + ((gates[idx].control_qbit < 0 || gates[idx].target_qbit == gates[idx].control_qbit) ? 0 : 1+(2+(gates[idx].target_qbit/8==0))*((gates[idx].control_qbit-(gates[idx].control_qbit > gates[idx].target_qbit ? 1 : 0))/8));
+#ifdef TEST
+                        timespec_get(&times[d], TIME_UTC);
+#endif                
                         status = groq_invoke(device[d], inputBuffers[d][progidx], 0, outputBuffers[d][progidx], 0, &completion[d]);
                         if (status) {
                             printf("ERROR: invoke %d\n", status);
@@ -850,7 +881,10 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
             }
             if (d == NUM_DEVICE) break;
         }        
-    }    
+    }
+#ifdef TEST
+    printf("%.9f\n", totalinvoketime / totalinvokes);
+#endif
     return 0;
 }
 
@@ -877,14 +911,14 @@ int main(int argc, char* argv[])
         }
     }
     load2groq(data, rows, cols);
-    int gatesNum = MAX_GATES,
+    int gatesNum = 20, //MAX_GATES,
         gateSetNum = 4;
     gate_kernel_type* gates = (gate_kernel_type*)calloc(gatesNum * gateSetNum, sizeof(gate_kernel_type));
     for (int i = 0; i < gatesNum; i++) {
         for (int d = 0; d < gateSetNum; d++) {
-            gates[i+d*gatesNum].Theta = 25+i+d;
-            gates[i+d*gatesNum].Lambda = 50+i;
-            gates[i+d*gatesNum].Phi = 55+i;
+            gates[i+d*gatesNum].Theta = ((25+i+d)%64)<<25;
+            gates[i+d*gatesNum].Lambda = ((50+i)%64)<<25;
+            gates[i+d*gatesNum].Phi = ((55+i)%64)<<25;
             gates[i+d*gatesNum].target_qbit = i % NUM_QBITS;
             gates[i+d*gatesNum].control_qbit = i % NUM_QBITS;
             gates[i+d*gatesNum].metadata = 0;
@@ -892,6 +926,9 @@ int main(int argc, char* argv[])
     }
     double* trace = (double*)calloc(gateSetNum, sizeof(double));
     calcqgdKernelGroq(rows, cols, gates, gatesNum, gateSetNum, trace);
+    for (int i = 0; i < gateSetNum; i++) {
+        printf("%.9f\n", trace[i]);
+    }
     free(data);
     free(gates);
     releive_groq();
