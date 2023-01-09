@@ -114,6 +114,10 @@ static int
     int target_qbit = -1;
     int control_qbit = -1;
 
+    if (PyArray_API == NULL) {
+        import_array();
+    }
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iii", kwlist,
                                      &qbit_num, &target_qbit, &control_qbit))
         return -1;

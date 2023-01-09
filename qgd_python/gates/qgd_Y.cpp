@@ -18,7 +18,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*
-\file qgd_X.cpp
+\file qgd_Y.cpp
 \brief Python interface for the X gate class
 */
 
@@ -27,20 +27,20 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include <Python.h>
 #include "structmember.h"
-#include "X.h"
+#include "Y.h"
 #include "numpy_interface.h"
 
 
 
 
 /**
-@brief Type definition of the qgd_X Python class of the qgd_X module
+@brief Type definition of the qgd_Y Python class of the qgd_Y module
 */
 typedef struct {
     PyObject_HEAD
     /// Pointer to the C++ class of the X gate
-    X* gate;
-} qgd_X;
+    Y* gate;
+} qgd_Y;
 
 
 /**
@@ -48,10 +48,10 @@ typedef struct {
 @param qbit_num The number of qubits spanning the operation.
 @param target_qbit The 0<=ID<qbit_num of the target qubit.
 */
-X* 
-create_X( int qbit_num, int target_qbit ) {
+Y* 
+create_Y( int qbit_num, int target_qbit ) {
 
-    return new X( qbit_num, target_qbit );
+    return new Y( qbit_num, target_qbit );
 }
 
 
@@ -60,7 +60,7 @@ create_X( int qbit_num, int target_qbit ) {
 @param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 void
-release_X( X*  instance ) {
+release_Y( Y*  instance ) {
     delete instance;
     return;
 }
@@ -74,42 +74,42 @@ extern "C"
 
 
 /**
-@brief Method called when a python instance of the class qgd_X is destroyed
-@param self A pointer pointing to an instance of class qgd_X.
+@brief Method called when a python instance of the class qgd_Y is destroyed
+@param self A pointer pointing to an instance of class qgd_Y.
 */
 static void
-qgd_X_dealloc(qgd_X *self)
+qgd_Y_dealloc(qgd_Y *self)
 {
 
     // release the X gate
-    release_X( self->gate );
+    release_Y( self->gate );
 
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 
 /**
-@brief Method called when a python instance of the class qgd_X is allocated
-@param type A pointer pointing to a structure describing the type of the class qgd_X.
+@brief Method called when a python instance of the class qgd_Y is allocated
+@param type A pointer pointing to a structure describing the type of the class qgd_Y.
 */
 static PyObject *
-qgd_X_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+qgd_Y_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    qgd_X *self;
-    self = (qgd_X *) type->tp_alloc(type, 0);
+    qgd_Y *self;
+    self = (qgd_Y *) type->tp_alloc(type, 0);
     if (self != NULL) {}
     return (PyObject *) self;
 }
 
 
 /**
-@brief Method called when a python instance of the class qgd_X is initialized
-@param self A pointer pointing to an instance of the class qgd_X.
+@brief Method called when a python instance of the class qgd_Y is initialized
+@param self A pointer pointing to an instance of the class qgd_Y.
 @param args A tuple of the input arguments: qbit_num (int), target_qbit (int), Theta (bool) , Phi (bool), Lambda (bool)
 @param kwds A tuple of keywords
 */
 static int
-qgd_X_init(qgd_X *self, PyObject *args, PyObject *kwds)
+qgd_Y_init(qgd_Y *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", NULL};
     int  qbit_num = -1; 
@@ -124,12 +124,8 @@ qgd_X_init(qgd_X *self, PyObject *args, PyObject *kwds)
         return -1;
 
     if (qbit_num != -1 && target_qbit != -1) {
-        self->gate = create_X( qbit_num, target_qbit );
+        self->gate = create_Y( qbit_num, target_qbit );
     }
-
-
-
-
     return 0;
 }
 
@@ -138,9 +134,28 @@ qgd_X_init(qgd_X *self, PyObject *args, PyObject *kwds)
 @param start_index The index of the first inverse gate
 */
 static PyObject *
-qgd_X_get_Matrix( qgd_X *self ) {
+qgd_Y_get_Matrix( qgd_Y *self, PyObject *args ) {
 
-   
+    PyObject * parameters_arr = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
     Matrix X_mtx = self->gate->get_matrix(  );
     
     // convert to numpy array
@@ -148,19 +163,19 @@ qgd_X_get_Matrix( qgd_X *self ) {
     PyObject *X_py = matrix_to_numpy( X_mtx );
 
 
+    Py_DECREF(parameters_arr);
+
     return X_py;
 }
-
 
 
 /**
 @brief Call to apply the gate operation on the inut matrix
 */
 static PyObject *
-qgd_X_apply_to( qgd_X *self, PyObject *args ) {
+qgd_Y_apply_to( qgd_Y *self, PyObject *args ) {
 
     PyObject * unitary_arg = NULL;
-
 
 
     // parsing input arguments
@@ -174,22 +189,21 @@ qgd_X_apply_to( qgd_X *self, PyObject *args ) {
         return NULL;
     }
 
+    PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
-    if ( PyArray_Check(unitary_arg) && PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
-        Py_INCREF(unitary_arg);
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
+        PyErr_SetString(PyExc_Exception, "input mtrix is not memory contiguous");
+        return NULL;
     }
-    else {
-        unitary_arg = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
-    }
-
 
 
     // create QGD version of the input matrix
-    Matrix unitary_mtx = numpy2matrix(unitary_arg);
+    Matrix unitary_mtx = numpy2matrix(unitary);
 
     self->gate->apply_to( unitary_mtx );
     
-    Py_DECREF(unitary_arg);
+    Py_DECREF(unitary);
 
     return Py_BuildValue("i", 0);
 }
@@ -197,21 +211,21 @@ qgd_X_apply_to( qgd_X *self, PyObject *args ) {
 
 
 /**
-@brief Structure containing metadata about the members of class qgd_X.
+@brief Structure containing metadata about the members of class qgd_Y.
 */
-static PyMemberDef qgd_X_members[] = {
+static PyMemberDef qgd_Y_members[] = {
     {NULL}  /* Sentinel */
 };
 
 
 /**
-@brief Structure containing metadata about the methods of class qgd_X.
+@brief Structure containing metadata about the methods of class qgd_Y.
 */
-static PyMethodDef qgd_X_methods[] = {
-    {"get_Matrix", (PyCFunction) qgd_X_get_Matrix, METH_NOARGS,
+static PyMethodDef qgd_Y_methods[] = {
+    {"get_Matrix", (PyCFunction) qgd_Y_get_Matrix, METH_VARARGS,
      "Method to get the matrix of the operation."
     },
-    {"apply_to", (PyCFunction) qgd_X_apply_to, METH_VARARGS,
+    {"apply_to", (PyCFunction) qgd_Y_apply_to, METH_VARARGS,
      "Call to apply the gate on the input matrix."
     },
     {NULL}  /* Sentinel */
@@ -219,14 +233,14 @@ static PyMethodDef qgd_X_methods[] = {
 
 
 /**
-@brief A structure describing the type of the class qgd_X.
+@brief A structure describing the type of the class qgd_Y.
 */
-static PyTypeObject  qgd_X_Type = {
+static PyTypeObject  qgd_Y_Type = {
   PyVarObject_HEAD_INIT(NULL, 0)
-  "qgd_X.qgd_X", /*tp_name*/
-  sizeof(qgd_X), /*tp_basicsize*/
+  "qgd_Y.qgd_Y", /*tp_name*/
+  sizeof(qgd_Y), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  (destructor) qgd_X_dealloc, /*tp_dealloc*/
+  (destructor) qgd_Y_dealloc, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -259,17 +273,17 @@ static PyTypeObject  qgd_X_Type = {
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  qgd_X_methods, /*tp_methods*/
-  qgd_X_members, /*tp_members*/
+  qgd_Y_methods, /*tp_methods*/
+  qgd_Y_members, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
   0, /*tp_dictoffset*/
-  (initproc) qgd_X_init, /*tp_init*/
+  (initproc) qgd_Y_init, /*tp_init*/
   0, /*tp_alloc*/
-  qgd_X_new, /*tp_new*/
+  qgd_Y_new, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -294,9 +308,9 @@ static PyTypeObject  qgd_X_Type = {
 /**
 @brief Structure containing metadata about the module.
 */
-static PyModuleDef  qgd_X_Module = {
+static PyModuleDef  qgd_Y_Module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_X",
+    .m_name = "qgd_Y",
     .m_doc = "Python binding for QGD X gate",
     .m_size = -1,
 };
@@ -306,19 +320,19 @@ static PyModuleDef  qgd_X_Module = {
 @brief Method called when the Python module is initialized
 */
 PyMODINIT_FUNC
-PyInit_qgd_X(void)
+PyInit_qgd_Y(void)
 {
     PyObject *m;
-    if (PyType_Ready(& qgd_X_Type) < 0)
+    if (PyType_Ready(& qgd_Y_Type) < 0)
         return NULL;
 
-    m = PyModule_Create(& qgd_X_Module);
+    m = PyModule_Create(& qgd_Y_Module);
     if (m == NULL)
         return NULL;
 
-    Py_INCREF(& qgd_X_Type);
-    if (PyModule_AddObject(m, "qgd_X", (PyObject *) & qgd_X_Type) < 0) {
-        Py_DECREF(& qgd_X_Type);
+    Py_INCREF(& qgd_Y_Type);
+    if (PyModule_AddObject(m, "qgd_Y", (PyObject *) & qgd_Y_Type) < 0) {
+        Py_DECREF(& qgd_Y_Type);
         Py_DECREF(m);
         return NULL;
     }

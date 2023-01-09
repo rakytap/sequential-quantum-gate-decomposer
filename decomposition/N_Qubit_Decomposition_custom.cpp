@@ -175,6 +175,8 @@ std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
     if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ opeartions," << std::endl;
     if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH opeartions," << std::endl;
     if ( gates_num.x>0 ) sstream << gates_num.x << " X opeartions," << std::endl;
+    if ( gates_num.x>0 ) sstream << gates_num.y << " Y opeartions," << std::endl;
+    if ( gates_num.x>0 ) sstream << gates_num.z << " Z opeartions," << std::endl;
     if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX opeartions," << std::endl;
     if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore opeartions," << std::endl;
     if ( gates_num.un>0 ) sstream << gates_num.un << " UN opeartions," << std::endl;
@@ -275,6 +277,18 @@ N_Qubit_Decomposition_custom::add_gate_layers() {
                 X* x_gate = static_cast<X*>( gate );
                 add_gate_to_end( (Gate*)x_gate->clone() );
             }
+            else if (gate->get_type() == Y_OPERATION ) {
+                Y* y_gate = static_cast<Y*>( gate );
+                add_gate_to_end( (Gate*)y_gate->clone() );
+            }
+            else if (gate->get_type() == Z_OPERATION ) {
+                Z* z_gate = static_cast<Z*>( gate );
+                add_gate_to_end( (Gate*)z_gate->clone() );
+            }
+            else if (gate->get_type() == Y_OPERATION ) {
+                Y* y_gate = static_cast<Y*>( gate );
+                add_gate_to_end( (Gate*)y_gate->clone() );
+            }
             else if (gate->get_type() == SX_OPERATION ) {
                 SX* sx_gate = static_cast<SX*>( gate );
                 add_gate_to_end( (Gate*)sx_gate->clone() );
@@ -298,6 +312,10 @@ N_Qubit_Decomposition_custom::add_gate_layers() {
             else if (gate->get_type() == BLOCK_OPERATION ) {
                 Gates_block* block_gate = static_cast<Gates_block*>( gate );
                 add_gate_to_end( (Gate*)block_gate->clone() );
+            }
+            else {
+                std::string err("N_Qubit_Decomposition_custom::add_gate_layers: Unimplemented gate");
+                throw err;
             }
 
         }

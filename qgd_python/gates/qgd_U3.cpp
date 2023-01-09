@@ -121,6 +121,10 @@ qgd_U3_init(qgd_U3 *self, PyObject *args, PyObject *kwds)
     bool Phi = false;
     bool Lambda = false;
 
+    if (PyArray_API == NULL) {
+        import_array();
+    }
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iibbb", kwlist,
                                      &qbit_num, &target_qbit, &Theta, &Phi, &Lambda))
         return -1;
@@ -176,6 +180,62 @@ qgd_U3_get_Matrix( qgd_U3 *self, PyObject *args ) {
 
 
 
+
+/**
+@brief Call to apply the gate operation on the inut matrix
+*/
+static PyObject *
+qgd_U3_apply_to( qgd_U3 *self, PyObject *args ) {
+
+    PyObject * parameters_arr = NULL;
+    PyObject * unitary_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|OO", &parameters_arr, &unitary_arg )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
+    // convert python object array to numpy C API array
+    if ( unitary_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+    PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
+        PyErr_SetString(PyExc_Exception, "input mtrix is not memory contiguous");
+        return NULL;
+    }
+
+
+    // create QGD version of the input matrix
+    Matrix unitary_mtx = numpy2matrix(unitary);
+
+
+    self->gate->apply_to( parameters_mtx, unitary_mtx );
+    
+    Py_DECREF(parameters_arr);
+    Py_DECREF(unitary);
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
 /**
 @brief Structure containing metadata about the members of class qgd_U3.
 */
@@ -190,6 +250,9 @@ static PyMemberDef qgd_U3_members[] = {
 static PyMethodDef qgd_U3_methods[] = {
     {"get_Matrix", (PyCFunction) qgd_U3_get_Matrix, METH_VARARGS,
      "Method to get the matrix of the operation."
+    },
+    {"apply_to", (PyCFunction) qgd_U3_apply_to, METH_VARARGS,
+     "Call to apply the gate on the input matrix."
     },
     {NULL}  /* Sentinel */
 };

@@ -434,6 +434,27 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
                 Gate* op_cloned = static_cast<Gate*>( x_op_cloned );
                 add_gate( op_cloned );
             }
+            else if (op->get_type() == Y_OPERATION) {
+                Y* y_op = static_cast<Y*>( op );
+                Y* y_op_cloned = y_op->clone();
+                y_op_cloned->set_qbit_num( qbit_num );
+                Gate* op_cloned = static_cast<Gate*>( y_op_cloned );
+                add_gate( op_cloned );
+            }
+            else if (op->get_type() == Z_OPERATION) {
+                Z* z_op = static_cast<Z*>( op );
+                Z* z_op_cloned = z_op->clone();
+                z_op_cloned->set_qbit_num( qbit_num );
+                Gate* op_cloned = static_cast<Gate*>( z_op_cloned );
+                add_gate( op_cloned );
+            }
+            else if (op->get_type() == Y_OPERATION) {
+                Y* y_op = static_cast<Y*>( op );
+                Y* y_op_cloned = y_op->clone();
+                y_op_cloned->set_qbit_num( qbit_num );
+                Gate* op_cloned = static_cast<Gate*>( y_op_cloned );
+                add_gate( op_cloned );
+            }
             else if (op->get_type() == SX_OPERATION) {
                 SX* sx_op = static_cast<SX*>( op );
                 SX* sx_op_cloned = sx_op->clone();

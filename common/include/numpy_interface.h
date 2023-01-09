@@ -40,6 +40,11 @@ PyObject* matrix_to_numpy( Matrix &mtx );
 PyObject* matrix_real_to_numpy( Matrix_real &mtx );
 
 
+/**
+@brief Call to make a numpy array from an instance of matrix_base<int8_t> class.
+@param mtx a matrix instance
+*/
+PyObject* matrix_int8_to_numpy( matrix_base<int8_t> &mtx );
 
 /**
 @brief Call to create a PIC matrix representation of a numpy array

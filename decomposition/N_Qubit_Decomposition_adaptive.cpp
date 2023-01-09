@@ -100,6 +100,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
     }
     
 
+    // Boolean variable to determine whether randomized adaptive layers are used or not
+    randomized_adaptive_layers = false;
+
     srand(time(NULL));   // Initialization, should only be called once.
 }
 
@@ -142,6 +145,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         max_iterations = 1;
 
     }
+
+    // Boolean variable to determine whether randomized adaptive layers are used or not
+    randomized_adaptive_layers = false;
 
     srand(time(NULL));   // Initialization, should only be called once.
 }
@@ -190,6 +196,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         // Maximal number of iteartions in the optimization process
         max_iterations = 1;
     }
+
+    // Boolean variable to determine whether randomized adaptive layers are used or not
+    randomized_adaptive_layers = false;
 
     srand(time(NULL));   // Initialization, should only be called once.
 }
@@ -557,9 +566,9 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
         for (int idx=0; idx<level; idx++) {
 
-            // create the new decomposing layer
-            Gates_block* layer = construct_gate_layer(0,0);
-            gate_structure_loc->combine( layer );
+            // create the new decomposing layer and add to the gate staructure
+            add_adaptive_layers( gate_structure_loc );
+
         }
            
         // add finalyzing layer to the top of the gate structure
@@ -1313,16 +1322,38 @@ N_Qubit_Decomposition_adaptive::create_reduced_parameters( Gates_block* gate_str
 
 
 
+/**
+@brief Call to add adaptive layers to the gate structure stored by the class.
+*/
+void 
+N_Qubit_Decomposition_adaptive::add_adaptive_layers() {
 
+    add_adaptive_layers( this );
+
+}
+
+/**
+@brief Call to add adaptive layers to the gate structure.
+*/
+void 
+N_Qubit_Decomposition_adaptive::add_adaptive_layers( Gates_block* gate_structure ) {
+
+
+    // create the new decomposing layer and add to the gate staructure
+    Gates_block* layer = construct_adaptive_gate_layers();
+    gate_structure->combine( layer );
+
+
+}
 
 
 
 
 /**
-@brief Call to add further layer to the gate structure used in the subdecomposition.
+@brief Call to construct adaptive layers.
 */
 Gates_block* 
-N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, const int& _control_qbit) {
+N_Qubit_Decomposition_adaptive::construct_adaptive_gate_layers() {
 
 
     //The stringstream input to store the output messages.
@@ -1397,13 +1428,26 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
 
     }
 */
-    while (layers.size()>0) { 
-        int idx = std::rand() % layers.size();
+
+    // make difference between randomized adaptive layers and deterministic one
+    if (randomized_adaptive_layers) {
+
+        while (layers.size()>0) { 
+            int idx = std::rand() % layers.size();
 #ifdef __MPI__        
-        MPI_Bcast( &idx, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Bcast( &idx, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
-        block->add_gate( layers[idx] );
-        layers.erase( layers.begin() + idx );
+            block->add_gate( layers[idx] );
+            layers.erase( layers.begin() + idx );
+        }
+
+    }
+    else {
+        while (layers.size()>0) { 
+            block->add_gate( layers[0] );
+            layers.erase( layers.begin() );
+        }
+
     }
 
 
@@ -1413,10 +1457,18 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
 }
 
 
+/**
+@brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure stored by the class.
+*/
+void 
+N_Qubit_Decomposition_adaptive::add_finalyzing_layer() {
 
+    add_finalyzing_layer( this );
+
+}
 
 /**
-@brief ??????????????????
+@brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
 */
 void 
 N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structure ) {
@@ -1435,32 +1487,16 @@ N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structur
              block->add_u3(idx, Theta, Phi, Lambda);
 //        block->add_ry(idx);
     }
-/*
-    // creating block of gates
-    Gates_block* block1 = new Gates_block( qbit_num );
 
-block1->add_u3(3, true, false, true);
-block1->add_u3(3, true, false, true);
-block1->add_u3(3, true, false, true);
-block1->add_u3(2, true, false, true);
-block1->add_u3(0, true, false, true);
-block1->add_u3(3, true, false, true);
-*/
-/*
-    Gates_block* block2 = new Gates_block( qbit_num );
 
-block2->add_u3(4, true, false, true);
-block2->add_u3(2, true, false, true);
-block2->add_u3(5, true, false, true);
-block2->add_u3(2, true, false, true);
-block2->add_u3(4, true, false, true);
-block2->add_u3(3, true, false, true);
-*/
     // adding the opeartion block to the gates
-    gate_structure->add_gate( block );
+    if ( gate_structure == NULL ) {
+        throw ("N_Qubit_Decomposition_adaptive::add_finalyzing_layer: gate_structure is null pointer");
+    }
+    else {
+        gate_structure->add_gate( block );
+    }
 
-    //gate_structure->add_gate( block1 );
-    //gate_structure->add_gate( block2 );
 
 }
 
@@ -1581,7 +1617,7 @@ N_Qubit_Decomposition_adaptive::add_layer_to_imported_gate_structure() {
     sstream << "Add new layer to the adaptive gate structure." << std::endl;	        
     print(sstream, 2);
 
-    Gates_block* layer = construct_gate_layer(0,0);
+    Gates_block* layer = construct_adaptive_gate_layers();
 
 
     if ( gate_structure == NULL ) {

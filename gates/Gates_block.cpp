@@ -30,6 +30,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CRY.h"
 #include "RZ.h"
 #include "X.h"
+#include "Y.h"
+#include "Z.h"
 #include "SX.h"
 #include "SYC.h"
 #include "UN.h"
@@ -140,6 +142,18 @@ Gates_block::release_gates() {
             delete x_operation;
 
         }
+        else if (operation->get_type() == Y_OPERATION) {
+
+            Y* y_operation = static_cast<Y*>(operation);
+            delete y_operation;
+
+        }
+        else if (operation->get_type() == Z_OPERATION) {
+
+            Z* z_operation = static_cast<Z*>(operation);
+            delete z_operation;
+
+        }
         else if (operation->get_type() == SX_OPERATION) {
 
             SX* sx_operation = static_cast<SX*>(operation);            
@@ -172,6 +186,10 @@ Gates_block::release_gates() {
             Adaptive* ad_operation = static_cast<Adaptive*>(operation);
             delete ad_operation;
 
+        }
+        else {
+            std::string err("Gates_block::release_gates(): unimplemented gate"); 
+            throw err;
         }
     }
     
@@ -302,6 +320,14 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
             X* x_operation = static_cast<X*>(operation);
             x_operation->apply_to( input ); 
         }
+        else if (operation->get_type() == Y_OPERATION) {
+            Y* y_operation = static_cast<Y*>(operation);
+            y_operation->apply_to( input ); 
+        }
+        else if (operation->get_type() == Z_OPERATION) {
+            Z* z_operation = static_cast<Z*>(operation);
+            z_operation->apply_to( input ); 
+        }
         else if (operation->get_type() == SX_OPERATION) {
             SX* sx_operation = static_cast<SX*>(operation);
             sx_operation->apply_to( input ); 
@@ -328,6 +354,10 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
         else if (operation->get_type() == ADAPTIVE_OPERATION) {
             Adaptive* ad_operation = static_cast<Adaptive*>(operation);
             ad_operation->apply_to( parameters_mtx, input ); 
+        }
+        else {
+            std::string err("Gates_block::apply_to: unimplemented gate"); 
+            throw err;
         }
 
 #ifdef DEBUG
@@ -404,6 +434,14 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
             X* x_operation = static_cast<X*>(operation);
             x_operation->apply_from_right( input ); 
         }
+        else if (operation->get_type() == Y_OPERATION) {
+            Y* y_operation = static_cast<Y*>(operation);
+            y_operation->apply_from_right( input ); 
+        }
+        else if (operation->get_type() == Z_OPERATION) {
+            Z* z_operation = static_cast<Z*>(operation);
+            z_operation->apply_from_right( input ); 
+        }
         else if (operation->get_type() == SX_OPERATION) {
             SX* sx_operation = static_cast<SX*>(operation);
             sx_operation->apply_from_right( input ); 
@@ -430,6 +468,10 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         else if (operation->get_type() == ADAPTIVE_OPERATION) {
             Adaptive* ad_operation = static_cast<Adaptive*>(operation);
             ad_operation->apply_from_right( parameters_mtx, input ); 
+        }
+        else {
+            std::string err("Gates_block::apply_from_right: unimplemented gate"); 
+            throw err;
         }
 
         parameters = parameters + operation->get_parameter_num();
@@ -607,6 +649,24 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                         x_operation->Gate::apply_to_list( grad_loc );
                     }
                 }
+                else if (operation->get_type() == Y_OPERATION) {
+                    Y* y_operation = static_cast<Y*>(operation);
+                    if ( deriv_idx < idx ) {
+                        y_operation->apply_to( input_loc );    
+                    }
+                    else {
+                        y_operation->Gate::apply_to_list( grad_loc );
+                    }
+                }
+                else if (operation->get_type() == Z_OPERATION) {
+                    Z* z_operation = static_cast<Z*>(operation);
+                    if ( deriv_idx < idx ) {
+                        z_operation->apply_to( input_loc );    
+                    }
+                    else {
+                        z_operation->Gate::apply_to_list( grad_loc );
+                    }
+                }
                 else if (operation->get_type() == SX_OPERATION) {
                     SX* sx_operation = static_cast<SX*>(operation);
                     if ( deriv_idx < idx ) {
@@ -669,6 +729,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                     else {
                         ad_operation->apply_to_list( parameters_mtx, grad_loc );
                     }
+                }
+                else {
+                    std::string err("Gates_block::apply_derivate_to: unimplemented gate"); 
+                    throw err;
                 }
 
             }
@@ -936,6 +1000,65 @@ void Gates_block::add_x(int target_qbit ) {
         add_gate( gate );
 
 }
+
+
+
+/**
+@brief Append a Y gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_y_to_end(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new Y( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate_to_end( operation );
+}
+
+/**
+@brief Add a Y gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_y(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new Y( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
+
+
+/**
+@brief Append a Z gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_z_to_end(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new Z( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate_to_end( operation );
+}
+
+/**
+@brief Add a Z gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_z(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new Z( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
 
 
 
@@ -1336,6 +1459,14 @@ gates_num Gates_block::get_gate_nums() {
                 gate_nums.x   = gate_nums.x + 1;
                 gate_nums.total = gate_nums.total + 1;
             }
+            else if (gate->get_type() == Y_OPERATION) {
+                gate_nums.y   = gate_nums.y + 1;
+                gate_nums.total = gate_nums.total + 1;
+            }
+            else if (gate->get_type() == Z_OPERATION) {
+                gate_nums.z   = gate_nums.z + 1;
+                gate_nums.total = gate_nums.total + 1;
+            }
             else if (gate->get_type() == SX_OPERATION) {
                 gate_nums.sx   = gate_nums.sx + 1;
                 gate_nums.total = gate_nums.total + 1;
@@ -1363,6 +1494,10 @@ gates_num Gates_block::get_gate_nums() {
             else if (gate->get_type() == ADAPTIVE_OPERATION) {
                 gate_nums.adap   = gate_nums.adap + 1;
                 gate_nums.total = gate_nums.total + 1;
+            }
+            else {
+                std::string err("Gates_block::get_gate_nums: unimplemented gate"); 
+                throw err;
             }
 
         }
@@ -1567,6 +1702,22 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 		print(sstream, 1);	    	
                 gate_idx = gate_idx + 1;
             }
+            else if (gate->get_type() == Y_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                Y* y_gate = static_cast<Y*>(gate);
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: Y on target qubit: " << y_gate->get_target_qbit() << std::endl;
+		print(sstream, 1);	    	
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == Z_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                Z* z_gate = static_cast<Z*>(gate);
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: Z on target qubit: " << z_gate->get_target_qbit() << std::endl;
+		print(sstream, 1);	    	
+                gate_idx = gate_idx + 1;
+            }
             else if (gate->get_type() == SX_OPERATION) {
                 // get the inverse parameters of the U3 rotation
                 SX* sx_gate = static_cast<SX*>(gate);
@@ -1618,6 +1769,10 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 		sstream << gate_idx << "th gate: Adaptive gate on target qubit: " << ad_gate->get_target_qbit() << ", control qubit " << ad_gate->get_control_qbit() << " and with parameters Phi = " << Phi << std::endl;
 		print(sstream, 1);	    	
                 gate_idx = gate_idx + 1;
+            }
+            else {
+                std::string err("Gates_block::list_gates: unimplemented gate"); 
+                throw err;
             }
 
         }
@@ -1676,6 +1831,14 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
              X* x_gate = static_cast<X*>(gate);
              x_gate->reorder_qubits( qbit_list );
          }
+         else if (gate->get_type() == Y_OPERATION) {
+             Y* y_gate = static_cast<Y*>(gate);
+             y_gate->reorder_qubits( qbit_list );
+         }
+         else if (gate->get_type() == Z_OPERATION) {
+             Z* z_gate = static_cast<Z*>(gate);
+             z_gate->reorder_qubits( qbit_list );
+         }
          else if (gate->get_type() == SX_OPERATION) {
              SX* sx_gate = static_cast<SX*>(gate);
              sx_gate->reorder_qubits( qbit_list );
@@ -1699,6 +1862,10 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
          else if (gate->get_type() == ADAPTIVE_OPERATION) {
              Adaptive* ad_gate = static_cast<Adaptive*>(gate);
              ad_gate->reorder_qubits( qbit_list );
+         }
+         else {
+             std::string err("Gates_block::reorder_qubits: unimplemented gate"); 
+             throw err;
          }
 
 
@@ -1835,6 +2002,18 @@ void Gates_block::combine(Gates_block* op_block) {
             Gate* op_cloned = static_cast<Gate*>( x_op_cloned );
             add_gate_to_end( op_cloned );
         }
+        else if (op->get_type() == Y_OPERATION) {
+            Y* y_op = static_cast<Y*>( op );
+            Y* y_op_cloned = y_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( y_op_cloned );
+            add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == Z_OPERATION) {
+            Z* z_op = static_cast<Z*>( op );
+            Z* z_op_cloned = z_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( z_op_cloned );
+            add_gate_to_end( op_cloned );
+        }
         else if (op->get_type() == SX_OPERATION) {
             SX* sx_op = static_cast<SX*>( op );
             SX* sx_op_cloned = sx_op->clone();
@@ -1874,6 +2053,10 @@ void Gates_block::combine(Gates_block* op_block) {
             Adaptive* ad_op_cloned = ad_op->clone();
             Gate* op_cloned = static_cast<Gate*>( ad_op_cloned );
             add_gate_to_end( op_cloned );
+        }
+        else {
+            std::string err("Gates_block::combine: unimplemented gate"); 
+            throw err;
         }
 
     }
@@ -1934,6 +2117,14 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
             X* x_op = static_cast<X*>( op );
             x_op->set_qbit_num( qbit_num_in );
         }
+        else if (op->get_type() == Y_OPERATION) {
+            Y* y_op = static_cast<Y*>( op );
+            y_op->set_qbit_num( qbit_num_in );
+        }
+        else if (op->get_type() == Z_OPERATION) {
+            Z* z_op = static_cast<Z*>( op );
+            z_op->set_qbit_num( qbit_num_in );
+        }
         else if (op->get_type() == SX_OPERATION) {
             SX* sx_op = static_cast<SX*>( op );
             sx_op->set_qbit_num( qbit_num_in );
@@ -1960,6 +2151,10 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         else if (op->get_type() == ADAPTIVE_OPERATION) {
             Adaptive* ad_op = static_cast<Adaptive*>( op );
             ad_op->set_qbit_num( qbit_num_in );
+        }
+        else {
+            std::string err("Gates_block::set_qbit_num: unimplemented gate"); 
+            throw err;
         }
     }
 }
@@ -2059,6 +2254,18 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
             Gate* op_cloned = static_cast<Gate*>( x_op_cloned );
             op_block->add_gate_to_end( op_cloned );
         }
+        else if (op->get_type() == Y_OPERATION) {
+            Y* y_op = static_cast<Y*>( op );
+            Y* y_op_cloned = y_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( y_op_cloned );
+            op_block->add_gate_to_end( op_cloned );
+        }
+        else if (op->get_type() == Z_OPERATION) {
+            Z* z_op = static_cast<Z*>( op );
+            Z* z_op_cloned = z_op->clone();
+            Gate* op_cloned = static_cast<Gate*>( z_op_cloned );
+            op_block->add_gate_to_end( op_cloned );
+        }
         else if (op->get_type() == SX_OPERATION) {
             SX* sx_op = static_cast<SX*>( op );
             SX* sx_op_cloned = sx_op->clone();
@@ -2098,6 +2305,10 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
             Adaptive* ad_op_cloned = ad_op->clone();
             Gate* op_cloned = static_cast<Gate*>( ad_op_cloned );
             op_block->add_gate_to_end( op_cloned );
+        }
+        else {
+            std::string err("Gates_block::extract_gates: unimplemented gate"); 
+            throw err;
         }
 
     }
@@ -2452,6 +2663,12 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
             else if (gate->get_type() == X_OPERATION) {
 
             }
+            else if (gate->get_type() == Y_OPERATION) {
+
+            }
+            else if (gate->get_type() == Z_OPERATION) {
+
+            }
             else if (gate->get_type() == SX_OPERATION) {
                 std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: SX_gate not implemented");
                 throw error;	    	
@@ -2492,6 +2709,10 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
                 parameter_idx = parameter_idx - 1;
 	    		                    
                 gate_idx = gate_idx + 1;
+            }
+            else {
+                std::string err("Gates_block::adjust_parameters_for_derivation: unimplemented gate"); 
+                throw err;
             }
 
         }
@@ -2762,6 +2983,34 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
 	    	
                 gate_idx = gate_idx + 1;
             }
+            else if (gate->get_type() == Y_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                Y* y_gate = static_cast<Y*>(gate);
+
+                DFEGate.target_qbit = y_gate->get_target_qbit();
+                DFEGate.control_qbit = -1;
+                DFEGate.gate_type = Y_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(M_PI/2*(1<<25));
+                DFEGate.Phi = (int32_t)(M_PI/2*(1<<25));
+                DFEGate.Lambda = (int32_t)(M_PI/2*(1<<25)); 
+                DFEGate.metadata = 0;
+	    	
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == Z_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                Z* z_gate = static_cast<Z*>(gate);
+
+                DFEGate.target_qbit = z_gate->get_target_qbit();
+                DFEGate.control_qbit = -1;
+                DFEGate.gate_type = Z_OPERATION;
+                DFEGate.ThetaOver2 = (int32_t)(0);
+                DFEGate.Phi = (int32_t)(0);
+                DFEGate.Lambda = (int32_t)(M_PI*(1<<25)); 
+                DFEGate.metadata = 0;
+	    	
+                gate_idx = gate_idx + 1;
+            }
             else if (gate->get_type() == SX_OPERATION) {
                 // get the inverse parameters of the U3 rotation
                 SX* sx_gate = static_cast<SX*>(gate);
@@ -2808,6 +3057,10 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 DFEGate.metadata = 0;
 	    		                    
                 gate_idx = gate_idx + 1;
+            }
+            else {
+                std::string err("Gates_block::convert_to_DFE_gates: unimplemented gate"); 
+                throw err;
             }
 
         }
@@ -2919,7 +3172,7 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
             fwrite(parameters_data, sizeof(double), parameter_num, pFile);
         }
         
-        else if (gt_type == X_OPERATION || gt_type == SX_OPERATION) {
+        else if (gt_type == X_OPERATION || gt_type == Y_OPERATION || gt_type == Z_OPERATION || gt_type == SX_OPERATION) {
             int target_qbit = op->get_target_qbit();
             fwrite(&target_qbit, sizeof(int), 1, pFile);
         }
@@ -2936,6 +3189,10 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
             fwrite(&control_qbit, sizeof(int), 1, pFile);
 
             fwrite(parameters_data, sizeof(double), parameter_num, pFile);
+        }
+        else {
+            std::string err("export_gate_list_to_binary: unimplemented gate"); 
+            throw err;
         }
 
 
@@ -3167,6 +3424,30 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             gate_block_level_gates_num[current_level]--;
 
         }
+        else if (gt_type == Y_OPERATION) {
+
+            sstream << "importing Y gate" << std::endl;
+
+            int target_qbit;
+            fread(&target_qbit, sizeof(int), 1, pFile);
+            sstream << "target_qbit: " << target_qbit << std::endl;
+
+            gate_block_levels[current_level]->add_y_to_end(target_qbit);
+            gate_block_level_gates_num[current_level]--;
+
+        }
+        else if (gt_type == Z_OPERATION) {
+
+            sstream << "importing Z gate" << std::endl;
+
+            int target_qbit;
+            fread(&target_qbit, sizeof(int), 1, pFile);
+            sstream << "target_qbit: " << target_qbit << std::endl;
+
+            gate_block_levels[current_level]->add_z_to_end(target_qbit);
+            gate_block_level_gates_num[current_level]--;
+
+        }
         else if (gt_type == SX_OPERATION) {
 
             sstream << "importing SX gate" << std::endl;
@@ -3221,6 +3502,10 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             gate_block_levels[current_level]->add_adaptive_to_end(target_qbit, control_qbit);
             gate_block_level_gates_num[current_level]--;
 
+        }
+        else {
+            std::string err("import_gate_list_from_binary: unimplemented gate"); 
+            throw err;
         }
 
 

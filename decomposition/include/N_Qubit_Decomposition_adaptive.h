@@ -67,12 +67,14 @@ protected:
 
     /// A gate structure describing custom gate structure to be used in the decomposition. 
     Gates_block* gate_structure;
-    ///
+    /// The maximal number of adaptive layers used in the decomposition
     int level_limit;
-    ///
+    /// The minimal number of adaptive layers used in the decomposition
     int level_limit_min;
-    ///
+    /// A vector of index pairs encoding the connectivity between the qubits
     std::vector<matrix_base<int>> topology;
+    /// Boolean variable to determine whether randomized adaptive layers are used or not
+    bool randomized_adaptive_layers;
     
     
 
@@ -165,13 +167,31 @@ virtual Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_r
 */
 Matrix_real create_reduced_parameters( Gates_block* gate_structure, Matrix_real& optimized_parameters, int layer_idx );
 
-/**
-@brief Call to add further layer to the gate structure used in the subdecomposition.
-*/
-Gates_block* construct_gate_layer( const int& _target_qbit, const int& _control_qbit);
 
 /**
-@brief ??????????????????
+@brief Call to add adaptive layers to the gate structure stored by the class.
+*/
+void add_adaptive_layers();
+
+/**
+@brief Call to add adaptive layers to the gate structure.
+*/
+void add_adaptive_layers( Gates_block* gate_structure );
+
+/**
+@brief Call to construct adaptive layers.
+*/
+Gates_block* construct_adaptive_gate_layers();
+
+
+/**
+@brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure stored by the class.
+*/
+void add_finalyzing_layer();
+
+
+/**
+@brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
 */
 void add_finalyzing_layer( Gates_block* gate_structure );
 
