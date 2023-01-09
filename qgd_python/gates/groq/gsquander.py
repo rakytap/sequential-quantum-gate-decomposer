@@ -76,8 +76,10 @@ def process_gates(unitary, num_qbits, parameters, target_qbits, control_qbits):
         unitary = apply_to_qbit_loop(unitary, num_qbits, target_qbit, None if control_qbit == target_qbit else control_qbit, (make_u3(param) if control_qbit is None or control_qbit==target_qbit else make_cry(param)).astype(unitary.dtype))
     return unitary
 def test():
+    print([np.trace(np.real(process_gates(np.eye(1 << 9) + 0j, 9, [np.array([(25+i+d)%64, (50+i)%64, (55+i)%64]) for i in range(20)], [i % 9 for i in range(20)], [i % 9 for i in range(20)]))) for d in range(4)]); return  
     num_qbits, use_identity = 5, False
-    pi = np.pi; parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89])
+    pi = np.pi
+    parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89])
     pow2qb = 1 << num_qbits
     unitary = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
     for i in range(num_qbits):
@@ -913,10 +915,10 @@ def main():
     #10 qbits max for single bank, 11 qbits requires dual chips [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 7, 26, 104]
     #import math; [math.ceil(((1<<x)*int(math.ceil((1<<x)/320)))/8192) for x in range(15)]
     #UnitarySimulator.validate_alus()
-    num_qbits = 3
-    max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
+    #num_qbits = 3
+    #max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
     #UnitarySimulator.unit_test(num_qbits)
-    UnitarySimulator.chain_test(num_qbits, max_gates)
+    #UnitarySimulator.chain_test(num_qbits, max_gates)
     #UnitarySimulator.checkacc()
     #UnitarySimulator.perfcompare()
 if __name__ == "__main__":
