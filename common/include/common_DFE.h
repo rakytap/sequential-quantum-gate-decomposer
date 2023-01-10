@@ -45,9 +45,15 @@ extern "C"
 
 
 /**
- * \brief ???????????
- * 
- */
+@brief Fixed point data related to a gate operation
+@param Theta Value of Theta/2
+@param Phi Value of Phi
+@param Lambda Value of Lambda
+@param target_qbit Qubit on which the gate is applied
+@param control_qbit The control qubit. For single qubit operations control_qbit=-1
+@param gate_type Gate type according to enumeration of gate_type defined in SQUANDER
+@param metadata The most significat bit is set to 1 for derivated gate operation. Set the (8-i)-th bit to 1 if the i-th element of the 2x2 gate kernel should be zero in the derivated gate operation. (If the 0st and 3nd element in kernel matrix should be zero then metadat should be 5 + (1<<7), since 5 = 0101. The the leading 1<<7 bit indicates that a derivation is processed.)
+*/
 typedef struct {
 	int32_t ThetaOver2;
 	int32_t Phi;

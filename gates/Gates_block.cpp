@@ -2328,7 +2328,7 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
                 else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_lambda_parameter()) { // not checked
                     DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
                     DFEGate.Lambda               = DFEGate.Lambda + parameter_shift;
-                    DFEGate.metadata             = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 6 = 0101, plus the leading bit indicates that derivate is processed
+                    DFEGate.metadata             = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
                     gate_set_index               = gate_set_index - 1;
 
                     parameter_idx                = parameter_idx - 1;
@@ -2353,7 +2353,7 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
 //////////////////////////////////////////////////////
                     DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
                     DFEGate2.Lambda              = DFEGate2.Lambda + parameter_shift;
-                    DFEGate2.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 6 = 0101, plus the leading bit indicates that derivate is processed
+                    DFEGate2.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
                     gate_set_index               = gate_set_index - 1;
 
                     DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
@@ -2369,7 +2369,7 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
 
                     DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
                     DFEGate2.Lambda              = DFEGate2.Lambda + parameter_shift;
-                    DFEGate2.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 6 = 0101, plus the leading bit indicates that derivate is processed
+                    DFEGate2.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
                     gate_set_index               = gate_set_index - 1;
 
                     DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
@@ -2384,7 +2384,7 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
 
                     DFEgate_kernel_type& DFEGate3= DFEgates[gate_set_index*gatesNum + gate_idx];
                     DFEGate3.Lambda              = DFEGate3.Lambda + parameter_shift;
-                    DFEGate3.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 6 = 0101, plus the leading bit indicates that derivate is processed
+                    DFEGate3.metadata            = 5 + (1<<7); // The 0st and 3nd element in kernel matrix should be zero for derivates and 5 = 0101, plus the leading bit indicates that derivate is processed
                     gate_set_index               = gate_set_index - 1;
 
                     DFEgate_kernel_type& DFEGate2= DFEgates[gate_set_index*gatesNum + gate_idx];
