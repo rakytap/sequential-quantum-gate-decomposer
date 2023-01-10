@@ -436,10 +436,18 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
 # @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2".
-# @return An instance of the class
     def set_Optimizer( self, optimizer="BFGS" ):
 
         # Set the optimizer
         super(qgd_N_Qubit_Decomposition_adaptive, self).set_Optimizer(optimizer)  
+
+
+## 
+# @brief Call to set the optimizer used in the gate synthesis process
+# @param costfnc Variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, and 2 for FROBENIUS_NORM_CORRECTION2 (currently unimplemented)
+    def set_Cost_Function_Variant( self, costfnc="1" ):
+
+        # Set the optimizer
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(costfnc=costfnc)  
 
 

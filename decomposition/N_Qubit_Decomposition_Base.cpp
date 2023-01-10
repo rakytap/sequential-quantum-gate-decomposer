@@ -61,6 +61,8 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     radius = 1.0;
     randomization_rate = 0.3;
 
+    // The chosen variant of the cost function
+    cost_fnc = FROBENIUS_NORM;
 }
 
 /**
@@ -99,6 +101,8 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
     radius = 1.0;
     randomization_rate = 0.3;
 
+    // The chosen variant of the cost function
+    cost_fnc = FROBENIUS_NORM;
 
 }
 
@@ -836,7 +840,14 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
 
     Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
 //matrix_new.print_matrix();
-    return get_cost_function(matrix_new);
+
+    if ( cost_fnc == FROBENIUS_NORM ) {
+        return get_cost_function(matrix_new);
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+        Matrix_real&& ret = get_cost_function_with_correction(matrix_new, qbit_num);
+        return ret[0] - ret[1];
+    }
 
 }
 
@@ -857,7 +868,17 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
     Matrix_real parameters_mtx(parameters->data, 1, instance->get_parameter_num() );
     Matrix matrix_new = instance->get_transformed_matrix( parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx_loc );
 
-    return get_cost_function(matrix_new);
+  
+    cost_function_type cost_fnc = instance->get_cost_function_variant();
+
+    if ( cost_fnc == FROBENIUS_NORM ) {
+        return get_cost_function(matrix_new);
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+        Matrix_real&& ret = get_cost_function_with_correction(matrix_new, instance->get_qbit_num());
+        return ret[0] - ret[1];
+    }
+
 }
 
 
@@ -891,7 +912,11 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
 
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
 
+    // the number of free parameters
     int parameter_num_loc = instance->get_parameter_num();
+
+    // the variant of the cost function
+    cost_function_type cost_fnc = instance->get_cost_function_variant();
 
 #ifdef __DFE__
 ///////////////////////////////////////
@@ -904,7 +929,7 @@ if ( instance->qbit_num >= 5 ) {
     DFEgate_kernel_type* DFEgates = instance->convert_to_DFE_gates_with_derivates( parameters_mtx, gatesNum, gateSetNum, redundantGateSets );
 
     Matrix&& Umtx_loc = instance->get_Umtx();   
-    Matrix_real trace_DFE_mtx(1, gateSetNum);
+    Matrix_real trace_DFE_mtx(gateSetNum, 3);
 
 #ifdef __MPI__
     // the number of decomposing layers are divided between the MPI processes
@@ -912,10 +937,8 @@ if ( instance->qbit_num >= 5 ) {
     int mpi_gateSetNum = gateSetNum / instance->world_size;
     int mpi_starting_gateSetIdx = gateSetNum/instance->world_size * instance->current_rank;
 
-    Matrix_real mpi_trace_DFE_mtx(1, mpi_gateSetNum);
+    Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
 
-//uploadMatrix2DFE( Umtx_loc );
-//tbb::tick_count t0_DFE = tbb::tick_count::now();
     calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, mpi_trace_DFE_mtx.get_data() );
 
     int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
@@ -923,20 +946,34 @@ if ( instance->qbit_num >= 5 ) {
 
 #else
 
-//uploadMatrix2DFE( Umtx_loc );
-//tbb::tick_count t0_DFE = tbb::tick_count::now();
     calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_DFE_mtx.get_data() );
-//tbb::tick_count t1_DFE = tbb::tick_count::now();
-//pure_DFE_time = pure_DFE_time + (t1_DFE-t0_DFE).seconds();
-#endif  
 
+#endif  
   
-//    double f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
-    *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
+    double f0_DFE;
+    if ( cost_fnc == FROBENIUS_NORM ) {
+//        f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
+        *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+//        f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.cols - trace_DFE_mtx[1]/Umtx_loc.cols;
+        *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
+    }
+
+
     Matrix_real grad_components_DFE_mtx(1, parameter_num_loc);
     for (int idx=0; idx<parameter_num_loc; idx++) {
-//        grad_components_DFE_mtx[idx] = -trace_DFE_mtx[idx+1]/Umtx_loc.cols;
-        gsl_vector_set(grad, idx, -trace_DFE_mtx[idx+1]/Umtx_loc.cols);
+
+        if ( cost_fnc == FROBENIUS_NORM ) {
+//            grad_components_DFE_mtx[idx] = -trace_DFE_mtx[3*(idx+1)]/Umtx_loc.cols;
+            gsl_vector_set(grad, idx, -trace_DFE_mtx[3*(idx+1)]/Umtx_loc.cols);
+        }
+        else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+//            grad_components_DFE_mtx[idx] = -(trace_DFE_mtx[3*(idx+1)] + trace_DFE_mtx[3*(idx+1)+1])/Umtx_loc.cols; 
+            gsl_vector_set(grad, idx, -(trace_DFE_mtx[3*(idx+1)] + trace_DFE_mtx[3*(idx+1)+1])/Umtx_loc.cols);
+        }
+
+
     }
 
     delete[] DFEgates;
@@ -958,21 +995,29 @@ else {
 tbb::tick_count t0_CPU = tbb::tick_count::now();/////////////////////////////////
 #endif
     tbb::parallel_invoke(
-        [&]{*f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance)); },
+        [&]{
+            *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance)); 
+        },
         [&]{
             Matrix Umtx_loc = instance->get_Umtx();
             Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
             Umtx_deriv = instance->apply_derivate_to( parameters_mtx, Umtx_loc );
         });
 
+    int qbit_num = instance->get_qbit_num();
+
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
-            // This is approximate derivate giving a good approximation when f0->0. Helps to avoid higher barren plateaus
-            //double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0)/(*f0);  
 
-            //double f = get_cost_function(Umtx_deriv[idx]);
-            //double grad_comp = (f*f - 1.0)/(*f0)/2;
-            double grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0);
+            double grad_comp;
+            if ( cost_fnc == FROBENIUS_NORM ) {
+                grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0);
+            }
+            else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+                Matrix_real deriv_tmp = get_cost_function_with_correction( Umtx_deriv[idx], qbit_num );
+                grad_comp = (deriv_tmp[0] - deriv_tmp[1] - 1.0);
+            }
+
             gsl_vector_set(grad, idx, grad_comp);
 
 
@@ -1005,6 +1050,34 @@ std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
         throw error;
 */
 #endif
+
+
+}
+
+
+/**
+@brief Call to get the variant of the cost function used in the calculations
+*/
+cost_function_type 
+N_Qubit_Decomposition_Base::get_cost_function_variant() {
+
+    return cost_fnc;
+
+}
+
+
+/**
+@brief Call to set the variant of the cost function used in the calculations
+@param variant The variant of the cost function from the enumaration cost_function_type
+*/
+void 
+N_Qubit_Decomposition_Base::set_cost_function_variant( cost_function_type variant  ) {
+
+    cost_fnc = variant;
+
+    std::stringstream sstream;
+    sstream << "N_Qubit_Decomposition_Base::set_cost_function_variant: Cost function variant set to " << cost_fnc << std::endl;
+    print(sstream, 2);	
 
 
 }

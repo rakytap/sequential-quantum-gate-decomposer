@@ -26,6 +26,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Decomposition_Base.h"
 
+/// @brief Type definition of the fifferent types of the cost function
+typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2} cost_function_type;
+
+
+
 #ifdef __cplusplus
 extern "C" 
 {
@@ -85,6 +90,8 @@ protected:
     std::map<int,int> identical_blocks;
     ///
     optimization_aglorithms alg;
+    /// The chosen variant of the cost function
+    cost_function_type cost_fnc;
     /// logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     bool adaptive_eta;
     /// parameter to contron the radius of parameter randomization around the curren tminimum
@@ -237,6 +244,19 @@ static void optimization_problem_combined( const gsl_vector* parameters, void* v
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 double optimization_problem_panelty( double* parameters, Gates_block* gates_block );
+
+
+/**
+@brief Call to get the variant of the cost function used in the calculations
+*/
+cost_function_type get_cost_function_variant();
+
+
+/**
+@brief Call to set the variant of the cost function used in the calculations
+@param variant The variant of the cost function from the enumaration cost_function_type
+*/
+void set_cost_function_variant( cost_function_type variant  );
 
 
 
