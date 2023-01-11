@@ -23,13 +23,16 @@ geniop:
 	for FILE in usiop/us*.0.iop; do xxd -i $$FILE $$FILE.h; done
 
 us%:
-	$(CC) $(CFLAGS) $(INCLUDES) -obuild/us$*.so $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -shared -O3
+	$(CC) $(CFLAGS) $(INCLUDES) -obuild/us$*.so $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -shared -O3 -fPIC -Wall -g
 
 usall:
-	$(CC) $(CFLAGS) $(INCLUDES) -obuild/libqgdDFE.so $(SRCS) $(LFLAGS) $(LIBS) -shared -O3
+	$(CC) $(CFLAGS) $(INCLUDES) -obuild/libqgdDFE.so $(SRCS) $(LFLAGS) $(LIBS) -shared -O3 -fPIC -Wall
 
 testus%:
-	$(CC) $(CFLAGS) $(INCLUDES) -obuild/testus$* $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -DTEST -O3
+	$(CC) $(CFLAGS) $(INCLUDES) -obuild/testus$* $(SRCS) $(LFLAGS) $(LIBS) -DNUM_QBITS=$* -DTEST -O3 -Wall -g
+
+testus:
+	$(CC) $(CFLAGS) $(INCLUDES) -obuild/testus $(SRCS) $(LFLAGS) $(LIBS) -DTEST -O3 -Wall -g
  
 all: geniop usall
 
