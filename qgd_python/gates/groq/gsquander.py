@@ -1,6 +1,9 @@
 import sys, os
 
 import numpy as np
+from numba import njit
+from numba.np.unsafe.ndarray import to_fixed_tuple
+from functools import lru_cache
 from scipy.stats import unitary_group
 
 import groq.api as g
@@ -32,26 +35,33 @@ def qiskit_oracle(unitary, qbit_num, parameters, target_qbits, control_qbits, us
     U3_qiskit = result.get_unitary(circuit)
     U3_qiskit = np.asarray(U3_qiskit)
     return U3_qiskit
+@njit
 def make_u3(parameters):
     return np.array(
         [[np.cos(parameters[0]*2/2), -np.exp(parameters[2]*1j)*np.sin(parameters[0]*2/2)],
          [np.exp(parameters[1]*1j)*np.sin(parameters[0]*2/2), np.exp((parameters[1]+parameters[2])*1j)*np.cos(parameters[0]*2/2)]])
+@njit
 def make_ry(parameters):
     return make_u3([parameters[0], 0, 0])
     #return np.array(
     #    [[np.cos(parameters[0]*2/2), -np.sin(parameters[0]*2/2)],
     #     [np.sin(parameters[0]*2/2), np.cos(parameters[0]*2/2)]])
+@njit
 def make_controlled(gate):
     return np.block([[np.eye(2), np.zeros((2, 2))], [np.zeros((2, 2)), gate]]) #[np.ix_(*([[0,2,1,3]]*2))]
+@njit
 def make_cry(parameters):
     return make_ry(parameters) #make_controlled(make_ry(parameters))
+@njit
 def twoByTwoFloat(A, B):
-    return np.array([[
-        ((np.real(A[j,0])*np.real(B[0,i])-np.imag(A[j,0])*np.imag(B[0,i])) + (np.real(A[j,1])*np.real(B[1,i])-np.imag(A[j,1])*np.imag(B[1,i])),
-                    (np.real(A[j,0])*np.imag(B[0,i])+np.imag(A[j,0])*np.real(B[0,i])) + (np.real(A[j,1])*np.imag(B[1,i])+np.imag(A[j,1])*np.real(B[1,i]))
-                    #(np.real(A[j,0])*np.imag(B[0,i])+np.real(A[j,1])*np.imag(B[1,i])) + (np.imag(A[j,0])*np.real(B[0,i])+np.imag(A[j,1])*np.real(B[1,i]))
-                    ) for i in range(B.shape[1])
-                    ] for j in range(2)]).view(B.dtype).reshape(B.shape)
+    res = np.empty(B.shape, dtype=B.dtype)
+    for j in range(2):
+        for i in range(B.shape[1]):
+            res[j,i] = (np.real(A[j,0])*np.real(B[0,i])-np.imag(A[j,0])*np.imag(B[0,i])) + (np.real(A[j,1])*np.real(B[1,i])-np.imag(A[j,1])*np.imag(B[1,i]))
+            res[j,i] += ((np.real(A[j,0])*np.imag(B[0,i])+np.imag(A[j,0])*np.real(B[0,i])) + (np.real(A[j,1])*np.imag(B[1,i])+np.imag(A[j,1])*np.real(B[1,i]))) * 1j
+            #((np.real(A[j,0])*np.imag(B[0,i])+np.real(A[j,1])*np.imag(B[1,i])) + (np.imag(A[j,0])*np.real(B[0,i])+np.imag(A[j,1])*np.real(B[1,i]))) * 1j
+    return res
+#@njit
 def apply_to_qbit(unitary, num_qbits, target_qbit, control_qbit, gate):
     pow2qb = 1 << num_qbits
     t = np.arange(num_qbits)
@@ -59,24 +69,33 @@ def apply_to_qbit(unitary, num_qbits, target_qbit, control_qbit, gate):
         t[:-1] = np.roll(t[:-1], (target_qbit - control_qbit) % num_qbits)
         gate = make_controlled(gate)
     t = np.roll(t, -target_qbit)
-    idxs = np.arange(pow2qb).reshape(*([2]*num_qbits)).transpose(t).flatten().tolist()
-    return np.kron(np.eye(pow2qb>>(1 if control_qbit is None else 2), dtype=np.bool), gate)[np.ix_(idxs, idxs)].astype(unitary.dtype) @ unitary
-def apply_to_qbit_loop(unitary, num_qbits, target_qbit, control_qbit, gate):
-    pow2qb = 1 << num_qbits
-    t = np.roll(np.arange(num_qbits), target_qbit)
-    idxs = np.arange(pow2qb).reshape(*([2]*num_qbits)).transpose(t).reshape(-1, 2)
-    for pair in (idxs if control_qbit is None else idxs[(idxs[:,0] & (1<<control_qbit)) != 0,:]).tolist():
-        unitary[pair,:] = twoByTwoFloat(gate, unitary[pair,:]) if unitary.dtype == np.complex64 else gate @ unitary[pair,:]
-    return unitary
+    idxs = np.arange(pow2qb).reshape(*((2,)*num_qbits)).transpose(t).flatten().tolist()
+    return np.kron(np.eye(pow2qb>>(1 if control_qbit is None else 2), dtype=np.bool_), gate)[np.ix_(idxs, idxs)].astype(unitary.dtype) @ unitary
+@lru_cache
+def make_apply_to_qbit_loop(num_qbits):
+    twos = tuple([2]*num_qbits)
+    @njit
+    def apply_to_qbit_loop(unitary, _, target_qbit, control_qbit, gate):
+        pow2qb = 1 << num_qbits
+        t = np.roll(np.arange(num_qbits), target_qbit)
+        idxs = np.arange(pow2qb).reshape(twos).transpose(to_fixed_tuple(t, num_qbits)).copy().reshape(-1, 2) #.reshape(*([2]*num_qbits)).transpose(t).reshape(-1, 2)
+        for pair in (idxs if control_qbit is None else idxs[(idxs[:,0] & (1<<control_qbit)) != 0,:]):
+            #unitary[pair,:] = twoByTwoFloat(gate, unitary[pair,:]) if unitary.dtype == np.dtype(np.complex64) else gate @ unitary[pair,:]
+            unitary[pair,:] = gate @ unitary[pair,:]
+        return unitary
+    return apply_to_qbit_loop
 def process_gates32(unitary, num_qbits, parameters, target_qbits, control_qbits):
     return process_gates(unitary.astype(np.complex64), num_qbits, parameters, target_qbits, control_qbits).astype(np.complex128)
 def process_gates(unitary, num_qbits, parameters, target_qbits, control_qbits):
-    if unitary.dtype == np.complex128: unitary = np.copy(unitary)
+    if unitary.dtype == np.dtype(np.complex128): unitary = np.copy(unitary)
+    return process_gates_loop(unitary, num_qbits, parameters, target_qbits, control_qbits, make_apply_to_qbit_loop(num_qbits)) #apply_to_qbit
+@njit
+def process_gates_loop(unitary, num_qbits, parameters, target_qbits, control_qbits, apply_to_qbit_func):
     for param, target_qbit, control_qbit in zip(parameters, target_qbits, control_qbits):
-        unitary = apply_to_qbit_loop(unitary, num_qbits, target_qbit, None if control_qbit == target_qbit else control_qbit, (make_u3(param) if control_qbit is None or control_qbit==target_qbit else make_cry(param)).astype(unitary.dtype))
+        unitary = apply_to_qbit_func(unitary, num_qbits, target_qbit, None if control_qbit == target_qbit else control_qbit, (make_u3(param) if control_qbit is None or control_qbit==target_qbit else make_cry(param)).astype(unitary.dtype))
     return unitary
 def test():
-    print([np.trace(np.real(process_gates(np.eye(1 << 9) + 0j, 9, [np.array([(25+i+d)%64, (50+i)%64, (55+i)%64]) for i in range(20)], [i % 9 for i in range(20)], [i % 9 for i in range(20)]))) for d in range(4)]); return  
+    print([np.trace(np.real(process_gates(np.eye(1 << 9) + 0j, 9, np.array([[(25+i+d)%64, (50+i)%64, (55+i)%64] for i in range(20)]), np.array([i % 9 for i in range(20)]), np.array([i % 9 for i in range(20)])))) for d in range(4)])
     num_qbits, use_identity = 5, False
     pi = np.pi
     parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89])
@@ -84,8 +103,8 @@ def test():
     unitary = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
     for i in range(num_qbits):
         for j in range(num_qbits):
-            target_qbits, control_qbits = [i, (i+1)%num_qbits, i], [None, None, j]
-            gateparams = [parameters]*3
+            target_qbits, control_qbits = np.array([i, (i+1)%num_qbits, i]), np.array([i, i, j])
+            gateparams = np.repeat(parameters.reshape(1,3), 3, axis=0)
             actual, oracle = qiskit_oracle(unitary, num_qbits, gateparams, target_qbits, control_qbits), process_gates(unitary, num_qbits, gateparams, target_qbits, control_qbits)
             assert np.allclose(actual, oracle), (i, j, actual, oracle)
 #test()
@@ -421,8 +440,8 @@ class UnitarySimulator(g.Component):
             else:
                 if len(tcqbitsel) == 6:
                     ri = [g.concat_vectors([usb[i], ri[i]], (pow2qb*num_inner_splits, innerdim)) for i in range(2)]
-                    cdistro = g.stack(pow2qb*num_inner_splits*[cqbitdistro[0]], 0).read(streams=g.SG1[16+12])
-                    writecontrols = g.distribute_8(g.stack([cqbitpairs0[0]]*2 + [cqbitpairs1[0]]*2, 0).read(streams=g.SG1[16+8]), cdistro, bypass8=0b11111110, distributor_req=3 if self.rev else 7)
+                    cdistro = g.stack(pow2qb*num_inner_splits*[cqbitdistro[0]], 0).read(streams=g.SG1[16+1])
+                    writecontrols = g.distribute_8(g.stack([cqbitpairs0[0]]*2 + [cqbitpairs1[0]]*2, 0).read(streams=g.SG1[16]), cdistro, bypass8=0b11111110, distributor_req=2 if self.rev else 6)
                     rigap, delay = 3*2, 4+4+1+4+2 #3 cycle ALU time and transposer time=4, IO crossing time=4, gather time=1, IO crossing time=4, distributor crossing time=2
                     scheduleri = [(delay, delay+pow2qb//2*num_inner_splits), (delay+pow2qb//2*num_inner_splits+rigap, delay+rigap+pow2qb*num_inner_splits)]
                     schedulewrite = [(0, pow2qb//2*num_inner_splits), (pow2qb//2*num_inner_splits+rigap, rigap+pow2qb*num_inner_splits)]
@@ -456,13 +475,13 @@ class UnitarySimulator(g.Component):
                     for i, splits in enumerate(zip(writesplits, risplits)):
                         with g.ResourceScope(name="dist" + str(i), is_buffered=False, time=119-75+t) as innerpred: #t=51 when gather transpose_null resource scope bases from but we are relative again to parent here
                             if splits[1] is None:
-                                writecontrols[x] = g.transpose_null(writecontrols[x], transposer_req=1 if self.rev else 3, stream_order=[8])
+                                writecontrols[x] = g.transpose_null(writecontrols[x], transposer_req=1 if self.rev else 3, stream_order=[0])
                                 x += 1
                             elif splits[0] is None:
                                 ri[1][y] = g.transpose_null(ri[1][y], transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7])
                                 y += 1
                             else:
-                                ri[1][y], writecontrols[x] = g.split(g.transpose_null(g.concat([ri[1][y].reinterpret(g.uint8), writecontrols[x].reshape(splits[0], 1, innerdim)], 1), transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7, 8], time=0), dim=1, splits=[4,1])
+                                writecontrols[x], ri[1][y] = g.split(g.transpose_null(g.concat([writecontrols[x].reshape(splits[0], 1, innerdim), ri[1][y].reinterpret(g.uint8)], 1), transposer_req=1 if self.rev else 3, stream_order=[0, 4, 5, 6, 7], time=0), dim=1, splits=[1, 4])
                                 writecontrols[x] = writecontrols[x].reshape(splits[0], innerdim)
                                 ri[1][y] = ri[1][y].reinterpret(g.float32).reshape(splits[1], innerdim)
                                 x += 1; y += 1
@@ -470,16 +489,16 @@ class UnitarySimulator(g.Component):
                         if t in gaps: t += gaps[t]
                     writecontrols = g.concat_vectors(writecontrols, (pow2qb*num_inner_splits, innerdim))
                     ri[1] = g.concat_vectors(ri[1], (pow2qb*num_inner_splits, innerdim))
-                    #ri[1], writecontrols = g.split(g.transpose_null(g.stack([ri[1].reinterpret(g.uint8), writecontrols], 1), transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7, 8]), dim=1, num_splits=2)
+                    #writecontrols, ri[1] = g.split(g.transpose_null(g.concat([writecontrols.reshape(-1, 1, innerdim), ri[1].reinterpret(g.uint8)], 1), transposer_req=1 if self.rev else 3, stream_order=[0, 4, 5, 6, 7]), dim=1, splits=[1, 4])
                     #ri[1] = ri[1].reinterpret(g.float32).reshape(pow2qb*num_inner_splits, innerdim)
-                    #writecontrols = writecontrols.split(dim=-2, num_splits=4)[0].reshape(pow2qb*num_inner_splits, innerdim)
-                    dist_st = g.distribute_lowest(g.concat_vectors([g.mem_gather((tqbitpairs0 if (i & (pow2qb*num_inner_splits//4)) == 0 else tqbitpairs1)[0], x, output_streams=[g.SG1[8]]) for i, x in enumerate(writecontrols.split_vectors([1]*pow2qb*num_inner_splits))], (pow2qb*num_inner_splits, innerdim)), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=1 if self.rev else 5)
+                    #writecontrols = writecontrols.reshape(pow2qb*num_inner_splits, innerdim)
+                    dist_st = g.distribute_lowest(g.concat_vectors([g.mem_gather((tqbitpairs0 if (i & (pow2qb*num_inner_splits//4)) == 0 else tqbitpairs1)[0], x, output_streams=[g.SG1[0]]) for i, x in enumerate(writecontrols.split_vectors([1]*pow2qb*num_inner_splits))], (pow2qb*num_inner_splits, innerdim)), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=0 if self.rev else 4)
                     #dist_st = g.distribute_lowest(g.mem_gather(g.stack([tqbitpairs0[0], tqbitpairs1[0]], dim=0).reshape(2, pow2qb//4*num_inner_splits, 2, innerdim).transpose(0,2,1,3), writecontrols, output_streams=[g.SG1[8]]), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=1 if self.rev else 5)
                 else:
                     tqbitdistro, tqbitpairs0, tqbitpairs1 = tcqbitsel
-                    dist_st = g.distribute_lowest(g.concat_vectors([tqbitpairs0[0], tqbitpairs1[0]], (pow2qb*num_inner_splits, innerdim)), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=1 if self.rev else 5)
+                    dist_st = g.distribute_lowest(g.concat_vectors([tqbitpairs0[0], tqbitpairs1[0]], (pow2qb*num_inner_splits, innerdim)), tqbitdistro[0].read(streams=g.SG1[12]), bypass8=0b11110000, distributor_req=0 if self.rev else 4)
                     ri[1] = g.transpose_null(ri[1], transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7])
-                ri[0], writeaddrs = g.split(g.transpose_null(g.stack([ri[0].reinterpret(g.uint8), dist_st], 1), transposer_req=0 if self.rev else 2, stream_order=[4, 5, 6, 7, 8, 9, 10, 11]), dim=1, num_splits=2)
+                writeaddrs, ri[0] = g.split(g.transpose_null(g.stack([dist_st, ri[0].reinterpret(g.uint8)], 1), transposer_req=0 if self.rev else 2, stream_order=[0, 1, 2, 3, 4, 5, 6, 7]), dim=1, num_splits=2)
                 ri[0] = ri[0].reinterpret(g.float32).reshape(pow2qb*num_inner_splits, innerdim)
                 result = g.from_addresses(np.array(self.otherinit[EAST].addresses).reshape(-1, g.float32.size), innerdim, g.float32, "result")
                 copy = g.from_addresses(np.array(self.copystore[EAST].addresses).reshape(-1, g.float32.size), innerdim, g.float32, "copy")
@@ -523,18 +542,19 @@ class UnitarySimulator(g.Component):
             for i, x in enumerate(g.split_vectors(unitary, [pow2qb*2]*num_inner_splits))
             for j, y in enumerate(g.split_vectors(x, [1]*(pow2qb*2)))
                 if (j & 1) == 0 and j//2>=i*min(256, pow2qb) and j//2<(i+1)*min(256, pow2qb)], (pow2qb, min(256, pow2qb)))
-        ident = g.eye(min(256, pow2qb), dtype=g.float32)
+        ident = g.eye(min(256, pow2qb), dtype=g.float32, layout=get_slice4(WEST, 4, 8, 0))
         with g.ResourceScope(name="mask", is_buffered=True, time=0) as pred:
             rows = g.mul(rows, g.concat_vectors([ident]*num_inner_splits, (pow2qb, min(256, pow2qb))), time=0)
             rows = g.sum(rows, dims=[0])
-            rows = rows.write(name="singledim", layout="-1, S4, H1(W)")
+            rows = rows.write(name="singledim", layout=get_slice4(WEST, 0, 4, 0))
         #with g.ResourceScope(name="innerred", is_buffered=True, time=None, predecessors=[pred]) as pred:
         #    #rows = g.sum(g.concat_vectors([rows.reshape(pow2qb, min(256, pow2qb)), *([g.zeros((3, min(256, pow2qb)), dtype=g.float32, layout="-1, S12")]*pow2qb)], (4, pow2qb, min(256, pow2qb))).transpose(1,0,2), dims=None, time=0).write(name="trace", layout="-1, S4")
         #    rows = g.sum(g.concat_vectors([rows.reshape(1, min(256, pow2qb)), g.zeros((3, min(256, pow2qb)), dtype=g.float32, layout="-1, S12")], (4, min(256, pow2qb))), dims=[0,1], time=0).write(name="trace", layout="-1, S4, H1(W)")
         return rows
     def build_chain(num_qbits, max_gates):
         pow2qb = 1 << num_qbits
-        pgm_pkg = g.ProgramPackage(name="us" + str(num_qbits) + "-" + str(max_gates), output_dir="usiop", inspect_raw=False, gen_vis_data=False, check_stream_conflicts=False, check_tensor_timing_conflicts=False)
+        output_unitary = True #False
+        pgm_pkg = g.ProgramPackage(name="us" + ("unit" if output_unitary else "") + str(num_qbits) + "-" + str(max_gates), output_dir="usiop", inspect_raw=True, gen_vis_data=False, check_stream_conflicts=True, check_tensor_timing_conflicts=True)
         print("Number of qbits:", num_qbits, "Maximum gates:", max_gates)
         num_inner_splits = (pow2qb+320-1)//320 #handle inner splits for >=9 qbits
         with pgm_pkg.create_program_context("init_us") as pcinitunitary:
@@ -648,8 +668,9 @@ class UnitarySimulator(g.Component):
                         for i in range(2):
                             g.mem_gather(tqbits, qmap, time=i).write(name="targetqbitdistro" + suffix, storage_req=tqbitdistro[i].storage_request)
                             g.mem_gather(cqbits, qmap, time=2+i).write(name="controlqbitdistro" + suffix, storage_req=cqbitdistro[i].storage_request)
-                        g.concat_vectors([g.zeros((3,320), dtype=g.uint8, layout="-1, S3").read(streams=g.SG1[1:4]), g.mem_gather(derivs, qmap, output_streams=g.SG1[:1]).reshape(1, 320)], (4,320)).reinterpret(g.uint32).mask_bar(g.full((320,), 1.0, dtype=g.float32), time=4).write(name="derivatedistro" + suffix, storage_req=ddistro.storage_request)
-                    
+                        onep = g.full((320,), 1.0, dtype=g.float32, layout=get_slice4(WEST, 4, 8, 0))
+                        zs = [g.zeros((1, 320), dtype=g.uint8, layout=get_slice1(WEST, 17+z, 1)) for z in range(3)]
+                        g.concat_vectors([g.mem_gather(derivs, qmap, output_streams=g.SG1[:1]).reshape(1, 320), *([zs[z].read(streams=g.SG1[1+z:1+z+1]) for z in range(3)])], (4,320)).reinterpret(g.uint32).mask_bar(onep, time=4).write(name="derivatedistro" + suffix, storage_req=ddistro.storage_request)
                     tcmap = [list(reversed(x)) if reversedir else x for x in ((tqbitdistro, tqbitpairs0, tqbitpairs1, cqbitdistro, cqbitpairs0, cqbitpairs1) if not control_qbit is None else (tqbitdistro, tqbitpairs0, tqbitpairs1))]
                     with g.ResourceScope(name="rungate", is_buffered=True, time=None, predecessors=[pred]) as pred:
                         newus.build(unitaryctxt, copyctxt, target_qbit, control_qbit, gatesctxt, gmap, tcmap, ddistro)
@@ -680,7 +701,6 @@ class UnitarySimulator(g.Component):
             assert {(x.hemi, x.slice, x.offset) for x in targetqbitpairs0[i].storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST if hemi==WEST else g.Hemisphere.EAST, x, i) for x in (43,) for i in range(pow2qb//2*num_inner_splits*(2 if num_qbits > 8 else 1))}
             assert {(x.hemi, x.slice, x.offset) for x in targetqbitpairs1[i].storage_request.addresses.reshape(-1).tolist()} == {(g.Hemisphere.WEST if hemi==WEST else g.Hemisphere.EAST, x, i) for x in (42,) for i in range(pow2qb//2*num_inner_splits*(2 if num_qbits > 8 else 1))}
         
-        output_unitary = False
         #we return in raw address format, so the inner splits will be on the outer dimension!
         with pgm_pkg.create_program_context("final_us") as pcfinal:
             g.reserve_tensor(pcinitunitary, pcfinal, unitaryinit)
@@ -716,6 +736,7 @@ class UnitarySimulator(g.Component):
         pow2qb = 1 << num_qbits
         if tensornames is None: tensornames = UnitarySimulator.build_chain(num_qbits, max_gates)
         iop = runtime.IOProgram(tensornames["iop"])
+        print(tensornames)
         driver = runtime.Driver()
         device = driver.next_available_device()
         result = [None]
@@ -725,7 +746,7 @@ class UnitarySimulator(g.Component):
             def closedevice(): exitstack.close()
             runfunc = [None]
             def loaddata():
-                #for i in range(1+2*2+2):
+                #for i in range(1+1+(2+(2 if num_qbits >= 9 else 0)+(2 if num_qbits >= 10 else 0))*2+2):
                 #    device.load(iop[i], unsafe_keep_entry_points=True)
                 device.load_all(iop, unsafe_keep_entry_points=True)
                 num_inner_splits = (pow2qb+320-1)//320
@@ -738,17 +759,17 @@ class UnitarySimulator(g.Component):
                     inputs = {}
                     inputs[tensornames["gates"]] = np.concatenate([np.repeat(gateparams[i].astype(np.complex64).view(np.float32).flatten(), min(320, pow2qb)) for i in range(0, num_gates, 2)] + [np.zeros((2*2*2*min(320, pow2qb)), dtype=np.float32)]*((max_gates+1)//2-(num_gates-num_gates//2)))
                     inputs[tensornames["othergates"]] = np.concatenate([np.repeat(gateparams[i].astype(np.complex64).view(np.float32).flatten(), min(320, pow2qb)) for i in range(1, num_gates, 2)] + [np.zeros((2*2*2*min(320, pow2qb)), dtype=np.float32)]*((max_gates+1)//2-num_gates//2))
-                    inputs[tensornames["targetqbits"]] = np.concatenate((np.repeat(np.hstack((np.array(target_qbits, dtype=np.uint8)[:,np.newaxis]%8*2, np.array(target_qbits, dtype=np.uint8)[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
-                    adjcontrolqbits = [x-(x>target_qbits[i]) for i, x in enumerate(control_qbits)]
-                    inputs[tensornames["controlqbits"]] = np.concatenate((np.repeat(np.hstack((np.array(adjcontrolqbits, dtype=np.uint8)[:,np.newaxis]%8*2, np.array(adjcontrolqbits, dtype=np.uint8)[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
+                    inputs[tensornames["targetqbits"]] = np.concatenate((np.repeat(np.hstack((target_qbits.astype(np.uint8)[:,np.newaxis]%8*2, target_qbits.astype(np.uint8)[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
+                    adjcontrolqbits = (control_qbits - (control_qbits > target_qbits)).astype(np.uint8)
+                    inputs[tensornames["controlqbits"]] = np.concatenate((np.repeat(np.hstack((adjcontrolqbits[:,np.newaxis]%8*2, adjcontrolqbits[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
                     inputs[tensornames["derivates"]] = np.zeros((max_gates, 320), dtype=np.uint8)
                     invoke([device], iop, 1, 0, [inputs])
                     for i in range(num_gates):
-                        progidx = 1+1+(2+(2 if num_qbits >= 9 else 0)+(2 if num_qbits >= 10 else 0) if (i&1)!=0 else 0) + target_qbits[i]//8*2 + (0 if target_qbits[i] == control_qbits[i] else 1+(2+(target_qbits[i]//8==0))*(adjcontrolqbits[i]//8))
+                        progidx = int(1+1+(2+(2 if num_qbits >= 9 else 0)+(2 if num_qbits >= 10 else 0) if (i&1)!=0 else 0) + target_qbits[i]//8*2 + (0 if target_qbits[i] == control_qbits[i] else 1+(2+(target_qbits[i]//8==0))*(adjcontrolqbits[i]//8)))
                         invoke([device], iop, progidx, 0, None, None, None)
                     res, _ = invoke([device], iop, 1+1+(2+(2 if num_qbits >= 9 else 0)+(2 if num_qbits >= 10 else 0))*2+(num_gates&1), 0, None, None, None)
-                    #result[0] = np.ascontiguousarray(res[0][tensornames["unitaryres" if (num_gates&1)==0 else "unitaryrevres"]].reshape(num_inner_splits, pow2qb, 2, min(256, pow2qb)).transpose(1, 0, 3, 2)).view(np.complex64).reshape(pow2qb, pow2qb).astype(np.complex128)
-                    result[0] = np.sum(res[0][tensornames["unitaryres" if (num_gates&1)==0 else "unitaryrevres"]])
+                    result[0] = np.ascontiguousarray(res[0][tensornames["unitaryres" if (num_gates&1)==0 else "unitaryrevres"]].reshape(num_inner_splits, pow2qb, 2, min(256, pow2qb)).transpose(1, 0, 3, 2)).view(np.complex64).reshape(pow2qb, pow2qb).astype(np.complex128)
+                    #result[0] = np.sum(res[0][tensornames["unitaryres" if (num_gates&1)==0 else "unitaryrevres"]])
                 runfunc[0] = actual
         loaddata()
         actual = runfunc[0]
@@ -774,8 +795,8 @@ class UnitarySimulator(g.Component):
         print_utils.infoc("\nRunning on HW ...")
         oracleres, result = [None], [None]
         def oracle():
-            oracleres[0] = process_gates32(u, num_qbits, [parameters], [target_qbit], [control_qbit])
-            #oracleres[0] = qiskit_oracle(u, num_qbits, [parameters], [target_qbit], [control_qbit])
+            oracleres[0] = process_gates32(u, num_qbits, parameters.reshape(1, 3), np.array([target_qbit]), np.array([control_qbit]))
+            #oracleres[0] = qiskit_oracle(u, num_qbits, parameters.reshape(1, 3), np.array([target_qbit]), np.array([control_qbit]))
         def actual():
             inputs = {}
             inputs[unitary.name] = np.ascontiguousarray(u.astype(np.complex64)).view(np.float32).reshape(pow2qb, pow2qb, 2).transpose(0, 2, 1).reshape(pow2qb*2, pow2qb)
@@ -798,14 +819,14 @@ class UnitarySimulator(g.Component):
         num_gates, use_identity = max_gates, False
 
         u = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
-        target_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
-        control_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
+        target_qbits = np.array([np.random.randint(num_qbits) for _ in range(num_gates)], dtype=np.uint8)
+        control_qbits = np.array([np.random.randint(num_qbits) for _ in range(num_gates)], dtype=np.uint8)
         parameters = np.random.random((num_gates, 3))
         oracleres = [None]
         def oracle():
             oracleres[0] = process_gates32(u, num_qbits, parameters, target_qbits, control_qbits)
-            oracleres[0] = np.trace(np.real(oracleres[0]))
             #oracleres[0] = qiskit_oracle(u, num_qbits, parameters, target_qbits, control_qbits)
+            #oracleres[0] = np.trace(np.real(oracleres[0]))
         actual, result, closefunc = UnitarySimulator.get_unitary_sim(num_qbits, max_gates)
         oracle()
         actual(u, num_qbits, parameters, target_qbits, control_qbits)
@@ -822,10 +843,14 @@ class UnitarySimulator(g.Component):
             print_utils.infoc(str(abs(oracleres[~np.isclose(oracleres, result)] - result[~np.isclose(oracleres, result)]) / abs(oracleres[~np.isclose(oracleres, result)])))
         #print(oracleres, result)
     def checkacc():
-        use_identity, max_levels = False, 6
+        use_identity, max_levels = True, 6
         d = UnitarySimulator.build_all(max_levels)
+        print(d[(10, 820)])
+        d[(10,820)]['iop'] = d[(10,820)]['iop'].replace("us10", "usunit10")
+        d[(10,820)]['unitaryres'] = 'unitaryfin'
+        d[(10,820)]['unitaryrevres'] = 'unitaryrevfin'
         acc, acc32 = {}, {}
-        for num_qbits in range(2, 6+1):
+        for num_qbits in range(10, 10+1):
             max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
             pow2qb = 1 << num_qbits
             func, result, closefunc = UnitarySimulator.get_unitary_sim(num_qbits, max_gates, d[(num_qbits, max_gates)])
@@ -834,15 +859,17 @@ class UnitarySimulator(g.Component):
             parameters = np.random.random((num_gates, 3))
             for i in range(num_qbits):
                 for j in range(num_qbits):
-                    func(u, num_qbits, parameters, [i]*num_gates, [j]*num_gates)
-                    oracle = np.trace(np.real(process_gates(u, num_qbits, parameters, [i]*num_gates, [j]*num_gates)))
-                    if not np.allclose(oracle, result[0]): print("Fail", num_qbits, i, j)
+                    func(u, num_qbits, parameters, np.array([i]*num_gates), np.array([j]*num_gates))
+                    oracle = process_gates(u, num_qbits, parameters, np.array([i]*num_gates), np.array([j]*num_gates))
+                    #oracle = np.trace(np.real(oracle))
+                    if not np.allclose(oracle, result[0]): print("Fail", num_qbits, i, j, oracle, result[0], make_cry(parameters[0]) )
             acc[num_qbits] = {}; acc32[num_qbits] = {}
             print(num_qbits)
+            continue
             for num_gates in (max_gates,): #range(1, max_gates):
                 parameters = np.random.random((num_gates, 3))
-                target_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
-                control_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
+                target_qbits = np.array([np.random.randint(num_qbits) for _ in range(num_gates)])
+                control_qbits = np.array([np.random.randint(num_qbits) for _ in range(num_gates)])
                 func(u, num_qbits, parameters, target_qbits, control_qbits)
                 oracle = np.trace(np.real(process_gates(u, num_qbits, parameters, target_qbits, control_qbits)))
                 if not np.allclose(oracle, result[0]): print("Fail", num_qbits, i, j)
@@ -876,8 +903,8 @@ class UnitarySimulator(g.Component):
             num_gates = max_gates
             pow2qb = 1 << num_qbits
             u = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
-            target_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
-            control_qbits = [np.random.randint(num_qbits) for _ in range(num_gates)]
+            target_qbits = np.array([np.random.randint(num_qbits) for _ in range(num_gates)])
+            control_qbits = np.array([np.random.randint(num_qbits) for _ in range(num_gates)])
             parameters = np.random.random((num_gates, 3))
             for testfunc in testfuncs:
                 if testfunc in initfuncs:
@@ -915,11 +942,11 @@ def main():
     #10 qbits max for single bank, 11 qbits requires dual chips [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 7, 26, 104]
     #import math; [math.ceil(((1<<x)*int(math.ceil((1<<x)/320)))/8192) for x in range(15)]
     #UnitarySimulator.validate_alus()
-    #num_qbits = 3
-    #max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
+    num_qbits = 4
+    max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
     #UnitarySimulator.unit_test(num_qbits)
-    #UnitarySimulator.chain_test(num_qbits, max_gates)
-    #UnitarySimulator.checkacc()
+    UnitarySimulator.chain_test(num_qbits, max_gates)
+    UnitarySimulator.checkacc()
     #UnitarySimulator.perfcompare()
 if __name__ == "__main__":
     main()
