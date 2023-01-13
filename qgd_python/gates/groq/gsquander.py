@@ -681,11 +681,16 @@ class UnitarySimulator(g.Component):
                     tqbitdistro = [tensor.shared_memory_tensor(mem_tensor=targetqbitdistro[i], name="tqbitdistro" + suffix) for i in range(2)]
                     tqbitpairs0 = [tensor.shared_memory_tensor(mem_tensor=targetqbitpairs0[i], name="tqbitpairs0" + suffix) for i in range(2)]
                     tqbitpairs1 = [tensor.shared_memory_tensor(mem_tensor=targetqbitpairs1[i], name="tqbitpairs1" + suffix) for i in range(2)]
-                    cqbitdistro = [tensor.shared_memory_tensor(mem_tensor=controlqbitdistro[i], name="cqbitdistro" + suffix) for i in range(2)]
                     ddistro = tensor.shared_memory_tensor(mem_tensor=derivatedistro, name="ddistro" + suffix)
                     if not control_qbit is None:
+                        cqbitdistro = [tensor.shared_memory_tensor(mem_tensor=controlqbitdistro[i], name="cqbitdistro" + suffix) for i in range(2)]
                         cqbitpairs0 = [tensor.shared_memory_tensor(mem_tensor=controlqbitpairs0[i], name="cqbitpairs0" + suffix) for i in range(2)]
                         cqbitpairs1 = [tensor.shared_memory_tensor(mem_tensor=controlqbitpairs1[i], name="cqbitpairs1" + suffix) for i in range(2)]
+                    else:
+                        for i in range(2):
+                            tensor.shared_memory_tensor(mem_tensor=controlqbitdistro[i], name="cqbitdistro" + suffix)
+                            tensor.shared_memory_tensor(mem_tensor=controlqbitpairs0[i], name="cqbitpairs0" + suffix)
+                            tensor.shared_memory_tensor(mem_tensor=controlqbitpairs1[i], name="cqbitpairs1" + suffix)
                     g.add_mem_constraints([ginc, ginc256, ginccount], [othergates if reversedir else gates], g.MemConstraintType.NOT_MUTUALLY_EXCLUSIVE)
                     
                     qmap = tensor.shared_memory_tensor(mem_tensor=qbitmap, name="qmap" + suffix)
@@ -706,7 +711,7 @@ class UnitarySimulator(g.Component):
                     with g.ResourceScope(name="setgatherdistros", is_buffered=True, time=0, predecessors=None) as pred:
                         for i in range(2):
                             g.mem_gather(tqbits, qmap, time=i).write(name="targetqbitdistro" + suffix, storage_req=tqbitdistro[i].storage_request)
-                            g.mem_gather(cqbits, qmap, time=2+i).write(name="controlqbitdistro" + suffix, storage_req=cqbitdistro[i].storage_request)                                                
+                            if not control_qbit is None: g.mem_gather(cqbits, qmap, time=2+i).write(name="controlqbitdistro" + suffix, storage_req=cqbitdistro[i].storage_request)                                                
                         g.concat_vectors([g.mem_gather(derivs, qmap, output_streams=g.SG1[:1]).reshape(1, 320), *([zs[z].read(streams=g.SG1[1+z:1+z+1]) for z in range(3)])], (4,320)).reinterpret(g.uint32).mask_bar(onep, time=4).write(name="derivatedistro" + suffix, storage_req=ddistro.storage_request)
                     tcmap = [list(reversed(x)) if reversedir else x for x in ((tqbitdistro, tqbitpairs0, tqbitpairs1, cqbitdistro, cqbitpairs0, cqbitpairs1) if not control_qbit is None else (tqbitdistro, tqbitpairs0, tqbitpairs1))]
                     with g.ResourceScope(name="rungate", is_buffered=True, time=None, predecessors=[pred]) as pred:
@@ -878,7 +883,7 @@ class UnitarySimulator(g.Component):
         parameters = np.random.random((num_gates, 3))
         oracleres = [None]
         def oracle():
-            oracleres[0] = process_gates32(u, num_qbits, parameters, target_qbits, control_qbits)
+            oracleres[0] = process_gates(u, num_qbits, parameters, target_qbits, control_qbits)
             #oracleres[0] = qiskit_oracle(u, num_qbits, parameters, target_qbits, control_qbits)
             if not output_unitary: oracleres[0] = np.trace(np.real(oracleres[0]))
         actual, result, closefunc = UnitarySimulator.get_unitary_sim(num_qbits, max_gates, output_unitary=output_unitary)
@@ -887,7 +892,7 @@ class UnitarySimulator(g.Component):
         closefunc()
         oracleres, result = oracleres[0], result[0]
         np.set_printoptions(formatter={'int':hex, 'complexfloat':lambda x:float(np.real(x)).hex()+'+'+float(np.imag(x)).hex()+'j'}, threshold=sys.maxsize, floatmode='unique')
-        if not np.array_equal(oracleres, result): print(oracleres - result, oracleres, result, u)
+        #if not np.array_equal(oracleres, result): print(oracleres - result, oracleres, result, u)
         if np.allclose(oracleres, result):
             print_utils.success("\nQuantum Simulator Chain Test Success ...")
         else:
@@ -897,8 +902,8 @@ class UnitarySimulator(g.Component):
             print_utils.infoc(str(abs(oracleres[~np.isclose(oracleres, result)] - result[~np.isclose(oracleres, result)]) / abs(oracleres[~np.isclose(oracleres, result)])))
         #print(oracleres, result)
     def checkacc():
-        use_identity, max_levels = False, 6
-        output_unitary = False
+        use_identity, max_levels = True, 6
+        output_unitary = True
         d = UnitarySimulator.build_all(max_levels, output_unitary=output_unitary)
         acc, acc32 = {}, {}
         for num_qbits in range(10, 10+1):
@@ -906,10 +911,11 @@ class UnitarySimulator(g.Component):
             pow2qb = 1 << num_qbits
             func, result, closefunc = UnitarySimulator.get_unitary_sim(num_qbits, max_gates, d[(num_qbits, max_gates, output_unitary)], output_unitary=output_unitary)
             u = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
-            num_gates = 1
+            num_gates = 5
             parameters = np.random.random((num_gates, 3))
             for i in range(num_qbits):
                 for j in range(num_qbits):
+                    if i == j: continue
                     func(u, num_qbits, parameters, np.array([i]*num_gates), np.array([j]*num_gates))
                     oracle = process_gates(u, num_qbits, parameters, np.array([i]*num_gates), np.array([j]*num_gates))
                     if not output_unitary: oracle = np.trace(np.real(oracle))
@@ -917,6 +923,7 @@ class UnitarySimulator(g.Component):
             acc[num_qbits] = {}; acc32[num_qbits] = {}
             print(num_qbits)
             for num_gates in range(1, max_gates):
+                print(num_gates)
                 parameters = np.random.random((num_gates, 3))
                 target_qbits = np.array([np.random.randint(num_qbits) for _ in range(num_gates)])
                 control_qbits = np.array([np.random.randint(num_qbits) for _ in range(num_gates)])
@@ -949,7 +956,7 @@ class UnitarySimulator(g.Component):
         d = UnitarySimulator.build_all(max_levels, output_unitary=output_unitary)
         use_identity, max_levels = False, 6
         initfuncs = {"Groq": lambda nqb, mg: UnitarySimulator.get_unitary_sim(nqb, mg, d[(nqb, mg, output_unitary)])}
-        testfuncs = {"Groq": None, "numpy": process_gates32} #, "qiskit": qiskit_oracle}
+        testfuncs = {"Groq": None, "numpy": process_gates} #, "qiskit": qiskit_oracle}
         times, accuracy = {k: {} for k in testfuncs}, {k: {} for k in testfuncs}
         inittimesize = {"Groq": {}}
         for num_qbits in range(2, 10+1):
@@ -998,11 +1005,11 @@ def main():
     #10 qbits max for single bank, 11 qbits requires dual chips [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 7, 26, 104]
     #import math; [math.ceil(((1<<x)*int(math.ceil((1<<x)/320)))/8192) for x in range(15)]
     #UnitarySimulator.validate_alus()
-    num_qbits = 10
+    num_qbits = 5
     max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
     #UnitarySimulator.unit_test(num_qbits)
     UnitarySimulator.chain_test(num_qbits, max_gates, True)
-    UnitarySimulator.checkacc()
+    #UnitarySimulator.checkacc()
     #UnitarySimulator.perfcompare()
 if __name__ == "__main__":
     main()
