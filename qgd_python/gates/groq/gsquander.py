@@ -355,50 +355,41 @@ class UnitarySimulator(g.Component):
         else: bypasspairs = None
         #print(pairs, bypasspairs)
         return pairs, bypasspairs
-    def transpose_null_share(a, b, scheduleA, scheduleB, gaps, time, transposer_req, stream_orderA, stream_orderB, tpose_shared):
-        Asplits, Bsplits = [], []
-        while len(scheduleA) != 0 or len(scheduleB) != 0:
-            if len(scheduleA) == 0 or len(scheduleB) != 0 and scheduleB[0][0] < scheduleA[0][0] and scheduleB[0][1] <= scheduleA[0][0]:
-                Bsplits.append(scheduleB[0][1]-scheduleB[0][0]); Asplits.append(None)
-                del scheduleB[0]
-            elif len(scheduleB) == 0 or scheduleA[0][0] < scheduleB[0][0] and scheduleA[0][1] <= scheduleB[0][0]:
-                Bsplits.append(None); Asplits.append(scheduleA[0][1]-scheduleA[0][0])
-                del scheduleA[0]
-            elif scheduleB[0][0] == scheduleA[0][0]:
-                if scheduleB[0][1] == scheduleA[0][1]:
-                    Bsplits.append(scheduleB[0][1]-scheduleB[0][0]); Asplits.append(scheduleA[0][1]-scheduleA[0][0])
-                    del scheduleB[0]; del scheduleA[0]
-                elif scheduleB[0][1] < scheduleA[0][1]:
-                    Bsplits.append(scheduleB[0][1]-scheduleB[0][0]); Asplits.append(scheduleB[0][1]-scheduleA[0][0])
-                    scheduleA[0] = (scheduleB[0][1], scheduleA[0][1]); del scheduleB[0]
-                else:
-                    Bsplits.append(scheduleA[0][1]-scheduleB[0][0]); Asplits.append(scheduleA[0][1]-scheduleA[0][0])
-                    scheduleB[0] = (scheduleA[0][1], scheduleB[0][1]); del scheduleA[0]
-            elif scheduleB[0][0] < scheduleA[0][0]:
-                Bsplits.append(scheduleA[0][0]-scheduleB[0][0]); Asplits.append(None)
-                scheduleB[0] = (scheduleA[0][0], scheduleB[0][1])
-            else:
-                Bsplits.append(None); Asplits.append(scheduleB[0][0]-scheduleA[0][0])
-                scheduleA[0] = (scheduleB[0][0], scheduleA[0][1])
-        b = b.split_vectors([x for x in Bsplits if not x is None])
-        a = a.split_vectors([x for x in Asplits if not x is None])
-        t, x, y = 0, 0, 0
-        for i, splits in enumerate(zip(Bsplits, Asplits)):
-            with g.ResourceScope(name="dist" + str(i), is_buffered=False, time=time+t) as innerpred: #t=51 when gather transpose_null resource scope bases from but we are relative again to parent here
-                if splits[1] is None:
-                    b[x] = g.transpose_null(b[x], transposer_req=transposer_req, stream_order=stream_orderB)
-                    x += 1
-                elif splits[0] is None:
-                    a[y] = g.transpose_null(a[y], transposer_req=transposer_req, stream_order=stream_orderA)
-                    y += 1
-                else:
-                    a[y], b[x] = tpose_shared(a[y], b[x], transposer_req=transposer_req, stream_order=stream_orderB + stream_orderA)
-                    x += 1; y += 1
-            t += splits[0] if not splits[0] is None else splits[1]
+    def intersection_range(r1, r2):
+        mx, mn = max(r1[0], r2[0]), min(r1[-1], r2[-1])
+        return (mx, mn) if mx < mn else None
+    def difference_range(r1, r2):
+        return None if r1 == r2 else (r1[1], r2[1])
+    def difference_ranges(r, ranges):
+        return [(None, None) if x is None else (UnitarySimulator.intersection_range(r, x), UnitarySimulator.difference_range(r, x)) for x in ranges]
+    def smallest_contig_range(ranges):
+        if all(r is None for r in ranges): return None
+        ranges = list(filter(lambda k: not k is None, ranges))
+        m = min(ranges)[0]
+        return (m, min(map(lambda k: k[1] if k[0] == m else k[0], ranges))) 
+    def transpose_null_share(tensors, schedules, gaps, time, tpose_shared):
+        Allsplits = [[] for _ in tensors]
+        while True:
+            r = UnitarySimulator.smallest_contig_range([x[0] for x in schedules])
+            if r is None: break
+            diffs = UnitarySimulator.difference_ranges(r, [x[0] for x in schedules])
+            for i, x in enumerate(diffs):
+                Allsplits[i].append(None if x[0] is None else x[0][1] - x[0][0])
+                if x[1] is None:
+                    del schedules[i][0]
+                    if len(schedules[i]) == 0: schedules[i].append(None) 
+                else: schedules[i][0] = x[1]
+        tensors = [y.split_vectors([x for x in Allsplits[i] if not x is None]) for i, y in enumerate(tensors)]
+        t, Allindexes = 0, [0 for _ in tensors]
+        for i, splits in enumerate(zip(*Allsplits)):
+            with g.ResourceScope(name="dist" + str(i), is_buffered=False, time=time+t) as innerpred:
+                res = tpose_shared([None if x is None else tensors[j][Allindexes[j]] for j, x in enumerate(splits)])
+                for j, x in enumerate(splits):
+                    if not x is None: tensors[j][Allindexes[j]] = res[j]
+                Allindexes = [x + (0 if splits[j] is None else 1) for j, x in enumerate(Allindexes)]
+            t += next(filter(lambda k: not k is None, splits))
             if t in gaps: t += gaps[t]
-        b = g.concat(b, 0)
-        a = g.concat(a, 0)
-        return a, b
+        return [g.concat(x, 0) for x in tensors] 
     def build(self, unitary, copy, target_qbit, control_qbit, gate, gatesel=None, tcqbitsel=None, derivdistro=None, inittime=0):
         if copy is None:
             with g.ResourceScope(name="initcopy", is_buffered=True, time=0) as pred:
@@ -516,11 +507,12 @@ class UnitarySimulator(g.Component):
                     scheduleri = [(delay, delay+pow2qb//2*num_inner_splits), (delay+pow2qb//2*num_inner_splits+rigap, delay+rigap+pow2qb*num_inner_splits)]
                     schedulewrite = [(0, pow2qb//2*num_inner_splits), (pow2qb//2*num_inner_splits+rigap, rigap+pow2qb*num_inner_splits)]                    
                     gaps = {pow2qb//2*num_inner_splits: rigap, delay+pow2qb//2*num_inner_splits: rigap} if pow2qb//2*num_inner_splits <= delay else {}
-                    def shared_tpose(a, b, transposer_req, stream_order):
-                        b, a = g.split(g.transpose_null(g.concat([b.reshape(b.shape[0], 1, innerdim), a.reinterpret(g.uint8)], 1), transposer_req=transposer_req, stream_order=stream_order, time=0), dim=1, splits=[1, 4])
-                        return a.reinterpret(g.float32).reshape(a.shape[0], innerdim), b.reshape(b.shape[0], innerdim)                    
-                    ri[1], writecontrols = UnitarySimulator.transpose_null_share(ri[1], writecontrols, scheduleri, schedulewrite, gaps, 101-51 if len(gatesel)==4 else 15+119-75,
-                        1 if self.rev else 3, [4, 5, 6, 7], [0], shared_tpose)
+                    def shared_tpose(tensors):
+                        if tensors[0] is None: return None, g.transpose_null(tensors[1], transposer_req=1 if self.rev else 3, stream_order=[0], time=0)
+                        elif tensors[1] is None: return g.transpose_null(tensors[0], transposer_req=1 if self.rev else 3, stream_order=[4, 5, 6, 7], time=0), None
+                        tensors[1], tensors[0] = g.split(g.transpose_null(g.concat([tensors[1].reshape(tensors[1].shape[0], 1, innerdim), tensors[0].reinterpret(g.uint8)], 1), transposer_req=1 if self.rev else 3, stream_order=[0, 4, 5, 6, 7], time=0), dim=1, splits=[1, 4])
+                        return tensors[0].reinterpret(g.float32).reshape(tensors[0].shape[0], innerdim), tensors[1].reshape(tensors[1].shape[0], innerdim)                    
+                    ri[1], writecontrols = UnitarySimulator.transpose_null_share([ri[1], writecontrols], [scheduleri, schedulewrite], gaps, 101-51 if len(gatesel)==4 else 15+119-75, shared_tpose) #t=51 when gather transpose_null resource scope bases from but we are relative again to parent here
                     #writecontrols, ri[1] = g.split(g.transpose_null(g.concat([writecontrols.reshape(-1, 1, innerdim), ri[1].reinterpret(g.uint8)], 1), transposer_req=1 if self.rev else 3, stream_order=[0, 4, 5, 6, 7]), dim=1, splits=[1, 4])
                     #ri[1] = ri[1].reinterpret(g.float32).reshape(pow2qb*num_inner_splits, innerdim)
                     #writecontrols = writecontrols.reshape(pow2qb*num_inner_splits, innerdim)
