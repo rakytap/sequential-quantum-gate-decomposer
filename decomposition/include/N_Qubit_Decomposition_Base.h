@@ -215,6 +215,7 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
+static void optimization_problem_combined_CPU( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
 static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
 
 

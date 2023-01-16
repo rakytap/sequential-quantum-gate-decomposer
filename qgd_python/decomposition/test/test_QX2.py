@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 # cerate unitary q-bit matrix
 from scipy.stats import unitary_group
 import numpy as np
+from qgd_python.utils import get_unitary_from_qiskit_circuit
 
 
 try:
@@ -101,22 +102,11 @@ class Test_Decomposition:
         # get the decomposing operations
         quantum_circuit = decomp.get_Quantum_Circuit()
 
-
-        from qiskit import execute
-        from qiskit import Aer
         import numpy.linalg as LA
     
         # test the decomposition of the matrix
-        # Qiskit backend for simulator
-        backend = Aer.get_backend('unitary_simulator')
-     
-        # job execution and getting the result as an object
-        job = execute(quantum_circuit, backend)
-        # the result of the Qiskit job
-        result = job.result()
-    
         # the unitary matrix from the result object
-        decomposed_matrix = np.asarray( result.get_unitary(quantum_circuit) )
+        decomposed_matrix = np.asarray( get_unitary_from_qiskit_circuit( quantum_circuit ) )
         product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
         phase = np.angle(product_matrix[0,0])
         product_matrix = product_matrix*np.exp(-1j*phase)

@@ -81,6 +81,13 @@ Decomposition_Base::Decomposition_Base() {
 
     // The convergence threshold in the optimization process
     convergence_threshold = 1e-5;
+    
+    //global phase of the unitary matrix
+    global_phase_factor.real = 1;
+    global_phase_factor.imag = 0;
+    
+    //the name of the SQUANDER project
+    std::string projectname = "";
 
 
 
@@ -109,7 +116,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
    
     // the unitary operator to be decomposed
     Umtx = Umtx_in;
-
+   
     // logical value describing whether the decomposition was finalized or not
     decomposition_finalized = false;
 
@@ -151,6 +158,13 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
 
     // The convergence threshold in the optimization process
     convergence_threshold = 1e-5;
+    
+    //global phase of the unitary matrix
+    global_phase_factor.real = 1;
+    global_phase_factor.imag = 0;
+    
+    //name of the SQUANDER project
+    std::string projectname = "";
 
 
 #if CBLAS==1
@@ -803,6 +817,14 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
             X* x_gate = static_cast<X*>( gate );
             x_gate->apply_to( ret_matrix );            
         }
+        else if (gate->get_type() == Y_OPERATION ) {
+            Y* y_gate = static_cast<Y*>( gate );
+            y_gate->apply_to( ret_matrix );            
+        }
+        else if (gate->get_type() == Z_OPERATION ) {
+            Z* z_gate = static_cast<Z*>( gate );
+            z_gate->apply_to( ret_matrix );            
+        }
         else if (gate->get_type() == SX_OPERATION ) {
             SX* sx_gate = static_cast<SX*>( gate );
             sx_gate->apply_to( ret_matrix );            
@@ -827,6 +849,11 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
             Adaptive* ad_gate = static_cast<Adaptive*>( gate );
             ad_gate->apply_to( parameters_mtx, ret_matrix);            
         }
+        else {
+            std::string err("Decomposition_Base::get_transformed_matrix: unimplemented gate");
+            throw err;
+        }
+
 
     }
 
@@ -923,6 +950,14 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
             X* x_gate = static_cast<X*>(gate);
             x_gate->apply_from_right(mtx);
         }
+        else if (gate->get_type() == Y_OPERATION ) {
+            Y* y_gate = static_cast<Y*>(gate);
+            y_gate->apply_from_right(mtx);
+        }
+        else if (gate->get_type() == Z_OPERATION ) {
+            Z* z_gate = static_cast<Z*>(gate);
+            z_gate->apply_from_right(mtx);
+        }
         else if (gate->get_type() == SX_OPERATION ) {
             SX* sx_gate = static_cast<SX*>(gate);
             sx_gate->apply_from_right(mtx);
@@ -946,6 +981,10 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         else if (gate->get_type() == ADAPTIVE_OPERATION ) {
             Adaptive* ad_gate = static_cast<Adaptive*>(gate);
             ad_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else {
+            std::string err("Decomposition_Base::get_gate_products: unimplemented gate");
+            throw err;
         }
 
         parameters_loc = parameters_loc + gate->get_parameter_num();
@@ -1175,6 +1214,12 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         else if (gate->get_type() == X_OPERATION) {
             ops_ret.push_back( gate );
         }
+        else if (gate->get_type() == Y_OPERATION) {
+            ops_ret.push_back( gate );
+        }
+        else if (gate->get_type() == Z_OPERATION) {
+            ops_ret.push_back( gate );
+        }
         else if (gate->get_type() == SX_OPERATION) {
             ops_ret.push_back( gate );
         }
@@ -1385,6 +1430,10 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
             ops_ret.insert( ops_ret.end(), ops_loc.begin(), ops_loc.end() );
         }
+        else {
+            std::string err("Decomposition_Base::prepare_gates_to_export: unimplemented gate");
+            throw err;
+        }
 
     }
 
@@ -1480,11 +1529,123 @@ double Decomposition_Base::get_current_minimum( ) {
 }
 
 /**
-@brief Call to apply global phase of U3 matrices to matrix
-@param global_phase The value of the phase
+@brief Call to get the current name of the project
+@return Returns the name of the project
 */
-void Decomposition_Base::apply_global_phase(QGD_Complex16 global_phase, Matrix& u3_gate){
-	mult(global_phase, u3_gate);
+std::string Decomposition_Base::get_project_name(){
+	return project_name;
+}
+
+/**
+@brief Call to set the name of the project
+@param project_name_new pointer to the new project name
+*/
+void Decomposition_Base::set_project_name(std::string& project_name_new){
+	project_name = project_name_new;
 	return;
 }
 
+
+/**
+@brief Call to calculate new global phase 
+@param global_phase_factor The value of the phase
+*/
+void Decomposition_Base::calculate_new_global_phase_factor(QGD_Complex16 global_phase_factor_new){
+	global_phase_factor = mult(global_phase_factor, global_phase_factor_new);
+	return;
+}
+
+/**
+@brief Call to get global phase 
+@param global_phase_factor The value of the phase
+*/
+QGD_Complex16 Decomposition_Base::get_global_phase_factor( ){
+	return global_phase_factor;
+}
+
+/**
+@brief Call to set global phase 
+@param global_phase_factor_new The value of the new phase
+*/
+void Decomposition_Base::set_global_phase(double new_global_phase){
+	global_phase_factor.real = sqrt(2)*cos(new_global_phase);
+	global_phase_factor.imag = sqrt(2)*sin(new_global_phase);
+	return;
+}
+
+/**
+@brief Call to apply global phase of U3 matrices to matrix
+@param global_phase_factor The value of the phase
+*/
+void Decomposition_Base::apply_global_phase_factor(QGD_Complex16 global_phase_factor, Matrix& u3_gate){
+	mult(global_phase_factor, u3_gate);
+	return;
+}
+
+/**
+@brief Call to apply the current global phase to the unitary matrix
+@param global_phase_factor The value of the phase
+*/
+void Decomposition_Base::apply_global_phase_factor(){
+	mult(global_phase_factor, Umtx);
+	set_global_phase(0);
+	return;
+}
+
+
+/**
+@brief ???????????
+@param ???????????
+*/
+void Decomposition_Base::export_unitary(std::string& filename){
+	FILE* pFile;
+	if (project_name != ""){filename = project_name + "_" + filename;}
+
+	const char* c_filename = filename.c_str();
+	pFile = fopen(c_filename, "wb");
+    	if (pFile==NULL) {
+            fputs ("File error",stderr); 
+            std::string error("Cannot open file.");
+            throw error;
+        }
+
+
+    	fwrite(&Umtx.rows, sizeof(int), 1, pFile);
+   	fwrite(&Umtx.cols, sizeof(int), 1, pFile);          
+   	fwrite(Umtx.get_data(), sizeof(QGD_Complex16), Umtx.size(), pFile);
+    	fclose(pFile);
+	return;
+}
+
+
+
+/**
+@brief ???????????
+@param ???????????
+*/
+Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
+	FILE* pFile;
+
+	if (project_name != ""){filename = project_name + "_"  + filename;}
+
+	const char* c_filename = filename.c_str();
+	int cols;
+	int rows;
+	pFile = fopen(c_filename, "rb");
+    	if (pFile==NULL) {
+            fputs ("File error",stderr); 
+            exit (1);
+        }
+
+	size_t fread_status;
+        fread_status = fread(&rows, sizeof(int), 1, pFile);
+	fread_status = fread(&cols, sizeof(int), 1, pFile);
+
+        //TODO error handling for fread_status
+
+	Matrix Umtx_ = Matrix(rows, cols);
+
+	fread_status = fread(Umtx_.get_data(), sizeof(QGD_Complex16), rows*cols, pFile);
+    	fclose(pFile);
+	return Umtx_;
+}

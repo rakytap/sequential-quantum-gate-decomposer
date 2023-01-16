@@ -41,19 +41,12 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
 # @return An instance of the class
-    def __init__( self, Umtx, level_limit_max=8, level_limit_min=0, method='LIMITED', topology=None ):
+    def __init__( self, Umtx, level_limit_max=8, level_limit_min=0, topology=None ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
 
         # validate input parameters
-        if method == 'LIMITED' or method == 'limited' :
-            pass
-        elif method == 'GENERAL' or method == 'general' :
-            pass
-        else: 
-            print('Invalid input argument method=', method, '. Falling back to default.')
-            method = 'limited'
 
         topology_validated = list()
         if isinstance(topology, list) or isinstance(topology, tuple):
@@ -72,7 +65,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         
 
         # call the constructor of the wrapper class
-        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, method=method, topology=topology_validated)
+        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, topology=topology_validated)
 
 
 ##
@@ -245,10 +238,12 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         print('Gate counts in teh imported Qiskit transpiled quantum circuit:', qc.count_ops())
         #print(qc)
         
+
+        # get the register of qubits
+        q_register = qc.qubits
+
         # get the size of the register
-        gate = qc.data[0]
-        qubits = gate[1]
-        register_size = qubits[0].register.size
+        register_size = qc.num_qubits
 
         # prepare dictionary for single qubit gates
         single_qubit_gates = dict()
@@ -268,16 +263,21 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             if name == 'u3':
                 # add u3 gate 
                 qubits = gate[1]
-                qubit = qubits[0].index
+
+                qubit = q_register.index( qubits[0] )   # qubits[0].index
                 single_qubit_gates[qubit].append( {'params': gate[0].params, 'type': 'u3'} )
 
             elif name == 'cz':
                 # add cz gate 
                 qubits = gate[1]
-                two_qubit_gate = {'type': 'cz', 'qubits': [qubits[0].index, qubits[1].index]}
 
-                qubit0 = qubits[0].index
-                qubit1 = qubits[1].index
+                qubit0 = q_register.index( qubits[0] ) #qubits[0].index
+                qubit1 = q_register.index( qubits[1] ) #qubits[1].index
+
+
+                two_qubit_gate = {'type': 'cz', 'qubits': [qubit0, qubit1]}
+
+
 
                 # creating an instance of the wrapper class qgd_Gates_Block
                 Layer = qgd_Gates_Block( register_size )
@@ -370,14 +370,82 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Randomized_Radius(radius)
 
-
-
 ##
 # @brief Call to append custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
     def add_Gate_Structure_From_Binary( self, filename ):  
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Gate_Structure_From_Binary( filename )
+        
+##
+# @brief Call to set unitary matrix from a binary file created from SQUANDER
+    def set_Unitary_From_Binary( self, filename ):  
 
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Unitary_From_Binary( filename )
+ 
+##
+# @brief Call to set unitary matrix from a numpy array
+    def set_Unitary( self, Umtx_arr ):  
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Unitary( Umtx_arr )
+        
+##
+# @brief Call to get unitary matrix
+    def get_Unitary( self ):
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Unitary()
+        
+##
+# @brief Call to export unitary matrix to binary file
+    def export_Unitary( self, filename ):
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).export_Unitary(filename)
+
+
+##
+# @brief Call to get the number of free parameters in the gate structure used for the decomposition
+    def get_Parameter_Num( self ):
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Parameter_Num()
+
+##
+# @brief Call to get global phase
+    def get_Global_Phase( self ):
+	
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Global_Phase()
+
+##
+# @brief Call to set global phase 
+    def set_Global_Phase( self, new_global_phase ):
+	
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Global_Phase(new_global_phase)
+##
+# @brief Call to get the name of the SQUANDER project
+    def get_Project_Name( self ):
+	
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Project_Name()
+
+##
+# @brief Call to set the name of the SQUANDER project ( recommended format : *new project name*_ ) 
+    def set_Project_Name( self, project_name_new ):
+	
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Project_Name(project_name_new)
+##
+# @brief Call to apply global phase on Unitary matrix
+    def apply_Global_Phase_Factor( self ):
+	
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Global_Phase_Factor()
+
+##
+# @brief Call to add adaptive layers to the gate structure stored by the class.
+    def add_Adaptive_Layers( self ):  
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Adaptive_Layers()
+
+##
+# @brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
+    def add_Finalyzing_Layer_To_Gate_Structure( self ):  
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Finalyzing_Layer_To_Gate_Structure()
 
 
 ##
@@ -385,4 +453,25 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def apply_Imported_Gate_Structure( self ):  
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Imported_Gate_Structure()
+
+## 
+# @brief Call to set the optimizer used in the gate synthesis process
+# @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2".
+# @return An instance of the class
+    def set_Optimizer( self, optimizer="BFGS" ):
+
+        # Set the optimizer
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Optimizer(optimizer)  
+
+
+##
+# @brief Call to retrieve the unitary of the circuit
+    def get_Matrix( self, parameters = None ):
+
+  
+        if parameters is None:
+            print( "get_Matrix: arary of input parameters is None")
+            return None
+
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Matrix( parameters )
 

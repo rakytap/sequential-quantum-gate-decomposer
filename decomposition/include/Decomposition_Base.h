@@ -32,6 +32,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "U3.h"
 #include "RX.h"
 #include "X.h"
+#include "Y.h"
+#include "Z.h"
 #include "SX.h"
 #include "RY.h"
 #include "CRY.h"
@@ -70,6 +72,12 @@ public:
 
     /// The maximal allowed error of the optimization problem (The error of the decomposition would scale with the square root of this value)
     double optimization_tolerance;
+    
+    ///The global phase
+    QGD_Complex16 global_phase_factor;
+    
+    ///the name of the project
+    std::string project_name;
 
 protected:
 
@@ -120,6 +128,8 @@ protected:
 
     /// The convergence threshold in the optimization process
     double convergence_threshold;
+    
+
 
 
 
@@ -391,10 +401,56 @@ double get_decomposition_error( );
 double get_current_minimum( );
 
 /**
+@brief Call to get the current name of the project
+@return Returns the name of the project
+*/
+std::string get_project_name();
+/**
+@brief Call to set the name of the project
+@param project_name_new pointer to the new project name
+*/
+void set_project_name(std::string& project_name_new);
+
+/**
+@brief  Calculate the new global phase of the Unitary matrix after removing a trivial U3 matrix
+@param global_phase_factor_new: global phase calculated from the product of two U3 matrices
+*/
+void calculate_new_global_phase_factor( QGD_Complex16 global_phase_factor_new );
+
+/**
+@brief Get the global phase of the Unitary matrix 
+@return The current global phase
+*/
+QGD_Complex16 get_global_phase_factor( );
+
+/**
+@brief Call to set global phase 
+@param global_phase_factor_new The value of the new phase
+*/
+void set_global_phase(double new_global_phase);
+
+
+/**
 @brief Call to apply the global phase to a matrix
 @return Returns with the minimum of the cost function
 */
-void apply_global_phase(QGD_Complex16 global_phase, Matrix& u3_gate);
-};
+void apply_global_phase_factor(QGD_Complex16 global_phase_factor, Matrix& u3_gate);
 
+/**
+@brief Call to apply the current global phase to the unitary matrix
+@param global_phase_factor The value of the phase
+*/
+void apply_global_phase_factor();
+
+/**
+@brief   exports unitary matrix to binary file
+@param  filename file to be exported to
+*/
+void export_unitary(std::string& filename);
+/**
+@brief Import a Unitary matrix from a file
+@param filename  .binary file to read
+*/
+Matrix import_unitary_from_binary(std::string& filename);
+};
 #endif //DECOMPOSITION_BASE

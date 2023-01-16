@@ -145,7 +145,7 @@ Matrix::isnan() {
 @brief Call to prints the stored matrix on the standard output
 */
 void 
-Matrix::print_matrix() {
+Matrix::print_matrix() const {
 
     std::cout << std::endl << "The stored matrix:" << std::endl;
     

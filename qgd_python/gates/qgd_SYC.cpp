@@ -114,6 +114,10 @@ static int
     int target_qbit = -1;
     int control_qbit = -1;
 
+    if (PyArray_API == NULL) {
+        import_array();
+    }
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iii", kwlist,
                                      &qbit_num, &target_qbit, &control_qbit))
         return -1;
@@ -128,37 +132,15 @@ static int
 @brief Extract the optimized parameters
 @param start_index The index of the first inverse gate
 */
+
 static PyObject *
-qgd_SYC_get_Matrix( qgd_SYC *self, PyObject *args ) {
-
-    PyObject * parameters_arr = NULL;
-
-
-    // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
-        return Py_BuildValue("i", -1);
-
-    
-    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
-        Py_INCREF(parameters_arr);
-    }
-    else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-    }
-
-
-    // get the C++ wrapper around the data
-    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
-
+qgd_SYC_get_Matrix( qgd_SYC *self ) {
 
     Matrix SYC_mtx = self->gate->get_matrix(  );
     
     // convert to numpy array
     SYC_mtx.set_owner(false);
     PyObject *SYC_py = matrix_to_numpy( SYC_mtx );
-
-
-    Py_DECREF(parameters_arr);
 
     return SYC_py;
 }
@@ -178,7 +160,7 @@ static PyMemberDef  qgd_SYC_members[] = {
 @brief Structure containing metadata about the methods of class  qgd_SYC.
 */
 static PyMethodDef  qgd_SYC_methods[] = {
-    {"get_Matrix", (PyCFunction) qgd_SYC_get_Matrix, METH_VARARGS,
+    {"get_Matrix", (PyCFunction) qgd_SYC_get_Matrix, METH_NOARGS,
      "Method to get the matrix of the operation."
     },
     {NULL}  /* Sentinel */

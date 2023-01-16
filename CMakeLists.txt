@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10.2)
 # CMAKE to create the shared library of the quantum gate decomposition project
 
 # set the project name and version
-project(CQGD VERSION 1.5)
+project(CQGD VERSION 1.7)
 
 # reuse compilation time linking for use runtime linking 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -356,6 +356,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/gates/ON.cpp
     ${PROJECT_SOURCE_DIR}/gates/Gates_block.cpp
     ${PROJECT_SOURCE_DIR}/gates/X.cpp
+    ${PROJECT_SOURCE_DIR}/gates/Y.cpp
+    ${PROJECT_SOURCE_DIR}/gates/Z.cpp
     ${PROJECT_SOURCE_DIR}/gates/SX.cpp
     ${PROJECT_SOURCE_DIR}/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/gates/RY.cpp
@@ -364,11 +366,11 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/gates/RX.cpp
     ${PROJECT_SOURCE_DIR}/gates/RZ.cpp
     ${PROJECT_SOURCE_DIR}/gates/Composite.cpp
+    ${PROJECT_SOURCE_DIR}/nn/NN.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive.cpp
-    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive_general.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_custom.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
@@ -434,6 +436,7 @@ target_include_directories(qgd PRIVATE
                             ./gates/include
                             ./decomposition/include
                             ./random_unitary/include
+                            ./nn/include
                             ${EXTRA_INCLUDES})
 
 
@@ -464,6 +467,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Adaptive.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/RZ.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Composite.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/nn/include/NN.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Decomposition_Base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_Base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition.h
@@ -495,6 +499,7 @@ set_target_properties(
 # adding CMAKE files for Python extensions
 add_subdirectory (qgd_python/decomposition)
 add_subdirectory (qgd_python/gates)
+add_subdirectory (qgd_python/nn)
 
 
 if(DEFINED ENV{QGD_CTEST})

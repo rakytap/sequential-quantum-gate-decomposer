@@ -299,6 +299,18 @@ void Sub_Matrix_Decomposition::add_gate_layers() {
                 X* x_gate = static_cast<X*>( gate );
                 add_gate_to_end( (Gate*)x_gate->clone() );
             }
+            else if (gate->get_type() == Y_OPERATION ) {
+                Y* y_gate = static_cast<Y*>( gate );
+                add_gate_to_end( (Gate*)y_gate->clone() );
+            }
+            else if (gate->get_type() == Z_OPERATION ) {
+                Z* z_gate = static_cast<Z*>( gate );
+                add_gate_to_end( (Gate*)z_gate->clone() );
+            }
+            else if (gate->get_type() == Y_OPERATION ) {
+                Y* y_gate = static_cast<Y*>( gate );
+                add_gate_to_end( (Gate*)y_gate->clone() );
+            }
             else if (gate->get_type() == SX_OPERATION ) {
                 SX* sx_gate = static_cast<SX*>( gate );
                 add_gate_to_end( (Gate*)sx_gate->clone() );
@@ -310,6 +322,10 @@ void Sub_Matrix_Decomposition::add_gate_layers() {
             else if (gate->get_type() == BLOCK_OPERATION ) {
                 Gates_block* block_gate = static_cast<Gates_block*>( gate );
                 add_gate_to_end( (Gate*)block_gate->clone() );
+            }
+            else {
+                std::string err("Sub_Matrix_Decomposition::add_gate_layers: Unimplemented gate");
+                throw err;
             }
 
         }

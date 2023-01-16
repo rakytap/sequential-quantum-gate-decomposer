@@ -453,7 +453,7 @@ int size() {
 /**
 @brief Call to prints the stored matrix on the standard output
 */
-void print_matrix() {
+void print_matrix() const {
     std::cout << std::endl << "The stored matrix:" << std::endl;
     for ( int row_idx=0; row_idx < rows; row_idx++ ) {
         for ( int col_idx=0; col_idx < cols; col_idx++ ) {

@@ -115,6 +115,10 @@ qgd_SX_init(qgd_SX *self, PyObject *args, PyObject *kwds)
     int  qbit_num = -1; 
     int target_qbit = -1;
 
+    if (PyArray_API == NULL) {
+        import_array();
+    }
+
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
                                      &qbit_num, &target_qbit))
         return -1;
@@ -129,37 +133,15 @@ qgd_SX_init(qgd_SX *self, PyObject *args, PyObject *kwds)
 @brief Extract the optimized parameters
 @param start_index The index of the first inverse gate
 */
+
 static PyObject *
-qgd_SX_get_Matrix( qgd_SX *self, PyObject *args ) {
-
-    PyObject * parameters_arr = NULL;
-
-
-    // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
-        return Py_BuildValue("i", -1);
-
-    
-    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
-        Py_INCREF(parameters_arr);
-    }
-    else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-    }
-
-
-    // get the C++ wrapper around the data
-    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
-
+qgd_SX_get_Matrix( qgd_SX *self ) {
 
     Matrix SX_mtx = self->gate->get_matrix(  );
     
     // convert to numpy array
     SX_mtx.set_owner(false);
     PyObject *SX_py = matrix_to_numpy( SX_mtx );
-
-
-    Py_DECREF(parameters_arr);
 
     return SX_py;
 }
@@ -177,7 +159,7 @@ static PyMemberDef qgd_SX_members[] = {
 @brief Structure containing metadata about the methods of class qgd_SX.
 */
 static PyMethodDef qgd_SX_methods[] = {
-    {"get_Matrix", (PyCFunction) qgd_SX_get_Matrix, METH_VARARGS,
+    {"get_Matrix", (PyCFunction) qgd_SX_get_Matrix, METH_NOARGS,
      "Method to get the matrix of the operation."
     },   
   {NULL}  /* Sentinel */

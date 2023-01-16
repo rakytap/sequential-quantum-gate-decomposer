@@ -100,6 +100,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
     }
     
 
+    // Boolean variable to determine whether randomized adaptive layers are used or not
+    randomized_adaptive_layers = false;
+
     srand(time(NULL));   // Initialization, should only be called once.
 }
 
@@ -142,6 +145,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         max_iterations = 1;
 
     }
+
+    // Boolean variable to determine whether randomized adaptive layers are used or not
+    randomized_adaptive_layers = false;
 
     srand(time(NULL));   // Initialization, should only be called once.
 }
@@ -190,6 +196,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         // Maximal number of iteartions in the optimization process
         max_iterations = 1;
     }
+
+    // Boolean variable to determine whether randomized adaptive layers are used or not
+    randomized_adaptive_layers = false;
 
     srand(time(NULL));   // Initialization, should only be called once.
 }
@@ -295,7 +304,11 @@ add_layer_to_imported_gate_structure();
 
 
 
-    std::string filename("circuit_squander.binary");    
+    std::string filename("circuit_squander.binary");
+    if (project_name != "") {
+        filename = project_name+ "_" +filename;
+    }
+
     export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
 /*
 Matrix_real parameters_imported;
@@ -334,16 +347,15 @@ Gates_block* gate_structure_loc_imported = import_gate_list_from_binary(paramete
             gate_structure_loc = gate_structure_compressed;
             gate_structure_compressed = NULL;
             
-            std::string filename("circuit_compression.binary");
-            export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);    
 
-            FILE* pFile = fopen("unitary_compression.binary", "wb");
-            if (pFile==NULL) {fputs ("File error to export unitary",stderr); exit (1);}
-            fwrite(&Umtx.rows, sizeof(int), 1, pFile);
-            fwrite(&Umtx.cols, sizeof(int), 1, pFile);            
-            fwrite(Umtx.get_data(), sizeof(QGD_Complex16), Umtx.size(), pFile);
-            fclose(pFile);
-                        
+            std::string filename("circuit_compression.binary");
+            if (project_name != "") { 
+                filename=project_name+ "_"  +filename;
+            }
+
+            export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);    
+            std::string filename_unitary("unitary_compression_unitary");
+            export_unitary(filename_unitary);
         }
 
         iter++;
@@ -395,6 +407,11 @@ iter_max = 1e4;
     final_optimization();
 
     std::string filename2("circuit_final.binary");
+
+    if (project_name != "") {
+        filename2=project_name+ "_"  +filename2;
+    }
+
     export_gate_list_to_binary(optimized_parameters_mtx, this, filename2, verbose);  
 
     // prepare gates to export
@@ -481,6 +498,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     cDecomp_custom.set_iteration_loops( iteration_loops );
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance ); 
     if (alg==ADAM || alg==BFGS2) { 
+        cDecomp_custom.set_optimizer( alg );  
         int param_num_loc = gate_structure_loc->get_parameter_num();
         int iter_max_loc = (double)param_num_loc/852 * 1e7;
         cDecomp_custom.set_iter_max( iter_max_loc );  
@@ -548,9 +566,9 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
         for (int idx=0; idx<level; idx++) {
 
-            // create the new decomposing layer
-            Gates_block* layer = construct_gate_layer(0,0);
-            gate_structure_loc->combine( layer );
+            // create the new decomposing layer and add to the gate staructure
+            add_adaptive_layers( gate_structure_loc );
+
         }
            
         // add finalyzing layer to the top of the gate structure
@@ -580,12 +598,13 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_debugfile("");
                 cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );
                 if ( alg == ADAM || alg == BFGS2 ) {
+                    cDecomp_custom_random.set_optimizer( alg );  
                     int param_num_loc = gate_structure_loc->get_parameter_num();
                     int iter_max_loc = (double)param_num_loc/852 * 1e7;
                     cDecomp_custom_random.set_iter_max( iter_max_loc );  
                     cDecomp_custom_random.set_random_shift_count_max( 10000 );       
                     cDecomp_custom_random.set_adaptive_eta( true );    
-                    cDecomp_custom_random.set_randomized_radius( radius );          
+                    cDecomp_custom_random.set_randomized_radius( radius );
                 }
                 cDecomp_custom_random.start_decomposition(true);
 
@@ -804,9 +823,9 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 //panelties.print_matrix();
 
     // determine the reduction with the lowest penalty
-    int panelty_min = panelties[0];
-    int idx_min = 0;
-    for (int idx=0; idx<panelties.size(); idx++) {
+    unsigned int panelty_min = panelties[0];
+    unsigned int idx_min = 0;
+    for (size_t idx=0; idx<panelties.size(); idx++) {
         if ( panelty_min > panelties[idx] ) {
             panelty_min = panelties[idx];
             idx_min = idx;
@@ -824,10 +843,10 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     }
     
 #ifdef __MPI__        
-    MPI_Bcast( &idx_min, 1, MPI_INT, 0, MPI_COMM_WORLD);
+    MPI_Bcast( &idx_min, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
 #endif    
 
-    for (int idx=0; idx<panelties.size(); idx++) {
+    for (size_t idx=0; idx<panelties.size(); idx++) {
         if (idx==idx_min) continue;
         if ( gate_structures_vec[idx] == gate_structure) continue;
         if ( gate_structures_vec[idx]  ) {
@@ -896,10 +915,11 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     cDecomp_custom.set_optimization_blocks( gate_structure_reduced->get_gate_num() ) ;
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance );
     if ( alg == ADAM || alg==BFGS2) {
+        cDecomp_custom.set_optimizer( alg );      
         cDecomp_custom.set_iter_max( 1e5 );  
         cDecomp_custom.set_random_shift_count_max( 1 );     
         cDecomp_custom.set_adaptive_eta( false );
-        cDecomp_custom.set_randomized_radius( radius );          
+        cDecomp_custom.set_randomized_radius( radius );        
     }
     cDecomp_custom.start_decomposition(true);
     double current_minimum_tmp = cDecomp_custom.get_current_minimum();
@@ -1140,7 +1160,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
             // find matching U3 gates
             std::vector<int>&& involved_qbits = layer->get_involved_qubits();
-            for( int rdx=0; rdx<involved_qbits.size(); rdx++ ) {
+            for( size_t rdx=0; rdx<involved_qbits.size(); rdx++ ) {
 
                 U3* U_gate_to_be_removed = static_cast<U3*>(layer->get_gate(rdx+1));
                 int qbit_to_be_matched = U_gate_to_be_removed->get_target_qbit();
@@ -1196,7 +1216,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
                 parameter_idx_to_be_removed = parameter_idx_to_be_removed + U_gate_to_be_removed->get_parameter_num();
 
                 // calculate the new theta/2, phi, lambda parameters from U3_prod, and replace them in param2
-                // apply global phase on Umtx
+                //  global phase on Umtx
                 double ctheta3_over2 = std::sqrt(U3_prod[0].real*U3_prod[0].real+U3_prod[0].imag*U3_prod[0].imag); // cos( theta/2 )
                 double stheta3_over2 = std::sqrt(U3_prod[2].real*U3_prod[2].real+U3_prod[2].imag*U3_prod[2].imag); // sin( theta/2 )
                 double theta3_over2 = std::atan2(stheta3_over2,ctheta3_over2); // theta/2
@@ -1207,7 +1227,6 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 		double phi3;
 
 		if (std::abs(stheta3_over2)<4e-8){
-		    std::cout<<"szutyok"<<std::endl;
 		    lambda3 = (std::atan2(U3_prod[3].imag,U3_prod[3].real)-alpha)/2;
 		    phi3 = lambda3;
 		}
@@ -1218,19 +1237,18 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
                 // the product U3 matrix
 		Matrix U3_new = matching_gate->calc_one_qubit_u3(theta3_over2,phi3,lambda3);
-		QGD_Complex16 global_phase;
-		global_phase.real = std::cos(alpha);
-		global_phase.imag = std::sin(alpha);
-		apply_global_phase(global_phase, U3_new);
-
+		QGD_Complex16 global_phase_factor_new;
+		global_phase_factor_new.real = std::cos(alpha);
+		global_phase_factor_new.imag = std::sin(alpha);
+		apply_global_phase_factor(global_phase_factor_new, U3_new);
                 // test for the product U3 matrix
 		if (std::sqrt((U3_new[3].real-U3_prod[3].real)*(U3_new[3].real-U3_prod[3].real)) + std::sqrt((U3_new[3].imag-U3_prod[3].imag)*(U3_new[3].imag-U3_prod[3].imag)) < 1e-8 && (stheta3_over2*stheta3_over2+ctheta3_over2*ctheta3_over2) > 0.99) {
 
-                    // setting the resulting parameters if test passed
+            // setting the resulting parameters if test passed
 		    param2[0] = theta3_over2;
 		    param2[1] = phi3;
 		    param2[2] = lambda3;
-		    apply_global_phase(global_phase, Umtx);
+    		apply_global_phase_factor(global_phase_factor_new, Umtx);
 		}
 /*
 	        N_Qubit_Decomposition_custom cDecomp_custom_( Umtx.copy(), qbit_num, false, initial_guess);
@@ -1304,16 +1322,38 @@ N_Qubit_Decomposition_adaptive::create_reduced_parameters( Gates_block* gate_str
 
 
 
+/**
+@brief Call to add adaptive layers to the gate structure stored by the class.
+*/
+void 
+N_Qubit_Decomposition_adaptive::add_adaptive_layers() {
 
+    add_adaptive_layers( this );
+
+}
+
+/**
+@brief Call to add adaptive layers to the gate structure.
+*/
+void 
+N_Qubit_Decomposition_adaptive::add_adaptive_layers( Gates_block* gate_structure ) {
+
+
+    // create the new decomposing layer and add to the gate staructure
+    Gates_block* layer = construct_adaptive_gate_layers();
+    gate_structure->combine( layer );
+
+
+}
 
 
 
 
 /**
-@brief Call to add further layer to the gate structure used in the subdecomposition.
+@brief Call to construct adaptive layers.
 */
 Gates_block* 
-N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, const int& _control_qbit) {
+N_Qubit_Decomposition_adaptive::construct_adaptive_gate_layers() {
 
 
     //The stringstream input to store the output messages.
@@ -1388,13 +1428,26 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
 
     }
 */
-    while (layers.size()>0) { 
-        int idx = std::rand() % layers.size();
+
+    // make difference between randomized adaptive layers and deterministic one
+    if (randomized_adaptive_layers) {
+
+        while (layers.size()>0) { 
+            int idx = std::rand() % layers.size();
 #ifdef __MPI__        
-        MPI_Bcast( &idx, 1, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Bcast( &idx, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
-        block->add_gate( layers[idx] );
-        layers.erase( layers.begin() + idx );
+            block->add_gate( layers[idx] );
+            layers.erase( layers.begin() + idx );
+        }
+
+    }
+    else {
+        while (layers.size()>0) { 
+            block->add_gate( layers[0] );
+            layers.erase( layers.begin() );
+        }
+
     }
 
 
@@ -1404,10 +1457,18 @@ N_Qubit_Decomposition_adaptive::construct_gate_layer( const int& _target_qbit, c
 }
 
 
+/**
+@brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure stored by the class.
+*/
+void 
+N_Qubit_Decomposition_adaptive::add_finalyzing_layer() {
 
+    add_finalyzing_layer( this );
+
+}
 
 /**
-@brief ??????????????????
+@brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
 */
 void 
 N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structure ) {
@@ -1426,32 +1487,16 @@ N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structur
              block->add_u3(idx, Theta, Phi, Lambda);
 //        block->add_ry(idx);
     }
-/*
-    // creating block of gates
-    Gates_block* block1 = new Gates_block( qbit_num );
 
-block1->add_u3(3, true, false, true);
-block1->add_u3(3, true, false, true);
-block1->add_u3(3, true, false, true);
-block1->add_u3(2, true, false, true);
-block1->add_u3(0, true, false, true);
-block1->add_u3(3, true, false, true);
-*/
-/*
-    Gates_block* block2 = new Gates_block( qbit_num );
 
-block2->add_u3(4, true, false, true);
-block2->add_u3(2, true, false, true);
-block2->add_u3(5, true, false, true);
-block2->add_u3(2, true, false, true);
-block2->add_u3(4, true, false, true);
-block2->add_u3(3, true, false, true);
-*/
     // adding the opeartion block to the gates
-    gate_structure->add_gate( block );
+    if ( gate_structure == NULL ) {
+        throw ("N_Qubit_Decomposition_adaptive::add_finalyzing_layer: gate_structure is null pointer");
+    }
+    else {
+        gate_structure->add_gate( block );
+    }
 
-    //gate_structure->add_gate( block1 );
-    //gate_structure->add_gate( block2 );
 
 }
 
@@ -1467,10 +1512,6 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( Gates_block* gate_s
     gate_structure = gate_structure_in->clone();
 
 }
-
-
-
-
 
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
@@ -1488,7 +1529,26 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( std::string filenam
 
 }
 
+/**
+@brief set unitary matrix from binary file
+@param filename .binary file to import unitary from
+*/
+void 
+N_Qubit_Decomposition_adaptive::set_unitary_from_file( std::string filename ) {
 
+    Umtx = import_unitary_from_binary(filename);
+
+}
+/**
+@brief call to set Unitary from mtx
+@param matrix to set over
+*/
+void 
+N_Qubit_Decomposition_adaptive::set_unitary( Matrix& Umtx_new ) {
+
+    Umtx = Umtx_new;
+
+}
 
 /**
 @brief Call to append custom layers to the gate structure that are intended to be used in the decomposition.
@@ -1557,7 +1617,7 @@ N_Qubit_Decomposition_adaptive::add_layer_to_imported_gate_structure() {
     sstream << "Add new layer to the adaptive gate structure." << std::endl;	        
     print(sstream, 2);
 
-    Gates_block* layer = construct_gate_layer(0,0);
+    Gates_block* layer = construct_adaptive_gate_layers();
 
 
     if ( gate_structure == NULL ) {
