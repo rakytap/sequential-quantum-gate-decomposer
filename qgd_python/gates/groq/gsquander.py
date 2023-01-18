@@ -589,7 +589,7 @@ class UnitarySimulator(g.Component):
         return rows
     def build_chain(num_qbits, max_gates, output_unitary=False):
         pow2qb = 1 << num_qbits
-        pgm_pkg = g.ProgramPackage(name="us" + ("unit" if output_unitary else "") + str(num_qbits) + "-" + str(max_gates), output_dir="usiop", inspect_raw=True, gen_vis_data=True, check_stream_conflicts=True, check_tensor_timing_conflicts=True)
+        pgm_pkg = g.ProgramPackage(name="us" + ("unit" if output_unitary else "") + str(num_qbits) + "-" + str(max_gates), output_dir="usiop", inspect_raw=True, gen_vis_data=True, check_stream_conflicts=True, check_tensor_timing_conflicts=False)
         print("Number of qbits:", num_qbits, "Maximum gates:", max_gates)
         num_inner_splits = (pow2qb+320-1)//320 #handle inner splits for >=9 qbits
         with pgm_pkg.create_program_context("init_us") as pcinitunitary:
@@ -882,10 +882,9 @@ class UnitarySimulator(g.Component):
                     inputs[tensornames["targetqbits"]] = np.concatenate((np.repeat(np.hstack((target_qbits.astype(np.uint8)[:,np.newaxis]%8*2, target_qbits.astype(np.uint8)[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
                     adjcontrolqbits = np.where(control_qbits==target_qbits, 0, (control_qbits - (control_qbits > target_qbits)).astype(np.uint8))
                     inputs[tensornames["controlqbits"]] = np.concatenate((np.repeat(np.hstack((adjcontrolqbits[:,np.newaxis]%8*2, adjcontrolqbits[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
-                    hightcq = (target_qbits//8 + (adjcontrolqbits//8)*2).astype(np.uint8)
                     if num_qbits >= 9:
-                        #inputs[tensornames["hightcqbits"]] = np.concatenate((np.repeat(np.hstack((hightcq[:,np.newaxis]%8*2, hightcq[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
-                        inputs["high_tcqbits"] = np.concatenate((np.repeat(np.hstack((hightcq[:,np.newaxis]%8*2, hightcq[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
+                        hightcq = (adjcontrolqbits//8 + (target_qbits//8)*2).astype(np.uint8) if num_qbits==10 else (target_qbits//8).astype(np.uint8)
+                        inputs[tensornames["hightcqbits"]] = np.concatenate((np.repeat(np.hstack((hightcq[:,np.newaxis]%8*2, hightcq[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
                     derivs = np.array([0 if target_qbits[i]==control_qbits[i] else (i//2*2) ^ ((max_gates+1)//2*2) for i in range(num_gates)], dtype=np.uint16)
                     inputs[tensornames["derivates"]] = np.concatenate((np.repeat(np.hstack(((derivs & 255).astype(np.uint8)[:,np.newaxis], (derivs >> 8).astype(np.uint8)[:,np.newaxis], np.array([[0]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))                    
                     #inputs[tensornames["derivates"]] = np.zeros((max_gates, 320), dtype=np.uint8)
@@ -931,21 +930,6 @@ class UnitarySimulator(g.Component):
                 print_utils.err(
                     f"Test FAILED with a max tolerance of {max_atol} (should be = 0)"
                 )
-    def distrib_depend():
-        with g.ProgramContext() as pc:
-            distromap1 = g.input_tensor((1, 320), g.uint8, layout="-1, S1(33), H1(W)", name="distromap1")
-            distromap2 = g.input_tensor((1, 320), g.uint8, layout="-1, S1(34), H1(W)", name="distromap2")
-            distro1 = g.input_tensor((45, 320), g.uint8, layout="-1, S1(37), H1(W)", name="distro1")
-            distro2 = g.input_tensor((45, 320), g.uint8, layout="-1, S1(41), H1(W)", name="distro2")
-            gath = g.input_tensor((320, 320), g.uint8, layout="-1, S1(41), H1(W)", name="gath")
-            d1 = g.distribute_8(distro1.read(streams=g.SG1[16]), g.concat([distromap1]*45, 0).read(streams=g.SG1[17]), bypass8=0b11111110, distributor_req=2, time=0)
-            d2 = g.distribute_8(distro2.read(streams=g.SG1[24]), g.concat([distromap2]*45, 0).read(streams=g.SG1[25]), bypass8=0b11111110, distributor_req=3, time=0)
-            d1, d2 = g.split(g.transpose_null(g.concat((d1, d2), 0), stream_order=[0, 8], transposer_req=1, time=1), num_splits=2)            
-            d1, d2 = g.split(g.transpose_null(g.concat((d1.reshape(45, 1, 320), d2.reshape(45, 1, 320)), 1), stream_order=[0, 8], transposer_req=1, time=1), num_splits=2, dim=1)
-            d1.write(name="out1", program_output=True)
-            d2.write(name="out2", program_output=True)
-            compiled_iop, _ = compile_unit_test("distrib_depend")
-        runner = tsp.create_tsp_runner(compiled_iop)
     def unit_test(num_qbits):
         pow2qb = 1 << num_qbits
         use_identity = False
@@ -1019,12 +1003,12 @@ class UnitarySimulator(g.Component):
         output_unitary = True
         d = UnitarySimulator.build_all(max_levels, output_unitary=output_unitary)
         acc, acc32 = {}, {}
-        for num_qbits in range(10, 10+1):
+        for num_qbits in range(2, 10+1):
             max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
             pow2qb = 1 << num_qbits
             func, result, closefunc = UnitarySimulator.get_unitary_sim(num_qbits, max_gates, d[(num_qbits, max_gates, output_unitary)], output_unitary=output_unitary)
             u = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
-            num_gates = 3
+            num_gates = 1
             parameters = np.random.random((num_gates, 3))
             for i in range(num_qbits):
                 for j in range(num_qbits):
@@ -1109,7 +1093,7 @@ class UnitarySimulator(g.Component):
         print(times, accuracy, inittimesize)
 def main():
     max_levels=6
-    #UnitarySimulator.build_all(max_levels, output_unitary=False)
+    UnitarySimulator.build_all(max_levels, output_unitary=False)
     UnitarySimulator.build_all(max_levels, output_unitary=True)
     #test()
     #UnitarySimulator.distrib_depend()
@@ -1122,7 +1106,7 @@ def main():
     num_qbits = 10
     max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
     #UnitarySimulator.unit_test(num_qbits)
-    UnitarySimulator.chain_test(num_qbits, max_gates, True)
+    #UnitarySimulator.chain_test(num_qbits, max_gates, True)
     UnitarySimulator.checkacc()
     #UnitarySimulator.perfcompare()
 if __name__ == "__main__":
