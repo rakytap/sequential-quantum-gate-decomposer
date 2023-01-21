@@ -82,8 +82,8 @@ def make_apply_to_qbit_loop(num_qbits):
         t = np.roll(np.arange(num_qbits), target_qbit)
         idxs = np.arange(pow2qb).reshape(twos).transpose(to_fixed_tuple(t, num_qbits)).copy().reshape(-1, 2) #.reshape(*([2]*num_qbits)).transpose(t).reshape(-1, 2)
         for pair in (idxs if control_qbit is None else idxs[(idxs[:,0] & (1<<control_qbit)) != 0,:]):
-            #unitary[pair,:] = twoByTwoFloat(gate, unitary[pair,:]) if unitary.dtype == np.dtype(np.complex64) else gate @ unitary[pair,:]
-            unitary[pair,:] = gate @ unitary[pair,:]
+            unitary[pair,:] = twoByTwoFloat(gate, unitary[pair,:])
+            #unitary[pair,:] = gate @ unitary[pair,:]
         return unitary
     return apply_to_qbit_loop
 def process_gates32(unitary, num_qbits, parameters, target_qbits, control_qbits):
@@ -602,8 +602,8 @@ class UnitarySimulator(g.Component):
         debug = False
         pgm_pkg = g.ProgramPackage(name="us" + ("unit" if output_unitary else "") + str(num_qbits) + "-" + str(max_gates), output_dir="usiop", inspect_raw=debug, gen_vis_data=debug, check_stream_conflicts=debug, check_tensor_timing_conflicts=debug)
         num_inner_splits = (pow2qb+320-1)//320 #handle inner splits for >=9 qbits
-        chainsize = 20 #min(max_gates, int(np.sqrt(6000*max_gates/(pow2qb*num_inner_splits/2)))) #6000*gates/chainsize == chainsize*pow2qb*num_inner_splits/2
-        if (chainsize & 1) != 0: chainsize += 1        
+        chainsize = 40 #min(max_gates, int(np.sqrt(6000*max_gates/(pow2qb*num_inner_splits/2)))) #6000*gates/chainsize == chainsize*pow2qb*num_inner_splits/2
+        #if (chainsize & 1) != 0: chainsize += 1
         print("Number of qbits:", num_qbits, "Maximum gates:", max_gates, "Chain size:", chainsize)
         with pgm_pkg.create_program_context("init_us") as pcinitunitary:
             unitaryinit = g.input_tensor(shape=(pow2qb*2, pow2qb), dtype=g.float32, name="unitaryinit", layout="-1, H1(W), B1(1), A" + str(pow2qb*num_inner_splits) + "(0-" + str(pow2qb*num_inner_splits-1) + "), S8(0-8)") #get_slice8(WEST, 0, 7, 0)
@@ -784,7 +784,7 @@ class UnitarySimulator(g.Component):
             if num_qbits >= 9: htcqbits = g.from_addresses(np.array(hightcqbits.storage_request.addresses.reshape(-1, g.uint8.size), dtype=object), 320, g.uint8, "hightcqbits" + suffix)
             derivs = g.from_addresses(np.array(derivates.storage_request.addresses.reshape(-1, g.uint8.size), dtype=object), 320, g.uint8, "derivates" + suffix)
             pred, reversedir = None, False
-            for c in range(chainsize):
+            for c in range(2):
                 with g.ResourceScope(name="setgatherdistros" + str(c), is_buffered=True, time=0 if pred is None else None, predecessors=None if pred is None else [pred]) as pred:
                     qmapW_st = g.split(g.stack([qmap]*(1+1+(1+1 if not control_qbit is None else 0)+8), 0).read(streams=g.SG1_W[0], time=0), splits=[1, 1] + ([1, 1] if not control_qbit is None else []) + [8])
                     if not control_qbit is None and num_qbits >=9: qmapE_st = g.split(g.stack([qmap]*(1+1), 0).read(streams=g.SG1_E[0], time=1+1+(1+1)+8), splits=[1, 1])
@@ -860,6 +860,22 @@ class UnitarySimulator(g.Component):
         """
         print_utils.infoc("\nAssembling model ...")
         iops = pgm_pkg.assemble()
+        pgm_pkg = g.ProgramPackage(name="us" + ("unit" if output_unitary else "") + str(num_qbits) + "-" + str(max_gates), output_dir="usiop", inspect_raw=debug, gen_vis_data=debug, check_stream_conflicts=debug, check_tensor_timing_conflicts=debug)        
+        if chainsize != 2:
+            import shutil
+            for name in ("init_us", "init_gates", "us_gateuniversal", "final_us"):
+                shutil.copyfile("usiop/topo_0/" + name + "/" + name + ".aa", "usiop/topo_0/" + name + "/" + name + ".0.aa")
+            chain_aa("usiop/topo_0/us_gateuniversal/us_gateuniversal.0.aa", chainsize // 2)
+            with pgm_pkg.create_program_context("init_us") as pcinitunitary:
+                pgm_pkg.add_precompiled_program(pcinitunitary, "usiop/topo_0/init_us", "init_us")
+            with pgm_pkg.create_program_context("init_gates") as pcinit:
+                pgm_pkg.add_precompiled_program(pcinit, "usiop/topo_0/init_gates", "init_gates")
+            with pgm_pkg.create_program_context("us_gate"+suffix) as pc:
+                pgm_pkg.add_precompiled_program(pc, "usiop/topo_0/us_gateuniversal", "us_gateuniversal")
+            with pgm_pkg.create_program_context("final_us") as pcfinal:
+                pgm_pkg.add_precompiled_program(pcfinal, "usiop/topo_0/final_us", "final_us")
+            print_utils.infoc("\nAssembling chained model ...")
+            iops = pgm_pkg.assemble()
         return {"iop": iops[0], "chainsize": chainsize, "max_gates": max_gates, "unitary": unitaryinit.name, "gates": gatespack.name, "othergates": othergatespack.name,
             "targetqbits": targetqbits.name, "controlqbits": controlqbits.name, "derivates": derivates.name,
             "unitaryres": unitaryres.name, **({"hightcqbits" : hightcqbits.name} if num_qbits >= 9 else {})} #"unitaryrevres": unitaryrevres.name, 
@@ -1002,7 +1018,7 @@ class UnitarySimulator(g.Component):
         
     def chain_test(num_qbits, max_gates, output_unitary=False):
         pow2qb = 1 << num_qbits
-        num_gates, use_identity = max_gates, False
+        num_gates, use_identity = 20, True# max_gates, False
 
         u = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
         target_qbits = np.array([np.random.randint(num_qbits) for _ in range(num_gates)], dtype=np.uint8)
@@ -1010,7 +1026,7 @@ class UnitarySimulator(g.Component):
         parameters = np.random.random((num_gates, 3))
         oracleres = [None]
         def oracle():
-            oracleres[0] = process_gates(u, num_qbits, parameters, target_qbits, control_qbits)
+            oracleres[0] = process_gates32(u, num_qbits, parameters, target_qbits, control_qbits)
             #oracleres[0] = qiskit_oracle(u, num_qbits, parameters, target_qbits, control_qbits)
             if not output_unitary: oracleres[0] = np.trace(np.real(oracleres[0]))
         actual, result, closefunc = UnitarySimulator.get_unitary_sim(num_qbits, max_gates, output_unitary=output_unitary)
@@ -1124,6 +1140,30 @@ def get_max_gates(num_qbits, max_levels):
     max_gates = num_qbits+3*(num_qbits*(num_qbits-1)//2*max_levels)
     if (max_gates % 80) != 0: max_gates += (80 - max_gates % 80)
     return max_gates
+def chain_aa(aafile, chainsize):
+    with open(aafile, "r") as f:
+        lines = f.readlines()
+    import re #first determine the total cycles for the period size
+    period = 0
+    for line in lines:
+        if len(line) == 0 or line[0] == '\n' or line[0] == '.' or line[:2] == '//': continue #ignore empty lines, directives and comments
+        period = max(period, int(line[0:line.index(':')])) #time format with colon and 4 spaces "\d+:    "
+    period += 1
+    print("Atom Assembly Total Cycles", period)
+    with open(aafile, "w") as f:
+        duplines = []
+        for line in lines:
+            if len(line) == 0 or line[0] == '\n' or line[0] == '.' or line[:2] == '//':
+                for c in range(1, chainsize):
+                    for ln in duplines:
+                        colon = ln.index(':')
+                        v = str(int(ln[0:colon])+period*c)
+                        f.write(v + ln[colon:])
+                f.write(line)
+                duplines = []
+                continue
+            duplines.append(line)
+            f.write(line)
 def main():
     max_levels=6
     #UnitarySimulator.build_all(max_levels, output_unitary=False)
@@ -1136,10 +1176,10 @@ def main():
     #10 qbits max for single bank, 11 qbits requires dual chips [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 7, 26, 104]
     #import math; [math.ceil(((1<<x)*int(math.ceil((1<<x)/320)))/8192) for x in range(15)]
     #UnitarySimulator.validate_alus()
-    num_qbits = 4
+    num_qbits = 3
     #UnitarySimulator.unit_test(num_qbits)
     UnitarySimulator.chain_test(num_qbits, get_max_gates(num_qbits, max_levels), True)
-    UnitarySimulator.checkacc()
+    #UnitarySimulator.checkacc()
     #UnitarySimulator.perfcompare()
 if __name__ == "__main__":
     main()
