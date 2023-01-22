@@ -452,7 +452,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx_loc.get_data(), optimized_parameters_mtx_loc.size() );
     cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
     cDecomp_custom.set_max_iteration( max_iterations );
-    cDecomp_custom.set_verbose(0);
+    cDecomp_custom.set_verbose(verbose);
     cDecomp_custom.set_cost_function_variant( cost_fnc );
     cDecomp_custom.set_debugfile("");
     cDecomp_custom.set_iteration_loops( iteration_loops );
@@ -466,6 +466,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
         cDecomp_custom.set_adaptive_eta( true );      
         cDecomp_custom.set_randomized_radius( radius );             
     }
+    cDecomp_custom.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
     cDecomp_custom.start_decomposition(true);
     //cDecomp_custom.list_gates(0);
 
@@ -554,7 +555,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
                 cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
                 cDecomp_custom_random.set_max_iteration( max_iterations );
-                cDecomp_custom_random.set_verbose(0);
+                cDecomp_custom_random.set_verbose(verbose);
                 cDecomp_custom_random.set_cost_function_variant( cost_fnc );
                 cDecomp_custom_random.set_debugfile("");
                 cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );
@@ -567,6 +568,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                     cDecomp_custom_random.set_adaptive_eta( true );    
                     cDecomp_custom_random.set_randomized_radius( radius );
                 }
+                cDecomp_custom_random.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
                 cDecomp_custom_random.start_decomposition(true);
 
 #ifndef __DFE__
@@ -582,6 +584,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_close_to_zero.set_debugfile("");
                 cDecomp_custom_close_to_zero.set_optimization_tolerance( optimization_tolerance );  
                 cDecomp_custom_close_to_zero.start_decomposition(true);
+                cDecomp_custom_close_to_zero.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
                }
          );
 #endif
@@ -887,6 +890,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         cDecomp_custom.set_adaptive_eta( false );
         cDecomp_custom.set_randomized_radius( radius );        
     }
+    cDecomp_custom.set_iteration_threshold_of_randomization( 2500 );
     cDecomp_custom.start_decomposition(true);
     double current_minimum_tmp = cDecomp_custom.get_current_minimum();
 

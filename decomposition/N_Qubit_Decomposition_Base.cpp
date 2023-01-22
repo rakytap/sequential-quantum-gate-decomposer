@@ -63,6 +63,14 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 
     // The chosen variant of the cost function
     cost_fnc = FROBENIUS_NORM;
+
+
+    prev_cost_fnv_val = 0.0;
+    //
+    correction1_scale = 1/1.7;
+    correction2_scale = 1/2.0;  
+
+    iteration_threshold_of_randomization = 2500000;
 }
 
 /**
@@ -103,6 +111,13 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 
     // The chosen variant of the cost function
     cost_fnc = FROBENIUS_NORM;
+
+    prev_cost_fnv_val = 0.0;
+    //
+    correction1_scale = 1/1.7;
+    correction2_scale = 1/2.0; 
+
+    iteration_threshold_of_randomization = 2500000;
 
 }
 
@@ -313,7 +328,7 @@ pure_DFE_time = 0.0;
 
         double f0 = DBL_MAX;
         std::stringstream sstream;
-        sstream << "iter_max: " << iter_max << std::endl;
+        sstream << "iter_max: " << iter_max << ", randomization threshold: " << iteration_threshold_of_randomization << ", randomization radius: " << radius << std::endl;
         print(sstream, 2); 
 
         int ADAM_status = 0;
@@ -326,12 +341,17 @@ pure_DFE_time = 0.0;
 
 
             optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_gsl );
+
+            prev_cost_fnv_val = f0;
   
             if (sub_iter_idx == 1 ) {
-                current_minimum_hold = f0;                  
+                current_minimum_hold = f0;   
+               
                 if ( adaptive_eta )  { 
                     optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3; 
+                    //std::cout << "reset learning rate to " << optimizer.eta << std::endl;
                 }                 
+
             }
 
 
@@ -362,6 +382,10 @@ pure_DFE_time = 0.0;
                 print(sstream, 0);   
                 std::string filename("initial_circuit_iteration.binary");
                 export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
+
+Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+std::cout << "pure cost function: " << get_cost_function(matrix_new) << std::endl;
+
             }
 
 //std::cout << grad_norm  << std::endl;
@@ -370,15 +394,6 @@ pure_DFE_time = 0.0;
             }
 
 
-//grad_mtx.print_matrix();
-
-            
-            if ( sub_iter_idx> 2500 || ADAM_status != 0 ) {
-
-                //random_shift_count++;
-                sub_iter_idx = 0;
-                random_shift_count++;
-                current_minimum_hold = current_minimum;   
 
                 // calculate the gradient norm
                 double norm = 0.0;
@@ -387,12 +402,43 @@ pure_DFE_time = 0.0;
                 }
                 norm = std::sqrt(norm);
                 
+//grad_mtx.print_matrix();
+/*
+            if ( ADAM_status == 0 && norm > 0.01 && optimizer.eta < 1e-4) {
+
+                std::uniform_real_distribution<> distrib_prob(0.0, 1.0);
+                if ( distrib_prob(gen) < 0.05 ) {
+                    optimizer.eta = optimizer.eta*10;
+                    std::cout << "Increasing learning rate at " << f0 << " to " << optimizer.eta << std::endl;
+                }
+
+            }
+*/
+/*
+
+            if ( ADAM_status == 1 && norm > 0.01 ) {
+                optimizer.eta = optimizer.eta > 1e-5 ? optimizer.eta/10 : 1e-6;
+                std::cout << "Decreasing learning rate at " << f0 << " to " << optimizer.eta << std::endl;
+                ADAM_status = 0;
+            }
+
+  */       
+
+            if ( sub_iter_idx> iteration_threshold_of_randomization || ADAM_status != 0 ) {
+
+                //random_shift_count++;
+                sub_iter_idx = 0;
+                random_shift_count++;
+                current_minimum_hold = current_minimum;   
+
+
+                
                 std::stringstream sstream;
                 if ( ADAM_status == 0 ) {
-                    sstream << "ADAM: leaving barren plateau at " << f0 << ", gradient norm " << norm << std::endl;
+                    sstream << "ADAM: initiate randomization at " << f0 << ", gradient norm " << norm << std::endl;
                 }
                 else {
-                    sstream << "ADAM: leaving local minimum " << f0 << ", gradient norm " << norm << std::endl;
+                    sstream << "ADAM: leaving local minimum " << f0 << ", gradient norm " << norm << " eta: " << optimizer.eta << std::endl;
                 }
                 print(sstream, 0);   
                     
@@ -403,6 +449,8 @@ pure_DFE_time = 0.0;
                 optimizer.initialize_moment_and_variance( num_of_parameters );   
 
                 ADAM_status = 0;   
+
+                //optimizer.eta = 1e-3;
         
             }
 
@@ -414,7 +462,9 @@ pure_DFE_time = 0.0;
 
         }
 
-
+cost_fnc = FROBENIUS_NORM;
+std::cout << optimization_problem( optimized_parameters_mtx ) << std::endl;
+cost_fnc == FROBENIUS_NORM_CORRECTION1;
 
         sstream.str("");
         sstream << "obtained minimum: " << current_minimum << std::endl;
@@ -615,10 +665,10 @@ bfgs_time = 0.0;
             do {
                 gsl_set_error_handler_off();
                 
-                if ( sub_iter_idx>2500 || status != GSL_CONTINUE ) {
+                if ( sub_iter_idx > iteration_threshold_of_randomization || status != GSL_CONTINUE ) {
 
                     std::stringstream sstream;
-                    sstream << "BFGS2: leaving local minimum " << s->f << std::endl;
+                    sstream << "BFGS2: initiate randomization at " << s->f << std::endl;
                     print(sstream, 2); 
                     
                     sub_iter_idx = 0;
@@ -742,11 +792,12 @@ void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, gsl_v
     if (randomization_probs.size() != num_of_parameters) {
         randomization_probs = Matrix_real(1, num_of_parameters);
         for ( int idx=0; idx<num_of_parameters; idx++ ) {
-            randomization_probs[idx] = 0.1;
+            randomization_probs[idx] = randomization_rate;
         }
         
         randomized_probs = matrix_base<int>(1, num_of_parameters);
     }
+/*
     else {
 
         if ( randomization_succesful ) {
@@ -776,7 +827,7 @@ void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, gsl_v
 
 
     }
- 
+*/
     int changed_parameters = 0;
     for ( int jdx=0; jdx<num_of_parameters; jdx++) {
         if ( distrib_prob(gen) <= randomization_probs[jdx] ) {
@@ -797,7 +848,7 @@ void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, gsl_v
    
 if ( current_rank == 0 ) { 
 #endif
-    std::cout << "Randomized parameters: " << changed_parameters << std::endl;
+    std::cout << "Randomized parameters: " << changed_parameters << " from " <<  num_of_parameters << std::endl;
 #ifdef __MPI__  
 }
 #endif
@@ -817,7 +868,23 @@ double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
     Matrix_real parameters_mtx(parameters, 1, parameter_num );
     Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
 
-    return get_cost_function(matrix_new);
+
+    if ( cost_fnc == FROBENIUS_NORM ) {
+        return get_cost_function(matrix_new);
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+        Matrix_real&& ret = get_cost_function_with_correction(matrix_new, qbit_num);
+        return ret[0] - std::sqrt(prev_cost_fnv_val)*ret[1]*correction1_scale;
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+        Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num);
+        return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
+    }
+    else {
+        std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
+        throw err;
+    }
+
 
 }
 
@@ -846,7 +913,15 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
         Matrix_real&& ret = get_cost_function_with_correction(matrix_new, qbit_num);
-        return ret[0] - ret[1];
+        return ret[0] - std::sqrt(prev_cost_fnv_val)*ret[1]*correction1_scale;
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+        Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num);
+        return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
+    }
+    else {
+        std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
+        throw err;
     }
 
 }
@@ -871,13 +946,27 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
   
     cost_function_type cost_fnc = instance->get_cost_function_variant();
 
+
+
     if ( cost_fnc == FROBENIUS_NORM ) {
         return get_cost_function(matrix_new);
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+        double correction1_scale    = instance->get_correction1_scale();
         Matrix_real&& ret = get_cost_function_with_correction(matrix_new, instance->get_qbit_num());
-        return ret[0] - ret[1];
+        return ret[0] - std::sqrt(instance->get_previous_cost_function_value())*ret[1]*correction1_scale;
     }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+        double correction1_scale    = instance->get_correction1_scale();
+        double correction2_scale    = instance->get_correction2_scale();            
+        Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, instance->get_qbit_num());
+        return ret[0] - std::sqrt(instance->get_previous_cost_function_value())*(ret[1]*correction1_scale + ret[2]*correction2_scale);
+    }
+    else {
+        std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
+        throw err;
+    }
+
 
 }
 
@@ -918,6 +1007,13 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
     // the variant of the cost function
     cost_function_type cost_fnc = instance->get_cost_function_variant();
 
+    // value of the cost function from the previous iteration to weigth the correction to the trace
+    double prev_cost_fnv_val = instance->get_previous_cost_function_value();
+    double correction1_scale    = instance->get_correction1_scale();
+    double correction2_scale    = instance->get_correction2_scale();    
+
+    int qbit_num = instance->get_qbit_num();
+
 #ifdef __DFE__
 ///////////////////////////////////////
 //std::cout << "number of qubits: " << instance->qbit_num << std::endl;
@@ -930,6 +1026,7 @@ if ( instance->qbit_num >= 5 ) {
 
     Matrix&& Umtx_loc = instance->get_Umtx();   
     Matrix_real trace_DFE_mtx(gateSetNum, 3);
+
 
 #ifdef __MPI__
     // the number of decomposing layers are divided between the MPI processes
@@ -949,29 +1046,46 @@ if ( instance->qbit_num >= 5 ) {
     calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_DFE_mtx.get_data() );
 
 #endif  
+
+    std::stringstream sstream;
+    sstream << *f0 << " " << 1.0 - trace_DFE_mtx[0]/Umtx_loc.cols << " " << trace_DFE_mtx[1]/Umtx_loc.cols << " " << trace_DFE_mtx[2]/Umtx_loc.cols << std::endl;
+    instance->print(sstream, 5);	
+    
   
-    double f0_DFE;
     if ( cost_fnc == FROBENIUS_NORM ) {
-//        f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
         *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-//        f0_DFE = 1-trace_DFE_mtx[0]/Umtx_loc.cols - trace_DFE_mtx[1]/Umtx_loc.cols;
-        *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
+        *f0 = 1 - (trace_DFE_mtx[0] + std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[1]*correction1_scale)/Umtx_loc.cols;
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+        *f0 = 1 - (trace_DFE_mtx[0] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[1]*correction1_scale + trace_DFE_mtx[2]*correction2_scale))/Umtx_loc.cols;
+    }
+    else {
+        std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
+        throw err;
     }
 
+    //double f0_DFE = *f0;
 
-    Matrix_real grad_components_DFE_mtx(1, parameter_num_loc);
+    //Matrix_real grad_components_DFE_mtx(1, parameter_num_loc);
     for (int idx=0; idx<parameter_num_loc; idx++) {
 
         if ( cost_fnc == FROBENIUS_NORM ) {
-//            grad_components_DFE_mtx[idx] = -trace_DFE_mtx[3*(idx+1)]/Umtx_loc.cols;
             gsl_vector_set(grad, idx, -trace_DFE_mtx[3*(idx+1)]/Umtx_loc.cols);
         }
         else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-//            grad_components_DFE_mtx[idx] = -(trace_DFE_mtx[3*(idx+1)] + trace_DFE_mtx[3*(idx+1)+1])/Umtx_loc.cols; 
-            gsl_vector_set(grad, idx, -(trace_DFE_mtx[3*(idx+1)] + trace_DFE_mtx[3*(idx+1)+1])/Umtx_loc.cols);
+            gsl_vector_set(grad, idx, -(trace_DFE_mtx[3*(idx+1)] + std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[3*(idx+1)+1]*correction1_scale)/Umtx_loc.cols);
         }
+        else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+            gsl_vector_set(grad, idx, -(trace_DFE_mtx[3*(idx+1)] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[3*(idx+1)+1]*correction1_scale + trace_DFE_mtx[3*(idx+1)+2]*correction2_scale))/Umtx_loc.cols );
+        }
+        else {
+            std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
+            throw err;
+        }
+
+        //grad_components_DFE_mtx[idx] = gsl_vector_get( grad, idx );
 
 
     }
@@ -994,6 +1108,9 @@ else {
 #ifdef __DFE__
 tbb::tick_count t0_CPU = tbb::tick_count::now();/////////////////////////////////
 #endif
+
+    Matrix_real cost_function_terms;
+
     tbb::parallel_invoke(
         [&]{
             *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance)); 
@@ -1004,7 +1121,6 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             Umtx_deriv = instance->apply_derivate_to( parameters_mtx, Umtx_loc );
         });
 
-    int qbit_num = instance->get_qbit_num();
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
@@ -1015,8 +1131,19 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             }
             else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
                 Matrix_real deriv_tmp = get_cost_function_with_correction( Umtx_deriv[idx], qbit_num );
-                grad_comp = (deriv_tmp[0] - deriv_tmp[1] - 1.0);
+                grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*deriv_tmp[1]*correction1_scale - 1.0);
             }
+            else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+                Matrix_real deriv_tmp = get_cost_function_with_correction2( Umtx_deriv[idx], qbit_num );
+                grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
+            }
+            else {
+                std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
+                throw err;
+            }
+
+
+
 
             gsl_vector_set(grad, idx, grad_comp);
 
@@ -1035,7 +1162,7 @@ std::cout << "cost function CPU: " << *f0 << " and DFE: " << f0_DFE << std::endl
 
 for ( int idx=0; idx<parameter_num_loc; idx++ ) {
 
-    double diff = (grad_components_DFE_mtx[idx]-gsl_vector_get(grad, idx))*(grad_components_DFE_mtx[idx]-gsl_vector_get(grad, idx));
+    double diff = std::sqrt((grad_components_DFE_mtx[idx]-gsl_vector_get(grad, idx))*(grad_components_DFE_mtx[idx]-gsl_vector_get(grad, idx)));
     if ( diff > 1e-5 ) {
         std::cout << "DFE and CPU cost functions differs at index " << idx << " " <<  grad_components_DFE_mtx[idx] << " and " <<  gsl_vector_get(grad, idx) << std::endl;
         
@@ -1164,6 +1291,94 @@ void
 N_Qubit_Decomposition_Base::set_randomized_radius( double radius_in  ) {
 
     radius = radius_in;
+
+}
+
+
+/**
+@brief ???????????
+*/
+double 
+N_Qubit_Decomposition_Base::get_previous_cost_function_value() {
+
+    return prev_cost_fnv_val;
+
+}
+
+
+
+/**
+@brief ???????????
+*/
+double 
+N_Qubit_Decomposition_Base::get_correction1_scale() {
+
+    return correction1_scale;
+
+}
+
+
+/**
+@brief ??????????????
+@param ?????????
+*/
+void 
+N_Qubit_Decomposition_Base::get_correction1_scale( const double& scale ) {
+
+
+    correction1_scale = scale;
+
+}
+
+
+
+
+/**
+@brief ???????????
+*/
+double 
+N_Qubit_Decomposition_Base::get_correction2_scale() {
+
+    return correction2_scale;
+
+}
+
+
+/**
+@brief ??????????????
+@param ?????????
+*/
+void 
+N_Qubit_Decomposition_Base::get_correction2_scale( const double& scale ) {
+
+
+    correction2_scale = scale;
+
+}
+
+
+
+
+/**
+@brief ???????????
+*/
+long 
+N_Qubit_Decomposition_Base::get_iteration_threshold_of_randomization() {
+
+    return iteration_threshold_of_randomization;
+
+}
+
+
+/**
+@brief ??????????????
+@param ?????????
+*/
+void 
+N_Qubit_Decomposition_Base::set_iteration_threshold_of_randomization( const unsigned long long& threshold ) {
+
+
+    iteration_threshold_of_randomization = threshold;
 
 }
 

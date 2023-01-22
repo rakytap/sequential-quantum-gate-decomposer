@@ -158,6 +158,12 @@ int Adam::update( Matrix_real& parameters, Matrix_real& grad, const double& f0 )
     f0_mean = f0_mean + (f0 - f0_vec[ f0_idx ])/f0_vec.size();
     f0_vec[ f0_idx ] = f0;
     f0_idx = (f0_idx + 1) % f0_vec.size();
+    
+    double var_f0 = 0.0;
+    for (int idx=0; idx<f0_vec.size(); idx++) {
+       var_f0 = var_f0 + (f0_vec[idx]-f0_mean)*(f0_vec[idx]-f0_mean);
+    }
+    var_f0 = std::sqrt(var_f0)/f0_vec.size();
 
 
     if ( f0 < f0_prev ) {
@@ -247,9 +253,10 @@ ta.execute( [&](){
 
 
     int ADAM_status = 0;
-    if ( std::abs( f0_mean - f0) < 1e-6 && decreasing_test <= 0.7 ) {
+    if ( std::abs( f0_mean - f0) < 1e-6 && decreasing_test <= 0.7 && var_f0/f0_mean < 1e-6 ) {
         // local minimum
         ADAM_status = 1;
+        std::cout << "iiiiiiiiiiiiiiiiiiiii " << var_f0 << std::endl;
     }
     else {
         ADAM_status = 0;

@@ -444,10 +444,19 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
-# @param costfnc Variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, and 2 for FROBENIUS_NORM_CORRECTION2 (currently unimplemented)
+# @param costfnc Variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2
     def set_Cost_Function_Variant( self, costfnc="1" ):
 
         # Set the optimizer
         super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(costfnc=costfnc)  
+
+
+## 
+# @brief Call to set the threshold value for the count of interations, above which the parameters are randomized if the cost function does not decreases fast enough.
+# @param threshold The value of the threshold
+    def set_Iteration_Threshold_of_Randomization( self, threshold=2500 ):
+
+        # Set the optimizer
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Iteration_Threshold_of_Randomization(threshold)  
 
 

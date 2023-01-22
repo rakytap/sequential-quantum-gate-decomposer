@@ -92,12 +92,21 @@ protected:
     optimization_aglorithms alg;
     /// The chosen variant of the cost function
     cost_function_type cost_fnc;
+    ///
+    double prev_cost_fnv_val;
+    ///
+    double correction1_scale;
+    ///
+    double correction2_scale;    
+
     /// logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     bool adaptive_eta;
     /// parameter to contron the radius of parameter randomization around the curren tminimum
     double radius;
     /// randomization rate
     double randomization_rate;
+    /// threashold of count of iterations after what the parameters are randomized if the cost function does not deacrese fast enough
+    unsigned long long iteration_threshold_of_randomization;
 
     Matrix_real randomization_probs;
     matrix_base<int> randomized_probs;
@@ -253,10 +262,56 @@ cost_function_type get_cost_function_variant();
 
 
 /**
+@brief ???????????
+*/
+double get_previous_cost_function_value();
+
+
+/**
 @brief Call to set the variant of the cost function used in the calculations
 @param variant The variant of the cost function from the enumaration cost_function_type
 */
 void set_cost_function_variant( cost_function_type variant  );
+
+
+/**
+@brief ???????????
+*/
+double get_correction1_scale();
+
+
+/**
+@brief ??????????????
+@param ?????????
+*/
+void get_correction1_scale( const double& scale  );
+
+
+
+/**
+@brief ???????????
+*/
+double get_correction2_scale();
+
+
+/**
+@brief ??????????????
+@param ?????????
+*/
+void get_correction2_scale( const double& scale  );
+
+
+/**
+@brief ???????????
+*/
+long get_iteration_threshold_of_randomization();
+
+
+/**
+@brief ??????????????
+@param ?????????
+*/
+void set_iteration_threshold_of_randomization( const unsigned long long& threshold  );
 
 
 
