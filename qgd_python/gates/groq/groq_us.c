@@ -103,58 +103,59 @@ extern "C" void releive_groq()
 
 const int MAX_LEVELS = 6;
 
-#define UP_TO_EVEN(X) (((X) & 1) != 0 ? (X+1) : (X))
+#define GATE_MULTIPLE 80
+#define UP_TO_EVEN(X) (((X) % GATE_MULTIPLE) != 0 ? ((X)+GATE_MULTIPLE-((X) % GATE_MULTIPLE)) : (X))
 
 //xxd -i us2-20.0.iop us2-20.0.iop.h
 #ifdef NUM_QBITS
 #if NUM_QBITS==2
-#include "us2-20.0.iop.h"
-#define binary_groq_program usiop_us2_20_0_iop
+#include "us2-80.0.iop.h"
+#define binary_groq_program usiop_us2_80_0_iop
 #elif NUM_QBITS==3
-#include "us3-58.0.iop.h"
-#define binary_groq_program usiop_us3_58_0_iop
+#include "us3-80.0.iop.h"
+#define binary_groq_program usiop_us3_80_0_iop
 #elif NUM_QBITS==4
-#include "us4-112.0.iop.h"
-#define binary_groq_program usiop_us4_112_0_iop
+#include "us4-160.0.iop.h"
+#define binary_groq_program usiop_us4_160_0_iop
 #elif NUM_QBITS==5
-#include "us5-186.0.iop.h"
-#define binary_groq_program usiop_us5_186_0_iop
+#include "us5-240.0.iop.h"
+#define binary_groq_program usiop_us5_240_0_iop
 #elif NUM_QBITS==6
-#include "us6-276.0.iop.h"
-#define binary_groq_program usiop_us6_276_0_iop
+#include "us6-320.0.iop.h"
+#define binary_groq_program usiop_us6_320_0_iop
 #elif NUM_QBITS==7
-#include "us7-386.0.iop.h"
-#define binary_groq_program usiop_us7_386_0_iop
+#include "us7-400.0.iop.h"
+#define binary_groq_program usiop_us7_400_0_iop
 #elif NUM_QBITS==8
-#include "us8-512.0.iop.h"
-#define binary_groq_program usiop_us8_512_0_iop
+#include "us8-560.0.iop.h"
+#define binary_groq_program usiop_us8_560_0_iop
 #elif NUM_QBITS==9
-#include "us9-658.0.iop.h"
-#define binary_groq_program usiop_us9_658_0_iop
+#include "us9-720.0.iop.h"
+#define binary_groq_program usiop_us9_720_0_iop
 #elif NUM_QBITS==10
-#include "us10-820.0.iop.h"
-#define binary_groq_program usiop_us10_820_0_iop
+#include "us10-880.0.iop.h"
+#define binary_groq_program usiop_us10_880_0_iop
 #endif
 #define MAX_GATES UP_TO_EVEN(NUM_QBITS+3*(NUM_QBITS*(NUM_QBITS-1)/2*MAX_LEVELS))
 #else
-#include "us2-20.0.iop.h"
-#include "us3-58.0.iop.h"
-#include "us4-112.0.iop.h"
-#include "us5-186.0.iop.h"
-#include "us6-276.0.iop.h"
-#include "us7-386.0.iop.h"
-#include "us8-512.0.iop.h"
-#include "us9-658.0.iop.h"
-#include "us10-820.0.iop.h"
+#include "us2-80.0.iop.h"
+#include "us3-80.0.iop.h"
+#include "us4-160.0.iop.h"
+#include "us5-240.0.iop.h"
+#include "us6-320.0.iop.h"
+#include "us7-400.0.iop.h"
+#include "us8-560.0.iop.h"
+#include "us9-720.0.iop.h"
+#include "us10-880.0.iop.h"
 unsigned char* binary_groq_programs[] = {
-    usiop_us2_20_0_iop, usiop_us3_58_0_iop, usiop_us4_112_0_iop,
-    usiop_us5_186_0_iop, usiop_us6_276_0_iop, usiop_us7_386_0_iop,
-    usiop_us8_512_0_iop, usiop_us9_658_0_iop, usiop_us10_820_0_iop
+    usiop_us2_80_0_iop, usiop_us3_80_0_iop, usiop_us4_160_0_iop,
+    usiop_us5_240_0_iop, usiop_us6_320_0_iop, usiop_us7_400_0_iop,
+    usiop_us8_560_0_iop, usiop_us9_720_0_iop, usiop_us10_880_0_iop
 };
 size_t prog_sizes[] = {
-    sizeof(usiop_us2_20_0_iop), sizeof(usiop_us3_58_0_iop), sizeof(usiop_us4_112_0_iop),
-    sizeof(usiop_us5_186_0_iop), sizeof(usiop_us6_276_0_iop), sizeof(usiop_us7_386_0_iop),
-    sizeof(usiop_us8_512_0_iop), sizeof(usiop_us9_658_0_iop), sizeof(usiop_us10_820_0_iop)
+    sizeof(usiop_us2_80_0_iop), sizeof(usiop_us3_80_0_iop), sizeof(usiop_us4_160_0_iop),
+    sizeof(usiop_us5_240_0_iop), sizeof(usiop_us6_320_0_iop), sizeof(usiop_us7_400_0_iop),
+    sizeof(usiop_us8_560_0_iop), sizeof(usiop_us9_720_0_iop), sizeof(usiop_us10_880_0_iop)
 };
 #define MAX_GATES(NUM_QBITS) UP_TO_EVEN(NUM_QBITS+3*(NUM_QBITS*(NUM_QBITS-1)/2*MAX_LEVELS))
 size_t max_gates[] = {
@@ -162,8 +163,7 @@ size_t max_gates[] = {
     MAX_GATES(7), MAX_GATES(8), MAX_GATES(9), MAX_GATES(10)
 };
 #endif
-
-#define CHAIN_SIZE 2
+size_t chain_sizes[] = { 40, 20, 20, 20, 20, 20, 20, 16, 10 };
 
 const char* TENSOR_TYPES[] = {"UNKNOWN", "UINT8", "UINT16", "UINT32", "INT8", "INT16", "INT32", "FLOAT16", "FLOAT32", "BOOL"};
 
@@ -486,7 +486,7 @@ int initialize_groq(unsigned int num_qbits)
 }
 
 extern "C" int get_chained_gates_num() {
-    return CHAIN_SIZE;
+    return chain_sizes[loaded-2];
 }
 
 
@@ -516,7 +516,7 @@ unsigned int log2(unsigned int v)
     return r;
 }
 
-//#define USE_GROQ_HOST_FUNCS
+#define USE_GROQ_HOST_FUNCS
 
 extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
 {
@@ -535,8 +535,8 @@ extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
     }
     //data type e.g. FLOAT32 along the -2 dimension
     //input format:
-    //gate FLOAT32 ((MAX_GATES+1)/2, 8, gatecols)
-    //othergate FLOAT32 ((MAX_GATES+1)/2, 8, gatecols)
+    //gate FLOAT32 ((MAX_GATES+1)/2*8)
+    //othergate FLOAT32 ((MAX_GATES+1)/2*8)
     //target_qbits UINT8 (MAX_GATES, 320)
     //control_qbits UINT8 (MAX_GATES, 320)
     //unitary FLOAT32 (2*rows, cols)
@@ -631,13 +631,12 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
     //size_t num_inner_splits = (cols+320-1)/320;
     size_t hemigates = (mx_gates+1)/2;
     size_t mx_gates320 = mx_gates*320;
-    size_t gatecols = cols < 320 ? cols : 320;
 #ifdef USE_GROQ_HOST_FUNCS
-    size_t hemigatessz = hemigates*8*gatecols*sizeof(float);
-    size_t gateinputsz = hemigates*2*8*4*320+mx_gates*4*320;
+    size_t hemigatessz = hemigates*8*sizeof(float);
+    size_t gateinputsz = hemigates*2*8*4+mx_gates*(num_qbits >= 9 ? 4 : 3)*320;
 #else
-    size_t hemigates16 = hemigates*2*320;
-    size_t offset_qbit = hemigates*2*8*4*320; //num_inner_splits*2*rows*4*320
+    size_t hemigates16 = hemigates*2*sizeof(float);
+    size_t offset_qbit = hemigates*2*8*4; //num_inner_splits*2*rows*4*320
 #endif
     size_t maxinnerdim = cols > 320 ? 256 : cols; //real chip shape is (num_inner_splits, rows, 2, min(cols, 256)) as inner splits are 256 for 9 and 10 qbits (not for 11)
     Status status;
@@ -659,8 +658,8 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                 timespec_get(&t, TIME_UTC);
 #endif
 #ifdef USE_GROQ_HOST_FUNCS
-                float* gbuf1 = (float*)calloc(hemigates*8*gatecols, sizeof(float));
-                float* gbuf2 = (float*)calloc(hemigates*8*gatecols, sizeof(float));
+                float* gbuf1 = (float*)calloc(hemigates*8, sizeof(float));
+                float* gbuf2 = (float*)calloc(hemigates*8, sizeof(float));
                 unsigned char* tbuf = (unsigned char*)malloc(mx_gates320);
                 unsigned char* cbuf = (unsigned char*)malloc(mx_gates320);
                 unsigned char* dbuf = (unsigned char*)malloc(mx_gates320);
@@ -668,7 +667,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                 for (int i = 0; i < gatesNum; i++) {
                     int idx = i+curGateSet[d]*gatesNum;
                     gate_kernel_type* curgate = &gates[idx];
-                    size_t ioffs = i/2*8*gatecols;
+                    size_t ioffs = i/2*8;
                     //Theta (actually ThetaOver2), Phi and Lambda are (32, -25) encoded fix points
                     long double theta = ldexpl((long double)curgate->Theta, -25),
                         phi = ldexpl((long double)curgate->Phi, -25),
@@ -679,20 +678,15 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                         (curgate->metadata & 4) ? 0.0 : cexpl(I*phi)*s,
                         (curgate->metadata & 8) ? 0.0 : cexpl(I*(phi+lambda))*c };
                     for (size_t goffs = 0; goffs < 4; goffs++) {
-                        size_t baseoffs = ioffs+goffs*2*gatecols,
-                            baseoffsimag = ioffs+(goffs*2+1)*gatecols;
-                        /*for (size_t innerdim = 0; innerdim < gatecols; innerdim++) {
-                            if ((i & 1) == 0) {
-                                gbuf1[baseoffs+innerdim] = crealf(g[goffs]);
-                                gbuf1[baseoffsimag+innerdim] = cimagf(g[goffs]);
-                            } else {
-                                gbuf2[baseoffs+innerdim] = crealf(g[goffs]);
-                                gbuf2[baseoffsimag+innerdim] = cimagf(g[goffs]);
-                            }
-                        }*/
-                        float re = crealf(g[goffs]), im = cimagf(g[goffs]);
-                        wmemset((wchar_t*)((i & 1) == 0 ? &gbuf1[baseoffs] : &gbuf2[baseoffs]), *((wchar_t*)floatToBytes(&re)), gatecols);
-                        wmemset((wchar_t*)((i & 1) == 0 ? &gbuf1[baseoffsimag] : &gbuf2[baseoffsimag]), *((wchar_t*)floatToBytes(&im)), gatecols);
+                        size_t baseoffs = ioffs+goffs*2,
+                            baseoffsimag = ioffs+(goffs*2+1);
+                        if ((i & 1) == 0) {
+                            gbuf1[baseoffs] = crealf(g[goffs]);                            
+                            gbuf1[baseoffsimag] = cimagf(g[goffs]);
+                        } else {
+                            gbuf2[baseoffs] = crealf(g[goffs]);
+                            gbuf2[baseoffsimag] = cimagf(g[goffs]);
+                        }
                     }
                     int8_t tqbit = curgate->target_qbit%8*2;
                     for (size_t j = 0; j < 320; j++) tbuf[320*i+j] = (j & 15) <= 1 ? tqbit + (j & 15) : 16;
@@ -746,7 +740,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                 //memset(input, 0, hemigates*2*8*4*320+mx_gates*3*320);
                 for (int i = 0; i < gatesNum; i++) {
                     int idx = i+curGateSet[d]*gatesNum;
-                    size_t ioffs = i/2*2*320;
+                    size_t ioffs = i/2*2*4;
                     gate_kernel_type* curgate = &gates[idx];
                     long double theta = ldexpl((long double)curgate->Theta, -25),
                         phi = ldexpl((long double)curgate->Phi, -25),
@@ -756,19 +750,21 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                         (curgate->metadata & 2) != 0 ? 0.0 : -cexpl(I*lambda)*s,
                         (curgate->metadata & 4) != 0 ? 0.0 : cexpl(I*phi)*s,
                         (curgate->metadata & 8) != 0 ? 0.0 : cexpl(I*(phi+lambda))*c };
-                    size_t offset = ((i & 1) != 0 ? hemigates*8*4*320 : 0) + (num_qbits >= 9 ? mx_gates320 : 0);
-                    for (size_t goffs = 0; goffs < 4; goffs++) { //effective address order dimension as S16 is (4, 4, hemigates, 2, min(320, cols))
-                        size_t gioffs = offset+ioffs+goffs/2*320;
-                        size_t goffsre = goffs%2*2*4, goffsim = (goffs%2*2+1)*4;
+                    size_t offset = ((i & 1) != 0 ? hemigates*8*4 : 0) + (num_qbits >= 9 ? mx_gates320 : 0);
+                    for (size_t goffs = 0; goffs < 4; goffs++) { //effective address order dimension as S16 is (4, 4, hemigates, 2)
+                        size_t gioffs = offset+ioffs+goffs*2;
                         float fr = crealf(g[goffs]), fi = cimagf(g[goffs]);
                         //printf("%f+%fj ", fr, fi);
                         //printf("%X+%Xj ", *((unsigned int*)floatToBytes(&fr)), *((unsigned int*)floatToBytes(&fi)));  
                         unsigned char* re = floatToBytes(&fr), *im = floatToBytes(&fi);
                         for (size_t byteidx = 0; byteidx < sizeof(float); byteidx++) {
-                            size_t baseoffs = (((i & 1) == 0 ? 15-(goffsre+byteidx) : goffsre+byteidx))*hemigates16+gioffs;
-                            size_t baseoffsimag = (((i & 1) == 0 ? 15-(goffsim+byteidx) : goffsim+byteidx))*hemigates16+gioffs;
-                            memset(&input[baseoffs], re[byteidx], gatecols);
-                            memset(&input[baseoffsimag], im[byteidx], gatecols);
+                            size_t baseoffs = (((i & 1) == 0 ? 3-byteidx : byteidx))*hemigates16+gioffs;
+                            size_t baseoffsimag = (((i & 1) == 0 ? 3-byteidx : byteidx))*hemigates16+gioffs+1;
+                            if (input[baseoffs] != re[byteidx] || input[baseoffsimag] != im[byteidx]) {
+                                printf("bad gate data %lu %lu %d %lu %lu\n", baseoffs, baseoffsimag, i, goffs, byteidx);
+                            }
+                            input[baseoffs] = re[byteidx];
+                            input[baseoffsimag] = im[byteidx];
                         }
                     }
                     //printf("\n");
@@ -783,7 +779,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                     int8_t tqbit = curgate->target_qbit%8*2;
                     for (size_t j = 0; j < 320; j++) {
                         //if (input[offset+j] != ((j & 15) <= 1 ? tqbit + (j & 15) : 16))
-                        //    printf("bad target qbit format\n");
+                        ///    printf("bad target qbit format\n");
                         input[offset+j] = (j & 15) <= 1 ? tqbit + (j & 15) : 16;
                     }
                     offset += mx_gates320;
@@ -925,7 +921,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                             printf("ERROR: invoke %d\n", status);
                             return 1;
                         }
-                        curStep[d]+=CHAIN_SIZE;
+                        curStep[d]+=chain_sizes[num_qbits-2];
                     }
                 }
             }
@@ -972,7 +968,7 @@ int main(int argc, char* argv[])
         }
     }
     load2groq(data, rows, cols);
-    int gatesNum = 10, //415, //MAX_GATES,
+    int gatesNum = chain_sizes[NUM_QBITS-2], //415, //MAX_GATES,
         gateSetNum = 976;
     gate_kernel_type* gates = (gate_kernel_type*)calloc(gatesNum * gateSetNum, sizeof(gate_kernel_type));
     for (int i = 0; i < gatesNum; i++) {
