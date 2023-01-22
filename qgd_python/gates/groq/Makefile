@@ -12,7 +12,7 @@ INCLUDES = -I$(GROQ_DIR)/include -I./usiop
 LFLAGS = 
 
 # define any libraries to link into executable:
-LIBS = $(GROQ_DIR)/lib/groqruntime/lib/libgroqruntime.a -lrt
+LIBS = $(GROQ_DIR)/lib/runtimelib/lib/libgroqruntime.a -lrt
 
 # define the C source files
 SRCS = groq_us.c
