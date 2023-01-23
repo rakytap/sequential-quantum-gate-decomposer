@@ -739,14 +739,14 @@ class UnitarySimulator(g.Component):
                     i = len(outpt) // num_inner_qbits
                     for j, x in enumerate(g.split_inner_splits(st)):
                         x = x.reinterpret(g.uint8).split(num_splits=2, dim=-2)
-                        with g.ResourceScope(name="innersplitsalus", is_buffered=False, time=0):              
+                        with g.ResourceScope(name="innersplitsalus", is_buffered=False, time=0):
                             am = amap[0].read(streams=g.SG1[7*4])
-                            outpt.append(x[0].bitwise_and(lmask.read(streams=g.SG1[2*4]), alus=[0], output_streams=g.SG4[2]).left_shift(s1.read(streams=g.SG1[5*4]), alus=[5], output_streams=g.SG4[4]).add(am, alus=[10])                        
+                            outpt.append(x[0].bitwise_and(lmask.read(streams=g.SG1[2*4]), alus=[0], output_streams=g.SG4[2]).left_shift(s1.read(streams=g.SG1[5*4]), alus=[5], output_streams=g.SG4[4]).add(am, alus=[10])
                                 .write(name="target_qbits" + str(i) + str(j), storage_req=tensor.create_storage_request(layout=get_slice1(WEST, 37, 0) + ", A16(" + str(i*16+320*j) + "-" + str(i*16+320*j+15) + ")")))
-                            outpc.append(x[0].bitwise_and(mmask.read(streams=g.SG1[6*4]), alus=[12]).right_shift(s2.read(streams=g.SG1[4*4]), alus=[9]).add(am, alus=[14])
+                            outpc.append(x[0].bitwise_and(mmask.read(streams=g.SG1[6*4]), alus=[12], output_streams=g.SG4[6]).right_shift(s2.read(streams=g.SG1[4*4]), alus=[9], output_streams=g.SG4[6]).add(am, alus=[14])
                                 .write(name="control_qbits" + str(i) + str(j), storage_req=tensor.create_storage_request(layout=get_slice1(WEST, 36, 0) + ", A16(" + str(i*16+320*j) + "-" + str(i*16+320*j+15) + ")")))
                             outpd.append(x[1].write(name="derivates" + str(i) + str(j), storage_req=tensor.create_storage_request(layout=get_slice1(WEST, 39, 0) + ", A16(" + str(i*16+320*j) + "-" + str(i*16+320*j+15) + ")")))
-                            if num_qbits >= 9: outph.append(x[0].right_shift(s6.read(streams=g.SG1[1*4]), alus=[1], output_streams=g.SG4[1]).add(amap[1], alus=[2])
+                            if num_qbits >= 9: outph.append(x[0].right_shift(s6.read(streams=g.SG1[1*4]), alus=[1], output_streams=g.SG4[1]).add(amap[1].read(streams=g.SG1[3*4]), alus=[2])
                                 .write(name="high_tcqbits" + str(i) + str(j), storage_req=tensor.create_storage_request(layout=get_slice1(EAST, 36, 0) + ", A16(" + str(i*16+320*j) + "-" + str(i*16+320*j+15) + ")")))
                 temp_store = tensor.create_storage_request(layout=get_slice2(hemi, 42, 43, 0).replace(", S2", ", A" + str(num_inner_qbits) + "(" + str(4096-num_inner_qbits) + "-" + "4095), S2"))
                 UnitarySimulator.unpack_broadcast(qbitinfo, dmaps[WEST], temp_store, num_inner_qbits, WEST, 2, writefn)
@@ -994,10 +994,10 @@ class UnitarySimulator(g.Component):
                     #inputs[tensornames["targetqbits"]] = np.concatenate((np.repeat(np.hstack((target_qbits.astype(np.uint8)[:,np.newaxis]%8*2, target_qbits.astype(np.uint8)[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
                     adjcontrolqbits = np.where(control_qbits==target_qbits, 0, (control_qbits - (control_qbits > target_qbits)).astype(np.uint8))
                     deriv = control_qbits!=target_qbits
-                    inputs[tensornames["qbits"]] = (target_qbits.astype(np.uint8) & 7) | ((adjcontrolqbits & 7) << 3)
+                    inputs[tensornames["qbits"]] = (target_qbits & 7) | ((adjcontrolqbits & 7) << 3)
                     if num_qbits == 9: inputs[tensornames["qbits"]] |= ((target_qbits>>3)<<6)
                     elif num_qbits == 10: inputs[tensornames["qbits"]] |= ((adjcontrolqbits>>3)<<6) | ((target_qbits>>3)<<7)
-                    inputs[tensornames["qbits"]] = inputs[tensornames["qbits"]].astype(np.uint16) | (deriv.astype(np.uint16) << 8)                    
+                    inputs[tensornames["qbits"]] = inputs[tensornames["qbits"]].astype(np.uint16) | (deriv.astype(np.uint16) << 8)     
                     #inputs[tensornames["controlqbits"]] = np.concatenate((np.repeat(np.hstack((adjcontrolqbits[:,np.newaxis]%8*2, adjcontrolqbits[:,np.newaxis]%8*2+1, np.array([[16]*14]*num_gates, dtype=np.uint8))), 20, axis=0).reshape(-1, 320), np.zeros((max_gates-num_gates, 320), dtype=np.uint8)))
                     #if num_qbits >= 9:
                     #    hightcq = (adjcontrolqbits//8 + (target_qbits//8)*2).astype(np.uint8) if num_qbits==10 else (target_qbits//8).astype(np.uint8)
