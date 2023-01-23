@@ -608,7 +608,7 @@ class UnitarySimulator(g.Component):
         debug = False
         pgm_pkg = g.ProgramPackage(name="us" + ("unit" if output_unitary else "") + str(num_qbits) + "-" + str(max_gates), output_dir="usiop", inspect_raw=debug, gen_vis_data=debug, check_stream_conflicts=debug, check_tensor_timing_conflicts=debug)
         num_inner_splits = (pow2qb+320-1)//320 #handle inner splits for >=9 qbits
-        chainsize = 2 #40 if num_qbits == 2 else (10 if num_qbits == 10 else (16 if num_qbits == 9 else 20)) #min(max_gates, int(np.sqrt(6000*max_gates/(pow2qb*num_inner_splits/2)))) #6000*gates/chainsize == chainsize*pow2qb*num_inner_splits/2
+        chainsize = 40 if num_qbits == 2 else (10 if num_qbits == 10 else (16 if num_qbits == 9 else 20)) #min(max_gates, int(np.sqrt(6000*max_gates/(pow2qb*num_inner_splits/2)))) #6000*gates/chainsize == chainsize*pow2qb*num_inner_splits/2
         #if (chainsize & 1) != 0: chainsize += 1
         print("Number of qbits:", num_qbits, "Maximum gates:", max_gates, "Chain size:", chainsize)
         with pgm_pkg.create_program_context("init_us") as pcinitunitary:
@@ -685,11 +685,11 @@ class UnitarySimulator(g.Component):
             distmaps = [g.from_data(np.array([[i] + [16]*319 for i in range(16)], dtype=np.uint8), name="distmaps", layout=get_slice1(hemi, 37, 1) + ", A16(4080-4095)") for hemi in (WEST, EAST)]
             lowmask = g.from_data(np.array(([7]*2+[0]*14)*20, dtype=np.uint8), name="lowmask", layout=get_slice1(WEST, 0, 0) + ", A1(4087)")
             midmask = g.from_data(np.array(([0x38]*2+[0]*14)*20, dtype=np.uint8), name="midmask", layout=get_slice1(WEST, 1, 0) + ", A1(4087)")
-            if num_qbits >= 9: highmask = g.from_data(np.array(([0xC0]*2+[0]*14)*20, dtype=np.uint8), name="highmask", layout=get_slice1(WEST, 6, 0) + ", A1(4087)")
-            shl1 = g.full((320,), 1, name="shl1", dtype=g.uint8, layout=get_slice1(WEST, 4, 0) + ", A1(3839)")
+            if num_qbits >= 9: highmask = g.from_data(np.array(([0xC0]*2+[0]*14)*20, dtype=np.uint8), name="highmask", layout=get_slice1(WEST, 6, 0) + ", A1(3838)")
+            shl1 = g.full((320,), 1, name="shl1", dtype=g.uint8, layout=get_slice1(WEST, 4, 0) + ", A1(3838)")
             shr2 = g.full((320,), 2, name="shr2", dtype=g.uint8, layout=get_slice1(WEST, 3, 0) + ", A1(4087)")
             if num_qbits >= 9: shr5 = g.full((320,), 5, name="shr5", dtype=g.uint8, layout=get_slice1(WEST, 2, 0) + ", A1(4087)")
-            adjmap = g.from_data(np.array(([0, 1] + [16]*14)*20, dtype=np.uint8), name="adjmap", layout=get_slice1(WEST, 5, 0) + ", A1(3839)")
+            adjmap = g.from_data(np.array(([0, 1] + [16]*14)*20, dtype=np.uint8), name="adjmap", layout=get_slice1(WEST, 5, 0) + ", A1(3838)")
             
         with pgm_pkg.create_program_context("init_gates") as pcinit:
             us = UnitarySimulator(num_qbits)
@@ -750,7 +750,7 @@ class UnitarySimulator(g.Component):
                             outpd.append(x[1].write(name="derivates" + str(i) + str(j), storage_req=tensor.create_storage_request(layout=get_slice1(WEST, 39, 0) + ", A16(" + str(i*16+320*j) + "-" + str(i*16+320*j+15) + ")")))
                             if num_qbits >= 9: outph.append(x[0].bitwise_and(hmask.read(streams=g.SG1[3*4]), alus=[1], output_streams=g.SG4[3]).right_shift(s5.read(streams=g.SG1[1*4]), alus=[2], output_streams=g.SG4[1]).add(am, alus=[15])
                                 .write(name="high_tcqbits" + str(i) + str(j), storage_req=tensor.create_storage_request(layout=get_slice1(EAST, 36, 0) + ", A16(" + str(i*16+320*j) + "-" + str(i*16+320*j+15) + ")")))
-                temp_store = tensor.create_storage_request(layout=get_slice2(hemi, 42, 43, 0).replace(", S2", ", A" + str(num_inner_qbits) + "(" + str(4096-num_inner_qbits) + "-" + "4095), S2"))
+                temp_store = tensor.create_storage_request(layout=get_slice2(hemi, 42, 43, 1).replace(", S2", ", A" + str(num_inner_qbits) + "(" + str(4096-num_inner_qbits-num_inner_gates) + "-" + str(4095-num_inner_gates) + "), S2"))
                 UnitarySimulator.unpack_broadcast(qbitinfo, dmaps[WEST], temp_store, num_inner_qbits, WEST, 2, writefn)
                 g.add_mem_constraints(outpt, outpt, g.MemConstraintType.NOT_MUTUALLY_EXCLUSIVE)
                 g.add_mem_constraints(outpc, outpc, g.MemConstraintType.NOT_MUTUALLY_EXCLUSIVE)
@@ -961,7 +961,6 @@ class UnitarySimulator(g.Component):
     def get_unitary_sim(num_qbits, max_gates, tensornames=None, output_unitary=False):
         pow2qb = 1 << num_qbits
         if tensornames is None: tensornames = UnitarySimulator.build_chain(num_qbits, max_gates, output_unitary)
-        print(num_qbits, max_gates, tensornames)
         iop = runtime.IOProgram(tensornames["iop"])
         driver = runtime.Driver()
         device = driver.next_available_device()
@@ -1123,10 +1122,10 @@ class UnitarySimulator(g.Component):
         output_unitary = True
         d = UnitarySimulator.build_all(max_levels, output_unitary=output_unitary)
         acc, acc32 = {}, {}
-        for num_qbits in range(9, 9+1):
+        for num_qbits in range(2, 10+1):
             max_gates = get_max_gates(num_qbits, max_levels)
             pow2qb = 1 << num_qbits
-            func, result, closefunc = UnitarySimulator.get_unitary_sim(num_qbits, max_gates, None, output_unitary=output_unitary) #UnitarySimulator.get_unitary_sim(num_qbits, max_gates, d[(num_qbits, max_gates, output_unitary)], output_unitary=output_unitary)
+            func, result, closefunc = UnitarySimulator.get_unitary_sim(num_qbits, max_gates, d[(num_qbits, max_gates, output_unitary)], output_unitary=output_unitary)
             u = np.eye(pow2qb) + 0j if use_identity else unitary_group.rvs(pow2qb)
             num_gates = 1
             parameters = np.random.random((num_gates, 3))
@@ -1241,7 +1240,7 @@ def chain_aa(aafile, chainsize):
 def main():
     max_levels=6
     UnitarySimulator.build_all(max_levels, output_unitary=False)
-    #UnitarySimulator.build_all(max_levels, output_unitary=True)
+    UnitarySimulator.build_all(max_levels, output_unitary=True)
     #test()
     #UnitarySimulator.distrib_depend()
     #[UnitarySimulator.idxmapgather(x) for x in range(10)]; assert False
@@ -1250,7 +1249,7 @@ def main():
     #10 qbits max for single bank, 11 qbits requires dual chips [1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 1, 2, 7, 26, 104]
     #import math; [math.ceil(((1<<x)*int(math.ceil((1<<x)/320)))/8192) for x in range(15)]
     #UnitarySimulator.validate_alus()
-    num_qbits = 9
+    #num_qbits = 9
     #UnitarySimulator.unit_test(num_qbits)
     #UnitarySimulator.chain_test(num_qbits, get_max_gates(num_qbits, max_levels), True)
     UnitarySimulator.checkacc()
