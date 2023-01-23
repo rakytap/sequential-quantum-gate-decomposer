@@ -655,7 +655,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
 #ifdef USE_GROQ_HOST_FUNCS
                 float* gbuf1 = (float*)calloc(hemigates*8, sizeof(float));
                 float* gbuf2 = (float*)calloc(hemigates*8, sizeof(float));
-                uint16_t* qbuf = (uint16_t*)malloc(mx_gates320);
+                uint16_t* qbuf = (uint16_t*)malloc(mx_gates320*2);
                 for (int i = 0; i < gatesNum; i++) {
                     int idx = i+curGateSet[d]*gatesNum;
                     gate_kernel_type* curgate = &gates[idx];
@@ -681,9 +681,9 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                         }
                     }
                     int deriv = (curgate->metadata & 0x80) != 0;
-                    int iscontrol = curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0;
-                    int8_t cqbit = iscontrol ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0));
-                    uint16_t qbit = (curgate->target_qbit & 7) | ((cqbit & 7) << 3) | (deriv*2+iscontrol) << 8;
+                    int istarget = curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0;
+                    int8_t cqbit = istarget ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0));
+                    uint16_t qbit = (curgate->target_qbit & 7) | ((cqbit & 7) << 3) | (istarget ? 0 : (deriv ? 2 : 1)) << 8;
                     if (num_qbits == 9) qbit |= ((curgate->target_qbit >> 3) << 6);
                     else if (num_qbits == 10) qbit |= ((cqbit >> 3) << 6) | ((curgate->target_qbit >> 3) << 7);
                     qbuf[i] = qbit;                    
@@ -736,9 +736,9 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                     //printf("\n");
                     offset = offset_qbit + i;
                     int deriv = (curgate->metadata & 0x80) != 0;
-                    int iscontrol = curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0;
-                    int8_t cqbit = iscontrol ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0));
-                    uint16_t qbit = (curgate->target_qbit & 7) | ((cqbit & 7) << 3) | (deriv*2+iscontrol) << 8;
+                    int istarget = curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0;
+                    int8_t cqbit = istarget ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0));
+                    uint16_t qbit = (curgate->target_qbit & 7) | ((cqbit & 7) << 3) | (istarget ? 0 : (deriv ? 2 : 1)) << 8;
                     if (num_qbits == 9) qbit |= ((curgate->target_qbit >> 3) << 6);
                     else if (num_qbits == 10) qbit |= ((cqbit >> 3) << 6) | ((curgate->target_qbit >> 3) << 7);
                     input[offset] = qbit & 255;
