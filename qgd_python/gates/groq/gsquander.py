@@ -1240,7 +1240,7 @@ def chain_aa(aafile, chainsize):
 def main():
     max_levels=6
     UnitarySimulator.build_all(max_levels, output_unitary=False)
-    UnitarySimulator.build_all(max_levels, output_unitary=True)
+    #UnitarySimulator.build_all(max_levels, output_unitary=True)
     #test()
     #UnitarySimulator.distrib_depend()
     #[UnitarySimulator.idxmapgather(x) for x in range(10)]; assert False
@@ -1252,7 +1252,7 @@ def main():
     #num_qbits = 9
     #UnitarySimulator.unit_test(num_qbits)
     #UnitarySimulator.chain_test(num_qbits, get_max_gates(num_qbits, max_levels), True)
-    UnitarySimulator.checkacc()
+    #UnitarySimulator.checkacc()
     #UnitarySimulator.perfcompare()
 if __name__ == "__main__":
     main()
