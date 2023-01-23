@@ -30,7 +30,7 @@ Device device[NUM_DEVICE] = {NULL};
 IOP prog = NULL;
 IOBufferArray* inputBuffers[NUM_DEVICE] = {NULL};
 IOBufferArray* outputBuffers[NUM_DEVICE] = {NULL};
-TensorLayout inpLayouts[7] = {NULL};
+TensorLayout inpLayouts[4] = {NULL};
 TensorLayout outpLayouts[1] = {NULL};
 unsigned int loaded = 0;
 
@@ -408,14 +408,8 @@ int initialize_groq(unsigned int num_qbits)
                         memcpy(&inpLayouts[1], &tl, sizeof(TensorLayout));
                     } else if (strcmp(name, "othergate") == 0) {
                         memcpy(&inpLayouts[2], &tl, sizeof(TensorLayout));
-                    } else if (strcmp(name, "target_qbits") == 0) {
+                    } else if (strcmp(name, "qbits") == 0) {
                         memcpy(&inpLayouts[3], &tl, sizeof(TensorLayout));
-                    } else if (strcmp(name, "control_qbits") == 0) {
-                        memcpy(&inpLayouts[4], &tl, sizeof(TensorLayout));
-                    } else if (strcmp(name, "derivates") == 0) {
-                        memcpy(&inpLayouts[5], &tl, sizeof(TensorLayout));
-                    } else if (strcmp(name, "high_tcqbits") == 0) {
-                        memcpy(&inpLayouts[6], &tl, sizeof(TensorLayout));
                     } else if (strcmp(name, "singledim") == 0) {
                         memcpy(&outpLayouts[0], &tl, sizeof(TensorLayout));
                     } else {
@@ -516,7 +510,7 @@ unsigned int log2(unsigned int v)
     return r;
 }
 
-#define USE_GROQ_HOST_FUNCS
+//#define USE_GROQ_HOST_FUNCS
 
 extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
 {
@@ -630,10 +624,11 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
 #endif
     //size_t num_inner_splits = (cols+320-1)/320;
     size_t hemigates = (mx_gates+1)/2;
-    size_t mx_gates320 = mx_gates*320;
+    size_t num_inner_qbits = (mx_gates+320-1)/320;
+    size_t mx_gates320 = num_inner_qbits*320;
 #ifdef USE_GROQ_HOST_FUNCS
     size_t hemigatessz = hemigates*8*sizeof(float);
-    size_t gateinputsz = hemigates*2*8*4+mx_gates*(num_qbits >= 9 ? 4 : 3)*320;
+    size_t gateinputsz = hemigates*2*8*4+mx_gates320*2;
 #else
     size_t hemigates16 = hemigates*2*sizeof(float);
     size_t offset_qbit = hemigates*2*8*4; //num_inner_splits*2*rows*4*320
@@ -660,10 +655,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
 #ifdef USE_GROQ_HOST_FUNCS
                 float* gbuf1 = (float*)calloc(hemigates*8, sizeof(float));
                 float* gbuf2 = (float*)calloc(hemigates*8, sizeof(float));
-                unsigned char* tbuf = (unsigned char*)malloc(mx_gates320);
-                unsigned char* cbuf = (unsigned char*)malloc(mx_gates320);
-                unsigned char* dbuf = (unsigned char*)malloc(mx_gates320);
-                unsigned char* tchbuf = num_qbits >= 9 ? (unsigned char*)malloc(mx_gates320) : NULL;
+                uint16_t* qbuf = (uint16_t*)malloc(mx_gates320);
                 for (int i = 0; i < gatesNum; i++) {
                     int idx = i+curGateSet[d]*gatesNum;
                     gate_kernel_type* curgate = &gates[idx];
@@ -688,19 +680,13 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                             gbuf2[baseoffsimag] = cimagf(g[goffs]);
                         }
                     }
-                    int8_t tqbit = curgate->target_qbit%8*2;
-                    for (size_t j = 0; j < 320; j++) tbuf[320*i+j] = (j & 15) <= 1 ? tqbit + (j & 15) : 16;
-                    int8_t cqbit = (curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0) ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0))%8*2;
-                    for (size_t j = 0; j < 320; j++) cbuf[320*i+j] = (j & 15) <= 1 ? cqbit + (j & 15) : 16;
                     int deriv = (curgate->metadata & 0x80) != 0;
-                    int derivxor = (curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0) ? 0 : (i/2*2)^((mx_gates+1)/2*2+(deriv ? 2 : 0));
-                    for (size_t j = 0; j < 320; j++) {
-                        dbuf[320*i+j] = (j & 15) <= 1 ? ((j & 15) == 1 ? derivxor >> 8 : derivxor & 0xFF) : 0;
-                    }
-                    if (num_qbits >= 9) {
-                        int8_t tcqbit = num_qbits == 9 ? curgate->target_qbit/8*2 : (((curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0) ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0)))/8 + curgate->target_qbit/8*2)*2;
-                        for (size_t j = 0; j < 320; j++) tchbuf[320*i+j] = (j & 15) <= 1 ? tcqbit + (j & 15) : 16;
-                    }
+                    int iscontrol = curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0;
+                    int8_t cqbit = iscontrol ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0));
+                    uint16_t qbit = (curgate->target_qbit & 7) | ((cqbit & 7) << 3) | (deriv*2+iscontrol) << 8;
+                    if (num_qbits == 9) qbit |= ((curgate->target_qbit >> 3) << 6);
+                    else if (num_qbits == 10) qbit |= ((cqbit >> 3) << 6) | ((curgate->target_qbit >> 3) << 7);
+                    qbuf[i] = qbit;                    
                 }
                 status = groq_tensor_layout_from_host(inpLayouts[1], (unsigned char*)gbuf1, hemigatessz, input, gateinputsz);
                 if (status) {
@@ -712,30 +698,12 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                     printf("ERROR: tensor layout from host %d\n", status);
                     return 1;
                 }
-                status = groq_tensor_layout_from_host(inpLayouts[3], tbuf, mx_gates320, input, gateinputsz);
+                status = groq_tensor_layout_from_host(inpLayouts[3], (unsigned char*)qbuf, mx_gates320*2, input, gateinputsz);
                 if (status) {
                     printf("ERROR: tensor layout from host %d\n", status);
                     return 1;
                 }
-                status = groq_tensor_layout_from_host(inpLayouts[4], cbuf, mx_gates320, input, gateinputsz);
-                if (status) {
-                    printf("ERROR: tensor layout from host %d\n", status);
-                    return 1;
-                }
-                status = groq_tensor_layout_from_host(inpLayouts[5], dbuf, mx_gates320, input, gateinputsz);
-                if (status) {
-                    printf("ERROR: tensor layout from host %d\n", status);
-                    return 1;
-                }
-                if (num_qbits >= 9) {                    
-                    status = groq_tensor_layout_from_host(inpLayouts[6], tchbuf, mx_gates320, input, gateinputsz);
-                    if (status) {
-                        printf("ERROR: tensor layout from host %d\n", status);
-                        return 1;
-                    }
-                    free(tchbuf);
-                }
-                free(gbuf1); free(gbuf2); free(tbuf); free(cbuf); free(dbuf);
+                free(gbuf1); free(gbuf2); free(qbuf);
 #else
                 //memset(input, 0, hemigates*2*8*4*320+mx_gates*3*320);
                 for (int i = 0; i < gatesNum; i++) {
@@ -750,7 +718,7 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                         (curgate->metadata & 2) != 0 ? 0.0 : -cexpl(I*lambda)*s,
                         (curgate->metadata & 4) != 0 ? 0.0 : cexpl(I*phi)*s,
                         (curgate->metadata & 8) != 0 ? 0.0 : cexpl(I*(phi+lambda))*c };
-                    size_t offset = ((i & 1) != 0 ? hemigates*8*4 : 0) + (num_qbits >= 9 ? mx_gates320 : 0);
+                    size_t offset = ((i & 1) != 0 ? hemigates*8*4 : 0);
                     for (size_t goffs = 0; goffs < 4; goffs++) { //effective address order dimension as S16 is (4, 4, hemigates, 2)
                         size_t gioffs = offset+ioffs+goffs*2;
                         float fr = crealf(g[goffs]), fi = cimagf(g[goffs]);
@@ -760,44 +728,21 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
                         for (size_t byteidx = 0; byteidx < sizeof(float); byteidx++) {
                             size_t baseoffs = (((i & 1) == 0 ? 3-byteidx : byteidx))*hemigates16+gioffs;
                             size_t baseoffsimag = (((i & 1) == 0 ? 3-byteidx : byteidx))*hemigates16+gioffs+1;
-                            if (input[baseoffs] != re[byteidx] || input[baseoffsimag] != im[byteidx]) {
-                                printf("bad gate data %lu %lu %d %lu %lu\n", baseoffs, baseoffsimag, i, goffs, byteidx);
-                            }
+                            //if (input[baseoffs] != re[byteidx] || input[baseoffsimag] != im[byteidx]) printf("bad gate data\n");
                             input[baseoffs] = re[byteidx];
                             input[baseoffsimag] = im[byteidx];
                         }
                     }
                     //printf("\n");
-                    offset = offset_qbit + i * 320 + (num_qbits >= 9 ? mx_gates320 : 0);
-                    int8_t cqbit = (curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0) ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0))%8*2;
-                    for (size_t j = 0; j < 320; j++) {
-                        //if (input[offset+j] != ((j & 15) <= 1 ? cqbit + (j & 15) : 16))
-                        //    printf("bad control qbit format\n"); 
-                        input[offset+j] = (j & 15) <= 1 ? cqbit + (j & 15) : 16;
-                    }
-                    offset += mx_gates320;
-                    int8_t tqbit = curgate->target_qbit%8*2;
-                    for (size_t j = 0; j < 320; j++) {
-                        //if (input[offset+j] != ((j & 15) <= 1 ? tqbit + (j & 15) : 16))
-                        ///    printf("bad target qbit format\n");
-                        input[offset+j] = (j & 15) <= 1 ? tqbit + (j & 15) : 16;
-                    }
-                    offset += mx_gates320;
+                    offset = offset_qbit + i;
                     int deriv = (curgate->metadata & 0x80) != 0;
-                    uint16_t derivxor = (curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0) ? 0 : (i/2*2)^((mx_gates+1)/2*2+(deriv ? 2 : 0));
-                    for (size_t j = 0; j < 320; j++) {
-                        input[offset+j] = (j & 15) <= 1 ? ((j & 15) == 1 ? derivxor >> 8 : derivxor & 0xFF) : 0;
-                    }
-                    offset = i * 320;
-                    if (num_qbits >= 9) {
-                        int8_t tcqbit = num_qbits == 9 ? curgate->target_qbit/8*2 : (((curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0) ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0)))/8 + curgate->target_qbit/8*2)*2;
-                        for (size_t j = 0; j < 320; j++) {
-                            //if (input[offset+j] != ((j & 15) <= 1 ? tcqbit + (j & 15) : 16))
-                            //    printf("bad high target control qbit format\n");
-                            input[offset+j] = (j & 15) <= 1 ? tcqbit + (j & 15) : 16;
-                        }
-                    }
-
+                    int iscontrol = curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0;
+                    int8_t cqbit = iscontrol ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0));
+                    uint16_t qbit = (curgate->target_qbit & 7) | ((cqbit & 7) << 3) | (deriv*2+iscontrol) << 8;
+                    if (num_qbits == 9) qbit |= ((curgate->target_qbit >> 3) << 6);
+                    else if (num_qbits == 10) qbit |= ((cqbit >> 3) << 6) | ((curgate->target_qbit >> 3) << 7);
+                    input[offset] = qbit & 255;
+                    input[offset+mx_gates320] = qbit >> 8;
                 }
 #endif
 #ifdef TEST
