@@ -4,6 +4,7 @@
 #include <math.h>
 #include <string.h>
 #include <complex.h>
+#include <pthread.h>
 #ifdef TEST
 #include <time.h>
 #endif
@@ -24,8 +25,9 @@ typedef struct {
 } gate_kernel_type;
 
 Driver driver = NULL;
-#define NUM_DEVICE 2
-//#define NUM_DEVICE 1
+#ifndef NUM_DEVICE
+#define NUM_DEVICE 1
+#endif
 Device device[NUM_DEVICE] = {NULL};
 IOP prog = NULL;
 IOBufferArray* inputBuffers[NUM_DEVICE] = {NULL};
@@ -164,6 +166,7 @@ size_t max_gates[] = {
 };
 #endif
 size_t chain_sizes[] = { 40, 20, 20, 20, 20, 20, 20, 16, 10 };
+uint32_t gateinput_ptindex = -1;
 
 const char* TENSOR_TYPES[] = {"UNKNOWN", "UINT8", "UINT16", "UINT32", "INT8", "INT16", "INT32", "FLOAT16", "FLOAT32", "BOOL"};
 
@@ -457,6 +460,7 @@ int initialize_groq(unsigned int num_qbits)
         outpSize = groq_program_get_output_size(prog, j);
         //printf("input size %lu output size %lu\n", inpSize, outpSize);
         //program table index entry point offsets: 0 is (input, output, compute), 1 is (input only), 2 is (compute only), 3 is (output only)
+        if (j == 1) gateinput_ptindex = ptindex;
         status = groq_allocate_iobuffer_array(driver, inpSize, 1, ptindex+((j<=1||j>=num_programs-1) ? 0 : 2), &inputBuffers[d][j]);
         if (status) {
             printf("ERROR: allocate iobuffer array %d\n", status);
@@ -602,6 +606,148 @@ extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
     return 0;
 }
 
+struct PreProcessGates {
+    gate_kernel_type* gates;
+    int gatesNum;
+    int gateSetNum;
+    int completionCount;
+    int num_qbits;
+    size_t mx_gates;
+    IOBufferArray iobufs;
+};
+
+void* dataPrepFunc(void* arg)
+{
+    struct PreProcessGates* ppGates = (struct PreProcessGates*)arg;
+    size_t hemigates = (ppGates->mx_gates+1)/2;
+    size_t num_inner_qbits = (ppGates->mx_gates+320-1)/320;
+    size_t mx_gates320 = num_inner_qbits*320;
+    size_t gateinputsz = hemigates*2*8*4+mx_gates320*2;
+#ifdef USE_GROQ_HOST_FUNCS
+    size_t hemigatessz = hemigates*8*sizeof(float);
+#else
+    size_t hemigates16 = hemigates*2*sizeof(float);
+    size_t offset_qbit = hemigates*2*8*4; //num_inner_splits*2*rows*4*320
+#endif
+    Status status;
+    status = groq_allocate_iobuffer_array(driver, gateinputsz, ppGates->gateSetNum, gateinput_ptindex, &ppGates->iobufs);
+    if (status) {
+        printf("ERROR: allocate iobuffer array %d\n", status);
+        return NULL;
+    }
+    for (int curGateSet = 0; curGateSet < ppGates->gateSetNum; curGateSet++) { 
+        u_int8_t* input;
+        status = groq_get_data_handle(ppGates->iobufs, curGateSet, &input);
+        if (status) {
+            printf("ERROR: get data handle %d\n", status);
+            return NULL;
+        }
+#ifdef TEST
+        struct timespec t;
+        timespec_get(&t, TIME_UTC);
+#endif
+#ifdef USE_GROQ_HOST_FUNCS
+        float* gbuf1 = (float*)calloc(hemigates*8, sizeof(float));
+        float* gbuf2 = (float*)calloc(hemigates*8, sizeof(float));
+        uint16_t* qbuf = (uint16_t*)malloc(mx_gates320*2);
+        for (int i = 0; i < ppGates->gatesNum; i++) {
+            int idx = i+curGateSet*ppGates->gatesNum;
+            gate_kernel_type* curgate = &ppGates->gates[idx];
+            size_t ioffs = i/2*8;
+            //Theta (actually ThetaOver2), Phi and Lambda are (32, -25) encoded fix points
+            long double theta = ldexpl((long double)curgate->Theta, -25),
+                phi = ldexpl((long double)curgate->Phi, -25),
+                lambda = ldexpl((long double)curgate->Lambda, -25);
+            long double c = cosl(theta), s = sinl(theta);
+            float _Complex g[] = { (curgate->metadata & 1) ? 0.0 : c,
+                (curgate->metadata & 2) ? 0.0 : -cexpl(I*lambda)*s,
+                (curgate->metadata & 4) ? 0.0 : cexpl(I*phi)*s,
+                (curgate->metadata & 8) ? 0.0 : cexpl(I*(phi+lambda))*c };
+            for (size_t goffs = 0; goffs < 4; goffs++) {
+                size_t baseoffs = ioffs+goffs*2,
+                    baseoffsimag = ioffs+(goffs*2+1);
+                if ((i & 1) == 0) {
+                    gbuf1[baseoffs] = crealf(g[goffs]);                            
+                    gbuf1[baseoffsimag] = cimagf(g[goffs]);
+                } else {
+                    gbuf2[baseoffs] = crealf(g[goffs]);
+                    gbuf2[baseoffsimag] = cimagf(g[goffs]);
+                }
+            }
+            int deriv = (curgate->metadata & 0x80) != 0;
+            int istarget = curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0;
+            int8_t cqbit = istarget ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0));
+            uint16_t qbit = (curgate->target_qbit & 7) | ((cqbit & 7) << 3) | (istarget ? 0 : (deriv ? 2 : 1)) << 8;
+            if (ppGates->num_qbits == 9) qbit |= ((curgate->target_qbit >> 3) << 6);
+            else if (ppGates->num_qbits == 10) qbit |= ((cqbit >> 3) << 6) | ((curgate->target_qbit >> 3) << 7);
+            qbuf[i] = qbit;                    
+        }
+        status = groq_tensor_layout_from_host(inpLayouts[1], (unsigned char*)gbuf1, hemigatessz, input, gateinputsz);
+        if (status) {
+            printf("ERROR: tensor layout from host %d\n", status);
+            return NULL;
+        }
+        status = groq_tensor_layout_from_host(inpLayouts[2], (unsigned char*)gbuf2, hemigatessz, input, gateinputsz);
+        if (status) {
+            printf("ERROR: tensor layout from host %d\n", status);
+            return NULL;
+        }
+        status = groq_tensor_layout_from_host(inpLayouts[3], (unsigned char*)qbuf, mx_gates320*2, input, gateinputsz);
+        if (status) {
+            printf("ERROR: tensor layout from host %d\n", status);
+            return NULL;
+        }
+        free(gbuf1); free(gbuf2); free(qbuf);
+#else
+        for (int i = 0; i < ppGates->gatesNum; i++) {
+            int idx = i+curGateSet*ppGates->gatesNum;
+            size_t ioffs = i/2*2*4;
+            gate_kernel_type* curgate = &ppGates->gates[idx];
+            long double theta = ldexpl((long double)curgate->Theta, -25),
+                phi = ldexpl((long double)curgate->Phi, -25),
+                lambda = ldexpl((long double)curgate->Lambda, -25);
+            long double c = cosl(theta), s = sinl(theta);
+            float _Complex g[] = { (curgate->metadata & 1) != 0 ? 0.0 : c,
+                (curgate->metadata & 2) != 0 ? 0.0 : -cexpl(I*lambda)*s,
+                (curgate->metadata & 4) != 0 ? 0.0 : cexpl(I*phi)*s,
+                (curgate->metadata & 8) != 0 ? 0.0 : cexpl(I*(phi+lambda))*c };
+            size_t offset = ((i & 1) != 0 ? hemigates*8*4 : 0);
+            for (size_t goffs = 0; goffs < 4; goffs++) { //effective address order dimension as S16 is (4, 4, hemigates, 2)
+                size_t gioffs = offset+ioffs+goffs*2;
+                float fr = crealf(g[goffs]), fi = cimagf(g[goffs]);
+                //printf("%f+%fj ", fr, fi);
+                //printf("%X+%Xj ", *((unsigned int*)floatToBytes(&fr)), *((unsigned int*)floatToBytes(&fi)));  
+                unsigned char* re = floatToBytes(&fr), *im = floatToBytes(&fi);
+                for (size_t byteidx = 0; byteidx < sizeof(float); byteidx++) {
+                    size_t baseoffs = (((i & 1) == 0 ? 3-byteidx : byteidx))*hemigates16+gioffs;
+                    size_t baseoffsimag = (((i & 1) == 0 ? 3-byteidx : byteidx))*hemigates16+gioffs+1;
+                    //if (input[baseoffs] != re[byteidx] || input[baseoffsimag] != im[byteidx]) printf("bad gate data\n");
+                    input[baseoffs] = re[byteidx];
+                    input[baseoffsimag] = im[byteidx];
+                }
+            }
+            //printf("\n");
+            offset = offset_qbit + i;
+            int deriv = (curgate->metadata & 0x80) != 0;
+            int istarget = curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0;
+            int8_t cqbit = istarget ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0));
+            uint16_t qbit = (curgate->target_qbit & 7) | ((cqbit & 7) << 3) | (istarget ? 0 : (deriv ? 2 : 1)) << 8;
+            if (ppGates->num_qbits == 9) qbit |= ((curgate->target_qbit >> 3) << 6);
+            else if (ppGates->num_qbits == 10) qbit |= ((cqbit >> 3) << 6) | ((curgate->target_qbit >> 3) << 7);
+            input[offset] = qbit & 255;
+            input[offset+mx_gates320] = qbit >> 8;
+        }
+#endif
+#ifdef TEST
+        struct timespec endtime;
+        timespec_get(&endtime, TIME_UTC);
+        printf("Gate prep time: %.9f\n", (endtime.tv_sec - t.tv_sec) + (endtime.tv_nsec - t.tv_nsec) / 1e9);
+#endif                
+        ppGates->completionCount++;
+    }
+    return NULL;    
+}
+
 int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates, int gatesNum, int gateSetNum, double* trace )
 {
     //printf("oneShot with %d gates and %d gate sets\n", gatesNum, gateSetNum);
@@ -623,133 +769,28 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
     size_t mx_gates = max_gates[num_qbits-2];
 #endif
     //size_t num_inner_splits = (cols+320-1)/320;
-    size_t hemigates = (mx_gates+1)/2;
-    size_t num_inner_qbits = (mx_gates+320-1)/320;
-    size_t mx_gates320 = num_inner_qbits*320;
-#ifdef USE_GROQ_HOST_FUNCS
-    size_t hemigatessz = hemigates*8*sizeof(float);
-    size_t gateinputsz = hemigates*2*8*4+mx_gates320*2;
-#else
-    size_t hemigates16 = hemigates*2*sizeof(float);
-    size_t offset_qbit = hemigates*2*8*4; //num_inner_splits*2*rows*4*320
-#endif
+
     size_t maxinnerdim = cols > 320 ? 256 : cols; //real chip shape is (num_inner_splits, rows, 2, min(cols, 256)) as inner splits are 256 for 9 and 10 qbits (not for 11)
     Status status;
     if (gateSetNum == 0) return 0;
+
+    pthread_t tid;
+    struct PreProcessGates preprocessGates = { gates, gatesNum, gateSetNum, 0, num_qbits, mx_gates };
+    pthread_create(&tid, NULL, &dataPrepFunc, &preprocessGates);
+
+    //struct timespec starttime;
+    //timespec_get(&starttime, TIME_UTC);
     while (true) {
         for (int d = 0; d < NUM_DEVICE; d++) {        
             if (curGateSet[d] == -1) {
-                if (nextGateSet >= gateSetNum) continue;
+                //if (nextGateSet >= gateSetNum) continue;
+                if (nextGateSet >= preprocessGates.completionCount) continue;
                 curGateSet[d] = nextGateSet++;
                 curStep[d] = 0;
-                u_int8_t* input;
-                status = groq_get_data_handle(inputBuffers[d][1], 0, &input);
-                if (status) {
-                    printf("ERROR: get data handle %d\n", status);
-                    return 1;
-                }
-#ifdef TEST                
-                struct timespec t;
-                timespec_get(&t, TIME_UTC);
-#endif
-#ifdef USE_GROQ_HOST_FUNCS
-                float* gbuf1 = (float*)calloc(hemigates*8, sizeof(float));
-                float* gbuf2 = (float*)calloc(hemigates*8, sizeof(float));
-                uint16_t* qbuf = (uint16_t*)malloc(mx_gates320*2);
-                for (int i = 0; i < gatesNum; i++) {
-                    int idx = i+curGateSet[d]*gatesNum;
-                    gate_kernel_type* curgate = &gates[idx];
-                    size_t ioffs = i/2*8;
-                    //Theta (actually ThetaOver2), Phi and Lambda are (32, -25) encoded fix points
-                    long double theta = ldexpl((long double)curgate->Theta, -25),
-                        phi = ldexpl((long double)curgate->Phi, -25),
-                        lambda = ldexpl((long double)curgate->Lambda, -25);
-                    long double c = cosl(theta), s = sinl(theta);
-                    float _Complex g[] = { (curgate->metadata & 1) ? 0.0 : c,
-                        (curgate->metadata & 2) ? 0.0 : -cexpl(I*lambda)*s,
-                        (curgate->metadata & 4) ? 0.0 : cexpl(I*phi)*s,
-                        (curgate->metadata & 8) ? 0.0 : cexpl(I*(phi+lambda))*c };
-                    for (size_t goffs = 0; goffs < 4; goffs++) {
-                        size_t baseoffs = ioffs+goffs*2,
-                            baseoffsimag = ioffs+(goffs*2+1);
-                        if ((i & 1) == 0) {
-                            gbuf1[baseoffs] = crealf(g[goffs]);                            
-                            gbuf1[baseoffsimag] = cimagf(g[goffs]);
-                        } else {
-                            gbuf2[baseoffs] = crealf(g[goffs]);
-                            gbuf2[baseoffsimag] = cimagf(g[goffs]);
-                        }
-                    }
-                    int deriv = (curgate->metadata & 0x80) != 0;
-                    int istarget = curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0;
-                    int8_t cqbit = istarget ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0));
-                    uint16_t qbit = (curgate->target_qbit & 7) | ((cqbit & 7) << 3) | (istarget ? 0 : (deriv ? 2 : 1)) << 8;
-                    if (num_qbits == 9) qbit |= ((curgate->target_qbit >> 3) << 6);
-                    else if (num_qbits == 10) qbit |= ((cqbit >> 3) << 6) | ((curgate->target_qbit >> 3) << 7);
-                    qbuf[i] = qbit;                    
-                }
-                status = groq_tensor_layout_from_host(inpLayouts[1], (unsigned char*)gbuf1, hemigatessz, input, gateinputsz);
-                if (status) {
-                    printf("ERROR: tensor layout from host %d\n", status);
-                    return 1;
-                }
-                status = groq_tensor_layout_from_host(inpLayouts[2], (unsigned char*)gbuf2, hemigatessz, input, gateinputsz);
-                if (status) {
-                    printf("ERROR: tensor layout from host %d\n", status);
-                    return 1;
-                }
-                status = groq_tensor_layout_from_host(inpLayouts[3], (unsigned char*)qbuf, mx_gates320*2, input, gateinputsz);
-                if (status) {
-                    printf("ERROR: tensor layout from host %d\n", status);
-                    return 1;
-                }
-                free(gbuf1); free(gbuf2); free(qbuf);
-#else
-                //memset(input, 0, hemigates*2*8*4*320+mx_gates*3*320);
-                for (int i = 0; i < gatesNum; i++) {
-                    int idx = i+curGateSet[d]*gatesNum;
-                    size_t ioffs = i/2*2*4;
-                    gate_kernel_type* curgate = &gates[idx];
-                    long double theta = ldexpl((long double)curgate->Theta, -25),
-                        phi = ldexpl((long double)curgate->Phi, -25),
-                        lambda = ldexpl((long double)curgate->Lambda, -25);
-                    long double c = cosl(theta), s = sinl(theta);
-                    float _Complex g[] = { (curgate->metadata & 1) != 0 ? 0.0 : c,
-                        (curgate->metadata & 2) != 0 ? 0.0 : -cexpl(I*lambda)*s,
-                        (curgate->metadata & 4) != 0 ? 0.0 : cexpl(I*phi)*s,
-                        (curgate->metadata & 8) != 0 ? 0.0 : cexpl(I*(phi+lambda))*c };
-                    size_t offset = ((i & 1) != 0 ? hemigates*8*4 : 0);
-                    for (size_t goffs = 0; goffs < 4; goffs++) { //effective address order dimension as S16 is (4, 4, hemigates, 2)
-                        size_t gioffs = offset+ioffs+goffs*2;
-                        float fr = crealf(g[goffs]), fi = cimagf(g[goffs]);
-                        //printf("%f+%fj ", fr, fi);
-                        //printf("%X+%Xj ", *((unsigned int*)floatToBytes(&fr)), *((unsigned int*)floatToBytes(&fi)));  
-                        unsigned char* re = floatToBytes(&fr), *im = floatToBytes(&fi);
-                        for (size_t byteidx = 0; byteidx < sizeof(float); byteidx++) {
-                            size_t baseoffs = (((i & 1) == 0 ? 3-byteidx : byteidx))*hemigates16+gioffs;
-                            size_t baseoffsimag = (((i & 1) == 0 ? 3-byteidx : byteidx))*hemigates16+gioffs+1;
-                            //if (input[baseoffs] != re[byteidx] || input[baseoffsimag] != im[byteidx]) printf("bad gate data\n");
-                            input[baseoffs] = re[byteidx];
-                            input[baseoffsimag] = im[byteidx];
-                        }
-                    }
-                    //printf("\n");
-                    offset = offset_qbit + i;
-                    int deriv = (curgate->metadata & 0x80) != 0;
-                    int istarget = curgate->target_qbit == curgate->control_qbit || curgate->control_qbit < 0;
-                    int8_t cqbit = istarget ? 0 : (curgate->control_qbit - (curgate->control_qbit > curgate->target_qbit ? 1 : 0));
-                    uint16_t qbit = (curgate->target_qbit & 7) | ((cqbit & 7) << 3) | (istarget ? 0 : (deriv ? 2 : 1)) << 8;
-                    if (num_qbits == 9) qbit |= ((curgate->target_qbit >> 3) << 6);
-                    else if (num_qbits == 10) qbit |= ((cqbit >> 3) << 6) | ((curgate->target_qbit >> 3) << 7);
-                    input[offset] = qbit & 255;
-                    input[offset+mx_gates320] = qbit >> 8;
-                }
-#endif
 #ifdef TEST
                 timespec_get(&times[d], TIME_UTC);
-                printf("Gate prep time Device %d: %.9f\n", d, (times[d].tv_sec - t.tv_sec) + (times[d].tv_nsec - t.tv_nsec) / 1e9);
-#endif                
-                status = groq_invoke(device[d], inputBuffers[d][1], 0, outputBuffers[d][1], 0, &completion[d]);
+#endif
+                status = groq_invoke(device[d], preprocessGates.iobufs, curGateSet[d], outputBuffers[d][1], 0, &completion[d]);
                 if (status) {
                     printf("ERROR: invoke %d\n", status);
                     return 1;
@@ -882,6 +923,11 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
 #ifdef TEST
     printf("%.9f\n", totalinvoketime / totalinvokes);
 #endif
+    //struct timespec t;
+    //timespec_get(&t, TIME_UTC);
+    //printf("Total Gate Set Processing Time: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+    pthread_join(tid, NULL);
+    status = groq_deallocate_iobuffer_array(preprocessGates.iobufs);
     return 0;
 }
 
@@ -898,12 +944,15 @@ extern "C" int calcqgdKernelGroq(size_t rows, size_t cols, gate_kernel_type* gat
 int main(int argc, char* argv[])
 {
 #ifndef NUM_QBITS
-    int NUM_QBITS = 10;
-    if (initialize_groq(NUM_QBITS)) exit(1);
+    for (int num_qbits = 2; num_qbits <= 10; num_qbits++) { 
+    int max_gates = max_gates[NUM_QBITS-2];
+    if (initialize_groq(num_qbits)) exit(1);
 #else
+    int num_qbits = NUM_QBITS;
+    int mx_gates = MAX_GATES;
     if (initialize_groq()) exit(1);
 #endif    
-    int rows = 1 << NUM_QBITS, cols = 1 << NUM_QBITS;
+    int rows = 1 << num_qbits, cols = 1 << num_qbits;
     Complex8* data = (Complex8*)calloc(rows*cols, sizeof(Complex8));
     for (int i = 0; i < rows; i++) {
         for (int j = 0; j < cols; j++) {
@@ -913,16 +962,16 @@ int main(int argc, char* argv[])
         }
     }
     load2groq(data, rows, cols);
-    int gatesNum = chain_sizes[NUM_QBITS-2], //415, //MAX_GATES,
-        gateSetNum = 976;
+    int gatesNum = mx_gates,
+        gateSetNum = 4;
     gate_kernel_type* gates = (gate_kernel_type*)calloc(gatesNum * gateSetNum, sizeof(gate_kernel_type));
     for (int i = 0; i < gatesNum; i++) {
         for (int d = 0; d < gateSetNum; d++) {
             gates[i+d*gatesNum].Theta = ((25+i+d)%64)<<25;
             gates[i+d*gatesNum].Lambda = ((50+i)%64)<<25;
             gates[i+d*gatesNum].Phi = ((55+i)%64)<<25;
-            gates[i+d*gatesNum].target_qbit = i % NUM_QBITS;
-            gates[i+d*gatesNum].control_qbit = (i*2+d+1) % NUM_QBITS;
+            gates[i+d*gatesNum].target_qbit = i % num_qbits;
+            gates[i+d*gatesNum].control_qbit = (i*2+d+1) % num_qbits;
             gates[i+d*gatesNum].metadata = 0;
         } 
     }
@@ -934,6 +983,9 @@ int main(int argc, char* argv[])
     free(data);
     free(gates);
     releive_groq();
+#ifndef NUM_QBITS
+    }
+#endif
     return 0;
 }
 #endif
