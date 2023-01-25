@@ -112,6 +112,128 @@ double get_cost_function(Matrix matrix) {
 
 
 
+/**
+@brief Call co calculate the cost function of the optimization process, and the first correction to the cost finction according to https://arxiv.org/pdf/2210.09191.pdf
+@param matrix The square shaped complex matrix from which the cost function is calculated.
+@param qbit_num The number of qubits
+@return Returns with the matrix containing the cost function (index 0) and the first correction (index 1).
+*/
+Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num) {
+
+    Matrix_real ret(1,2);
+
+    // calculate the cost function
+    ret[0] = get_cost_function( matrix );
+
+
+
+    // calculate teh first correction
+
+    int matrix_size = matrix.cols;
+
+    double trace_real = 0.0;
+
+    for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+
+        int qbit_error_mask = 1 << qbit_idx;
+
+        for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+
+            // determine the row index pair with one bit error at the given qbit_idx
+            int row_idx = col_idx ^ qbit_error_mask;
+ 
+            trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+        }
+    }
+
+    //double cost_function = std::sqrt(1.0 - trace_real/matrix_size);
+    double cost_function = trace_real/matrix_size;
+
+    ret[1] = cost_function;
+
+    return ret;
+
+    
+
+}
+
+
+
+
+/**
+@brief Call co calculate the cost function of the optimization process, and the first correction to the cost finction according to https://arxiv.org/pdf/2210.09191.pdf
+@param matrix The square shaped complex matrix from which the cost function is calculated.
+@param qbit_num The number of qubits
+@return Returns with the matrix containing the cost function (index 0), the first correction (index 1) and the second correction (index 2).
+*/
+Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num) {
+
+
+    Matrix_real ret(1,3);
+
+    // calculate the cost function
+    ret[0] = get_cost_function( matrix );
+
+
+
+    // calculate the first correction
+
+    int matrix_size = matrix.cols;
+
+    double trace_real = 0.0;
+
+    for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+
+        int qbit_error_mask = 1 << qbit_idx;
+
+        for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+
+            // determine the row index pair with one bit error at the given qbit_idx
+            int row_idx = col_idx ^ qbit_error_mask;
+ 
+            trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+        }
+    }
+
+    double cost_function = trace_real/matrix_size;
+
+    ret[1] = cost_function;
+
+
+
+
+    // calculate the second correction
+
+    trace_real = 0.0;
+
+    for (int qbit_idx=0; qbit_idx<qbit_num-1; qbit_idx++) {
+        for (int qbit_idx2=qbit_idx+1; qbit_idx2<qbit_num; qbit_idx2++) {
+
+            int qbit_error_mask = (1 << qbit_idx) + (1 << qbit_idx2);
+
+            for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+
+                // determine the row index pair with one bit error at the given qbit_idx
+                int row_idx = col_idx ^ qbit_error_mask;
+ 
+                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+            }
+
+        }
+    }
+
+    double cost_function2 = trace_real/matrix_size;
+
+    ret[2] = cost_function2;
+
+    return ret;
+
+
+
+
+
+}
+
 
 /**
 @brief Constructor of the class.

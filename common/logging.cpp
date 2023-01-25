@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file Decomposition_Base.cpp
+/*! \file logging.cpp
     \brief Class containing basic methods for setting up the verbosity level.
 */
 

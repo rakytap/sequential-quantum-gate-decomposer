@@ -64,8 +64,23 @@ protected:
     /// beta1^t
     double beta1_t;
     /// beta2^t
-    double beta2_t;    
+    double beta2_t;   
 
+    /// vector stroing the lates values of cost function values to test local minimum
+    Matrix_real f0_vec; 
+    /// Mean of the latest cost function values to test local minimum
+    double f0_mean;
+    /// current index in the f0_vec array
+    int f0_idx;
+    
+    /// vector containing 1 if cost function decreased from previous value, and -1 if it increased
+    matrix_base<int> decreasing_vec; 
+    /// current index in the decreasing_vec array
+    int decreasing_idx = 0;
+    /// decreasing_test
+    double decreasing_test;
+    /// previous value of the cost function
+    double f0_prev;
 
 
 public:
@@ -105,7 +120,13 @@ void initialize_moment_and_variance(int parameter_num);
 @brief Call to set the number of gate blocks to be optimized in one shot
 @param optimization_block_in The number of gate blocks to be optimized in one shot
 */
-void update( Matrix_real& parameters, Matrix_real& grad );
+int update( Matrix_real& parameters, Matrix_real& grad, const double& f0 );
+
+
+/**
+@brief ?????????????
+*/
+double get_decreasing_test();
 
 };
 

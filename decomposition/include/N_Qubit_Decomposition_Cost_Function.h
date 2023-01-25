@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define N_Qubit_Decomposition_Cost_Function_H
 
 #include "common.h"
+#include "matrix_real.h"
 #include <tbb/combinable.h>
 #include "logging.h"
 
@@ -35,6 +36,24 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @return Returns with the calculated cost function.
 */
 double get_cost_function(Matrix matrix);
+
+
+/**
+@brief Call co calculate the cost function of the optimization process, and the first correction to the cost finction according to https://arxiv.org/pdf/2210.09191.pdf
+@param matrix The square shaped complex matrix from which the cost function is calculated.
+@param qbit_num The number of qubits
+@return Returns with the matrix containing the cost function (index 0) and the first correction (index 1).
+*/
+Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num);
+
+
+/**
+@brief Call co calculate the cost function of the optimization process, and the first correction to the cost finction according to https://arxiv.org/pdf/2210.09191.pdf
+@param matrix The square shaped complex matrix from which the cost function is calculated.
+@param qbit_num The number of qubits
+@return Returns with the matrix containing the cost function (index 0), the first correction (index 1) and the second correction (index 2).
+*/
+Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num);
 
 
 

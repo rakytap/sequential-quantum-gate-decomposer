@@ -40,35 +40,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 
-/**
-@brief Method to create random initial parameters for the optimization
-@return 
-*/
-Matrix_real create_random_paramaters( Gates_block* gate_structure ) {
-
-    int parameter_num = gate_structure->get_parameter_num();
-
-    Matrix_real parameters(1, parameter_num);
-
-    for(int idx = 0; idx < parameter_num; idx++) {
-         if ( idx % 5 == 0 ) {
-             if ( rand() % 2 == 0 ) {
-                 parameters[idx] = 0.0;
-             }
-             else {
-                 parameters[idx] = M_PI;
-             }
-         }
-         else {
-             parameters[idx] = (2*double(rand())/double(RAND_MAX)-1)*2*M_PI;
-         }
-    }
-
-    return parameters;
-
-
-}
-
 
 
 /**
@@ -103,7 +74,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
     // Boolean variable to determine whether randomized adaptive layers are used or not
     randomized_adaptive_layers = false;
 
-    srand(time(NULL));   // Initialization, should only be called once.
+
 }
 
 /**
@@ -149,7 +120,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
     // Boolean variable to determine whether randomized adaptive layers are used or not
     randomized_adaptive_layers = false;
 
-    srand(time(NULL));   // Initialization, should only be called once.
+
 }
 
 
@@ -200,7 +171,6 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
     // Boolean variable to determine whether randomized adaptive layers are used or not
     randomized_adaptive_layers = false;
 
-    srand(time(NULL));   // Initialization, should only be called once.
 }
 
 
@@ -493,7 +463,8 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx_loc.get_data(), optimized_parameters_mtx_loc.size() );
     cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
     cDecomp_custom.set_max_iteration( max_iterations );
-    cDecomp_custom.set_verbose(0);
+    cDecomp_custom.set_verbose(verbose);
+    cDecomp_custom.set_cost_function_variant( cost_fnc );
     cDecomp_custom.set_debugfile("");
     cDecomp_custom.set_iteration_loops( iteration_loops );
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance ); 
@@ -506,6 +477,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
         cDecomp_custom.set_adaptive_eta( true );      
         cDecomp_custom.set_randomized_radius( radius );             
     }
+    cDecomp_custom.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
     cDecomp_custom.start_decomposition(true);
     //cDecomp_custom.list_gates(0);
 
@@ -594,7 +566,8 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
                 cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
                 cDecomp_custom_random.set_max_iteration( max_iterations );
-                cDecomp_custom_random.set_verbose(0);
+                cDecomp_custom_random.set_verbose(verbose);
+                cDecomp_custom_random.set_cost_function_variant( cost_fnc );
                 cDecomp_custom_random.set_debugfile("");
                 cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );
                 if ( alg == ADAM || alg == BFGS2 ) {
@@ -606,6 +579,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                     cDecomp_custom_random.set_adaptive_eta( true );    
                     cDecomp_custom_random.set_randomized_radius( radius );
                 }
+                cDecomp_custom_random.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
                 cDecomp_custom_random.start_decomposition(true);
 
 #ifndef __DFE__
@@ -617,9 +591,11 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_close_to_zero.set_optimization_blocks( gate_structure_loc->get_gate_num() );    
                 cDecomp_custom_close_to_zero.set_max_iteration( max_iterations );
                 cDecomp_custom_close_to_zero.set_verbose(0);
+                cDecomp_custom_close_to_zero.set_cost_function_variant( cost_fnc );
                 cDecomp_custom_close_to_zero.set_debugfile("");
                 cDecomp_custom_close_to_zero.set_optimization_tolerance( optimization_tolerance );  
                 cDecomp_custom_close_to_zero.start_decomposition(true);
+                cDecomp_custom_close_to_zero.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
                }
          );
 #endif
@@ -763,8 +739,11 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         layers_to_remove.push_back(idx+1);
     }   
 
+    // random generator of integers   
+    std::uniform_int_distribution<> distrib_int(0, 5000);  
+
     while ( (int)layers_to_remove.size() > layer_num_max ) {
-        int remove_idx = rand() % layers_to_remove.size();
+        int remove_idx = distrib_int(gen) % layers_to_remove.size();
        
         layers_to_remove.erase( layers_to_remove.begin() + remove_idx );
     }
@@ -833,7 +812,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         else if ( panelty_min == panelties[idx] ) {
 
             // randomly choose the solution between identical penalties
-            if ( (rand() % 2) == 1 ) {
+            if ( (distrib_int(gen) % 2) == 1 ) {
                 idx_min = idx;
 
                 panelty_min = panelties[idx];
@@ -909,6 +888,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     cDecomp_custom.set_custom_gate_structure( gate_structure_reduced );
     cDecomp_custom.set_optimized_parameters( parameters_reduced.get_data(), parameters_reduced.size() );
     cDecomp_custom.set_verbose(0);
+    cDecomp_custom.set_cost_function_variant( cost_fnc );
     cDecomp_custom.set_debugfile("");
     cDecomp_custom.set_max_iteration( max_iterations );
     cDecomp_custom.set_iteration_loops( iteration_loops );
@@ -921,6 +901,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         cDecomp_custom.set_adaptive_eta( false );
         cDecomp_custom.set_randomized_radius( radius );        
     }
+    cDecomp_custom.set_iteration_threshold_of_randomization( 2500 );
     cDecomp_custom.start_decomposition(true);
     double current_minimum_tmp = cDecomp_custom.get_current_minimum();
 
@@ -1432,8 +1413,11 @@ N_Qubit_Decomposition_adaptive::construct_adaptive_gate_layers() {
     // make difference between randomized adaptive layers and deterministic one
     if (randomized_adaptive_layers) {
 
+        std::uniform_int_distribution<> distrib_int(0, 5000);
+
         while (layers.size()>0) { 
-            int idx = std::rand() % layers.size();
+            int idx = distrib_int(gen) % layers.size();
+
 #ifdef __MPI__        
             MPI_Bcast( &idx, 1, MPI_INT, 0, MPI_COMM_WORLD);
 #endif

@@ -26,6 +26,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Decomposition_Base.h"
 
+/// @brief Type definition of the fifferent types of the cost function
+typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2} cost_function_type;
+
+
+
 #ifdef __cplusplus
 extern "C" 
 {
@@ -85,10 +90,28 @@ protected:
     std::map<int,int> identical_blocks;
     ///
     optimization_aglorithms alg;
+    /// The chosen variant of the cost function
+    cost_function_type cost_fnc;
+    ///
+    double prev_cost_fnv_val;
+    ///
+    double correction1_scale;
+    ///
+    double correction2_scale;    
+
     /// logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     bool adaptive_eta;
     /// parameter to contron the radius of parameter randomization around the curren tminimum
     double radius;
+    /// randomization rate
+    double randomization_rate;
+    /// threashold of count of iterations after what the parameters are randomized if the cost function does not deacrese fast enough
+    unsigned long long iteration_threshold_of_randomization;
+
+    Matrix_real randomization_probs;
+    matrix_base<int> randomized_probs;
+
+    
 
 
 
@@ -173,6 +196,10 @@ void solve_layer_optimization_problem_BFGS2( int num_of_parameters, gsl_vector *
 */
 void solve_layer_optimization_problem_ADAM( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
+/**
+@brief ?????????????
+*/
+void randomize_parameters( Matrix_real& input, gsl_vector* output, const int randomization_succesful, const double& f0 );
 
 /**
 @brief The optimization problem of the final optimization
@@ -215,7 +242,6 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-static void optimization_problem_combined_CPU( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
 static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad  );
 
 
@@ -227,6 +253,65 @@ static void optimization_problem_combined( const gsl_vector* parameters, void* v
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 double optimization_problem_panelty( double* parameters, Gates_block* gates_block );
+
+
+/**
+@brief Call to get the variant of the cost function used in the calculations
+*/
+cost_function_type get_cost_function_variant();
+
+
+/**
+@brief ???????????
+*/
+double get_previous_cost_function_value();
+
+
+/**
+@brief Call to set the variant of the cost function used in the calculations
+@param variant The variant of the cost function from the enumaration cost_function_type
+*/
+void set_cost_function_variant( cost_function_type variant  );
+
+
+/**
+@brief ???????????
+*/
+double get_correction1_scale();
+
+
+/**
+@brief ??????????????
+@param ?????????
+*/
+void get_correction1_scale( const double& scale  );
+
+
+
+/**
+@brief ???????????
+*/
+double get_correction2_scale();
+
+
+/**
+@brief ??????????????
+@param ?????????
+*/
+void get_correction2_scale( const double& scale  );
+
+
+/**
+@brief ???????????
+*/
+long get_iteration_threshold_of_randomization();
+
+
+/**
+@brief ??????????????
+@param ?????????
+*/
+void set_iteration_threshold_of_randomization( const unsigned long long& threshold  );
 
 
 
