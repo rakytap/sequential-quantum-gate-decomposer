@@ -5,6 +5,7 @@
 #include <string.h>
 #include <complex.h>
 #include <pthread.h>
+#include <atomic>
 #ifdef TEST
 #include <time.h>
 #endif
@@ -606,14 +607,19 @@ extern "C" int load2groq(Complex8* data, size_t rows, size_t cols)
     return 0;
 }
 
+#define NUM_PREPROCESS_THREADS 2
+
 struct PreProcessGates {
     gate_kernel_type* gates;
     int gatesNum;
     int gateSetNum;
-    int completionCount;
     int num_qbits;
     size_t mx_gates;
-    IOBufferArray iobufs;
+    int* completionQueue;
+    std::atomic<int> completionCount;
+    std::atomic<int> completionUpdate;
+    std::atomic<int> curGateSet;
+    uint8_t** inputs;
 };
 
 void* dataPrepFunc(void* arg)
@@ -622,26 +628,18 @@ void* dataPrepFunc(void* arg)
     size_t hemigates = (ppGates->mx_gates+1)/2;
     size_t num_inner_qbits = (ppGates->mx_gates+320-1)/320;
     size_t mx_gates320 = num_inner_qbits*320;
-    size_t gateinputsz = hemigates*2*8*4+mx_gates320*2;
 #ifdef USE_GROQ_HOST_FUNCS
+    size_t gateinputsz = hemigates*2*8*4+mx_gates320*2;
     size_t hemigatessz = hemigates*8*sizeof(float);
 #else
     size_t hemigates16 = hemigates*2*sizeof(float);
     size_t offset_qbit = hemigates*2*8*4; //num_inner_splits*2*rows*4*320
 #endif
-    Status status;
-    status = groq_allocate_iobuffer_array(driver, gateinputsz, ppGates->gateSetNum, gateinput_ptindex, &ppGates->iobufs);
-    if (status) {
-        printf("ERROR: allocate iobuffer array %d\n", status);
-        return NULL;
-    }
-    for (int curGateSet = 0; curGateSet < ppGates->gateSetNum; curGateSet++) { 
-        u_int8_t* input;
-        status = groq_get_data_handle(ppGates->iobufs, curGateSet, &input);
-        if (status) {
-            printf("ERROR: get data handle %d\n", status);
-            return NULL;
-        }
+    while (ppGates->curGateSet < ppGates->gateSetNum) {
+        int curGateSet = ppGates->curGateSet.load(); //try to acquire by atomic compare and exchange to increment
+        if (!ppGates->curGateSet.compare_exchange_strong(curGateSet, curGateSet+1)) continue;        
+        u_int8_t* input = ppGates->inputs[curGateSet];
+        
 #ifdef TEST
         struct timespec t;
         timespec_get(&t, TIME_UTC);
@@ -682,7 +680,7 @@ void* dataPrepFunc(void* arg)
             else if (ppGates->num_qbits == 10) qbit |= ((cqbit >> 3) << 6) | ((curgate->target_qbit >> 3) << 7);
             qbuf[i] = qbit;                    
         }
-        status = groq_tensor_layout_from_host(inpLayouts[1], (unsigned char*)gbuf1, hemigatessz, input, gateinputsz);
+        Status status = groq_tensor_layout_from_host(inpLayouts[1], (unsigned char*)gbuf1, hemigatessz, input, gateinputsz);
         if (status) {
             printf("ERROR: tensor layout from host %d\n", status);
             return NULL;
@@ -742,7 +740,8 @@ void* dataPrepFunc(void* arg)
         struct timespec endtime;
         timespec_get(&endtime, TIME_UTC);
         printf("Gate prep time: %.9f\n", (endtime.tv_sec - t.tv_sec) + (endtime.tv_nsec - t.tv_nsec) / 1e9);
-#endif                
+#endif
+        ppGates->completionQueue[ppGates->completionUpdate++] = curGateSet;
         ppGates->completionCount++;
     }
     return NULL;    
@@ -774,10 +773,36 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
     Status status;
     if (gateSetNum == 0) return 0;
 
-    pthread_t tid;
-    struct PreProcessGates preprocessGates = { gates, gatesNum, gateSetNum, 0, num_qbits, mx_gates };
-    pthread_create(&tid, NULL, &dataPrepFunc, &preprocessGates);
-
+    pthread_t tid[NUM_PREPROCESS_THREADS];
+    struct PreProcessGates preprocessGates = { gates, gatesNum, gateSetNum, num_qbits, mx_gates };
+    preprocessGates.completionCount = 0;
+    preprocessGates.completionUpdate = 0;
+    preprocessGates.curGateSet = 0;
+    preprocessGates.completionQueue = (int*)calloc(gateSetNum, sizeof(int));
+    preprocessGates.inputs = (uint8_t**)malloc(gateSetNum*sizeof(uint8_t*));
+    size_t hemigates = (mx_gates+1)/2;
+    size_t num_inner_qbits = (mx_gates+320-1)/320;
+    size_t mx_gates320 = num_inner_qbits*320;
+    size_t gateinputsz = hemigates*2*8*4+mx_gates320*2;    
+    IOBufferArray iobufs = NULL;
+    status = groq_allocate_iobuffer_array(driver, gateinputsz, gateSetNum, gateinput_ptindex, &iobufs);
+    if (status) {
+        printf("ERROR: allocate iobuffer array %d\n", status);
+        return 1;
+    }
+    //for (int curGateSet = 0; curGateSet < ppGates->gateSetNum; curGateSet++) {
+    for (int i = 0; i < gateSetNum; i++) {
+        u_int8_t* input;
+        status = groq_get_data_handle(iobufs, i, &input);
+        if (status) {
+            printf("ERROR: get data handle %d\n", status);
+            return 1;
+        }
+        preprocessGates.inputs[i] = input;
+    }    
+    for (int i = 0; i < NUM_PREPROCESS_THREADS; i++)
+        pthread_create(&tid[i], NULL, &dataPrepFunc, &preprocessGates);
+        
     //struct timespec starttime;
     //timespec_get(&starttime, TIME_UTC);
     while (true) {
@@ -785,12 +810,12 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
             if (curGateSet[d] == -1) {
                 //if (nextGateSet >= gateSetNum) continue;
                 if (nextGateSet >= preprocessGates.completionCount) continue;
-                curGateSet[d] = nextGateSet++;
+                curGateSet[d] = preprocessGates.completionQueue[nextGateSet++];
                 curStep[d] = 0;
 #ifdef TEST
                 timespec_get(&times[d], TIME_UTC);
 #endif
-                status = groq_invoke(device[d], preprocessGates.iobufs, curGateSet[d], outputBuffers[d][1], 0, &completion[d]);
+                status = groq_invoke(device[d], iobufs, curGateSet[d], outputBuffers[d][1], 0, &completion[d]);
                 if (status) {
                     printf("ERROR: invoke %d\n", status);
                     return 1;
@@ -926,8 +951,10 @@ int calcqgdKernelGroq_oneShot(size_t rows, size_t cols, gate_kernel_type* gates,
     //struct timespec t;
     //timespec_get(&t, TIME_UTC);
     //printf("Total Gate Set Processing Time: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
-    pthread_join(tid, NULL);
-    status = groq_deallocate_iobuffer_array(preprocessGates.iobufs);
+    for (int i = 0; i < NUM_PREPROCESS_THREADS; i++)
+        pthread_join(tid[i], NULL);
+    free(preprocessGates.completionQueue);
+    status = groq_deallocate_iobuffer_array(iobufs);
     return 0;
 }
 
@@ -963,7 +990,7 @@ int main(int argc, char* argv[])
     }
     load2groq(data, rows, cols);
     int gatesNum = mx_gates,
-        gateSetNum = 4;
+        gateSetNum = 976;
     gate_kernel_type* gates = (gate_kernel_type*)calloc(gatesNum * gateSetNum, sizeof(gate_kernel_type));
     for (int i = 0; i < gatesNum; i++) {
         for (int d = 0; d < gateSetNum; d++) {
