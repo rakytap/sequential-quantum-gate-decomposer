@@ -377,14 +377,14 @@ pure_DFE_time = 0.0;
     
 
             if ( iter_idx % 5000 == 0 ) {
+
+                Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+
                 std::stringstream sstream;
-                sstream << "ADAM: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                sstream << "ADAM: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new) << std::endl;
                 print(sstream, 0);   
                 std::string filename("initial_circuit_iteration.binary");
-                export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
-
-Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
-std::cout << "pure cost function: " << get_cost_function(matrix_new) << std::endl;
+                export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
 
             }
 
@@ -727,7 +727,7 @@ bfgs_time = 0.0;
                      print(sstream, 2);  
 
                      std::string filename("initial_circuit_iteration.binary");
-                     export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
+                     export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
                 }
 
 
