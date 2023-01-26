@@ -465,6 +465,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 ##
 # @brief Call to retrieve the unitary of the circuit
+# @param parameters A float64 numpy array
     def get_Matrix( self, parameters = None ):
 
   
@@ -491,4 +492,22 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         # Set the optimizer
         super(qgd_N_Qubit_Decomposition_adaptive, self).set_Iteration_Threshold_of_Randomization(threshold)  
 
+
+
+## 
+# @brief Call to evaluate the cost function and the gradient components.
+# @param parameters A float64 numpy array
+# @param onlyCPU Perform calculation on CPU. Has effect if SQUANDER is compiled with DFE/Groq support.
+    def Optimization_Problem_Combined( self, parameters=None, onlyCPU=False ):
+
+        if parameters is None:
+            print( "Optimization_Problem_Combined: arary of input parameters is None")
+            return None
+
+        # evaluate the cost function and gradients
+        cost_function, grad = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem_Combined(parameters, onlyCPU)  
+
+        grad = grad.reshape( (-1,))
+
+        return cost_function, grad
 
