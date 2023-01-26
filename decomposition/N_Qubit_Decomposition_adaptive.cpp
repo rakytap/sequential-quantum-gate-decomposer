@@ -48,8 +48,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decomposition_Base() {
 
-    // initialize custom gate structure
-    gate_structure = NULL;
 
     // set the level limit
     level_limit = 0;
@@ -87,9 +85,6 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
 */
 N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, false, RANDOM) {
 
-
-    // initialize custom gate structure
-    gate_structure = NULL;
 
     // set the level limit
     level_limit = level_limit_in;
@@ -136,8 +131,6 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, false, RANDOM) {
 
 
-    // initialize custom gate structure
-    gate_structure = NULL;
 
     // set the level limit
     level_limit = level_limit_in;
@@ -180,13 +173,6 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 */
 N_Qubit_Decomposition_adaptive::~N_Qubit_Decomposition_adaptive() {
 
-
-    if ( gate_structure != NULL ) {
-        // release custom gate structure
-        delete gate_structure;
-        gate_structure = NULL;
-    }
-
 }
 
 
@@ -228,26 +214,9 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         std::stringstream sstream;
 	sstream << "please increase level limit" << std::endl;
         print(sstream, 0);	
-        //exit(-1);
+        return;
     }
-/*
-            FILE* pFile = fopen("unitary_compression.binary", "rb");
-            if (pFile==NULL) {fputs ("File error to export unitary",stderr); exit (1);}
-int rows, cols;
-fread(&rows, sizeof(int), 1, pFile);
-fread(&cols, sizeof(int), 1, pFile);
-Umtx = Matrix(rows, cols );        
-fread(Umtx.get_data(), sizeof(QGD_Complex16), Umtx.size(), pFile);
-            fclose(pFile);
-*/
 
-
-/*
-apply_imported_gate_structure();
-set_adaptive_gate_structure( "initial_circuit_iteration_2_rd53_135_0.0049.binary" );
-add_layer_to_imported_gate_structure();
-*/
-//add_adaptive_gate_structure( "initial_circuit_iteration_2_rd53_135_0.0049.binary" );
 
 #ifdef __DFE__
     uploadMatrix2DFE( Umtx );
@@ -258,7 +227,7 @@ add_layer_to_imported_gate_structure();
 
 
     Gates_block* gate_structure_loc = NULL;
-    if ( gate_structure != NULL ) {
+    if ( gates.size() > 0 ) {
         std::stringstream sstream;
 	sstream << "Using imported gate structure for the decomposition." << std::endl;
         print(sstream, 1);	
@@ -280,11 +249,8 @@ add_layer_to_imported_gate_structure();
     }
 
     export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
-/*
-Matrix_real parameters_imported;
-Gates_block* gate_structure_loc_imported = import_gate_list_from_binary(parameters_imported);
-*/
-//exit(0);///////////////////
+
+
     sstream.str("");
     sstream << std::endl;
     sstream << std::endl;
@@ -343,7 +309,8 @@ Gates_block* gate_structure_loc_imported = import_gate_list_from_binary(paramete
 
     optimization_tolerance = optimization_tolerance_orig;
 
-    // store the decomposing gate structure    
+    // store the decomposing gate structure   
+    release_gates();
     combine( gate_structure_loc );
     optimization_block = get_gate_num();
 
@@ -368,8 +335,6 @@ Gates_block* gate_structure_loc_imported = import_gate_list_from_binary(paramete
     	
     // reset the global minimum before final tuning
     current_minimum = DBL_MAX;
-std::cout << "iter_max: " << iter_max << std::endl;
-iter_max = 1e4;
 
     set_adaptive_eta( true );
 
@@ -446,7 +411,7 @@ Gates_block*
 N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& optimized_parameters_mtx_loc) {
 
 
-    Gates_block* gate_structure_loc = gate_structure->clone();
+    Gates_block* gate_structure_loc = static_cast<Gates_block*>(this)->clone();
 
     //measure the time for the decompositin
     tbb::tick_count start_time_loc = tbb::tick_count::now();
@@ -1493,7 +1458,8 @@ N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structur
 void 
 N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( Gates_block* gate_structure_in ) {
 
-    gate_structure = gate_structure_in->clone();
+    release_gates();
+    combine( gate_structure_in );
 
 }
 
@@ -1504,12 +1470,14 @@ N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( Gates_block* gate_s
 void 
 N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( std::string filename ) {
 
-    if ( gate_structure ) {
-        delete gate_structure;
+    if ( gates.size() > 0  ) {
+        release_gates();
         optimized_parameters_mtx = Matrix_real(0,0);
     }
 
-    gate_structure = import_gate_list_from_binary(optimized_parameters_mtx, filename, verbose);
+    Gates_block* gate_structure = import_gate_list_from_binary(optimized_parameters_mtx, filename, verbose);
+    combine( gate_structure );
+    delete gate_structure;
 
 }
 
@@ -1546,10 +1514,12 @@ N_Qubit_Decomposition_adaptive::add_adaptive_gate_structure( std::string filenam
     Matrix_real optimized_parameters_mtx_tmp;
     Gates_block* gate_structure_tmp = import_gate_list_from_binary(optimized_parameters_mtx_tmp, filename, verbose);
 
-    if ( gate_structure ) {
-        gate_structure_tmp->combine( gate_structure );
-        delete gate_structure;
-        gate_structure = gate_structure_tmp;
+    if ( gates.size() > 0 ) {
+        gate_structure_tmp->combine( static_cast<Gates_block*>(this) );
+
+        release_gates();
+        combine( gate_structure_tmp );
+      
 
         Matrix_real optimized_parameters_mtx_tmp2( 1, optimized_parameters_mtx_tmp.size() + optimized_parameters_mtx.size() );
         memcpy( optimized_parameters_mtx_tmp2.get_data(), optimized_parameters_mtx_tmp.get_data(), optimized_parameters_mtx_tmp.size()*sizeof(double) );
@@ -1557,7 +1527,7 @@ N_Qubit_Decomposition_adaptive::add_adaptive_gate_structure( std::string filenam
         optimized_parameters_mtx = optimized_parameters_mtx_tmp2;
     }
     else {
-        gate_structure = gate_structure_tmp;
+        combine( gate_structure_tmp );
         optimized_parameters_mtx = optimized_parameters_mtx_tmp;
     }
 
@@ -1571,9 +1541,9 @@ N_Qubit_Decomposition_adaptive::add_adaptive_gate_structure( std::string filenam
 void 
 N_Qubit_Decomposition_adaptive::apply_imported_gate_structure() {
 
-    if ( gate_structure==NULL ) return;
+    if ( gates.size() == 0 ) return;
 
-    std::vector<Gate*> gates_loc = gate_structure->get_gates();
+    std::vector<Gate*> gates_loc = get_gates();
     Matrix Umtx_new = get_transformed_matrix( optimized_parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx );
 
     std::stringstream sstream;
@@ -1581,8 +1551,7 @@ N_Qubit_Decomposition_adaptive::apply_imported_gate_structure() {
     print(sstream, 3);	
 
     Umtx = Umtx_new;
-    delete gate_structure;
-    gate_structure = NULL;
+    release_gates();
     optimized_parameters_mtx = Matrix_real(0,0);
 
 
@@ -1604,13 +1573,7 @@ N_Qubit_Decomposition_adaptive::add_layer_to_imported_gate_structure() {
     Gates_block* layer = construct_adaptive_gate_layers();
 
 
-    if ( gate_structure == NULL ) {
-        gate_structure = layer;
-        return;
-    }
-
-
-    gate_structure->combine( layer );
+    combine( layer );
 
     Matrix_real tmp( 1, optimized_parameters_mtx.size() + layer->get_parameter_num() );
     memset( tmp.get_data(), 0, tmp.size()*sizeof(double) );

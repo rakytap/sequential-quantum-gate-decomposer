@@ -1015,7 +1015,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
 
     // the number of free parameters
     int parameter_num_loc = instance->get_parameter_num();
-std::cout << parameter_num_loc << std::endl;
+
     // the variant of the cost function
     cost_function_type cost_fnc = instance->get_cost_function_variant();
 

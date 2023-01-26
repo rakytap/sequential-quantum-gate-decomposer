@@ -65,8 +65,6 @@ public:
 protected:
 
 
-    /// A gate structure describing custom gate structure to be used in the decomposition. 
-    Gates_block* gate_structure;
     /// The maximal number of adaptive layers used in the decomposition
     int level_limit;
     /// The minimal number of adaptive layers used in the decomposition
