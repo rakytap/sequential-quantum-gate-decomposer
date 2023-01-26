@@ -146,8 +146,8 @@ def get_optimized_circuit( alpha, optimizer='BFGS' ):
                 # set the optimizer
 		cDecompose.set_Optimizer( optimizer )
 
-		# turning off verbosity
-		cDecompose.set_Verbose( False )
+		# set verbosity
+		cDecompose.set_Verbose( 4 )
 
 		# starting the decomposition
 		cDecompose.Start_Decomposition()
@@ -189,8 +189,6 @@ class Test_parametric_circuit:
         # determine the quantum circuit at parameter value alpha with BFGS optimizer
         qc = get_optimized_circuit( alpha, optimizer='BFGS2' )
 
-        # determine the quantum circuit at parameter value alpha with ADAM optimizer
-        qc = get_optimized_circuit( alpha, optimizer='ADAM' )
 
 
 

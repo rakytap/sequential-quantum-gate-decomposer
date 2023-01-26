@@ -377,14 +377,14 @@ pure_DFE_time = 0.0;
     
 
             if ( iter_idx % 5000 == 0 ) {
+
+                Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+
                 std::stringstream sstream;
-                sstream << "ADAM: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                sstream << "ADAM: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new) << std::endl;
                 print(sstream, 0);   
                 std::string filename("initial_circuit_iteration.binary");
-                export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
-
-Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
-std::cout << "pure cost function: " << get_cost_function(matrix_new) << std::endl;
+                export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
 
             }
 
@@ -462,9 +462,6 @@ std::cout << "pure cost function: " << get_cost_function(matrix_new) << std::end
 
         }
 
-cost_fnc = FROBENIUS_NORM;
-std::cout << optimization_problem( optimized_parameters_mtx ) << std::endl;
-cost_fnc == FROBENIUS_NORM_CORRECTION1;
 
         sstream.str("");
         sstream << "obtained minimum: " << current_minimum << std::endl;
@@ -727,7 +724,7 @@ bfgs_time = 0.0;
                      print(sstream, 2);  
 
                      std::string filename("initial_circuit_iteration.binary");
-                     export_gate_list_to_binary(optimized_parameters_mtx, this, filename);
+                     export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
                 }
 
 
@@ -987,15 +984,32 @@ void N_Qubit_Decomposition_Base::optimization_problem_grad( const gsl_vector* pa
 
 }
 
+
 /**
 @brief Call to calculate both the cost function and the its gradient components.
 @param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
+@param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
 */
-void 
-N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+
+    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+
+    instance->optimization_problem_combined( parameters, void_instance, f0, grad, false );
+
+}
+
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param f0 The value of the cost function at x0.
+@param grad A GNU Scientific Library vector containing the calculated gradient components.
+@param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
+*/
+void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad, bool onlyCPU ) {
 
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
 
@@ -1017,7 +1031,7 @@ N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector* par
 ///////////////////////////////////////
 //std::cout << "number of qubits: " << instance->qbit_num << std::endl;
 //tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
-if ( instance->qbit_num >= 5 ) {
+if ( instance->qbit_num >= 5 && ~onlyCPU ) {
     Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
 
     int gatesNum, redundantGateSets, gateSetNum;
@@ -1140,10 +1154,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
                 std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
                 throw err;
             }
-
-
-
-
+            
+//            grad->data[idx] = grad_comp;
             gsl_vector_set(grad, idx, grad_comp);
 
 
@@ -1177,6 +1189,46 @@ std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
 */
 #endif
 
+
+}
+
+
+
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters The parameters for which the cost fuction shoule be calculated
+@param f0 The value of the cost function at x0.
+@param grad An array storing the calculated gradient components
+@param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
+*/
+void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad, bool onlyCPU ) {
+
+    // create GSL wrappers around the pointers
+    gsl_block block_tmp;
+    block_tmp.data = parameters.get_data();
+    block_tmp.size = parameters.size(); 
+
+    gsl_vector parameters_gsl;
+    parameters_gsl.data = parameters.get_data();
+    parameters_gsl.size = parameters.size();
+    parameters_gsl.stride = 1;   
+    parameters_gsl.block = &block_tmp; 
+    parameters_gsl.owner = 0; 
+    
+    
+    gsl_block block_tmp2;
+    block_tmp.data = grad.get_data();
+    block_tmp.size = grad.size();        
+
+    gsl_vector grad_gsl;
+    grad_gsl.data = grad.get_data();
+    grad_gsl.size = grad.size();
+    grad_gsl.stride = 1;   
+    grad_gsl.block = &block_tmp2; 
+    grad_gsl.owner = 0;    
+
+    // call the method to calculate the cost function and the gradients
+    optimization_problem_combined( &parameters_gsl, this, f0, &grad_gsl, onlyCPU );
 
 }
 

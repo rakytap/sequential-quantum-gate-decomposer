@@ -3084,7 +3084,7 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, co
     sstream << "Exporting circuit into binary format. Filename: " << filename << std::endl;
     logging log;
     log.verbose = verbosity;
-    log.print(sstream, 2);	
+    log.print(sstream, 3);	
 
     FILE* pFile;
     const char* c_filename = filename.c_str();

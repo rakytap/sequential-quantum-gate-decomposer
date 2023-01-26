@@ -256,7 +256,6 @@ ta.execute( [&](){
     if ( std::abs( f0_mean - f0) < 1e-6 && decreasing_test <= 0.7 && var_f0/f0_mean < 1e-6 ) {
         // local minimum
         ADAM_status = 1;
-        std::cout << "iiiiiiiiiiiiiiiiiiiii " << var_f0 << std::endl;
     }
     else {
         ADAM_status = 0;
