@@ -29,7 +29,8 @@ class Test_operations_squander:
 
         # creating an instance of the C++ class
         X = qgd_X( qbit_num, target_qbit )
-                
+
+        # get the matrix                
         X_squander = X.get_Matrix( )
         
         print(X_squander)
@@ -69,9 +70,11 @@ class Test_operations_squander:
 
         # creating an instance of the C++ class
         X = qgd_X( qbit_num, target_qbit)
-              
+
+        # get the matrix                  
         X_squander = X.get_Matrix(  )
-               
+
+        # apply the gate on the input array/matrix              
         X.apply_to(X_squander )
               
         print(X_squander)             
@@ -84,13 +87,17 @@ class Test_operations_squander:
         # Add the X gate on the target qbit
         circuit.x( target_qbit )
 
+        # the unitary matrix from the result object
         X_qiskit = get_unitary_from_qiskit_circuit( circuit )
         X_qiskit = np.asarray(X_qiskit)
 
-        x_1qbit=np.array([[0.+0.j, 1+0.j], [1.+0.j, 0.+0.j]])
+        # the X gate 
+        x_1qbit=np.array([[0.+0.j, 1.+0.j], [1.+0.j, 0.+0.j]])
 
+        # apply the gate on the input array/matrix  
         X_qiskit_apply_gate=X_qiskit*x_1qbit
         print(X_qiskit_apply_gate)
+
 
 
 
