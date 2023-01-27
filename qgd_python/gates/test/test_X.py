@@ -33,7 +33,7 @@ class Test_operations_squander:
         # get the matrix                
         X_squander = X.get_Matrix( )
         
-        print(X_squander)
+        #print(X_squander)
 
 #QISKIT
 
@@ -48,7 +48,7 @@ class Test_operations_squander:
         X_qiskit = np.asarray(X_qiskit)
         
         # Draw the circuit        
-        print(X_qiskit)
+        #print(X_qiskit)
         
         #the difference between the SQUANDER and the qiskit result        
         delta_matrix=X_squander-X_qiskit
@@ -77,7 +77,7 @@ class Test_operations_squander:
         # apply the gate on the input array/matrix              
         X.apply_to(X_squander )
               
-        print(X_squander)             
+        #print(X_squander)             
 
 #QISKIT      
 
@@ -95,9 +95,18 @@ class Test_operations_squander:
         x_1qbit=np.array([[0.+0.j, 1.+0.j], [1.+0.j, 0.+0.j]])
 
         # apply the gate on the input array/matrix  
-        X_qiskit_apply_gate=X_qiskit*x_1qbit
+        X_qiskit_apply_gate=np.matmul(X_qiskit, x_1qbit)
+
         print(X_qiskit_apply_gate)
 
+        #the difference between the SQUANDER and the qiskit result        
+        delta_matrix=X_squander-X_qiskit_apply_gate
+
+        # compute norm of matrix
+        error=np.linalg.norm(delta_matrix)
+
+        print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+        assert( error < 1e-3 ) 
 
 
 
