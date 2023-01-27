@@ -387,9 +387,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     	print(sstream, 1);	    	
     	
             
-#ifdef __DFE__
-releive_DFE();
-#endif               
+         
     
 
 
@@ -1490,6 +1488,12 @@ N_Qubit_Decomposition_adaptive::set_unitary_from_file( std::string filename ) {
 
     Umtx = import_unitary_from_binary(filename);
 
+#ifdef __DFE__
+    if( qbit_num >= 5 ) {
+        uploadMatrix2DFE( Umtx );
+    }
+#endif
+
 }
 /**
 @brief call to set Unitary from mtx
@@ -1499,6 +1503,12 @@ void
 N_Qubit_Decomposition_adaptive::set_unitary( Matrix& Umtx_new ) {
 
     Umtx = Umtx_new;
+
+#ifdef __DFE__
+    if( qbit_num >= 5 ) {
+        uploadMatrix2DFE( Umtx );
+    }
+#endif
 
 }
 

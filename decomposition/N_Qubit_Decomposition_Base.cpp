@@ -71,6 +71,12 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     correction2_scale = 1/2.0;  
 
     iteration_threshold_of_randomization = 2500000;
+
+#ifdef __DFE__
+    if( qbit_num >= 5 ) {
+        uploadMatrix2DFE( Umtx );
+    }
+#endif
 }
 
 /**
@@ -119,6 +125,12 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 
     iteration_threshold_of_randomization = 2500000;
 
+#ifdef __DFE__
+    if( qbit_num >= 5 ) {
+        uploadMatrix2DFE( Umtx );
+    }
+#endif
+
 }
 
 
@@ -127,6 +139,11 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 @brief Destructor of the class
 */
 N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
+
+
+#ifdef __DFE__
+    releive_DFE();
+#endif      
 
 
 }
