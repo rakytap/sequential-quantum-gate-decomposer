@@ -87,7 +87,7 @@ class Test_operations_squander:
         X_qiskit = get_unitary_from_qiskit_circuit( circuit )
         X_qiskit = np.asarray(X_qiskit)
 
-        x_1qbit=np.array([[0.+0.j, 1+0.j], [0.+0.j, 1.+0.j]])
+        x_1qbit=np.array([[0.+0.j, 1+0.j], [1.+0.j, 0.+0.j]])
 
         X_qiskit_apply_gate=X_qiskit*x_1qbit
         print(X_qiskit_apply_gate)
