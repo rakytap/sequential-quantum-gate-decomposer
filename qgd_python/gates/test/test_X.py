@@ -81,7 +81,7 @@ class Test_operations_squander:
         # Create a Quantum Circuit acting on the q register
         circuit = QuantumCircuit(qbit_num)
       
-        # Add the CNOT gate on control qbit and target qbit
+        # Add the X gate on the target qbit
         circuit.x( target_qbit )
 
         X_qiskit = get_unitary_from_qiskit_circuit( circuit )
