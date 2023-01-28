@@ -5,11 +5,9 @@ from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 
 from qgd_python.utils import get_unitary_from_qiskit_circuit
+from qgd_python.gates.qgd_X import qgd_X
 
 pi=np.pi
-
-
-from qgd_python.gates.qgd_X import qgd_X
 
 # number of qubits
 qbit_num = 1
@@ -19,13 +17,14 @@ target_qbit = 0
 
 class Test_operations_squander:
     """This is a test class of the python iterface to compare the SQUANDER and the qiskit decomposition"""
-#SQUANDER#
+
 
     def test_X_get_matrix(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of X gate and compare with qiskit.
         """
+	#SQUANDER#
 
         # creating an instance of the C++ class
         X = qgd_X( qbit_num, target_qbit )
@@ -35,7 +34,7 @@ class Test_operations_squander:
         
         #print(X_squander)
 
-#QISKIT
+	#QISKIT
 
         # Create a Quantum Circuit acting on the q register
         circuit = QuantumCircuit(qbit_num)
@@ -64,9 +63,7 @@ class Test_operations_squander:
         This method is called by pytest. 
         Test to create an instance of X gate and compare with qiskit.
         """
-
-#SQUANDER
-        from qgd_python.gates.qgd_X import qgd_X
+	#SQUANDER
 
         # creating an instance of the C++ class
         X = qgd_X( qbit_num, target_qbit)
@@ -79,7 +76,7 @@ class Test_operations_squander:
               
         #print(X_squander)             
 
-#QISKIT      
+	#QISKIT      
 
         # Create a Quantum Circuit acting on the q register
         circuit = QuantumCircuit(qbit_num)
@@ -92,10 +89,10 @@ class Test_operations_squander:
         X_qiskit = np.asarray(X_qiskit)
 
         # the X gate 
-        x_1qbit=np.array([[0.+0.j, 1.+0.j], [1.+0.j, 0.+0.j]])
+        x_gate=np.array([[0.+0.j, 1.+0.j], [1.+0.j, 0.+0.j]])
 
         # apply the gate on the input array/matrix  
-        X_qiskit_apply_gate=np.matmul(X_qiskit, x_1qbit)
+        X_qiskit_apply_gate=np.matmul(X_qiskit, x_gate)
 
         print(X_qiskit_apply_gate)
 
@@ -107,6 +104,7 @@ class Test_operations_squander:
 
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
         assert( error < 1e-3 ) 
+
 
 
 
