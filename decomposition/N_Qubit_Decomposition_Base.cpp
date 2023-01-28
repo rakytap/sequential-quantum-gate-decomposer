@@ -1048,7 +1048,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
 ///////////////////////////////////////
 //std::cout << "number of qubits: " << instance->qbit_num << std::endl;
 //tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
-if ( instance->qbit_num >= 5 && ~onlyCPU ) {
+if ( instance->qbit_num >= 5 && !onlyCPU ) {
     Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
 
     int gatesNum, redundantGateSets, gateSetNum;
