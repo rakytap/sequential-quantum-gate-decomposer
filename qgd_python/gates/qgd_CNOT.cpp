@@ -166,6 +166,7 @@ qgd_CNOT_apply_to( qgd_CNOT *self, PyObject *args ) {
         return NULL;
     }
 
+
     if ( PyArray_Check(unitary_arg) && PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
         Py_INCREF(unitary_arg);
     }
@@ -173,15 +174,25 @@ qgd_CNOT_apply_to( qgd_CNOT *self, PyObject *args ) {
         unitary_arg = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
     }
 
+   PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
+        PyErr_SetString(PyExc_Exception, "input mtrix is not memory contiguous");
+        return NULL;
+    }
+
+
     // create QGD version of the input matrix
-    Matrix unitary_mtx = numpy2matrix(unitary_arg);
+    Matrix unitary_mtx = numpy2matrix(unitary);
 
     self->gate->apply_to( unitary_mtx );
     
-    Py_DECREF(unitary_arg);
+    Py_DECREF(unitary);
 
     return Py_BuildValue("i", 0);
 }
+
 
 
 
