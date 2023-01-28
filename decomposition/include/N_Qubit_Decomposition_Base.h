@@ -134,7 +134,7 @@ N_Qubit_Decomposition_Base();
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in );
+N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in, int accelerator_num=0 );
 
 
 
@@ -249,24 +249,12 @@ static void optimization_problem_combined( const gsl_vector* parameters, void* v
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
-@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param f0 The value of the cost function at x0.
-@param grad A GNU Scientific Library vector containing the calculated gradient components.
-@param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
-*/
-static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad, bool onlyCPU  );
-
-
-
-/**
-@brief Call to calculate both the cost function and the its gradient components.
 @param parameters The parameters for which the cost fuction shoule be calculated
 @param f0 The value of the cost function at x0.
 @param grad An array storing the calculated gradient components
 @param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
 */
-void optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad, bool onlyCPU );
+void optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad );
 
 
 /**

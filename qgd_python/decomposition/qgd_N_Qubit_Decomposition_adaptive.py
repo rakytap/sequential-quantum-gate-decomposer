@@ -41,7 +41,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
 # @return An instance of the class
-    def __init__( self, Umtx, level_limit_max=8, level_limit_min=0, topology=None ):
+    def __init__( self, Umtx, level_limit_max=8, level_limit_min=0, topology=None, accelerator_num=0 ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
@@ -65,7 +65,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         
 
         # call the constructor of the wrapper class
-        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, topology=topology_validated)
+        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, topology=topology_validated, accelerator_num=accelerator_num)
 
 
 ##
@@ -497,15 +497,14 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 ## 
 # @brief Call to evaluate the cost function and the gradient components.
 # @param parameters A float64 numpy array
-# @param onlyCPU Perform calculation on CPU. Has effect if SQUANDER is compiled with DFE/Groq support.
-    def Optimization_Problem_Combined( self, parameters=None, onlyCPU=False ):
+    def Optimization_Problem_Combined( self, parameters=None ):
 
         if parameters is None:
             print( "Optimization_Problem_Combined: arary of input parameters is None")
             return None
 
         # evaluate the cost function and gradients
-        cost_function, grad = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem_Combined(parameters, onlyCPU)  
+        cost_function, grad = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem_Combined(parameters)  
 
         grad = grad.reshape( (-1,))
 

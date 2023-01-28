@@ -87,7 +87,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
+N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
 
     // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -126,6 +126,8 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
     iteration_threshold_of_randomization = 2500000;
 
 #ifdef __DFE__
+    set_accelerator_num( accelerator_num );
+
     if( qbit_num >= 5 ) {
         uploadMatrix2DFE( Umtx );
     }
@@ -1008,25 +1010,8 @@ void N_Qubit_Decomposition_Base::optimization_problem_grad( const gsl_vector* pa
 @param void_instance A void pointer pointing to the instance of the current class.
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
-@param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
 */
 void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
-
-    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
-
-    instance->optimization_problem_combined( parameters, void_instance, f0, grad, false );
-
-}
-
-/**
-@brief Call to calculate both the cost function and the its gradient components.
-@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param f0 The value of the cost function at x0.
-@param grad A GNU Scientific Library vector containing the calculated gradient components.
-@param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
-*/
-void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad, bool onlyCPU ) {
 
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
 
@@ -1048,7 +1033,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
 ///////////////////////////////////////
 //std::cout << "number of qubits: " << instance->qbit_num << std::endl;
 //tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
-if ( instance->qbit_num >= 5 && !onlyCPU ) {
+if ( instance->qbit_num >= 5 && get_accelerator_num() > 0 ) {
     Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
 
     int gatesNum, redundantGateSets, gateSetNum;
@@ -1216,9 +1201,8 @@ std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
 @param parameters The parameters for which the cost fuction shoule be calculated
 @param f0 The value of the cost function at x0.
 @param grad An array storing the calculated gradient components
-@param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
 */
-void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad, bool onlyCPU ) {
+void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad ) {
 
     // create GSL wrappers around the pointers
     gsl_block block_tmp;
@@ -1245,7 +1229,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_rea
     grad_gsl.owner = 0;    
 
     // call the method to calculate the cost function and the gradients
-    optimization_problem_combined( &parameters_gsl, this, f0, &grad_gsl, onlyCPU );
+    optimization_problem_combined( &parameters_gsl, this, f0, &grad_gsl );
 
 }
 

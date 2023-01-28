@@ -70,9 +70,9 @@ typedef struct qgd_N_Qubit_Decomposition_adaptive_Wrapper {
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition_adaptive* 
-create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in ) {
+create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in, int accelerator_num ) {
 
-    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, level_limit, level_limit_min, topology_in );
+    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, level_limit, level_limit_min, topology_in, accelerator_num );
 }
 
 
@@ -155,7 +155,7 @@ static int
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit_min", (char*)"method", (char*)"topology", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit_min", (char*)"method", (char*)"topology", (char*)"accelerator_num", NULL};
  
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
@@ -163,10 +163,11 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     int level_limit = 0;
     int level_limit_min = 0;
     PyObject *topology = NULL;
+    int accelerator_num = 0;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiO", kwlist,
-                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &topology))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiOi", kwlist,
+                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &topology, &accelerator_num))
         return -1;
 
     // convert python object array to numpy C API array
@@ -220,7 +221,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
 
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
-        self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp);
+        self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp, accelerator_num);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;
@@ -1270,11 +1271,10 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined( qgd_N_
 
 
     PyObject* parameters_arg = NULL;
-    bool onlyCPU = 0;
 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|Ob", &parameters_arg, &onlyCPU )) {
+    if (!PyArg_ParseTuple(args, "|Oi", &parameters_arg )) {
 
         std::string err( "Unsuccessful argument parsing not ");
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1301,7 +1301,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined( qgd_N_
     double f0;
 
     try {
-        self->decomp->optimization_problem_combined(parameters_mtx, &f0, grad_mtx, onlyCPU);
+        self->decomp->optimization_problem_combined(parameters_mtx, &f0, grad_mtx );
     }
     catch (std::string err ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
