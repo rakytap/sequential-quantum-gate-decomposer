@@ -193,7 +193,13 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_custom_W
   
     // create an instance of the class N_Qubit_Decomposition_custom
     if (qbit_num > 0 ) {
-        self->decomp =  create_N_Qubit_Decomposition_custom( Umtx_mtx, qbit_num, false, qgd_initial_guess, accelerator_num);
+        try {
+            self->decomp =  create_N_Qubit_Decomposition_custom( Umtx_mtx, qbit_num, false, qgd_initial_guess, accelerator_num);
+        }
+        catch (std::string err ) {
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return -1;
+        }
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;
@@ -1013,6 +1019,34 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer( qgd_N_Qubit_Decompositio
 }
 
 
+/**
+@brief Call to upload the unitary to the DFE. (Has no effect for non-DFE builds)
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_custom_Wrapper_Upload_Umtx_to_DFE(qgd_N_Qubit_Decomposition_custom_Wrapper *self ) {
+
+#ifdef __DFE__
+
+    try {
+        self->decomp->upload_Umtx_to_DFE();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+#endif
+
+    return Py_BuildValue("i", 0);
+    
+}
+
 
 
 /**
@@ -1076,6 +1110,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_custom_Wrapper_methods[] = {
     },
     {"set_Optimizer", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer, METH_VARARGS | METH_KEYWORDS,
      "Wrapper method to to set the optimizer method for the gate synthesis."
+    },
+    {"Upload_Umtx_to_DFE", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_Upload_Umtx_to_DFE, METH_NOARGS,
+     "Call to upload the unitary to the DFE. (Has no effect for non-DFE builds)"
     },
     {NULL}  /* Sentinel */
 };

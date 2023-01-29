@@ -27,6 +27,32 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "common_DFE.h"
 
+#include <atomic>
+#include <dlfcn.h>
+#include <unistd.h>
+
+
+// pointer to the dynamically loaded DFE library
+void* handle = NULL;
+
+/// reference counting of locking-unlocking the DFE accelerators
+std::atomic_size_t read_count(0); //readers-writer problem semaphore
+
+/// mutex to guard DFE lib locking and unlocking
+std::recursive_mutex libmutex; //writing mutex
+std::mutex libreadmutex; //reader mutex
+
+
+size_t (*get_accelerator_avail_num_dll)() = NULL;
+size_t (*get_accelerator_free_num_dll)() = NULL;
+int (*calcqgdKernelDFE_dll)(size_t rows, size_t cols, DFEgate_kernel_type* gates, int gatesNum, int gateSetNum, double* trace) = NULL;
+int (*load2LMEM_dll)(QGD_Complex16* data, size_t rows, size_t cols) = NULL;
+void (*releive_DFE_dll)() = NULL;
+int (*initialize_DFE_dll)( int accelerator_num ) = NULL;
+int (*get_chained_gates_num_dll)() = NULL;
+
+
+
 /**
 @brief ????????????
 @return ??????????
@@ -36,7 +62,137 @@ void uploadMatrix2DFE( Matrix& input ) {
     std::cout << "size in bytes of uploading to DFE: " << input.size()*2*sizeof(float) << std::endl;    
 
     // load the data to LMEM
-    load2LMEM( input.get_data(), input.rows, input.cols );
+    load2LMEM_dll( input.get_data(), input.rows, input.cols );
+
+}
+
+
+/**
+@brief ????????????
+@return ??????????
+*/
+void unload_dfe_lib()
+{
+    const std::lock_guard<std::recursive_mutex> lock(libmutex);
+    if (handle) {
+        releive_DFE_dll();
+        dlclose(handle);
+        handle = NULL;
+    }
+}
+
+
+
+
+
+
+
+/**
+@brief ????????????
+@return ??????????
+*/
+int init_dfe_lib( const int accelerator_num )  {
+
+    const std::lock_guard<std::recursive_mutex> lock(libmutex);
+
+    
+    unload_dfe_lib();
+
+
+    std::string lib_name = getenv("SLIC_CONF") ? DFE_LIB_SIM : DFE_LIB_9QUBITS;
+
+    // dynamic-loading the correct DFE permanent calculator (Simulator/DFE/single or dual) from shared libararies
+    handle = dlopen(lib_name.c_str(), RTLD_NOW); //"MAXELEROSDIR"
+    if (handle == NULL) {
+
+        std::string err("init_dfe_lib: failed to load library " + lib_name);
+        throw err;
+
+    } 
+    else {
+
+        get_accelerator_avail_num_dll = (size_t (*)())dlsym(handle, "get_accelerator_avail_num");
+        get_accelerator_free_num_dll  = (size_t (*)())dlsym(handle, "get_accelerator_free_num");
+        calcqgdKernelDFE_dll          = (int (*)(size_t, size_t, DFEgate_kernel_type*, int, int, double*))dlsym(handle, "calcqgdKernelDFE");
+        load2LMEM_dll                 = (int (*)(QGD_Complex16*, size_t, size_t))dlsym(handle, "load2LMEM");
+        releive_DFE_dll               = (void (*)())dlsym(handle, "releive_DFE");
+        initialize_DFE_dll            = (int (*)(int))dlsym(handle, "initialize_DFE");
+        get_chained_gates_num_dll     = (int (*)())dlsym(handle, "get_chained_gates_num");
+
+        return initialize_DFE_dll(accelerator_num);
+
+    }
+
+
+}
+
+
+/**
+@brief ????????????
+@return ??????????
+*/
+void lock_lib()
+{
+    const std::lock_guard<std::mutex> lock(libreadmutex);
+    if (++read_count == 1) libmutex.lock();
+}
+
+
+/**
+@brief ????????????
+@return ??????????
+*/
+void unlock_lib()
+{
+    const std::lock_guard<std::mutex> lock(libreadmutex);
+    if (--read_count == 0) libmutex.unlock();
+}
+
+
+
+
+
+/**
+@brief ????????????
+@return ??????????
+*/
+size_t get_accelerator_avail_num() {
+
+    return get_accelerator_avail_num_dll();
+
+}
+
+
+/**
+@brief ????????????
+@return ??????????
+*/
+size_t get_accelerator_free_num() {
+
+    return get_accelerator_free_num_dll();
+
+}
+
+/**
+@brief ????????????
+@return ??????????
+*/
+int calcqgdKernelDFE(size_t rows, size_t cols, DFEgate_kernel_type* gates, int gatesNum, int gateSetNum, double* trace) {
+
+
+    return calcqgdKernelDFE_dll(rows, cols, gates, gatesNum, gateSetNum, trace);
+
+}
+
+
+
+/**
+@brief ????????????
+@return ??????????
+*/
+int get_chained_gates_num() {
+
+    return get_chained_gates_num_dll();
 
 }
 

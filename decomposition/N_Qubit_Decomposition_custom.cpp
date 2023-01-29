@@ -134,9 +134,6 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     // setting the gate structure for optimization
     add_gate_layers();
 
-#ifdef __DFE__
-    uploadMatrix2DFE( Umtx );
-#endif
 
 /*
 if (optimized_parameters_mtx.size() > 0 ) {
@@ -148,9 +145,7 @@ std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
     // final tuning of the decomposition parameters
     final_optimization();
 
-#ifdef __DFE__
-//return;
-#endif
+
     // prepare gates to export
     if (prepare_export) {
         prepare_gates_to_export();

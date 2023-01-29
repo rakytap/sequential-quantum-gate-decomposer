@@ -108,6 +108,11 @@ protected:
     /// threashold of count of iterations after what the parameters are randomized if the cost function does not deacrese fast enough
     unsigned long long iteration_threshold_of_randomization;
 
+#ifdef __DFE__
+    /// number of utilized accelerators
+    int accelerator_num;
+#endif
+
     Matrix_real randomization_probs;
     matrix_base<int> randomized_probs;
 
@@ -134,7 +139,7 @@ N_Qubit_Decomposition_Base();
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in, int accelerator_num=0 );
+N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in, int accelerator_num_in=0 );
 
 
 
@@ -354,6 +359,22 @@ void set_adaptive_eta( bool adaptive_eta_in  );
 @brief ?????????????
 */
 void set_randomized_radius( double radius_in  );
+
+#ifdef __DFE__
+
+/**
+@brief ?????????????
+*/
+void upload_Umtx_to_DFE();
+
+
+/**
+@brief Get the number of accelerators to be reserved on DFEs on users demand.
+*/
+int get_accelerator_num();
+
+
+#endif
 
 };
 

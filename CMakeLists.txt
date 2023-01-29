@@ -397,9 +397,6 @@ if (DEFINED ENV{QGD_DFE})
   list(APPEND CXX_FLAGS_DEBUG "-D__DFE__=1")
   list(APPEND CXX_FLAGS_RELEASE "-D__DFE__=1")
 
-  find_library(DFE_LIB qgdDFE
-               PATHS $ENV{DFE_LIB_DIR}
-               REQUIRED)
 
 endif()
 
@@ -425,7 +422,6 @@ target_link_libraries( qgd PRIVATE
     ${TBBMALLOC_PROXY_LIB}
     ${TBB_LIB}
     ${GSL_LIB}
-    ${DFE_LIB}
     ${MPI_C_LIBRARIES}
     )
 
