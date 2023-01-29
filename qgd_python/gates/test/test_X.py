@@ -7,17 +7,21 @@ from qiskit.visualization import plot_histogram
 from qgd_python.utils import get_unitary_from_qiskit_circuit
 from qgd_python.gates.qgd_X import qgd_X
 
-pi=np.pi
 
-# number of qubits
-qbit_num = 1
-
-# target qbit
-target_qbit = 0
 
 class Test_operations_squander:
     """This is a test class of the python iterface to compare the SQUANDER and the qiskit decomposition"""
 
+    pi=np.pi
+
+    # number of qubits
+    qbit_num = 1
+
+    # target qbit
+    target_qbit = 0
+
+    # creating an instance of the C++ class
+    X = qgd_X( qbit_num, target_qbit )
 
     def test_X_get_matrix(self):
         r"""
@@ -26,21 +30,16 @@ class Test_operations_squander:
         """
 	#SQUANDER#
 
-        # creating an instance of the C++ class
-        X = qgd_X( qbit_num, target_qbit )
-
         # get the matrix                
-        X_squander = X.get_Matrix( )
-        
-        #print(X_squander)
+        X_squander = self.X.get_Matrix( )
 
 	#QISKIT
 
         # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(qbit_num)
+        circuit = QuantumCircuit(self.qbit_num)
 
         # Add the CNOT gate on control qbit and target qbit
-        circuit.x( target_qbit )
+        circuit.x( self.target_qbit )
 
         # the unitary matrix from the result object
         X_qiskit = get_unitary_from_qiskit_circuit( circuit )
@@ -64,25 +63,22 @@ class Test_operations_squander:
         Test to create an instance of X gate and compare with qiskit.
         """
 	#SQUANDER
+              
+        # get the matrix             
+        X_squander = self.X.get_Matrix(  )
 
-        # creating an instance of the C++ class
-        X = qgd_X( qbit_num, target_qbit)
-
-        # get the matrix                  
-        X_squander = X.get_Matrix(  )
-
-        # apply the gate on the input array/matrix              
-        X.apply_to(X_squander )
+        # apply the gate on the input array/matrix                
+        self.X.apply_to(X_squander)
               
         #print(X_squander)             
 
 	#QISKIT      
 
         # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(qbit_num)
+        circuit = QuantumCircuit(self.qbit_num)
       
         # Add the X gate on the target qbit
-        circuit.x( target_qbit )
+        circuit.x( self.target_qbit )
 
         # the unitary matrix from the result object
         X_qiskit = get_unitary_from_qiskit_circuit( circuit )
@@ -94,7 +90,7 @@ class Test_operations_squander:
         # apply the gate on the input array/matrix  
         X_qiskit_apply_gate=np.matmul(X_qiskit, x_gate)
 
-        print(X_qiskit_apply_gate)
+        #print(X_qiskit_apply_gate)
 
         #the difference between the SQUANDER and the qiskit result        
         delta_matrix=X_squander-X_qiskit_apply_gate

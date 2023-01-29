@@ -5,48 +5,47 @@ from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 
 from qgd_python.utils import get_unitary_from_qiskit_circuit
-
-pi=np.pi
-
-
 from qgd_python.gates.qgd_CNOT import qgd_CNOT
-
-# number of qubits
-qbit_num = 2
-
-# target qbit
-target_qbit = 0
-
-# control qbit
-control_qbit = 1
 
 
 class Test_operations_squander:
     """This is a test class of the python iterface to compare the SQUANDER and the qiskit decomposition"""
 
-	#SQUANDER#
+    pi=np.pi
+
+    # number of qubits
+    qbit_num = 2
+
+    # target qbit
+    target_qbit = 0
+
+    # control_qbit
+    control_qbit = 1
+
+    # creating an instance of the C++ class
+    CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
+	
 
     def test_CNOT_get_matrix(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of U3 gate and compare with qiskit.
         """
-     
-        # creating an instance of the C++ class
-        CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
+      
+        #SQUANDER#     
 
         # get the matrix                        
-        CNOT_squander = CNOT.get_Matrix( )
+        CNOT_squander = self.CNOT.get_Matrix( )
         
         #print(CNOT_squander)
 
 	#QISKIT
 
         # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(qbit_num)
+        circuit = QuantumCircuit(self.qbit_num)
 
         # Add the CNOT gate on control qbit and target qbit
-        circuit.cx( control_qbit, target_qbit )
+        circuit.cx( self.control_qbit, self.target_qbit )
                        
         # the unitary matrix from the result object
         CNOT_qiskit = get_unitary_from_qiskit_circuit( circuit )
@@ -72,24 +71,21 @@ class Test_operations_squander:
 
 	#SQUANDER
 
-        # creating an instance of the C++ class
-        CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
-
         # get the matrix                
-        CNOT_squander = CNOT.get_Matrix(  )
+        CNOT_squander = self.CNOT.get_Matrix(  )
 
         # apply the gate on the input array/matrix 
-        CNOT.apply_to(CNOT_squander )
+        self.CNOT.apply_to(CNOT_squander )
         
         #print(CNOT_squander)
 
 	#QISKIT      
 
         # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(qbit_num)
+        circuit = QuantumCircuit(self.qbit_num)
 
         # Add the CNOT gate on control qbit and target qbit
-        circuit.cx( control_qbit, target_qbit )
+        circuit.cx( self.control_qbit, self.target_qbit )
                        
         # the unitary matrix from the result object
         CNOT_qiskit = get_unitary_from_qiskit_circuit( circuit )
