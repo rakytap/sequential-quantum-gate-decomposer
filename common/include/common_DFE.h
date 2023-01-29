@@ -40,7 +40,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 #define DFE_LIB_9QUBITS "libqgdDFE.so"
-#define DFE_LIB_SIM "libqgdDFE.so"
+#define DFE_LIB_10QUBITS "libqgdDFE_10qubits.so"
+#define DFE_LIB_SIM "libqgdDFE_SIM.so"
 
 
 
@@ -137,7 +138,7 @@ void unlock_lib();
 @brief ????????????
 @return ??????????
 */
-int init_dfe_lib( const int accelerator_num );
+int init_dfe_lib( const int accelerator_num, int qbit_num);
 
 
 

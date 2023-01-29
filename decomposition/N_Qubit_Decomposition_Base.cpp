@@ -301,7 +301,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_of_parameters, gsl_vector *solution_guess_gsl) {
-std::cout << "ooooooooooooooooooo " << std::endl;
+
 #ifdef __DFE__
         if ( qbit_num >= 5 ) {
             upload_Umtx_to_DFE();
@@ -510,6 +510,12 @@ pure_DFE_time = 0.0;
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
 
+#ifdef __DFE__
+        if ( qbit_num >= 5 ) {
+            upload_Umtx_to_DFE();
+        }
+#endif
+
         if (gates.size() == 0 ) {
             return;
         }
@@ -613,6 +619,13 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS2( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+
+
+#ifdef __DFE__
+        if ( qbit_num >= 5 ) {
+            upload_Umtx_to_DFE();
+        }
+#endif
 
 
         if (gates.size() == 0 ) {
@@ -1212,7 +1225,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_rea
     lock_lib();
 
     // initialize DFE library
-    init_dfe_lib( accelerator_num );
+    init_dfe_lib( accelerator_num, qbit_num );
 
     // create GSL wrappers around the pointers
     gsl_block block_tmp;
@@ -1456,7 +1469,7 @@ N_Qubit_Decomposition_Base::upload_Umtx_to_DFE() {
     lock_lib();
 
     // initialize DFE library
-    init_dfe_lib( accelerator_num );
+    init_dfe_lib( accelerator_num, qbit_num );
 
     uploadMatrix2DFE( Umtx );
 

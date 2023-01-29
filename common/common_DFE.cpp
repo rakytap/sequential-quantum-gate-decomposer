@@ -91,7 +91,7 @@ void unload_dfe_lib()
 @brief ????????????
 @return ??????????
 */
-int init_dfe_lib( const int accelerator_num )  {
+int init_dfe_lib( const int accelerator_num, int qbit_num )  {
 
     const std::lock_guard<std::recursive_mutex> lock(libmutex);
 
@@ -99,7 +99,8 @@ int init_dfe_lib( const int accelerator_num )  {
     unload_dfe_lib();
 
 
-    std::string lib_name = getenv("SLIC_CONF") ? DFE_LIB_SIM : DFE_LIB_9QUBITS;
+    std::string lib_name_DFE = qbit_num > 9 ? DFE_LIB_10QUBITS : DFE_LIB_9QUBITS;
+    std::string lib_name     = getenv("SLIC_CONF") ? DFE_LIB_SIM : lib_name_DFE;
 
     // dynamic-loading the correct DFE permanent calculator (Simulator/DFE/single or dual) from shared libararies
     handle = dlopen(lib_name.c_str(), RTLD_NOW); //"MAXELEROSDIR"
