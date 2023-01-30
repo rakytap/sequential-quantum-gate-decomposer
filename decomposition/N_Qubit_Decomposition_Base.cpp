@@ -1469,7 +1469,7 @@ N_Qubit_Decomposition_Base::upload_Umtx_to_DFE() {
     lock_lib();
 
     // initialize DFE library
-    init_dfe_lib( accelerator_num, qbit_num );
+    //init_dfe_lib( accelerator_num, qbit_num );
 
     uploadMatrix2DFE( Umtx );
 
