@@ -133,6 +133,7 @@ qgd_Z_init(qgd_Z *self, PyObject *args, PyObject *kwds)
 @brief Extract the optimized parameters
 @param start_index The index of the first inverse gate
 */
+/**
 static PyObject *
 qgd_Z_get_Matrix( qgd_Z *self, PyObject *args ) {
 
@@ -168,7 +169,24 @@ qgd_Z_get_Matrix( qgd_Z *self, PyObject *args ) {
     return Z_py;
 }
 
+*/
+/**
+@brief Extract the optimized parameters
+@param start_index The index of the first inverse gate
+*/
+static PyObject *
+qgd_Z_get_Matrix( qgd_Z *self ) {
 
+   
+    Matrix Z_mtx = self->gate->get_matrix(  );
+    
+    // convert to numpy array
+    Z_mtx.set_owner(false);
+    PyObject *Z_py = matrix_to_numpy( Z_mtx );
+
+
+    return Z_py;
+}
 
 /**
 @brief Call to apply the gate operation on the inut matrix
