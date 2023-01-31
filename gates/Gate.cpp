@@ -25,6 +25,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Gate.h"
 #include "common.h"
 
+#ifdef USE_AVX 
+#include "apply_kernel_to_input_AVX.h"
+#endif
 
 
 /**
@@ -253,12 +256,17 @@ void
 Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
 
 
+#ifdef USE_AVX
+
+    apply_kernel_to_input_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+    return;
+
+#else
     
     int index_step_target = 1 << target_qbit;
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step_target;
 
-//std::cout << "target qbit: " << target_qbit << std::endl;
 
     while ( current_idx_pair < matrix_size ) {
 
@@ -295,6 +303,7 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
 
                 }
 
+
             }
             else if (deriv) {
                 // when calculating derivatives, the constant element should be zeros
@@ -307,8 +316,6 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
             }
 
 
-//std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
-
         
         //});
         }
@@ -319,6 +326,9 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
 
 
     }
+
+
+#endif // USE_AVX
 
 
 }

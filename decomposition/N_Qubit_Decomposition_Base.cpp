@@ -72,10 +72,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 
     iteration_threshold_of_randomization = 2500000;
 
-#ifdef __DFE__
     // number of utilized accelerators
     accelerator_num = 0;
-#endif
+
 }
 
 /**
@@ -127,6 +126,8 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 #ifdef __DFE__
     // number of utilized accelerators
     accelerator_num = accelerator_num_in;
+#else
+    accelerator_num = 0;
 #endif
 
 }
@@ -1221,11 +1222,12 @@ std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
 */
 void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad ) {
 
-
+#ifdef __DFE__
     lock_lib();
 
     // initialize DFE library
     init_dfe_lib( accelerator_num, qbit_num );
+#endif
 
     // create GSL wrappers around the pointers
     gsl_block block_tmp;
@@ -1254,7 +1256,9 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_rea
     // call the method to calculate the cost function and the gradients
     optimization_problem_combined( &parameters_gsl, this, f0, &grad_gsl );
 
+#ifdef __DFE__
     unlock_lib();
+#endif
 
 }
 

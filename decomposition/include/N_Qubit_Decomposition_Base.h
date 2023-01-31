@@ -107,11 +107,8 @@ protected:
     double randomization_rate;
     /// threashold of count of iterations after what the parameters are randomized if the cost function does not deacrese fast enough
     unsigned long long iteration_threshold_of_randomization;
-
-#ifdef __DFE__
     /// number of utilized accelerators
     int accelerator_num;
-#endif
 
     Matrix_real randomization_probs;
     matrix_base<int> randomized_probs;
