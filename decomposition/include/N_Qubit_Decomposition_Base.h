@@ -79,7 +79,8 @@ public:
     int random_shift_count_max;
     ///    
     double eta;
-
+    /// unique id indentifying the instance of the class
+    int id;
 protected:
 
 
@@ -109,6 +110,8 @@ protected:
     unsigned long long iteration_threshold_of_randomization;
     /// number of utilized accelerators
     int accelerator_num;
+
+
 
     Matrix_real randomization_probs;
     matrix_base<int> randomized_probs;

@@ -75,6 +75,10 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     // number of utilized accelerators
     accelerator_num = 0;
 
+    // unique id indentifying the instance of the class
+    std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
+    int id = distrib_int(gen);
+
 }
 
 /**
@@ -123,7 +127,14 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 
     iteration_threshold_of_randomization = 2500000;
 
+
+    // unique id indentifying the instance of the class
+    std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
+    id = distrib_int(gen);
+
+
 #ifdef __DFE__
+
     // number of utilized accelerators
     accelerator_num = accelerator_num_in;
 #else
@@ -1069,14 +1080,18 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
 
     Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
 
+    lock_lib();
     calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, mpi_trace_DFE_mtx.get_data() );
+    unlock_lib();
 
     int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
     MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
 
 #else
 
+    lock_lib();
     calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_DFE_mtx.get_data() );
+    unlock_lib();
 
 #endif  
 
@@ -1223,10 +1238,14 @@ std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
 void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad ) {
 
 #ifdef __DFE__
+
     lock_lib();
 
-    // initialize DFE library
-    init_dfe_lib( accelerator_num, qbit_num );
+    if ( get_initialize_id() != id ) {
+        std::string err("The uploaded unitary to the DFE might not be identical to the unitary stored by this specific class instance. Please upload the unitary to DFE by the Upload_Umtx_to_DFE() method.");
+        throw err;
+    }
+
 #endif
 
     // create GSL wrappers around the pointers
@@ -1469,11 +1488,12 @@ N_Qubit_Decomposition_Base::set_iteration_threshold_of_randomization( const unsi
 void 
 N_Qubit_Decomposition_Base::upload_Umtx_to_DFE() {
 
-    
     lock_lib();
 
-    // initialize DFE library
-    init_dfe_lib( accelerator_num, qbit_num );
+    if ( get_initialize_id() != id ) {
+        // initialize DFE library
+        init_dfe_lib( accelerator_num, qbit_num, id );
+    }
 
     uploadMatrix2DFE( Umtx );
 
