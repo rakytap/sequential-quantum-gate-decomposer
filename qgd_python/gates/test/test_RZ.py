@@ -95,20 +95,25 @@ class Test_operations_squander:
 
         # the R gate 
         rz_gate=np.array([[np.exp(-1.j*(self.parameters[2]/2)), 0.], [0. ,np.exp(1.j*(self.parameters[2]/2))] ])
+
+        #print(rz_gate)
  
         # apply the gate on the input array/matrix 
         RZ_qiskit_apply_gate=np.matmul(RZ_qiskit, rz_gate)
 
         # the unitary matrix from the result object
-        product_matrix = np.dot(RZ_squander, RZ_qiskit.conj().T)
+        product_matrix = np.dot(RZ_squander, RZ_qiskit_apply_gate.conj().T)
         phase = np.angle(product_matrix[0,0])
         product_matrix = product_matrix*np.exp(-1j*phase)
 
-         # the error of the decomposition
+        # the error of the decomposition
         error = (np.real(np.trace(product_matrix)))/2
-       
+        #error = (np.real(np.trace(RZ_qiskit_apply_gate-RZ_squander)))/2       
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
         #assert( error < 1e-3 )) 
 
 
-
+ 
+a=Test_operations_squander()
+a.test_RZ_get_matrix()
+a.test_RZ_apply_to()
