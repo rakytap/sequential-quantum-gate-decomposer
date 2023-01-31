@@ -1225,7 +1225,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_rea
     lock_lib();
 
     // initialize DFE library
-    init_dfe_lib( accelerator_num, qbit_num );
+    //init_dfe_lib( accelerator_num, qbit_num );
 
     // create GSL wrappers around the pointers
     gsl_block block_tmp;
@@ -1469,7 +1469,7 @@ N_Qubit_Decomposition_Base::upload_Umtx_to_DFE() {
     lock_lib();
 
     // initialize DFE library
-    //init_dfe_lib( accelerator_num, qbit_num );
+    init_dfe_lib( accelerator_num, qbit_num );
 
     uploadMatrix2DFE( Umtx );
 
