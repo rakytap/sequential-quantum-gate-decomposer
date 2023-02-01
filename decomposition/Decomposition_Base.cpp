@@ -1339,17 +1339,17 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         else if (gate->get_type() == CRY_OPERATION) {
 
             // definig the parameter of the rotational angle
-            double phi;
+            double Theta;
 
             // get the inverse parameters of the RZ rotation
 
             CRY* cry_gate = static_cast<CRY*>(gate);
 
-            phi = std::fmod( parameters[parameter_idx], 2*M_PI);
+            Theta = std::fmod( 2.0*parameters[parameter_idx], 4*M_PI);
             parameter_idx = parameter_idx + 1;
 
 
-            cry_gate->set_optimized_parameters( phi );
+            cry_gate->set_optimized_parameters( Theta );
             ops_ret.push_back( static_cast<Gate*>(cry_gate) );
 
 
