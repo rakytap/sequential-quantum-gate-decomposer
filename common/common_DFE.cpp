@@ -30,6 +30,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <atomic>
 #include <dlfcn.h>
 #include <unistd.h>
+#include <mutex>
 
 
 // pointer to the dynamically loaded DFE library
@@ -109,6 +110,9 @@ int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in 
 
     // dynamic-loading the correct DFE permanent calculator (Simulator/DFE/single or dual) from shared libararies
     handle = dlopen(lib_name.c_str(), RTLD_NOW); //"MAXELEROSDIR"
+    if (handle == NULL && qbit_num == 10 && !getenv("SLIC_CONF")) {
+        handle = dlopen(DFE_LIB_9QUBITS, RTLD_NOW);
+    }
     if (handle == NULL) {
 
         std::string err("init_dfe_lib: failed to load library " + lib_name);
