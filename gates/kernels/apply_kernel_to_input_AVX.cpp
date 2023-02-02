@@ -23,6 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 #include "apply_kernel_to_input_AVX.h"
+#include <immintrin.h>
 
 
 /**
