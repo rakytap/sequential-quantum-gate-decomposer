@@ -571,16 +571,9 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_get_Optimized_Parameters( qgd_N_Qubit_D
     double* parameters = parameters_mtx.get_data();
     self->decomp->get_optimized_parameters(parameters);
 
-    // reversing the order
-    Matrix_real parameters_mtx_reversed(1, parameter_num);
-    double* parameters_reversed = parameters_mtx_reversed.get_data();
-    for (int idx=0; idx<parameter_num; idx++ ) {
-        parameters_reversed[idx] = parameters[parameter_num-1-idx];
-    }
-
     // convert to numpy array
-    parameters_mtx_reversed.set_owner(false);
-    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx_reversed );
+    parameters_mtx.set_owner(false);
+    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx );
 
     return parameter_arr;
 }
@@ -612,21 +605,10 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimized_Parameters( qgd_N_Qubit_D
     }
 
 
-    // get the pointer to the data stored in the input matrices
-    double* parameters = (double*)PyArray_DATA(parameters_arr);
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
 
 
-    npy_intp param_num = PyArray_Size( parameters_arr );
-
-    // reversing the order
-    Matrix_real parameters_mtx_reversed(param_num, 1);
-    double* parameters_reversed = parameters_mtx_reversed.get_data();
-    for (int idx=0; idx<param_num; idx++ ) {
-        parameters_reversed[idx] = parameters[param_num-1-idx];
-    }
-
-
-    self->decomp->set_optimized_parameters(parameters_reversed, param_num);
+    self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
 
 
     Py_DECREF(parameters_arr);

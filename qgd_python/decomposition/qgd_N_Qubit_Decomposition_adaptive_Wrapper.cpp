@@ -317,6 +317,7 @@ static PyObject *
 get_gate( N_Qubit_Decomposition_adaptive* decomp, int &idx ) {
 
 
+
     // create dictionary conatining the gate data
     PyObject* py_gate = PyDict_New();
 
@@ -485,10 +486,60 @@ get_gate( N_Qubit_Decomposition_adaptive* decomp, int &idx ) {
 
 
     }
+    else if (gate->get_type() == CRY_OPERATION ||  gate->get_type() == ADAPTIVE_OPERATION ) {
+
+        // get U3 parameters
+        CRY* cry_gate = static_cast<CRY*>(gate);
+        Matrix_real&& parameters = cry_gate->get_optimized_parameters();
+ 
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "CRY" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
+        PyObject* Theta = Py_BuildValue("f",  parameters[0] );
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "control_qbit", control_qbit );            
+        PyDict_SetItemString(py_gate, "Theta", Theta );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(control_qbit);
+        Py_XDECREF(Theta);
+
+    }
     else if (gate->get_type() == X_OPERATION) {
 
         // create gate parameters
         PyObject* type = Py_BuildValue("s",  "X" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+
+    }
+    else if (gate->get_type() == Y_OPERATION) {
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "Y" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+
+    }
+    else if (gate->get_type() == Z_OPERATION) {
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "Z" );
         PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
 
         PyDict_SetItemString(py_gate, "type", type );
@@ -648,23 +699,16 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Optimized_Parameters( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
     int parameter_num = self->decomp->get_parameter_num();
-
-    matrix_base<double> parameters_mtx(1, parameter_num);
+    Matrix_real parameters_mtx(1, parameter_num);
     double* parameters = parameters_mtx.get_data();
     self->decomp->get_optimized_parameters(parameters);
 
-    // reversing the order
-    Matrix_real parameters_mtx_reversed(1, parameter_num);
-    double* parameters_reversed = parameters_mtx_reversed.get_data();
-    for (int idx=0; idx<parameter_num; idx++ ) {
-        parameters_reversed[idx] = parameters[parameter_num-1-idx];
-    }
-
     // convert to numpy array
-    parameters_mtx_reversed.set_owner(false);
-    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx_reversed );
+    parameters_mtx.set_owner(false);
+    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx );
 
     return parameter_arr;
+
 }
 
 
@@ -706,20 +750,10 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimized_Parameters( qgd_N_Qubit
     }
 
 
-    // get the pointer to the data stored in the input matrices
-    double* parameters = (double*)PyArray_DATA(parameters_arr);
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
 
 
-    npy_intp param_num = PyArray_Size( parameters_arr );
-
-    // reversing the order
-    matrix_base<double> parameters_mtx_reversed(param_num, 1);
-    double* parameters_reversed = parameters_mtx_reversed.get_data();
-    for (int idx=0; idx<param_num; idx++ ) {
-        parameters_reversed[idx] = parameters[param_num-1-idx];
-    }
-
-    self->decomp->set_optimized_parameters(parameters_reversed, param_num);
+    self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
 
 
     Py_DECREF(parameters_arr);
@@ -1721,6 +1755,33 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Upload_Umtx_to_DFE(qgd_N_Qubit_Decomp
 }
 
 
+
+/**
+@brief Call to prepare the circuit to be exported into Qiskit format. (parameters and gates gets bound together, gate block structure is converted to plain structure).
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_Prepare_Gates_To_Export(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+    try {
+        self->decomp->prepare_gates_to_export();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("i", 0);
+    
+}
+
+
 /**
 @brief Structure containing metadata about the members of class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
 */
@@ -1848,6 +1909,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"Upload_Umtx_to_DFE", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Upload_Umtx_to_DFE, METH_NOARGS,
      "Call to upload the unitary to the DFE. (Has no effect for non-DFE builds)"
+    },
+    {"Prepare_Gates_To_Export", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Prepare_Gates_To_Export, METH_NOARGS,
+     "Call to prepare the circuit to be exported into Qiskit format. (parameters and gates gets bound together, gate block structure is converted to plain structure)."
     },
     {NULL}  /* Sentinel */
 };

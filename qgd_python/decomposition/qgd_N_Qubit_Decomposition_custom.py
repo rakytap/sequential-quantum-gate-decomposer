@@ -98,6 +98,10 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                 # adding CNOT gate to the quantum circuit
                 circuit.cx(gate.get("control_qbit"), gate.get("target_qbit"))
 
+            elif gate.get("type") == "CRY":
+                # adding CNOT gate to the quantum circuit
+                circuit.cry(gate.get("Theta"), gate.get("control_qbit"), gate.get("target_qbit"))
+
             elif gate.get("type") == "CZ":
                 # adding CZ gate to the quantum circuit
                 circuit.cz(gate.get("control_qbit"), gate.get("target_qbit"))
@@ -108,7 +112,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
             elif gate.get("type") == "SYC":
                 # Sycamore gate
-                print("Unsupported gate in the Qiskit circuit export: Sycamore gate")
+                print("Unsupported gate in the circuit export: Sycamore gate")
                 return None;
 
             elif gate.get("type") == "U3":
@@ -128,11 +132,19 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                 circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
 
             elif gate.get("type") == "X":
-                # RZ gate
+                # X gate
+                circuit.x(gate.get("target_qbit"))
+
+            elif gate.get("type") == "Y":
+                # Y gate
+                circuit.x(gate.get("target_qbit"))
+
+            elif gate.get("type") == "Z":
+                # Z gate
                 circuit.x(gate.get("target_qbit"))
 
             elif gate.get("type") == "SX":
-                # RZ gate
+                # SX gate
                 circuit.sx(gate.get("target_qbit"))
 
 
@@ -167,6 +179,10 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                 # adding CNOT gate to the quantum circuit
                 circuit.append(cirq.CNOT(q[self.qbit_num-1-gate.get("control_qbit")], q[self.qbit_num-1-gate.get("target_qbit")]))
 
+            if gate.get("type") == "CRY":
+                # adding CRY gate to the quantum circuit
+                print("CRY gate needs to be implemented")
+
             elif gate.get("type") == "CZ":
                 # adding CZ gate to the quantum circuit
                 circuit.append(cirq.CZ(q[self.qbit_num-1-gate.get("control_qbit")], q[self.qbit_num-1-gate.get("target_qbit")]))
@@ -199,14 +215,21 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                 # X gate
                 circuit.append(cirq.x(q[self.qbit_num-1-gate.get("target_qbit")]))
 
+            elif gate.get("type") == "Y":
+                # Y gate
+                circuit.append(cirq.y(q[self.qbit_num-1-gate.get("target_qbit")]))
+
+            elif gate.get("type") == "Z":
+                # Z gate
+                circuit.append(cirq.z(q[self.qbit_num-1-gate.get("target_qbit")]))
+
+
             elif gate.get("type") == "SX":
-                # SX gate
-                print('SX!!!!!!!!!!!!!!!!!!!')
+                # RZ gate
                 circuit.append(cirq.sx(q[self.qbit_num-1-gate.get("target_qbit")]))
 
 
         return circuit
-
 
         
 ##
@@ -326,7 +349,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
         # setting gate structure and optimized initial parameters
         self.set_Gate_Structure(Gates_Block_ret)
-        self.set_Optimized_Parameters( optimized_parameters )      
+        self.set_Optimized_Parameters( np.flip(optimized_parameters,0) )      
         
 
 
@@ -340,4 +363,11 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
         super(qgd_N_Qubit_Decomposition_custom, self).set_Optimizer(optimizer)  
 
 
+
+## 
+# @brief Call to prepare the circuit to be exported into Qiskit format. (parameters and gates gets bound together, gate block structure is converted to plain structure).
+    def Prepare_Gates_To_Export(self):
+
+        # Set the optimizer
+        super(qgd_N_Qubit_Decomposition_custom, self).Prepare_Gates_To_Export()  
 

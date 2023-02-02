@@ -52,6 +52,9 @@ void (*releive_DFE_dll)() = NULL;
 int (*initialize_DFE_dll)( int accelerator_num ) = NULL;
 int (*get_chained_gates_num_dll)() = NULL;
 
+// The ID of the class initializing the DFE lib
+int initialize_id = -1;
+
 
 
 /**
@@ -92,9 +95,11 @@ void unload_dfe_lib()
 @brief ????????????
 @return ??????????
 */
-int init_dfe_lib( const int accelerator_num, int qbit_num )  {
+int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in )  {
 
     const std::lock_guard<std::recursive_mutex> lock(libmutex);
+
+    initialize_id = initialize_id_in;
 
     
     unload_dfe_lib();
@@ -175,6 +180,16 @@ size_t get_accelerator_avail_num() {
 size_t get_accelerator_free_num() {
 
     return get_accelerator_free_num_dll();
+
+}
+
+/**
+@brief ????????????
+@return ??????????
+*/
+int get_initialize_id() {
+
+    return initialize_id;
 
 }
 
