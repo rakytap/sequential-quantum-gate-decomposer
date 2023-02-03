@@ -68,9 +68,9 @@ typedef struct qgd_N_Qubit_Decomposition_custom_Wrapper {
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition_custom* 
-create_N_Qubit_Decomposition_custom( Matrix& Umtx, int qbit_num, bool optimize_layer_num, guess_type initial_guess ) {
+create_N_Qubit_Decomposition_custom( Matrix& Umtx, int qbit_num, bool optimize_layer_num, guess_type initial_guess, int accelerator_num ) {
 
-    return new N_Qubit_Decomposition_custom( Umtx, qbit_num, optimize_layer_num, initial_guess );
+    return new N_Qubit_Decomposition_custom( Umtx, qbit_num, optimize_layer_num, initial_guess, accelerator_num );
 }
 
 
@@ -144,16 +144,17 @@ static int
 qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_custom_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"initial_guess", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"initial_guess", (char*)"accelerator_num", NULL};
  
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
     int  qbit_num = -1; 
     PyObject *initial_guess = NULL;
+    int accelerator_num = 0;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiO", kwlist,
-                                     &Umtx_arg, &qbit_num, &initial_guess))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiOi", kwlist,
+                                     &Umtx_arg, &qbit_num, &initial_guess, &accelerator_num))
         return -1;
 
     // convert python object array to numpy C API array
@@ -192,7 +193,13 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_custom_W
   
     // create an instance of the class N_Qubit_Decomposition_custom
     if (qbit_num > 0 ) {
-        self->decomp =  create_N_Qubit_Decomposition_custom( Umtx_mtx, qbit_num, false, qgd_initial_guess);
+        try {
+            self->decomp =  create_N_Qubit_Decomposition_custom( Umtx_mtx, qbit_num, false, qgd_initial_guess, accelerator_num);
+        }
+        catch (std::string err ) {
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return -1;
+        }
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;
@@ -564,16 +571,9 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_get_Optimized_Parameters( qgd_N_Qubit_D
     double* parameters = parameters_mtx.get_data();
     self->decomp->get_optimized_parameters(parameters);
 
-    // reversing the order
-    Matrix_real parameters_mtx_reversed(1, parameter_num);
-    double* parameters_reversed = parameters_mtx_reversed.get_data();
-    for (int idx=0; idx<parameter_num; idx++ ) {
-        parameters_reversed[idx] = parameters[parameter_num-1-idx];
-    }
-
     // convert to numpy array
-    parameters_mtx_reversed.set_owner(false);
-    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx_reversed );
+    parameters_mtx.set_owner(false);
+    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx );
 
     return parameter_arr;
 }
@@ -605,21 +605,10 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimized_Parameters( qgd_N_Qubit_D
     }
 
 
-    // get the pointer to the data stored in the input matrices
-    double* parameters = (double*)PyArray_DATA(parameters_arr);
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
 
 
-    npy_intp param_num = PyArray_Size( parameters_arr );
-
-    // reversing the order
-    Matrix_real parameters_mtx_reversed(param_num, 1);
-    double* parameters_reversed = parameters_mtx_reversed.get_data();
-    for (int idx=0; idx<param_num; idx++ ) {
-        parameters_reversed[idx] = parameters[param_num-1-idx];
-    }
-
-
-    self->decomp->set_optimized_parameters(parameters_reversed, param_num);
+    self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
 
 
     Py_DECREF(parameters_arr);
@@ -1012,6 +1001,34 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer( qgd_N_Qubit_Decompositio
 }
 
 
+/**
+@brief Call to upload the unitary to the DFE. (Has no effect for non-DFE builds)
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_custom_Wrapper_Upload_Umtx_to_DFE(qgd_N_Qubit_Decomposition_custom_Wrapper *self ) {
+
+#ifdef __DFE__
+
+    try {
+        self->decomp->upload_Umtx_to_DFE();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+#endif
+
+    return Py_BuildValue("i", 0);
+    
+}
+
 
 
 /**
@@ -1075,6 +1092,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_custom_Wrapper_methods[] = {
     },
     {"set_Optimizer", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer, METH_VARARGS | METH_KEYWORDS,
      "Wrapper method to to set the optimizer method for the gate synthesis."
+    },
+    {"Upload_Umtx_to_DFE", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_Upload_Umtx_to_DFE, METH_NOARGS,
+     "Call to upload the unitary to the DFE. (Has no effect for non-DFE builds)"
     },
     {NULL}  /* Sentinel */
 };

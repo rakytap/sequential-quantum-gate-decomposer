@@ -114,7 +114,7 @@ def get_unitary_distance( Umtx1, Umtx2 ):
 ##
 # @brief ???????????
 # @return ???????????
-def get_optimized_circuit( alpha, optimizer='BFGS' ):
+def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 	
 	filename = 'qgd_python/decomposition/test/19CNOT.qasm'
 	qc_trial = QuantumCircuit.from_qasm_file( filename )
@@ -145,6 +145,10 @@ def get_optimized_circuit( alpha, optimizer='BFGS' ):
 
                 # set the optimizer
 		cDecompose.set_Optimizer( optimizer )
+
+		# set the initial parameters if given
+		if not ( optimized_parameters is None ):
+			cDecompose.set_Optimized_Parameters( optimized_parameters )
 
 		# set verbosity
 		cDecompose.set_Verbose( 4 )
@@ -186,8 +190,14 @@ class Test_parametric_circuit:
         # determine random parameter value alpha
         alpha = 1.823631161607293
 
+        # determine the quantum circuit at parameter value alpha with BFGS2 optimizer
+        qc, optimized_parameters = get_optimized_circuit( alpha, optimizer='BFGS2' )
+
         # determine the quantum circuit at parameter value alpha with BFGS optimizer
-        qc = get_optimized_circuit( alpha, optimizer='BFGS2' )
+        qc, optimized_parameters = get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=optimized_parameters )
+
+        # determine the quantum circuit at parameter value alpha with ADAM optimizer
+        qc, optimized_parameters = get_optimized_circuit( alpha+0.005, optimizer='ADAM', optimized_parameters=optimized_parameters )
 
 
 

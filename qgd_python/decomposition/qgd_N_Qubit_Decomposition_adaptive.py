@@ -41,7 +41,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
 # @return An instance of the class
-    def __init__( self, Umtx, level_limit_max=8, level_limit_min=0, topology=None ):
+    def __init__( self, Umtx, level_limit_max=8, level_limit_min=0, topology=None, accelerator_num=0 ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
@@ -65,7 +65,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         
 
         # call the constructor of the wrapper class
-        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, topology=topology_validated)
+        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, topology=topology_validated, accelerator_num=accelerator_num)
 
 
 ##
@@ -115,6 +115,10 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                 # adding CNOT gate to the quantum circuit
                 circuit.cx(gate.get("control_qbit"), gate.get("target_qbit"))
 
+            elif gate.get("type") == "CRY":
+                # adding CNOT gate to the quantum circuit
+                circuit.cry(gate.get("Theta"), gate.get("control_qbit"), gate.get("target_qbit"))
+
             elif gate.get("type") == "CZ":
                 # adding CZ gate to the quantum circuit
                 circuit.cz(gate.get("control_qbit"), gate.get("target_qbit"))
@@ -145,11 +149,19 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                 circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
 
             elif gate.get("type") == "X":
-                # RZ gate
+                # X gate
+                circuit.x(gate.get("target_qbit"))
+
+            elif gate.get("type") == "Y":
+                # Y gate
+                circuit.x(gate.get("target_qbit"))
+
+            elif gate.get("type") == "Z":
+                # Z gate
                 circuit.x(gate.get("target_qbit"))
 
             elif gate.get("type") == "SX":
-                # RZ gate
+                # SX gate
                 circuit.sx(gate.get("target_qbit"))
 
 
@@ -184,6 +196,10 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                 # adding CNOT gate to the quantum circuit
                 circuit.append(cirq.CNOT(q[self.qbit_num-1-gate.get("control_qbit")], q[self.qbit_num-1-gate.get("target_qbit")]))
 
+            if gate.get("type") == "CRY":
+                # adding CRY gate to the quantum circuit
+                print("CRY gate needs to be implemented")
+
             elif gate.get("type") == "CZ":
                 # adding CZ gate to the quantum circuit
                 circuit.append(cirq.CZ(q[self.qbit_num-1-gate.get("control_qbit")], q[self.qbit_num-1-gate.get("target_qbit")]))
@@ -213,8 +229,17 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                 circuit.append(cirq.rz(gate.get("Phi")).on(q[self.qbit_num-1-gate.get("target_qbit")]))
 
             elif gate.get("type") == "X":
-                # RZ gate
+                # X gate
                 circuit.append(cirq.x(q[self.qbit_num-1-gate.get("target_qbit")]))
+
+            elif gate.get("type") == "Y":
+                # Y gate
+                circuit.append(cirq.y(q[self.qbit_num-1-gate.get("target_qbit")]))
+
+            elif gate.get("type") == "Z":
+                # Z gate
+                circuit.append(cirq.z(q[self.qbit_num-1-gate.get("target_qbit")]))
+
 
             elif gate.get("type") == "SX":
                 # RZ gate
@@ -346,7 +371,8 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         # setting gate structure and optimized initial parameters
         self.set_Gate_Structure(Gates_Block_ret)
-        self.set_Optimized_Parameters( optimized_parameters )
+        self.set_Optimized_Parameters( np.flip(optimized_parameters,0) )
+        #self.set_Optimized_Parameters( optimized_parameters )
           
 ##
 # @brief Call to set custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
@@ -478,7 +504,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
 # @param costfnc Variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2
-    def set_Cost_Function_Variant( self, costfnc="1" ):
+    def set_Cost_Function_Variant( self, costfnc=0 ):
 
         # Set the optimizer
         super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(costfnc=costfnc)  
@@ -497,17 +523,25 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 ## 
 # @brief Call to evaluate the cost function and the gradient components.
 # @param parameters A float64 numpy array
-# @param onlyCPU Perform calculation on CPU. Has effect if SQUANDER is compiled with DFE/Groq support.
-    def Optimization_Problem_Combined( self, parameters=None, onlyCPU=False ):
+    def Optimization_Problem_Combined( self, parameters=None ):
 
         if parameters is None:
             print( "Optimization_Problem_Combined: arary of input parameters is None")
             return None
 
         # evaluate the cost function and gradients
-        cost_function, grad = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem_Combined(parameters, onlyCPU)  
+        cost_function, grad = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem_Combined(parameters)  
 
         grad = grad.reshape( (-1,))
 
         return cost_function, grad
+
+
+
+## 
+# @brief Call to prepare the circuit to be exported into Qiskit format. (parameters and gates gets bound together, gate block structure is converted to plain structure).
+    def Prepare_Gates_To_Export(self):
+
+        # Set the optimizer
+        super(qgd_N_Qubit_Decomposition_adaptive, self).Prepare_Gates_To_Export()  
 

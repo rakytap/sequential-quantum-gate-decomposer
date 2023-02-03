@@ -188,6 +188,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     list(APPEND CXX_FLAGS_RELEASE "-mavx512f" "-DUSE_AVX")
   elseif (${HAVE_AVX2_EXTENSIONS})
     list(APPEND CXX_FLAGS_RELEASE "-mavx2" "-DUSE_AVX")
+    list(APPEND EXTRA_INCLUDES "./gates/kernels/include/")
   elseif (${HAVE_AVX_EXTENSIONS})
     list(APPEND CXX_FLAGS_RELEASE "-mavx" "-DUSE_AVX")
   endif()
@@ -366,6 +367,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/gates/RX.cpp
     ${PROJECT_SOURCE_DIR}/gates/RZ.cpp
     ${PROJECT_SOURCE_DIR}/gates/Composite.cpp
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input_AVX.cpp
     ${PROJECT_SOURCE_DIR}/nn/NN.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Base.cpp
@@ -397,9 +399,6 @@ if (DEFINED ENV{QGD_DFE})
   list(APPEND CXX_FLAGS_DEBUG "-D__DFE__=1")
   list(APPEND CXX_FLAGS_RELEASE "-D__DFE__=1")
 
-  find_library(DFE_LIB qgdDFE
-               PATHS $ENV{DFE_LIB_DIR}
-               REQUIRED)
 
 endif()
 
@@ -425,7 +424,6 @@ target_link_libraries( qgd PRIVATE
     ${TBBMALLOC_PROXY_LIB}
     ${TBB_LIB}
     ${GSL_LIB}
-    ${DFE_LIB}
     ${MPI_C_LIBRARIES}
     )
 
@@ -437,6 +435,7 @@ target_include_directories(qgd PRIVATE
                             ./decomposition/include
                             ./random_unitary/include
                             ./nn/include
+                            ./gates/kernels/include
                             ${EXTRA_INCLUDES})
 
 

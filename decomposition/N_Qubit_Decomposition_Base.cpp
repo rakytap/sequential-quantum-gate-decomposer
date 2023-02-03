@@ -72,11 +72,13 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 
     iteration_threshold_of_randomization = 2500000;
 
-#ifdef __DFE__
-    if( qbit_num >= 5 ) {
-        uploadMatrix2DFE( Umtx );
-    }
-#endif
+    // number of utilized accelerators
+    accelerator_num = 0;
+
+    // unique id indentifying the instance of the class
+    std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
+    int id = distrib_int(gen);
+
 }
 
 /**
@@ -87,7 +89,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
+N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num_in ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
 
     // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -125,10 +127,18 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 
     iteration_threshold_of_randomization = 2500000;
 
+
+    // unique id indentifying the instance of the class
+    std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
+    id = distrib_int(gen);
+
+
 #ifdef __DFE__
-    if( qbit_num >= 5 ) {
-        uploadMatrix2DFE( Umtx );
-    }
+
+    // number of utilized accelerators
+    accelerator_num = accelerator_num_in;
+#else
+    accelerator_num = 0;
 #endif
 
 }
@@ -142,7 +152,7 @@ N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
 
 
 #ifdef __DFE__
-    releive_DFE();
+    unload_dfe_lib();//releive_DFE();
 #endif      
 
 
@@ -303,6 +313,14 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+
+#ifdef __DFE__
+        if ( qbit_num >= 5 ) {
+            upload_Umtx_to_DFE();
+        }
+#endif
+
+
 
         if (gates.size() == 0 ) {
             return;
@@ -504,6 +522,12 @@ pure_DFE_time = 0.0;
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
 
+#ifdef __DFE__
+        if ( qbit_num >= 5 ) {
+            upload_Umtx_to_DFE();
+        }
+#endif
+
         if (gates.size() == 0 ) {
             return;
         }
@@ -607,6 +631,13 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS2( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+
+
+#ifdef __DFE__
+        if ( qbit_num >= 5 ) {
+            upload_Umtx_to_DFE();
+        }
+#endif
 
 
         if (gates.size() == 0 ) {
@@ -1008,25 +1039,8 @@ void N_Qubit_Decomposition_Base::optimization_problem_grad( const gsl_vector* pa
 @param void_instance A void pointer pointing to the instance of the current class.
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
-@param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
 */
 void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
-
-    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
-
-    instance->optimization_problem_combined( parameters, void_instance, f0, grad, false );
-
-}
-
-/**
-@brief Call to calculate both the cost function and the its gradient components.
-@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param f0 The value of the cost function at x0.
-@param grad A GNU Scientific Library vector containing the calculated gradient components.
-@param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
-*/
-void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad, bool onlyCPU ) {
 
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
 
@@ -1048,7 +1062,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
 ///////////////////////////////////////
 //std::cout << "number of qubits: " << instance->qbit_num << std::endl;
 //tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
-if ( instance->qbit_num >= 5 && !onlyCPU ) {
+if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
     Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
 
     int gatesNum, redundantGateSets, gateSetNum;
@@ -1066,14 +1080,18 @@ if ( instance->qbit_num >= 5 && !onlyCPU ) {
 
     Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
 
+    lock_lib();
     calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, mpi_trace_DFE_mtx.get_data() );
+    unlock_lib();
 
     int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
     MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
 
 #else
 
+    lock_lib();
     calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_DFE_mtx.get_data() );
+    unlock_lib();
 
 #endif  
 
@@ -1216,9 +1234,19 @@ std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
 @param parameters The parameters for which the cost fuction shoule be calculated
 @param f0 The value of the cost function at x0.
 @param grad An array storing the calculated gradient components
-@param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
 */
-void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad, bool onlyCPU ) {
+void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad ) {
+
+#ifdef __DFE__
+
+    lock_lib();
+
+    if ( get_initialize_id() != id ) {
+        std::string err("The uploaded unitary to the DFE might not be identical to the unitary stored by this specific class instance. Please upload the unitary to DFE by the Upload_Umtx_to_DFE() method.");
+        throw err;
+    }
+
+#endif
 
     // create GSL wrappers around the pointers
     gsl_block block_tmp;
@@ -1245,7 +1273,11 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_rea
     grad_gsl.owner = 0;    
 
     // call the method to calculate the cost function and the gradients
-    optimization_problem_combined( &parameters_gsl, this, f0, &grad_gsl, onlyCPU );
+    optimization_problem_combined( &parameters_gsl, this, f0, &grad_gsl );
+
+#ifdef __DFE__
+    unlock_lib();
+#endif
 
 }
 
@@ -1449,4 +1481,38 @@ N_Qubit_Decomposition_Base::set_iteration_threshold_of_randomization( const unsi
     iteration_threshold_of_randomization = threshold;
 
 }
+
+
+#ifdef __DFE__
+
+void 
+N_Qubit_Decomposition_Base::upload_Umtx_to_DFE() {
+
+    lock_lib();
+
+    if ( get_initialize_id() != id ) {
+        // initialize DFE library
+        init_dfe_lib( accelerator_num, qbit_num, id );
+    }
+
+    uploadMatrix2DFE( Umtx );
+
+
+    unlock_lib();
+
+}
+
+
+/**
+@brief Get the number of accelerators to be reserved on DFEs on users demand. 
+*/
+int 
+N_Qubit_Decomposition_Base::get_accelerator_num() {
+
+    return accelerator_num;
+
+}
+
+
+#endif
 

@@ -61,7 +61,7 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom() : N_Qubit_Decomposi
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, optimize_layer_num_in, initial_guess_in) {
+N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, optimize_layer_num_in, initial_guess_in, accelerator_num) {
 
     // initialize custom gate structure
     gate_structure = NULL;
@@ -134,9 +134,6 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     // setting the gate structure for optimization
     add_gate_layers();
 
-#ifdef __DFE__
-    uploadMatrix2DFE( Umtx );
-#endif
 
 /*
 if (optimized_parameters_mtx.size() > 0 ) {
@@ -148,9 +145,7 @@ std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
     // final tuning of the decomposition parameters
     final_optimization();
 
-#ifdef __DFE__
-//return;
-#endif
+
     // prepare gates to export
     if (prepare_export) {
         prepare_gates_to_export();

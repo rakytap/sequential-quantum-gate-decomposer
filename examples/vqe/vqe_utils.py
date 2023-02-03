@@ -80,8 +80,8 @@ def get_optimized_circuit( alpha, optimized_parameters_in=None ):
 		# importing the quantum circuit
 		cDecompose.import_Qiskit_Circuit(qc_trial)
 
-		if isinstance(optimized_parameters_in, (np.ndarray, np.generic) ) :
-			cDecompose.set_Optimized_Parameters( optimized_parameters_in )
+		#if isinstance(optimized_parameters_in, (np.ndarray, np.generic) ) :
+		#	cDecompose.set_Optimized_Parameters( optimized_parameters_in )
 
 		# set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
 		cDecompose.set_Optimization_Blocks( 200 )
