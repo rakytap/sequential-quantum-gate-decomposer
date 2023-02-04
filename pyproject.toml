@@ -1,9 +1,11 @@
 [build-system]
 requires = [
-    "setuptools",
+        "setuptools>=40.8.0",
     "wheel",
     "scikit-build",
-    "cmake",
-    "numpy",
-    "tbb-devel",
+    "ninja",
+    "scipy", 
 ]
+
+
+
