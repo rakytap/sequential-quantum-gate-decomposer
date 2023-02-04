@@ -69,6 +69,12 @@ One can easily install the GNU Scientific Library for local users by the command
 
 $ conda install -c conda-forge gsl
 
+Alternatively, a python binding project alongside the GNU GSL library is accessible via pypi repository:
+
+$ pip install numpy swig
+
+$ pip install pygsl
+
 Here we describe an alternative way to deploy GNU Scientific Library from source by the end user without administrative privileges. 
 The GNU Scientific Library can be downloaded from the site [https://www.gnu.org/software/gsl/](https://www.gnu.org/software/gsl/).
 After the downloaded package is extracted somewhere in the home directory of the user (**path/to/gsl/source**), one should configure the building environment using the **configure** tool.
@@ -88,6 +94,18 @@ $ make
 The compilation of the GNU Scientific Library takes some time. When the compilation is done, the package (including the C header files and the static and shared libraries) is installed into the directory **path/to/gsl** by the shell command:
 
 $ make install
+
+### Install SQUANDER from Python Package Index (PyPI)
+
+Since version 1.7.1 the SQUANDER package is accessible at Python Package Index (PyPI). The package can be installed on linux systems following the steps outlined below:
+
+$ pip install numpy swig tbb-devel wheel scikit-build ninja qiskit
+
+$ pip install pygsl
+
+$ pip install squander
+
+
 
 ### Download the SQUANDER package
 
