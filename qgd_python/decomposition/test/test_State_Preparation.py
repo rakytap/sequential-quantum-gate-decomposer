@@ -27,7 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 from scipy.stats import unitary_group
 import numpy as np
 import pytest
-
+from qgd_python.utils import get_unitary_from_qiskit_circuit
 
 try:
     from mpi4py import MPI
@@ -74,7 +74,6 @@ class Test_State_Preparation:
 
 		    # creating a class to decompose the unitary
 		    cDecompose = qgd_N_qubit_State_Preparation_adaptive( State, level_limit_max=5, level_limit_min=0 )
-		    print(cDecompose.get_Unitary())
 
 		    # setting the verbosity of the decomposition
 		    cDecompose.set_Verbose( 3 )
@@ -90,34 +89,11 @@ class Test_State_Preparation:
 
 		    # print the quantum circuit
 		    print(quantum_circuit)
-
-		    from qiskit import execute
-		    from qiskit import Aer
-		    import numpy.linalg as LA
 		
-		    # test the decomposition of the matrix
-		    # Qiskit backend for simulator
-		    backend = Aer.get_backend('unitary_simulator')
-		 
-		    # job execution and getting the result as an object
-		    job = execute(quantum_circuit, backend)
-		    # the result of the Qiskit job
-		    result = job.result()
 		
 		    # the unitary matrix from the result object
-		    decomposed_matrix = np.asarray( result.get_unitary(quantum_circuit))
-		    prepared_State = decomposed_matrix.conj().T[:,0]
+		    decomposed_matrix = np.asarray( get_unitary_from_qiskit_circuit( quantum_circuit ))
+		    prepared_State = decomposed_matrix[:,0]
 		    dot_prod = np.dot(State.conj().T, prepared_State)
-		    print(dot_prod)
+		    print(np.abs(dot_prod))
 		    
-		    #product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
-		    #phase = np.angle(product_matrix[0])
-		    #product_matrix = product_matrix*np.exp(-1j*phase)
-		    #product_matrix = 2 - product_matrix - product_matrix.conj().T
-		    # the error of the decomposition
-		    #decomposition_error = (np.real(product_matrix))/2
-
-		    #print('The error of the decomposition is ' + str(decomposition_error))
-
-		    #assert( decomposition_error < 1e-3 )
-		    #print(decomposed_matrix)

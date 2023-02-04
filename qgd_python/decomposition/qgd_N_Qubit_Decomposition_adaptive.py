@@ -479,16 +479,6 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def apply_Imported_Gate_Structure( self ):  
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Imported_Gate_Structure()
-        
-        
-class qgd_N_qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive): #Decomposition nem kell a nevbe 
-	def __init__( self, State, level_limit_max=8, level_limit_min=0, method='LIMITED', topology=None ):
-		if ( (type(State) == np.ndarray) and (len(State.shape)==1) ):
-			super().__init__( State, level_limit_max, level_limit_min, method, topology )
-		else:
-			raise Exception("Initial state not properly formatted. Input state must be a column vector")
-	def get_Quantum_Circuit( self ):
-
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
 # @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2".
@@ -509,6 +499,71 @@ class qgd_N_qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive)
             return None
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Matrix( parameters )
+class qgd_N_qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive): #Decomposition nem kell a nevbe 
+
+	def __init__( self, State, level_limit_max=8, level_limit_min=0, topology=None ):
+		if ( (type(State) == np.ndarray) and (len(State.shape)==1) ):
+			super().__init__( State, level_limit_max, level_limit_min, topology )
+		else:
+			raise Exception("Initial state not properly formatted. Input state must be a column vector")
+			
+	def get_Quantum_Circuit( self ):
+
+		from qiskit import QuantumCircuit
+
+        # creating Qiskit quantum circuit
+		circuit = QuantumCircuit(self.qbit_num)
+
+        # retrive the list of decomposing gate structure
+		gates = self.get_Gates()
+
+        # constructing quantum circuit
+		for idx in range(len(gates)):
+
+			gate = gates[idx]
+
+			if gate.get("type") == "CNOT":
+                # adding CNOT gate to the quantum circuit
+				circuit.cx(gate.get("control_qbit"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "CZ":
+                # adding CZ gate to the quantum circuit
+				circuit.cz(gate.get("control_qbit"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "CH":
+                # adding CZ gate to the quantum circuit
+				circuit.ch(gate.get("control_qbit"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "SYC":
+                # Sycamore gate
+				print("Unsupported gate in the circuit export: Sycamore gate")
+				return None;
+
+			elif gate.get("type") == "U3":
+                # adding U3 gate to the quantum circuit
+				circuit.u(-gate.get("Theta"), -gate.get("Lambda"), -gate.get("Phi"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "RX":
+                # RX gate
+				circuit.rx(-gate.get("Theta"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "RY":
+                # RY gate
+				circuit.ry(-gate.get("Theta"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "RZ":
+                # RZ gate
+				circuit.rz(-gate.get("Phi"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "X":
+                # X gate
+				circuit.x(gate.get("target_qbit"))
+
+			elif gate.get("type") == "SX":
+                # SX gate
+				circuit.sx(gate.get("target_qbit"))
+
+		return circuit
 
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
