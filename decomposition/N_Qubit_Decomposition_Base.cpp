@@ -1241,7 +1241,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_rea
 
     lock_lib();
 
-    if ( get_initialize_id() != id ) {
+    if ( get_accelerator_num() > 0 && get_initialize_id() != id ) {
         std::string err("The uploaded unitary to the DFE might not be identical to the unitary stored by this specific class instance. Please upload the unitary to DFE by the Upload_Umtx_to_DFE() method.");
         throw err;
     }
