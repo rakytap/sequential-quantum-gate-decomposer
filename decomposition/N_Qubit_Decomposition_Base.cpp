@@ -925,6 +925,9 @@ double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
         Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num);
         return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
     }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
+        return hilbert_schmidt_test(matrix_new);
+    }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -963,6 +966,9 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
         Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num);
         return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
+        return hilbert_schmidt_test(matrix_new);
     }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
@@ -1006,6 +1012,9 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
         double correction2_scale    = instance->get_correction2_scale();            
         Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, instance->get_qbit_num());
         return ret[0] - std::sqrt(instance->get_previous_cost_function_value())*(ret[1]*correction1_scale + ret[2]*correction2_scale);
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
+        return hilbert_schmidt_test(matrix_new);
     }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
@@ -1158,6 +1167,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
     // vector containing gradients of the transformed matrix
     std::vector<Matrix> Umtx_deriv;
+    Matrix_real trace_temp(1,2);
 
     tbb::parallel_invoke(
         [&]{
@@ -1167,6 +1177,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             Matrix Umtx_loc = instance->get_Umtx();
             Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
             Umtx_deriv = instance->apply_derivate_to( parameters_mtx, Umtx_loc );
+            trace_temp = get_trace(Umtx_loc);
         });
 
 
@@ -1184,6 +1195,12 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
                 Matrix_real deriv_tmp = get_cost_function_with_correction2( Umtx_deriv[idx], qbit_num );
                 grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
+            }
+            else if (cost_fnc == HILBERT_SCHMIDT_TEST){
+                double d = 1/Umtx_deriv[idx].cols;
+                Matrix_real deriv_tmp = (get_trace(Umtx_deriv[idx]));
+                
+                grad_comp = -2*d*d*trace_temp[0]*deriv_tmp[0]-2*d*d*trace_temp[1]*deriv_tmp[1];
             }
             else {
                 std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
