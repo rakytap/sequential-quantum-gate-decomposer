@@ -20,8 +20,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 """
 
-## \file qgd_N_Qubit_Decomposition.py
-##    \brief A QGD Python interface class for the decomposition of N-qubit unitaries into a set of two-qubit and one-qubit gates.
+## \file qgd_nn.py
+##    \brief A QGD Python interface class for the NN interface.
 
 
 import numpy as np

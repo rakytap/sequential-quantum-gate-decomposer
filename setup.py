@@ -28,21 +28,23 @@ from setuptools import find_packages
 
 
 setup(
-    name="qgd",
+    name="squander",
     packages=find_packages(
         exclude=(
             "test_standalone", "test_standalone.*",
         )
     ),
-    version='1.7',
+    version='1.7.1',
     url="https://github.com/rakytap/sequential-quantum-gate-decomposer", 
     maintainer="Peter Rakyta",
     maintainer_email="peter.rakyta@ttk.elte.hu",
     include_package_data=True,
     install_requires=[
-        "numpy>=1.19.2",
-	"tbb-devel",
-	"qiskit",
+        "setuptools>=40.8.0",
+        "wheel",
+        "scikit-build",          
+        "ninja",
+        "scipy",
     ],
     tests_require=["pytest"],
     description='The C++ binding for the SQUANDER package',
@@ -51,8 +53,6 @@ setup(
     keywords="test, cmake, extension",
     classifiers=[
         "Intended Audience :: Developers",
-        "License :: OSI Approved :: "
-        "GNU General Public License v3.0",
         "Natural Language :: English",
         "Programming Language :: C",
         "Programming Language :: C++"
