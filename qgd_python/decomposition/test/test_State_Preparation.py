@@ -70,7 +70,7 @@ class Test_State_Preparation:
 		    # The unitary to be decomposed  
 		    Umtx = data['Umtx']
 		    State = Umtx[:,0]
-		    
+		    40
 
 		    # creating a class to decompose the unitary
 		    cDecompose = qgd_N_qubit_State_Preparation_adaptive( State, level_limit_max=5, level_limit_min=0 )
@@ -78,6 +78,9 @@ class Test_State_Preparation:
 		    # setting the verbosity of the decomposition
 		    cDecompose.set_Verbose( 3 )
 
+		    # setting the verbosity of the decomposition
+		    cDecompose.set_Cost_Function_Variant( 3 )
+		    
 		    # starting the decomposition
 		    cDecompose.Start_Decomposition()
 

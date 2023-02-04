@@ -56,6 +56,21 @@ Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num);
 Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num);
 
 
+/**
+@brief Call to calculate the real and imaginary parts of the trace
+@param matrix The square shaped complex matrix from which the trace is calculated.
+@return Returns with the calculated trace.s
+*/
+Matrix_real get_trace(Matrix matrix);
+
+
+/**
+@brief Call co calculate the cost function of the optimization process according to https://arxiv.org/pdf/2210.09191.pdf
+@param matrix The square shaped complex matrix from which the cost function is calculated.
+@param qbit_num The number of qubits
+@return Returns the cost function
+*/
+double hilbert_schmidt_test(Matrix matrix);
 
 /**
 @brief Function operator class to calculate the partial cost function of the final optimization process.
