@@ -70,7 +70,25 @@ Matrix_real get_trace(Matrix matrix);
 @param qbit_num The number of qubits
 @return Returns the cost function
 */
-double hilbert_schmidt_test(Matrix matrix);
+double get_hilbert_schmidt_test(Matrix matrix);
+
+
+/**
+@brief Call co calculate the Hilbert Schmidt testof the optimization process, and the first correction to the cost finction according to https://arxiv.org/pdf/2210.09191.pdf
+@param matrix The square shaped complex matrix from which the cost function is calculated.
+@param qbit_num The number of qubits
+@return Returns with the matrix containing the cost function (index 0-1) and the first correction (index 2-3).
+*/
+Matrix_real get_hilbert_schmidt_test_with_correction(Matrix matrix, int qbit_num);
+
+
+/**
+@brief Call co calculate the Hilbert Schmidt testof the optimization process, and the first correction to the cost finction according to https://arxiv.org/pdf/2210.09191.pdf
+@param matrix The square shaped complex matrix from which the cost function is calculated.
+@param qbit_num The number of qubits
+@return Returns with the matrix containing the cost function (index 0-1), the first correction (index 2-3) and the second correction (index 4-5).
+*/
+Matrix_real get_hilbert_schmidt_test_with_correction2(Matrix matrix, int qbit_num);
 
 /**
 @brief Function operator class to calculate the partial cost function of the final optimization process.

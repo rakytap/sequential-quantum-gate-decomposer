@@ -241,7 +241,7 @@ Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num) {
 */
 Matrix_real get_trace(Matrix matrix){
 
-    int matrix_size = matrix.cols ;
+    int matrix_size = matrix.cols;
     double trace_real=0.0;
     double trace_imag=0.0;
     Matrix_real ret(1,2);
@@ -264,7 +264,7 @@ Matrix_real get_trace(Matrix matrix){
 @param qbit_num The number of qubits
 @return Returns the cost function
 */
-double hilbert_schmidt_test(Matrix matrix){
+double get_hilbert_schmidt_test(Matrix matrix){
     
     double d = 1/matrix.cols ;
     double cost_function = 0;
@@ -273,6 +273,114 @@ double hilbert_schmidt_test(Matrix matrix){
     cost_function = 1 - d*d*(ret[0]*ret[0]+ret[1]*ret[1]);
     
     return cost_function;
+}
+
+/**
+@brief Call co calculate the Hilbert Schmidt testof the optimization process, and the first correction to the cost finction according to https://arxiv.org/pdf/2210.09191.pdf
+@param matrix The square shaped complex matrix from which the cost function is calculated.
+@param qbit_num The number of qubits
+@return Returns with the matrix containing the cost function (index 0-1) and the first correction (index 2-3).
+*/
+Matrix_real get_hilbert_schmidt_test_with_correction(Matrix matrix, int qbit_num) {
+    
+    Matrix_real ret(1,4);
+    
+    Matrix_real trace_tmp = get_trace(matrix);
+    
+    int matrix_size = matrix.cols;
+
+    double trace_real = 0.0;
+    double trace_imag = 0.0;
+
+    for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+
+        int qbit_error_mask = 1 << qbit_idx;
+
+        for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+
+            // determine the row index pair with one bit error at the given qbit_idx
+            int row_idx = col_idx ^ qbit_error_mask;
+ 
+            trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+            trace_imag += matrix[row_idx*matrix.stride + col_idx].imag;
+        }
+    }
+    
+    ret[0] = trace_tmp[0];
+    ret[1] = trace_tmp[1];
+    ret[2] = trace_real;
+    ret[3] = trace_imag;
+    
+    return ret;
+}
+
+
+/**
+@brief Call co calculate the Hilbert Schmidt testof the optimization process, and the first correction to the cost finction according to https://arxiv.org/pdf/2210.09191.pdf
+@param matrix The square shaped complex matrix from which the cost function is calculated.
+@param qbit_num The number of qubits
+@return Returns with the matrix containing the cost function (index 0-1), the first correction (index 2-3) and the second correction (index 4-5).
+*/
+Matrix_real get_hilbert_schmidt_test_with_correction2(Matrix matrix, int qbit_num) {
+
+    Matrix_real ret(1,4);
+    
+    Matrix_real trace_tmp = get_trace(matrix);
+    
+    int matrix_size = matrix.cols;
+
+    double trace_real = 0.0;
+    double trace_imag = 0.0;
+
+    for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+
+        int qbit_error_mask = 1 << qbit_idx;
+
+        for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+
+            // determine the row index pair with one bit error at the given qbit_idx
+            int row_idx = col_idx ^ qbit_error_mask;
+ 
+            trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+            trace_imag += matrix[row_idx*matrix.stride + col_idx].imag;
+        }
+    }
+
+
+    ret[2] = trace_real;
+    ret[3] = trace_imag;
+
+
+
+    // calculate the second correction
+
+    trace_real = 0.0;
+    trace_imag = 0.0;
+
+    for (int qbit_idx=0; qbit_idx<qbit_num-1; qbit_idx++) {
+        for (int qbit_idx2=qbit_idx+1; qbit_idx2<qbit_num; qbit_idx2++) {
+
+            int qbit_error_mask = (1 << qbit_idx) + (1 << qbit_idx2);
+
+            for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+
+                // determine the row index pair with one bit error at the given qbit_idx
+                int row_idx = col_idx ^ qbit_error_mask;
+ 
+                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+                trace_imag += matrix[row_idx*matrix.stride + col_idx].imag;
+            }
+
+        }
+    }
+
+
+    ret[4] = trace_real;
+    ret[5] = trace_imag;
+    ret[0] = trace_tmp[0];
+    ret[1] = trace_tmp[1];
+    
+    return ret;
 }
 
 /**
