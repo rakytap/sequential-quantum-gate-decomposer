@@ -50,7 +50,7 @@ message("PYTHONPATH is set to "$ENV{PYTHONPATH})
 
 # contruct library directories
 exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"import site; tmp = [s + '/../..' for s in site.getsitepackages()]; ret=';'.join(tmp); print(ret)\""
+             ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [get_python_lib()]; ret=';'.join(tmp); print(ret)\""
              OUTPUT_VARIABLE PYTHON_SYS_PATH
              RETURN_VALUE SYSPATH_NOT_FOUND
             )
@@ -65,7 +65,7 @@ message("Python syspaths: " ${PYTHON_SYS_PATH})
 
 # contruct include directories
 exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"import site; tmp = [s + '/../../../include' for s in site.getsitepackages()]; ret=';'.join(tmp); print(ret)\""
+             ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../../../include' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
              OUTPUT_VARIABLE CMAKE_REQUIRED_INCLUDES
              RETURN_VALUE SYSPATH_NOT_FOUND
             )
