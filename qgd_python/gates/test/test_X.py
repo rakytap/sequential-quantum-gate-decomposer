@@ -33,6 +33,8 @@ class Test_operations_squander:
         # get the matrix                
         X_squander = self.X.get_Matrix( )
 
+        print(X_squander)    
+
 	#QISKIT
 
         # Create a Quantum Circuit acting on the q register
@@ -62,36 +64,34 @@ class Test_operations_squander:
         This method is called by pytest. 
         Test to create an instance of X gate and compare with qiskit.
         """
+
+ 
+
+	#QISKIT 
+
+        test_matrix = np.array([[0.+0.j, 1.+0.j], [1.+0.j, 0+0.j]])
+        print("ťest_matrix: ")
+        print(test_matrix) 
+
+	#x gate         
+        #x_gate=np.array([[0., 0., 0., 1.], [0., 0., 1., 0.], [0., 1., 0., 0.], [1., 0., 0., 0.]])
+        x_gate=np.array([[0., 1.], [1., 0.]])
+        # apply the gate on the input array/matrix  
+        X_qiskit_apply_gate=np.matmul(test_matrix, x_gate)
+
+        print("qiskit appply_to: ")   
+        print(X_qiskit_apply_gate)
+
 	#SQUANDER
-              
-        # get the matrix             
-        X_squander = self.X.get_Matrix(  )
+
+        X_squander = test_matrix
 
         # apply the gate on the input array/matrix                
         self.X.apply_to(X_squander)
-              
-        #print(X_squander)             
 
-	#QISKIT      
-
-        # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(self.qbit_num)
-      
-        # Add the X gate on the target qbit
-        circuit.x( self.target_qbit )
-
-        # the unitary matrix from the result object
-        X_qiskit = get_unitary_from_qiskit_circuit( circuit )
-        X_qiskit = np.asarray(X_qiskit)
-
-        # the X gate 
-        x_gate=np.array([[0.+0.j, 1.+0.j], [1.+0.j, 0.+0.j]])
-
-        # apply the gate on the input array/matrix  
-        X_qiskit_apply_gate=np.matmul(X_qiskit, x_gate)
-
-        #print(X_qiskit_apply_gate)
-
+        print("squander apply_to: ")                
+        print(X_squander)            
+     
         #the difference between the SQUANDER and the qiskit result        
         delta_matrix=X_squander-X_qiskit_apply_gate
 
@@ -99,7 +99,8 @@ class Test_operations_squander:
         error=np.linalg.norm(delta_matrix)
 
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
-        assert( error < 1e-3 ) 
+        assert( error < 1e-3 )         
+
 
 
 
