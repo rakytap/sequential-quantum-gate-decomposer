@@ -1224,6 +1224,15 @@ std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
 */
 #endif
 
+/*
+
+    // adjust gradient components corresponding to adaptive gates
+    for (int idx=3*qbit_num; idx<parameter_num_loc; idx=idx+7 ) {
+        double grad_comp = gsl_vector_get(grad, idx);
+        grad_comp = grad_comp * std::sin( parameters->data[idx])*0.5*M_PI;
+        gsl_vector_set(grad, idx, grad_comp);
+    }
+*/
 
 }
 
