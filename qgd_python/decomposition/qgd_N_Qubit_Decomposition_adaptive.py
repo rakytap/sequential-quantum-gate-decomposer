@@ -499,6 +499,49 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             return None
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Matrix( parameters )
+        
+## 
+# @brief Call to set the optimizer used in the gate synthesis process
+# @param costfnc Variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2
+    def set_Cost_Function_Variant( self, costfnc=0 ):
+
+        # Set the optimizer
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(costfnc=costfnc)  
+
+
+## 
+# @brief Call to set the threshold value for the count of interations, above which the parameters are randomized if the cost function does not decreases fast enough.
+# @param threshold The value of the threshold
+    def set_Iteration_Threshold_of_Randomization( self, threshold=2500 ):
+
+        # Set the optimizer
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Iteration_Threshold_of_Randomization(threshold)  
+
+
+
+## 
+# @brief Call to evaluate the cost function and the gradient components.
+# @param parameters A float64 numpy array
+    def Optimization_Problem_Combined( self, parameters=None ):
+
+        if parameters is None:
+            print( "Optimization_Problem_Combined: arary of input parameters is None")
+            return None
+
+        # evaluate the cost function and gradients
+        cost_function, grad = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem_Combined(parameters)  
+
+        grad = grad.reshape( (-1,))
+
+        return cost_function, grad
+
+## 
+# @brief Call to prepare the circuit to be exported into Qiskit format. (parameters and gates gets bound together, gate block structure is converted to plain structure).
+    def Prepare_Gates_To_Export(self):
+
+        # Set the optimizer
+        super(qgd_N_Qubit_Decomposition_adaptive, self).Prepare_Gates_To_Export()  
+        
 class qgd_N_qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive): #Decomposition nem kell a nevbe 
 
 	def __init__( self, State, level_limit_max=8, level_limit_min=0, topology=None ):
@@ -564,48 +607,4 @@ class qgd_N_qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive)
 				circuit.sx(gate.get("target_qbit"))
 
 		return circuit
-
-## 
-# @brief Call to set the optimizer used in the gate synthesis process
-# @param costfnc Variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2
-    def set_Cost_Function_Variant( self, costfnc=0 ):
-
-        # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(costfnc=costfnc)  
-
-
-## 
-# @brief Call to set the threshold value for the count of interations, above which the parameters are randomized if the cost function does not decreases fast enough.
-# @param threshold The value of the threshold
-    def set_Iteration_Threshold_of_Randomization( self, threshold=2500 ):
-
-        # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Iteration_Threshold_of_Randomization(threshold)  
-
-
-
-## 
-# @brief Call to evaluate the cost function and the gradient components.
-# @param parameters A float64 numpy array
-    def Optimization_Problem_Combined( self, parameters=None ):
-
-        if parameters is None:
-            print( "Optimization_Problem_Combined: arary of input parameters is None")
-            return None
-
-        # evaluate the cost function and gradients
-        cost_function, grad = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem_Combined(parameters)  
-
-        grad = grad.reshape( (-1,))
-
-        return cost_function, grad
-
-
-
-## 
-# @brief Call to prepare the circuit to be exported into Qiskit format. (parameters and gates gets bound together, gate block structure is converted to plain structure).
-    def Prepare_Gates_To_Export(self):
-
-        # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_adaptive, self).Prepare_Gates_To_Export()  
 
