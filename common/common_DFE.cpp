@@ -66,7 +66,7 @@ void uploadMatrix2DFE( Matrix& input ) {
     std::cout << "size in bytes of uploading to DFE: " << input.size()*2*sizeof(float) << std::endl;    
 
     // load the data to LMEM
-    load2LMEM_dll( input.get_data(), input.rows, input.cols );
+    if (load2LMEM_dll( input.get_data(), input.rows, input.cols )) initialize_id = -1;
 
 }
 
@@ -114,7 +114,7 @@ int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in 
         handle = dlopen(DFE_LIB_9QUBITS, RTLD_NOW);
     }
     if (handle == NULL) {
-
+        initialize_id = -1;
         std::string err("init_dfe_lib: failed to load library " + lib_name);
         throw err;
 
@@ -129,7 +129,7 @@ int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in 
         initialize_DFE_dll            = (int (*)(int))dlsym(handle, "initialize_DFE");
         get_chained_gates_num_dll     = (int (*)())dlsym(handle, "get_chained_gates_num");
 
-        return initialize_DFE_dll(accelerator_num);
+        if (initialize_DFE_dll(accelerator_num)) initialize_id = -1;
 
     }
 
