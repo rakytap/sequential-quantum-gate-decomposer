@@ -1759,14 +1759,14 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
             }
             else if (gate->get_type() == ADAPTIVE_OPERATION) {
                 // definig the rotation parameter
-                double Phi;
+                double Theta;
                 // get the inverse parameters of the U3 rotation
                 Adaptive* ad_gate = static_cast<Adaptive*>(gate);
-                Phi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                Theta = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		std::stringstream sstream;
-		sstream << gate_idx << "th gate: Adaptive gate on target qubit: " << ad_gate->get_target_qbit() << ", control qubit " << ad_gate->get_control_qbit() << " and with parameters Phi = " << Phi << std::endl;
+		sstream << gate_idx << "th gate: Adaptive gate on target qubit: " << ad_gate->get_target_qbit() << ", control qubit " << ad_gate->get_control_qbit() << " and with parameters Theta = " << Theta << std::endl;
 		print(sstream, 1);	    	
                 gate_idx = gate_idx + 1;
             }
