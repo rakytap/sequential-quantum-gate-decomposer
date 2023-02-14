@@ -50,7 +50,7 @@ message("PYTHONPATH is set to "$ENV{PYTHONPATH})
 
 # contruct library directories
 exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [get_python_lib()]; ret=';'.join(tmp); print(ret)\""
+             ARGS "-c \"from distutils.sysconfig import get_python_lib; tmp = [s + '/../..' for s in [get_python_lib()]]; ret=';'.join(tmp); print(ret)\""
              OUTPUT_VARIABLE PYTHON_SYS_PATH
              RETURN_VALUE SYSPATH_NOT_FOUND
             )
