@@ -1259,8 +1259,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             else if (cost_fnc == HILBERT_SCHMIDT_TEST){
                 double d = 1.0/Umtx_deriv[idx].cols;
                 Matrix_real deriv_tmp = (get_trace(Umtx_deriv[idx]));
-                //grad_comp = -2.0*d*d*trace_tmp[0]*deriv_tmp[0]-2.0*d*d*trace_tmp[1]*deriv_tmp[1];
-                grad_comp = -d*deriv_tmp[0];
+                grad_comp = -2.0*d*d*trace_tmp[0]*deriv_tmp[0]-2.0*d*d*trace_tmp[1]*deriv_tmp[1];
             }
             else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
                 Matrix_real&&  deriv_tmp = get_trace_with_correction( Umtx_deriv[idx], qbit_num);
