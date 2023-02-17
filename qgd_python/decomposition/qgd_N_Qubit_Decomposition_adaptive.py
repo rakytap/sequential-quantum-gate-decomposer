@@ -542,7 +542,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         # Set the optimizer
         super(qgd_N_Qubit_Decomposition_adaptive, self).Prepare_Gates_To_Export()  
         
-class qgd_N_qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive): #Decomposition nem kell a nevbe 
+class qgd_N_Qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive): #Decomposition nem kell a nevbe 
 
 	def __init__( self, State, level_limit_max=8, level_limit_min=0, topology=None ):
 		if ( (type(State) == np.ndarray) and (len(State.shape)==1) ):
