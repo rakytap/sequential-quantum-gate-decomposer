@@ -67,7 +67,10 @@ class Test_operations_squander:
         for qbit_num in range(1,7):
   
 
-	    #SQUANDER#
+   
+            #create text matrix for apply_to 
+            test_m = unitary_group.rvs(((2**qbit_num)))           
+            test_matrix = np.dot(test_m, test_m.conj().T)
 
             target_qbit=qbit_num-1
 
@@ -83,19 +86,10 @@ class Test_operations_squander:
 
             # the unitary matrix from the result object
             X_qiskit = get_unitary_from_qiskit_circuit( circuit )
-            X_qiskit = np.asarray(X_qiskit)
-
-	    #QISKIT 
-   
-            #create text matrix for apply_to 
-            test_m = unitary_group.rvs(((2**qbit_num)))           
-            test_matrix = np.dot(test_m, test_m.conj().T)
-           
-	    #x gate         
-            x_gate=X_qiskit
+            X_qiskit = np.asarray(X_qiskit)         
 
             # apply the gate on the input array/matrix  
-            X_qiskit_apply_gate=np.matmul(x_gate, test_matrix)
+            X_qiskit_apply_gate=np.matmul(X_qiskit, test_matrix)
 
             #print("qiskit apply_to: ")   
             #print(X_qiskit_apply_gate)

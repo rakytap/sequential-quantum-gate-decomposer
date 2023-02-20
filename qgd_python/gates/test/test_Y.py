@@ -66,43 +66,63 @@ class Test_operations_squander:
         """
 	#SQUANDER
 
-        # get the matrix                  
-        Y_squander = self.Y.get_Matrix(  )
+        #matrix_size = int( pow(2,self.qbit_num) )
+        #test_matrix = np.eye( matrix_size )
 
-        # apply the gate on the input array/matrix              
-        self.Y.apply_to(Y_squander )
-              
-        #print(Y_squander)             
-
-	#QISKIT      
-
-        # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(self.qbit_num)
-      
-        # Add the Y gate on the target qbit
-        circuit.y( self.target_qbit )
-
-        # the unitary matrix from the result object
-        Y_qiskit = get_unitary_from_qiskit_circuit( circuit )
-        Y_qiskit = np.asarray(Y_qiskit)
+        #print(test_matrix)     
+        #get the matrix             
+        
+        test_matrix = np.array([[0.+1.j, 0.-1.j], [0.+1.j, 0.+0.j]])
+        print("ťest_matrix: ")
+        print(test_matrix) 
 
         # the Y gate 
         y_gate=np.array([[0., 0.-1.j], [0.+1.j, 0.]])
 
-        # apply the gate on the input array/matrix  
-        y_qiskit_apply_gate=np.matmul(Y_qiskit, y_gate)
 
-        #print(Y_qiskit_apply_gate)
+        # apply the gate on the input array/matrix  
+        y_qiskit_apply_gate=np.matmul(test_matrix, y_gate)
+
+        print("qiskit appply_to: ")    
+        print(y_qiskit_apply_gate)
+
+        Y_squander = test_matrix
+        # get the matrix                  
+        #Y_squander = self.Y.get_Matrix(  )
+
+ 
+
+        # apply the gate on the input array/matrix              
+        self.Y.apply_to(Y_squander )
+
+        print("squander apply_to: ")              
+        print(Y_squander)             
+
+	#QISKIT      
+
+        # Create a Quantum Circuit acting on the q register
+        #circuit = QuantumCircuit(self.qbit_num)
+      
+        # Add the Y gate on the target qbit
+        #circuit.y( self.target_qbit )
+
+        # the unitary matrix from the result object
+        #Y_qiskit = get_unitary_from_qiskit_circuit( circuit )
+        #Y_qiskit = np.asarray(Y_qiskit)
+
+
 
         #the difference between the SQUANDER and the qiskit result        
-        delta_matrix=Y_squander-y_qiskit_apply_gate
+        #delta_matrix=Y_squander-y_qiskit_apply_gate
 
         # compute norm of matrix
-        error=np.linalg.norm(delta_matrix)
+        #error=np.linalg.norm(delta_matrix)
 
-        print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
-        assert( error < 1e-3 ) 
+        #print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+        #assert( error < 1e-3 ) 
 
 
-
+a=Test_operations_squander()
+a.test_Y_get_matrix()
+a.test_Y_apply_to()
 

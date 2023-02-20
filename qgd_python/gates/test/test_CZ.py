@@ -6,6 +6,7 @@ from qiskit.visualization import plot_histogram
 
 from qgd_python.utils import get_unitary_from_qiskit_circuit
 from qgd_python.gates.qgd_CZ import qgd_CZ
+from scipy.stats import unitary_group
 
 
 class Test_operations_squander:
@@ -13,17 +14,6 @@ class Test_operations_squander:
 
     pi=np.pi
 
-    # number of qubits
-    qbit_num = 2
-
-    # target qbit
-    target_qbit = 0
-
-    # control_qbit
-    control_qbit = 1
-
-    # creating an instance of the C++ class
-    CZ = qgd_CZ( qbit_num, target_qbit, control_qbit )
 
 
     def test_CZ_get_matrix(self):
@@ -31,21 +21,32 @@ class Test_operations_squander:
         This method is called by pytest. 
         Test to create an instance of U3 gate and compare with qiskit.
         """
+        # number of qubits
+        qbit_num = 2
+
+        # target qbit
+        target_qbit = 0
+
+        # control_qbit
+        control_qbit = 1
+
+        # creating an instance of the C++ class
+        CZ = qgd_CZ( qbit_num, target_qbit, control_qbit )
 
 	#SQUANDER#
 
         # get the matrix                     
-        CZ_squander = self.CZ.get_Matrix( )
+        CZ_squander = CZ.get_Matrix( )
         
         #print(CZ_squander)
 
 	#QISKIT
 
         # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(self.qbit_num)
+        circuit = QuantumCircuit(qbit_num)
 
         # Add the CZ gate on control qbit and target qbit
-        circuit.cz( self.control_qbit, self.target_qbit )
+        circuit.cz( control_qbit, target_qbit )
         
         # the unitary matrix from the result object
         CZ_qiskit = get_unitary_from_qiskit_circuit( circuit )
@@ -68,36 +69,48 @@ class Test_operations_squander:
         This method is called by pytest. 
         Test to create an instance of U3 gate and compare with qiskit.
         """
+        # number of qubits
+        qbit_num = 2
 
-	#SQUANDER
+        # target qbit
+        target_qbit = 0
 
-        # get the matrix              
-        CZ_squander = self.CZ.get_Matrix(  )
+        # control_qbit
+        control_qbit = 1
 
-        # apply the gate on the input array/matrix                
-        self.CZ.apply_to(CZ_squander )
-        
-        #print(CZ_squander)
+        # creating an instance of the C++ class
+        CZ = qgd_CZ( qbit_num, target_qbit, control_qbit )
+
+        #create text matrix 
+        test_m = unitary_group.rvs(((2**qbit_num)))           
+        test_matrix = np.dot(test_m, test_m.conj().T)
 
 	#QISKIT      
 
         # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(self.qbit_num)
+        circuit = QuantumCircuit(qbit_num)
 
         # Add the CZ gate on control qbit and target qbit
-        circuit.cz( self.control_qbit, self.target_qbit )
+        circuit.cz( control_qbit, target_qbit )
         
         # the unitary matrix from the result object
         CZ_qiskit = get_unitary_from_qiskit_circuit( circuit )
         CZ_qiskit = np.asarray(CZ_qiskit)
 
         # the CZ gate 
-        cz_gate=np.array([[1., 0., 0., 0.], [0., 1., 0., 0.], [0., 0.,1., 0.], [0., 0., 0.,-1.]])
+        #cz_gate=np.array([[1., 0., 0., 0.], [0., 1., 0., 0.], [0., 0.,1., 0.], [0., 0., 0.,-1.]])
 
         # apply the gate on the input array/matrix 
-        CZ_qiskit_apply_gate=np.matmul(CZ_qiskit, cz_gate)
+        CZ_qiskit_apply_gate=np.matmul(CZ_qiskit, test_matrix)
 
-        #print(np.around(CH_qiskit_apply_gate,1))
+	#SQUANDER
+
+        CZ_squander=test_matrix
+
+        # apply the gate on the input array/matrix                
+        CZ.apply_to(CZ_squander )
+        
+        #print(CZ_squander)
 
         #the difference between the SQUANDER and the qiskit result        
         delta_matrix=CZ_squander-CZ_qiskit_apply_gate
@@ -107,5 +120,6 @@ class Test_operations_squander:
 
         print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
         assert( error < 1e-3 ) 
+
 
 
