@@ -1657,7 +1657,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Cost_Function_Variant( qgd_N_Qubi
  
     }
    
-    cost_function_type qgd_costfnc = costfnc_arg;
+    cost_function_type qgd_costfnc = (cost_function_type)costfnc_arg;
 
 
     try {
