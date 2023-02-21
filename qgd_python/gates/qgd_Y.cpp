@@ -309,7 +309,7 @@ static PyTypeObject  qgd_Y_Type = {
 @brief Structure containing metadata about the module.
 */
 static PyModuleDef  qgd_Y_Module = {
-    PyModuleDef_HEAD_INIT,
+    .m_base = PyModuleDef_HEAD_INIT,
     .m_name = "qgd_Y",
     .m_doc = "Python binding for QGD X gate",
     .m_size = -1,
