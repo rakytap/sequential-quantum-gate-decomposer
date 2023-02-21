@@ -11,6 +11,7 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) #for lib not just dll when no exports
 
 # include CMAKE modules
 include(CheckIncludeFile)
