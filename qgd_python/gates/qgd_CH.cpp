@@ -250,7 +250,7 @@ static PyTypeObject  qgd_CH_Type = {
 @brief Structure containing metadata about the module.
 */
 static PyModuleDef  qgd_CH_Module = {
-    PyModuleDef_HEAD_INIT,
+    .m_base = PyModuleDef_HEAD_INIT,
     .m_name = "qgd_CH",
     .m_doc = "Python binding for QGD CH gate",
     .m_size = -1,
