@@ -9,7 +9,7 @@ project(CQGD VERSION 1.7)
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 
 # specify the C++ standard
-set(CMAKE_CXX_STANDARD 11)
+set(CMAKE_CXX_STANDARD 20)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
 
 # include CMAKE modules
@@ -267,6 +267,7 @@ else()
     message(FATAL_ERROR "GSL header gsl_multimin.h not found")
   endif()
 
+  list(APPEND EXTRA_INCLUDES "${GSL_HEADER}")
 
 endif()
 
@@ -337,6 +338,7 @@ else()
     message(FATAL_ERROR "TBB header tbb.h not found")
   endif()
 
+  list(APPEND EXTRA_INCLUDES "${TBB_HEADER}")
 
 endif()
 
