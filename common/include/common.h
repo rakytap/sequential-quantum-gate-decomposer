@@ -24,6 +24,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef common_H
 #define common_H
 
+#define _USE_MATH_DEFINES
+#include <cmath>
 
 #include <omp.h>
 #include "QGDTypes.h"
@@ -33,7 +35,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <string>
 #include <stdio.h>
 #include <iostream>
-#include <cmath>
 #include <vector>
 #include <cstring>
 #include <sstream>
