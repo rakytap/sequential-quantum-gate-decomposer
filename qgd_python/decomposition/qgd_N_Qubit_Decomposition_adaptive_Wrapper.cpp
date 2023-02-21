@@ -1992,7 +1992,7 @@ static PyTypeObject qgd_N_Qubit_Decomposition_adaptive_Wrapper_Type = {
 @brief Structure containing metadata about the module.
 */
 static PyModuleDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_Module = {
-    PyModuleDef_HEAD_INIT,
+    .m_base = PyModuleDef_HEAD_INIT,
     .m_name = "qgd_N_Qubit_Decomposition_adaptive_Wrapper",
     .m_doc = "Python binding for QGD N_Qubit_Decomposition class",
     .m_size = -1,
