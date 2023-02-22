@@ -10,7 +10,7 @@ add_library( qgd_U3 MODULE
 
 ADD_DEPENDENCIES (qgd_U3 qgd)
 
-target_link_libraries (qgd_U3 qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_U3 qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 python_extension_module(qgd_U3)
 
@@ -51,7 +51,7 @@ add_library( qgd_CNOT MODULE
 
 ADD_DEPENDENCIES (qgd_CNOT qgd)
 
-target_link_libraries (qgd_CNOT qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_CNOT qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 python_extension_module(qgd_CNOT)
 
@@ -93,7 +93,7 @@ add_library( qgd_CZ MODULE
 
 ADD_DEPENDENCIES (qgd_CZ qgd)
 
-target_link_libraries (qgd_CZ qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_CZ qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 python_extension_module(qgd_CZ)
 
@@ -137,7 +137,7 @@ add_library( qgd_CH MODULE
 
 ADD_DEPENDENCIES (qgd_CH qgd)
 
-target_link_libraries (qgd_CH qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_CH qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 python_extension_module(qgd_CH)
 
@@ -179,7 +179,7 @@ add_library( qgd_Gates_Block MODULE
 
 ADD_DEPENDENCIES (qgd_Gates_Block qgd)
 
-target_link_libraries (qgd_Gates_Block qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_Gates_Block qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 
 python_extension_module(qgd_Gates_Block)
@@ -225,7 +225,7 @@ add_library( qgd_SYC MODULE
 
 ADD_DEPENDENCIES (qgd_SYC qgd)
 
-target_link_libraries (qgd_SYC qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_SYC qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 
 python_extension_module(qgd_SYC)
@@ -271,7 +271,7 @@ add_library( qgd_RY MODULE
 
 ADD_DEPENDENCIES (qgd_RY qgd)
 
-target_link_libraries (qgd_RY qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_RY qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 
 python_extension_module(qgd_RY)
@@ -318,7 +318,7 @@ add_library( qgd_RZ MODULE
 
 ADD_DEPENDENCIES (qgd_RZ qgd)
 
-target_link_libraries (qgd_RZ qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_RZ qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 
 python_extension_module(qgd_RZ)
@@ -365,7 +365,7 @@ add_library( qgd_RX MODULE
 
 ADD_DEPENDENCIES (qgd_RX qgd)
 
-target_link_libraries (qgd_RX qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_RX qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 
 python_extension_module(qgd_RX)
@@ -412,7 +412,7 @@ add_library( qgd_X MODULE
 
 ADD_DEPENDENCIES (qgd_X qgd)
 
-target_link_libraries (qgd_X qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_X qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 
 python_extension_module(qgd_X)
@@ -459,7 +459,7 @@ add_library( qgd_Y MODULE
 
 ADD_DEPENDENCIES (qgd_Y qgd)
 
-target_link_libraries (qgd_Y qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_Y qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 
 python_extension_module(qgd_Y)
@@ -505,7 +505,7 @@ add_library( qgd_Z MODULE
 
 ADD_DEPENDENCIES (qgd_Z qgd)
 
-target_link_libraries (qgd_Z qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_Z qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 
 python_extension_module(qgd_Z)
@@ -552,7 +552,7 @@ add_library( qgd_SX MODULE
 
 ADD_DEPENDENCIES (qgd_SX qgd)
 
-target_link_libraries (qgd_SX qgd ${BLAS_LIBRARIES})
+target_link_libraries (qgd_SX qgd ${BLAS_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
 
 
 python_extension_module(qgd_SX)
