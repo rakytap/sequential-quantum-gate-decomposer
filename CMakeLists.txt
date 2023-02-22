@@ -285,7 +285,7 @@ if(DEFINED ENV{TBB_LIB_DIR})
                NO_DEFAULT_PATH
                REQUIRED)
 
-  find_library(TBB_LIB tbb12
+  find_library(TBB_LIB12 tbb12
                PATHS $ENV{TBB_LIB_DIR}
                NO_DEFAULT_PATH
                REQUIRED)
