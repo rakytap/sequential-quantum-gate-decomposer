@@ -280,8 +280,12 @@ endif()
 
 # adding TBB library dir if given by environment variable
 if(DEFINED ENV{TBB_LIB_DIR})
-
   find_library(TBB_LIB tbb
+               PATHS $ENV{TBB_LIB_DIR}
+               NO_DEFAULT_PATH
+               REQUIRED)
+
+  find_library(TBB_LIB tbb12
                PATHS $ENV{TBB_LIB_DIR}
                NO_DEFAULT_PATH
                REQUIRED)
@@ -303,6 +307,11 @@ else()
                NO_DEFAULT_PATH
                REQUIRED)
 
+  find_library(TBB_LIB12 tbb12
+               PATHS ${PYTHON_SYS_PATH}
+               NO_DEFAULT_PATH
+               REQUIRED)
+
   find_library(TBBMALLOC_LIB tbbmalloc
                PATHS ${PYTHON_SYS_PATH}
                NO_DEFAULT_PATH
@@ -312,7 +321,6 @@ else()
                PATHS ${PYTHON_SYS_PATH}
                NO_DEFAULT_PATH
                REQUIRED)
-  
 endif()
 
 
@@ -416,8 +424,6 @@ target_compile_options(qgd PUBLIC
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
 )
 
-
-
 # adding linking options
 target_link_libraries( qgd PRIVATE
     ${BLAS_LIBRARIES}
@@ -425,6 +431,7 @@ target_link_libraries( qgd PRIVATE
     ${LAPACKE_LIBRARIES}
     ${TBBMALLOC_LIB}
     ${TBBMALLOC_PROXY_LIB}
+    ${TBB_LIB12}
     ${TBB_LIB}
     ${GSL_LIB}
     ${MPI_C_LIBRARIES}
