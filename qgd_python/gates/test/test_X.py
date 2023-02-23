@@ -19,6 +19,9 @@ class Test_operations_squander:
         Test to create an instance of X gate and compare with qiskit.
         """
 
+        global X_qiskit
+        X_qiskit = [0]*6
+
         for qbit_num in range(1,7):
 
 	    #SQUANDER#
@@ -41,14 +44,14 @@ class Test_operations_squander:
             circuit.x( target_qbit )
 
             # the unitary matrix from the result object
-            X_qiskit_ = get_unitary_from_qiskit_circuit( circuit )
-            X_qiskit = np.asarray(X_qiskit_)          
+            X_qiskit[qbit_num-1] = get_unitary_from_qiskit_circuit( circuit )
+            X_qiskit[qbit_num-1] = np.asarray(X_qiskit[qbit_num-1])          
                     
             # Draw the circuit        
             #print(X_qiskit)
         
             #the difference between the SQUANDER and the qiskit result        
-            delta_matrix=X_squander-X_qiskit
+            delta_matrix=X_squander-X_qiskit[qbit_num-1]
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
@@ -65,31 +68,21 @@ class Test_operations_squander:
 
 
         for qbit_num in range(1,7):
-  
 
+            # target qbit  
+            target_qbit=qbit_num-1
+
+            # creating an instance of the C++ class
+            X = qgd_X( qbit_num, target_qbit )
    
             #create text matrix for apply_to 
             test_m = unitary_group.rvs(((2**qbit_num)))           
             test_matrix = np.dot(test_m, test_m.conj().T)
 
-            target_qbit=qbit_num-1
-
-            X = qgd_X( qbit_num, target_qbit )
-
 	    #QISKIT
-
-            # Create a Quantum Circuit acting on the q register
-            circuit = QuantumCircuit(qbit_num)
-
-            # Add the CNOT gate on control qbit and target qbit
-            circuit.x( target_qbit )
-
-            # the unitary matrix from the result object
-            X_qiskit = get_unitary_from_qiskit_circuit( circuit )
-            X_qiskit = np.asarray(X_qiskit)         
-
+   
             # apply the gate on the input array/matrix  
-            X_qiskit_apply_gate=np.matmul(X_qiskit, test_matrix)
+            X_qiskit_apply_gate=np.matmul(X_qiskit[qbit_num-1], test_matrix)
 
             #print("qiskit apply_to: ")   
             #print(X_qiskit_apply_gate)
@@ -112,7 +105,6 @@ class Test_operations_squander:
 
             print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 ) 
-
 
 
 
