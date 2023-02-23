@@ -6,6 +6,7 @@ from qiskit.visualization import plot_histogram
 
 from qgd_python.utils import get_unitary_from_qiskit_circuit
 from qgd_python.gates.qgd_Y import qgd_Y
+from scipy.stats import unitary_group
 
 
 class Test_operations_squander:
@@ -13,116 +14,98 @@ class Test_operations_squander:
 
     pi=np.pi
 
-    # number of qubits
-    qbit_num = 1
-
-    # target qbit
-    target_qbit = 0
-
-    # creating an instance of the C++ class
-    Y = qgd_Y( qbit_num, target_qbit )
-
-    def test_Y_get_matrix(self):
+    def test_Y_get_matrix(self):          
         r"""
         This method is called by pytest. 
-        Test to create an instance of U3 gate and compare with qiskit.
+        Test to create an instance of X gate and compare with qiskit.
         """
 
-	#SQUANDER#
+        global Y_qiskit
+        Y_qiskit = [0]*6
 
-        # get the matrix                
-        Y_squander = self.Y.get_Matrix( )
+        for qbit_num in range(1,7):
 
-        #print(Y_squander)
+	    #SQUANDER#
 
-	#QISKIT
+            target_qbit=qbit_num-1
 
-        # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(self.qbit_num)
+            Y = qgd_Y( qbit_num, target_qbit )
 
-        # Add the CNOT gate on control qbit and target qbit
-        circuit.y( self.target_qbit )
+            # get the matrix                
+            Y_squander = Y.get_Matrix( )
 
-        # the unitary matrix from the result object
-        Y_qiskit = get_unitary_from_qiskit_circuit( circuit )
-        Y_qiskit = np.asarray(Y_qiskit)
+            #print(Y_squander)    
+
+	    #QISKIT
+
+            # Create a Quantum Circuit acting on the q register
+            circuit = QuantumCircuit(qbit_num)
+
+            # Add the CNOT gate on control qbit and target qbit
+            circuit.y( target_qbit )
+
+            # the unitary matrix from the result object
+            Y_qiskit[qbit_num-1] = get_unitary_from_qiskit_circuit( circuit )
+            Y_qiskit[qbit_num-1] = np.asarray(Y_qiskit[qbit_num-1])          
+                    
+            # Draw the circuit        
+            #print(X_qiskit)
         
-        # Draw the circuit        
-        #print(Y_qiskit)
-        
-        #the difference between the SQUANDER and the qiskit result        
-        delta_matrix=Y_squander-Y_qiskit
+            #the difference between the SQUANDER and the qiskit result        
+            delta_matrix=Y_squander-Y_qiskit[qbit_num-1]
 
-        # compute norm of matrix
-        error=np.linalg.norm(delta_matrix)
+            # compute norm of matrix
+            error=np.linalg.norm(delta_matrix)
 
-        print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
-        assert( error < 1e-3 ) 
+            print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            assert( error < 1e-3 ) 
+           
 
     def test_Y_apply_to(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of X gate and compare with qiskit.
         """
-	#SQUANDER
-
-        #matrix_size = int( pow(2,self.qbit_num) )
-        #test_matrix = np.eye( matrix_size )
-
-        #print(test_matrix)     
-        #get the matrix             
-        
-        test_matrix = np.array([[0.+1.j, 0.-1.j], [0.+1.j, 0.+0.j]])
-        print("ťest_matrix: ")
-        print(test_matrix) 
-
-        # the Y gate 
-        y_gate=np.array([[0., 0.-1.j], [0.+1.j, 0.]])
 
 
-        # apply the gate on the input array/matrix  
-        y_qiskit_apply_gate=np.matmul(test_matrix, y_gate)
+        for qbit_num in range(1,7):
 
-        print("qiskit appply_to: ")    
-        print(y_qiskit_apply_gate)
+            # target qbit  
+            target_qbit=qbit_num-1
 
-        Y_squander = test_matrix
-        # get the matrix                  
-        #Y_squander = self.Y.get_Matrix(  )
+            # creating an instance of the C++ class
+            Y = qgd_Y( qbit_num, target_qbit )
+   
+            #create text matrix for apply_to 
+            test_m = unitary_group.rvs(((2**qbit_num)))           
+            test_matrix = np.dot(test_m, test_m.conj().T)
 
- 
+	    #QISKIT
+   
+            # apply the gate on the input array/matrix  
+            Y_qiskit_apply_gate=np.matmul(Y_qiskit[qbit_num-1], test_matrix)
 
-        # apply the gate on the input array/matrix              
-        self.Y.apply_to(Y_squander )
+            #print("qiskit apply_to: ")   
+            #print(Y_qiskit_apply_gate)
 
-        print("squander apply_to: ")              
-        print(Y_squander)             
+	    #SQUANDER
 
-	#QISKIT      
+            Y_squander = test_matrix
 
-        # Create a Quantum Circuit acting on the q register
-        #circuit = QuantumCircuit(self.qbit_num)
-      
-        # Add the Y gate on the target qbit
-        #circuit.y( self.target_qbit )
+            # apply the gate on the input array/matrix                
+            Y.apply_to(Y_squander)
 
-        # the unitary matrix from the result object
-        #Y_qiskit = get_unitary_from_qiskit_circuit( circuit )
-        #Y_qiskit = np.asarray(Y_qiskit)
+            #print("squander apply_to: ")                
+            #print(X_squander)            
 
+            #the difference between the SQUANDER and the qiskit result        
+            delta_matrix=Y_squander-Y_qiskit_apply_gate
 
+            # compute norm of matrix
+            error=np.linalg.norm(delta_matrix)
 
-        #the difference between the SQUANDER and the qiskit result        
-        #delta_matrix=Y_squander-y_qiskit_apply_gate
-
-        # compute norm of matrix
-        #error=np.linalg.norm(delta_matrix)
-
-        #print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
-        #assert( error < 1e-3 ) 
+            print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            assert( error < 1e-3 ) 
 
 
-a=Test_operations_squander()
-a.test_Y_get_matrix()
-a.test_Y_apply_to()
 

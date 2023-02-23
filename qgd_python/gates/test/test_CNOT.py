@@ -9,119 +9,107 @@ from qgd_python.gates.qgd_CNOT import qgd_CNOT
 from scipy.stats import unitary_group
 
 class Test_operations_squander:
-    """This is a test class of the python iterface to compare the SQUANDER and the qiskit decomposition"""
+    """This is a test class of the python iterface to the gates of the QGD package"""
+
 
     pi=np.pi
 
 
-	
-
     def test_CNOT_get_matrix(self):
         r"""
         This method is called by pytest. 
-        Test to create an instance of U3 gate and compare with qiskit.
+        Test to create an instance of CNOT gate.
         """
+        global CNOT_qiskit
+        CNOT_qiskit = [0]*6
 
-        # number of qubits
-        qbit_num = 2
+        for qbit_num in range(2,7):
 
-        # target qbit
-        target_qbit = 0
+            # target qbit
+            target_qbit = qbit_num-2
 
-        # control_qbit
-        control_qbit = 1
+            # control qbit
+            control_qbit = qbit_num-1
 
-        # creating an instance of the C++ class
-        CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
-      
-        #SQUANDER#     
+            # creating an instance of the C++ class
+            CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
 
-        # get the matrix                        
-        CNOT_squander = CNOT.get_Matrix( )
+	    #SQUANDER
+
+            # get the matrix              
+            CNOT_squander = CNOT.get_Matrix(  )
         
-        #print(CNOT_squander)
+            #print(CNOT_squander)
 
-	#QISKIT
+	    #QISKIT
 
-        # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(qbit_num)
+            # Create a Quantum Circuit acting on the q register
+            circuit = QuantumCircuit(qbit_num)
 
-        # Add the CNOT gate on control qbit and target qbit
-        circuit.cx( control_qbit, target_qbit )
-                       
-        # the unitary matrix from the result object
-        CNOT_qiskit = get_unitary_from_qiskit_circuit( circuit )
-        CNOT_qiskit = np.asarray(CNOT_qiskit)
+            # Add the CNOT gate on qubit pi, pi,
+            circuit.cx(control_qbit, target_qbit)
+
+            # the unitary matrix from the result object
+            CNOT_qiskit[qbit_num-1] = get_unitary_from_qiskit_circuit( circuit )
+            CNOT_qiskit[qbit_num-1] = np.asarray(CNOT_qiskit[qbit_num-1])
         
-        # Draw the circuit        
-        #print(CNOT_qiskit)
+            # Draw the circuit        
+            #print(CNOT_qiskit)
         
-        #the difference between the SQUANDER and the qiskit result        
-        delta_matrix=CNOT_squander-CNOT_qiskit
+            #the difference between the SQUANDER and the qiskit result        
+            delta_matrix=CNOT_squander-CNOT_qiskit[qbit_num-1]
 
-        # compute norm of matrix
-        error=np.linalg.norm(delta_matrix)
+            # compute norm of matrix
+            error=np.linalg.norm(delta_matrix)
 
-        print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
-        assert( error < 1e-3 ) 
-
+            print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            assert( error < 1e-3 )        
+ 
     def test_CNOT_apply_to(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of U3 gate and compare with qiskit.
         """
+        for qbit_num in range(2,7):
 
-        # number of qubits
-        qbit_num = 2
+            # target qbit
+            target_qbit = qbit_num-2
 
-        # target qbit
-        target_qbit = 0
+            # control qbit
+            control_qbit = qbit_num-1
 
-        # control_qbit
-        control_qbit = 1
+            # creating an instance of the C++ class
+            CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
 
-        # creating an instance of the C++ class
-        CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
+            #create text matrix 
+            test_m = unitary_group.rvs(((2**qbit_num)))           
+            test_matrix = np.dot(test_m, test_m.conj().T)
 
-        #create text matrix 
-        test_m = unitary_group.rvs(((2**qbit_num)))           
-        test_matrix = np.dot(test_m, test_m.conj().T)
+	    #QISKIT      
 
-	#QISKIT      
+            # Create a Quantum Circuit acting on the q register
+            circuit = QuantumCircuit(qbit_num)
 
-        # Create a Quantum Circuit acting on the q register
-        circuit = QuantumCircuit(qbit_num)
+            # apply the gate on the input array/matrix 
+            CNOT_qiskit_apply_gate=np.matmul(CNOT_qiskit[qbit_num-1], test_matrix)
 
-        # Add the CNOT gate on control qbit and target qbit
-        circuit.cx( control_qbit, target_qbit )
-                       
-        # the unitary matrix from the result object
-        CNOT_qiskit = get_unitary_from_qiskit_circuit( circuit )
-        CNOT_qiskit = np.asarray(CNOT_qiskit)
+	    #SQUANDER
 
-        # the CNOT gate 
-        #cnot_gate=np.array([[1., 0., 0., 0.], [0., 1., 0., 0.], [0., 0.,0., 1.], [0., 0., 1.,0.]])
+            CNOT_squander=test_matrix
 
-        # apply the gate on the input array/matrix 
-        CNOT_qiskit_apply_gate=np.matmul(CNOT_qiskit, test_matrix)
-
-	#SQUANDER
-
-        CNOT_squander = test_matrix
-
-        # apply the gate on the input array/matrix 
-        CNOT.apply_to(CNOT_squander )
+            # apply the gate on the input array/matrix                
+            CNOT.apply_to(CNOT_squander )
         
-        #print(CNOT_squander)
+            #print(CNOT_squander)
 
-        #the difference between the SQUANDER and the qiskit result        
-        delta_matrix=CNOT_squander-CNOT_qiskit_apply_gate
+            #the difference between the SQUANDER and the qiskit result        
+            delta_matrix=CNOT_squander-CNOT_qiskit_apply_gate
 
-        # compute norm of matrix
-        error=np.linalg.norm(delta_matrix)
+            # compute norm of matrix
+            error=np.linalg.norm(delta_matrix)
 
-        print("The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
-        assert( error < 1e-3 ) 
+            print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            assert( error < 1e-3 ) 
 
 
 
