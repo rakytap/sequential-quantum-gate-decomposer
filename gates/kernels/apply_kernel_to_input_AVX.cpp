@@ -221,7 +221,7 @@ apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, co
     int current_idx_pair = current_idx + index_step_target;
 
 
-    // load elements of the U3 unitary into 256bit registers (4 registers)
+    // load elements of the U3 unitary into 256bit registers (8 registers)
     __m256d u3_1bit_00r_vec = _mm256_broadcast_sd(&u3_1qbit[0].real);
     __m256d u3_1bit_00i_vec = _mm256_broadcast_sd(&u3_1qbit[0].imag);
     __m256d u3_1bit_01r_vec = _mm256_broadcast_sd(&u3_1qbit[1].real);
@@ -230,7 +230,6 @@ apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, co
     __m256d u3_1bit_10i_vec = _mm256_broadcast_sd(&u3_1qbit[2].imag);
     __m256d u3_1bit_11r_vec = _mm256_broadcast_sd(&u3_1qbit[3].real);
     __m256d u3_1bit_11i_vec = _mm256_broadcast_sd(&u3_1qbit[3].imag);
-    __m128i gathermap = _mm_setr_epi32(0, 4, 2, 6);
 
     while (current_idx_pair < matrix_size) {
 
@@ -253,10 +252,17 @@ apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, co
                 for (int col_idx = 0; col_idx < 2 * (input.cols - 1); col_idx = col_idx + 8) {
 
                     // extract successive elements from arrays element, element_pair
-                    __m256d element_vec = _mm256_i32gather_pd(element + col_idx, gathermap, sizeof(double)); // 6th register
-                    __m256d element_pair_vec = _mm256_i32gather_pd(element_pair + col_idx, gathermap, sizeof(double)); // 7th register
-                    __m256d element_vec2 = _mm256_i32gather_pd(element + col_idx + 1, gathermap, sizeof(double)); // 8th register
-                    __m256d element_pair_vec2 = _mm256_i32gather_pd(element_pair + col_idx + 1, gathermap, sizeof(double)); // 9th register
+                    __m256d element_vec = _mm256_loadu_pd(element + col_idx);
+                    __m256d element_vec2 = _mm256_loadu_pd(element + col_idx + 4);
+                    __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
+                    element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
+                    element_vec = tmp;
+
+                    __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx);
+                    __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
+                    tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
+                    element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
+                    element_pair_vec = tmp;
 
                     __m256d vec3 = _mm256_mul_pd(u3_1bit_00r_vec, element_vec);
                     vec3 = _mm256_fnmadd_pd(u3_1bit_00i_vec, element_vec2, vec3);
@@ -270,13 +276,11 @@ apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, co
                     vec5 = _mm256_add_pd(vec5, vec6);
 
                     // 6 store the transformed elements in vec3
-                    __m256d tmp = _mm256_shuffle_pd(vec3, vec5, 0);
+                    tmp = _mm256_shuffle_pd(vec3, vec5, 0);
                     vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
                     vec3 = tmp;
                     _mm256_storeu_pd(element + col_idx, vec3);
                     _mm256_storeu_pd(element + col_idx + 4, vec5);
-                    //_mm256_i32scatter_pd(element + col_idx, gathermap, vec3, 2);
-                    //_mm256_i32scatter_pd(element + col_idx + 1, gathermap, vec5, 2);
 
                     __m256d vec7 = _mm256_mul_pd(u3_1bit_10r_vec, element_vec);
                     vec7 = _mm256_fnmadd_pd(u3_1bit_10i_vec, element_vec2, vec7);
@@ -295,8 +299,6 @@ apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, co
                     vec7 = tmp;
                     _mm256_storeu_pd(element_pair + col_idx, vec7);
                     _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
-                    //_mm256_i32scatter_pd(element_pair + col_idx, gathermap, vec7, 2);
-                    //_mm256_i32scatter_pd(element_pair + col_idx + 1, gathermap, vec9, 2);
                 }
 
                 if (input.cols % 4 != 0) {
