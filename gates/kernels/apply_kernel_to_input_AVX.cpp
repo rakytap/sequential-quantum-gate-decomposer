@@ -249,7 +249,7 @@ apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, co
                 double* element_pair = (double*)input.get_data() + 2 * row_offset_pair;
 
 
-                for (int col_idx = 0; col_idx < 2 * (input.cols - 1); col_idx = col_idx + 8) {
+                for (int col_idx = 0; col_idx < 2 * (input.cols - 3); col_idx = col_idx + 8) {
 
                     // extract successive elements from arrays element, element_pair
                     __m256d element_vec = _mm256_loadu_pd(element + col_idx);
