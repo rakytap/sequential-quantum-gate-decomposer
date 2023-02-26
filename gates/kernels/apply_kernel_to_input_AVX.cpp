@@ -32,7 +32,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @param v A matrix instance of the reflection vector
 */
 void
-apply_kernel_to_input_AVX_old(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
+apply_kernel_to_input_AVX_small(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
 
 
     int index_step_target = 1 << target_qbit;
@@ -301,9 +301,10 @@ apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, co
                     _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
                 }
 
-                if (input.cols % 4 != 0) {
+                int remainder = input.cols % 4;
+                if (remainder != 0) {
 
-                    for (int col_idx = input.cols - (input.cols % 4); col_idx < input.cols; col_idx++) {
+                    for (int col_idx = input.cols-remainder; col_idx < input.cols; col_idx++) {
                         int index = row_offset + col_idx;
                         int index_pair = row_offset_pair + col_idx;
 

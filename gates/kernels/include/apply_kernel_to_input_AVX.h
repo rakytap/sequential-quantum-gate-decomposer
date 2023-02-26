@@ -27,6 +27,16 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "matrix.h"
 #include "common.h"
+
+/**
+@brief AVX kernel to apply single qubit gate kernel on an input matrix
+@param ????????
+@param ?????????
+*/
+void apply_kernel_to_input_AVX_small(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+
+
 /**
 @brief AVX kernel to apply single qubit gate kernel on an input matrix
 @param ????????
