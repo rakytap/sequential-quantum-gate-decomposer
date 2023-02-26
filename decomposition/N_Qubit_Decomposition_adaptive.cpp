@@ -522,7 +522,11 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
                 cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
                 cDecomp_custom_random.set_max_iteration( max_iterations );
+#ifndef __DFE__
                 cDecomp_custom_random.set_verbose(verbose);
+#else
+                cDecomp_custom_random.set_verbose(0);
+#endif
                 cDecomp_custom_random.set_cost_function_variant( cost_fnc );
                 cDecomp_custom_random.set_debugfile("");
                 cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );
@@ -550,7 +554,6 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_close_to_zero.set_cost_function_variant( cost_fnc );
                 cDecomp_custom_close_to_zero.set_debugfile("");
                 cDecomp_custom_close_to_zero.set_optimization_tolerance( optimization_tolerance );  
-                cDecomp_custom_close_to_zero.start_decomposition(true);
                 cDecomp_custom_close_to_zero.set_optimizer( alg );
                 if ( alg == ADAM || alg == BFGS2 ) {
                     int param_num_loc = gate_structure_loc->get_parameter_num();
@@ -561,6 +564,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                     cDecomp_custom_close_to_zero.set_randomized_radius( radius );
                 }
                 cDecomp_custom_close_to_zero.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
+                cDecomp_custom_close_to_zero.start_decomposition(true);
                }
          );
 #endif
