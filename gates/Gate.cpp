@@ -258,11 +258,16 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
 
 #ifdef USE_AVX
 
-    apply_kernel_to_input_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+    if ( qbit_num < 4 ) {
+        apply_kernel_to_input_AVX_small(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+    }
+    else {
+        apply_kernel_to_input_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+     }
     return;
 
 #else
-    
+   
     int index_step_target = 1 << target_qbit;
     int current_idx = 0;
     int current_idx_pair = current_idx+index_step_target;
