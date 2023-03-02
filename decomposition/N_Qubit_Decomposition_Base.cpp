@@ -395,10 +395,12 @@ pure_DFE_time = 0.0;
         int ADAM_status = 0;
 
         int randomization_successful = 0;
+        
+	int iter_temp=0;
 
         for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
 
-            
+            iter_temp = iter_idx;
 
 
             optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_gsl );
@@ -523,7 +525,18 @@ pure_DFE_time = 0.0;
 
         }
 
-
+	FILE* pFile;
+	std::string filename("number_of_iters.txt");
+	if (project_name != ""){filename = project_name + "_" + filename;}
+	const char* c_filename = filename.c_str();
+	pFile = fopen(c_filename, "a+");
+	if (pFile==NULL) {
+	    fputs ("File error",stderr); 
+	    std::string error("Cannot open file.");
+	    throw error;
+	}
+        fprintf(pFile,"%d \n",iter_temp);
+	fclose(pFile);
         sstream.str("");
         sstream << "obtained minimum: " << current_minimum << std::endl;
 
@@ -533,7 +546,7 @@ pure_DFE_time = 0.0;
         tbb::tick_count adam_end = tbb::tick_count::now();
         adam_time  = adam_time + (adam_end-adam_start).seconds();
         sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
-        
+
         print(sstream, 0); 
 
 }
@@ -546,6 +559,7 @@ pure_DFE_time = 0.0;
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+	int iter_temp=0;
 
 
 #ifdef __DFE__
@@ -584,7 +598,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
-
+	    
             int iter = 0;
             int status;
 
@@ -611,6 +625,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
             do {
                 iter++;
+                iter_temp++;
                 gsl_set_error_handler_off();
                 status = gsl_multimin_fdfminimizer_iterate (s);
 
@@ -645,7 +660,18 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
 
         }
-
+	    FILE* pFile;
+	    std::string filename("number_of_iters.txt");
+	    if (project_name != ""){filename = project_name + "_" + filename;}
+	    const char* c_filename = filename.c_str();
+	    pFile = fopen(c_filename, "a+");
+	    if (pFile==NULL) {
+		 fputs ("File error",stderr); 
+		 std::string error("Cannot open file.");
+		  throw error;
+	    }
+	    fprintf(pFile,"%d \n",iter_temp);
+	    fclose(pFile);
 
 }
 
