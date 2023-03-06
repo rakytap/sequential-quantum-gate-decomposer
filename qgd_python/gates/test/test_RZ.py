@@ -12,18 +12,18 @@ from scipy.stats import unitary_group
 class Test_operations_squander:
     """This is a test class of the python iterface to the gates of the QGD package"""
 
-    pi=np.pi
 
-    # parameters
-    parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
 
     def test_RZ_get_matrix(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of RX gate.
         """
-        global RZ_qiskit
-        RZ_qiskit = [0]*6
+
+        pi=np.pi
+
+        # parameters
+        parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
 
         for qbit_num in range(1,7):
 
@@ -36,9 +36,7 @@ class Test_operations_squander:
 	    #SQUANDER
 
             # get the matrix              
-            RZ_squander = RZ.get_Matrix( self.parameters )
-        
-            #print(RZ_squander)
+            RZ_squander = RZ.get_Matrix( parameters )
 
 	    #QISKIT
 
@@ -46,18 +44,14 @@ class Test_operations_squander:
             circuit = QuantumCircuit(qbit_num)
 
             # Add the RX gate on qubit pi, pi,
-            #      circuit.rz(self.parameters[0], target_qbit)
-            circuit.rz(self.parameters[0], target_qbit)
+            circuit.rz(parameters[0], target_qbit)
 
             # the unitary matrix from the result object
-            RZ_qiskit[qbit_num-1] = get_unitary_from_qiskit_circuit( circuit )
-            RZ_qiskit[qbit_num-1] = np.asarray(RZ_qiskit[qbit_num-1])
-        
-            # Draw the circuit        
-            #print(RZ_qiskit)
+            RZ_qiskit = get_unitary_from_qiskit_circuit( circuit )
+            RZ_qiskit = np.asarray(RZ_qiskit)
       
             # the unitary matrix from the result object
-            product_matrix = np.dot(RZ_squander, RZ_qiskit[qbit_num-1].conj().T)
+            product_matrix = np.dot(RZ_squander, RZ_qiskit.conj().T)
             phase = np.angle(product_matrix[0,0])
             product_matrix = product_matrix*np.exp(-1j*phase)
     
@@ -65,7 +59,7 @@ class Test_operations_squander:
             # the error of the decomposition
             error = (np.real(np.trace(product_matrix)))/2
        
-            print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            #print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 )
 
     def test_RZ_apply_to(self):
@@ -73,6 +67,10 @@ class Test_operations_squander:
         This method is called by pytest. 
         Test to create an instance of U3 gate and compare with qiskit.
         """
+        pi=np.pi
+
+        # parameters
+        parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
 
         for qbit_num in range(1,7):
 
@@ -83,25 +81,31 @@ class Test_operations_squander:
             RZ = qgd_RZ( qbit_num, target_qbit )
 
             #create text matrix 
-            test_m = unitary_group.rvs(((2**qbit_num)))           
-            test_matrix = np.dot(test_m, test_m.conj().T)
+            test_matrix= np.eye( int( pow(2,qbit_num) ))        
 
 	    #QISKIT      
+            # Create a Quantum Circuit acting on the q register
+            circuit = QuantumCircuit(qbit_num)
+
+            # Add the RX gate on qubit pi, pi,
+            circuit.rz(parameters[0], target_qbit)
+
+            # the unitary matrix from the result object
+            RZ_qiskit = get_unitary_from_qiskit_circuit( circuit )
+            RZ_qiskit = np.asarray(RZ_qiskit)
 
             # Create a Quantum Circuit acting on the q register
             circuit = QuantumCircuit(qbit_num)
 
             # apply the gate on the input array/matrix 
-            RZ_qiskit_apply_gate=np.matmul(RZ_qiskit[qbit_num-1], test_matrix)
+            RZ_qiskit_apply_gate=np.matmul(RZ_qiskit, test_matrix)
 
 	    #SQUANDER
 
             RZ_squander=test_matrix
 
             # apply the gate on the input array/matrix                
-            RZ.apply_to(self.parameters, RZ_squander )
-        
-            #print(RX_squander)
+            RZ.apply_to(parameters, RZ_squander )
 
             # the unitary matrix from the result object
             product_matrix = np.dot(RZ_squander, RZ_qiskit_apply_gate.conj().T)
@@ -112,7 +116,8 @@ class Test_operations_squander:
             # the error of the decomposition
             error = (np.real(np.trace(product_matrix)))/2
 
-            print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            #print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 ) 
+
 
 

@@ -40,8 +40,6 @@ class Test_operations_squander:
 
             # get the matrix              
             U3_squander = U3.get_Matrix( parameters )
-        
-            #print(U3_squander)
 
 	    #QISKIT
 
@@ -55,16 +53,13 @@ class Test_operations_squander:
             U3_qiskit= get_unitary_from_qiskit_circuit( circuit )
             U3_qiskit = np.asarray(U3_qiskit)
         
-            # Draw the circuit        
-            #print(RX_qiskit)
-        
             #the difference between the SQUANDER and the qiskit result        
             delta_matrix=U3_squander-U3_qiskit
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
 
-            print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            #print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 )        
  
     def test_U3_apply_to(self):
@@ -92,9 +87,7 @@ class Test_operations_squander:
             U3 = qgd_U3( qbit_num, target_qbit, Theta, Phi, Lambda )
 
             #create text matrix 
-            test_matrix = np.eye( int( pow(2,qbit_num) ))
-            #test_matrix = unitary_group.rvs(((2**qbit_num)))           
-            #test_matrix = np.dot(test_m, test_m.conj().T)
+            test_matrix= np.eye( int( pow(2,qbit_num) ))
 
 	    #QISKIT      
 
@@ -116,9 +109,7 @@ class Test_operations_squander:
             U3_squander=test_matrix
 
             # apply the gate on the input array/matrix                
-            U3.apply_to(parameters, U3_squander )
-        
-            #print(RX_squander)
+            U3.apply_to(parameters, U3_squander )        
 
             #the difference between the SQUANDER and the qiskit result        
             delta_matrix=U3_squander-U3_qiskit_apply_gate
@@ -126,9 +117,8 @@ class Test_operations_squander:
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
 
-            print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            #print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 )
-
 
 
 
