@@ -74,7 +74,7 @@ class Test_operations_squander:
             Z = qgd_Z( qbit_num, target_qbit )
         
             #create text matrix       
-            test_matrix= np.eye( int( pow(2,qbit_num) ))
+            test_matrix= np.identity( 2**qbit_num, dtype=complex )
 
 	    #QISKIT      
 

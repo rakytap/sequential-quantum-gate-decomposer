@@ -79,7 +79,7 @@ class Test_operations_squander:
             RX = qgd_RX( qbit_num, target_qbit )
 
             #create text matrix 
-            test_matrix= np.eye( int( pow(2,qbit_num) ))
+            test_matrix= np.identity( 2**qbit_num, dtype=complex )
 
 	    #QISKIT      
 
@@ -97,7 +97,7 @@ class Test_operations_squander:
             circuit = QuantumCircuit(qbit_num)
 
             # apply the gate on the input array/matrix 
-            RX_qiskit_apply_gate=np.matmul(RX_qiskit[qbit_num-1], test_matrix)
+            RX_qiskit_apply_gate=np.matmul(RX_qiskit, test_matrix)
 
 	    #SQUANDER
 
@@ -116,6 +116,4 @@ class Test_operations_squander:
             assert( error < 1e-3 ) 
 
 
-a=Test_operations_squander()
-a.test_RX_get_matrix()
-a.test_RX_apply_to()
+

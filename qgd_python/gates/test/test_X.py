@@ -73,8 +73,7 @@ class Test_operations_squander:
             X = qgd_X( qbit_num, target_qbit )
    
             #create text matrix for apply_to 
-            test_matrix= np.eye( int( pow(2,qbit_num) ))
-            #print(test_matrix)
+            test_matrix= np.identity( 2**qbit_num, dtype=complex )
 
 	    #QISKIT
 
@@ -96,7 +95,7 @@ class Test_operations_squander:
             X_squander = test_matrix
 
             # apply the gate on the input array/matrix                
-            X.apply_to(X_squander)       
+            X.apply_to(X_squander)     
 
             #the difference between the SQUANDER and the qiskit result        
             delta_matrix=X_squander-X_qiskit_apply_gate

@@ -87,7 +87,7 @@ class Test_operations_squander:
             U3 = qgd_U3( qbit_num, target_qbit, Theta, Phi, Lambda )
 
             #create text matrix 
-            test_matrix= np.eye( int( pow(2,qbit_num) ))
+            test_matrix= np.identity( 2**qbit_num, dtype=complex )
 
 	    #QISKIT      
 
@@ -119,7 +119,6 @@ class Test_operations_squander:
 
             #print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 )
-
 
 
 

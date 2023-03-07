@@ -12,7 +12,7 @@ from scipy.stats import unitary_group
 class Test_operations_squander:
     """This is a test class of the python iterface to compare the SQUANDER and the qiskit decomposition"""
 
-    pi=np.pi
+
 
     def test_Y_get_matrix(self):          
         r"""
@@ -20,8 +20,7 @@ class Test_operations_squander:
         Test to create an instance of X gate and compare with qiskit.
         """
 
-        global Y_qiskit
-        Y_qiskit = [0]*6
+        pi=np.pi
 
         for qbit_num in range(1,7):
 
@@ -34,8 +33,6 @@ class Test_operations_squander:
             # get the matrix                
             Y_squander = Y.get_Matrix( )
 
-            #print(Y_squander)    
-
 	    #QISKIT
 
             # Create a Quantum Circuit acting on the q register
@@ -45,19 +42,16 @@ class Test_operations_squander:
             circuit.y( target_qbit )
 
             # the unitary matrix from the result object
-            Y_qiskit[qbit_num-1] = get_unitary_from_qiskit_circuit( circuit )
-            Y_qiskit[qbit_num-1] = np.asarray(Y_qiskit[qbit_num-1])          
-                    
-            # Draw the circuit        
-            #print(X_qiskit)
+            Y_qiskit = get_unitary_from_qiskit_circuit( circuit )
+            Y_qiskit = np.asarray(Y_qiskit)          
         
             #the difference between the SQUANDER and the qiskit result        
-            delta_matrix=Y_squander-Y_qiskit[qbit_num-1]
+            delta_matrix=Y_squander-Y_qiskit
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
 
-            print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            #print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 ) 
            
 
@@ -67,6 +61,7 @@ class Test_operations_squander:
         Test to create an instance of X gate and compare with qiskit.
         """
 
+        pi=np.pi
 
         for qbit_num in range(1,7):
 
@@ -77,26 +72,28 @@ class Test_operations_squander:
             Y = qgd_Y( qbit_num, target_qbit )
    
             #create text matrix for apply_to 
-            test_m = unitary_group.rvs(((2**qbit_num)))           
-            test_matrix = np.dot(test_m, test_m.conj().T)
+            test_matrix= np.identity( 2**qbit_num, dtype=complex )
 
 	    #QISKIT
+            # Create a Quantum Circuit acting on the q register
+            circuit = QuantumCircuit(qbit_num)
+
+            # Add the CNOT gate on control qbit and target qbit
+            circuit.y( target_qbit )
+
+            # the unitary matrix from the result object
+            Y_qiskit = get_unitary_from_qiskit_circuit( circuit )
+            Y_qiskit = np.asarray(Y_qiskit)  
    
             # apply the gate on the input array/matrix  
-            Y_qiskit_apply_gate=np.matmul(Y_qiskit[qbit_num-1], test_matrix)
-
-            #print("qiskit apply_to: ")   
-            #print(Y_qiskit_apply_gate)
+            Y_qiskit_apply_gate=np.matmul(Y_qiskit, test_matrix)
 
 	    #SQUANDER
 
             Y_squander = test_matrix
 
             # apply the gate on the input array/matrix                
-            Y.apply_to(Y_squander)
-
-            #print("squander apply_to: ")                
-            #print(X_squander)            
+            Y.apply_to(Y_squander)          
 
             #the difference between the SQUANDER and the qiskit result        
             delta_matrix=Y_squander-Y_qiskit_apply_gate
@@ -104,7 +101,7 @@ class Test_operations_squander:
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
 
-            print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            #print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 ) 
 
 
