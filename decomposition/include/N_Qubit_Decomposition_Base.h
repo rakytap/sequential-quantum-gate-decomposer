@@ -99,6 +99,9 @@ protected:
     double correction1_scale;
     ///
     double correction2_scale;    
+    
+    /// number of iterations
+    int number_of_iters;
 
     /// logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     bool adaptive_eta;
@@ -359,6 +362,11 @@ void set_adaptive_eta( bool adaptive_eta_in  );
 @brief ?????????????
 */
 void set_randomized_radius( double radius_in  );
+
+/**
+@brief ?????????????
+*/
+int get_num_iters();
 
 #ifdef __DFE__
 

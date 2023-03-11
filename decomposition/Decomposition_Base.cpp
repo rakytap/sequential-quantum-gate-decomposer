@@ -627,19 +627,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         if (optimized_parameters != NULL ) {
             qgd_free( optimized_parameters );
         }
-*/	    FILE* pFile;
-	    std::string filename("number_of_iters.txt");
-	    if (project_name != ""){filename = project_name + "_" + filename;}
-	    const char* c_filename = filename.c_str();
-	    pFile = fopen(c_filename, "a+");
-	    if (pFile==NULL) {
-		 fputs ("File error",stderr); 
-		 std::string error("Cannot open file.");
-		  throw error;
-	    }
-	    fprintf(pFile,"%d \n",iter_idx);
-	    fclose(pFile);
-
+*/
         optimized_parameters_mtx = Matrix_real( 1, parameter_num );
         memcpy( optimized_parameters_mtx.get_data(), optimized_parameters_gsl->data, parameter_num*sizeof(double) );
 

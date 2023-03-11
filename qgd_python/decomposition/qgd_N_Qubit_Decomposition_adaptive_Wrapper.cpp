@@ -725,6 +725,16 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Parameter_Num( qgd_N_Qubit_Decomp
     return Py_BuildValue("i", parameter_num);
 }
 
+/**
+@brief Get the number of free parameters in the gate structure used for the decomposition
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Num_of_Iters( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+    int number_of_iters = self->decomp->get_num_iters();
+
+    return Py_BuildValue("i", number_of_iters);
+}
 
 
 /**
@@ -858,7 +868,27 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Iteration_Loops(qgd_N_Qubit_Decom
     return Py_BuildValue("i", 0);
 }
 
+/**
+@brief Set the number of maximum iterations.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+@param args  (int) number of max iters.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Max_Iterations(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
 
+    // initiate variables for input arguments
+    PyObject* max_iters_input; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|i", &max_iters_input )) return Py_BuildValue("i", -1);
+
+
+    //set the maximum number of iterations
+    self->decomp->set_iter_max(max_iters_input);
+
+
+    return Py_BuildValue("i", 0);
+}
 
 /**
 @brief Set the verbosity of the N_Qubit_Decomposition class
@@ -1817,6 +1847,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     {"List_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_List_Gates, METH_NOARGS,
      "Call to print the decomposing nitaries on standard output"
     },
+    {"get_Num_of_Iters", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Num_of_Iters, METH_NOARGS,
+     "Method to get the number of iterations."
+    },
     {"set_Max_Layer_Num", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Max_Layer_Num, METH_VARARGS,
      "Call to set the maximal number of layers used in the subdecomposition of the qbit-th qubit."
     },
@@ -1894,6 +1927,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Optimizer", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimizer, METH_VARARGS | METH_KEYWORDS,
      "Wrapper method to to set the optimizer method for the gate synthesis."
+    },
+    {"set_Max_Iterations", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Max_Iterations, METH_VARARGS | METH_VARARGS,
+     "Wrapper method to to set the maximum number of iterations for the gate synthesis."
     },
     {"get_Matrix", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Matrix, METH_VARARGS,
      "Method to retrieve the unitary of the circuit."
