@@ -482,7 +482,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
-# @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2".
+# @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2", "ADAM_BATCHED".
     def set_Optimizer( self, optimizer="BFGS" ):
 
         # Set the optimizer
@@ -515,8 +515,27 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param threshold The value of the threshold
     def set_Iteration_Threshold_of_Randomization( self, threshold=2500 ):
 
-        # Set the optimizer
+        # Set the threshold
         super(qgd_N_Qubit_Decomposition_adaptive, self).set_Iteration_Threshold_of_Randomization(threshold)  
+
+
+
+## 
+# @brief Call to set the trace offset used in the cost function. In this case Tr(A) = sum_(i-offset=j) A_{ij}
+# @param trace_offset The trace offset to be set
+    def set_Trace_Offset( self, trace_offset=0 ):
+
+        # Set the trace offset
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Trace_Offset(trace_offset=trace_offset)  
+
+
+## 
+# @brief Call to get the trace offset used in the cost function. In this case Tr(A) = sum_(i-offset=j) A_{ij}
+# @return Returns with the trace offset
+    def get_Trace_Offset( self ):
+
+        # Set the optimizer
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Trace_Offset()  
 
 
 

@@ -97,7 +97,7 @@ int get_initialize_id();
 @brief ????????????
 @return ??????????
 */
-int calcqgdKernelDFE(size_t rows, size_t cols, DFEgate_kernel_type* gates, int gatesNum, int gateSetNum, double* trace);
+int calcqgdKernelDFE(size_t rows, size_t cols, DFEgate_kernel_type* gates, int gatesNum, int gateSetNum, int traceOffset, double* trace);
 
 
 /**

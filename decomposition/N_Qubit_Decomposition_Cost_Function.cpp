@@ -29,9 +29,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief Call co calculate the cost function during the final optimization process.
 @param matrix The square shaped complex matrix from which the cost function is calculated.
+@param trace_offset The offset in the first columns from which the "trace" is calculated. In this case Tr(A) = sum_(i-offset=j) A_{ij}
 @return Returns with the calculated cost function.
 */
-double get_cost_function(Matrix matrix) {
+double get_cost_function(Matrix matrix, int trace_offset) {
 
     int matrix_size = matrix.cols ;
 /*
@@ -97,9 +98,21 @@ double get_cost_function(Matrix matrix) {
 
     double trace_real = 0.0;
 
-    for (int idx=0; idx<matrix_size; idx++) {
-        
-        trace_real += matrix[idx*matrix.stride + idx].real;
+    if ( trace_offset == 0 ) {
+
+        for (int idx=0; idx<matrix_size; idx++) {
+         
+            trace_real += matrix[idx*matrix.stride + idx].real;
+
+        }
+    }
+    else {
+
+        for (int idx=0; idx<matrix_size; idx++) {
+
+            trace_real += matrix[(idx+trace_offset)*matrix.stride + idx].real;
+
+        }
 
     }
 
@@ -118,12 +131,12 @@ double get_cost_function(Matrix matrix) {
 @param qbit_num The number of qubits
 @return Returns with the matrix containing the cost function (index 0) and the first correction (index 1).
 */
-Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num) {
+Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num, int trace_offset) {
 
     Matrix_real ret(1,2);
 
     // calculate the cost function
-    ret[0] = get_cost_function( matrix );
+    ret[0] = get_cost_function( matrix, trace_offset );
 
 
 
@@ -133,21 +146,45 @@ Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num) {
 
     double trace_real = 0.0;
 
-    for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+    if ( trace_offset == 0 ) {
+        for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
 
-        int qbit_error_mask = 1 << qbit_idx;
+            int qbit_error_mask = 1 << qbit_idx;
 
-        for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+            for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
 
-            // determine the row index pair with one bit error at the given qbit_idx
-            int row_idx = col_idx ^ qbit_error_mask;
+                // determine the row index pair with one bit error at the given qbit_idx
+                int row_idx = col_idx ^ qbit_error_mask;
  
-            trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+            }
         }
+
+    }
+    else {
+
+
+        for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+
+            int qbit_error_mask = 1 << qbit_idx;
+
+            for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+
+                // determine the row index pair with one bit error at the given qbit_idx
+                int row_idx = (col_idx + trace_offset) ^ qbit_error_mask;
+// std::cout << matrix[row_idx*matrix.stride + col_idx].real << " " << row_idx << " " << col_idx << std::endl;
+                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+            }
+        }
+
+
     }
 
     //double cost_function = std::sqrt(1.0 - trace_real/matrix_size);
     double cost_function = trace_real/matrix_size;
+
+//std::cout << cost_function << std::endl;
+//exit(1);
 
     ret[1] = cost_function;
 
@@ -166,13 +203,13 @@ Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num) {
 @param qbit_num The number of qubits
 @return Returns with the matrix containing the cost function (index 0), the first correction (index 1) and the second correction (index 2).
 */
-Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num) {
+Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num, int trace_offset) {
 
 
     Matrix_real ret(1,3);
 
     // calculate the cost function
-    ret[0] = get_cost_function( matrix );
+    ret[0] = get_cost_function( matrix, trace_offset );
 
 
 
@@ -182,17 +219,38 @@ Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num) {
 
     double trace_real = 0.0;
 
-    for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+    if ( trace_offset == 0 ) {
+        for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
 
-        int qbit_error_mask = 1 << qbit_idx;
+            int qbit_error_mask = 1 << qbit_idx;
 
-        for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+            for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
 
-            // determine the row index pair with one bit error at the given qbit_idx
-            int row_idx = col_idx ^ qbit_error_mask;
+                // determine the row index pair with one bit error at the given qbit_idx
+                int row_idx = col_idx ^ qbit_error_mask;
  
-            trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+            }
         }
+
+    }
+    else {
+
+
+        for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+
+            int qbit_error_mask = 1 << qbit_idx;
+
+            for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+
+                // determine the row index pair with one bit error at the given qbit_idx
+                int row_idx = (col_idx+trace_offset) ^ qbit_error_mask;
+ 
+                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+            }
+        }
+
+
     }
 
     double cost_function = trace_real/matrix_size;
@@ -206,20 +264,42 @@ Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num) {
 
     trace_real = 0.0;
 
-    for (int qbit_idx=0; qbit_idx<qbit_num-1; qbit_idx++) {
-        for (int qbit_idx2=qbit_idx+1; qbit_idx2<qbit_num; qbit_idx2++) {
+    if ( trace_offset == 0 ) {
+        for (int qbit_idx=0; qbit_idx<qbit_num-1; qbit_idx++) {
+            for (int qbit_idx2=qbit_idx+1; qbit_idx2<qbit_num; qbit_idx2++) {
 
-            int qbit_error_mask = (1 << qbit_idx) + (1 << qbit_idx2);
+                int qbit_error_mask = (1 << qbit_idx) + (1 << qbit_idx2);
 
-            for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+                for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
 
-                // determine the row index pair with one bit error at the given qbit_idx
-                int row_idx = col_idx ^ qbit_error_mask;
+                    // determine the row index pair with one bit error at the given qbit_idx
+                    int row_idx = col_idx ^ qbit_error_mask;
  
-                trace_real += matrix[row_idx*matrix.stride + col_idx].real;
-            }
+                    trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+                }
 
+            }
         }
+    }
+    else {
+
+        for (int qbit_idx=0; qbit_idx<qbit_num-1; qbit_idx++) {
+            for (int qbit_idx2=qbit_idx+1; qbit_idx2<qbit_num; qbit_idx2++) {
+
+                int qbit_error_mask = (1 << qbit_idx) + (1 << qbit_idx2);
+
+                for (int col_idx=0; col_idx<matrix_size; col_idx++) {        
+
+                    // determine the row index pair with one bit error at the given qbit_idx
+                    int row_idx = (col_idx+trace_offset) ^ qbit_error_mask;
+ 
+                    trace_real += matrix[row_idx*matrix.stride + col_idx].real;
+                }
+
+            }
+        }
+
+
     }
 
     double cost_function2 = trace_real/matrix_size;

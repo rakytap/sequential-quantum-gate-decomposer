@@ -59,7 +59,7 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 
 
 /// implemented optimization algorithms
-enum optimization_aglorithms{ ADAM, BFGS, BFGS2 };
+enum optimization_aglorithms{ ADAM, BFGS, BFGS2, ADAM_BATCHED };
 
 
 /**
@@ -111,6 +111,8 @@ protected:
     /// number of utilized accelerators
     int accelerator_num;
 
+    /// The offset in the first columns from which the "trace" is calculated. In this case Tr(A) = sum_(i-offset=j) A_{ij}
+    int trace_offset;
 
 
     Matrix_real randomization_probs;
@@ -193,6 +195,12 @@ void solve_layer_optimization_problem_BFGS( int num_of_parameters, gsl_vector *s
 */
 void solve_layer_optimization_problem_BFGS2( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
+/**
+@brief Call to solve layer by layer the optimization problem via batched ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 /**
 @brief Call to solve layer by layer the optimization problem via ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
@@ -360,6 +368,19 @@ void set_adaptive_eta( bool adaptive_eta_in  );
 */
 void set_randomized_radius( double radius_in  );
 
+
+
+/**
+@brief Get the trace ffset used in the evaluation of the cost function
+*/
+int get_trace_offset();
+
+/**
+@brief Set the trace offset used in the evaluation of the cost function
+*/
+void set_trace_offset(int trace_offset_in);
+
+
 #ifdef __DFE__
 
 /**
@@ -372,6 +393,7 @@ void upload_Umtx_to_DFE();
 @brief Get the number of accelerators to be reserved on DFEs on users demand.
 */
 int get_accelerator_num();
+
 
 
 #endif

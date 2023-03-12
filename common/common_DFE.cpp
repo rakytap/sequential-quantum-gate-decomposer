@@ -46,7 +46,7 @@ std::mutex libreadmutex; //reader mutex
 
 size_t (*get_accelerator_avail_num_dll)() = NULL;
 size_t (*get_accelerator_free_num_dll)() = NULL;
-int (*calcqgdKernelDFE_dll)(size_t rows, size_t cols, DFEgate_kernel_type* gates, int gatesNum, int gateSetNum, double* trace) = NULL;
+int (*calcqgdKernelDFE_dll)(size_t rows, size_t cols, DFEgate_kernel_type* gates, int gatesNum, int gateSetNum, int traceOffset, double* trace) = NULL;
 int (*load2LMEM_dll)(QGD_Complex16* data, size_t rows, size_t cols) = NULL;
 void (*releive_DFE_dll)() = NULL;
 int (*initialize_DFE_dll)( int accelerator_num ) = NULL;
@@ -197,10 +197,10 @@ int get_initialize_id() {
 @brief ????????????
 @return ??????????
 */
-int calcqgdKernelDFE(size_t rows, size_t cols, DFEgate_kernel_type* gates, int gatesNum, int gateSetNum, double* trace) {
+int calcqgdKernelDFE(size_t rows, size_t cols, DFEgate_kernel_type* gates, int gatesNum, int gateSetNum, int traceOffset, double* trace) {
 
 
-    return calcqgdKernelDFE_dll(rows, cols, gates, gatesNum, gateSetNum, trace);
+    return calcqgdKernelDFE_dll(rows, cols, gates, gatesNum, gateSetNum, traceOffset, trace);
 
 }
 
