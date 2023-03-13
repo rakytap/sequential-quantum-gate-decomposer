@@ -23,7 +23,7 @@ class Test_operations_squander:
         pi=np.pi
 
         # parameters
-        parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
+        parameters = np.array( [pi/2*0.32, 0,0] )
 
         for qbit_num in range(1,7):
 
@@ -70,7 +70,7 @@ class Test_operations_squander:
         pi=np.pi
 
         # parameters
-        parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
+        parameters = np.array( [pi/2*0.32, 0, 0] )
 
         for qbit_num in range(1,7):
 
@@ -98,7 +98,7 @@ class Test_operations_squander:
             circuit = QuantumCircuit(qbit_num)
 
             # apply the gate on the input array/matrix 
-            RZ_qiskit_apply_gate=np.matmul(RZ_qiskit, test_matrix)
+            #RZ_qiskit_apply_gate=np.matmul(RZ_qiskit, test_matrix)
 
 	    #SQUANDER
 
@@ -108,7 +108,7 @@ class Test_operations_squander:
             RZ.apply_to(parameters, RZ_squander )
 
             # the unitary matrix from the result object
-            product_matrix = np.dot(RZ_squander, RZ_qiskit_apply_gate.conj().T)
+            product_matrix = np.dot(RZ_squander, RZ_qiskit.conj().T)
             phase = np.angle(product_matrix[0,0])
             product_matrix = product_matrix*np.exp(-1j*phase)
     

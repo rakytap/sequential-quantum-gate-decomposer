@@ -90,7 +90,7 @@ class Test_operations_squander:
             CNOT_qiskit = np.asarray(CNOT_qiskit)
 
             # apply the gate on the input array/matrix 
-            CNOT_qiskit_apply_gate=np.matmul(CNOT_qiskit, test_matrix)
+            #CNOT_qiskit_apply_gate=np.matmul(CNOT_qiskit, test_matrix)
 
 	    #SQUANDER
 
@@ -100,7 +100,7 @@ class Test_operations_squander:
             CNOT.apply_to(CNOT_squander )
 
             #the difference between the SQUANDER and the qiskit result        
-            delta_matrix=CNOT_squander-CNOT_qiskit_apply_gate
+            delta_matrix=CNOT_squander-CNOT_qiskit
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
@@ -109,5 +109,5 @@ class Test_operations_squander:
             assert( error < 1e-3 ) 
 
 
-
+ 
 

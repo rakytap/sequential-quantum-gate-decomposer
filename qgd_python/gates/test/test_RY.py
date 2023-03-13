@@ -23,7 +23,7 @@ class Test_operations_squander:
         pi=np.pi
 
         # parameters
-        parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
+        parameters = np.array( [pi/2*0.32, 0, 0] )
 
         for qbit_num in range(1,7):
 
@@ -69,7 +69,7 @@ class Test_operations_squander:
         pi=np.pi
 
         # parameters
-        parameters = np.array( [pi/2*0.32, pi*1.2, pi/2*0.89] )
+        parameters = np.array( [pi/2*0.32, 0, 0] )
 
         for qbit_num in range(1,7):
 
@@ -94,7 +94,7 @@ class Test_operations_squander:
             RY_qiskit = np.asarray(RY_qiskit)
 
             # apply the gate on the input array/matrix 
-            RY_qiskit_apply_gate=np.matmul(RY_qiskit, test_matrix)
+            #RY_qiskit_apply_gate=np.matmul(RY_qiskit, test_matrix)
 
 	    #SQUANDER
 
@@ -104,13 +104,14 @@ class Test_operations_squander:
             RY.apply_to(parameters, RY_squander )
 
             #the difference between the SQUANDER and the qiskit result        
-            delta_matrix=RY_squander-RY_qiskit_apply_gate
+            delta_matrix=RY_squander-RY_qiskit
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
 
             #print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 ) 
+
 
 
 

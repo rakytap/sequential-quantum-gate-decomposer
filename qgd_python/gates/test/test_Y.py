@@ -86,7 +86,7 @@ class Test_operations_squander:
             Y_qiskit = np.asarray(Y_qiskit)  
    
             # apply the gate on the input array/matrix  
-            Y_qiskit_apply_gate=np.matmul(Y_qiskit, test_matrix)
+            #Y_qiskit_apply_gate=np.matmul(Y_qiskit, test_matrix)
 
 	    #SQUANDER
 
@@ -96,7 +96,7 @@ class Test_operations_squander:
             Y.apply_to(Y_squander)          
 
             #the difference between the SQUANDER and the qiskit result        
-            delta_matrix=Y_squander-Y_qiskit_apply_gate
+            delta_matrix=Y_squander-Y_qiskit
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)

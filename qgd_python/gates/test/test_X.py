@@ -73,7 +73,7 @@ class Test_operations_squander:
             X = qgd_X( qbit_num, target_qbit )
    
             #create text matrix for apply_to 
-            test_matrix= np.identity( 2**qbit_num, dtype=complex )
+            test_matrix= np.identity( pow(2,qbit_num), dtype=complex )
 
 	    #QISKIT
 
@@ -88,7 +88,7 @@ class Test_operations_squander:
             X_qiskit = np.asarray(X_qiskit)
    
             # apply the gate on the input array/matrix  
-            X_qiskit_apply_gate=np.matmul(X_qiskit, test_matrix)
+            #X_qiskit_apply_gate=np.matmul(X_qiskit, test_matrix)
 
 	    #SQUANDER
 
@@ -98,14 +98,15 @@ class Test_operations_squander:
             X.apply_to(X_squander)     
 
             #the difference between the SQUANDER and the qiskit result        
-            delta_matrix=X_squander-X_qiskit_apply_gate
+            delta_matrix=X_squander-X_qiskit
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
 
             #print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
-            assert( error < 1e-3 ) 
+            assert( error < 1e-3 )
 
+          
 
 
 
