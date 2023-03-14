@@ -23,7 +23,7 @@ class Test_operations_squander:
         pi=np.pi
 
         # parameters
-        parameters = np.array( [pi/2*0.32, 0, 0] )
+        parameters = np.array( [pi/2*0.32] )
 
         for qbit_num in range(1,7):
 
@@ -69,7 +69,7 @@ class Test_operations_squander:
         pi=np.pi
 
         # parameters
-        parameters = np.array( [pi/2*0.32, 0, 0] )
+        parameters = np.array( [pi/2*0.32] )
 
         for qbit_num in range(1,7):
 

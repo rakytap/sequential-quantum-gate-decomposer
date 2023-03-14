@@ -23,7 +23,7 @@ class Test_operations_squander:
         pi=np.pi
 
         # parameters
-        parameters = np.array( [pi/2*0.32, 0, 0] )
+        parameters = np.array( [pi/2*0.32] )
 
         for qbit_num in range(1,7):
 
@@ -68,7 +68,7 @@ class Test_operations_squander:
         pi=np.pi
 
         # parameters
-        parameters = np.array( [pi/2*0.32, 0, 0] )
+        parameters = np.array( [pi/2*0.32] )
 
         for qbit_num in range(1,7):
 
@@ -97,7 +97,7 @@ class Test_operations_squander:
             circuit = QuantumCircuit(qbit_num)
 
             # apply the gate on the input array/matrix 
-            RX_qiskit_apply_gate=np.matmul(RX_qiskit, test_matrix)
+            #RX_qiskit_apply_gate=np.matmul(RX_qiskit, test_matrix)
 
 	    #SQUANDER
 
