@@ -269,9 +269,7 @@ double get_hilbert_schmidt_test(Matrix& matrix){
     double d = 1.0/matrix.cols;
     double cost_function = 0.0;
     Matrix_real ret = get_trace(matrix);
-    
-    cost_function = (1-d*d*(ret[0]*ret[0]+ret[1]*ret[1]));
-    
+    cost_function = 1.0-d*d*ret[0]*ret[0]-d*d*ret[1]*ret[1];
     return cost_function;
 }
 
@@ -323,7 +321,7 @@ Matrix_real get_trace_with_correction(Matrix& matrix, int qbit_num) {
 */
 Matrix_real get_trace_with_correction2(Matrix& matrix, int qbit_num) {
 
-    Matrix_real ret(1,4);
+    Matrix_real ret(1,6);
     
     Matrix_real trace_tmp = get_trace(matrix);
     

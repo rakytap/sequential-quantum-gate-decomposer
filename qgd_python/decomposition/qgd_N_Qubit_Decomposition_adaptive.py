@@ -546,7 +546,7 @@ class qgd_N_Qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive)
 
 	def __init__( self, State, level_limit_max=8, level_limit_min=0, topology=None ):
 		print(State.shape)
-		if ( (type(State) == np.ndarray) and (State.shape[1]==2) ):
+		if ( (type(State) == np.ndarray) and (State.shape[1]==1) ):
 			super().__init__( State, level_limit_max, level_limit_min, topology )
 		else:
 			raise Exception("Initial state not properly formatted. Input state must be a column vector")

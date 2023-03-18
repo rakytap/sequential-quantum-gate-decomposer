@@ -234,6 +234,15 @@ double optimization_problem( Matrix_real& parameters);
 */
 static double optimization_problem( const gsl_vector* parameters, void* void_instance );
 
+/**
+@brief The optimization problem of the final optimization useful for gradient
+@param parameters A GNU Scientific Library containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param ret_temp A matrix to store trace in for gradient
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double optimization_problem( const gsl_vector* parameters, void* void_instance, Matrix_real ret_temp );
+
 
 /**
 @brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.

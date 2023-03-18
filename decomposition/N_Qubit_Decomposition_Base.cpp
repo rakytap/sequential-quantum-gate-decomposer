@@ -1084,6 +1084,70 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
 
 }
 
+/**
+// @brief The optimization problem of the final optimization
+@param parameters A GNU Scientific Library containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* parameters, void* void_instance, Matrix_real ret_temp) {
+
+    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+    std::vector<Gate*> gates_loc = instance->get_gates();
+
+    // get the transformed matrix with the gates in the list
+    Matrix Umtx_loc = instance->get_Umtx();
+    Matrix_real parameters_mtx(parameters->data, 1, instance->get_parameter_num() );
+    Matrix matrix_new = instance->get_transformed_matrix( parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx_loc );
+
+  
+    cost_function_type cost_fnc = instance->get_cost_function_variant();
+
+
+
+    if ( cost_fnc == FROBENIUS_NORM ) {
+        return get_cost_function(matrix_new);
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+        double correction1_scale    = instance->get_correction1_scale();
+        Matrix_real&& ret = get_cost_function_with_correction(matrix_new, instance->get_qbit_num());
+        return ret[0] - std::sqrt(instance->get_previous_cost_function_value())*ret[1]*correction1_scale;
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+        double correction1_scale = instance->get_correction1_scale();
+        double correction2_scale = instance->get_correction2_scale();            
+        Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, instance->get_qbit_num());
+        return ret[0] - std::sqrt(instance->get_previous_cost_function_value())*(ret[1]*correction1_scale + ret[2]*correction2_scale);
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
+    	Matrix_real&& trace_temp = get_trace(matrix_new);
+    	ret_temp[0] = trace_temp[0];
+    	ret_temp[1] = trace_temp[1];
+    	double d = 1.0/matrix_new.cols;
+        return 1.0-d*d*trace_temp[0]*trace_temp[0]-d*d*trace_temp[1]*trace_temp[1];
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
+        double correction1_scale = instance->get_correction1_scale();
+        Matrix_real&& ret = get_trace_with_correction(matrix_new, instance->get_qbit_num());
+        double d = 1.0/matrix_new.cols;
+        for (int idx=0; idx<4; idx++){ret_temp[idx]=ret[idx];}
+        return 1.0 - d*d*(ret[0]*ret[0]+ret[1]*ret[1]+std::sqrt(instance->get_previous_cost_function_value())*correction1_scale*(ret[2]*ret[2]+ret[3]*ret[3]));
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION2 ){
+        double correction1_scale    = instance->get_correction1_scale();
+        double correction2_scale    = instance->get_correction2_scale();            
+        Matrix_real&& ret = get_trace_with_correction2(matrix_new, instance->get_qbit_num());
+        double d = 1.0/matrix_new.cols;
+        for (int idx=0; idx<6; idx++){ret_temp[idx]=ret[idx];}
+        return 1.0 - d*d*(ret[0]*ret[0]+ret[1]*ret[1]+std::sqrt(instance->get_previous_cost_function_value())*(correction1_scale*(ret[2]*ret[2]+ret[3]*ret[3])+correction2_scale*(ret[4]*ret[4]+ret[5]*ret[5])));
+    }
+    else {
+        std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
+        throw err;
+    }
+
+
+}
 
 /**
 @brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
@@ -1227,18 +1291,16 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
     // vector containing gradients of the transformed matrix
     std::vector<Matrix> Umtx_deriv;
-    Matrix_real trace_tmp;
+    Matrix_real trace_tmp(1,6);
 
     tbb::parallel_invoke(
         [&]{
-            *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance)); 
-            //std::cout<<"koltsegf: "<<*f0<<" HS teszt: "<<hs_teszt<<std::endl;
+            *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance), trace_tmp); 
         },
         [&]{
-            Matrix Umtx_loc = instance->get_Umtx();
+            Matrix&& Umtx_loc = instance->get_Umtx();   
             Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
             Umtx_deriv = instance->apply_derivate_to( parameters_mtx, Umtx_loc );
-            trace_tmp = get_trace_with_correction2(Umtx_loc, qbit_num);
         });
 
 
@@ -1259,7 +1321,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             }
             else if (cost_fnc == HILBERT_SCHMIDT_TEST){
                 double d = 1.0/Umtx_deriv[idx].cols;
-                Matrix_real deriv_tmp = (get_trace(Umtx_deriv[idx]));
+                Matrix_real deriv_tmp = get_trace(Umtx_deriv[idx]);
                 grad_comp = -2.0*d*d*trace_tmp[0]*deriv_tmp[0]-2.0*d*d*trace_tmp[1]*deriv_tmp[1];
             }
             else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
