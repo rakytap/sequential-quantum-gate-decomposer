@@ -1,14 +1,12 @@
 import numpy as np
 import random
-import math
 
 from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 
 from qgd_python.utils import get_unitary_from_qiskit_circuit
-from qgd_python.gates.qgd_SX import qgd_SX
+from qgd_python.gates.qgd_Z import qgd_Z
 from scipy.stats import unitary_group
-      
 
 class Test_operations_squander:
     """This is a test class of the python iterface to compare the SQUANDER and the qiskit decomposition"""
@@ -16,7 +14,7 @@ class Test_operations_squander:
 
 
 
-    def test_SX_get_matrix(self):
+    def test_Z_get_matrix(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of U3 gate and compare with qiskit.
@@ -30,12 +28,12 @@ class Test_operations_squander:
             target_qbit = qbit_num-1
 
             # creating an instance of the C++ class
-            SX = qgd_SX( qbit_num, target_qbit )
+            Z = qgd_Z( qbit_num, target_qbit )
 
 	    #SQUANDER#
 
             # get the matrix                       
-            SX_squander = SX.get_Matrix( )
+            Z_squander = Z.get_Matrix( )
       
 	    #QISKIT
 
@@ -43,14 +41,14 @@ class Test_operations_squander:
             circuit = QuantumCircuit(qbit_num)
 
             # Add the CNOT gate on control qbit and target qbit
-            circuit.sx( target_qbit )
+            circuit.z( target_qbit )
 
             # the unitary matrix from the result object
-            SX_qiskit = get_unitary_from_qiskit_circuit( circuit )
-            SX_qiskit = np.asarray(SX_qiskit)
-        
+            Z_qiskit = get_unitary_from_qiskit_circuit( circuit )
+            Z_qiskit = np.asarray(Z_qiskit)
+
             #the difference between the SQUANDER and the qiskit result        
-            delta_matrix=SX_squander-SX_qiskit
+            delta_matrix=Z_squander-Z_qiskit
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
@@ -59,7 +57,7 @@ class Test_operations_squander:
             assert( error < 1e-3 ) 
 
 
-    def test_SX_apply_to(self):
+    def test_Z_apply_to(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of U3 gate and compare with qiskit.
@@ -73,9 +71,9 @@ class Test_operations_squander:
             target_qbit = qbit_num-1
 
             # creating an instance of the C++ class
-            SX = qgd_SX( qbit_num, target_qbit )
+            Z = qgd_Z( qbit_num, target_qbit )
         
-            #create text matrix 
+            #create text matrix       
             test_matrix= np.identity( 2**qbit_num, dtype=complex )
 
 	    #QISKIT      
@@ -84,24 +82,24 @@ class Test_operations_squander:
             circuit = QuantumCircuit(qbit_num)
 
             # Add the CNOT gate on control qbit and target qbit
-            circuit.sx( target_qbit )
+            circuit.z( target_qbit )
 
             # the unitary matrix from the result object
-            SX_qiskit = get_unitary_from_qiskit_circuit( circuit )
-            SX_qiskit = np.asarray(SX_qiskit)
+            Z_qiskit = get_unitary_from_qiskit_circuit( circuit )
+            Z_qiskit = np.asarray(Z_qiskit)
 
             # apply the gate on the input array/matrix 
-            #SX_qiskit_apply_gate=np.matmul(SX_qiskit, test_matrix)
+            #Z_qiskit_apply_gate=np.matmul(Z_qiskit, test_matrix)
 
 	    #SQUANDER
 
-            SX_squander = test_matrix
+            Z_squander = test_matrix
 
             # apply the gate on the input array/matrix                
-            SX.apply_to(SX_squander)       
+            Z.apply_to(Z_squander)       
 
             #the difference between the SQUANDER and the qiskit result        
-            delta_matrix=SX_squander-SX_qiskit
+            delta_matrix=Z_squander-Z_qiskit
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
@@ -110,3 +108,4 @@ class Test_operations_squander:
             assert( error < 1e-3 ) 
 
 
+ 

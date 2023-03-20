@@ -148,12 +148,54 @@ qgd_SYC_get_Matrix( qgd_SYC *self ) {
 
 
 /**
+@brief Call to apply the gate operation on the inut matrix
+*/
+static PyObject *
+qgd_SYC_apply_to( qgd_SYC *self, PyObject *args ) {
+
+    PyObject * unitary_arg = NULL;
+
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &unitary_arg )) 
+        return Py_BuildValue("i", -1);
+
+
+    // convert python object array to numpy C API array
+    if ( unitary_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+
+    if ( PyArray_Check(unitary_arg) && PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
+        Py_INCREF(unitary_arg);
+    }
+    else {
+        unitary_arg = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    }
+
+
+
+    // create QGD version of the input matrix
+    Matrix unitary_mtx = numpy2matrix(unitary_arg);
+
+    self->gate->apply_to( unitary_mtx );
+    
+    Py_DECREF(unitary_arg);
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+/**
 @brief Structure containing metadata about the members of class  qgd_SYC.
 */
 static PyMemberDef  qgd_SYC_members[] = {
     {NULL}  /* Sentinel */
 };
-
 
 
 /**
@@ -162,6 +204,9 @@ static PyMemberDef  qgd_SYC_members[] = {
 static PyMethodDef  qgd_SYC_methods[] = {
     {"get_Matrix", (PyCFunction) qgd_SYC_get_Matrix, METH_NOARGS,
      "Method to get the matrix of the operation."
+    },
+    {"apply_to", (PyCFunction) qgd_SYC_apply_to, METH_VARARGS,
+     "Call to apply the gate on the input matrix."
     },
     {NULL}  /* Sentinel */
 };

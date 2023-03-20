@@ -147,6 +147,57 @@ qgd_SX_get_Matrix( qgd_SX *self ) {
 }
 
 
+
+/**
+@brief Call to apply the gate operation on the inut matrix
+*/
+static PyObject *
+qgd_SX_apply_to( qgd_SX *self, PyObject *args ) {
+
+    PyObject * unitary_arg = NULL;
+
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &unitary_arg )) 
+        return Py_BuildValue("i", -1);
+
+    // convert python object array to numpy C API array
+    if ( unitary_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+
+    if ( PyArray_Check(unitary_arg) && PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
+        Py_INCREF(unitary_arg);
+    }
+    else {
+        unitary_arg = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    }
+
+   PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
+        PyErr_SetString(PyExc_Exception, "input mtrix is not memory contiguous");
+        return NULL;
+    }
+
+
+    // create QGD version of the input matrix
+    Matrix unitary_mtx = numpy2matrix(unitary);
+
+    self->gate->apply_to( unitary_mtx );
+    
+    Py_DECREF(unitary);
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+
 /**
 @brief Structure containing metadata about the members of class qgd_SX.
 */
@@ -162,6 +213,9 @@ static PyMethodDef qgd_SX_methods[] = {
     {"get_Matrix", (PyCFunction) qgd_SX_get_Matrix, METH_NOARGS,
      "Method to get the matrix of the operation."
     },   
+    {"apply_to", (PyCFunction) qgd_SX_apply_to, METH_VARARGS,
+     "Call to apply the gate on the input matrix."
+    },
   {NULL}  /* Sentinel */
 };
 

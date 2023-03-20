@@ -129,10 +129,12 @@ qgd_Y_init(qgd_Y *self, PyObject *args, PyObject *kwds)
     return 0;
 }
 
+
 /**
 @brief Extract the optimized parameters
 @param start_index The index of the first inverse gate
 */
+/**
 static PyObject *
 qgd_Y_get_Matrix( qgd_Y *self, PyObject *args ) {
 
@@ -156,18 +158,36 @@ qgd_Y_get_Matrix( qgd_Y *self, PyObject *args ) {
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
 
-    Matrix X_mtx = self->gate->get_matrix(  );
+    Matrix Y_mtx = self->gate->get_matrix(  );
     
     // convert to numpy array
-    X_mtx.set_owner(false);
-    PyObject *X_py = matrix_to_numpy( X_mtx );
+    Y_mtx.set_owner(false);
+    PyObject *Y_py = matrix_to_numpy( Y_mtx );
 
 
     Py_DECREF(parameters_arr);
 
-    return X_py;
+    return Y_py;
 }
+*/
 
+/**
+@brief Extract the optimized parameters
+@param start_index The index of the first inverse gate
+*/
+static PyObject *
+qgd_Y_get_Matrix( qgd_Y *self ) {
+
+   
+    Matrix Y_mtx = self->gate->get_matrix(  );
+    
+    // convert to numpy array
+    Y_mtx.set_owner(false);
+    PyObject *Y_py = matrix_to_numpy( Y_mtx );
+
+
+    return Y_py;
+}
 
 /**
 @brief Call to apply the gate operation on the inut matrix
@@ -222,7 +242,7 @@ static PyMemberDef qgd_Y_members[] = {
 @brief Structure containing metadata about the methods of class qgd_Y.
 */
 static PyMethodDef qgd_Y_methods[] = {
-    {"get_Matrix", (PyCFunction) qgd_Y_get_Matrix, METH_VARARGS,
+    {"get_Matrix", (PyCFunction) qgd_Y_get_Matrix, METH_NOARGS,
      "Method to get the matrix of the operation."
     },
     {"apply_to", (PyCFunction) qgd_Y_apply_to, METH_VARARGS,
