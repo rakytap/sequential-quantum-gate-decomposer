@@ -239,12 +239,12 @@ Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num) {
 @param matrix The square shaped complex matrix from which the trace is calculated.
 @return Returns with the calculated trace.
 */
-Matrix_real get_trace(Matrix& matrix){
+QGD_Complex16 get_trace(Matrix& matrix){
 
     int matrix_size = matrix.cols;
     double trace_real=0.0;
     double trace_imag=0.0;
-    Matrix_real ret(1,2);
+    QGD_Complex16 ret;
     
     for (int idx=0; idx<matrix_size; idx++) {
         
@@ -252,8 +252,8 @@ Matrix_real get_trace(Matrix& matrix){
         trace_imag += matrix[idx*matrix.stride + idx].imag;
 
     }
-    ret[0] = trace_real;
-    ret[1] = trace_imag;
+    ret.real = trace_real;
+    ret.imag = trace_imag;
     
     return ret;
 }
@@ -268,8 +268,8 @@ double get_hilbert_schmidt_test(Matrix& matrix){
     
     double d = 1.0/matrix.cols;
     double cost_function = 0.0;
-    Matrix_real ret = get_trace(matrix);
-    cost_function = 1.0-d*d*ret[0]*ret[0]-d*d*ret[1]*ret[1];
+    QGD_Complex16 ret = get_trace(matrix);
+    cost_function = 1.0-d*d*ret.real*ret.real-d*d*ret.imag*ret.imag;
     return cost_function;
 }
 
@@ -279,11 +279,11 @@ double get_hilbert_schmidt_test(Matrix& matrix){
 @param qbit_num The number of qubits
 @return Returns with the matrix containing the cost function (index 0-1) and the first correction (index 2-3).
 */
-Matrix_real get_trace_with_correction(Matrix& matrix, int qbit_num) {
+Matrix get_trace_with_correction(Matrix& matrix, int qbit_num) {
     
-    Matrix_real ret(1,4);
+    Matrix ret(1,2);
     
-    Matrix_real trace_tmp = get_trace(matrix);
+    QGD_Complex16 trace_tmp = get_trace(matrix);
     
     int matrix_size = matrix.cols;
 
@@ -304,10 +304,10 @@ Matrix_real get_trace_with_correction(Matrix& matrix, int qbit_num) {
         }
     }
     
-    ret[0] = trace_tmp[0];
-    ret[1] = trace_tmp[1];
-    ret[2] = trace_real;
-    ret[3] = trace_imag;
+    ret[0].real = trace_tmp.real;
+    ret[0].imag = trace_tmp.imag;
+    ret[1].real = trace_real;
+    ret[1].imag = trace_imag;
     
     return ret;
 }
@@ -319,11 +319,11 @@ Matrix_real get_trace_with_correction(Matrix& matrix, int qbit_num) {
 @param qbit_num The number of qubits
 @return Returns with the matrix containing the cost function (index 0-1), the first correction (index 2-3) and the second correction (index 4-5).
 */
-Matrix_real get_trace_with_correction2(Matrix& matrix, int qbit_num) {
+Matrix get_trace_with_correction2(Matrix& matrix, int qbit_num) {
 
-    Matrix_real ret(1,6);
+    Matrix ret(1,3);
     
-    Matrix_real trace_tmp = get_trace(matrix);
+    QGD_Complex16 trace_tmp = get_trace(matrix);
     
     int matrix_size = matrix.cols;
 
@@ -345,8 +345,8 @@ Matrix_real get_trace_with_correction2(Matrix& matrix, int qbit_num) {
     }
 
 
-    ret[2] = trace_real;
-    ret[3] = trace_imag;
+    ret[1].real = trace_real;
+    ret[1].imag = trace_imag;
 
 
 
@@ -373,10 +373,10 @@ Matrix_real get_trace_with_correction2(Matrix& matrix, int qbit_num) {
     }
 
 
-    ret[4] = trace_real;
-    ret[5] = trace_imag;
-    ret[0] = trace_tmp[0];
-    ret[1] = trace_tmp[1];
+    ret[2].real = trace_real;
+    ret[2].imag = trace_imag;
+    ret[0].real = trace_tmp.real;
+    ret[0].imag = trace_tmp.imag;
     
     return ret;
 }

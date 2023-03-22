@@ -225,6 +225,15 @@ double optimization_problem( double* parameters);
 double optimization_problem( Matrix_real& parameters);
 
 
+/**
+@brief The optimization problem of the final optimization useful for gradient
+@param parameters A GNU Scientific Library containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param ret_temp A matrix to store trace in for gradient
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double optimization_problem( const gsl_vector* parameters, void* void_instance, Matrix ret_temp );
+
 
 /**
 @brief The optimization problem of the final optimization
@@ -233,15 +242,6 @@ double optimization_problem( Matrix_real& parameters);
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 static double optimization_problem( const gsl_vector* parameters, void* void_instance );
-
-/**
-@brief The optimization problem of the final optimization useful for gradient
-@param parameters A GNU Scientific Library containing the parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param ret_temp A matrix to store trace in for gradient
-@return Returns with the cost function. (zero if the qubits are desintangled.)
-*/
-double optimization_problem( const gsl_vector* parameters, void* void_instance, Matrix_real ret_temp );
 
 
 /**
