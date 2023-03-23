@@ -410,6 +410,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
  
 ##
 # @brief Call to set unitary matrix from a numpy array
+# @param Umtx_arr numpy complex array 
     def set_Unitary( self, Umtx_arr ):  
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Unitary( Umtx_arr )
@@ -422,6 +423,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         
 ##
 # @brief Call to export unitary matrix to binary file
+# @param filename string
     def export_Unitary( self, filename ):
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).export_Unitary(filename)
@@ -440,7 +442,8 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Global_Phase()
 
 ##
-# @brief Call to set global phase 
+# @brief Call to set global phase
+# @param new_global_phase New global phase (in radians)
     def set_Global_Phase( self, new_global_phase ):
 	
         return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Global_Phase(new_global_phase)
@@ -451,7 +454,8 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Project_Name()
 
 ##
-# @brief Call to set the name of the SQUANDER project ( recommended format : *new project name*_ ) 
+# @brief Call to set the name of the SQUANDER project
+# @param project_name_new new project name
     def set_Project_Name( self, project_name_new ):
 	
         return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Project_Name(project_name_new)
@@ -540,72 +544,17 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def Prepare_Gates_To_Export(self):
 
         # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_adaptive, self).Prepare_Gates_To_Export()  
+        super(qgd_N_Qubit_Decomposition_adaptive, self).Prepare_Gates_To_Export()
+
+##
+# @brief Call to get the number of iterations  
+    def get_Num_of_Iters(self):
+    
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Num_of_Iters()
+    
+##
+# @brief Call to set the maximum number of iterations for each optimization loop
+# @param max_iters int number of maximum iterations each loop
+    def set_Max_Iterations(self, max_iters):
         
-class qgd_N_Qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive): #Decomposition nem kell a nevbe 
-
-	def __init__( self, State, level_limit_max=8, level_limit_min=0, topology=None ):
-		print(State.shape)
-		if ( (type(State) == np.ndarray) and (State.shape[1]==1) ):
-			super().__init__( State, level_limit_max, level_limit_min, topology )
-		else:
-			raise Exception("Initial state not properly formatted. Input state must be a column vector")
-			
-	def get_Quantum_Circuit( self ):
-
-		from qiskit import QuantumCircuit
-
-        # creating Qiskit quantum circuit
-		circuit = QuantumCircuit(self.qbit_num)
-
-        # retrive the list of decomposing gate structure
-		gates = self.get_Gates()
-
-        # constructing quantum circuit
-		for idx in range(len(gates)):
-
-			gate = gates[idx]
-
-			if gate.get("type") == "CNOT":
-                # adding CNOT gate to the quantum circuit
-				circuit.cx(gate.get("control_qbit"), gate.get("target_qbit"))
-
-			elif gate.get("type") == "CZ":
-                # adding CZ gate to the quantum circuit
-				circuit.cz(gate.get("control_qbit"), gate.get("target_qbit"))
-
-			elif gate.get("type") == "CH":
-                # adding CZ gate to the quantum circuit
-				circuit.ch(gate.get("control_qbit"), gate.get("target_qbit"))
-
-			elif gate.get("type") == "SYC":
-                # Sycamore gate
-				print("Unsupported gate in the circuit export: Sycamore gate")
-				return None;
-
-			elif gate.get("type") == "U3":
-                # adding U3 gate to the quantum circuit
-				circuit.u(-gate.get("Theta"), -gate.get("Lambda"), -gate.get("Phi"), gate.get("target_qbit"))
-
-			elif gate.get("type") == "RX":
-                # RX gate
-				circuit.rx(-gate.get("Theta"), gate.get("target_qbit"))
-
-			elif gate.get("type") == "RY":
-                # RY gate
-				circuit.ry(-gate.get("Theta"), gate.get("target_qbit"))
-
-			elif gate.get("type") == "RZ":
-                # RZ gate
-				circuit.rz(-gate.get("Phi"), gate.get("target_qbit"))
-
-			elif gate.get("type") == "X":
-                # X gate
-				circuit.x(gate.get("target_qbit"))
-
-			elif gate.get("type") == "SX":
-                # SX gate
-				circuit.sx(gate.get("target_qbit"))
-
-		return circuit
-
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Max_Iterations(max_iters)
