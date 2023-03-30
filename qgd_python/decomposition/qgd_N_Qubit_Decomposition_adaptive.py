@@ -558,3 +558,10 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def set_Max_Iterations(self, max_iters):
         
         super(qgd_N_Qubit_Decomposition_adaptive, self).set_Max_Iterations(max_iters)
+    
+##
+# @brief call to set the cost function type of the optimization problem
+# @param cost_func int argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for HILBERT_SCHMIDT_TEST, 4 for HILBERT_SCHMIDT_TEST_CORRECTION1, 5 for HILBERT_SCHMIDT_TEST_CORRECTION2 see more at: https://arxiv.org/abs/2210.09191
+    def set_Cost_Function_Variant(self, cost_func):
+    
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(cost_func) 
