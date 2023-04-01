@@ -63,6 +63,8 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 
     // The chosen variant of the cost function
     cost_fnc = FROBENIUS_NORM;
+    
+    number_of_iters = 0;
 
 
     prev_cost_fnv_val = 1.0;
@@ -202,7 +204,7 @@ N_Qubit_Decomposition_Base::calc_decomposition_error(Matrix& decomposed_matrix )
 	// (U-U_{approx}) (U-U_{approx})^\dagger = 2*I - U*U_{approx}^\dagger - U_{approx}*U^\dagger
 	// U*U_{approx}^\dagger = decomposed_matrix_copy
 	
- 	Matrix A(matrix_size, matrix_size);
+ 	/*Matrix A(matrix_size, matrix_size);
 	QGD_Complex16* A_data = A.get_data();
 	QGD_Complex16* decomposed_data = decomposed_matrix.get_data();
 	QGD_Complex16 phase;
@@ -245,10 +247,36 @@ N_Qubit_Decomposition_Base::calc_decomposition_error(Matrix& decomposed_matrix )
 		double eigval_abs = std::sqrt((alpha[idx].real*alpha[idx].real + alpha[idx].imag*alpha[idx].imag) / (beta[idx].real*beta[idx].real + beta[idx].imag*beta[idx].imag));
 		if ( eigval_max < eigval_abs ) eigval_max = eigval_abs;		
 	}
-
-	// the norm is the square root of the largest einegvalue.
-	decomposition_error = std::sqrt(eigval_max);
-
+    
+	// the norm is the square root of the largest einegvalue.*/
+    if ( cost_fnc == FROBENIUS_NORM ) {
+        decomposition_error =  get_cost_function(decomposed_matrix);
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+        Matrix_real&& ret = get_cost_function_with_correction(decomposed_matrix, qbit_num);
+        decomposition_error = ret[0] - std::sqrt(prev_cost_fnv_val)*ret[1]*correction1_scale;
+    }
+    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+        Matrix_real&& ret = get_cost_function_with_correction2(decomposed_matrix, qbit_num);
+        decomposition_error = ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
+       decomposition_error = get_hilbert_schmidt_test(decomposed_matrix);
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
+        Matrix&& ret = get_trace_with_correction(decomposed_matrix, qbit_num);
+        double d = 1.0/decomposed_matrix.cols;
+        decomposition_error = 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag));
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION2 ){
+        Matrix&& ret = get_trace_with_correction2(decomposed_matrix, qbit_num);
+        double d = 1.0/decomposed_matrix.cols;
+        decomposition_error = 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
+    }
+    else {
+        std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
+        throw err;
+    }
 
 }
 
@@ -587,10 +615,11 @@ pure_DFE_time = 0.0;
         int ADAM_status = 0;
 
         int randomization_successful = 0;
+        
 
         for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
 
-            
+            number_of_iters++;
 
 
             optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_gsl );
@@ -714,8 +743,6 @@ pure_DFE_time = 0.0;
             sub_iter_idx++;
 
         }
-
-
         sstream.str("");
         sstream << "obtained minimum: " << current_minimum << std::endl;
 
@@ -725,7 +752,7 @@ pure_DFE_time = 0.0;
         tbb::tick_count adam_end = tbb::tick_count::now();
         adam_time  = adam_time + (adam_end-adam_start).seconds();
         sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
-        
+
         print(sstream, 0); 
 
 }
@@ -776,7 +803,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
-
+	    
             int iter = 0;
             int status;
 
@@ -803,6 +830,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
             do {
                 iter++;
+                number_of_iters++;
                 gsl_set_error_handler_off();
                 status = gsl_multimin_fdfminimizer_iterate (s);
 
@@ -837,7 +865,6 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
 
         }
-
 
 }
 
@@ -1001,6 +1028,7 @@ bfgs_time = 0.0;
 
                 sub_iter_idx++;
                 iter_idx++;
+                number_of_iters++;
 
             } while (iter_idx < iter_max && s->f > optimization_tolerance);
 
@@ -1143,6 +1171,19 @@ double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
         Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num, trace_offset);
         return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
     }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
+        return get_hilbert_schmidt_test(matrix_new);
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
+        Matrix&& ret = get_trace_with_correction(matrix_new, qbit_num);
+        double d = 1.0/matrix_new.cols;
+        return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag));
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION2 ){
+        Matrix&& ret = get_trace_with_correction2(matrix_new, qbit_num);
+        double d = 1.0/matrix_new.cols;
+        return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
+    }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -1182,6 +1223,19 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
         Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num, trace_offset);
         return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
     }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
+        return get_hilbert_schmidt_test(matrix_new);
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
+        Matrix&& ret = get_trace_with_correction(matrix_new, qbit_num);
+        double d = 1.0/matrix_new.cols;
+        return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag));
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION2 ){
+        Matrix&& ret = get_trace_with_correction2(matrix_new, qbit_num);
+        double d = 1.0/matrix_new.cols;
+        return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
+    }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -1194,9 +1248,10 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
 // @brief The optimization problem of the final optimization
 @param parameters A GNU Scientific Library containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
+@param ret_temp A matrix to store trace in for gradient for HS test 
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* parameters, void* void_instance ) {
+double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* parameters, void* void_instance, Matrix ret_temp) {
 
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
@@ -1208,8 +1263,6 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
 
   
     cost_function_type cost_fnc = instance->get_cost_function_variant();
-
-
 
     if ( cost_fnc == FROBENIUS_NORM ) {
         return get_cost_function(matrix_new, instance->get_trace_offset());
@@ -1225,6 +1278,28 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
         Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, instance->get_qbit_num(), instance->get_trace_offset());
         return ret[0] - std::sqrt(instance->get_previous_cost_function_value())*(ret[1]*correction1_scale + ret[2]*correction2_scale);
     }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
+    	QGD_Complex16 trace_temp = get_trace(matrix_new);
+    	ret_temp[0].real = trace_temp.real;
+    	ret_temp[0].imag = trace_temp.imag;
+    	double d = 1.0/matrix_new.cols;
+        return 1.0-d*d*trace_temp.real*trace_temp.real-d*d*trace_temp.imag*trace_temp.imag;
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
+        double correction1_scale = instance->get_correction1_scale();
+        Matrix&& ret = get_trace_with_correction(matrix_new, instance->get_qbit_num());
+        double d = 1.0/matrix_new.cols;
+        for (int idx=0; idx<3; idx++){ret_temp[idx].real=ret[idx].real;ret_temp[idx].imag=ret[idx].imag;}
+        return 1.0 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(instance->get_previous_cost_function_value())*correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag));
+    }
+    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION2 ){
+        double correction1_scale    = instance->get_correction1_scale();
+        double correction2_scale    = instance->get_correction2_scale();            
+        Matrix&& ret = get_trace_with_correction2(matrix_new, instance->get_qbit_num());
+        double d = 1.0/matrix_new.cols;
+        for (int idx=0; idx<4; idx++){ret_temp[idx].real=ret[idx].real;ret_temp[idx].imag=ret[idx].imag;}
+        return 1.0 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(instance->get_previous_cost_function_value())*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
+    }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -1233,6 +1308,18 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
 
 }
 
+/**
+// @brief The optimization problem of the final optimization
+@param parameters A GNU Scientific Library containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* parameters, void* void_instance) {
+    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+    Matrix ret(1,3);
+    double cost_func = instance->optimization_problem(parameters, void_instance, ret);
+    return cost_func;
+}
 
 /**
 @brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
@@ -1377,13 +1464,14 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
     // vector containing gradients of the transformed matrix
     std::vector<Matrix> Umtx_deriv;
+    Matrix trace_tmp(1,3);
 
     tbb::parallel_invoke(
         [&]{
-            *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance)); 
+            *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance), trace_tmp); 
         },
         [&]{
-            Matrix Umtx_loc = instance->get_Umtx();
+            Matrix&& Umtx_loc = instance->get_Umtx();   
             Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
             Umtx_deriv = instance->apply_derivate_to( parameters_mtx, Umtx_loc );
         });
@@ -1405,6 +1493,21 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
                 Matrix_real deriv_tmp = get_cost_function_with_correction2( Umtx_deriv[idx], qbit_num, trace_offset_loc );
                 grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
+            }
+            else if (cost_fnc == HILBERT_SCHMIDT_TEST){
+                double d = 1.0/Umtx_deriv[idx].cols;
+                QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
+                grad_comp = -2.0*d*d*trace_tmp[0].real*deriv_tmp.real-2.0*d*d*trace_tmp[0].imag*deriv_tmp.imag;
+            }
+            else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
+                Matrix&&  deriv_tmp = get_trace_with_correction( Umtx_deriv[idx], qbit_num);
+                double d = 1.0/Umtx_deriv[idx].cols;
+                grad_comp = -2.0*d*d* (trace_tmp[0].real*deriv_tmp[0].real+trace_tmp[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(trace_tmp[1].real*deriv_tmp[1].real+trace_tmp[1].imag*deriv_tmp[1].imag));
+            }
+            else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION2 ){
+                Matrix&& deriv_tmp = get_trace_with_correction2( Umtx_deriv[idx], qbit_num);
+                double d = 1.0/Umtx_deriv[idx].cols;
+                grad_comp = -2.0*d*d* (trace_tmp[0].real*deriv_tmp[0].real+trace_tmp[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(trace_tmp[1].real*deriv_tmp[1].real+trace_tmp[1].imag*deriv_tmp[1].imag) + correction2_scale*(trace_tmp[2].real*deriv_tmp[2].real+trace_tmp[2].imag*deriv_tmp[2].imag)));
             }
             else {
                 std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
@@ -1722,7 +1825,15 @@ N_Qubit_Decomposition_Base::set_iteration_threshold_of_randomization( const unsi
     iteration_threshold_of_randomization = threshold;
 
 }
+/**
+@brief Get the number of iterations.
+*/
+int 
+N_Qubit_Decomposition_Base::get_num_iters() {
 
+    return number_of_iters;
+
+}
 
 
 /**

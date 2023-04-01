@@ -628,8 +628,6 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             qgd_free( optimized_parameters );
         }
 */
-
-
         optimized_parameters_mtx = Matrix_real( 1, parameter_num );
         memcpy( optimized_parameters_mtx.get_data(), optimized_parameters_gsl->data, parameter_num*sizeof(double) );
 

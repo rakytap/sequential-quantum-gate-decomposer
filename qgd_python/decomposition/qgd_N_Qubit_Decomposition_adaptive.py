@@ -410,6 +410,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
  
 ##
 # @brief Call to set unitary matrix from a numpy array
+# @param Umtx_arr numpy complex array 
     def set_Unitary( self, Umtx_arr ):  
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Unitary( Umtx_arr )
@@ -422,6 +423,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         
 ##
 # @brief Call to export unitary matrix to binary file
+# @param filename string
     def export_Unitary( self, filename ):
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).export_Unitary(filename)
@@ -440,7 +442,8 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Global_Phase()
 
 ##
-# @brief Call to set global phase 
+# @brief Call to set global phase
+# @param new_global_phase New global phase (in radians)
     def set_Global_Phase( self, new_global_phase ):
 	
         return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Global_Phase(new_global_phase)
@@ -451,7 +454,8 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Project_Name()
 
 ##
-# @brief Call to set the name of the SQUANDER project ( recommended format : *new project name*_ ) 
+# @brief Call to set the name of the SQUANDER project
+# @param project_name_new new project name
     def set_Project_Name( self, project_name_new ):
 	
         return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Project_Name(project_name_new)
@@ -479,7 +483,6 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def apply_Imported_Gate_Structure( self ):  
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Imported_Gate_Structure()
-
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
 # @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2", "ADAM_BATCHED".
@@ -500,7 +503,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             return None
 
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Matrix( parameters )
-
+        
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
 # @param costfnc Variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2
@@ -555,12 +558,29 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         return cost_function, grad
 
-
-
 ## 
 # @brief Call to prepare the circuit to be exported into Qiskit format. (parameters and gates gets bound together, gate block structure is converted to plain structure).
     def Prepare_Gates_To_Export(self):
 
         # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_adaptive, self).Prepare_Gates_To_Export()  
+        super(qgd_N_Qubit_Decomposition_adaptive, self).Prepare_Gates_To_Export()
 
+##
+# @brief Call to get the number of iterations  
+    def get_Num_of_Iters(self):
+    
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Num_of_Iters()
+    
+##
+# @brief Call to set the maximum number of iterations for each optimization loop
+# @param max_iters int number of maximum iterations each loop
+    def set_Max_Iterations(self, max_iters):
+        
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Max_Iterations(max_iters)
+    
+##
+# @brief call to set the cost function type of the optimization problem
+# @param cost_func int argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for HILBERT_SCHMIDT_TEST, 4 for HILBERT_SCHMIDT_TEST_CORRECTION1, 5 for HILBERT_SCHMIDT_TEST_CORRECTION2 see more at: https://arxiv.org/abs/2210.09191
+    def set_Cost_Function_Variant(self, cost_func):
+    
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(cost_func) 

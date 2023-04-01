@@ -27,7 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Decomposition_Base.h"
 
 /// @brief Type definition of the fifferent types of the cost function
-typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2} cost_function_type;
+typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2, HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2} cost_function_type;
 
 
 
@@ -99,6 +99,9 @@ protected:
     double correction1_scale;
     ///
     double correction2_scale;    
+    
+    /// number of iterations
+    int number_of_iters;
 
     /// logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     bool adaptive_eta;
@@ -229,6 +232,15 @@ double optimization_problem( double* parameters);
 */
 double optimization_problem( Matrix_real& parameters);
 
+
+/**
+@brief The optimization problem of the final optimization useful for gradient
+@param parameters A GNU Scientific Library containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param ret_temp A matrix to store trace in for gradient
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double optimization_problem( const gsl_vector* parameters, void* void_instance, Matrix ret_temp );
 
 
 /**
@@ -369,7 +381,6 @@ void set_adaptive_eta( bool adaptive_eta_in  );
 void set_randomized_radius( double radius_in  );
 
 
-
 /**
 @brief Get the trace ffset used in the evaluation of the cost function
 */
@@ -380,6 +391,11 @@ int get_trace_offset();
 */
 void set_trace_offset(int trace_offset_in);
 
+
+/**
+@brief Get the number of processed iterations during the optimization process
+*/
+int get_num_iters();
 
 #ifdef __DFE__
 
