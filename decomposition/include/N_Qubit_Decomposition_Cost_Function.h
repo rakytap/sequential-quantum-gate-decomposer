@@ -35,7 +35,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @param matrix The square shaped complex matrix from which the cost function is calculated.
 @return Returns with the calculated cost function.
 */
-double get_cost_function(Matrix matrix);
+double get_cost_function(Matrix matrix, int trace_offset=0);
 
 
 /**
@@ -44,7 +44,7 @@ double get_cost_function(Matrix matrix);
 @param qbit_num The number of qubits
 @return Returns with the matrix containing the cost function (index 0) and the first correction (index 1).
 */
-Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num);
+Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num, int trace_offset=0);
 
 
 /**
@@ -53,7 +53,7 @@ Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num);
 @param qbit_num The number of qubits
 @return Returns with the matrix containing the cost function (index 0), the first correction (index 1) and the second correction (index 2).
 */
-Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num);
+Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num, int trace_offset=0);
 
 
 

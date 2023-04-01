@@ -65,7 +65,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     cost_fnc = FROBENIUS_NORM;
 
 
-    prev_cost_fnv_val = 0.0;
+    prev_cost_fnv_val = 1.0;
     //
     correction1_scale = 1/1.7;
     correction2_scale = 1/2.0;  
@@ -74,6 +74,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 
     // number of utilized accelerators
     accelerator_num = 0;
+
+    // set the trace offset
+    trace_offset = 0;
 
     // unique id indentifying the instance of the class
     std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
@@ -120,13 +123,15 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
     // The chosen variant of the cost function
     cost_fnc = FROBENIUS_NORM;
 
-    prev_cost_fnv_val = 0.0;
+    prev_cost_fnv_val = 1.0;
     //
     correction1_scale = 1/1.7;
     correction2_scale = 1/2.0; 
 
     iteration_threshold_of_randomization = 2500000;
 
+    // set the trace offset
+    trace_offset = 0;
 
     // unique id indentifying the instance of the class
     std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
@@ -292,6 +297,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
         case ADAM:
             solve_layer_optimization_problem_ADAM( num_of_parameters, solution_guess_gsl);
             return;
+        case ADAM_BATCHED:
+            solve_layer_optimization_problem_ADAM_BATCHED( num_of_parameters, solution_guess_gsl);
+            return;
         case BFGS:
             solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess_gsl);
             return;
@@ -306,6 +314,216 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 
 }
 
+
+/**
+@brief Call to solve layer by layer the optimization problem via batched ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+
+#ifdef __DFE__
+        if ( qbit_num >= 5 ) {
+            upload_Umtx_to_DFE();
+        }
+#endif
+
+
+
+        if (gates.size() == 0 ) {
+            return;
+        }
+
+
+        if (solution_guess_gsl == NULL) {
+            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
+        }
+//memset( solution_guess_gsl->data, 0.0, solution_guess_gsl->size*sizeof(double) );
+
+        if (optimized_parameters_mtx.size() == 0) {
+            optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+        }
+
+
+        int random_shift_count = 0;
+        int sub_iter_idx = 0;
+        double current_minimum_hold = current_minimum;
+    
+
+        tbb::tick_count adam_start = tbb::tick_count::now();
+        adam_time = 0.0;
+pure_DFE_time = 0.0;
+        Adam optimizer;
+        optimizer.initialize_moment_and_variance( num_of_parameters );
+
+
+
+        // the array storing the optimized parameters
+        gsl_vector* grad_gsl = gsl_vector_alloc(num_of_parameters);
+        gsl_vector* solution_guess_tmp = gsl_vector_alloc(num_of_parameters);
+        memcpy(solution_guess_tmp->data, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+
+        Matrix_real solution_guess_tmp_mtx = Matrix_real( solution_guess_tmp->data, num_of_parameters, 1 );
+        Matrix_real grad_mtx = Matrix_real( grad_gsl->data, num_of_parameters, 1 );
+        //solution_guess_tmp_mtx.print_matrix();
+
+
+        double f0 = DBL_MAX;
+        std::stringstream sstream;
+        sstream << "iter_max: " << iter_max << ", randomization threshold: " << iteration_threshold_of_randomization << ", randomization radius: " << radius << std::endl;
+        print(sstream, 2); 
+
+        int ADAM_status = 0;
+
+
+
+Matrix Umtx_orig = Umtx;
+int batch_size_min = Umtx_orig.cols*5/6;
+std::uniform_int_distribution<> distrib_trace_offset(0, Umtx_orig.cols-batch_size_min);
+
+
+int batch_num = 100;
+for (int batch_idx=0; batch_idx<batch_num; batch_idx++ ) {
+
+    trace_offset = distrib_trace_offset(gen);
+
+    std::uniform_int_distribution<> distrib_col_num(batch_size_min, Umtx_orig.cols-trace_offset);
+    int col_num = distrib_col_num(gen);
+std::cout << "trace offset: " << trace_offset << " col_num: " << col_num << " iter_max: " << iter_max << std::endl;
+
+    // create a slice from the original Umtx
+    Matrix Umtx_slice(Umtx_orig.rows, col_num);
+    for (int row_idx=0; row_idx<Umtx_orig.rows; row_idx++) {
+        memcpy( Umtx_slice.get_data() + row_idx*Umtx_slice.stride, Umtx_orig.get_data() + row_idx*Umtx_orig.stride + trace_offset, col_num*sizeof(QGD_Complex16) );
+    }
+
+    Umtx = Umtx_slice;
+
+        for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
+
+            
+
+
+            optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_gsl );
+
+            prev_cost_fnv_val = f0;
+  
+            if (sub_iter_idx == 1 ) {
+                current_minimum_hold = f0;   
+               
+                if ( adaptive_eta )  { 
+                    optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3; 
+                    //std::cout << "reset learning rate to " << optimizer.eta << std::endl;
+                }                 
+
+            }
+
+
+            if (current_minimum_hold*0.95 > f0 || (current_minimum_hold*0.97 > f0 && f0 < 1e-3) ||  (current_minimum_hold*0.99 > f0 && f0 < 1e-4) ) {
+                sub_iter_idx = 0;
+                current_minimum_hold = f0;        
+            }
+    
+    
+            if (current_minimum > f0 ) {
+                current_minimum = f0;
+                memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp->data, num_of_parameters*sizeof(double) );
+                //double new_eta = 1e-3 * f0 * f0;
+                
+                if ( adaptive_eta )  {
+                    double new_eta = 1e-3 * f0;
+                    optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;
+                    optimizer.eta = new_eta < 1e-1 ? new_eta : 1e-1;
+                }
+                
+            }
+    
+
+            if ( iter_idx % 5000 == 0 ) {
+
+                Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+
+                std::stringstream sstream;
+                sstream << "ADAM: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new, trace_offset) << std::endl;
+                print(sstream, 0);   
+                std::string filename("initial_circuit_iteration.binary");
+                export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+
+            }
+
+//std::cout << grad_norm  << std::endl;
+            if (f0 < optimization_tolerance || random_shift_count > random_shift_count_max ) {
+                break;
+            }
+
+
+
+                // calculate the gradient norm
+                double norm = 0.0;
+                for ( int grad_idx=0; grad_idx<num_of_parameters; grad_idx++ ) {
+                    norm += grad_gsl->data[grad_idx]*grad_gsl->data[grad_idx];
+                }
+                norm = std::sqrt(norm);
+                    
+
+            if ( sub_iter_idx> iteration_threshold_of_randomization || ADAM_status != 0 ) {
+
+                //random_shift_count++;
+                sub_iter_idx = 0;
+                random_shift_count++;
+                current_minimum_hold = current_minimum;   
+
+
+                
+                std::stringstream sstream;
+                if ( ADAM_status == 0 ) {
+                    sstream << "ADAM: initiate randomization at " << f0 << ", gradient norm " << norm << std::endl;
+                }
+                else {
+                    sstream << "ADAM: leaving local minimum " << f0 << ", gradient norm " << norm << " eta: " << optimizer.eta << std::endl;
+                }
+                print(sstream, 0);   
+                    
+                 int randomization_successful = 1;
+                randomize_parameters(optimized_parameters_mtx, solution_guess_tmp, randomization_successful, f0 );
+                randomization_successful = 0;
+        
+                optimizer.reset();
+                optimizer.initialize_moment_and_variance( num_of_parameters );   
+
+                ADAM_status = 0;   
+
+                //optimizer.eta = 1e-3;
+        
+            }
+
+            else {
+                ADAM_status = optimizer.update(solution_guess_tmp_mtx, grad_mtx, f0);
+            }
+
+            sub_iter_idx++;
+
+        }
+
+
+
+
+}
+
+        sstream.str("");
+        sstream << "obtained minimum: " << current_minimum << std::endl;
+
+
+        gsl_vector_free(grad_gsl);
+        gsl_vector_free(solution_guess_tmp);
+        tbb::tick_count adam_end = tbb::tick_count::now();
+        adam_time  = adam_time + (adam_end-adam_start).seconds();
+        sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
+        
+        print(sstream, 0); 
+
+}
 
 /**
 @brief Call to solve layer by layer the optimization problem via ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
@@ -416,7 +634,7 @@ pure_DFE_time = 0.0;
                 Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 
                 std::stringstream sstream;
-                sstream << "ADAM: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new) << std::endl;
+                sstream << "ADAM: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new, trace_offset) << std::endl;
                 print(sstream, 0);   
                 std::string filename("initial_circuit_iteration.binary");
                 export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
@@ -915,14 +1133,14 @@ double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
 
 
     if ( cost_fnc == FROBENIUS_NORM ) {
-        return get_cost_function(matrix_new);
+        return get_cost_function(matrix_new, trace_offset);
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-        Matrix_real&& ret = get_cost_function_with_correction(matrix_new, qbit_num);
+        Matrix_real&& ret = get_cost_function_with_correction(matrix_new, qbit_num, trace_offset);
         return ret[0] - std::sqrt(prev_cost_fnv_val)*ret[1]*correction1_scale;
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
-        Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num);
+        Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num, trace_offset);
         return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
     }
     else {
@@ -954,14 +1172,14 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
 //matrix_new.print_matrix();
 
     if ( cost_fnc == FROBENIUS_NORM ) {
-        return get_cost_function(matrix_new);
+        return get_cost_function(matrix_new, trace_offset);
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-        Matrix_real&& ret = get_cost_function_with_correction(matrix_new, qbit_num);
+        Matrix_real&& ret = get_cost_function_with_correction(matrix_new, qbit_num, trace_offset);
         return ret[0] - std::sqrt(prev_cost_fnv_val)*ret[1]*correction1_scale;
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
-        Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num);
+        Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num, trace_offset);
         return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
     }
     else {
@@ -994,17 +1212,17 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
 
 
     if ( cost_fnc == FROBENIUS_NORM ) {
-        return get_cost_function(matrix_new);
+        return get_cost_function(matrix_new, instance->get_trace_offset());
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
         double correction1_scale    = instance->get_correction1_scale();
-        Matrix_real&& ret = get_cost_function_with_correction(matrix_new, instance->get_qbit_num());
-        return ret[0] - std::sqrt(instance->get_previous_cost_function_value())*ret[1]*correction1_scale;
+        Matrix_real&& ret = get_cost_function_with_correction(matrix_new, instance->get_qbit_num(), instance->get_trace_offset());
+        return ret[0] - 0*std::sqrt(instance->get_previous_cost_function_value())*ret[1]*correction1_scale;
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
         double correction1_scale    = instance->get_correction1_scale();
         double correction2_scale    = instance->get_correction2_scale();            
-        Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, instance->get_qbit_num());
+        Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, instance->get_qbit_num(), instance->get_trace_offset());
         return ret[0] - std::sqrt(instance->get_previous_cost_function_value())*(ret[1]*correction1_scale + ret[2]*correction2_scale);
     }
     else {
@@ -1056,13 +1274,14 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const gsl_vector
     double correction2_scale    = instance->get_correction2_scale();    
 
     int qbit_num = instance->get_qbit_num();
+    int trace_offset_loc = instance->get_trace_offset();
 
 #ifdef __DFE__
 
 ///////////////////////////////////////
 //std::cout << "number of qubits: " << instance->qbit_num << std::endl;
 //tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
-if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
+if ( instance->qbit_num >= 2 && instance->get_accelerator_num() > 0 ) {
     Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
 
     int gatesNum, redundantGateSets, gateSetNum;
@@ -1081,7 +1300,7 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
     Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
 
     lock_lib();
-    calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, mpi_trace_DFE_mtx.get_data() );
+    calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset_loc, mpi_trace_DFE_mtx.get_data() );
     unlock_lib();
 
     int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
@@ -1090,7 +1309,7 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
 #else
 
     lock_lib();
-    calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_DFE_mtx.get_data() );
+    calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_offset_loc, trace_DFE_mtx.get_data() );
     unlock_lib();
 
 #endif  
@@ -1104,7 +1323,7 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
         *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-        *f0 = 1 - (trace_DFE_mtx[0] + std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[1]*correction1_scale)/Umtx_loc.cols;
+        *f0 = 1 - (trace_DFE_mtx[0] + 0*std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[1]*correction1_scale)/Umtx_loc.cols;
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
         *f0 = 1 - (trace_DFE_mtx[0] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[1]*correction1_scale + trace_DFE_mtx[2]*correction2_scale))/Umtx_loc.cols;
@@ -1170,19 +1389,21 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
         });
 
 
+
+
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
 
             double grad_comp;
             if ( cost_fnc == FROBENIUS_NORM ) {
-                grad_comp = (get_cost_function(Umtx_deriv[idx]) - 1.0);
+                grad_comp = (get_cost_function(Umtx_deriv[idx], trace_offset_loc) - 1.0);
             }
             else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-                Matrix_real deriv_tmp = get_cost_function_with_correction( Umtx_deriv[idx], qbit_num );
+                Matrix_real deriv_tmp = get_cost_function_with_correction( Umtx_deriv[idx], qbit_num, trace_offset_loc );
                 grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*deriv_tmp[1]*correction1_scale - 1.0);
             }
             else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
-                Matrix_real deriv_tmp = get_cost_function_with_correction2( Umtx_deriv[idx], qbit_num );
+                Matrix_real deriv_tmp = get_cost_function_with_correction2( Umtx_deriv[idx], qbit_num, trace_offset_loc );
                 grad_comp = (deriv_tmp[0] - std::sqrt(prev_cost_fnv_val)*(deriv_tmp[1]*correction1_scale + deriv_tmp[2]*correction2_scale) - 1.0);
             }
             else {
@@ -1197,6 +1418,10 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
         }
     });
+
+    std::stringstream sstream;
+    sstream << *f0 << std::endl;
+    instance->print(sstream, 5);	
 
 #ifdef __DFE__
 }
@@ -1356,6 +1581,13 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
             max_iterations = 1;
             return;
 
+        case ADAM_BATCHED:
+            iter_max = 2.5e3;
+            random_shift_count_max = 3;
+            gradient_threshold = 1e-8;
+            max_iterations = 1;
+            return;
+
         case BFGS:
             iter_max = 100;
             gradient_threshold = 1e-1;
@@ -1488,6 +1720,42 @@ N_Qubit_Decomposition_Base::set_iteration_threshold_of_randomization( const unsi
 
 
     iteration_threshold_of_randomization = threshold;
+
+}
+
+
+
+/**
+@brief Get the trace offset used in the evaluation of the cost function
+*/
+int 
+N_Qubit_Decomposition_Base::get_trace_offset() {
+
+    return trace_offset;
+
+}
+
+
+/**
+@brief Set the trace offset used in the evaluation of the cost function
+*/
+void 
+N_Qubit_Decomposition_Base::set_trace_offset(int trace_offset_in) {
+
+
+    if ( (trace_offset_in + Umtx.cols) > Umtx.rows ) {
+        std::string error("N_Qubit_Decomposition_Base::set_trace_offset: trace offset must be smaller or equal to the difference of the rows and columns in the input unitary.");
+        throw error;
+
+    }
+
+    
+    trace_offset = trace_offset_in;
+
+
+    std::stringstream sstream;
+    sstream << "N_Qubit_Decomposition_Base::set_trace_offset: trace offset set to " << trace_offset << std::endl;
+    print(sstream, 2);	
 
 }
 
