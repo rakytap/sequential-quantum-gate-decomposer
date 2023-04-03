@@ -541,6 +541,21 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Trace_Offset()  
 
 
+## 
+# @brief Call to evaluate the cost function.
+# @param parameters A float64 numpy array
+    def Optimization_Problem( self, parameters=None ):
+
+        if parameters is None:
+            print( "Optimization_Problem: array of input parameters is None")
+            return None
+
+        # evaluate the cost function and gradients
+        cost_function = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem(parameters)  
+
+
+        return cost_function
+
 
 ## 
 # @brief Call to evaluate the cost function and the gradient components.
@@ -548,7 +563,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def Optimization_Problem_Combined( self, parameters=None ):
 
         if parameters is None:
-            print( "Optimization_Problem_Combined: arary of input parameters is None")
+            print( "Optimization_Problem_Combined: array of input parameters is None")
             return None
 
         # evaluate the cost function and gradients
