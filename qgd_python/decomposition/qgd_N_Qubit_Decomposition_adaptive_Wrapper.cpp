@@ -67,6 +67,7 @@ typedef struct qgd_N_Qubit_Decomposition_adaptive_Wrapper {
 @param qbit_num Number of qubits spanning the unitary
 @param level_limit The maximal number of layers used in the decomposition
 @param initial_guess Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
+@param compression_enabled_in Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition_adaptive* 
@@ -165,6 +166,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     int level_limit_min = 0;
     PyObject *topology = NULL;
     int accelerator_num = 0;
+    int compression_enabled = 1;
 
     // parsing input arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiOOi", kwlist,
@@ -323,8 +325,33 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Start_Decomposition(qgd_N_Qubit_Decom
 
 }
 
+/**
+@brief Wrapper function to call the start_compression method of C++ class N_Qubit_Decomposition
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_Start_Compression(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self)
+{
+
+    try {
+        self->decomp->start_compression();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    
 
 
+    return Py_BuildValue("i", 0);
+
+}
 
 
 
@@ -2013,6 +2040,9 @@ static PyMemberDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_members[] = {
 static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     {"Start_Decomposition", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Start_Decomposition, METH_VARARGS | METH_KEYWORDS,
      "Method to start the decomposition."
+    },
+    {"Start_Compression", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Start_Compression, METH_NOARGS,
+     "Method to start the compression."
     },
     {"get_Gate_Num", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gate_num, METH_NOARGS,
      "Method to get the number of decomposing gates."
