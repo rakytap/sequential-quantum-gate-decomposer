@@ -65,6 +65,8 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     cost_fnc = FROBENIUS_NORM;
     
     number_of_iters = 0;
+    
+    compression_enabled = 1;
 
 
     prev_cost_fnv_val = 1.0;
@@ -126,7 +128,8 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 
     // The chosen variant of the cost function
     cost_fnc = FROBENIUS_NORM;
-
+    
+    compression_enabled = 1;
     prev_cost_fnv_val = 1.0;
     //
     correction1_scale = 1/1.7;
