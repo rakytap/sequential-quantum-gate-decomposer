@@ -29,7 +29,7 @@ from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qu
 
 ##
 # @brief A QGD Python interface class for the decomposition of N-qubit state into U3 and CNOT gates.
-class qgd_N_Qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive): #Decomposition nem kell a nevbe 
+class qgd_N_Qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive):
 
 	def __init__( self, State, level_limit_max=8, level_limit_min=0, topology=None, config={} ):
 		print(State.shape)
