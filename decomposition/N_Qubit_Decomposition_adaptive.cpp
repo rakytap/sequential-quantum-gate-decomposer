@@ -81,6 +81,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
 @param qbit_num_in The number of qubits spanning the unitary Umtx
 @param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@param compression_enabled_in Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
 @return An instance of the class
 */
 N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, false, config, RANDOM, accelerator_num) {
@@ -91,7 +92,8 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
     level_limit_min = level_limit_min_in;
 
 
-
+    // En/Dis -able compression
+    compression_enabled = compression_enabled_in;
 
     // BFGS is better for smaller problems, while ADAM for larger ones
     if ( qbit_num <= 5 ) {
@@ -126,6 +128,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 @param qbit_num_in The number of qubits spanning the unitary Umtx
 @param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@param compression_enabled_in Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
 @return An instance of the class
 */
 N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, false, config, RANDOM, accelerator_num) {
@@ -140,6 +143,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
     max_outer_iterations = 1;
 
     gradient_threshold = 1e-8;
+    
+    // En/Dis -able compression
+    compression_enabled = compression_enabled_in;
 
     // setting the topology
     topology = topology_in;
@@ -246,7 +252,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
     export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
 
-
+	if (compression_enabled==1){
     sstream.str("");
     sstream << std::endl;
     sstream << std::endl;
@@ -294,6 +300,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
         if (uncompressed_iter_num>10) break;
 
+    }
     }
 
     sstream.str("");
@@ -444,7 +451,59 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
 }
 
+/**
+*/
+void N_Qubit_Decomposition_adaptive::start_compression(){
+    std::stringstream sstream;
+    sstream.str("");
+    sstream << std::endl;
+    sstream << std::endl;
+    sstream << "**************************************************************" << std::endl;
+    sstream << "***************** Compressing Gate structure *****************" << std::endl;
+    sstream << "**************************************************************" << std::endl;
+    print(sstream, 1);
+    Gates_block* gate_structure_loc = NULL;
+    gate_structure_loc = optimize_imported_gate_structure(optimized_parameters_mtx);
+    int iter = 0;
+    int uncompressed_iter_num = 0;
+    while ( iter<25 || uncompressed_iter_num <= 5 ) {
 
+        sstream.str("");
+        sstream << "iteration " << iter+1 << ": ";
+        print(sstream, 1);	
+
+       
+        Gates_block* gate_structure_compressed = compress_gate_structure( gate_structure_loc );
+
+        if ( gate_structure_compressed->get_gate_num() < gate_structure_loc->get_gate_num() ) {
+            uncompressed_iter_num = 0;
+        }
+        else {
+            uncompressed_iter_num++;
+        }
+
+        if ( gate_structure_compressed != gate_structure_loc ) {
+            delete( gate_structure_loc );
+            gate_structure_loc = gate_structure_compressed;
+            gate_structure_compressed = NULL;
+            
+
+            std::string filename("circuit_compression.binary");
+            if (project_name != "") { 
+                filename=project_name+ "_"  +filename;
+            }
+
+            export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);    
+            std::string filename_unitary("unitary_compression_unitary");
+            export_unitary(filename_unitary);
+        }
+
+        iter++;
+
+        if (uncompressed_iter_num>10) break;
+
+    }
+}
 /**
 @brief ??????????????
 */

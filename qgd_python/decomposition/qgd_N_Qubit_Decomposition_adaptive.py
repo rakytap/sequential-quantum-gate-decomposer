@@ -40,6 +40,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param Umtx The unitary matrix to be decomposed.
 # @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
+# @param compression_enabled_in Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
 # @return An instance of the class
     def __init__( self, Umtx, level_limit_max=8, level_limit_min=0, topology=None, config={}, accelerator_num=0 ):
 
@@ -603,4 +604,9 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param cost_func int argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for HILBERT_SCHMIDT_TEST, 4 for HILBERT_SCHMIDT_TEST_CORRECTION1, 5 for HILBERT_SCHMIDT_TEST_CORRECTION2 see more at: https://arxiv.org/abs/2210.09191
     def set_Cost_Function_Variant(self, cost_func):
     
-        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(cost_func) 
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(cost_func)
+##
+# @brief call to start the compression
+    def Start_Compression(self):
+    
+        super(qgd_N_Qubit_Decomposition_adaptive, self).Start_Compression() 
