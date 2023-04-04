@@ -142,7 +142,7 @@ Gates_block* compress_gate_structure( Gates_block* gate_structure );
 /**
 @brief ???????????????
 */
-Gates_block* compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& currnt_minimum_loc );
+Gates_block* compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& currnt_minimum_loc, int& iteration_num );
 
 /**
 @brief ???????????????

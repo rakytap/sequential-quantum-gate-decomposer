@@ -101,6 +101,8 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 
     // The global minimum of the optimization problem
     global_target_minimum = 0;
+    
+    number_of_iters = 0;
 
     // number of iteratrion loops in the optimization
     iteration_loops[2] = 3;
