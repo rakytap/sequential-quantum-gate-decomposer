@@ -102,7 +102,8 @@ protected:
     ///
     double correction2_scale;    
     
-
+    /// En/Dis -able compression
+    int compression_enabled;
     /// number of iterations
     int number_of_iters;
 
