@@ -32,7 +32,6 @@ from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qu
 class qgd_N_Qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive):
 
 	def __init__( self, State, level_limit_max=8, level_limit_min=0, topology=None, config={} ):
-		print(State.shape)
 		if ( (type(State) == np.ndarray) and (State.shape[1]==1) ):
 			super().__init__( State, level_limit_max, level_limit_min, topology=topology, config=config )
 		else:
