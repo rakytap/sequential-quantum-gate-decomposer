@@ -47,31 +47,14 @@ class Test_State_Preparation:
         This method is called by pytest. 
         Test to decompose a 4-qubit unitary State
 
-		from squander import N_Qubit_State_Preparation_adaptive       
-		from scipy.io import loadmat
-				
-		# load the unitary from file
-		data = loadmat('Umtx.mat')  
-		# The unitary to be decomposed
-		Umtx = data['Umtx'].conj().T
+        """
 
-		# creating a class to decompose the unitary
-		with pytest.raises(Exception):
-			cDecompose = N_qubit_State_Preparation_adaptive( Umtx, level_limit_max=5, level_limit_min=0 )
-		    
-	def State_Preparation_adaptive_base(self, optimizer, cost_func):
+        from qgd_python.decomposition.qgd_N_Qubit_State_Preparation_adaptive import qgd_N_Qubit_State_Preparation_adaptive
+        from scipy.io import loadmat
 
-		from squander import N_Qubit_State_Preparation_adaptive       
-		from scipy.io import loadmat
-				
-		# load the unitary from file
-		data = loadmat('Umtx.mat')  
-		# The unitary to be decomposed  
-		Umtx = data['Umtx']
-		State = Umtx[:,0].reshape(16,1)
+        # load the unitary from file
 
-		# creating a class to decompose the unitary
-		cDecompose = N_Qubit_State_Preparation_adaptive( State, level_limit_max=5, level_limit_min=0 )
+        data = loadmat('Umtx.mat')
 
         # The unitary to be decomposed
 
