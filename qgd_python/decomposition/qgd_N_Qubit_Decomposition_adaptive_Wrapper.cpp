@@ -732,7 +732,7 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Num_of_Iters( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
 
     int number_of_iters = self->decomp->get_num_iters();
-
+    
     return Py_BuildValue("i", number_of_iters);
 }
 
