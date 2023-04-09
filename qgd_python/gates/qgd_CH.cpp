@@ -317,6 +317,11 @@ static PyModuleDef  qgd_CH_Module = {
 PyMODINIT_FUNC
 PyInit_qgd_CH(void)
 {
+
+    // initialize Numpy API
+    import_array();
+
+
     PyObject *m;
     if (PyType_Ready(& qgd_CH_Type) < 0)
         return NULL;
