@@ -710,8 +710,11 @@ apply_kernel_to_state_vector_input_parallel_AVX(Matrix& u3_1qbit, Matrix& input,
         __m256d u3_1bit_11r_vec = _mm256_broadcast_sd(&u3_1qbit[3].real);    
         __m256d u3_1bit_11i_vec = _mm256_broadcast_sd(&u3_1qbit[3].imag);
 
+        tbb::parallel_for( tbb::blocked_range<int>(0,parallel_outer_cycles,outer_grain_size), [&](tbb::blocked_range<int> r) { 
 
 
+            int current_idx      = r.begin()*(index_step_target << 1);
+            int current_idx_pair = index_step_target + r.begin()*(index_step_target << 1);
 
         tbb::parallel_for( tbb::blocked_range<int>(0,matrix_size/2,grain_size), [&](tbb::blocked_range<int> r) { 
 
