@@ -163,7 +163,7 @@ apply_kernel_to_state_vector_input_AVX(Matrix& u3_1qbit, Matrix& input, const bo
 
 
     }
-    else {
+    else if (target_qbit == 1 || control_qbit == 1) {
 
 
 
@@ -305,7 +305,116 @@ apply_kernel_to_state_vector_input_AVX(Matrix& u3_1qbit, Matrix& input, const bo
 
 
 
-    } // else
+    } // else if
+    else {
+
+
+
+        // load elements of the U3 unitary into 256bit registers (8 registers)
+        __m256d u3_1bit_00r_vec = _mm256_broadcast_sd(&u3_1qbit[0].real);
+        __m256d u3_1bit_00i_vec = _mm256_broadcast_sd(&u3_1qbit[0].imag);
+        __m256d u3_1bit_01r_vec = _mm256_broadcast_sd(&u3_1qbit[1].real);
+        __m256d u3_1bit_01i_vec = _mm256_broadcast_sd(&u3_1qbit[1].imag);
+        __m256d u3_1bit_10r_vec = _mm256_broadcast_sd(&u3_1qbit[2].real);
+        __m256d u3_1bit_10i_vec = _mm256_broadcast_sd(&u3_1qbit[2].imag);
+        __m256d u3_1bit_11r_vec = _mm256_broadcast_sd(&u3_1qbit[3].real);
+        __m256d u3_1bit_11i_vec = _mm256_broadcast_sd(&u3_1qbit[3].imag);
+
+
+        for ( int current_idx_pair=current_idx + index_step_target; current_idx_pair<matrix_size; current_idx_pair=current_idx_pair+(index_step_target << 1) ) {
+
+            for (int idx = 0; idx < index_step_target; idx=idx+4) {
+
+                int current_idx_loc = current_idx + idx;
+                int current_idx_pair_loc = current_idx_pair + idx;
+
+                int row_offset = current_idx_loc;
+                int row_offset_pair = current_idx_pair_loc;
+
+                if (control_qbit < 0 || ((current_idx_loc >> control_qbit) & 1)) {
+
+
+                    double* element = (double*)input.get_data() + 2 * row_offset;
+                    double* element_pair = (double*)input.get_data() + 2 * row_offset_pair;
+
+                    // extract successive elements from arrays element, element_pair
+                            __m256d element_vec = _mm256_loadu_pd(element);
+                            __m256d element_vec2 = _mm256_loadu_pd(element + 4);
+                            __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
+                            element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
+                            element_vec = tmp;
+
+                            __m256d element_pair_vec = _mm256_loadu_pd(element_pair);
+                            __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + 4);
+                            tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
+                            element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
+                            element_pair_vec = tmp;
+
+                            __m256d vec3 = _mm256_mul_pd(u3_1bit_00r_vec, element_vec);
+                            vec3 = _mm256_fnmadd_pd(u3_1bit_00i_vec, element_vec2, vec3);
+                            __m256d vec4 = _mm256_mul_pd(u3_1bit_01r_vec, element_pair_vec);
+                            vec4 = _mm256_fnmadd_pd(u3_1bit_01i_vec, element_pair_vec2, vec4);
+                            vec3 = _mm256_add_pd(vec3, vec4);
+                            __m256d vec5 = _mm256_mul_pd(u3_1bit_00r_vec, element_vec2);
+                            vec5 = _mm256_fmadd_pd(u3_1bit_00i_vec, element_vec, vec5);
+                            __m256d vec6 = _mm256_mul_pd(u3_1bit_01r_vec, element_pair_vec2);
+                            vec6 = _mm256_fmadd_pd(u3_1bit_01i_vec, element_pair_vec, vec6);
+                            vec5 = _mm256_add_pd(vec5, vec6);    
+
+                            // 6 store the transformed elements in vec3
+                            tmp = _mm256_shuffle_pd(vec3, vec5, 0);
+                            vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
+                            vec3 = tmp;
+                            _mm256_storeu_pd(element, vec3);
+                            _mm256_storeu_pd(element + 4, vec5);
+
+                            __m256d vec7 = _mm256_mul_pd(u3_1bit_10r_vec, element_vec);
+                            vec7 = _mm256_fnmadd_pd(u3_1bit_10i_vec, element_vec2, vec7);
+                            __m256d vec8 = _mm256_mul_pd(u3_1bit_11r_vec, element_pair_vec);
+                            vec8 = _mm256_fnmadd_pd(u3_1bit_11i_vec, element_pair_vec2, vec8);
+                            vec7 = _mm256_add_pd(vec7, vec8);
+                            __m256d vec9 = _mm256_mul_pd(u3_1bit_10r_vec, element_vec2);
+                            vec9 = _mm256_fmadd_pd(u3_1bit_10i_vec, element_vec, vec9);
+                            __m256d vec10 = _mm256_mul_pd(u3_1bit_11r_vec, element_pair_vec2);
+                            vec10 = _mm256_fmadd_pd(u3_1bit_11i_vec, element_pair_vec, vec10);
+                            vec9 = _mm256_add_pd(vec9, vec10);
+
+                            // 6 store the transformed elements in vec3
+                            tmp = _mm256_shuffle_pd(vec7, vec9, 0);
+                            vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
+                            vec7 = tmp;
+                            _mm256_storeu_pd(element_pair, vec7);
+                            _mm256_storeu_pd(element_pair + 4, vec9);
+                        
+                    
+
+
+                }
+                else if (deriv) {
+                    // when calculating derivatives, the constant element should be zeros
+                    memset(input.get_data() + row_offset, 0.0, input.cols * sizeof(QGD_Complex16));
+                    memset(input.get_data() + row_offset_pair, 0.0, input.cols * sizeof(QGD_Complex16));
+                }
+                else {
+                    // leave the state as it is
+                    continue;
+                }
+
+
+            //std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
+
+
+                    //});
+            }
+
+
+            current_idx = current_idx + (index_step_target << 1);
+
+
+        }
+
+
+    }// else
 
 }
 
@@ -441,7 +550,7 @@ apply_kernel_to_state_vector_input_parallel_AVX(Matrix& u3_1qbit, Matrix& input,
         outer_grain_size = 2;
     }
 
-
+    int inner_grain_size = 32;
 
     if ( target_qbit == 0 || control_qbit == 0 ) {
         tbb::parallel_for( tbb::blocked_range<int>(0,parallel_outer_cycles,outer_grain_size), [&](tbb::blocked_range<int> r) { 
@@ -452,7 +561,7 @@ apply_kernel_to_state_vector_input_parallel_AVX(Matrix& u3_1qbit, Matrix& input,
             for (int rdx=r.begin(); rdx<r.end(); rdx++) {
             
 
-                tbb::parallel_for( tbb::blocked_range<int>(0,index_step_target,32), [&](tbb::blocked_range<int> r) {
+                tbb::parallel_for( tbb::blocked_range<int>(0,index_step_target,inner_grain_size), [&](tbb::blocked_range<int> r) {
 	            for (int idx=r.begin(); idx<r.end(); ++idx) {
 
 
@@ -510,7 +619,7 @@ apply_kernel_to_state_vector_input_parallel_AVX(Matrix& u3_1qbit, Matrix& input,
 
 
     }
-    else {
+    else if (target_qbit == 1 || control_qbit == 1) {
 
         // load elements of the U3 unitary into 256bit registers (4 registers)
         __m128d* u3_1qubit_tmp = (__m128d*) & u3_1qbit[0];
@@ -538,7 +647,7 @@ apply_kernel_to_state_vector_input_parallel_AVX(Matrix& u3_1qbit, Matrix& input,
             for (int rdx=r.begin(); rdx<r.end(); rdx++) {
             
 
-                tbb::parallel_for( tbb::blocked_range<int>(0,index_step_target,32), [&](tbb::blocked_range<int> r) {
+                tbb::parallel_for( tbb::blocked_range<int>(0,index_step_target,inner_grain_size), [&](tbb::blocked_range<int> r) {
 	            for (int idx=r.begin(); idx<r.end(); idx=idx+2) {
 
 
@@ -659,100 +768,56 @@ apply_kernel_to_state_vector_input_parallel_AVX(Matrix& u3_1qbit, Matrix& input,
 
 
 
-
-
-
-
-
-
-    } // else
-
-
-
-
-}
-
-
-
-
-/**
-@brief parallel AVX kernel to apply single qubit gate kernel on an input matrix
-@param ???????????????????
-*/
-/*
-void
-apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
-
-
-    int index_step_target = 1 << target_qbit;
-
-    // load elements of the U3 unitary into 256bit registers (8 registers)
-    __m256d u3_1bit_00r_vec = _mm256_broadcast_sd(&u3_1qbit[0].real);
-    __m256d u3_1bit_00i_vec = _mm256_broadcast_sd(&u3_1qbit[0].imag);
-    __m256d u3_1bit_01r_vec = _mm256_broadcast_sd(&u3_1qbit[1].real);
-    __m256d u3_1bit_01i_vec = _mm256_broadcast_sd(&u3_1qbit[1].imag);
-    __m256d u3_1bit_10r_vec = _mm256_broadcast_sd(&u3_1qbit[2].real);
-    __m256d u3_1bit_10i_vec = _mm256_broadcast_sd(&u3_1qbit[2].imag);
-    __m256d u3_1bit_11r_vec = _mm256_broadcast_sd(&u3_1qbit[3].real);
-    __m256d u3_1bit_11i_vec = _mm256_broadcast_sd(&u3_1qbit[3].imag);
-
-
-
-    int parallel_outer_cycles = matrix_size/(index_step_target << 1);
-    int outer_grain_size;
-    if ( index_step_target <= 2 ) {
-        outer_grain_size = 32;
-    }
-    else if ( index_step_target <= 4 ) {
-        outer_grain_size = 16;
-    }
-    else if ( index_step_target <= 8 ) {
-        outer_grain_size = 8;
-    }
-    else if ( index_step_target <= 16 ) {
-        outer_grain_size = 4;
-    }
+    } // else if
     else {
-        outer_grain_size = 2;
-    }
 
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,parallel_outer_cycles,outer_grain_size), [&](tbb::blocked_range<int> r) { 
+        // load elements of the U3 unitary into 256bit registers (8 registers)
+        __m256d u3_1bit_00r_vec = _mm256_broadcast_sd(&u3_1qbit[0].real);
+        __m256d u3_1bit_00i_vec = _mm256_broadcast_sd(&u3_1qbit[0].imag);
+        __m256d u3_1bit_01r_vec = _mm256_broadcast_sd(&u3_1qbit[1].real);
+        __m256d u3_1bit_01i_vec = _mm256_broadcast_sd(&u3_1qbit[1].imag);
+        __m256d u3_1bit_10r_vec = _mm256_broadcast_sd(&u3_1qbit[2].real);
+        __m256d u3_1bit_10i_vec = _mm256_broadcast_sd(&u3_1qbit[2].imag);
+        __m256d u3_1bit_11r_vec = _mm256_broadcast_sd(&u3_1qbit[3].real);    
+        __m256d u3_1bit_11i_vec = _mm256_broadcast_sd(&u3_1qbit[3].imag);
 
-        int current_idx      = r.begin()*(index_step_target << 1);
-        int current_idx_pair = index_step_target + r.begin()*(index_step_target << 1);
+        tbb::parallel_for( tbb::blocked_range<int>(0,parallel_outer_cycles,outer_grain_size), [&](tbb::blocked_range<int> r) { 
 
-        for (int rdx=r.begin(); rdx<r.end(); rdx++) {
+
+            int current_idx      = r.begin()*(index_step_target << 1);
+            int current_idx_pair = index_step_target + r.begin()*(index_step_target << 1);
+
+
+            for (int rdx=r.begin(); rdx<r.end(); rdx++) {
             
 
-            tbb::parallel_for( tbb::blocked_range<int>(0,index_step_target,32), [&](tbb::blocked_range<int> r) {
-	        for (int idx=r.begin(); idx<r.end(); ++idx) {
+                tbb::parallel_for( tbb::blocked_range<int>(0,index_step_target,inner_grain_size), [&](tbb::blocked_range<int> r) {
+	            for (int idx=r.begin(); idx<r.end(); idx=idx+4) {
 
 
-                    int current_idx_loc = current_idx + idx;
-                    int current_idx_pair_loc = current_idx_pair + idx;
+                        int current_idx_loc = current_idx + idx;
+                        int current_idx_pair_loc = current_idx_pair + idx;
 
-                    int row_offset = current_idx_loc * input.stride;
-                    int row_offset_pair = current_idx_pair_loc * input.stride;
+                        int row_offset = current_idx_loc;
+                        int row_offset_pair = current_idx_pair_loc;
 
-                    if (control_qbit < 0 || ((current_idx_loc >> control_qbit) & 1)) {
-
-    
-                        double* element = (double*)input.get_data() + 2 * row_offset;
-                        double* element_pair = (double*)input.get_data() + 2 * row_offset_pair;
+                        if (control_qbit < 0 || ((current_idx_loc >> control_qbit) & 1)) {
 
 
-                        for (int col_idx = 0; col_idx < 2 * (input.cols - 3); col_idx = col_idx + 8) {
+                            double* element = (double*)input.get_data() + 2 * row_offset;
+                            double* element_pair = (double*)input.get_data() + 2 * row_offset_pair;
+
 
                             // extract successive elements from arrays element, element_pair
-                            __m256d element_vec = _mm256_loadu_pd(element + col_idx);
-                            __m256d element_vec2 = _mm256_loadu_pd(element + col_idx + 4);
+                            __m256d element_vec = _mm256_loadu_pd(element);
+                            __m256d element_vec2 = _mm256_loadu_pd(element + 4);
                             __m256d tmp = _mm256_shuffle_pd(element_vec, element_vec2, 0);
                             element_vec2 = _mm256_shuffle_pd(element_vec, element_vec2, 0xf);
                             element_vec = tmp;
 
-                            __m256d element_pair_vec = _mm256_loadu_pd(element_pair + col_idx);
-                            __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + col_idx + 4);
+                            __m256d element_pair_vec = _mm256_loadu_pd(element_pair);
+                            __m256d element_pair_vec2 = _mm256_loadu_pd(element_pair + 4);
                             tmp = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0);
                             element_pair_vec2 = _mm256_shuffle_pd(element_pair_vec, element_pair_vec2, 0xf);
                             element_pair_vec = tmp;
@@ -772,8 +837,8 @@ apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& 
                             tmp = _mm256_shuffle_pd(vec3, vec5, 0);
                             vec5 = _mm256_shuffle_pd(vec3, vec5, 0xf);
                             vec3 = tmp;
-                            _mm256_storeu_pd(element + col_idx, vec3);
-                            _mm256_storeu_pd(element + col_idx + 4, vec5);
+                            _mm256_storeu_pd(element, vec3);
+                            _mm256_storeu_pd(element + 4, vec5);
 
                             __m256d vec7 = _mm256_mul_pd(u3_1bit_10r_vec, element_vec);
                             vec7 = _mm256_fnmadd_pd(u3_1bit_10i_vec, element_vec2, vec7);
@@ -790,61 +855,42 @@ apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& 
                             tmp = _mm256_shuffle_pd(vec7, vec9, 0);
                             vec9 = _mm256_shuffle_pd(vec7, vec9, 0xf);
                             vec7 = tmp;
-                            _mm256_storeu_pd(element_pair + col_idx, vec7);
-                            _mm256_storeu_pd(element_pair + col_idx + 4, vec9);
+                            _mm256_storeu_pd(element_pair, vec7);
+                            _mm256_storeu_pd(element_pair + 4, vec9);
+
                         }
-
-                        int remainder = input.cols % 4;
-                        if (remainder != 0) {
-
-                            for (int col_idx = input.cols-remainder; col_idx < input.cols; col_idx++) {
-                                int index = row_offset + col_idx;
-                                int index_pair = row_offset_pair + col_idx;
-        
-                                QGD_Complex16 element = input[index];
-                                QGD_Complex16 element_pair = input[index_pair];
-
-                                QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
-                                QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
-
-                                input[index].real = tmp1.real + tmp2.real;
-                                input[index].imag = tmp1.imag + tmp2.imag;
-
-                                tmp1 = mult(u3_1qbit[2], element);
-                                tmp2 = mult(u3_1qbit[3], element_pair);
-
-                                input[index_pair].real = tmp1.real + tmp2.real;
-                                input[index_pair].imag = tmp1.imag + tmp2.imag;
-                            }
-        
+                        else if (deriv) {
+                            // when calculating derivatives, the constant element should be zeros
+                            memset(input.get_data() + row_offset, 0.0, input.cols * sizeof(QGD_Complex16));
+                            memset(input.get_data() + row_offset_pair, 0.0, input.cols * sizeof(QGD_Complex16));
                         }
-
-                    }
-                    else if (deriv) {
-                        // when calculating derivatives, the constant element should be zeros
-                        memset(input.get_data() + row_offset, 0.0, input.cols * sizeof(QGD_Complex16));
-                        memset(input.get_data() + row_offset_pair, 0.0, input.cols * sizeof(QGD_Complex16));
-                    }
-                    else {
-                        // leave the state as it is
-                        continue;
-                    }
+                        else {
+                            // leave the state as it is
+                            continue;
+                        }
 
 
             //std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
 
-                 
-                }
-            });
+
+                    }
+                });
             
 
 
-            current_idx = current_idx + (index_step_target << 1);
-            current_idx_pair = current_idx_pair + (index_step_target << 1);
+                current_idx = current_idx + (index_step_target << 1);
+                current_idx_pair = current_idx_pair + (index_step_target << 1);
 
-        }
-    });
-    
+            }
+        });
+
+
+
+    } // else
+
+
+
 
 }
-*/
+
+
