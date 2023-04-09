@@ -261,8 +261,11 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
     if ( qbit_num < 4 ) {
         apply_kernel_to_input_AVX_small(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
     }
-    else {
+    else if ( qbit_num < 6 || (qbit_num < 10 && input.cols < 32) ) {
         apply_kernel_to_input_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+     }
+    else {
+        apply_kernel_to_input_AVX_parallel(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
      }
     return;
 
@@ -270,10 +273,9 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
    
     int index_step_target = 1 << target_qbit;
     int current_idx = 0;
-    int current_idx_pair = current_idx+index_step_target;
 
 
-    while ( current_idx_pair < matrix_size ) {
+    for ( int current_idx_pair=current_idx + index_step_target; current_idx_pair<matrix_size; current_idx_pair=current_idx_pair+(index_step_target << 1) ) {
 
         for(int idx=0; idx<index_step_target; idx++) {  
         //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
@@ -327,7 +329,6 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
 
 
         current_idx = current_idx + (index_step_target << 1);
-        current_idx_pair = current_idx_pair + (index_step_target << 1);
 
 
     }
