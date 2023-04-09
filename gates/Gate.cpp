@@ -279,8 +279,9 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
      }
     else {
         apply_kernel_to_input_AVX_parallel(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
      }
-    return;
+
 
 
 #else
