@@ -29,6 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "apply_kernel_to_input_AVX.h"
 #endif
 
+#include "apply_kernel_to_state_vector_input.h"
 
 /**
 @brief Deafult constructor of the class.
@@ -256,18 +257,31 @@ void
 Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
 
 
+    if ( input.cols == 1 && qbit_num<10 ) {
+        apply_kernel_to_state_vector_input_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+    }
+    else if ( input.cols == 1 ) {
+        apply_kernel_to_state_vector_input_parallel_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+    }
+
+
 #ifdef USE_AVX
 
     if ( qbit_num < 4 ) {
         apply_kernel_to_input_AVX_small(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
     }
     else if ( qbit_num < 6 || (qbit_num < 10 && input.cols < 32) ) {
         apply_kernel_to_input_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
      }
     else {
         apply_kernel_to_input_AVX_parallel(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
      }
-    return;
+
 
 #else
    
