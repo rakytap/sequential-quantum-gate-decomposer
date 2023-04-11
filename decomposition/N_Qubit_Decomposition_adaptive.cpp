@@ -454,6 +454,18 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 /**
 */
 void N_Qubit_Decomposition_adaptive::start_compression(){
+
+    // temporarily turn off OpenMP parallelism
+#if BLAS==0 // undefined BLAS
+    num_threads = omp_get_max_threads();
+    omp_set_num_threads(1);
+#elif BLAS==1 // MKL
+    num_threads = mkl_get_max_threads();
+    MKL_Set_Num_Threads(1);
+#elif BLAS==2 //OpenBLAS
+    num_threads = openblas_get_num_threads();
+    openblas_set_num_threads(1);
+#endif
     std::stringstream sstream;
     sstream.str("");
     sstream << std::endl;
@@ -462,8 +474,12 @@ void N_Qubit_Decomposition_adaptive::start_compression(){
     sstream << "***************** Compressing Gate structure *****************" << std::endl;
     sstream << "**************************************************************" << std::endl;
     print(sstream, 1);
+    std::string filename("circuit_squander.binary");
+    if (project_name != "") {
+        filename = project_name+ "_" +filename;
+    }
     Gates_block* gate_structure_loc = NULL;
-    gate_structure_loc = optimize_imported_gate_structure(optimized_parameters_mtx);
+    gate_structure_loc = import_gate_list_from_binary(optimized_parameters_mtx, filename, verbose);
     int iter = 0;
     int uncompressed_iter_num = 0;
     while ( iter<25 || uncompressed_iter_num <= 5 ) {
@@ -503,6 +519,34 @@ void N_Qubit_Decomposition_adaptive::start_compression(){
         if (uncompressed_iter_num>10) break;
 
     }
+        // get the number of gates used in the decomposition
+    gates_num gates_num = get_gate_nums();
+
+    
+    sstream.str("");
+      
+        if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 gates," << std::endl;
+        if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX gates," << std::endl;
+        if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY gates," << std::endl;
+        if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ gates," << std::endl;
+        if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT gates," << std::endl;
+        if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ gates," << std::endl;
+        if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH gates," << std::endl;
+        if ( gates_num.x>0 ) sstream << gates_num.x << " X gates," << std::endl;
+        if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX gates," << std::endl; 
+        if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore gates," << std::endl;   
+        if ( gates_num.un>0 ) sstream << gates_num.un << " UN gates," << std::endl;
+        if ( gates_num.cry>0 ) sstream << gates_num.cry << " CRY gates," << std::endl;  
+        if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive gates," << std::endl;
+        	print(sstream, 1);	    	
+
+#if BLAS==0 // undefined BLAS
+    omp_set_num_threads(num_threads);
+#elif BLAS==1 //MKL
+    MKL_Set_Num_Threads(num_threads);
+#elif BLAS==2 //OpenBLAS
+    openblas_set_num_threads(num_threads);
+#endif
 }
 /**
 @brief ??????????????
