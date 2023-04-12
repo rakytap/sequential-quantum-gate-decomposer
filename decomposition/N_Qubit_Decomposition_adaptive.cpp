@@ -519,10 +519,12 @@ void N_Qubit_Decomposition_adaptive::start_compression(){
         if (uncompressed_iter_num>10) break;
 
     }
+    
         // get the number of gates used in the decomposition
     gates_num gates_num = get_gate_nums();
 
-    
+    combine( gate_structure_loc );
+    delete( gate_structure_loc );
     sstream.str("");
       
         if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 gates," << std::endl;
