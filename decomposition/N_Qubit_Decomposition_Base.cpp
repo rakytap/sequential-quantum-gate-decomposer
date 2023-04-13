@@ -84,6 +84,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
     int id = distrib_int(gen);
 
+
 }
 
 /**
@@ -94,7 +95,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num_in ) : Decomposition_Base(Umtx_in, qbit_num_in, initial_guess_in) {
+N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, int>& config_int, std::map<std::string, double>& config_float, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num_in ) : Decomposition_Base(Umtx_in, qbit_num_in, config_int, config_float, initial_guess_in) {
 
     // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -917,6 +918,11 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS2( int num
         double current_minimum_hold = current_minimum;
 
 
+        std::stringstream sstream;
+        sstream << "iter_max: " << iter_max << ", randomization threshold: " << iteration_threshold_of_randomization << ", randomization radius: " << radius << std::endl;
+        print(sstream, 2); 
+
+
 tbb::tick_count bfgs_start = tbb::tick_count::now();
 bfgs_time = 0.0;
 
@@ -965,13 +971,25 @@ bfgs_time = 0.0;
                     
                     sub_iter_idx = 0;
                     random_shift_count++;
-                    current_minimum_hold = current_minimum;        
+                    current_minimum_hold = current_minimum;  
 
-                    int factor = distrib_int(gen) % 10 + 1;
-             
-                    for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                        solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*2*M_PI*std::sqrt(s->f)/factor;
-                    } 
+                    // calculate the gradient norm
+                    gsl_vector* grad_gsl = gsl_vector_alloc(num_of_parameters);
+                    optimization_problem_grad( solution_guess_gsl, this, grad_gsl );
+                    double norm = 0.0;
+                    for ( int grad_idx=0; grad_idx<num_of_parameters; grad_idx++ ) {
+                        norm += grad_gsl->data[grad_idx]*grad_gsl->data[grad_idx];
+                    }
+                    norm = std::sqrt(norm);  
+                    gsl_vector_free( grad_gsl );
+
+
+                    sstream.str("");
+                    sstream << "BFGS2: leaving local minimum " << s->f << ", gradient norm " << norm  << std::endl;                    
+                    print(sstream, 0);   
+                    
+                    int randomization_successful = 0;
+                    randomize_parameters(optimized_parameters_mtx, solution_guess_gsl, randomization_successful, s->f );    
 
 #ifdef __MPI__        
                     MPI_Bcast( (void*)solution_guess_gsl->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -1062,10 +1080,9 @@ bfgs_time = 0.0;
 
         }
 
-tbb::tick_count bfgs_end = tbb::tick_count::now();
-bfgs_time  = bfgs_time + (bfgs_end-bfgs_start).seconds();
-std::cout << "bfgs2 time: " << bfgs_time << " " << current_minimum << std::endl;
-std::cout << "cost function of the imported circuit: " << optimization_problem( optimized_parameters_mtx ) << std::endl;
+        tbb::tick_count bfgs_end = tbb::tick_count::now();
+        bfgs_time  = bfgs_time + (bfgs_end-bfgs_start).seconds();
+        std::cout << "bfgs2 time: " << bfgs_time << " " << current_minimum << std::endl;
 
 }
 
@@ -1680,7 +1697,7 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
 
     switch ( alg ) {
         case ADAM:
-            iter_max = 1e5;
+            iter_max = 1e5; 
             random_shift_count_max = 100;
             gradient_threshold = 1e-8;
             max_iterations = 1;
