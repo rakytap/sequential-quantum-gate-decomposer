@@ -196,6 +196,36 @@ qgd_SX_apply_to( qgd_SX *self, PyObject *args ) {
 }
 
 
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param ThetaOver2 Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+
+static PyObject *
+qgd_SX_calc_one_qubit_u3( qgd_SX *self, PyObject *args ) {
+
+    double ThetaOver2;
+    double Phi; 
+    double Lambda; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|d", &ThetaOver2, &Phi, &Lambda )) 
+        return Py_BuildValue("i", -1);
+
+
+    // create QGD version of the input matrix
+
+    Matrix SX_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    
+    PyObject *SX_1qbit = matrix_to_numpy( SX_1qbit_ );
+
+    return SX_1qbit;
+
+}
+
 
 
 /**
@@ -215,6 +245,9 @@ static PyMethodDef qgd_SX_methods[] = {
     },   
     {"apply_to", (PyCFunction) qgd_SX_apply_to, METH_VARARGS,
      "Call to apply the gate on the input matrix."
+    },
+    {"calc_one_qubit_u3", (PyCFunction) qgd_SX_calc_one_qubit_u3, METH_VARARGS,
+     "Call to calculate the gate matrix acting on a single qbit space."
     },
   {NULL}  /* Sentinel */
 };
