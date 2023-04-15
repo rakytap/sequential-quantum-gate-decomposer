@@ -726,7 +726,7 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
 
     // setting computational parameters
     ret->set_identical_blocks( identical_blocks );
-    ret->set_max_iteration( max_iterations );
+    ret->set_max_iteration( max_outer_iterations );
     ret->set_optimization_blocks( optimization_block );
     ret->set_max_layer_num( max_layer_num );
     ret->set_iteration_loops( iteration_loops );

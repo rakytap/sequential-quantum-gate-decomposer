@@ -72,7 +72,7 @@ class N_Qubit_Decomposition_Base : public Decomposition_Base {
 public:
 
     ///
-    int iter_max;
+    int max_inner_iterations;
     ///
     int gradient_threshold;
     /// 
@@ -354,7 +354,7 @@ void set_iteration_threshold_of_randomization( const unsigned long long& thresho
 /**
 @brief ?????????????
 */
-void set_iter_max( int iter_max_in  );
+void set_max_inner_iterations( int max_inner_iterations_in  );
 
 
 /**

@@ -125,7 +125,7 @@ protected:
     bool optimization_problem_solved;
 
     /// Maximal number of iterations allowed in the optimization process
-    int max_iterations;
+    int max_outer_iterations;
 
     /// type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
     guess_type initial_guess;
@@ -172,9 +172,9 @@ void set_optimization_blocks( int optimization_block_in );
 
 /**
 @brief Call to set the maximal number of the iterations in the optimization process
-@param max_iterations_in maximal number of iteartions in the optimization process
+@param max_outer_iterations_in maximal number of iteartions in the optimization process
 */
-void set_max_iteration( int max_iterations_in);
+void set_max_iteration( int max_outer_iterations_in);
 
 
 /**

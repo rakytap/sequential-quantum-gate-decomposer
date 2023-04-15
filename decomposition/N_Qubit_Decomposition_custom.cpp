@@ -42,13 +42,13 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom() : N_Qubit_Decomposi
         set_optimizer( BFGS );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 4;
+        max_outer_iterations = 4;
     }
     else {
         set_optimizer( ADAM );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 1;
+        max_outer_iterations = 1;
     }
 
 }
@@ -72,13 +72,13 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int 
         set_optimizer( BFGS );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 4;
+        max_outer_iterations = 4;
     }
     else {
         set_optimizer( ADAM );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 1;
+        max_outer_iterations = 1;
     }
 
 }

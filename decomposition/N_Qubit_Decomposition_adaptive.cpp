@@ -59,13 +59,13 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
         set_optimizer( BFGS );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 4;
+        max_outer_iterations = 4;
     }
     else {
         set_optimizer( ADAM );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 1;
+        max_outer_iterations = 1;
     }
     
 
@@ -98,9 +98,9 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         set_optimizer( BFGS );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 4;
+        max_outer_iterations = 4;
         
-        iter_max = 10000;
+        max_inner_iterations = 10000;
         gradient_threshold = 1e-8;
 
     }
@@ -108,7 +108,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         set_optimizer( ADAM );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 1;
+        max_outer_iterations = 1;
 
     }
 
@@ -137,7 +137,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
     level_limit_min = level_limit_min_in;
 
     // Maximal number of iteartions in the optimization process
-    max_iterations = 1;
+    max_outer_iterations = 1;
 
     gradient_threshold = 1e-8;
 
@@ -152,13 +152,13 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         alg = BFGS;
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 4;
+        max_outer_iterations = 4;
     }
     else {
         alg = ADAM;
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 1;
+        max_outer_iterations = 1;
     }
 
     // Boolean variable to determine whether randomized adaptive layers are used or not
@@ -321,6 +321,60 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     release_gates();
     optimized_parameters_mtx = optimized_parameters_save;
 
+    // solve the optimization problem
+    N_Qubit_Decomposition_custom cDecomp_custom;
+
+
+    std::map<std::string, int> config_int_copy;
+    config_int_copy.insert(config_int.begin(), config_int.end());
+    if ( config_int.count("max_inner_iterations_final") > 0 ) {
+        config_int_copy["max_inner_iterations"] = config_int["max_inner_iterations_final"];  
+    }
+
+
+    // solve the optimization problem in isolated optimization process
+    cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config_int, config_float, initial_guess, accelerator_num);
+    cDecomp_custom.set_custom_gate_structure( gate_structure_tmp );
+    cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size() );
+    cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+    cDecomp_custom.set_max_iteration( max_outer_iterations );
+    cDecomp_custom.set_verbose(verbose);
+    cDecomp_custom.set_cost_function_variant( cost_fnc );
+    cDecomp_custom.set_debugfile("");
+    cDecomp_custom.set_iteration_loops( iteration_loops );
+    cDecomp_custom.set_optimization_tolerance( optimization_tolerance ); 
+    cDecomp_custom.set_trace_offset( trace_offset ); 
+    cDecomp_custom.set_optimizer( alg );  
+    if (alg==ADAM || alg==BFGS2) { 
+        int param_num_loc = gate_structure_loc->get_parameter_num();
+        int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
+        cDecomp_custom.set_random_shift_count_max( 10000 );   
+        cDecomp_custom.set_adaptive_eta( true );      
+        cDecomp_custom.set_randomized_radius( radius );             
+    }
+    else if ( alg==ADAM_BATCHED ) {
+        cDecomp_custom.set_optimizer( alg );  
+        int max_inner_iterations_loc = 2500;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
+        cDecomp_custom.set_random_shift_count_max( 5 );   
+        cDecomp_custom.set_adaptive_eta( true );      
+        cDecomp_custom.set_randomized_radius( radius );   
+    }
+    else if ( alg==BFGS ) {
+        cDecomp_custom.set_optimizer( alg );  
+        int max_inner_iterations_loc = 10000;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
+        cDecomp_custom.set_randomized_radius( radius );   
+    }
+    cDecomp_custom.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
+    cDecomp_custom.start_decomposition(true);
+    number_of_iters += cDecomp_custom.get_num_iters();
+
+    current_minimum = cDecomp_custom.get_current_minimum();
+    optimized_parameters_mtx = cDecomp_custom.get_optimized_parameters();
+
+
     combine( gate_structure_tmp );
     delete( gate_structure_tmp );
     delete( gate_structure_loc );
@@ -329,14 +383,6 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
     print(sstream, 3);	
     	
-    // reset the global minimum before final tuning
-    current_minimum = DBL_MAX;
-
-    set_adaptive_eta( true );
-
-    // final tuning of the decomposition parameters
-    final_optimization();
-
     std::string filename2("circuit_final.binary");
 
     if (project_name != "") {
@@ -418,7 +464,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     cDecomp_custom.set_custom_gate_structure( gate_structure_loc );
     cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx_loc.get_data(), optimized_parameters_mtx_loc.size() );
     cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
-    cDecomp_custom.set_max_iteration( max_iterations );
+    cDecomp_custom.set_max_iteration( max_outer_iterations );
     cDecomp_custom.set_verbose(verbose);
     cDecomp_custom.set_cost_function_variant( cost_fnc );
     cDecomp_custom.set_debugfile("");
@@ -428,24 +474,24 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     cDecomp_custom.set_optimizer( alg );  
     if (alg==ADAM || alg==BFGS2) { 
         int param_num_loc = gate_structure_loc->get_parameter_num();
-        int iter_max_loc = (double)param_num_loc/852 * 1e7;
-        cDecomp_custom.set_iter_max( iter_max_loc );  
+        int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
         cDecomp_custom.set_random_shift_count_max( 10000 );   
         cDecomp_custom.set_adaptive_eta( true );      
         cDecomp_custom.set_randomized_radius( radius );             
     }
     else if ( alg==ADAM_BATCHED ) {
         cDecomp_custom.set_optimizer( alg );  
-        int iter_max_loc = 2500;
-        cDecomp_custom.set_iter_max( iter_max_loc );  
+        int max_inner_iterations_loc = 2500;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
         cDecomp_custom.set_random_shift_count_max( 5 );   
         cDecomp_custom.set_adaptive_eta( true );      
         cDecomp_custom.set_randomized_radius( radius );   
     }
     else if ( alg==BFGS ) {
         cDecomp_custom.set_optimizer( alg );  
-        int iter_max_loc = 10000;
-        cDecomp_custom.set_iter_max( iter_max_loc );    
+        int max_inner_iterations_loc = 10000;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
         cDecomp_custom.set_randomized_radius( radius );   
     }
     cDecomp_custom.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
@@ -526,7 +572,9 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
         std::stringstream sstream;
         sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
-        print(sstream, 1);	
+        print(sstream, 1);
+
+	
 /*
 #ifndef __DFE__
         // try the decomposition withrandom and with close to zero initial values
@@ -538,7 +586,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config_int, config_float, RANDOM, accelerator_num);
                 cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
                 cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
-                cDecomp_custom_random.set_max_iteration( max_iterations );
+                cDecomp_custom_random.set_max_iteration( max_outer_iterations );
 #ifndef __DFE__
                 cDecomp_custom_random.set_verbose(verbose);
 #else
@@ -551,24 +599,24 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_optimizer( alg );
                 if ( alg == ADAM || alg == BFGS2 ) {
                     int param_num_loc = gate_structure_loc->get_parameter_num();
-                    int iter_max_loc = (double)param_num_loc/852 * 1e7;
-                    cDecomp_custom_random.set_iter_max( iter_max_loc );  
+                    int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+                    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
                     cDecomp_custom_random.set_random_shift_count_max( 10000 );       
                     cDecomp_custom_random.set_adaptive_eta( true );    
                     cDecomp_custom_random.set_randomized_radius( radius );
                 }
                 else if ( alg==ADAM_BATCHED ) {
                     cDecomp_custom_random.set_optimizer( alg );  
-                    int iter_max_loc = 2000;
-                    cDecomp_custom_random.set_iter_max( iter_max_loc );  
+                    int max_inner_iterations_loc = 2000;
+                    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
                     cDecomp_custom_random.set_random_shift_count_max( 5 );   
                     cDecomp_custom_random.set_adaptive_eta( true );      
                     cDecomp_custom_random.set_randomized_radius( radius );   
                 }
                 else if ( alg==BFGS ) {
                     cDecomp_custom_random.set_optimizer( alg );  
-                    int iter_max_loc = 10000;
-                    cDecomp_custom_random.set_iter_max( iter_max_loc );    
+                    int max_inner_iterations_loc = 10000;
+                    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );    
                     cDecomp_custom_random.set_randomized_radius( radius );   
                 }
                 cDecomp_custom_random.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
@@ -582,7 +630,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_close_to_zero = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, CLOSE_TO_ZERO);
                 cDecomp_custom_close_to_zero.set_custom_gate_structure( gate_structure_loc );
                 cDecomp_custom_close_to_zero.set_optimization_blocks( gate_structure_loc->get_gate_num() );    
-                cDecomp_custom_close_to_zero.set_max_iteration( max_iterations );
+                cDecomp_custom_close_to_zero.set_max_iteration( max_outer_iterations );
                 cDecomp_custom_close_to_zero.set_verbose(0);
                 cDecomp_custom_close_to_zero.set_cost_function_variant( cost_fnc );
                 cDecomp_custom_close_to_zero.set_debugfile("");
@@ -590,8 +638,8 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_close_to_zero.set_optimizer( alg );
                 if ( alg == ADAM || alg == BFGS2 ) {
                     int param_num_loc = gate_structure_loc->get_parameter_num();
-                    int iter_max_loc = (double)param_num_loc/852 * 1e7;
-                    cDecomp_custom_close_to_zero.set_iter_max( iter_max_loc );  
+                    int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+                    cDecomp_custom_close_to_zero.set_max_inner_iterations( max_inner_iterations_loc );  
                     cDecomp_custom_close_to_zero.set_random_shift_count_max( 10000 );       
                     cDecomp_custom_close_to_zero.set_adaptive_eta( true );    
                     cDecomp_custom_close_to_zero.set_randomized_radius( radius );
@@ -890,30 +938,37 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 
 
     N_Qubit_Decomposition_custom cDecomp_custom;
+
+    std::map<std::string, int> config_int_copy;
+    config_int_copy.insert(config_int.begin(), config_int.end());
+    if ( config_int.count("max_inner_iterations_compression") > 0 ) {
+        config_int_copy["max_inner_iterations"] = config_int["max_inner_iterations_compression"];  
+    }
+
        
     // solve the optimization problem in isolated optimization process
-    cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config_int, config_float, initial_guess, accelerator_num);
+    cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config_int_copy, config_float, initial_guess, accelerator_num);
     cDecomp_custom.set_custom_gate_structure( gate_structure_reduced );
     cDecomp_custom.set_optimized_parameters( parameters_reduced.get_data(), parameters_reduced.size() );
     cDecomp_custom.set_verbose(0);
     cDecomp_custom.set_cost_function_variant( cost_fnc );
     cDecomp_custom.set_debugfile("");
-    cDecomp_custom.set_max_iteration( max_iterations );
+    cDecomp_custom.set_max_iteration( max_outer_iterations );
     cDecomp_custom.set_iteration_loops( iteration_loops );
     cDecomp_custom.set_optimization_blocks( gate_structure_reduced->get_gate_num() ) ;
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance );
     cDecomp_custom.set_trace_offset( trace_offset ); 
     cDecomp_custom.set_optimizer( alg );
     if ( alg == ADAM || alg==BFGS2) {
-        cDecomp_custom.set_iter_max( 1e5 );  
+        cDecomp_custom.set_max_inner_iterations( 1e5 );  
         cDecomp_custom.set_random_shift_count_max( 1 );     
         cDecomp_custom.set_adaptive_eta( false );
         cDecomp_custom.set_randomized_radius( radius );        
     }
     else if ( alg==BFGS ) {
         cDecomp_custom.set_optimizer( alg );  
-        int iter_max_loc = 100;
-        cDecomp_custom.set_iter_max( iter_max_loc );    
+        int max_inner_iterations_loc = 100;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
         cDecomp_custom.set_randomized_radius( radius );   
     }
     cDecomp_custom.set_iteration_threshold_of_randomization( 2500 );
@@ -1428,8 +1483,17 @@ N_Qubit_Decomposition_adaptive::construct_adaptive_gate_layers() {
     }
 */
 
+    int randomized_adaptive_layers_loc;
+    if ( config_int.count("randomized_adaptive_layers") > 0 ) {
+        randomized_adaptive_layers_loc = config_int["randomized_adaptive_layers"];  
+    }
+    else {
+        randomized_adaptive_layers_loc = randomized_adaptive_layers;
+    }
+
+
     // make difference between randomized adaptive layers and deterministic one
-    if (randomized_adaptive_layers) {
+    if (randomized_adaptive_layers_loc) {
 
         std::uniform_int_distribution<> distrib_int(0, 5000);
 

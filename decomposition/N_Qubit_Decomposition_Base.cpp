@@ -399,10 +399,36 @@ pure_DFE_time = 0.0;
         Matrix_real grad_mtx = Matrix_real( grad_gsl->data, num_of_parameters, 1 );
         //solution_guess_tmp_mtx.print_matrix();
 
+        int max_inner_iterations_loc;
+        if ( config_int.count("max_inner_iterations") > 0 ) {
+            max_inner_iterations_loc = config_int["max_inner_iterations"];  
+        }
+        else {
+            max_inner_iterations_loc =max_inner_iterations;
+        }
+
+
+        int iteration_threshold_of_randomization_loc;
+        if ( config_int.count("randomization_threshold") > 0 ) {
+            iteration_threshold_of_randomization_loc = config_int["randomization_threshold"];  
+        }
+        else {
+            iteration_threshold_of_randomization_loc = iteration_threshold_of_randomization;
+        }
+
+
+        int batch_num_loc;
+        if ( config_int.count("batch_num") > 0 ) {
+            batch_num_loc = config_int["batch_num"];  
+        }
+        else {
+            batch_num_loc = 100;
+        }
+
 
         double f0 = DBL_MAX;
         std::stringstream sstream;
-        sstream << "iter_max: " << iter_max << ", randomization threshold: " << iteration_threshold_of_randomization << ", randomization radius: " << radius << std::endl;
+        sstream << "max_inner_iterations: " << max_inner_iterations << ", randomization threshold: " << iteration_threshold_of_randomization << ", randomization radius: " << radius << std::endl;
         print(sstream, 2); 
 
         int ADAM_status = 0;
@@ -410,18 +436,17 @@ pure_DFE_time = 0.0;
 
 
 Matrix Umtx_orig = Umtx;
-int batch_size_min = Umtx_orig.cols*5/6;
+int batch_size_min = Umtx_orig.cols*2/3;
 std::uniform_int_distribution<> distrib_trace_offset(0, Umtx_orig.cols-batch_size_min);
 
 
-int batch_num = 100;
-for (int batch_idx=0; batch_idx<batch_num; batch_idx++ ) {
+for (int batch_idx=0; batch_idx<batch_num_loc; batch_idx++ ) {
 
     trace_offset = distrib_trace_offset(gen);
 
     std::uniform_int_distribution<> distrib_col_num(batch_size_min, Umtx_orig.cols-trace_offset);
     int col_num = distrib_col_num(gen);
-std::cout << "trace offset: " << trace_offset << " col_num: " << col_num << " iter_max: " << iter_max << std::endl;
+std::cout << "trace offset: " << trace_offset << " col_num: " << col_num << " max_inner_iterations: " << max_inner_iterations_loc << std::endl;
 
     // create a slice from the original Umtx
     Matrix Umtx_slice(Umtx_orig.rows, col_num);
@@ -431,7 +456,7 @@ std::cout << "trace offset: " << trace_offset << " col_num: " << col_num << " it
 
     Umtx = Umtx_slice;
 
-        for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
+        for ( int iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++ ) {
 
             
 
@@ -476,7 +501,7 @@ std::cout << "trace offset: " << trace_offset << " col_num: " << col_num << " it
                 Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 
                 std::stringstream sstream;
-                sstream << "ADAM: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new, trace_offset) << std::endl;
+                sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new, trace_offset) << std::endl;
                 print(sstream, 0);   
                 std::string filename("initial_circuit_iteration.binary");
                 export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
@@ -498,7 +523,7 @@ std::cout << "trace offset: " << trace_offset << " col_num: " << col_num << " it
                 norm = std::sqrt(norm);
                     
 
-            if ( sub_iter_idx> iteration_threshold_of_randomization || ADAM_status != 0 ) {
+            if ( sub_iter_idx> iteration_threshold_of_randomization_loc || ADAM_status != 0 ) {
 
                 //random_shift_count++;
                 sub_iter_idx = 0;
@@ -610,17 +635,39 @@ pure_DFE_time = 0.0;
         //solution_guess_tmp_mtx.print_matrix();
 
 
-        double f0 = DBL_MAX;
-        std::stringstream sstream;
-        sstream << "iter_max: " << iter_max << ", randomization threshold: " << iteration_threshold_of_randomization << ", randomization radius: " << radius << std::endl;
-        print(sstream, 2); 
+
+
+
 
         int ADAM_status = 0;
 
         int randomization_successful = 0;
+
+
+        int max_inner_iterations_loc;
+        if ( config_int.count("max_inner_iterations") > 0 ) {
+            max_inner_iterations_loc = config_int["max_inner_iterations"];         
+        }
+        else {
+            max_inner_iterations_loc =max_inner_iterations;
+        }
+
+        int iteration_threshold_of_randomization_loc;
+        if ( config_int.count("randomization_threshold") > 0 ) {
+            iteration_threshold_of_randomization_loc = config_int["randomization_threshold"];  
+        }
+        else {
+            iteration_threshold_of_randomization_loc = iteration_threshold_of_randomization;
+        }
+
+
+        double f0 = DBL_MAX;
+        std::stringstream sstream;
+        sstream << "max_inner_iterations: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization_loc << ", randomization radius: " << radius << std::endl;
+        print(sstream, 2); 
         
 
-        for ( int iter_idx=0; iter_idx<iter_max; iter_idx++ ) {
+        for ( int iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++ ) {
 
             number_of_iters++;
 
@@ -663,10 +710,11 @@ pure_DFE_time = 0.0;
 
             if ( iter_idx % 5000 == 0 ) {
 
-                Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+                Matrix_real solution_guess_tmp_mtx( solution_guess_tmp->data, solution_guess_tmp->size, 1 );
+                Matrix matrix_new = get_transformed_matrix( solution_guess_tmp_mtx, gates.begin(), gates.size(), Umtx );
 
                 std::stringstream sstream;
-                sstream << "ADAM: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new, trace_offset) << std::endl;
+                sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << ", current cost function:" << get_cost_function(matrix_new, trace_offset) << ", sub_iter_idx:" << sub_iter_idx <<std::endl;
                 print(sstream, 0);   
                 std::string filename("initial_circuit_iteration.binary");
                 export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
@@ -709,7 +757,7 @@ pure_DFE_time = 0.0;
 
   */       
 
-            if ( sub_iter_idx> iteration_threshold_of_randomization || ADAM_status != 0 ) {
+            if ( sub_iter_idx> iteration_threshold_of_randomization_loc || ADAM_status != 0 ) {
 
                 //random_shift_count++;
                 sub_iter_idx = 0;
@@ -803,6 +851,15 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
         // random generator of real numbers   
         std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
 
+        // maximal number of inner iterations overriden by config
+        int max_inner_iterations_loc;
+        if ( config_int.count("max_inner_iterations") > 0 ) {
+            max_inner_iterations_loc = config_int["max_inner_iterations"];         
+        }
+        else {
+            max_inner_iterations_loc =max_inner_iterations;
+        }
+
 
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
@@ -843,7 +900,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
                 status = gsl_multimin_test_gradient (s->gradient, gradient_threshold);
 
-            } while (status == GSL_CONTINUE && iter < iter_max);
+            } while (status == GSL_CONTINUE && iter < max_inner_iterations_loc);
 
             if (current_minimum > s->f) {
                 current_minimum = s->f;
@@ -918,9 +975,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS2( int num
         double current_minimum_hold = current_minimum;
 
 
-        std::stringstream sstream;
-        sstream << "iter_max: " << iter_max << ", randomization threshold: " << iteration_threshold_of_randomization << ", randomization radius: " << radius << std::endl;
-        print(sstream, 2); 
+
 
 
 tbb::tick_count bfgs_start = tbb::tick_count::now();
@@ -932,6 +987,28 @@ bfgs_time = 0.0;
 
         // random generator of integers   
         std::uniform_int_distribution<> distrib_int(0, 5000);  
+
+
+        int max_inner_iterations_loc;
+        if ( config_int.count("max_inner_iterations") > 0 ) {
+            max_inner_iterations_loc = config_int["max_inner_iterations"];  
+        }
+        else {
+            max_inner_iterations_loc =max_inner_iterations;
+        }
+
+
+        int iteration_threshold_of_randomization_loc;
+        if ( config_int.count("randomization_threshold") > 0 ) {
+            iteration_threshold_of_randomization_loc = config_int["randomization_threshold"];  
+        }
+        else {
+            iteration_threshold_of_randomization_loc = iteration_threshold_of_randomization;
+        }
+
+        std::stringstream sstream;
+        sstream << "max_inner_iterations: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization_loc << ", randomization radius: " << radius << std::endl;
+        print(sstream, 2); 
 
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
@@ -963,11 +1040,8 @@ bfgs_time = 0.0;
             do {
                 gsl_set_error_handler_off();
                 
-                if ( sub_iter_idx > iteration_threshold_of_randomization || status != GSL_CONTINUE ) {
+                if ( sub_iter_idx > iteration_threshold_of_randomization_loc || status != GSL_CONTINUE ) {
 
-                    std::stringstream sstream;
-                    sstream << "BFGS2: initiate randomization at " << s->f << std::endl;
-                    print(sstream, 2); 
                     
                     sub_iter_idx = 0;
                     random_shift_count++;
@@ -984,7 +1058,7 @@ bfgs_time = 0.0;
                     gsl_vector_free( grad_gsl );
 
 
-                    sstream.str("");
+                    std::stringstream sstream;
                     sstream << "BFGS2: leaving local minimum " << s->f << ", gradient norm " << norm  << std::endl;                    
                     print(sstream, 0);   
                     
@@ -1033,7 +1107,7 @@ bfgs_time = 0.0;
 
                 if ( iter_idx % 5000 == 0 ) {
                      std::stringstream sstream;
-                     sstream << "BFGS2: processed iterations " << (double)iter_idx/iter_max*100 << "\%, current minimum:" << current_minimum << std::endl;
+                     sstream << "BFGS2: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << std::endl;
                      print(sstream, 2);  
 
                      std::string filename("initial_circuit_iteration.binary");
@@ -1050,7 +1124,7 @@ bfgs_time = 0.0;
                 iter_idx++;
                 number_of_iters++;
 
-            } while (iter_idx < iter_max && s->f > optimization_tolerance);
+            } while (iter_idx < max_inner_iterations_loc && s->f > optimization_tolerance);
 
             if (current_minimum > s->f) {
                 current_minimum = s->f;
@@ -1670,9 +1744,9 @@ N_Qubit_Decomposition_Base::set_cost_function_variant( cost_function_type varian
 /**
 @brief ?????????????
 */
-void N_Qubit_Decomposition_Base::set_iter_max( int iter_max_in  ) {
+void N_Qubit_Decomposition_Base::set_max_inner_iterations( int max_inner_iterations_in  ) {
 
-    iter_max = iter_max_in;
+    max_inner_iterations = max_inner_iterations_in;
     
 }
 
@@ -1697,31 +1771,31 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
 
     switch ( alg ) {
         case ADAM:
-            iter_max = 1e5; 
+            max_inner_iterations = 1e5; 
             random_shift_count_max = 100;
             gradient_threshold = 1e-8;
-            max_iterations = 1;
+            max_outer_iterations = 1;
             return;
 
         case ADAM_BATCHED:
-            iter_max = 2.5e3;
+            max_inner_iterations = 2.5e3;
             random_shift_count_max = 3;
             gradient_threshold = 1e-8;
-            max_iterations = 1;
+            max_outer_iterations = 1;
             return;
 
         case BFGS:
-            iter_max = 100;
+            max_inner_iterations = 100;
             gradient_threshold = 1e-1;
             random_shift_count_max = 1;  
-            max_iterations = 1e8; 
+            max_outer_iterations = 1e8; 
             return;
 
         case BFGS2:
-            iter_max = 1e5;
+            max_inner_iterations = 1e5;
             random_shift_count_max = 100;
             gradient_threshold = 1e-8;
-            max_iterations = 1;
+            max_outer_iterations = 1;
             return;
 
         default:

@@ -134,7 +134,7 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
     cSub_decomposition->optimization_block = optimization_block;
 
     // setting the number of operators in one sub-layer of the disentangling process
-    //cSub_decomposition->max_iterations = self.max_iterations
+    //cSub_decomposition->max_outer_iterations = self.max_outer_iterations
 
     //start to disentangle the qubit pair
     cSub_decomposition->disentangle_submatrices();
@@ -164,7 +164,7 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 
         int optimization_block_orig = optimization_block;
         optimization_block = optimization_block*3;
-        //max_iterations = 4;
+        //max_outer_iterations = 4;
 
 
         // final tuning of the decomposition parameters
@@ -308,7 +308,7 @@ N_Qubit_Decomposition::decompose_submatrix() {
         cdecomposition->set_debugfile( debugfile_name );
 
         // Maximal number of iteartions in the optimization process
-        cdecomposition->set_max_iteration(max_iterations);
+        cdecomposition->set_max_iteration(max_outer_iterations);
 
         // Set the number of identical successive blocks in the sub-decomposition
         cdecomposition->set_identical_blocks(identical_blocks);

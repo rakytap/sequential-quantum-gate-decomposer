@@ -222,11 +222,43 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
 
     // parse config and create C++ version of the hyperparameters
 
+    bool is_dict = PyDict_Check( config_arg );
+    if (!is_dict) {
+        printf("Config object must be a python dictionary!\n");
+        return -1;
+    }
+
     // integer type config metadata utilized during the optimization
     std::map<std::string, int> config_int;
 
     // float type config metadata utilized during the optimization
     std::map<std::string, double> config_float;
+
+
+    // keys and values of the config dict
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(config_arg, &pos, &key, &value)) {
+
+        // determine the initial guess type
+        PyObject* key_string = PyObject_Str(key);
+        PyObject* key_string_unicode = PyUnicode_AsEncodedString(key_string, "utf-8", "~E~");
+        const char* key_C = PyBytes_AS_STRING(key_string_unicode);
+
+        std::string key_Cpp( key_C );
+
+        if ( PyLong_Check( value ) ) {
+            config_int[ key_Cpp ] = PyLong_AsLong( value );
+        }
+        else if ( PyFloat_Check( value ) ) {
+            config_int[ key_Cpp ] = PyFloat_AsDouble( value );
+        }
+        else {
+
+        }
+
+    }
 
 
     // create an instance of the class N_Qubit_Decomposition
@@ -894,7 +926,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Max_Iterations(qgd_N_Qubit_Decomp
 
 
     //set the maximum number of iterations
-    self->decomp->set_iter_max(max_iters_input);
+    self->decomp->set_max_inner_iterations(max_iters_input);
 
 
     return Py_BuildValue("i", 0);
