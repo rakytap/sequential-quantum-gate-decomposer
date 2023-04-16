@@ -225,14 +225,14 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     Gates_block* gate_structure_loc = NULL;
     if ( gates.size() > 0 ) {
         std::stringstream sstream;
-	sstream << "Using imported gate structure for the decomposition." << std::endl;
+        sstream << "Using imported gate structure for the decomposition." << std::endl;
         print(sstream, 1);	
 	        
         gate_structure_loc = optimize_imported_gate_structure(optimized_parameters_mtx);
     }
     else {
         std::stringstream sstream;
-	sstream << "Construct initial gate structure for the decomposition." << std::endl;
+        sstream << "Construct initial gate structure for the decomposition." << std::endl;
         print(sstream, 1);
         gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
     }
@@ -543,26 +543,57 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
     std::vector<double> minimum_vec;
     std::vector<Gates_block*> gate_structure_vec;
     std::vector<Matrix_real> optimized_parameters_vec;
+    
+    // create gate structure to be optimized
+    Gates_block* gate_structure_loc = NULL;    
 
     int level = level_limit_min;
     while ( current_minimum > optimization_tolerance && level <= level_limit) {
 
-        // reset optimized parameters
-        optimized_parameters_mtx_loc = Matrix_real(0,0);
+        
+        
+        if (  level == level_limit_min ) {
+        
+            // reset optimized parameters
+            optimized_parameters_mtx_loc = Matrix_real(0,0);
+        
+            gate_structure_loc = new Gates_block(qbit_num);
+            
 
+            for (int idx=0; idx<level; idx++) {
 
-        // create gate structure to be optimized
-        Gates_block* gate_structure_loc = new Gates_block(qbit_num);
+                // create the new decomposing layer and add to the gate staructure
+                add_adaptive_layers( gate_structure_loc );
 
-        for (int idx=0; idx<level; idx++) {
-
-            // create the new decomposing layer and add to the gate staructure
-            add_adaptive_layers( gate_structure_loc );
-
-        }
+            }
            
-        // add finalyzing layer to the top of the gate structure
-        add_finalyzing_layer( gate_structure_loc );
+            // add finalyzing layer to the top of the gate structure
+            add_finalyzing_layer( gate_structure_loc );
+            
+        }
+        else {
+        std::cout << "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii " << std::endl;
+        
+            Gates_block* layer = construct_adaptive_gate_layers();
+
+
+            gate_structure_loc->combine( layer );
+
+            Matrix_real tmp( 1, optimized_parameters_mtx_loc.size() + layer->get_parameter_num() );
+            memset( tmp.get_data(), 0, tmp.size()*sizeof(double) );            
+            
+            // random generator of real numbers   
+            std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
+                       
+            for (int param_idx=optimized_parameters_mtx_loc.size(); param_idx<tmp.size(); param_idx++) {
+                tmp[param_idx] = distrib_real(gen);
+            }
+
+            memcpy( tmp.get_data(), optimized_parameters_mtx_loc.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
+
+            optimized_parameters_mtx_loc = tmp;    
+        
+        }
 
         //measure the time for the decompositin
         tbb::tick_count start_time_loc = tbb::tick_count::now();
@@ -620,7 +651,17 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                     cDecomp_custom_random.set_randomized_radius( radius );   
                 }
                 cDecomp_custom_random.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
+                
+                if (  level > level_limit_min ) {
+                        std::cout << "gggggggggggggg " << std::endl;
+                        optimized_parameters_mtx_loc.print_matrix();
+                    cDecomp_custom_random.set_optimized_parameters( optimized_parameters_mtx_loc.get_data(), optimized_parameters_mtx_loc.size() );
+                }
+                
                 cDecomp_custom_random.start_decomposition(true);
+                
+
+                
                 number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization
 /*
 #ifndef __DFE__
@@ -740,7 +781,8 @@ return NULL;
         }
     }
      
-    Gates_block* gate_structure_loc = gate_structure_vec[idx_min];
+    delete( gate_structure_loc );
+    gate_structure_loc = gate_structure_vec[idx_min];
     optimized_parameters_mtx_loc = optimized_parameters_vec[idx_min];
 
     // release unnecesarry data
