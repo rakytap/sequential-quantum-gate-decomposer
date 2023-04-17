@@ -70,9 +70,9 @@ typedef struct qgd_N_Qubit_Decomposition_adaptive_Wrapper {
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition_adaptive* 
-create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in, std::map<std::string, int>& config_int, std::map<std::string, double>& config_float, int accelerator_num ) {
+create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num ) {
 
-    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, level_limit, level_limit_min, topology_in, config_int, config_float, accelerator_num );
+    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, level_limit, level_limit_min, topology_in, config, accelerator_num );
 }
 
 
@@ -229,10 +229,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     }
 
     // integer type config metadata utilized during the optimization
-    std::map<std::string, int> config_int;
-
-    // float type config metadata utilized during the optimization
-    std::map<std::string, double> config_float;
+    std::map<std::string, Config_Element> config;
 
 
     // keys and values of the config dict
@@ -247,12 +244,15 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
         const char* key_C = PyBytes_AS_STRING(key_string_unicode);
 
         std::string key_Cpp( key_C );
+        Config_Element element;
 
-        if ( PyLong_Check( value ) ) {
-            config_int[ key_Cpp ] = PyLong_AsLong( value );
+        if ( PyLong_Check( value ) ) {            
+            element.set_property( key_Cpp, PyLong_AsLongLong( value ) );
+            config[ key_Cpp ] = element;
         }
         else if ( PyFloat_Check( value ) ) {
-            config_int[ key_Cpp ] = PyFloat_AsDouble( value );
+            element.set_property( key_Cpp, PyFloat_AsDouble( value ) );
+            config[ key_Cpp ] = element;
         }
         else {
 
@@ -264,7 +264,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
         try {
-            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp, config_int, config_float, accelerator_num);
+            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp, config, accelerator_num);
         }
         catch (std::string err ) {
             PyErr_SetString(PyExc_Exception, err.c_str());

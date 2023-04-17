@@ -63,7 +63,7 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( ) {
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, int>& config_int_in, std::map<std::string, double>& config_float_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, config_int_in, config_float_in, initial_guess_in) {
+Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Decomposition_Base(Umtx_in, qbit_num_in, config_in, initial_guess_in) {
 
     // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of CNOT gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -722,7 +722,7 @@ int Sub_Matrix_Decomposition::set_identical_blocks( std::map<int, int> identical
 Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
 
 
-    Sub_Matrix_Decomposition* ret = new Sub_Matrix_Decomposition(Umtx, qbit_num, optimize_layer_num, config_int, config_float, initial_guess);
+    Sub_Matrix_Decomposition* ret = new Sub_Matrix_Decomposition(Umtx, qbit_num, optimize_layer_num, config, initial_guess);
 
     // setting computational parameters
     ret->set_identical_blocks( identical_blocks );

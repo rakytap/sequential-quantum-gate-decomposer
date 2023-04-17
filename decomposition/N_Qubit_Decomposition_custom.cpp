@@ -61,7 +61,7 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom() : N_Qubit_Decomposi
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, int>& config_int, std::map<std::string, double>& config_float, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, optimize_layer_num_in, config_int, config_float, initial_guess_in, accelerator_num) {
+N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, optimize_layer_num_in, config, initial_guess_in, accelerator_num) {
 
     // initialize custom gate structure
     gate_structure = NULL;

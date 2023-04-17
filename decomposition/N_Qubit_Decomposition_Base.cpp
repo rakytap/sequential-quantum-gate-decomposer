@@ -95,7 +95,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, int>& config_int, std::map<std::string, double>& config_float, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num_in ) : Decomposition_Base(Umtx_in, qbit_num_in, config_int, config_float, initial_guess_in) {
+N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num_in ) : Decomposition_Base(Umtx_in, qbit_num_in, config, initial_guess_in) {
 
     // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -303,7 +303,6 @@ void  N_Qubit_Decomposition_Base::final_optimization() {
         //# setting the global minimum
         global_target_minimum = 0;
 
-
         if ( optimized_parameters_mtx.size() == 0 ) {
             solve_optimization_problem(NULL, 0);
         }
@@ -378,7 +377,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( 
 
 
         int random_shift_count = 0;
-        int sub_iter_idx = 0;
+        long long sub_iter_idx = 0;
         double current_minimum_hold = current_minimum;
     
 
@@ -396,9 +395,9 @@ pure_DFE_time = 0.0;
         
         current_minimum =   optimization_problem( optimized_parameters_mtx );              
 
-        int max_inner_iterations_loc;
-        if ( config_int.count("max_inner_iterations") > 0 ) {
-            max_inner_iterations_loc = config_int["max_inner_iterations"];  
+        long long max_inner_iterations_loc;
+        if ( config.count("max_inner_iterations") > 0 ) {
+             config["max_inner_iterations"].get_property( max_inner_iterations_loc );  
         }
         else {
             max_inner_iterations_loc =max_inner_iterations;
@@ -408,7 +407,7 @@ pure_DFE_time = 0.0;
         std::stringstream sstream;
         sstream << "max_inner_iterations: " << max_inner_iterations_loc << std::endl;
         print(sstream, 2); 
-
+std::cout << "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii "  << std::endl;
 
 
         double M_PI_half = M_PI/2;
@@ -459,7 +458,7 @@ pure_DFE_time = 0.0;
             std::uniform_int_distribution<> distrib_int(0, num_of_parameters);
             
             
-            for (unsigned long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++) {
+            for (long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++) {
         
                 int param_idx = distrib_int(gen);
         
@@ -956,7 +955,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
 
 
         int random_shift_count = 0;
-        int sub_iter_idx = 0;
+        long long sub_iter_idx = 0;
         double current_minimum_hold = current_minimum;
     
 
@@ -987,17 +986,17 @@ pure_DFE_time = 0.0;
         int randomization_successful = 0;
 
 
-        int max_inner_iterations_loc;
-        if ( config_int.count("max_inner_iterations") > 0 ) {
-            max_inner_iterations_loc = config_int["max_inner_iterations"];         
+        long long max_inner_iterations_loc;
+        if ( config.count("max_inner_iterations") > 0 ) {
+            config["max_inner_iterations"].get_property( max_inner_iterations_loc );         
         }
         else {
             max_inner_iterations_loc =max_inner_iterations;
         }
 
-        int iteration_threshold_of_randomization_loc;
-        if ( config_int.count("randomization_threshold") > 0 ) {
-            iteration_threshold_of_randomization_loc = config_int["randomization_threshold"];  
+        long long iteration_threshold_of_randomization_loc;
+        if ( config.count("randomization_threshold") > 0 ) {
+            config["randomization_threshold"].get_property( iteration_threshold_of_randomization_loc );  
         }
         else {
             iteration_threshold_of_randomization_loc = iteration_threshold_of_randomization;
@@ -1010,7 +1009,7 @@ pure_DFE_time = 0.0;
         print(sstream, 2); 
         
 
-        for ( int iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++ ) {
+        for ( long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++ ) {
 
             number_of_iters++;
 
@@ -1195,9 +1194,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
         std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
 
         // maximal number of inner iterations overriden by config
-        int max_inner_iterations_loc;
-        if ( config_int.count("max_inner_iterations") > 0 ) {
-            max_inner_iterations_loc = config_int["max_inner_iterations"];         
+        long long max_inner_iterations_loc;
+        if ( config.count("max_inner_iterations") > 0 ) {
+            config["max_inner_iterations"].get_property( max_inner_iterations_loc );         
         }
         else {
             max_inner_iterations_loc =max_inner_iterations;
@@ -1207,7 +1206,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
 	    
-            int iter = 0;
+            long long iter = 0;
             int status;
 
             const gsl_multimin_fdfminimizer_type *T;
@@ -1314,7 +1313,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS2( int num
 
 
         int random_shift_count = 0;
-        int sub_iter_idx = 0;
+        long long sub_iter_idx = 0;
         double current_minimum_hold = current_minimum;
 
 
@@ -1332,18 +1331,18 @@ bfgs_time = 0.0;
         std::uniform_int_distribution<> distrib_int(0, 5000);  
 
 
-        int max_inner_iterations_loc;
-        if ( config_int.count("max_inner_iterations") > 0 ) {
-            max_inner_iterations_loc = config_int["max_inner_iterations"];  
+        long long max_inner_iterations_loc;
+        if ( config.count("max_inner_iterations") > 0 ) {
+            config["max_inner_iterations"].get_property( max_inner_iterations_loc );  
         }
         else {
             max_inner_iterations_loc =max_inner_iterations;
         }
 
 
-        int iteration_threshold_of_randomization_loc;
-        if ( config_int.count("randomization_threshold") > 0 ) {
-            iteration_threshold_of_randomization_loc = config_int["randomization_threshold"];  
+        long long iteration_threshold_of_randomization_loc;
+        if ( config.count("randomization_threshold") > 0 ) {
+            config["randomization_threshold"].get_property( iteration_threshold_of_randomization_loc );  
         }
         else {
             iteration_threshold_of_randomization_loc = iteration_threshold_of_randomization;
@@ -1354,9 +1353,9 @@ bfgs_time = 0.0;
         print(sstream, 2); 
 
         // do the optimization loops
-        for (int idx=0; idx<iteration_loops_max; idx++) {
+        for (long long idx=0; idx<iteration_loops_max; idx++) {
 
-            int iter_idx = 0;
+            long long iter_idx = 0;
             int status = GSL_CONTINUE;
 
             const gsl_multimin_fdfminimizer_type *T;

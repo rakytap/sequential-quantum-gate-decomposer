@@ -114,7 +114,7 @@ Decomposition_Base::Decomposition_Base() {
 @param initial_guess_in Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return An instance of the class
 */
-Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::map<std::string, int>& config_int_in, std::map<std::string, double>& config_float_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Gates_block(qbit_num_in) {
+Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Gates_block(qbit_num_in) {
 
     Init_max_layer_num();
 
@@ -173,8 +173,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::ma
 
 
     // config maps
-    config_int   = config_int_in;
-    config_float = config_float_in;
+    config   = config_in;
 
 
     // Will be used to obtain a seed for the random number engine
@@ -479,9 +478,9 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
         // maximal number of outer iterations overriden by config
-        int max_outer_iterations_loc;
-        if ( config_int.count("max_outer_iterations") > 0 ) {
-            max_outer_iterations_loc = config_int["max_outer_iterations"];
+        long long max_outer_iterations_loc;
+        if ( config.count("max_outer_iterations") > 0 ) {
+            config["max_outer_iterations"].get_property( max_outer_iterations_loc );
          
         }
         else {
@@ -489,13 +488,12 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
 
 
-
         //measure the time for the decomposition
         tbb::tick_count start_time = tbb::tick_count::now();
 
         ////////////////////////////////////////
         // Start the iterations
-        int iter_idx;
+        long long iter_idx;
         for ( iter_idx=0; iter_idx<max_outer_iterations_loc; iter_idx++) {
 
             //determine the range of blocks to be optimalized togedther

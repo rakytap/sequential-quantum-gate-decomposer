@@ -68,9 +68,9 @@ typedef struct qgd_N_Qubit_Decomposition_custom_Wrapper {
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition_custom* 
-create_N_Qubit_Decomposition_custom( Matrix& Umtx, int qbit_num, bool optimize_layer_num, guess_type initial_guess, std::map<std::string, int>& config_int, std::map<std::string, double>& config_float, int accelerator_num ) {
+create_N_Qubit_Decomposition_custom( Matrix& Umtx, int qbit_num, bool optimize_layer_num, guess_type initial_guess, std::map<std::string, Config_Element>& config, int accelerator_num ) {
 
-    return new N_Qubit_Decomposition_custom( Umtx, qbit_num, optimize_layer_num, config_int, config_float, initial_guess, accelerator_num );
+    return new N_Qubit_Decomposition_custom( Umtx, qbit_num, optimize_layer_num, config, initial_guess, accelerator_num );
 }
 
 
@@ -195,16 +195,14 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_custom_W
     // parse config and create C++ version of the hyperparameters
 
     // integer type config metadata utilized during the optimization
-    std::map<std::string, int> config_int;
+    std::map<std::string, Config_Element> config;
 
-    // float type config metadata utilized during the optimization
-    std::map<std::string, double> config_float;
 
   
     // create an instance of the class N_Qubit_Decomposition_custom
     if (qbit_num > 0 ) {
         try {
-            self->decomp =  create_N_Qubit_Decomposition_custom( Umtx_mtx, qbit_num, false, qgd_initial_guess, config_int, config_float, accelerator_num);
+            self->decomp =  create_N_Qubit_Decomposition_custom( Umtx_mtx, qbit_num, false, qgd_initial_guess, config, accelerator_num);
         }
         catch (std::string err ) {
             PyErr_SetString(PyExc_Exception, err.c_str());
