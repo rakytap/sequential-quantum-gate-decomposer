@@ -1323,6 +1323,59 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
     return cost_func;
 }
 
+Matrix_real N_Qubit_Decomposition_Base::optimization_problem_batch( int batchsize, const gsl_vector* parameters, void* void_instance) {
+    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+    Matrix_real costs(batchsize,1);
+    // the number of free parameters
+    int parameter_num_loc = instance->get_parameter_num();
+#ifdef __DFE__
+    if ( instance->qbit_num >= 2 && instance->get_accelerator_num() > 0 ) {
+        int trace_offset_loc = instance->get_trace_offset();
+        // the variant of the cost function
+        cost_function_type cost_fnc = instance->get_cost_function_variant();
+    
+        // value of the cost function from the previous iteration to weigth the correction to the trace
+        double prev_cost_fnv_val = instance->get_previous_cost_function_value();
+        double correction1_scale    = instance->get_correction1_scale();
+        double correction2_scale    = instance->get_correction2_scale();    
+        Matrix&& Umtx_loc = instance->get_Umtx();
+        Matrix_real trace_DFE_mtx(batchsize, 3);
+        int gatesNum;
+        Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
+        DFEgate_kernel_type* DFEgates = instance->convert_to_DFE_gates( parameters_mtx, gatesNum);
+        lock_lib();
+        calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, parameter_num_loc, batchsize, trace_offset_loc, trace_DFE_mtx.get_data() );
+        unlock_lib();
+        for (int idx=0; idx<batchsize; idx++) {
+            if ( cost_fnc == FROBENIUS_NORM ) {
+                costs[idx] = 1-trace_DFE_mtx[3*idx]/Umtx_loc.cols;
+            } else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+                costs[idx] = 1 - (trace_DFE_mtx[3*idx] + 0*std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[3*idx+1]*correction1_scale)/Umtx_loc.cols;
+            }
+            else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+                costs[idx] = 1 - (trace_DFE_mtx[3*idx] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[3*idx+1]*correction1_scale + trace_DFE_mtx[3*idx+2]*correction2_scale))/Umtx_loc.cols;
+            }
+            else {
+                std::string err("N_Qubit_Decomposition_Base::optimization_problem_batch: Cost function variant not implmented.");
+                throw err;
+            }
+        }
+    } else {
+#else
+    tbb::parallel_for( tbb::blocked_range<int>(0,batchsize,2), [&](tbb::blocked_range<int> r) {
+        Matrix ret(batchsize,3);
+        for (int idx=r.begin(); idx<r.end(); ++idx) {
+            gsl_vector_view view = gsl_vector_subvector(parameters, parameter_num_loc * idx, parameter_num_loc);
+            costs[idx] = instance->optimization_problem(&view.vector, void_instance, ret);
+        }
+    });
+#endif
+#ifdef __DFE__
+    }
+#endif
+    return costs;
+}
+
 /**
 @brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
 @param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
