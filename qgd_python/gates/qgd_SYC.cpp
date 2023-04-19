@@ -302,6 +302,9 @@ static PyModuleDef  qgd_SYC_Module = {
 PyMODINIT_FUNC
 PyInit_qgd_SYC(void)
 {
+    // initialize Numpy API
+    import_array();
+
     PyObject *m;
     if (PyType_Ready(& qgd_SYC_Type) < 0)
         return NULL;
