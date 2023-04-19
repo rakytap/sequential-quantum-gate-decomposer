@@ -237,7 +237,7 @@ qgd_Y_apply_to( qgd_Y *self, PyObject *args ) {
 */
 
 static PyObject *
-qgd_Y_calc_one_qubit_u3( qgd_Y *self, PyObject *args ) {
+qgd_Y_get_gate_kernel( qgd_Y *self, PyObject *args ) {
 
     double ThetaOver2;
     double Phi; 
@@ -276,7 +276,7 @@ static PyMethodDef qgd_Y_methods[] = {
     {"apply_to", (PyCFunction) qgd_Y_apply_to, METH_VARARGS,
      "Call to apply the gate on the input matrix."
     },
-    {"calc_one_qubit_u3", (PyCFunction) qgd_Y_calc_one_qubit_u3, METH_VARARGS,
+    {"get_gate_kernel", (PyCFunction) qgd_Y_get_gate_kernel, METH_VARARGS,
      "Call to calculate the gate matrix acting on a single qbit space."
     },
     {NULL}  /* Sentinel */
