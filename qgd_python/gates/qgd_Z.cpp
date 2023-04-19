@@ -243,7 +243,7 @@ qgd_Z_calc_one_qubit_u3( qgd_Z *self, PyObject *args ) {
     double Lambda; 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|d", &ThetaOver2, &Phi, &Lambda )) 
+    if (!PyArg_ParseTuple(args, "|ddd", &ThetaOver2, &Phi, &Lambda )) 
         return Py_BuildValue("i", -1);
 
 

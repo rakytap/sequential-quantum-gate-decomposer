@@ -251,7 +251,7 @@ qgd_U3_calc_one_qubit_u3( qgd_U3 *self, PyObject *args ) {
     double Lambda; 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|d", &ThetaOver2, &Phi, &Lambda )) 
+    if (!PyArg_ParseTuple(args, "|ddd", &ThetaOver2, &Phi, &Lambda )) 
         return Py_BuildValue("i", -1);
 
     // create QGD version of the input matrix
