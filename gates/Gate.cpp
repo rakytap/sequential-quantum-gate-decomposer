@@ -413,4 +413,54 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
 
 }
 
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param ThetaOver2 Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 
+    Matrix u3_1qbit = Matrix(2,2);
+
+#ifdef DEBUG
+    if (isnan(ThetaOver2)) {
+        std::stringstream sstream;
+	sstream << "Matrix U3::calc_one_qubit_u3: ThetaOver2 is NaN." << std::endl;
+        print(sstream, 1);	    
+    }
+    if (isnan(Phi)) {
+        std::stringstream sstream;
+	sstream << "Matrix U3::calc_one_qubit_u3: Phi is NaN." << std::endl;
+        print(sstream, 1);	     
+    }
+    if (isnan(Lambda)) {
+        std::stringstream sstream;
+	sstream << "Matrix U3::calc_one_qubit_u3: Lambda is NaN." << std::endl;
+        print(sstream, 1);	   
+    }
+#endif // DEBUG
+
+
+    double cos_theta = cos(ThetaOver2);
+    double sin_theta = sin(ThetaOver2);
+
+
+    // the 1,1 element
+    u3_1qbit[0].real = cos_theta;
+    u3_1qbit[0].imag = 0;
+    // the 1,2 element
+    u3_1qbit[1].real = -cos(Lambda)*sin_theta;
+    u3_1qbit[1].imag = -sin(Lambda)*sin_theta;
+    // the 2,1 element
+    u3_1qbit[2].real = cos(Phi)*sin_theta;
+    u3_1qbit[2].imag = sin(Phi)*sin_theta;
+    // the 2,2 element
+    u3_1qbit[3].real = cos(Phi+Lambda)*cos_theta;
+    u3_1qbit[3].imag = sin(Phi+Lambda)*cos_theta;
+
+
+    return u3_1qbit;
+
+}

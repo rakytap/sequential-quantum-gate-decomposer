@@ -169,6 +169,20 @@ int get_qbit_num();
 */
 Gate* clone();
 
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
+
+
+
+
+
+
 protected:
 /**
 @brief ???????????
@@ -181,8 +195,6 @@ void apply_kernel_to( Matrix& u3_1qbit, Matrix& input, bool deriv=false );
 void apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input );
 
 
-
 };
-
 
 #endif //OPERATION
