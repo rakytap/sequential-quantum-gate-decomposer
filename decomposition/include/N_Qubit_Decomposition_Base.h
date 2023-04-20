@@ -253,6 +253,15 @@ static double optimization_problem( const gsl_vector* parameters, void* void_ins
 
 
 /**
+@brief The optimization problem of the final optimization
+@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param grad A GNU Scientific Library vector containing the calculated gradient components.
+*/
+static Matrix_real optimization_problem_batch( int batchsize, const gsl_vector* parameters, void* void_instance );
+
+
+/**
 @brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
 @param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
