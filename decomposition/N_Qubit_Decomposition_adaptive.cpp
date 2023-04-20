@@ -91,10 +91,6 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
     level_limit = level_limit_in;
     level_limit_min = level_limit_min_in;
 
-
-    // En/Dis -able compression
-    compression_enabled = compression_enabled_in;
-
     // BFGS is better for smaller problems, while ADAM for larger ones
     if ( qbit_num <= 5 ) {
         set_optimizer( BFGS );
@@ -144,9 +140,6 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 
     gradient_threshold = 1e-8;
     
-    // En/Dis -able compression
-    compression_enabled = compression_enabled_in;
-
     // setting the topology
     topology = topology_in;
 
@@ -252,7 +245,15 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
     export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
 
-	if (compression_enabled==1){
+    int compression_enabled_loc;
+    if ( config.count("compression_enabled") > 0 ) {
+        config["compression_enabled"].get_property( compression_enabled_loc );  
+    }
+    else {
+        compression_enabled_loc = compression_enabled;
+    }
+
+	if (compression_enabled_loc==1){
     sstream.str("");
     sstream << std::endl;
     sstream << std::endl;
