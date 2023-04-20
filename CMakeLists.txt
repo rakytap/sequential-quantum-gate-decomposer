@@ -343,6 +343,7 @@ endif()
 
 list(APPEND qgd_files 
     ${PROJECT_SOURCE_DIR}/common/common.cpp
+    ${PROJECT_SOURCE_DIR}/common/config_element.cpp
     ${PROJECT_SOURCE_DIR}/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix_real.cpp

@@ -71,7 +71,7 @@ Decomposition_Base::Decomposition_Base() {
     optimization_tolerance = 1e-7;
 
     // Maximal number of iteartions in the optimization process
-    max_iterations = 1e8;
+    max_outer_iterations = 1e8;
 
     // number of operators in one sub-layer of the optimization process
     optimization_block = 1;
@@ -114,7 +114,7 @@ Decomposition_Base::Decomposition_Base() {
 @param initial_guess_in Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return An instance of the class
 */
-Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Gates_block(qbit_num_in) {
+Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Gates_block(qbit_num_in) {
 
     Init_max_layer_num();
 
@@ -153,7 +153,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
     optimization_tolerance = 1e-7;
 
     // Maximal number of iteartions in the optimization process
-    max_iterations = 1e8;
+    max_outer_iterations = 1e8;
 
     // number of operators in one sub-layer of the optimization process
     optimization_block = 1;
@@ -170,6 +170,10 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_t
     
     //name of the SQUANDER project
     std::string projectname = "";
+
+
+    // config maps
+    config   = config_in;
 
 
     // Will be used to obtain a seed for the random number engine
@@ -218,10 +222,10 @@ void Decomposition_Base::set_optimization_blocks( int optimization_block_in) {
 
 /**
 @brief Call to set the maximal number of the iterations in the optimization process
-@param max_iterations_in maximal number of iteartions in the optimization process
+@param max_outer_iterations_in maximal number of iteartions in the optimization process
 */
-void Decomposition_Base::set_max_iteration( int max_iterations_in) {
-    max_iterations = max_iterations_in;
+void Decomposition_Base::set_max_iteration( int max_outer_iterations_in) {
+    max_outer_iterations = max_outer_iterations_in;
 }
 
 
@@ -473,13 +477,24 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         gsl_vector *solution_guess_gsl = NULL;
 
 
+        // maximal number of outer iterations overriden by config
+        long long max_outer_iterations_loc;
+        if ( config.count("max_outer_iterations") > 0 ) {
+            config["max_outer_iterations"].get_property( max_outer_iterations_loc );
+         
+        }
+        else {
+            max_outer_iterations_loc =max_outer_iterations;
+        }
+
+
         //measure the time for the decomposition
         tbb::tick_count start_time = tbb::tick_count::now();
 
         ////////////////////////////////////////
         // Start the iterations
-        int iter_idx;
-        for ( iter_idx=0; iter_idx<max_iterations; iter_idx++) {
+        long long iter_idx;
+        for ( iter_idx=0; iter_idx<max_outer_iterations_loc; iter_idx++) {
 
             //determine the range of blocks to be optimalized togedther
             block_idx_end = block_idx_start - optimization_block;
@@ -582,7 +597,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             if (iter_idx % 500 == 0) {                
                 tbb::tick_count current_time = tbb::tick_count::now();
                 std::stringstream sstream;
-		sstream << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << " calculated in " << (current_time - start_time).seconds() << " seconds" << std::endl;
+		sstream << "The minimum with " << layer_num << " layers after " << iter_idx << " outer iterations is " << current_minimum << " calculated in " << (current_time - start_time).seconds() << " seconds" << std::endl;
 		print(sstream, 2);            
                 start_time = tbb::tick_count::now();
             }
@@ -594,13 +609,13 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // conditions to break the iteration cycles
             if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < convergence_threshold ) {              
 		std::stringstream sstream;
-	        sstream << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " iterations with " << layer_num << " layers" << std::endl;
+	        sstream << "The iterations converged to minimum " << current_minimum << " after " << iter_idx << " outer iterations with " << layer_num << " layers" << std::endl;
 		print(sstream, 1);             
                 break;
             }
             else if (check_optimization_solution()) {
       		std::stringstream sstream;
-		sstream << "The minimum with " << layer_num << " layers after " << iter_idx << " iterations is " << current_minimum << std::endl;
+		sstream << "The minimum with " << layer_num << " layers after " << iter_idx << " outer iterations is " << current_minimum << std::endl;
 		print(sstream, 1);  		               
                 break;
             }
@@ -609,9 +624,9 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
 
 
-        if (iter_idx == max_iterations && max_iterations>1) {            
+        if (iter_idx == max_outer_iterations_loc && max_outer_iterations_loc>1) {            
 		std::stringstream sstream;
-		sstream << "Reached maximal number of iterations" << std::endl << std::endl;
+		sstream << "Reached maximal number of outer iterations" << std::endl << std::endl;
 		print(sstream, 1);
         }
 

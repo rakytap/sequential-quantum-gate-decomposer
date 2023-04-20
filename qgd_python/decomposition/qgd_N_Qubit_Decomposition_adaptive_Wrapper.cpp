@@ -71,9 +71,9 @@ typedef struct qgd_N_Qubit_Decomposition_adaptive_Wrapper {
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition_adaptive* 
-create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in, int accelerator_num, int compression_enabled ) {
+create_N_Qubit_Decomposition_adaptive( Matrix& Umtx, int qbit_num, int level_limit, int level_limit_min, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num ) {
 
-    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, level_limit, level_limit_min, topology_in, accelerator_num, compression_enabled);
+    return new N_Qubit_Decomposition_adaptive( Umtx, qbit_num, level_limit, level_limit_min, topology_in, config, accelerator_num );
 }
 
 
@@ -156,10 +156,11 @@ static int
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit_min", (char*)"method", (char*)"topology", (char*)"accelerator_num",(char*)"compression_enabled", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit_min", (char*)"method", (char*)"topology", (char*)"config", (char*)"accelerator_num", NULL};
  
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
+    PyObject *config_arg = NULL;
     int  qbit_num = -1; 
     int level_limit = 0;
     int level_limit_min = 0;
@@ -168,8 +169,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     int compression_enabled = 1;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiOii", kwlist,
-                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &topology, &accelerator_num, &compression_enabled))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiiOOi", kwlist,
+                                     &Umtx_arg, &qbit_num, &level_limit, &level_limit_min, &topology, &config_arg, &accelerator_num))
         return -1;
 
     // convert python object array to numpy C API array
@@ -221,10 +222,51 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     }
 
 
+    // parse config and create C++ version of the hyperparameters
+
+    bool is_dict = PyDict_Check( config_arg );
+    if (!is_dict) {
+        printf("Config object must be a python dictionary!\n");
+        return -1;
+    }
+
+    // integer type config metadata utilized during the optimization
+    std::map<std::string, Config_Element> config;
+
+
+    // keys and values of the config dict
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(config_arg, &pos, &key, &value)) {
+
+        // determine the initial guess type
+        PyObject* key_string = PyObject_Str(key);
+        PyObject* key_string_unicode = PyUnicode_AsEncodedString(key_string, "utf-8", "~E~");
+        const char* key_C = PyBytes_AS_STRING(key_string_unicode);
+
+        std::string key_Cpp( key_C );
+        Config_Element element;
+
+        if ( PyLong_Check( value ) ) {            
+            element.set_property( key_Cpp, PyLong_AsLongLong( value ) );
+            config[ key_Cpp ] = element;
+        }
+        else if ( PyFloat_Check( value ) ) {
+            element.set_property( key_Cpp, PyFloat_AsDouble( value ) );
+            config[ key_Cpp ] = element;
+        }
+        else {
+
+        }
+
+    }
+
+
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
         try {
-            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp, accelerator_num, compression_enabled);
+            self->decomp = create_N_Qubit_Decomposition_adaptive( Umtx_mtx, qbit_num, level_limit, level_limit_min, topology_Cpp, config, accelerator_num);
         }
         catch (std::string err ) {
             PyErr_SetString(PyExc_Exception, err.c_str());
@@ -911,7 +953,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Max_Iterations(qgd_N_Qubit_Decomp
 
 
     //set the maximum number of iterations
-    self->decomp->set_iter_max(max_iters_input);
+    self->decomp->set_max_inner_iterations(max_iters_input);
 
 
     return Py_BuildValue("i", 0);
@@ -1607,7 +1649,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure(
 /**
 @brief Wrapper function to set the radius in which randomized parameters are generated around the current minimum duting the optimization process
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
-@param args A tuple of the input arguments: gate_structure_dict (PyDict)
 @return Returns with zero on success.
 */
 static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {

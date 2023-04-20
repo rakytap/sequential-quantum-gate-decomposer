@@ -72,7 +72,7 @@ class N_Qubit_Decomposition_Base : public Decomposition_Base {
 public:
 
     ///
-    int iter_max;
+    int max_inner_iterations;
     ///
     int gradient_threshold;
     /// 
@@ -146,7 +146,7 @@ N_Qubit_Decomposition_Base();
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in, int accelerator_num_in=0 );
+N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in, int accelerator_num_in=0 );
 
 
 
@@ -356,7 +356,7 @@ void set_iteration_threshold_of_randomization( const unsigned long long& thresho
 /**
 @brief ?????????????
 */
-void set_iter_max( int iter_max_in  );
+void set_max_inner_iterations( int max_inner_iterations_in  );
 
 
 /**
