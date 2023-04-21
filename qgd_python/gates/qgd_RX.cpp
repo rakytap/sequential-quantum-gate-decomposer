@@ -242,7 +242,7 @@ qgd_RX_get_Gate_Kernel( qgd_RX *self, PyObject *args ) {
 
     // create QGD version of the input matrix
 
-    Matrix RX_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix RX_1qbit_ = self->gate->get_Gate_Kernel(ThetaOver2, Phi, Lambda );
     
     PyObject *RX_1qbit = matrix_to_numpy( RX_1qbit_ );
 

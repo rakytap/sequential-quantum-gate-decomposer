@@ -420,7 +420,7 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
+Matrix Gate::get_Gate_Kernel(double ThetaOver2, double Phi, double Lambda ) {
 
     Matrix u3_1qbit = Matrix(2,2);
 

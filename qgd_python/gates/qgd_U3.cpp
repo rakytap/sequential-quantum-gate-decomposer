@@ -256,7 +256,7 @@ qgd_U3_get_Gate_Kernel( qgd_U3 *self, PyObject *args ) {
 
     // create QGD version of the input matrix
 
-    Matrix U3_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix U3_1qbit_ = self->gate->get_Gate_Kernel(ThetaOver2, Phi, Lambda );
     PyObject *U3_1qbit = matrix_to_numpy( U3_1qbit_ );
 
     return U3_1qbit;

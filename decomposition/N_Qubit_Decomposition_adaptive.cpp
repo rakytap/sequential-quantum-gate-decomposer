@@ -1143,10 +1143,10 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
 
                 Matrix_real param1( &optimized_parameters_loc[parameter_idx_to_be_removed], 1, U_gate_to_be_removed->get_parameter_num() );
-                Matrix U3_matrix1 = U_gate_to_be_removed->calc_one_qubit_u3(param1[0], param1[1], param1[2] );
+                Matrix U3_matrix1 = U_gate_to_be_removed->get_Gate_Kernel(param1[0], param1[1], param1[2] );
 
                 Matrix_real param2( &optimized_parameters_loc[parameter_idx_loc], 1, matching_gate->get_parameter_num() );
-                Matrix U3_matrix2 = matching_gate->calc_one_qubit_u3(param2[0], param2[1], param2[2] );
+                Matrix U3_matrix2 = matching_gate->get_Gate_Kernel(param2[0], param2[1], param2[2] );
 
                 Matrix U3_prod = dot(U3_matrix2, U3_matrix1);
 
@@ -1176,7 +1176,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 		}
 
                 // the product U3 matrix
-		Matrix U3_new = matching_gate->calc_one_qubit_u3(theta3_over2,phi3,lambda3);
+		Matrix U3_new = matching_gate->get_Gate_Kernel(theta3_over2,phi3,lambda3);
 		QGD_Complex16 global_phase_factor_new;
 		global_phase_factor_new.real = std::cos(alpha);
 		global_phase_factor_new.imag = std::sin(alpha);

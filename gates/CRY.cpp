@@ -112,7 +112,7 @@ Phi = Phi - M_PI;
 //Phi = 0.5*(1.0-std::cos(Phi))*M_PI;
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix u3_1qbit = get_Gate_Kernel(ThetaOver2, Phi, Lambda );
 
 
     // apply the computing kernel on the matrix
@@ -157,7 +157,7 @@ Phi = Phi - M_PI;
 
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix u3_1qbit = get_Gate_Kernel(ThetaOver2, Phi, Lambda );
 
     // apply the computing kernel on the matrix
     apply_kernel_from_right(u3_1qbit, input);
@@ -191,7 +191,7 @@ CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix u3_1qbit = get_Gate_Kernel(ThetaOver2, Phi, Lambda );
 
 
     // apply the computing kernel on the matrix

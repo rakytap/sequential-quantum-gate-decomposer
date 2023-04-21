@@ -148,7 +148,7 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix u3_1qbit = get_Gate_Kernel(ThetaOver2, Phi, Lambda );
 
 
     apply_kernel_to( u3_1qbit, input );
@@ -181,7 +181,7 @@ RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix u3_1qbit = get_Gate_Kernel(ThetaOver2, Phi, Lambda );
 
 
     apply_kernel_from_right(u3_1qbit, input);

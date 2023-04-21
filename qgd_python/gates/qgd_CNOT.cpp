@@ -216,7 +216,7 @@ qgd_CNOT_get_Gate_Kernel( qgd_CNOT *self, PyObject *args ) {
 
     // create QGD version of the input matrix
 
-    Matrix CNOT_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix CNOT_1qbit_ = self->gate->get_Gate_Kernel(ThetaOver2, Phi, Lambda );
     PyObject *CNOT_1qbit = matrix_to_numpy( CNOT_1qbit_ );
 
     return CNOT_1qbit;
