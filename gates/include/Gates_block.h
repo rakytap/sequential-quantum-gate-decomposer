@@ -507,6 +507,13 @@ DFEgate_kernel_type* convert_to_DFE_gates_with_derivates( Matrix_real& parameter
 */
 void adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgates, const int  gatesNum, int& gate_idx, int& gate_set_index );
 
+/**
+@brief Method to create random initial parameters for the optimization
+@return 
+*/
+DFEgate_kernel_type* convert_to_batched_DFE_gates( std::vector<Matrix_real>& parameters_mtx_vec, int& gatesNum, int& gateSetNum, int& redundantGateSets );
+
+
 
 /**
 @brief Method to create random initial parameters for the optimization
