@@ -45,7 +45,7 @@ protected:
     /// variable to store bool parameter value
     bool bval;
     /// variable to store int parameter value
-    int ival;
+    long ival;
     /// variable to store long long parameter value
     long long llval;
     /// variable to store unsigned long long parameter value
@@ -85,7 +85,7 @@ void set_property( std::string name_, bool val_ );
 @param name The name of the property
 @param val_ The value of the property
 */
-void set_property( std::string name_, int val_ );
+void set_property( std::string name_, long val_ );
 
 
 /**
@@ -128,7 +128,7 @@ void get_property( bool& val_ );
 @param name The name of the property
 @param val_ The value of the property
 */
-void get_property( int& val_ );
+void get_property( long& val_ );
 
 
 /**

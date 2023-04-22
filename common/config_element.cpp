@@ -116,7 +116,7 @@ Config_Element::set_property( std::string name_, bool val_ ) {
 @param val_ The value of the property
 */
 void 
-Config_Element::set_property( std::string name_, int val_ ) {
+Config_Element::set_property( std::string name_, long val_ ) {
 
     /// The name of the configuration property
     name = name_;
@@ -221,7 +221,7 @@ Config_Element::get_property( bool& val_ ) {
 @param val_ The value of the property
 */
 void 
-Config_Element::get_property( int& val_ ) {
+Config_Element::get_property( long& val_ ) {
 
     val_ = ival;
 

@@ -74,7 +74,7 @@ Decomposition_Base::Decomposition_Base() {
     max_outer_iterations = 1e8;
 
     // number of operators in one sub-layer of the optimization process
-    optimization_block = 1;
+    optimization_block = -1;
 
     // method to guess initial values for the optimization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
     initial_guess = ZEROS;
@@ -156,7 +156,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::ma
     max_outer_iterations = 1e8;
 
     // number of operators in one sub-layer of the optimization process
-    optimization_block = 1;
+    optimization_block = -1;
 
     // method to guess initial values for the optimization. Possible values: ZEROS, RANDOM, CLOSE_TO_ZERO (default)
     initial_guess = initial_guess_in;
@@ -414,6 +414,10 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
         // storing the initial computational parameters
         int optimization_block_loc = optimization_block;
+        
+        if ( optimization_block == -1 ) {
+            optimization_block = gates.size();
+        }
 
         // random generator of real numbers   
         std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
@@ -693,7 +697,15 @@ double Decomposition_Base::optimization_problem( const double* parameters ) {
 */
 bool Decomposition_Base::check_optimization_solution() {
 
-        return (std::abs(current_minimum - global_target_minimum) < optimization_tolerance);
+        double optimization_tolerance_loc;
+        if ( config.count("optimization_tolerance") > 0 ) {
+             config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
+        }
+        else {
+            optimization_tolerance_loc = optimization_tolerance;
+        }       
+
+        return (std::abs(current_minimum - global_target_minimum) < optimization_tolerance_loc);
 
 }
 

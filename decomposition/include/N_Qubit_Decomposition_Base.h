@@ -234,6 +234,14 @@ double optimization_problem( Matrix_real& parameters);
 
 
 /**
+@brief The optimization problem of the final optimization with batched input (implemented only for the Frobenius norm cost function)
+@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+Matrix_real optimization_problem_batched( std::vector<Matrix_real>& parameters_vec);
+
+
+/**
 @brief The optimization problem of the final optimization useful for gradient
 @param parameters A GNU Scientific Library containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.

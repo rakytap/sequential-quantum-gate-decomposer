@@ -38,6 +38,9 @@ static double adam_time = 0;
 static double bfgs_time = 0;
 static double pure_DFE_time = 0;
 
+static double DFE_time = 0.0;
+static double CPU_time = 0.0;
+
 
 /**
 @brief Nullary constructor of the class.
@@ -400,7 +403,6 @@ pure_DFE_time = 0.0;
 
         double optimization_tolerance_loc;
         if ( config.count("optimization_tolerance_agent") > 0 ) {
-std::cout  << "pppppppppppppppppppppppppppppppppppppppppppppp uuuuuuuuuuuuuuuuuu " << std::endl;
              config["optimization_tolerance_agent"].get_property( optimization_tolerance_loc );  
         }
         else {
@@ -422,7 +424,20 @@ std::cout  << "pppppppppppppppppppppppppppppppppppppppppppppp uuuuuuuuuuuuuuuuuu
         
         double exploration_rate = 1e-2;
         double randomization_rate = 0.2;
-        int agent_num = 64;
+        
+        int agent_num;
+        if ( config.count("agent_num") > 0 ) { 
+             long long value;                   
+             config["agent_num"].get_property( value );  
+             agent_num = (int) value;
+        }
+        else {
+            agent_num = 64;
+        }
+        
+        sstream.str("");
+        sstream << "COSINE, number of agents " << agent_num << std::endl;
+        print(sstream, 2);        
         
         bool terminate_optimization = false;
         
@@ -443,16 +458,14 @@ std::cout  << "pppppppppppppppppppppppppppppppppppppppppppppp uuuuuuuuuuuuuuuuuu
 if ( qbit_num >= 5 && get_accelerator_num() > 0 ) {
 
 
-double DFE_time = 0.0;
-double CPU_time = 0.0;
+
 
 tbb::tick_count t0_CPU = tbb::tick_count::now();
 
         std::vector<Matrix_real> solution_guess_mtx_agents( agent_num );
         solution_guess_mtx_agents.reserve( agent_num );
 
-        std::vector<double> current_minimum_agents( agent_num );
-        current_minimum_agents.reserve( agent_num );
+        Matrix_real current_minimum_agents;
 
         for(int agent_idx=0; agent_idx<agent_num; agent_idx++) {
 
@@ -470,47 +483,10 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 
         }
 
-        int gatesNum, redundantGateSets, gateSetNum; 
-        DFEgate_kernel_type* DFEgates = convert_to_batched_DFE_gates( solution_guess_mtx_agents, gatesNum, gateSetNum, redundantGateSets );
-std::cout << gatesNum << " " << redundantGateSets << " " << gateSetNum << std::endl;
-
-
-        Matrix_real trace_DFE_mtx(gateSetNum, 3);
         
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
-
-#ifdef __MPI__
-        // the number of decomposing layers are divided between the MPI processes
-
-        int mpi_gateSetNum = gateSetNum / instance->world_size;
-        int mpi_starting_gateSetIdx = gateSetNum/instance->world_size * instance->current_rank;
-
-        Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
-
-        lock_lib();
-        calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset, mpi_trace_DFE_mtx.get_data() );
-        unlock_lib();
-
-        int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
-        MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
-
-#else
-tbb::tick_count t0_DFE = tbb::tick_count::now();
-        lock_lib();
-        calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates, gatesNum, gateSetNum, trace_offset, trace_DFE_mtx.get_data() );
-        unlock_lib();
-DFE_time += (tbb::tick_count::now() - t0_DFE).seconds();        
-
-
-#endif  
-t0_CPU = tbb::tick_count::now();
-        // intitial cost function
-        for ( int idx=0; idx<agent_num; idx++ ) {
-            current_minimum_agents[idx] = 1-trace_DFE_mtx[idx*3]/Umtx.cols;
-        }
-
-
-        delete[] DFEgates;
+        // intitial cost function for each of the agents
+        current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents );
+       
         
         
         std::vector<Matrix_real> f0_vec_agents( agent_num );
@@ -554,7 +530,7 @@ t0_CPU = tbb::tick_count::now();
             for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
             
             
-                Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];
+                Matrix_real& solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];
      
                 // vector stroing the lates values of cost function to test local minimum
                 Matrix_real& f0_vec = f0_vec_agents[agent_idx]; 
@@ -574,124 +550,29 @@ t0_CPU = tbb::tick_count::now();
             for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
                 Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ]; 
                 solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;                
-            }
-            
-            DFEgates = convert_to_batched_DFE_gates( solution_guess_mtx_agents, gatesNum, gateSetNum, redundantGateSets );       
-            
-            trace_DFE_mtx = Matrix_real(gateSetNum, 3);
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();       
-
-#ifdef __MPI__
-            // the number of decomposing layers are divided between the MPI processes
-
-            int mpi_gateSetNum = gateSetNum / instance->world_size;
-            int mpi_starting_gateSetIdx = gateSetNum/instance->world_size * instance->current_rank;
-
-            Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
-
-            lock_lib();
-            calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset, mpi_trace_DFE_mtx.get_data() );
-            unlock_lib();
-
-            int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
-            MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
-
-#else
-t0_DFE = tbb::tick_count::now();
-            lock_lib();
-            calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates, gatesNum, gateSetNum, trace_offset, trace_DFE_mtx.get_data() );
-            unlock_lib();
-DFE_time += (tbb::tick_count::now() - t0_DFE).seconds();                    
-#endif  
-t0_CPU = tbb::tick_count::now();        
-            // intitial cost function
-            for ( int idx=0; idx<agent_num; idx++ ) {
-                f0_shifted_pi2_agents[idx] = 1-trace_DFE_mtx[idx*3]/Umtx.cols;
             }                 
-                                 
-                
-            delete[] DFEgates;                
+CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();                   
+            f0_shifted_pi2_agents = optimization_problem_batched( solution_guess_mtx_agents );              
+t0_CPU = tbb::tick_count::now();                                         
+                        
 
             for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
                 Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
                 solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;
             }   
-            
-            DFEgates = convert_to_batched_DFE_gates( solution_guess_mtx_agents, gatesNum, gateSetNum, redundantGateSets );                        
-            
-            trace_DFE_mtx = Matrix_real(gateSetNum, 3);
-
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();       
-#ifdef __MPI__
-            // the number of decomposing layers are divided between the MPI processes
-
-            int mpi_gateSetNum = gateSetNum / instance->world_size;
-            int mpi_starting_gateSetIdx = gateSetNum/instance->world_size * instance->current_rank;
-
-            Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
-
-            lock_lib();
-            calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset, mpi_trace_DFE_mtx.get_data() );
-            unlock_lib();
-
-            int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
-            MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
-
-#else
-t0_DFE = tbb::tick_count::now();
-            lock_lib();
-            calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates, gatesNum, gateSetNum, trace_offset, trace_DFE_mtx.get_data() );
-            unlock_lib();
-DFE_time += (tbb::tick_count::now() - t0_DFE).seconds();                                
-#endif  
-t0_CPU = tbb::tick_count::now();        
-            // intitial cost function
-            for ( int idx=0; idx<agent_num; idx++ ) {
-                f0_shifted_pi_agents[idx] = 1-trace_DFE_mtx[idx*3]/Umtx.cols;
-            }                 
+CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();                   
+            f0_shifted_pi_agents = optimization_problem_batched( solution_guess_mtx_agents );             
                 
-            delete[] DFEgates;                         
-
+                                       
+t0_CPU = tbb::tick_count::now();                                         
             for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
                 Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
                 solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;
             }            
-            
-            DFEgates = convert_to_batched_DFE_gates( solution_guess_mtx_agents, gatesNum, gateSetNum, redundantGateSets );                        
-        
-            trace_DFE_mtx = Matrix_real(gateSetNum, 3);
-
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();       
-#ifdef __MPI__
-            // the number of decomposing layers are divided between the MPI processes
-
-            int mpi_gateSetNum = gateSetNum / instance->world_size;
-            int mpi_starting_gateSetIdx = gateSetNum/instance->world_size * instance->current_rank;
-
-            Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
-
-            lock_lib();
-            calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset, mpi_trace_DFE_mtx.get_data() );
-            unlock_lib();
-
-            int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
-            MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
-
-#else
-t0_DFE = tbb::tick_count::now();
-            lock_lib();
-            calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates, gatesNum, gateSetNum, trace_offset, trace_DFE_mtx.get_data() );
-            unlock_lib();
-DFE_time += (tbb::tick_count::now() - t0_DFE).seconds();                                            
-#endif  
-t0_CPU = tbb::tick_count::now();        
-            // intitial cost function
-            for ( int idx=0; idx<agent_num; idx++ ) {
-                f0_shifted_3pi2_agents[idx] = 1-trace_DFE_mtx[idx*3]/Umtx.cols;
-            }                 
-                
-            delete[] DFEgates;                         
-
+CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();                               
+            f0_shifted_3pi2_agents = optimization_problem_batched( solution_guess_mtx_agents );  
+                                       
+t0_CPU = tbb::tick_count::now();                                         
             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
 
                 double current_minimum_agent = current_minimum_agents[agent_idx];         
@@ -722,49 +603,18 @@ t0_CPU = tbb::tick_count::now();
                                     
                 
             }
-            
-            DFEgates = convert_to_batched_DFE_gates( solution_guess_mtx_agents, gatesNum, gateSetNum, redundantGateSets );                        
-            
-            trace_DFE_mtx = Matrix_real(gateSetNum, 3);
-
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();       
-#ifdef __MPI__
-            // the number of decomposing layers are divided between the MPI processes
-
-            int mpi_gateSetNum = gateSetNum / instance->world_size;
-            int mpi_starting_gateSetIdx = gateSetNum/instance->world_size * instance->current_rank;
-
-            Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
-
-            lock_lib();
-            calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset, mpi_trace_DFE_mtx.get_data() );
-            unlock_lib();
-
-            int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
-            MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
-
-#else
-t0_DFE = tbb::tick_count::now();
-            lock_lib();
-            calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates, gatesNum, gateSetNum, trace_offset, trace_DFE_mtx.get_data() );
-            unlock_lib();
-DFE_time += (tbb::tick_count::now() - t0_DFE).seconds();                                                        
-#endif  
+CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();                                           
+            current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents );  
 
 t0_CPU = tbb::tick_count::now();        
             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
-                current_minimum_agents[ agent_idx ] = 1-trace_DFE_mtx[agent_idx*3]/Umtx.cols;
                 double& current_minimum_agent = current_minimum_agents[ agent_idx ];
                    
             
                 if ( iter_idx % 2000 == 0 && agent_idx == 0) {
                     std::stringstream sstream;
-                    sstream << "COSINE, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum of agent:" << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time << " DFE_time: " << DFE_time << std::endl;
-                    print(sstream, 0);   
-                    //std::string filename("initial_circuit_iteration.binary");
-                    //export_gate_list_to_binary(solution_guess_tmp_mtx, this, filename, verbose);
-
-
+                    sstream << "COSINE, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum of agent:" << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time << " DFE_time: " << DFE_time << " pure DFE time: " << pure_DFE_time << std::endl;
+                    print(sstream, 0); 
                 }
                 
                 if (current_minimum_agents[agent_idx] < optimization_tolerance_loc ) {
@@ -797,6 +647,9 @@ t0_CPU = tbb::tick_count::now();
                     
                         // export the parameters of the curremt, most successful agent
                         memcpy(optimized_parameters_mtx.get_data(), solution_guess_mtx_agent.get_data(), num_of_parameters*sizeof(double) );
+                        
+                        std::string filename("initial_circuit_iteration.binary");
+                        export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
                         
                         current_minimum = current_minimum_agent;
                         
@@ -907,7 +760,7 @@ t0_CPU = tbb::tick_count::now();
                                       
                 
             }  // for agent_idx                        
-            
+CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();                   
             // terminate the agent if the whole optimization problem was solved
             if ( terminate_optimization ) {                   
                 break;                    
@@ -915,7 +768,7 @@ t0_CPU = tbb::tick_count::now();
         
         }
 
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();       
+
 }
 else {
 
@@ -1146,7 +999,7 @@ else {
 }
 
 #endif
-        
+
         // the result of the most successful agent:
         current_minimum = optimization_problem( optimized_parameters_mtx );
         
@@ -1364,7 +1217,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
             memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
         }
 
-
+std::cout << "zzzzzzzzzzzzzzzzzzzzzzzzzzzz " << num_of_parameters << std::endl;
         int random_shift_count = 0;
         long long sub_iter_idx = 0;
         double current_minimum_hold = current_minimum;
@@ -1412,6 +1265,15 @@ pure_DFE_time = 0.0;
         else {
             iteration_threshold_of_randomization_loc = iteration_threshold_of_randomization;
         }
+        
+        
+        double optimization_tolerance_loc;
+        if ( config.count("optimization_tolerance") > 0 ) {
+             config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
+        }
+        else {
+            optimization_tolerance_loc = optimization_tolerance;
+        }        
 
 
         double f0 = DBL_MAX;
@@ -1471,11 +1333,10 @@ pure_DFE_time = 0.0;
                 print(sstream, 0);   
                 std::string filename("initial_circuit_iteration.binary");
                 export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
-
             }
 
 //std::cout << grad_norm  << std::endl;
-            if (f0 < optimization_tolerance || random_shift_count > random_shift_count_max ) {
+            if (f0 < optimization_tolerance_loc || random_shift_count > random_shift_count_max ) {
                 break;
             }
 
@@ -2003,37 +1864,8 @@ double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
 
     // get the transformed matrix with the gates in the list
     Matrix_real parameters_mtx(parameters, 1, parameter_num );
-    Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
-
-
-    if ( cost_fnc == FROBENIUS_NORM ) {
-        return get_cost_function(matrix_new, trace_offset);
-    }
-    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-        Matrix_real&& ret = get_cost_function_with_correction(matrix_new, qbit_num, trace_offset);
-        return ret[0] - std::sqrt(prev_cost_fnv_val)*ret[1]*correction1_scale;
-    }
-    else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
-        Matrix_real&& ret = get_cost_function_with_correction2(matrix_new, qbit_num, trace_offset);
-        return ret[0] - std::sqrt(prev_cost_fnv_val)*(ret[1]*correction1_scale + ret[2]*correction2_scale);
-    }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
-        return get_hilbert_schmidt_test(matrix_new);
-    }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION1 ){
-        Matrix&& ret = get_trace_with_correction(matrix_new, qbit_num);
-        double d = 1.0/matrix_new.cols;
-        return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag));
-    }
-    else if ( cost_fnc == HILBERT_SCHMIDT_TEST_CORRECTION2 ){
-        Matrix&& ret = get_trace_with_correction2(matrix_new, qbit_num);
-        double d = 1.0/matrix_new.cols;
-        return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
-    }
-    else {
-        std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
-        throw err;
-    }
+    
+    return optimization_problem( parameters_mtx );
 
 
 }
@@ -2087,6 +1919,81 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
         throw err;
     }
 
+}
+
+
+/**
+@brief The optimization problem of the final optimization with batched input (implemented only for the Frobenius norm cost function)
+@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+Matrix_real 
+N_Qubit_Decomposition_Base::optimization_problem_batched( std::vector<Matrix_real>& parameters_vec) {
+
+tbb::tick_count t0_DFE = tbb::tick_count::now();        
+
+
+        Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
+        
+#ifdef __DFE__
+    if ( get_accelerator_num() > 0 ) {
+        int gatesNum, gateSetNum, redundantGateSets;
+        DFEgate_kernel_type* DFEgates = convert_to_batched_DFE_gates( parameters_vec, gatesNum, gateSetNum, redundantGateSets );                        
+            
+        Matrix_real trace_DFE_mtx(gateSetNum, 3);
+        
+tbb::tick_count t0_DFE_pure = tbb::tick_count::now();         
+#ifdef __MPI__
+        // the number of decomposing layers are divided between the MPI processes
+
+        int mpi_gateSetNum = gateSetNum / instance->world_size;
+        int mpi_starting_gateSetIdx = gateSetNum/instance->world_size * instance->current_rank;
+
+        Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
+
+        lock_lib();
+        calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset, mpi_trace_DFE_mtx.get_data() );
+        unlock_lib();
+
+        int bytes = mpi_trace_DFE_mtx.size()*sizeof(double);
+        MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
+
+#else
+        lock_lib();
+        calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates, gatesNum, gateSetNum, trace_offset, trace_DFE_mtx.get_data() );
+        unlock_lib();    
+                                                                      
+#endif  
+pure_DFE_time += (tbb::tick_count::now() - t0_DFE_pure).seconds();       
+
+        // calculate the cost function
+        for ( int idx=0; idx<parameters_vec.size(); idx++ ) {
+            cost_fnc_mtx[idx] = 1-trace_DFE_mtx[idx*3]/Umtx.cols;
+        }
+
+
+        delete[] DFEgates;
+
+    }
+    else{
+
+#endif
+
+        tbb::parallel_for( 0, (int)parameters_vec.size(), 1, [&]( int idx) {
+            cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
+        });
+       
+
+   
+
+
+#ifdef __DFE__  
+    }
+#endif
+
+DFE_time += (tbb::tick_count::now() - t0_DFE).seconds();       
+    return cost_fnc_mtx;
+        
 }
 
 
