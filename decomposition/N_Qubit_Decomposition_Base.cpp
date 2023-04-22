@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Base.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "Adam.h"
+#include "RL_experience.h"
 
 #include <fstream>
 
@@ -379,15 +380,17 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( 
         }
 
 
-        int random_shift_count = 0;
         long long sub_iter_idx = 0;
         double current_minimum_hold = current_minimum;
     
 
-        tbb::tick_count adam_start = tbb::tick_count::now();
-        adam_time = 0.0;
+        tbb::tick_count optimization_start = tbb::tick_count::now();
+        double optimization_time = 0.0;
 pure_DFE_time = 0.0;
 
+
+        // class to store RL agents experience
+        RL_experience experience;
 
         
         current_minimum =   optimization_problem( optimized_parameters_mtx );              
@@ -1178,8 +1181,8 @@ else {
         sstream << "obtained minimum: " << current_minimum << std::endl;
 
 
-        tbb::tick_count adam_end = tbb::tick_count::now();
-        adam_time  = adam_time + (adam_end-adam_start).seconds();
+        tbb::tick_count optimization_end = tbb::tick_count::now();
+        optimization_time  = optimization_time + (optimization_end-optimization_start).seconds();
         sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << current_minimum << std::endl;
         
         print(sstream, 0); 

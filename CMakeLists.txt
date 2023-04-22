@@ -349,6 +349,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/common/matrix_real.cpp
     ${PROJECT_SOURCE_DIR}/common/logging.cpp
     ${PROJECT_SOURCE_DIR}/common/Adam.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/RL_experience.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
@@ -435,6 +436,7 @@ target_include_directories(qgd PRIVATE
                             ./gates/include
                             ./decomposition/include
                             ./random_unitary/include
+                            ./optimization_engines/include
                             ./nn/include
                             ./gates/kernels/include
                             ${EXTRA_INCLUDES})
