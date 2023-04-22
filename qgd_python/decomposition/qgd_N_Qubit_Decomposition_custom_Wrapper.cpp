@@ -144,17 +144,18 @@ static int
 qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_custom_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"initial_guess", (char*)"accelerator_num", NULL};
+    static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"initial_guess", (char*)"config", (char*)"accelerator_num", NULL};
  
     // initiate variables for input arguments
     PyObject *Umtx_arg = NULL;
+    PyObject *config_arg = NULL;    
     int  qbit_num = -1; 
     PyObject *initial_guess = NULL;
     int accelerator_num = 0;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiOi", kwlist,
-                                     &Umtx_arg, &qbit_num, &initial_guess, &accelerator_num))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiOOi", kwlist,
+                                     &Umtx_arg, &qbit_num, &initial_guess, &config_arg, &accelerator_num))
         return -1;
 
     // convert python object array to numpy C API array
@@ -197,7 +198,33 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_custom_W
     // integer type config metadata utilized during the optimization
     std::map<std::string, Config_Element> config;
 
+    // keys and values of the config dict
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
 
+    while (PyDict_Next(config_arg, &pos, &key, &value)) {
+
+        // determine the initial guess type
+        PyObject* key_string = PyObject_Str(key);
+        PyObject* key_string_unicode = PyUnicode_AsEncodedString(key_string, "utf-8", "~E~");
+        const char* key_C = PyBytes_AS_STRING(key_string_unicode);
+
+        std::string key_Cpp( key_C );
+        Config_Element element;
+
+        if ( PyLong_Check( value ) ) { 
+            element.set_property( key_Cpp, PyLong_AsLongLong( value ) );
+            config[ key_Cpp ] = element;
+        }
+        else if ( PyFloat_Check( value ) ) {
+            element.set_property( key_Cpp, PyFloat_AsDouble( value ) );
+            config[ key_Cpp ] = element;
+        }
+        else {
+
+        }
+
+    }
   
     // create an instance of the class N_Qubit_Decomposition_custom
     if (qbit_num > 0 ) {
@@ -871,7 +898,6 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decompo
 
     // convert gate structure from PyObject to qgd_Gates_Block
     qgd_Gates_Block* qgd_op_block = (qgd_Gates_Block*) gate_structure_py;
-
     self->decomp->set_custom_gate_structure( qgd_op_block->gate );
 
     return Py_BuildValue("i", 0);
@@ -980,11 +1006,14 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer( qgd_N_Qubit_Decompositio
     else if ( strcmp("adam", optimizer_C)==0 or strcmp("ADAM", optimizer_C)==0) {
         qgd_optimizer = ADAM;        
     }
+    else if ( strcmp("adam_batched", optimizer_C)==0 or strcmp("ADAM_BATCHED", optimizer_C)==0) {
+        qgd_optimizer = ADAM_BATCHED;        
+    }
     else if ( strcmp("bfgs2", optimizer_C)==0 or strcmp("BFGS2", optimizer_C)==0) {
         qgd_optimizer = BFGS2;        
     }
     else {
-        std::cout << "Wrong optimizer. Using default: BFGS rrrrrrrrrrrrrrr" << std::endl; 
+        std::cout << "Wrong optimizer. Using default: BFGS" << std::endl; 
         qgd_optimizer = BFGS;     
     }
 
