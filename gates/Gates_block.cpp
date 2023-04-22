@@ -2193,7 +2193,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
 
     for ( std::vector<Gate*>::iterator it=gates.begin(); it != gates.end(); ++it ) {
         Gate* op = *it;
-
+        
         if (op->get_type() == CNOT_OPERATION) {
             CNOT* cnot_op = static_cast<CNOT*>( op );
             CNOT* cnot_op_cloned = cnot_op->clone();
@@ -2312,7 +2312,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         }
 
     }
-
+    
     return 0;
 
 }
