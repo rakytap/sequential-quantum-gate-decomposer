@@ -335,10 +335,10 @@ static PyTypeObject  qgd_U3_Type = {
 @brief Structure containing metadata about the module.
 */
 static PyModuleDef  qgd_U3_Module = {
-    .m_base = PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_U3",
-    .m_doc = "Python binding for QGD U3 gate",
-    .m_size = -1,
+    PyModuleDef_HEAD_INIT,
+    "qgd_U3",
+    "Python binding for QGD U3 gate",
+    -1,
 };
 
 
