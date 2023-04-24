@@ -265,10 +265,10 @@ static PyTypeObject  qgd_RZ_Type = {
 @brief Structure containing metadata about the module.
 */
 static PyModuleDef  qgd_RZ_Module = {
-    .m_base = PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_RZ",
-    .m_doc = "Python binding for QGD RZ gate",
-    .m_size = -1,
+    PyModuleDef_HEAD_INIT,
+    "qgd_RZ",
+    "Python binding for QGD RZ gate",
+    -1,
 };
 
 
