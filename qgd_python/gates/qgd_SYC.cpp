@@ -244,10 +244,10 @@ static PyTypeObject  qgd_SYC_Type = {
 @brief Structure containing metadata about the module.
 */
 static PyModuleDef  qgd_SYC_Module = {
-    .m_base = PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_SYC",
-    .m_doc = "Python binding for QGD SYC gate",
-    .m_size = -1,
+    PyModuleDef_HEAD_INIT,
+    "qgd_SYC",
+    "Python binding for QGD SYC gate",
+    -1,
 };
 
 
