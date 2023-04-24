@@ -834,10 +834,10 @@ static PyTypeObject qgd_Gates_Block_Type = {
 @brief Structure containing metadata about the module.
 */
 static PyModuleDef qgd_Gates_Block_Module = {
-    .m_base = PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_Gates_Block",
-    .m_doc = "Python binding for QGD Gates_block class",
-    .m_size = -1,
+    PyModuleDef_HEAD_INIT,
+    "qgd_Gates_Block",
+    "Python binding for QGD Gates_block class",
+    -1,
 };
 
 /**
