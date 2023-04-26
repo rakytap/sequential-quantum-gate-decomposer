@@ -161,7 +161,9 @@ N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
 
 
 #ifdef __DFE__
-    unload_dfe_lib();//releive_DFE();
+    if ( qbit_num >= 2 && get_accelerator_num() > 0 ) {
+        unload_dfe_lib();//releive_DFE();
+    }
 #endif      
 
 
@@ -353,7 +355,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
 #ifdef __DFE__
-        if ( qbit_num >= 5 ) {
+        if ( qbit_num >= 2 && get_accelerator_num() > 0 ) {
             upload_Umtx_to_DFE();
         }
 #endif
@@ -563,7 +565,7 @@ std::cout << "trace offset: " << trace_offset << " col_num: " << col_num << " it
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
 #ifdef __DFE__
-        if ( qbit_num >= 5 ) {
+        if ( qbit_num >= 2 && get_accelerator_num() > 0 ) {
             upload_Umtx_to_DFE();
         }
 #endif
@@ -770,7 +772,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
 
 #ifdef __DFE__
-        if ( qbit_num >= 5 ) {
+        if ( qbit_num >= 2 && get_accelerator_num() > 0 ) {
             upload_Umtx_to_DFE();
         }
 #endif
@@ -881,7 +883,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS2( int num
 
 
 #ifdef __DFE__
-        if ( qbit_num >= 5 ) {
+        if ( qbit_num >= 2 && get_accelerator_num() > 0 ) {
             upload_Umtx_to_DFE();
         }
 #endif
