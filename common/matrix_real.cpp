@@ -112,7 +112,7 @@ Matrix_real::copy() {
   // logical value indicating whether the class instance is the owner of the stored data or not. (If true, the data array is released in the destructor)
   ret.owner = true;
 
-  memcpy( ret.data, data, rows*cols*sizeof(double));
+  memcpy( ret.data, data, rows*stride*sizeof(double));
 
   return ret;
 
