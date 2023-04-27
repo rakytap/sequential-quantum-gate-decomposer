@@ -256,7 +256,7 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = get_Gate_Kernel(ThetaOver2, Phi, Lambda );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
     apply_kernel_to( u3_1qbit, input );
@@ -337,7 +337,7 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     }
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = get_Gate_Kernel(ThetaOver2, Phi, Lambda );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
     apply_kernel_from_right(u3_1qbit, input);
@@ -419,7 +419,7 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (theta) {
 
-        Matrix u3_1qbit = get_Gate_Kernel(ThetaOver2+M_PIOver2, Phi, Lambda);
+        Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2+M_PIOver2, Phi, Lambda);
         Matrix res_mtx = input.copy();
         apply_kernel_to( u3_1qbit, res_mtx );
         ret.push_back(res_mtx);
@@ -430,7 +430,7 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (phi) {
 
-        Matrix u3_1qbit = get_Gate_Kernel(ThetaOver2, Phi+M_PIOver2, Lambda );
+        Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi+M_PIOver2, Lambda );
         memset(u3_1qbit.get_data(), 0.0, 2*sizeof(QGD_Complex16) );
 
         Matrix res_mtx = input.copy();
@@ -443,7 +443,7 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (lambda) {
 
-        Matrix u3_1qbit = get_Gate_Kernel(ThetaOver2, Phi, Lambda+M_PIOver2 );
+        Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda+M_PIOver2 );
         memset(u3_1qbit.get_data(), 0.0, sizeof(QGD_Complex16) );
         memset(u3_1qbit.get_data()+2, 0.0, sizeof(QGD_Complex16) );
 

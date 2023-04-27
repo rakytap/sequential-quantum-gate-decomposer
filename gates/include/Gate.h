@@ -176,7 +176,7 @@ Gate* clone();
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-Matrix get_Gate_Kernel(double Theta, double Phi, double Lambda );
+Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
 
 
 

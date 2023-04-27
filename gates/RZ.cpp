@@ -154,7 +154,7 @@ RZ::apply_to( Matrix_real& parameters, Matrix& input ) {
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = get_Gate_Kernel(Theta, Phi, Lambda );
+    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
 
 
     apply_kernel_to( u3_1qbit, input );
@@ -188,7 +188,7 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = get_Gate_Kernel(Theta, Phi, Lambda );
+    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
 
 
     apply_kernel_from_right(u3_1qbit, input);
@@ -222,7 +222,7 @@ RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = get_Gate_Kernel(Theta, Phi, Lambda );
+    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
     memset(u3_1qbit.get_data(), 0.0, 2*sizeof(QGD_Complex16));
 
 
