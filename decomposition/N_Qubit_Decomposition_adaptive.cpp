@@ -238,7 +238,6 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     }
 
 
-
     std::string filename("circuit_squander.binary");
     if (project_name != "") {
         filename = project_name+ "_" +filename;
@@ -476,6 +475,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance ); 
     cDecomp_custom.set_trace_offset( trace_offset ); 
     cDecomp_custom.set_optimizer( alg );  
+    cDecomp_custom.set_project_name( project_name );
     if (alg==ADAM || alg==BFGS2) { 
         int param_num_loc = gate_structure_loc->get_parameter_num();
         int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
@@ -602,6 +602,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );
                 cDecomp_custom_random.set_trace_offset( trace_offset ); 
                 cDecomp_custom_random.set_optimizer( alg );
+                cDecomp_custom_random.set_project_name( project_name );
                 if ( alg == ADAM || alg == BFGS2 ) {
                     int param_num_loc = gate_structure_loc->get_parameter_num();
                     int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
