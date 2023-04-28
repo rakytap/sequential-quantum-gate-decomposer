@@ -70,6 +70,10 @@ public:
     matrix_base<unsigned long long> total_counts_probs;
 
 
+
+    std::vector<int> history;
+
+
     ///
     double exploration_rate;
 

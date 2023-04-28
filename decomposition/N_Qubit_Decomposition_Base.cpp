@@ -504,11 +504,19 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 
         for(int agent_idx=0; agent_idx<agent_num; agent_idx++) {
 
+            std::uniform_real_distribution<> distrib_real(0.0, M_PI_double); 
 
             // initialize random parameters for the agent            
             Matrix_real solution_guess_mtx_agent = Matrix_real( num_of_parameters, 1 );
 
-            memcpy( solution_guess_mtx_agent.get_data(), solution_guess_gsl->data, solution_guess_gsl->size*sizeof(double) );
+            if ( agent_idx == 0 ) {
+                memcpy( solution_guess_mtx_agent.get_data(), solution_guess_gsl->data, solution_guess_gsl->size*sizeof(double) );
+            }
+            else {
+                for( int element_idx=0; element_idx<num_of_parameters; element_idx++ ) {
+                    solution_guess_mtx_agent[element_idx] = distrib_real( gen );
+                }
+            }
 
             solution_guess_mtx_agents[ agent_idx ] = solution_guess_mtx_agent;
 
@@ -566,7 +574,7 @@ t0_CPU = tbb::tick_count::now();
                 double& f0_mean     = f0_mean_agents[agent_idx];
                 int& f0_idx         = f0_idx_agents[agent_idx]; 
                 
-                int param_idx       = distrib_int(gen);//experience_agents[ agent_idx ].draw( param_idx_agents[agent_idx], gen);//distrib_int(gen);
+                int param_idx       = experience_agents[ agent_idx ].draw( param_idx_agents[agent_idx], gen);//distrib_int(gen);
                 param_idx_agents[agent_idx] = param_idx;
                 
                 parameter_value_save_agents[agent_idx] = solution_guess_mtx_agent[param_idx];                
@@ -665,7 +673,7 @@ t0_CPU = tbb::tick_count::now();
                 Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];                             
                 
                 // look for the best agent in every 1000-th iteration
-                if ( iter_idx % 500 == 0 )
+                if ( iter_idx % 1000 == 0 )
                 {
                              
                     if ( current_minimum_agent <= current_minimum ) {
@@ -820,12 +828,16 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
                 solution_guess_mtx_agent[param_idx] += M_PI_half;
                 double f0_shifted_pi = optimization_problem( solution_guess_mtx_agent );
 
-                solution_guess_mtx_agent[param_idx] += M_PI_half;
-                double f0_shifted_3pi2 = optimization_problem( solution_guess_mtx_agent );
+                //solution_guess_mtx_agent[param_idx] += M_PI_half;
+                //double f0_shifted_3pi2 = optimization_problem( solution_guess_mtx_agent );
 
 
                 double A_times_cos = (current_minimum_agent-f0_shifted_pi)/2;
-                double A_times_sin = (f0_shifted_3pi2 - f0_shifted_pi2)/2;
+
+
+                double offset      = (current_minimum_agent+f0_shifted_pi)/2;
+                double A_times_sin = offset - f0_shifted_pi2;
+                //double A_times_sin = (f0_shifted_3pi2 - f0_shifted_pi2)/2;
 
                     //double amplitude = np.sqrt( A_times_cos**2 + A_times_sin**2 )
                     //print( "Amplitude: ", amplitude )
@@ -876,7 +888,7 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
                 
                 
                 // look for the best agent in every 4000-th iteration
-                if ( iter_idx % 1000 == 0 )
+                if ( iter_idx % 4000 == 0 )
                 {
 
                     experience_agents[ agent_idx ].update_probs();
@@ -919,7 +931,7 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
                         std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
                         double random_num = distrib_to_choose( gen );
                         
-                        if ( random_num < exploration_rate ) {
+                        if ( random_num < agent_exploration_rate ) {
                             // chose the state of the most succesfull agent
                             
                             std::stringstream sstream;
@@ -949,7 +961,7 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
 
 
      
-                if ( std::abs( f0_mean - current_minimum_agent) < 1e-7  && var_f0/f0_mean < 1e-7 ) {
+                if ( std::abs( f0_mean - current_minimum_agent) < 1e-5  && var_f0/f0_mean < 1e-5 ) {
                     std::stringstream sstream;
                     sstream << "COSINE agent " << agent_idx << ": converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum of the agent:" << current_minimum_agent << std::endl; 
                     //std::string filename("initial_circuit_iteration.binary");
@@ -988,14 +1000,23 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
 
 
 #endif
-/*
+
 RL_experience experience = experience_agents[ most_successfull_agent ];
 
-experience.export_probabilities();
+//experience.export_probabilities();
 
+
+FILE *file = fopen( "agent_history.txt", "w" );
+std::cout << "ppppppppp " << std::endl;
+for (int row_idx=0; row_idx<experience.history.size(); row_idx++ ) {
+
+    fprintf( file, "%d\n", experience.history[row_idx] );
+    
+}
+fclose( file );
 
 std::cout << "ppppppppp " << std::endl;
-
+/*
         tbb::tick_count optimization_end2 = tbb::tick_count::now();
 optimization_time  = optimization_time + (optimization_end2-optimization_start).seconds();
         sstream << "RL time: " << optimization_time << ", pure DFE time:  " << pure_DFE_time << " " << current_minimum << std::endl;
@@ -1011,8 +1032,9 @@ for (int row_idx=0; row_idx<parameter_num; row_idx++ ) {
     fprintf( file, "%s", "\n");
 }
 fclose( file );
-return;
 */
+return;
+
         // the result of the most successful agent:
         current_minimum = optimization_problem( optimized_parameters_mtx );
         
