@@ -118,9 +118,6 @@ protected:
     int trace_offset;
 
 
-    Matrix_real randomization_probs;
-    matrix_base<int> randomized_probs;
-
     
 
 
@@ -215,7 +212,7 @@ void solve_layer_optimization_problem_ADAM( int num_of_parameters, gsl_vector *s
 /**
 @brief ?????????????
 */
-void randomize_parameters( Matrix_real& input, gsl_vector* output, const int randomization_succesful, const double& f0 );
+void randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0 );
 
 /**
 @brief The optimization problem of the final optimization

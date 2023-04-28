@@ -435,8 +435,8 @@ std::cout << "tttttttttttttttttttttt " <<  current_minimum << std::endl;
         /// mutual exclusion to set the most successful agent
         tbb::spin_mutex agent_mutex;
         
-        double exploration_rate = 0.2;
-        double randomization_rate = 0.2;
+        double agent_exploration_rate = 0.2;
+        double agent_randomization_rate = 0.2;
         
         int agent_num;
         if ( config.count("agent_num") > 0 ) { 
@@ -665,7 +665,7 @@ t0_CPU = tbb::tick_count::now();
                 Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];                             
                 
                 // look for the best agent in every 1000-th iteration
-                if ( iter_idx % 1000 == 0 )
+                if ( iter_idx % 500 == 0 )
                 {
                              
                     if ( current_minimum_agent <= current_minimum ) {
@@ -710,7 +710,7 @@ t0_CPU = tbb::tick_count::now();
                         std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
                         double random_num = distrib_to_choose( gen );
                         
-                        if ( random_num < exploration_rate ) {
+                        if ( random_num < agent_exploration_rate ) {
                             // choose the state of the most succesfull agent
                             
                             std::stringstream sstream;
@@ -723,20 +723,8 @@ t0_CPU = tbb::tick_count::now();
                             // randomize the chosen state to increase the exploration
                             random_num = distrib_to_choose( gen );
                             
-                            if ( random_num < randomization_rate ) {
-                   
-                                std::uniform_real_distribution<> distrib_real(-2*M_PI, 2*M_PI);
-                                std::uniform_real_distribution<> distrib_prob(0.0, 1.0);
-                            
-                                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                                    if ( distrib_prob(gen) <= 0.3 ) {
-                                        solution_guess_mtx_agent[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*std::sqrt(current_minimum)*radius;
-                                     }
-                                     else {
-                                        solution_guess_mtx_agent[jdx] = optimized_parameters_mtx[jdx];
-                                     }
-                                }
-                            
+                            if ( random_num < agent_randomization_rate ) {
+                                randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                            
                             }
                             
                         }
@@ -752,9 +740,12 @@ t0_CPU = tbb::tick_count::now();
                     
                     
                 }   
+
+
                 
-                
-                if ( std::abs( f0_mean - current_minimum_agent) < 1e-7  && var_f0/f0_mean < 1e-7 ) {
+                // test the convergence of the current agent
+                if ( std::abs( f0_mean - current_minimum_agent) < 1e-5  && var_f0/f0_mean < 1e-5 ) {
+
                     std::stringstream sstream;
                     sstream << "COSINE: agent " << agent_idx << ": converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum of the agent:" << current_minimum_agent << std::endl; 
                     //std::string filename("initial_circuit_iteration.binary");
@@ -772,20 +763,8 @@ t0_CPU = tbb::tick_count::now();
                     std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
                     double random_num = distrib_to_choose( gen );
                             
-                    if ( random_num < randomization_rate ) {
-                              
-                        std::uniform_real_distribution<> distrib_real(-2*M_PI, 2*M_PI);
-                        std::uniform_real_distribution<> distrib_prob(0.0, 1.0);
-                            
-                        for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                             if ( distrib_prob(gen) <= 0.3 ) {
-                                 solution_guess_mtx_agent[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*std::sqrt(current_minimum)*radius;
-                              }
-                              else {
-                                 solution_guess_mtx_agent[jdx] = optimized_parameters_mtx[jdx];
-                              }
-                        }
-                        
+                    if ( random_num < agent_randomization_rate ) {
+                        randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                            
                     }                    
                 }             
                 
@@ -953,21 +932,9 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
                             // randomize the chosen state to increase the exploration
                             random_num = distrib_to_choose( gen );
                             
-                            if ( random_num < randomization_rate ) {
-                   
-                                std::uniform_real_distribution<> distrib_real(-2*M_PI, 2*M_PI);
-                                std::uniform_real_distribution<> distrib_prob(0.0, 1.0);
-                            
-                                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                                    if ( distrib_prob(gen) <= 0.3 ) {
-                                        solution_guess_mtx_agent[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*std::sqrt(current_minimum)*radius;
-                                     }
-                                     else {
-                                        solution_guess_mtx_agent[jdx] = optimized_parameters_mtx[jdx];
-                                     }
-                                }
-                            
-                            }
+                            if ( random_num < agent_randomization_rate ) {
+                                randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                            
+                            }  
                             
                         }
                         else {
@@ -1001,21 +968,10 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
                     std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
                     double random_num = distrib_to_choose( gen );
                             
-                    if ( random_num < randomization_rate ) {
-                              
-                        std::uniform_real_distribution<> distrib_real(-2*M_PI, 2*M_PI);
-                        std::uniform_real_distribution<> distrib_prob(0.0, 1.0);
-                            
-                        for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                             if ( distrib_prob(gen) <= 0.3 ) {
-                                 solution_guess_mtx_agent[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*std::sqrt(current_minimum)*radius;
-                              }
-                              else {
-                                 solution_guess_mtx_agent[jdx] = optimized_parameters_mtx[jdx];
-                              }
-                        }
-                        
-                    }                    
+                    if ( random_num < agent_randomization_rate ) {
+                        randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                            
+                    }  
+                    
                 }              
                 
                 
@@ -1535,7 +1491,8 @@ pure_DFE_time = 0.0;
                 }
                 print(sstream, 0);   
                     
-                randomize_parameters(optimized_parameters_mtx, solution_guess_tmp, randomization_successful, f0 );
+                 Matrix_real solution_guess_gsl_mtx( solution_guess_gsl->data, solution_guess_gsl->size, 1 );
+                randomize_parameters(optimized_parameters_mtx, solution_guess_tmp_mtx, f0 );
                 randomization_successful = 0;
         
                 optimizer.reset();
@@ -1767,7 +1724,7 @@ bfgs_time = 0.0;
         }
 
         std::stringstream sstream;
-        sstream << "max_inner_iterations: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization_loc << ", randomization radius: " << radius << std::endl;
+        sstream << "max_inner_iterations: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization_loc << std::endl;
         print(sstream, 2); 
 
         // do the optimization loops
@@ -1822,8 +1779,8 @@ bfgs_time = 0.0;
                     sstream << "BFGS2: leaving local minimum " << s->f << ", gradient norm " << norm  << std::endl;                    
                     print(sstream, 0);   
                     
-                    int randomization_successful = 0;
-                    randomize_parameters(optimized_parameters_mtx, solution_guess_gsl, randomization_successful, s->f );    
+                    Matrix_real solution_guess_gsl_mtx( solution_guess_gsl->data, solution_guess_gsl->size, 1 );
+                    randomize_parameters(optimized_parameters_mtx, solution_guess_gsl_mtx, s->f );    
 
 #ifdef __MPI__        
                     MPI_Bcast( (void*)solution_guess_gsl->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -1922,79 +1879,41 @@ bfgs_time = 0.0;
 
 
 /**
-@brief ?????????????
+@brief Call to randomize the parameter.
+@param input The parameters are randomized around the values stores in this array
+@param output The randomized parameters are stored within this array
+@param f0 weight in the randomiztaion (output = input + rand()*sqrt(f0) ).
 */
-void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, gsl_vector* output, const int randomization_succesful, const double& f0  ) {
+void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0  ) {
 
     // random generator of real numbers   
     std::uniform_real_distribution<> distrib_prob(0.0, 1.0);
     std::uniform_real_distribution<> distrib_real(-2*M_PI, 2*M_PI);
 
 
+    double radius_loc;
+    if ( config.count("Randomized_Radius") > 0 ) {
+        config["Randomized_Radius"].get_property( radius_loc );  
+    }
+    else {
+        radius_loc = radius;
+    }
+
     const int num_of_parameters = input.size();
 
-    if (randomization_probs.size() != num_of_parameters) {
-        randomization_probs = Matrix_real(1, num_of_parameters);
-        for ( int idx=0; idx<num_of_parameters; idx++ ) {
-            randomization_probs[idx] = randomization_rate;
-        }
-        
-        randomized_probs = matrix_base<int>(1, num_of_parameters);
-    }
-/*
-    else {
-
-        if ( randomization_succesful ) {
-            for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                if ( randomized_probs[jdx] == 1 ) {
-                    randomization_probs[jdx] = randomization_probs[jdx] + 1.0/50;
-                    randomization_probs[jdx] = randomization_probs[jdx] < 1.0 ? randomization_probs[jdx] : 1.0;
-                }
-                else {
-                    randomization_probs[jdx] = randomization_probs[jdx] - 1.0/50;
-                    randomization_probs[jdx] = randomization_probs[jdx] > 0.0 ? randomization_probs[jdx] : 0.01;
-                }
-            }
-        }
-        else {
-            for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                if ( randomized_probs[jdx] == 1 ) {
-                    randomization_probs[jdx] = randomization_probs[jdx] - 1.0/50;
-                    randomization_probs[jdx] = randomization_probs[jdx] > 0.0 ? randomization_probs[jdx] : 0.01;
-                }
-                else {
-                    randomization_probs[jdx] = randomization_probs[jdx] + 1.0/50;
-                    randomization_probs[jdx] = randomization_probs[jdx] < 1.0 ? randomization_probs[jdx] : 1.0;
-                }                
-            }
-        }
-
-
-    }
-*/
     int changed_parameters = 0;
     for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-        if ( distrib_prob(gen) <= randomization_probs[jdx] ) {
-            output->data[jdx] = input[jdx] + distrib_real(gen)*std::sqrt(f0)*radius;
-
-            randomized_probs[jdx] = 1;
+        if ( distrib_prob(gen) <= randomization_rate ) {
+            output[jdx] = input[jdx] + distrib_real(gen)*std::sqrt(f0)*radius_loc;
             changed_parameters++;
         }
         else {
-            output->data[jdx] = input[jdx];
-            randomized_probs[jdx] = 0;
+            output[jdx] = input[jdx];
         }
     }
 
 #ifdef __MPI__  
         MPI_Bcast( (void*)output->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-
-   
-if ( current_rank == 0 ) { 
-#endif
-    std::cout << "Randomized parameters: " << changed_parameters << " from " <<  num_of_parameters << std::endl;
-#ifdef __MPI__  
-}
 #endif
 
 
