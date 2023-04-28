@@ -36,6 +36,7 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
     set_optimizer( BFGS );
 
 
+
 }
 
 
@@ -53,6 +54,7 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
 N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, optimize_layer_num_in, config_in, initial_guess_in) {
 
     set_optimizer( BFGS );
+
 }
 
 
@@ -163,7 +165,9 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
         }
 
         int optimization_block_orig = optimization_block;
-        optimization_block = optimization_block*3;
+        if ( optimization_block > 0 ) {
+            optimization_block = optimization_block*3;
+        }
         //max_outer_iterations = 4;
 
 

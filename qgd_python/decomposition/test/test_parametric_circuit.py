@@ -13,8 +13,8 @@ import numpy as np
 
 from qiskit import execute
 
-from qgd_python.utils import get_unitary_from_qiskit_circuit
-from qgd_python.decomposition.qgd_N_Qubit_Decomposition_custom import qgd_N_Qubit_Decomposition_custom
+from squander import utils
+from squander import N_Qubit_Decomposition_custom
 
 
 
@@ -126,13 +126,13 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 	qc_orig = transpile(qc_orig, optimization_level=3, basis_gates=['cx', 'u3'], layout_method='sabre')
 	#print('global phase: ', qc_orig.global_phase)
 
-	Umtx_orig = get_unitary_from_qiskit_circuit( qc_orig )
+	Umtx_orig = utils.get_unitary_from_qiskit_circuit( qc_orig )
         
 	iteration_max = 10
 	
 	for jdx in range(iteration_max):
         
-		cDecompose = qgd_N_Qubit_Decomposition_custom( Umtx_orig.conj().T )
+		cDecompose = N_Qubit_Decomposition_custom( Umtx_orig.conj().T )
 
 		# setting the tolerance of the optimization process. The final error of the decomposition would scale with the square root of this value.
 		cDecompose.set_Optimization_Tolerance( 1e-5 )
@@ -162,7 +162,7 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 		qc_final = cDecompose.get_Quantum_Circuit()
 
 		# get the unitary of the final circuit
-		Umtx_recheck = get_unitary_from_qiskit_circuit( qc_final )
+		Umtx_recheck = utils.get_unitary_from_qiskit_circuit( qc_final )
 
 		# get the decomposition error
 		decomposition_error =  get_unitary_distance(Umtx_orig, Umtx_recheck)

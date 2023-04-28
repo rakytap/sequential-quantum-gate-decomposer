@@ -18,8 +18,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 """
-## \file test_decomposition.py
-## \brief Functionality test cases for the qgd_N_Qubit_Decomposition class.
+## \file test_State_Preparation.py
+## \brief Functionality test cases for the N_Qubit_State_Preparation_adaptive class.
 
 
 
@@ -27,7 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 from scipy.stats import unitary_group
 import numpy as np
 import pytest
-from qgd_python.utils import get_unitary_from_qiskit_circuit
+from squander import utils
 
 try:
     from mpi4py import MPI
@@ -43,7 +43,7 @@ class Test_State_Preparation:
 
 		"""
 
-		from qgd_python.decomposition.qgd_N_Qubit_State_Preparation_adaptive import qgd_N_Qubit_State_Preparation_adaptive       
+		from squander import N_Qubit_State_Preparation_adaptive       
 		from scipy.io import loadmat
 				
 		# load the unitary from file
@@ -53,11 +53,11 @@ class Test_State_Preparation:
 
 		# creating a class to decompose the unitary
 		with pytest.raises(Exception):
-			cDecompose = qgd_N_qubit_State_Preparation_adaptive( Umtx, level_limit_max=5, level_limit_min=0 )
+			cDecompose = N_qubit_State_Preparation_adaptive( Umtx, level_limit_max=5, level_limit_min=0 )
 		    
 	def State_Preparation_adaptive_base(self, optimizer, cost_func):
 
-		from qgd_python.decomposition.qgd_N_Qubit_State_Preparation_adaptive import qgd_N_Qubit_State_Preparation_adaptive       
+		from squander import N_Qubit_State_Preparation_adaptive       
 		from scipy.io import loadmat
 				
 		# load the unitary from file
@@ -67,7 +67,7 @@ class Test_State_Preparation:
 		State = Umtx[:,0].reshape(16,1)
 
 		# creating a class to decompose the unitary
-		cDecompose = qgd_N_Qubit_State_Preparation_adaptive( State, level_limit_max=5, level_limit_min=0 )
+		cDecompose = N_Qubit_State_Preparation_adaptive( State, level_limit_max=5, level_limit_min=0 )
 
 		# setting the verbosity of the decomposition
 		cDecompose.set_Verbose( 3 )
