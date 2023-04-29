@@ -78,11 +78,22 @@ class Test_State_Preparation:
         Umtx = data['Umtx']
         State = Umtx[:, 0].reshape(16, 1)
 
+        config = { 'max_outer_iterations': 1, 
+		'max_inner_iterations': 1000000, 
+		'max_inner_iterations_compression': 10000, 
+		'max_inner_iterations_final': 1000, 
+		'randomization_threshold': int(1e4),  			
+		'Randomized_Radius': 0.3, 
+	        'randomized_adaptive_layers': 1,
+		'optimization_tolerance_agent': 1e-5,
+		'optimization_tolerance': 1e-6,
+		'compression_enabled': compression_enabled}
+
+
         # creating a class to decompose the unitary
 
         cDecompose = qgd_N_Qubit_State_Preparation_adaptive(State,
-                level_limit_max=5, level_limit_min=0,
-                compression_enabled=compression_enabled)
+                level_limit_max=5, level_limit_min=0, config = config)
 
         # setting the verbosity of the decomposition
 
@@ -91,7 +102,11 @@ class Test_State_Preparation:
         # setting the verbosity of the decomposition
 
         cDecompose.set_Cost_Function_Variant(cost_func)
-
+        
+        #set Optimizer
+        
+        cDecompose.set_Optimizer(optimizer)
+        
         # starting the decomposition
 
         cDecompose.Start_Decomposition()
@@ -122,23 +137,15 @@ class Test_State_Preparation:
 
         self.State_Preparation_adaptive_base('BFGS', 0)
 
-    def test_State_Preparation_ADAM(self):
+    def test_State_Preparation_ADAM_BATCHED(self):
         r"""
         This method is called by pytest. 
         Test for a 4 qubit state preparation using the ADAM optimizer 
 
         """
 
-        self.State_Preparation_adaptive_base('ADAM', 0)
+        self.State_Preparation_adaptive_base('ADAM_BATCHED', 0)
 
-    def test_State_Preparation_BFGS2(self):
-        r"""
-        This method is called by pytest. 
-        Test for a 4 qubit state preparation using the BFGS2 optimizer 
-
-        """
-
-        self.State_Preparation_adaptive_base('BFGS2', 0)
 
     def test_State_Preparation_HS(self):
         r"""
@@ -156,4 +163,4 @@ class Test_State_Preparation:
 
         """
 
-        self.State_Preparation_adaptive_base('BFGS', 0, compression_enabled=0)
+        self.State_Preparation_adaptive_base('BFGS', 0, 0)

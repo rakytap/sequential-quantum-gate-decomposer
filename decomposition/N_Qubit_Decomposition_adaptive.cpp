@@ -245,15 +245,13 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
     export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
 
-    int compression_enabled_loc;
     if ( config.count("compression_enabled") > 0 ) {
-        config["compression_enabled"].get_property( compression_enabled_loc );  
-    }
-    else {
-        compression_enabled_loc = compression_enabled;
+        long long value;                   
+        config["compression_enabled"].get_property( value ); 
+        compression_enabled = (int) value;
     }
 
-	if (compression_enabled_loc==1){
+	if (compression_enabled==1){
     sstream.str("");
     sstream << std::endl;
     sstream << std::endl;
