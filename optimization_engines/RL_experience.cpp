@@ -132,9 +132,9 @@ RL_experience RL_experience::copy() {
     experience.parameter_probs  = parameter_probs.copy();
     experience.parameter_counts = parameter_counts.copy();
 
-    exploration_rate   = experience.exploration_rate;
+    experience.exploration_rate   = exploration_rate;
 
-    history            = experience.history;
+    experience.history            = history; 
 
     return experience;
 }
@@ -245,7 +245,7 @@ int RL_experience::draw( const int& curent_index, std::mt19937& gen ) {
     parameter_counts[ curent_index*parameter_counts.stride + selected_idx]++;
     total_counts[selected_idx]++;
 
-    history.push_back( selected_idx );
+    //history.push_back( selected_idx );
     
 //std::cout << "uuuuuuuuu " << parameter_counts[ curent_index*parameter_counts.stride + selected_idx] << std::endl;
     return selected_idx;
