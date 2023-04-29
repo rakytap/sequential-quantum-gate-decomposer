@@ -868,14 +868,14 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
             // initialize random parameters for the agent            
             Matrix_real solution_guess_mtx_agent = Matrix_real( num_of_parameters, 1 );
 
-            if ( agent_idx == 0 ) {
+            //if ( agent_idx == 0 ) {
                 memcpy( solution_guess_mtx_agent.get_data(), solution_guess_gsl->data, solution_guess_gsl->size*sizeof(double) );
-            }
-            else {
-                for( int element_idx=0; element_idx<num_of_parameters; element_idx++ ) {
-                    solution_guess_mtx_agent[element_idx] = distrib_real( gen );
-                }
-            }
+            //}
+            //else {
+            //    for( int element_idx=0; element_idx<num_of_parameters; element_idx++ ) {
+            //        solution_guess_mtx_agent[element_idx] = distrib_real( gen );
+            //    }
+            //}
 
             solution_guess_mtx_agents[ agent_idx ] = solution_guess_mtx_agent;
 
