@@ -780,8 +780,19 @@ std::cout << "tttttttttttttttttttttt " <<  current_minimum << std::endl;
         else {
             optimization_tolerance_loc = optimization_tolerance;
         }
+        
+        
+        int agent_lifetime_loc;
+        if ( config.count("agent_lifetime") > 0 ) {
+             long long agent_lifetime_loc_tmp;
+             config["agent_lifetime"].get_property( agent_lifetime_loc_tmp );  
+             agent_lifetime_loc = agent_lifetime_loc_tmp;
+        }
+        else {
+            agent_lifetime_loc = 1000;
+        }        
 
-
+std::cout << "agent_lifetime_loc: " << agent_lifetime_loc << std::endl;
 
         std::stringstream sstream;
         sstream << "max_inner_iterations: " << max_inner_iterations_loc << std::endl;
@@ -814,7 +825,7 @@ std::cout << "tttttttttttttttttttttt " <<  current_minimum << std::endl;
         bool terminate_optimization = false;
         
         // vector stroing the lates values of current minimums to identify convergence
-        Matrix_real current_minimum_vec(1, 100); 
+        Matrix_real current_minimum_vec(1, 20); 
         memset( current_minimum_vec.get_data(), 0.0, current_minimum_vec.size()*sizeof(double) );
         double current_minimum_mean = 0.0;
         int current_minimum_idx = 0;   
@@ -1000,30 +1011,6 @@ t0_CPU = tbb::tick_count::now();
 
             // build up probability distribution to use to chose between the agents
             Matrix_real agent_probs(  current_minimum_agents.size(), 1 );
-/*
-            // create probability distribution in each 1000-th iteration
-            if ( iter_idx % 1000 == 0 ) {
-                double prob_sum = 0.0;
-                double current_minimum_agents_min = DBL_MAX;
-                for( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
-                    if ( current_minimum_agents_min > current_minimum_agents[agent_idx] ) {
-                        current_minimum_agents_min = current_minimum_agents[agent_idx];
-                    }
-                }
-
-
-                for( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
-                    double prob_loc = exp( (current_minimum_agents_min - current_minimum_agents[agent_idx])*4.0/current_minimum_agents_min );
-                    agent_probs[agent_idx] = prob_loc;
-                    prob_sum = prob_sum + prob_loc;
-                }
-
-                for( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
-                    agent_probs[agent_idx] = agent_probs[agent_idx]/prob_sum;
-                }
-
-            }
-*/
 
 
 
@@ -1036,27 +1023,14 @@ t0_CPU = tbb::tick_count::now();
                     terminate_optimization = true;                    
                 }  
                 
-                // test local minimum convergence
-                double& f0_mean     = f0_mean_agents[agent_idx];
-                Matrix_real& f0_vec = f0_vec_agents[agent_idx];
-                int& f0_idx         = f0_idx_agents[agent_idx];                                
-                
-                f0_mean = f0_mean + (current_minimum - f0_vec[ f0_idx ])/f0_vec.size();
-                f0_vec[ f0_idx ] = current_minimum;
-                f0_idx = (f0_idx + 1) % f0_vec.size();
-    
-                double var_f0 = 0.0;
-                for (int idx=0; idx<f0_vec.size(); idx++) {
-                    var_f0 = var_f0 + (f0_vec[idx]-f0_mean)*(f0_vec[idx]-f0_mean);
-                }
-                var_f0 = std::sqrt(var_f0)/f0_vec.size();                
-                
+               
                 
                 Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];                             
                 
-                // look for the best agent in every 1000-th iteration
-                if ( iter_idx % 1000 == 0 )
+                // look for the best agent periodicaly
+                if ( iter_idx % agent_lifetime_loc == 0 )
                 {
+
                              
                     if ( current_minimum_agent <= current_minimum ) {
 
@@ -1073,25 +1047,7 @@ t0_CPU = tbb::tick_count::now();
 
                         //experience_agents[ agent_idx ].update_probs();
                         
-                        current_minimum = current_minimum_agent;
-                        
-                        // test global convergence 
-
-                        current_minimum_mean = current_minimum_mean + (current_minimum - current_minimum_vec[ current_minimum_idx ])/current_minimum_vec.size();
-                        current_minimum_vec[ current_minimum_idx ] = current_minimum;
-                        current_minimum_idx = (current_minimum_idx + 1) % current_minimum_vec.size();
-    
-                        var_current_minimum = 0.0;
-                        for (int idx=0; idx<current_minimum_vec.size(); idx++) {
-                            var_current_minimum = var_current_minimum + (current_minimum_vec[idx]-current_minimum_mean)*(current_minimum_vec[idx]-current_minimum_mean);
-                        }
-                        var_current_minimum = std::sqrt(var_current_minimum)/current_minimum_vec.size();
-                                  
-                        
-                        if ( std::abs( current_minimum_mean - current_minimum) < 1e-7  && var_current_minimum < 1e-7 ) {
-                            terminate_optimization = true;
-                        }
-                        
+                        current_minimum = current_minimum_agent;      
                         
                                    
                         
@@ -1108,23 +1064,6 @@ t0_CPU = tbb::tick_count::now();
                             std::stringstream sstream;
                             sstream << "agent " << agent_idx << ": adopts the state of the most succesful agent." << std::endl;
                             print(sstream, 5);            
-/*
-                            // chose a more successful agent 
-                            int chosen_agent_idx=0;
-                            double prob_sum = 0.0;
-                            random_num = distrib_to_choose( gen );
-
-                            for( int agent_jdx=0; agent_jdx<agent_num; agent_jdx++ ) {
-                                prob_sum = prob_sum + agent_probs[agent_jdx];
-                                if (prob_sum > random_num ) {
-                                    chosen_agent_idx = agent_jdx;
-                                    break;
-                                }
-                            }
-                       
-                            memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[chosen_agent_idx].get_data(), num_of_parameters*sizeof(double) );
-                            //experience_agents[ agent_idx ] = experience_agents[ chosen_agent_idx ].copy();
-*/                            
 
                             memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[most_successfull_agent].get_data(), num_of_parameters*sizeof(double) );
                             
@@ -1132,7 +1071,7 @@ t0_CPU = tbb::tick_count::now();
                             
                             
                             if ( random_num < agent_randomization_rate ) {
-                                randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                              
+                                randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, 1.0  );                              
                             }                            
                         }
                         else {
@@ -1142,7 +1081,28 @@ t0_CPU = tbb::tick_count::now();
                     
                     
                     }
-                    
+
+
+
+                    // test global convergence 
+                    if ( agent_idx == 0 ) {
+                        current_minimum_mean = current_minimum_mean + (current_minimum - current_minimum_vec[ current_minimum_idx ])/current_minimum_vec.size();
+                        current_minimum_vec[ current_minimum_idx ] = current_minimum;
+                        current_minimum_idx = (current_minimum_idx + 1) % current_minimum_vec.size();
+    
+                        var_current_minimum = 0.0;
+                        for (int idx=0; idx<current_minimum_vec.size(); idx++) {
+                            var_current_minimum = var_current_minimum + (current_minimum_vec[idx]-current_minimum_mean)*(current_minimum_vec[idx]-current_minimum_mean);
+                        }
+                        var_current_minimum = std::sqrt(var_current_minimum)/current_minimum_vec.size();
+                                  
+                            
+                        if ( std::abs( current_minimum_mean - current_minimum) < 1e-5  && var_current_minimum < 1e-5 ) {
+                            std::stringstream sstream;
+                            sstream << "AGENTS, iterations converged to "<< current_minimum << std::endl;
+                            terminate_optimization = true;
+                        }                    
+                   }   
                     
                     
                     
@@ -1151,17 +1111,38 @@ t0_CPU = tbb::tick_count::now();
 
                 if ( iter_idx % 2000 == 0 && agent_idx == 0) {
                     std::stringstream sstream;
-                    sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum of agent 0: " << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time << " DFE_time: " << DFE_time << " pure DFE time: " << pure_DFE_time << std::endl;
+                    sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
+                    sstream << ", current minimum of agent 0: " << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time;
+                    sstream << " DFE_time: " << DFE_time << " pure DFE time: " << pure_DFE_time << std::endl;
                     print(sstream, 0); 
                 }
 
 
+
+
                 
                 // test the convergence of the current agent
+
+                // test local minimum convergence
+                double& f0_mean     = f0_mean_agents[agent_idx];
+                Matrix_real& f0_vec = f0_vec_agents[agent_idx];
+                int& f0_idx         = f0_idx_agents[agent_idx];                                
+                
+                f0_mean = f0_mean + (current_minimum - f0_vec[ f0_idx ])/f0_vec.size();
+                f0_vec[ f0_idx ] = current_minimum;
+                f0_idx = (f0_idx + 1) % f0_vec.size();
+    
+                double var_f0 = 0.0;
+                for (int idx=0; idx<f0_vec.size(); idx++) {
+                    var_f0 = var_f0 + (f0_vec[idx]-f0_mean)*(f0_vec[idx]-f0_mean);
+                }
+                var_f0 = std::sqrt(var_f0)/f0_vec.size();                
+
                 if ( std::abs( f0_mean - current_minimum_agent) < 1e-5  && var_f0/f0_mean < 1e-5 ) {
 
                     std::stringstream sstream;
-                    sstream << "AGENTS: agent " << agent_idx << ": converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum of the agent:" << current_minimum_agent << std::endl; 
+                    sstream << "AGENTS: agent " << agent_idx << ": converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
+                    sstream << ", current minimum of the agent:" << current_minimum_agent << std::endl; 
                     //std::string filename("initial_circuit_iteration.binary");
                     //export_gate_list_to_binary(solution_guess_tmp_mtx, this, filename, verbose);
                 
@@ -1169,26 +1150,7 @@ t0_CPU = tbb::tick_count::now();
                     
                     sstream << "agent " << agent_idx << ": adopts the state of the most succesful agent." << std::endl;
                     print(sstream, 5);
-/*
-                    // chose a more successful agent 
-                    int chosen_agent_idx=0;
-                    double prob_sum = 0.0;
-
-                    std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
-                    double random_num = distrib_to_choose( gen );
-
-                    for( int agent_jdx=0; agent_jdx<agent_num; agent_jdx++ ) {
-                        prob_sum = prob_sum + agent_probs[agent_jdx];
-                        if (prob_sum > random_num ) {
-                            chosen_agent_idx = agent_jdx;
-                            break;
-                        }
-                    }
-                            
-                    memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[chosen_agent_idx].get_data(), num_of_parameters*sizeof(double) );
-                    //experience_agents[ agent_idx ] = experience_agents[ chosen_agent_idx ].copy();
-*/
-
+                    
                     memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[most_successfull_agent].get_data(), num_of_parameters*sizeof(double) );
                             
                     std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
@@ -1196,7 +1158,7 @@ t0_CPU = tbb::tick_count::now();
                             
                             
                     if ( random_num < agent_randomization_rate ) {
-                        randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                              
+                        randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, 1.0 );                              
                     }                                     
                 }             
                 
@@ -1290,7 +1252,8 @@ else {
 
                 if ( iter_idx % 2000 == 0 && agent_idx == 0) {
                     std::stringstream sstream;
-                    sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum of agent:" << current_minimum_agent << " global current minimum: " << current_minimum  << std::endl;
+                    sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
+                    sstream << ", current minimum of agent:" << current_minimum_agent << " global current minimum: " << current_minimum  << std::endl;
                     print(sstream, 0);   
                     //std::string filename("initial_circuit_iteration.binary");
                     //export_gate_list_to_binary(solution_guess_tmp_mtx, this, filename, verbose);
@@ -1345,7 +1308,7 @@ else {
                         var_current_minimum = std::sqrt(var_current_minimum)/current_minimum_vec.size();
                 
                 
-                        if ( std::abs( current_minimum_mean - current_minimum) < 1e-7  && var_current_minimum < 1e-7 ) {
+                        if ( std::abs( current_minimum_mean - current_minimum) < 1e-5  && var_current_minimum < 1e-5 ) {
                             terminate_optimization = true;
                         }
                         
