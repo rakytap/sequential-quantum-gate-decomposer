@@ -868,14 +868,12 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
             // initialize random parameters for the agent            
             Matrix_real solution_guess_mtx_agent = Matrix_real( num_of_parameters, 1 );
 
-            //if ( agent_idx == 0 ) {
+            if ( agent_idx == 0 ) {
                 memcpy( solution_guess_mtx_agent.get_data(), solution_guess_gsl->data, solution_guess_gsl->size*sizeof(double) );
-            //}
-            //else {
-            //    for( int element_idx=0; element_idx<num_of_parameters; element_idx++ ) {
-            //        solution_guess_mtx_agent[element_idx] = distrib_real( gen );
-            //    }
-            //}
+            }
+            else {
+                randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                              
+            }
 
             solution_guess_mtx_agents[ agent_idx ] = solution_guess_mtx_agent;
 
@@ -1002,7 +1000,7 @@ t0_CPU = tbb::tick_count::now();
 
             // build up probability distribution to use to chose between the agents
             Matrix_real agent_probs(  current_minimum_agents.size(), 1 );
-
+/*
             // create probability distribution in each 1000-th iteration
             if ( iter_idx % 1000 == 0 ) {
                 double prob_sum = 0.0;
@@ -1025,7 +1023,7 @@ t0_CPU = tbb::tick_count::now();
                 }
 
             }
-
+*/
 
 
 
@@ -1110,7 +1108,7 @@ t0_CPU = tbb::tick_count::now();
                             std::stringstream sstream;
                             sstream << "agent " << agent_idx << ": adopts the state of the most succesful agent." << std::endl;
                             print(sstream, 5);            
-
+/*
                             // chose a more successful agent 
                             int chosen_agent_idx=0;
                             double prob_sum = 0.0;
@@ -1126,7 +1124,16 @@ t0_CPU = tbb::tick_count::now();
                        
                             memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[chosen_agent_idx].get_data(), num_of_parameters*sizeof(double) );
                             //experience_agents[ agent_idx ] = experience_agents[ chosen_agent_idx ].copy();
+*/                            
+
+                            memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[most_successfull_agent].get_data(), num_of_parameters*sizeof(double) );
                             
+                            random_num = distrib_to_choose( gen );
+                            
+                            
+                            if ( random_num < agent_randomization_rate ) {
+                                randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                              
+                            }                            
                         }
                         else {
                             // keep the current state  of the agent                    
@@ -1162,7 +1169,7 @@ t0_CPU = tbb::tick_count::now();
                     
                     sstream << "agent " << agent_idx << ": adopts the state of the most succesful agent." << std::endl;
                     print(sstream, 5);
-
+/*
                     // chose a more successful agent 
                     int chosen_agent_idx=0;
                     double prob_sum = 0.0;
@@ -1180,7 +1187,17 @@ t0_CPU = tbb::tick_count::now();
                             
                     memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[chosen_agent_idx].get_data(), num_of_parameters*sizeof(double) );
                     //experience_agents[ agent_idx ] = experience_agents[ chosen_agent_idx ].copy();
-                                    
+*/
+
+                    memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[most_successfull_agent].get_data(), num_of_parameters*sizeof(double) );
+                            
+                    std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
+                    double random_num = distrib_to_choose( gen );
+                            
+                            
+                    if ( random_num < agent_randomization_rate ) {
+                        randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                              
+                    }                                     
                 }             
                 
                                       
