@@ -1345,7 +1345,7 @@ else {
                         var_current_minimum = std::sqrt(var_current_minimum)/current_minimum_vec.size();
                 
                 
-                        if ( std::abs( current_minimum_mean - current_minimum_agent) < 1e-7  && var_current_minimum < 1e-7 ) {
+                        if ( std::abs( current_minimum_mean - current_minimum) < 1e-7  && var_current_minimum < 1e-7 ) {
                             terminate_optimization = true;
                         }
                         
@@ -1484,7 +1484,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINE
 
     optimized_parameters_mtx = Matrix_real(solution_guess_gsl->data, solution_guess_gsl->size, 1);
 
-    for( int loop_idx=0; loop_idx<10; loop_idx++ ) {
+    for( int loop_idx=0; loop_idx<1; loop_idx++ ) {
 
         gsl_vector *solution_guess_gsl_AGENTS = gsl_vector_alloc(num_of_parameters);
         memcpy( solution_guess_gsl_AGENTS->data, optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
