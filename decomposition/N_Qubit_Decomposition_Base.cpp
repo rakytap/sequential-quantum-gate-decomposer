@@ -1359,7 +1359,7 @@ else {
                         std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
                         double random_num = distrib_to_choose( gen );
                         
-                        if ( random_num < agent_exploration_rate ) {
+                        if ( random_num < agent_exploration_rate && agent_idx != most_successfull_agent) {
                             // chose the state of the most succesfull agent
                             
                             std::stringstream sstream;
