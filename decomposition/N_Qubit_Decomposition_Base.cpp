@@ -970,7 +970,7 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
                 
                                        
                                        
-t0_CPU = tbb::tick_count::now();                                         
+t0_CPU = tbb::tick_count::now();                                  
             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
 
                 double current_minimum_agent = current_minimum_agents[agent_idx];         
@@ -1004,14 +1004,16 @@ t0_CPU = tbb::tick_count::now();
                                     
                 
             }
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();                                           
-            current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents );  
+CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
+
+double before =   current_minimum_agents[   most_successfull_agent ];                              
+            current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
+            
+if (  before - current_minimum_agents[   most_successfull_agent ] < -1e-7 ) {
+std::cout << most_successfull_agent << " before: " << current_minimum_agents[   most_successfull_agent ] << " after: " << current_minimum_agents[   most_successfull_agent ] << " " << f0_shifted_pi_agents[most_successfull_agent] << " " <<  f0_shifted_pi2_agents[most_successfull_agent] << std::endl; 
+}       
 
 t0_CPU = tbb::tick_count::now();        
-
-            // build up probability distribution to use to chose between the agents
-            Matrix_real agent_probs(  current_minimum_agents.size(), 1 );
-
 
 
             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
@@ -1033,7 +1035,7 @@ t0_CPU = tbb::tick_count::now();
 
                              
                     if ( current_minimum_agent <= current_minimum ) {
-
+std::cout << "most_successfull_agent: " << most_successfull_agent << " " << agent_idx << " " << current_minimum << std::endl;
                         most_successfull_agent = agent_idx;
                     
                         // export the parameters of the curremt, most successful agent
@@ -1058,12 +1060,16 @@ t0_CPU = tbb::tick_count::now();
                         std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
                         double random_num = distrib_to_choose( gen );
                         
+ if (     agent_idx == most_successfull_agent ) {
+ std::cout << most_successfull_agent << " " << current_minimum << " " << current_minimum_agent << std::endl;
+ 
+ }                   
                         if ( random_num < agent_exploration_rate && agent_idx != most_successfull_agent) {
                             // choose the state of the most succesfull agent
                             
                             std::stringstream sstream;
-                            sstream << "agent " << agent_idx << ": adopts the state of the most succesful agent." << std::endl;
-                            print(sstream, 5);            
+                            sstream << "agent " << agent_idx << ": adopts the state of the most succesful agent. " << most_successfull_agent << std::endl;
+                            print(sstream, 3);            
 
                             memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[most_successfull_agent].get_data(), num_of_parameters*sizeof(double) );
                             
@@ -1139,7 +1145,7 @@ t0_CPU = tbb::tick_count::now();
                 }
                 var_f0 = std::sqrt(var_f0)/f0_vec.size();                
 
-                if ( std::abs( f0_mean - current_minimum_agent) < 1e-5  && var_f0/f0_mean < 1e-5 ) {
+                if ( std::abs( f0_mean - current_minimum_agent) < 1e-5  && var_f0/f0_mean < 1e-5 && agent_idx != most_successfull_agent ) {
 
                     std::stringstream sstream;
                     sstream << "AGENTS: agent " << agent_idx << ": converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
@@ -1158,7 +1164,7 @@ t0_CPU = tbb::tick_count::now();
                     double random_num = distrib_to_choose( gen );
                             
                             
-                    if ( random_num < agent_randomization_rate ) {
+                    if ( random_num < agent_randomization_rate && agent_idx != most_successfull_agent) {
                         randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, 1.0 );                              
                     }                                     
                 }             
