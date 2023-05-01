@@ -1058,7 +1058,7 @@ t0_CPU = tbb::tick_count::now();
                         std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
                         double random_num = distrib_to_choose( gen );
                         
-                        if ( random_num < agent_exploration_rate ) {
+                        if ( random_num < agent_exploration_rate && agent_idx != most_successfull_agent) {
                             // choose the state of the most succesfull agent
                             
                             std::stringstream sstream;
@@ -1100,6 +1100,7 @@ t0_CPU = tbb::tick_count::now();
                         if ( std::abs( current_minimum_mean - current_minimum) < 1e-5  && var_current_minimum < 1e-5 ) {
                             std::stringstream sstream;
                             sstream << "AGENTS, iterations converged to "<< current_minimum << std::endl;
+                            print(sstream, 0); 
                             terminate_optimization = true;
                         }                    
                    }   
@@ -1282,8 +1283,6 @@ else {
                 if ( iter_idx % 1000 == 0 )
                 {
 
-                    experience_agents[ agent_idx ].update_probs();
-
                     tbb::spin_mutex::scoped_lock my_lock{agent_mutex};
              
                     if ( current_minimum_agent <= current_minimum ) {
@@ -1458,7 +1457,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINE
         gsl_vector *solution_guess_gsl_COSINE = gsl_vector_alloc(num_of_parameters);
         memcpy( solution_guess_gsl_COSINE->data, optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
 
-        solve_layer_optimization_problem_COSINE( num_of_parameters, solution_guess_gsl_COSINE );
+        solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess_gsl_COSINE );
 
     }
         
