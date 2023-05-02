@@ -1516,6 +1516,63 @@ int Gates_block::get_parameter_num() {
     return parameter_num;
 }
 
+void Gates_block::get_parameter_max(Matrix_real &range_max) {
+    int parameter_idx = parameter_num;
+	double *data = range_max.get_data();
+        for(int op_idx = gates.size()-1; op_idx>=0; op_idx--) {
+
+            Gate* gate = gates[op_idx];
+            switch (gate->get_type()) {
+            case U3_OPERATION: {
+                U3* u3_gate = static_cast<U3*>(gate);
+
+                if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
+		            data[parameter_idx-1] = 4 * M_PI;
+                    parameter_idx = parameter_idx - 1;
+
+                }
+                else if ((u3_gate->get_parameter_num() == 1) && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 1;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
+                    data[parameter_idx-2] = 4 * M_PI;
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
+                    data[parameter_idx-2] = 2 * M_PI;
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 3)) {
+                    data[parameter_idx-3] = 4 * M_PI;
+                    data[parameter_idx-2] = 2 * M_PI;
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 3;
+                }
+                break; }
+            case RX_OPERATION:
+            case RY_OPERATION:
+            case CRY_OPERATION:
+            case ADAPTIVE_OPERATION:
+                data[parameter_idx-1] = 4 * M_PI;
+                parameter_idx = parameter_idx - 1;
+                break;
+            case BLOCK_OPERATION: {
+                Gates_block* block_gate = static_cast<Gates_block*>(gate);
+                Matrix_real parameters_layer(range_max.get_data() + parameter_idx - gate->get_parameter_num(), 1, gate->get_parameter_num() );
+                block_gate->get_parameter_max( parameters_layer );
+                parameter_idx = parameter_idx - block_gate->get_parameter_num();
+                break; }
+            default:
+                for (int i = 0; i < gate->get_parameter_num(); i++)
+                    data[parameter_idx-1-i] = 2 * M_PI;    
+                parameter_idx = parameter_idx - gate->get_parameter_num();
+            }
+        }
+}
+
 
 /**
 @brief Call to get the number of gates grouped in the class
@@ -1590,7 +1647,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
                 if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
 		   
-                    varphi = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                    vartheta = std::fmod( 2*parameters_data[parameter_idx-1], 4*M_PI);
                     varphi = 0;
                     varlambda =0;
                     parameter_idx = parameter_idx - 1;
@@ -1670,14 +1727,14 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
             }
             else if (gate->get_type() == CRY_OPERATION) {
                 // definig the rotation parameter
-                double Phi;
+                double vartheta;
                 // get the inverse parameters of the U3 rotation
                 CRY* cry_gate = static_cast<CRY*>(gate);
-                Phi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                vartheta = std::fmod( 2*parameters_data[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		std::stringstream sstream;
-		sstream << gate_idx << "th gate: CRY on target qubit: " << cry_gate->get_target_qbit() << ", control qubit" << cry_gate->get_control_qbit() << " and with parameters Phi = " << Phi << std::endl;
+		sstream << gate_idx << "th gate: CRY on target qubit: " << cry_gate->get_target_qbit() << ", control qubit" << cry_gate->get_control_qbit() << " and with parameters theta = " << vartheta << std::endl;
 		print(sstream, 1);	    		                    
                 gate_idx = gate_idx + 1;
             }
@@ -1762,7 +1819,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 double Theta;
                 // get the inverse parameters of the U3 rotation
                 Adaptive* ad_gate = static_cast<Adaptive*>(gate);
-                Theta = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                Theta = std::fmod( 2*parameters_data[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		std::stringstream sstream;
@@ -3478,8 +3535,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             int gates_num_loc;
             fread_status = fread(&gates_num_loc, sizeof(int), 1, pFile);
             //std::cout << "gates_num_loc: " << gates_num_loc << std::endl;
-            
-            gate_block_levels[ current_level ]->add_gate_to_end( static_cast<Gate*>(gate_block_inner) );
+                        
             gate_block_levels.push_back( gate_block_inner );
             gate_block_level_gates_num.push_back(gates_num_loc);
             current_level++;
@@ -3510,6 +3566,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
 
 
         if ( gate_block_level_gates_num[current_level] == 0 ) {
+            gate_block_levels[ current_level-1 ]->add_gate_to_end( static_cast<Gate*>(gate_block_levels[ current_level ]) );
             gate_block_levels.pop_back();
             gate_block_level_gates_num.pop_back();
             current_level--;

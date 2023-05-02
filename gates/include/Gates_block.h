@@ -403,6 +403,7 @@ gates_num get_gate_nums();
 */
 int get_parameter_num();
 
+void get_parameter_max(Matrix_real &range_max);
 
 /**
 @brief Call to get the number of gates grouped in the class
