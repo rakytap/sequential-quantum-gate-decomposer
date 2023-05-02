@@ -895,27 +895,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
         // intitial cost function for each of the agents
         current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents );
        
-        
-        
-        std::vector<Matrix_real> f0_vec_agents( agent_num );
-        f0_vec_agents.reserve( agent_num );
-        
-        std::vector<double> f0_mean_agents( agent_num );
-        f0_mean_agents.reserve( agent_num );
                 
-        std::vector<int> f0_idx_agents( agent_num );
-        f0_idx_agents.reserve( agent_num );     
-        
-        for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
-            f0_vec_agents[agent_idx] = Matrix_real(1,100);
-            memset( f0_vec_agents[agent_idx].get_data(), 0.0, f0_vec_agents[agent_idx].size()*sizeof(double) );   
-            
-            f0_mean_agents[agent_idx] = 0.0;  
-            f0_idx_agents[agent_idx] = 0;
-        }
-        
-
-        
         std::vector<double> parameter_value_save_agents( agent_num );
         parameter_value_save_agents.reserve( agent_num );        
        
@@ -936,11 +916,6 @@ t0_CPU = tbb::tick_count::now();
             
             
                 Matrix_real& solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];
-     
-                // vector stroing the lates values of cost function to test local minimum
-                Matrix_real& f0_vec = f0_vec_agents[agent_idx]; 
-                double& f0_mean     = f0_mean_agents[agent_idx];
-                int& f0_idx         = f0_idx_agents[agent_idx]; 
                 
                 int param_idx       = distrib_int(gen);//experience_agents[ agent_idx ].draw( param_idx_agents[agent_idx], gen);//distrib_int(gen);
                 param_idx_agents[agent_idx] = param_idx;
@@ -1005,14 +980,9 @@ t0_CPU = tbb::tick_count::now();
                 
             }
 CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
-
-double before =   current_minimum_agents[   most_successfull_agent ];                              
+                         
             current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
-            
-if (  before - current_minimum_agents[   most_successfull_agent ] < -1e-7 ) {
-std::cout << most_successfull_agent << " before: " << current_minimum_agents[   most_successfull_agent ] << " after: " << current_minimum_agents[   most_successfull_agent ] << " " << f0_shifted_pi_agents[most_successfull_agent] << " " <<  f0_shifted_pi2_agents[most_successfull_agent] << std::endl; 
-}       
-
+  
 t0_CPU = tbb::tick_count::now();        
 
 
@@ -1035,7 +1005,7 @@ t0_CPU = tbb::tick_count::now();
 
                              
                     if ( current_minimum_agent <= current_minimum ) {
-std::cout << "most_successfull_agent: " << most_successfull_agent << " " << agent_idx << " " << current_minimum << std::endl;
+
                         most_successfull_agent = agent_idx;
                     
                         // export the parameters of the curremt, most successful agent
@@ -1069,7 +1039,7 @@ std::cout << "most_successfull_agent: " << most_successfull_agent << " " << agen
                             
                             std::stringstream sstream;
                             sstream << "agent " << agent_idx << ": adopts the state of the most succesful agent. " << most_successfull_agent << std::endl;
-                            print(sstream, 3);            
+                            print(sstream, 5);            
 
                             memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[most_successfull_agent].get_data(), num_of_parameters*sizeof(double) );
                             
@@ -1125,49 +1095,7 @@ std::cout << "most_successfull_agent: " << most_successfull_agent << " " << agen
                 }
 
 
-
-
-                
-                // test the convergence of the current agent
-
-                // test local minimum convergence
-                double& f0_mean     = f0_mean_agents[agent_idx];
-                Matrix_real& f0_vec = f0_vec_agents[agent_idx];
-                int& f0_idx         = f0_idx_agents[agent_idx];                                
-                
-                f0_mean = f0_mean + (current_minimum - f0_vec[ f0_idx ])/f0_vec.size();
-                f0_vec[ f0_idx ] = current_minimum;
-                f0_idx = (f0_idx + 1) % f0_vec.size();
-    
-                double var_f0 = 0.0;
-                for (int idx=0; idx<f0_vec.size(); idx++) {
-                    var_f0 = var_f0 + (f0_vec[idx]-f0_mean)*(f0_vec[idx]-f0_mean);
-                }
-                var_f0 = std::sqrt(var_f0)/f0_vec.size();                
-
-                if ( std::abs( f0_mean - current_minimum_agent) < 1e-5  && var_f0/f0_mean < 1e-5 && agent_idx != most_successfull_agent ) {
-
-                    std::stringstream sstream;
-                    sstream << "AGENTS: agent " << agent_idx << ": converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
-                    sstream << ", current minimum of the agent:" << current_minimum_agent << std::endl; 
-                    //std::string filename("initial_circuit_iteration.binary");
-                    //export_gate_list_to_binary(solution_guess_tmp_mtx, this, filename, verbose);
-                
-                    // copy the state of the most successful agent
-                    
-                    sstream << "agent " << agent_idx << ": adopts the state of the most succesful agent." << std::endl;
-                    print(sstream, 5);
-                    
-                    memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[most_successfull_agent].get_data(), num_of_parameters*sizeof(double) );
-                            
-                    std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
-                    double random_num = distrib_to_choose( gen );
-                            
-                            
-                    if ( random_num < agent_randomization_rate && agent_idx != most_successfull_agent) {
-                        randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, 1.0 );                              
-                    }                                     
-                }             
+           
                 
                                       
                 
