@@ -1670,14 +1670,14 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
             }
             else if (gate->get_type() == CRY_OPERATION) {
                 // definig the rotation parameter
-                double Phi;
+                double vartheta;
                 // get the inverse parameters of the U3 rotation
                 CRY* cry_gate = static_cast<CRY*>(gate);
-                Phi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		std::stringstream sstream;
-		sstream << gate_idx << "th gate: CRY on target qubit: " << cry_gate->get_target_qbit() << ", control qubit" << cry_gate->get_control_qbit() << " and with parameters Phi = " << Phi << std::endl;
+		sstream << gate_idx << "th gate: CRY on target qubit: " << cry_gate->get_target_qbit() << ", control qubit" << cry_gate->get_control_qbit() << " and with parameters theta = " << vartheta << std::endl;
 		print(sstream, 1);	    		                    
                 gate_idx = gate_idx + 1;
             }
