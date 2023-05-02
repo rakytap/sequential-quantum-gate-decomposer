@@ -3257,6 +3257,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
     gate_block_level_gates_num.push_back( gates_num );
     gate_block_levels.push_back(gate_block);
     int current_level = 0;
+    std::vector<int> delay_add;
 
     
 
@@ -3478,8 +3479,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             int gates_num_loc;
             fread_status = fread(&gates_num_loc, sizeof(int), 1, pFile);
             //std::cout << "gates_num_loc: " << gates_num_loc << std::endl;
-            
-            gate_block_levels[ current_level ]->add_gate_to_end( static_cast<Gate*>(gate_block_inner) );
+                        
             gate_block_levels.push_back( gate_block_inner );
             gate_block_level_gates_num.push_back(gates_num_loc);
             current_level++;
@@ -3510,6 +3510,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
 
 
         if ( gate_block_level_gates_num[current_level] == 0 ) {
+            gate_block_levels[ current_level-1 ]->add_gate_to_end( static_cast<Gate*>(gate_block_levels[ current_level ]) );
             gate_block_levels.pop_back();
             gate_block_level_gates_num.pop_back();
             current_level--;
@@ -3519,6 +3520,10 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
 
 
         iter++;
+    }
+    for (int i = delay_add.size() - 1; i >= 0; i--) {
+        printf("%d %d\n", i, delay_add[i]);
+        gate_block_levels[ delay_add[i] ]->add_gate_to_end( static_cast<Gate*>(gate_block_levels[ delay_add[i]+1 ]) );
     }
 
     logging log;
