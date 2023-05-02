@@ -3520,9 +3520,6 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
 
         iter++;
     }
-    for (int i = delay_add.size() - 1; i >= 0; i--) {
-        gate_block_levels[ delay_add[i] ]->add_gate_to_end( static_cast<Gate*>(gate_block_levels[ delay_add[i]+1 ]) );
-    }
 
     logging log;
     log.verbose = verbosity;
