@@ -1762,7 +1762,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 double Theta;
                 // get the inverse parameters of the U3 rotation
                 Adaptive* ad_gate = static_cast<Adaptive*>(gate);
-                Theta = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                Theta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		std::stringstream sstream;
