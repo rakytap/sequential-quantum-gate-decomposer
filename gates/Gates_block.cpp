@@ -1516,6 +1516,63 @@ int Gates_block::get_parameter_num() {
     return parameter_num;
 }
 
+void Gates_block::get_parameter_max(Matrix_real &range_max) {
+    int parameter_idx = parameter_num;
+	double *data = range_max.get_data();
+        for(int op_idx = gates.size()-1; op_idx>=0; op_idx--) {
+
+            Gate* gate = gates[op_idx];
+            switch (gate->get_type()) {
+            case U3_OPERATION: {
+                U3* u3_gate = static_cast<U3*>(gate);
+
+                if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
+		            data[parameter_idx-1] = 4 * M_PI;
+                    parameter_idx = parameter_idx - 1;
+
+                }
+                else if ((u3_gate->get_parameter_num() == 1) && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 1;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
+                    data[parameter_idx-2] = 4 * M_PI;
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
+                    data[parameter_idx-2] = 2 * M_PI;
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 3)) {
+                    data[parameter_idx-3] = 4 * M_PI;
+                    data[parameter_idx-2] = 2 * M_PI;
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 3;
+                }
+                break; }
+            case RX_OPERATION:
+            case RY_OPERATION:
+            case CRY_OPERATION:
+            case ADAPTIVE_OPERATION:
+                data[parameter_idx-1] = 4 * M_PI;
+                parameter_idx = parameter_idx - 1;
+                break;
+            case BLOCK_OPERATION: {
+                Gates_block* block_gate = static_cast<Gates_block*>(gate);
+                Matrix_real parameters_layer(range_max.get_data() + parameter_idx - gate->get_parameter_num(), 1, gate->get_parameter_num() );
+                block_gate->get_parameter_max( parameters_layer );
+                parameter_idx = parameter_idx - block_gate->get_parameter_num();
+                break; }
+            default:
+                for (int i = 0; i < gate->get_parameter_num(); i++)
+                    data[parameter_idx-1-i] = 2 * M_PI;    
+                parameter_idx = parameter_idx - gate->get_parameter_num();
+            }
+        }
+}
+
 
 /**
 @brief Call to get the number of gates grouped in the class
