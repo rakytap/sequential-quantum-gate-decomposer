@@ -3257,7 +3257,6 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
     gate_block_level_gates_num.push_back( gates_num );
     gate_block_levels.push_back(gate_block);
     int current_level = 0;
-    std::vector<int> delay_add;
 
     
 
@@ -3522,7 +3521,6 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
         iter++;
     }
     for (int i = delay_add.size() - 1; i >= 0; i--) {
-        printf("%d %d\n", i, delay_add[i]);
         gate_block_levels[ delay_add[i] ]->add_gate_to_end( static_cast<Gate*>(gate_block_levels[ delay_add[i]+1 ]) );
     }
 
