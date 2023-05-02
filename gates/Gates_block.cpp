@@ -1590,7 +1590,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
                 if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
 		   
-                    varphi = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                    vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
                     varphi = 0;
                     varlambda =0;
                     parameter_idx = parameter_idx - 1;
