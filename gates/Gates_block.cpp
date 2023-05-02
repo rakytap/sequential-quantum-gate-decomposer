@@ -1647,7 +1647,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
                 if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
 		   
-                    vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                    vartheta = std::fmod( 2*parameters_data[parameter_idx-1], 4*M_PI);
                     varphi = 0;
                     varlambda =0;
                     parameter_idx = parameter_idx - 1;
@@ -1730,7 +1730,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 double vartheta;
                 // get the inverse parameters of the U3 rotation
                 CRY* cry_gate = static_cast<CRY*>(gate);
-                vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                vartheta = std::fmod( 2*parameters_data[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		std::stringstream sstream;
@@ -1819,7 +1819,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 double Theta;
                 // get the inverse parameters of the U3 rotation
                 Adaptive* ad_gate = static_cast<Adaptive*>(gate);
-                Theta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
+                Theta = std::fmod( 2*parameters_data[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		std::stringstream sstream;
