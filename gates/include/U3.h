@@ -75,7 +75,7 @@ U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lambda_
 /**
 @brief Destructor of the class
 */
-~U3();
+virtual ~U3();
 
 /**
 @brief Call to retrieve the gate matrix
@@ -120,7 +120,7 @@ virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
 @brief Call to set the number of qubits spanning the matrix of the gate
 @param qbit_num_in The number of qubits
 */
-void set_qbit_num(int qbit_num_in);
+virtual void set_qbit_num(int qbit_num_in);
 
 
 
@@ -128,7 +128,7 @@ void set_qbit_num(int qbit_num_in);
 @brief Call to reorder the qubits in the matrix of the gate
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void reorder_qubits( std::vector<int> qbit_list);
+virtual void reorder_qubits( std::vector<int> qbit_list);
 
 /**
 @brief Call to check whether theta is a free parameter of the gate
@@ -164,7 +164,7 @@ Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-U3* clone();
+virtual U3* clone();
 
 
 /**
