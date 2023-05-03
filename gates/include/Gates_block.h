@@ -95,20 +95,20 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix> input );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_to( Matrix_real& parameters_mtx, Matrix& input );
+virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input );
 
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*CNOT
 @param input The input array on which the gate is applied
 */
-void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
+virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
 
 
 /**
 @brief ???????????????
 */
-std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input );
+virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input );
 
 
 
@@ -424,7 +424,7 @@ void list_gates( const Matrix_real &parameters, int start_index );
 @brief Call to reorder the qubits in the matrix of the gates
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void reorder_qubits( std::vector<int> qbit_list );
+virtual void reorder_qubits( std::vector<int> qbit_list );
 
 
 /**
@@ -457,14 +457,14 @@ void combine(Gates_block* op_block);
 @brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.
 @param qbit_num_in The number of qubits spanning the matrices.
 */
-void set_qbit_num( int qbit_num_in );
+virtual void set_qbit_num( int qbit_num_in );
 
 
 /**
 @brief Create a clone of the present class.
 @return Return with a pointer pointing to the cloned object.
 */
-Gates_block* clone();
+virtual Gates_block* clone();
 
 /**
 @brief Call to extract the gates stored in the class.
