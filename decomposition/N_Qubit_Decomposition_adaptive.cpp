@@ -243,7 +243,6 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     }
 
     export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
-return;
 
     if ( config.count("compression_enabled") > 0 ) {
         long long value;                   
