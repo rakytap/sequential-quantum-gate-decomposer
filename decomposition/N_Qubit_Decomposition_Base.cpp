@@ -851,6 +851,7 @@ std::cout << "agent_lifetime_loc: " << agent_lifetime_loc << std::endl;
         MPI_Bcast( (void*)param_idx_agents.get_data(), agent_num, MPI_INT, 0, MPI_COMM_WORLD);
 #endif
 
+
         int most_successfull_agent = 0;
  
 
@@ -875,7 +876,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                 memcpy( solution_guess_mtx_agent.get_data(), solution_guess_gsl->data, solution_guess_gsl->size*sizeof(double) );
             }
             else {
-                randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                              
+                randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  ); 
             }
 
             solution_guess_mtx_agents[ agent_idx ] = solution_guess_mtx_agent;
@@ -883,10 +884,12 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 
         }
 
-        
+
+
         // intitial cost function for each of the agents
         current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents );
-       
+
+
                 
         std::vector<double> parameter_value_save_agents( agent_num );
         parameter_value_save_agents.reserve( agent_num );        
@@ -916,12 +919,10 @@ t0_CPU = tbb::tick_count::now();
                 
                                    
             }
-
+       
 #ifdef __MPI__        
             MPI_Bcast( (void*)param_idx_agents.get_data(), agent_num, MPI_INT, 0, MPI_COMM_WORLD);
-#endif
-            
-                      
+#endif        
                       
             for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
                 Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ]; 
@@ -939,7 +940,7 @@ t0_CPU = tbb::tick_count::now();
 CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();                   
             f0_shifted_pi_agents = optimization_problem_batched( solution_guess_mtx_agents );             
                 
-                                       
+                                                     
                                        
 t0_CPU = tbb::tick_count::now();                                  
             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
@@ -975,12 +976,12 @@ t0_CPU = tbb::tick_count::now();
                                     
                 
             }
+               
 CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
                          
             current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
   
-t0_CPU = tbb::tick_count::now();        
-
+t0_CPU = tbb::tick_count::now();                       
 
             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
                 double& current_minimum_agent = current_minimum_agents[ agent_idx ];
@@ -994,7 +995,7 @@ t0_CPU = tbb::tick_count::now();
                
                 
                 Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];                             
-                
+
                 // look for the best agent periodicaly
                 if ( iter_idx % agent_lifetime_loc == 0 )
                 {
@@ -1024,6 +1025,10 @@ t0_CPU = tbb::tick_count::now();
                         
                         std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
                         double random_num = distrib_to_choose( gen );
+
+#ifdef __MPI__        
+                        MPI_Bcast( (void*)&random_num, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif   
                                          
                         if ( random_num < agent_exploration_rate && agent_idx != most_successfull_agent) {
                             // choose the state of the most succesfull agent
@@ -1035,6 +1040,9 @@ t0_CPU = tbb::tick_count::now();
                             memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[most_successfull_agent].get_data(), num_of_parameters*sizeof(double) );
                             
                             random_num = distrib_to_choose( gen );
+#ifdef __MPI__        
+                            MPI_Bcast( (void*)&random_num, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif   
                             
                             if ( random_num < agent_randomization_rate ) {
                                 randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, 1.0  );                              
@@ -1053,8 +1061,7 @@ t0_CPU = tbb::tick_count::now();
                     
                     
                     }
-
-
+                 
 
                     // test global convergence 
                     if ( agent_idx == 0 ) {
@@ -1077,7 +1084,7 @@ t0_CPU = tbb::tick_count::now();
                         }                    
                    }   
                     
-                    
+
                     
                 }   
 
@@ -1096,7 +1103,9 @@ t0_CPU = tbb::tick_count::now();
                                       
                 
             }  // for agent_idx                        
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();                   
+CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();       
+                                  
+            
             // terminate the agent if the whole optimization problem was solved
             if ( terminate_optimization ) {                   
                 break;                    
@@ -1786,7 +1795,7 @@ void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, Matri
     }
 
 #ifdef __MPI__  
-        MPI_Bcast( (void*)output.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        //MPI_Bcast( (void*)output.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
 
