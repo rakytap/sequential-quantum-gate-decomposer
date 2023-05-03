@@ -495,7 +495,6 @@ void N_Qubit_Decomposition_adaptive::start_compression(){
         else {
             uncompressed_iter_num++;
         }
-<<<<<<< HEAD
 
         if ( gate_structure_compressed != gate_structure_loc ) {
             delete( gate_structure_loc );
@@ -541,53 +540,6 @@ void N_Qubit_Decomposition_adaptive::start_compression(){
         if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive gates," << std::endl;
         	print(sstream, 1);	    	
 
-=======
-
-        if ( gate_structure_compressed != gate_structure_loc ) {
-            delete( gate_structure_loc );
-            gate_structure_loc = gate_structure_compressed;
-            gate_structure_compressed = NULL;
-            
-
-            std::string filename("circuit_compression.binary");
-            if (project_name != "") { 
-                filename=project_name+ "_"  +filename;
-            }
-
-            export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);    
-            std::string filename_unitary("unitary_compression_unitary");
-            export_unitary(filename_unitary);
-        }
-
-        iter++;
-
-        if (uncompressed_iter_num>10) break;
-
-    }
-    
-        // get the number of gates used in the decomposition
-    gates_num gates_num = get_gate_nums();
-
-    combine( gate_structure_loc );
-    delete( gate_structure_loc );
-    sstream.str("");
-      
-        if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 gates," << std::endl;
-        if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX gates," << std::endl;
-        if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY gates," << std::endl;
-        if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ gates," << std::endl;
-        if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT gates," << std::endl;
-        if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ gates," << std::endl;
-        if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH gates," << std::endl;
-        if ( gates_num.x>0 ) sstream << gates_num.x << " X gates," << std::endl;
-        if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX gates," << std::endl; 
-        if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore gates," << std::endl;   
-        if ( gates_num.un>0 ) sstream << gates_num.un << " UN gates," << std::endl;
-        if ( gates_num.cry>0 ) sstream << gates_num.cry << " CRY gates," << std::endl;  
-        if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive gates," << std::endl;
-        	print(sstream, 1);	    	
-
->>>>>>> jn_compression
 #if BLAS==0 // undefined BLAS
     omp_set_num_threads(num_threads);
 #elif BLAS==1 //MKL

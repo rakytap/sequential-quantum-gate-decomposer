@@ -282,10 +282,6 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
         return;
      }
 
-<<<<<<< HEAD
-
-=======
->>>>>>> jn_compression
 
 #else
    

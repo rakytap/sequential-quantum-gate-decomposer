@@ -25,11 +25,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 """
-<<<<<<< HEAD
 ## \file test_State_Preparation.py
 ## \brief Functionality test cases for the N_Qubit_State_Preparation_adaptive class.
-=======
->>>>>>> jn_compression
+
 
 from scipy.stats import unitary_group
 import numpy as np
@@ -89,10 +87,11 @@ class Test_State_Preparation:
 		'max_inner_iterations_final': 1000, 
 		'randomization_threshold': int(1e4),  			
 		'Randomized_Radius': 0.3, 
-	        'randomized_adaptive_layers': 1,
-		'optimization_tolerance_agent': 1e-5,
-		'optimization_tolerance': 1e-6,
-		'compression_enabled': compression_enabled}
+	    'randomized_adaptive_layers': 1,
+		'optimization_tolerance_agent': 1e-4,
+		'optimization_tolerance': 1e-4,
+		'compression_enabled': compression_enabled,
+		'number_of_agents': 4}
 
 
         # creating a class to decompose the unitary
@@ -132,6 +131,7 @@ class Test_State_Preparation:
 
         decomp_error = cDecompose.Optimization_Problem_Combined(cDecompose.get_Optimized_Parameters())[0]
         assert decomp_error < 1e-4
+        print(f"DECOMPOSITION ERROR: {decomp_error} ")
 
     def test_State_Preparation_BFGS(self):
         r"""
@@ -149,7 +149,7 @@ class Test_State_Preparation:
 
         """
 
-        self.State_Preparation_adaptive_base('ADAM_BATCHED', 0)
+        self.State_Preparation_adaptive_base('ADAM_BATCHED', 0, 0)
 
 
     def test_State_Preparation_HS(self):
