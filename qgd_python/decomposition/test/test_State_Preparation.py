@@ -25,8 +25,11 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 """
+<<<<<<< HEAD
 ## \file test_State_Preparation.py
 ## \brief Functionality test cases for the N_Qubit_State_Preparation_adaptive class.
+=======
+>>>>>>> jn_compression
 
 from scipy.stats import unitary_group
 import numpy as np
