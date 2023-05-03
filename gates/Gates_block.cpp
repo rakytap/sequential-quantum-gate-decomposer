@@ -89,107 +89,22 @@ Gates_block::release_gates() {
     for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
 
         Gate* operation = *it;
-
-        if (operation->get_type() == CNOT_OPERATION) {
-            CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            delete cnot_operation;
-        }
-        else if (operation->get_type() == CZ_OPERATION) {
-            CZ* cz_operation = static_cast<CZ*>(operation);
-            delete cz_operation;
-        }
-        else if (operation->get_type() == CH_OPERATION) {
-            CH* ch_operation = static_cast<CH*>(operation);
-            delete ch_operation;
-        }
-        else if (operation->get_type() == SYC_OPERATION) {
-            SYC* syc_operation = static_cast<SYC*>(operation);
-            delete syc_operation;
-        }
-        else if (operation->get_type() == U3_OPERATION) {
-
-            U3* u3_operation = static_cast<U3*>(operation);
-            delete u3_operation;
-
-        }
-        else if (operation->get_type() == RY_OPERATION) {
-
-            RY* ry_operation = static_cast<RY*>(operation);
-            delete ry_operation;
-
-        }
-        else if (operation->get_type() == CRY_OPERATION) {
-
-            CRY* cry_operation = static_cast<CRY*>(operation);
-            delete cry_operation;
-
-        }
-        else if (operation->get_type() == RX_OPERATION) {
-
-            RX* rx_operation = static_cast<RX*>(operation);
-            delete rx_operation;
-
-        }
-        else if (operation->get_type() == RZ_OPERATION) {
-
-            RZ* rz_operation = static_cast<RZ*>(operation);
-            delete rz_operation;
-
-        }
-        else if (operation->get_type() == X_OPERATION) {
-
-            X* x_operation = static_cast<X*>(operation);
-            delete x_operation;
-
-        }
-        else if (operation->get_type() == Y_OPERATION) {
-
-            Y* y_operation = static_cast<Y*>(operation);
-            delete y_operation;
-
-        }
-        else if (operation->get_type() == Z_OPERATION) {
-
-            Z* z_operation = static_cast<Z*>(operation);
-            delete z_operation;
-
-        }
-        else if (operation->get_type() == SX_OPERATION) {
-
-            SX* sx_operation = static_cast<SX*>(operation);            
-            delete sx_operation;
-
-        }
-        else if (operation->get_type() == BLOCK_OPERATION) {
-
-            Gates_block* block_operation = static_cast<Gates_block*>(operation);
-            delete block_operation;
-
-        }
-        else if (operation->get_type() == GENERAL_OPERATION) {
+        switch (operation->get_type()) {
+        case CNOT_OPERATION: case CZ_OPERATION:
+        case CH_OPERATION: case SYC_OPERATION:
+        case U3_OPERATION: case RY_OPERATION:
+        case CRY_OPERATION: case RX_OPERATION:
+        case RZ_OPERATION: case X_OPERATION:
+        case Y_OPERATION: case Z_OPERATION:
+        case SX_OPERATION: case BLOCK_OPERATION:
+        case GENERAL_OPERATION: case UN_OPERATION:
+        case ON_OPERATION: case COMPOSITE_OPERATION:
+        case ADAPTIVE_OPERATION:
             delete operation;
-        }
-        else if (operation->get_type() == UN_OPERATION) {
-            UN* un_operation = static_cast<UN*>(operation);
-            delete un_operation;
-        }
-        else if (operation->get_type() == ON_OPERATION) {
-            ON* on_operation = static_cast<ON*>(operation);
-            delete on_operation;
-        }
-        else if (operation->get_type() == COMPOSITE_OPERATION) {
-            Composite* com_operation = static_cast<Composite*>(operation);
-            delete com_operation;
-        }
-        else if (operation->get_type() == ADAPTIVE_OPERATION) {
-
-            Adaptive* ad_operation = static_cast<Adaptive*>(operation);
-            delete ad_operation;
-
-        }
-        else {
+            break;
+        default:
             std::string err("Gates_block::release_gates(): unimplemented gate"); 
-            throw err;
+            throw err;        
         }
     }
     
@@ -280,82 +195,65 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
         parameters = parameters - operation->get_parameter_num();
         Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
 
-        if (operation->get_type() == CNOT_OPERATION) {
-            CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            cnot_operation->apply_to(input);
-        }
-        else if (operation->get_type() == CZ_OPERATION) {
-            CZ* cz_operation = static_cast<CZ*>(operation);
-            cz_operation->apply_to(input);
-        }
-        else if (operation->get_type() == CH_OPERATION) {
-            CH* ch_operation = static_cast<CH*>(operation);
-            ch_operation->apply_to(input);
-        }
-        else if (operation->get_type() == SYC_OPERATION) {
-            SYC* syc_operation = static_cast<SYC*>(operation);
-            syc_operation->apply_to(input);
-        }
-        else if (operation->get_type() == U3_OPERATION) {
+        switch (operation->get_type()) {
+        case CNOT_OPERATION: case CZ_OPERATION:
+        case CH_OPERATION: case SYC_OPERATION:
+        case X_OPERATION: case Y_OPERATION:
+        case Z_OPERATION: case SX_OPERATION:
+        case GENERAL_OPERATION:
+            operation->apply_to(input);
+            break;
+        case U3_OPERATION: {
             U3* u3_operation = static_cast<U3*>(operation);
-            u3_operation->apply_to( parameters_mtx, input );    
+            u3_operation->apply_to( parameters_mtx, input );
+            break;    
         }
-        else if (operation->get_type() == RX_OPERATION) {
+        case RX_OPERATION: {
             RX* rx_operation = static_cast<RX*>(operation);
-            rx_operation->apply_to( parameters_mtx, input ); 
+            rx_operation->apply_to( parameters_mtx, input );
+            break; 
         }
-        else if (operation->get_type() == RY_OPERATION) {
+        case RY_OPERATION: {
             RY* ry_operation = static_cast<RY*>(operation);
-            ry_operation->apply_to( parameters_mtx, input ); 
+            ry_operation->apply_to( parameters_mtx, input );
+            break; 
         }
-        else if (operation->get_type() == CRY_OPERATION) {
+        case CRY_OPERATION: {
             CRY* cry_operation = static_cast<CRY*>(operation);
             cry_operation->apply_to( parameters_mtx, input ); 
+            break;
         }
-        else if (operation->get_type() == RZ_OPERATION) {
+        case RZ_OPERATION: {
             RZ* rz_operation = static_cast<RZ*>(operation);
             rz_operation->apply_to( parameters_mtx, input ); 
-        }
-        else if (operation->get_type() == X_OPERATION) {
-            X* x_operation = static_cast<X*>(operation);
-            x_operation->apply_to( input ); 
-        }
-        else if (operation->get_type() == Y_OPERATION) {
-            Y* y_operation = static_cast<Y*>(operation);
-            y_operation->apply_to( input ); 
-        }
-        else if (operation->get_type() == Z_OPERATION) {
-            Z* z_operation = static_cast<Z*>(operation);
-            z_operation->apply_to( input ); 
-        }
-        else if (operation->get_type() == SX_OPERATION) {
-            SX* sx_operation = static_cast<SX*>(operation);
-            sx_operation->apply_to( input ); 
-        }
-        else if (operation->get_type() == GENERAL_OPERATION) {
-            operation->apply_to(input);
-        }
-        else if (operation->get_type() == UN_OPERATION) {
+            break;
+        }        
+        case UN_OPERATION: {
             UN* un_operation = static_cast<UN*>(operation);
             un_operation->apply_to(parameters_mtx, input);
+            break;
         }
-        else if (operation->get_type() == ON_OPERATION) {
+        case ON_OPERATION: {
             ON* on_operation = static_cast<ON*>(operation);
             on_operation->apply_to(parameters_mtx, input);
+            break;
         }
-        else if (operation->get_type() == BLOCK_OPERATION) {
+        case BLOCK_OPERATION: {
             Gates_block* block_operation = static_cast<Gates_block*>(operation);
             block_operation->apply_to(parameters_mtx, input);
+            break;
         }
-        else if (operation->get_type() == COMPOSITE_OPERATION) {
+        case COMPOSITE_OPERATION: {
             Composite* com_operation = static_cast<Composite*>(operation);
             com_operation->apply_to(parameters_mtx, input);
+            break;
         }
-        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+        case ADAPTIVE_OPERATION: {
             Adaptive* ad_operation = static_cast<Adaptive*>(operation);
-            ad_operation->apply_to( parameters_mtx, input ); 
+            ad_operation->apply_to( parameters_mtx, input );
+            break; 
         }
-        else {
+        default:
             std::string err("Gates_block::apply_to: unimplemented gate"); 
             throw err;
         }
@@ -394,82 +292,65 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         Gate* operation = gates[idx];
         Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
 
-        if (operation->get_type() == CNOT_OPERATION) {
-            CNOT* cnot_operation = static_cast<CNOT*>(operation);
-            cnot_operation->apply_from_right(input);
-        }
-        else if (operation->get_type() == CZ_OPERATION) {
-            CZ* cz_operation = static_cast<CZ*>(operation);
-            cz_operation->apply_from_right(input);
-        }
-        else if (operation->get_type() == CH_OPERATION) {
-            CH* ch_operation = static_cast<CH*>(operation);
-            ch_operation->apply_from_right(input);
-        }
-        else if (operation->get_type() == SYC_OPERATION) {
-            SYC* syc_operation = static_cast<SYC*>(operation);
-            syc_operation->apply_from_right(input);
-        }
-        else if (operation->get_type() == U3_OPERATION) {
-            U3* u3_operation = static_cast<U3*>(operation);
-            u3_operation->apply_from_right( parameters_mtx, input ); 
-        }
-        else if (operation->get_type() == RX_OPERATION) {
-            RX* rx_operation = static_cast<RX*>(operation);
-            rx_operation->apply_from_right( parameters_mtx, input ); 
-        }
-        else if (operation->get_type() == RY_OPERATION) {
-            RY* ry_operation = static_cast<RY*>(operation);
-            ry_operation->apply_from_right( parameters_mtx, input ); 
-        }
-        else if (operation->get_type() == CRY_OPERATION) {
-            CRY* cry_operation = static_cast<CRY*>(operation);
-            cry_operation->apply_from_right( parameters_mtx, input ); 
-        }
-        else if (operation->get_type() == RZ_OPERATION) {
-            RZ* rz_operation = static_cast<RZ*>(operation);
-            rz_operation->apply_from_right( parameters_mtx, input );         
-        }
-        else if (operation->get_type() == X_OPERATION) {
-            X* x_operation = static_cast<X*>(operation);
-            x_operation->apply_from_right( input ); 
-        }
-        else if (operation->get_type() == Y_OPERATION) {
-            Y* y_operation = static_cast<Y*>(operation);
-            y_operation->apply_from_right( input ); 
-        }
-        else if (operation->get_type() == Z_OPERATION) {
-            Z* z_operation = static_cast<Z*>(operation);
-            z_operation->apply_from_right( input ); 
-        }
-        else if (operation->get_type() == SX_OPERATION) {
-            SX* sx_operation = static_cast<SX*>(operation);
-            sx_operation->apply_from_right( input ); 
-        }
-        else if (operation->get_type() == GENERAL_OPERATION) {
+        switch (operation->get_type()) {
+        case CNOT_OPERATION: case CZ_OPERATION:
+        case CH_OPERATION: case SYC_OPERATION:
+        case X_OPERATION: case Y_OPERATION:
+        case Z_OPERATION: case SX_OPERATION:
+        case GENERAL_OPERATION:
             operation->apply_from_right(input);
+            break;
+        case U3_OPERATION: {
+            U3* u3_operation = static_cast<U3*>(operation);
+            u3_operation->apply_from_right( parameters_mtx, input );
+            break; 
         }
-        else if (operation->get_type() == UN_OPERATION) {
+        case RX_OPERATION: {
+            RX* rx_operation = static_cast<RX*>(operation);
+            rx_operation->apply_from_right( parameters_mtx, input );
+            break; 
+        }
+        case RY_OPERATION: {
+            RY* ry_operation = static_cast<RY*>(operation);
+            ry_operation->apply_from_right( parameters_mtx, input );
+            break; 
+        }
+        case CRY_OPERATION: {
+            CRY* cry_operation = static_cast<CRY*>(operation);
+            cry_operation->apply_from_right( parameters_mtx, input );
+            break; 
+        }
+        case RZ_OPERATION: {
+            RZ* rz_operation = static_cast<RZ*>(operation);
+            rz_operation->apply_from_right( parameters_mtx, input );
+            break;         
+        }
+        case UN_OPERATION: {
             UN* un_operation = static_cast<UN*>(operation);
-            un_operation->apply_from_right( parameters_mtx, input ); 
+            un_operation->apply_from_right( parameters_mtx, input );
+            break; 
         }
-        else if (operation->get_type() == ON_OPERATION) {
+        case ON_OPERATION: {
             ON* on_operation = static_cast<ON*>(operation);
-            on_operation->apply_from_right( parameters_mtx, input ); 
+            on_operation->apply_from_right( parameters_mtx, input );
+            break; 
         }
-        else if (operation->get_type() == BLOCK_OPERATION) {
+        case BLOCK_OPERATION: {
             Gates_block* block_operation = static_cast<Gates_block*>(operation);
             block_operation->apply_from_right(parameters_mtx, input);
+            break;
         }
-        else if (operation->get_type() == COMPOSITE_OPERATION) {
+        case COMPOSITE_OPERATION: {
             Composite* com_operation = static_cast<Composite*>(operation);
-            com_operation->apply_from_right( parameters_mtx, input ); 
+            com_operation->apply_from_right( parameters_mtx, input );
+            break; 
         }
-        else if (operation->get_type() == ADAPTIVE_OPERATION) {
+        case ADAPTIVE_OPERATION: {
             Adaptive* ad_operation = static_cast<Adaptive*>(operation);
-            ad_operation->apply_from_right( parameters_mtx, input ); 
+            ad_operation->apply_from_right( parameters_mtx, input );
+            break; 
         }
-        else {
+        default:
             std::string err("Gates_block::apply_from_right: unimplemented gate"); 
             throw err;
         }
@@ -1647,7 +1528,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
                 if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
 		   
-                    vartheta = std::fmod( 2*parameters_data[parameter_idx-1], 4*M_PI);
+                    vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
                     varphi = 0;
                     varlambda =0;
                     parameter_idx = parameter_idx - 1;
@@ -1730,7 +1611,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 double vartheta;
                 // get the inverse parameters of the U3 rotation
                 CRY* cry_gate = static_cast<CRY*>(gate);
-                vartheta = std::fmod( 2*parameters_data[parameter_idx-1], 4*M_PI);
+                vartheta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		std::stringstream sstream;
@@ -1819,7 +1700,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 double Theta;
                 // get the inverse parameters of the U3 rotation
                 Adaptive* ad_gate = static_cast<Adaptive*>(gate);
-                Theta = std::fmod( 2*parameters_data[parameter_idx-1], 4*M_PI);
+                Theta = std::fmod( parameters_data[parameter_idx-1], 4*M_PI);
                 parameter_idx = parameter_idx - 1;
 
 		std::stringstream sstream;
@@ -1998,120 +1879,21 @@ void Gates_block::combine(Gates_block* op_block) {
 
     for(std::vector<Gate*>::iterator it = (gates_in).begin(); it != (gates_in).end(); ++it) {
         Gate* op = *it;
-
-        if (op->get_type() == CNOT_OPERATION) {
-            CNOT* cnot_op = static_cast<CNOT*>( op );
-            CNOT* cnot_op_cloned = cnot_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( cnot_op_cloned );
-            add_gate_to_end(op_cloned);
-        }
-        else if (op->get_type() == CZ_OPERATION) {
-            CZ* cz_op = static_cast<CZ*>( op );
-            CZ* cz_op_cloned = cz_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( cz_op_cloned );
-            add_gate_to_end(op_cloned);
-        }
-        else if (op->get_type() == CH_OPERATION) {
-            CH* ch_op = static_cast<CH*>( op );
-            CH* ch_op_cloned = ch_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( ch_op_cloned );
-            add_gate_to_end(op_cloned);
-        }
-        else if (op->get_type() == SYC_OPERATION) {
-            SYC* syc_op = static_cast<SYC*>( op );
-            SYC* syc_op_cloned = syc_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( syc_op_cloned );
-            add_gate_to_end(op_cloned);
-        }
-        else if (op->get_type() == U3_OPERATION) {
-            U3* u3_op = static_cast<U3*>( op );
-            U3* u3_op_cloned = u3_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( u3_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == RX_OPERATION) {
-            RX* rx_op = static_cast<RX*>( op );
-            RX* rx_op_cloned = rx_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( rx_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == RY_OPERATION) {
-            RY* ry_op = static_cast<RY*>( op );
-            RY* ry_op_cloned = ry_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( ry_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == CRY_OPERATION) {
-            CRY* cry_op = static_cast<CRY*>( op );
-            CRY* cry_op_cloned = cry_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( cry_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == RZ_OPERATION) {
-            RZ* rz_op = static_cast<RZ*>( op );
-            RZ* rz_op_cloned = rz_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( rz_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == X_OPERATION) {
-            X* x_op = static_cast<X*>( op );
-            X* x_op_cloned = x_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( x_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == Y_OPERATION) {
-            Y* y_op = static_cast<Y*>( op );
-            Y* y_op_cloned = y_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( y_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == Z_OPERATION) {
-            Z* z_op = static_cast<Z*>( op );
-            Z* z_op_cloned = z_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( z_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == SX_OPERATION) {
-            SX* sx_op = static_cast<SX*>( op );
-            SX* sx_op_cloned = sx_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( sx_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == BLOCK_OPERATION) {
-            Gates_block* block_op = static_cast<Gates_block*>( op );
-            Gates_block* block_op_cloned = block_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( block_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == GENERAL_OPERATION) {
+        switch (op->get_type()) {
+        case CNOT_OPERATION: case CZ_OPERATION:
+        case CH_OPERATION: case SYC_OPERATION:
+        case U3_OPERATION: case RY_OPERATION:
+        case CRY_OPERATION: case RX_OPERATION:
+        case RZ_OPERATION: case X_OPERATION:
+        case Y_OPERATION: case Z_OPERATION:
+        case SX_OPERATION: case BLOCK_OPERATION:
+        case GENERAL_OPERATION: case UN_OPERATION:
+        case ON_OPERATION: case COMPOSITE_OPERATION:
+        case ADAPTIVE_OPERATION: {
             Gate* op_cloned = op->clone();
             add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == UN_OPERATION) {
-            UN* un_op = static_cast<UN*>( op );
-            UN* un_op_cloned = un_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( un_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == ON_OPERATION) {
-            ON* on_op = static_cast<ON*>( op );
-            ON* on_op_cloned = on_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( on_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == COMPOSITE_OPERATION) {
-            Composite* com_op = static_cast<Composite*>( op );
-            Composite* com_op_cloned = com_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( com_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == ADAPTIVE_OPERATION) {
-            Adaptive* ad_op = static_cast<Adaptive*>( op );
-            Adaptive* ad_op_cloned = ad_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( ad_op_cloned );
-            add_gate_to_end( op_cloned );
-        }
-        else {
+            break; }
+        default:
             std::string err("Gates_block::combine: unimplemented gate"); 
             throw err;
         }
@@ -2133,83 +1915,20 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
     // setting the number of qubit in the gates
     for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
         Gate* op = *it;
-
-        if (op->get_type() == CNOT_OPERATION) {
-            CNOT* cnot_op = static_cast<CNOT*>( op );
-            cnot_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == CZ_OPERATION) {
-            CZ* cz_op = static_cast<CZ*>( op );
-            cz_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == CH_OPERATION) {
-            CH* ch_op = static_cast<CH*>( op );
-            ch_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == SYC_OPERATION) {
-            SYC* syc_op = static_cast<SYC*>( op );
-            syc_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == U3_OPERATION) {
-            U3* u3_op = static_cast<U3*>( op );
-            u3_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == RX_OPERATION) {
-            RX* rx_op = static_cast<RX*>( op );
-            rx_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == RY_OPERATION) {
-            RY* ry_op = static_cast<RY*>( op );
-            ry_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == CRY_OPERATION) {
-            CRY* cry_op = static_cast<CRY*>( op );
-            cry_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == RZ_OPERATION) {
-            RZ* rz_op = static_cast<RZ*>( op );
-            rz_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == X_OPERATION) {
-            X* x_op = static_cast<X*>( op );
-            x_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == Y_OPERATION) {
-            Y* y_op = static_cast<Y*>( op );
-            y_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == Z_OPERATION) {
-            Z* z_op = static_cast<Z*>( op );
-            z_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == SX_OPERATION) {
-            SX* sx_op = static_cast<SX*>( op );
-            sx_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == BLOCK_OPERATION) {
-            Gates_block* block_op = static_cast<Gates_block*>( op );
-            block_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == UN_OPERATION) {
-            UN* un_op = static_cast<UN*>( op );
-            un_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == ON_OPERATION) {
-            ON* on_op = static_cast<ON*>( op );
-            on_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == COMPOSITE_OPERATION) {
-            Composite* com_op = static_cast<Composite*>( op );
-            com_op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == GENERAL_OPERATION) {
+        switch (op->get_type()) {
+        case CNOT_OPERATION: case CZ_OPERATION:
+        case CH_OPERATION: case SYC_OPERATION:
+        case U3_OPERATION: case RY_OPERATION:
+        case CRY_OPERATION: case RX_OPERATION:
+        case RZ_OPERATION: case X_OPERATION:
+        case Y_OPERATION: case Z_OPERATION:
+        case SX_OPERATION: case BLOCK_OPERATION:
+        case GENERAL_OPERATION: case UN_OPERATION:
+        case ON_OPERATION: case COMPOSITE_OPERATION:
+        case ADAPTIVE_OPERATION:
             op->set_qbit_num( qbit_num_in );
-        }
-        else if (op->get_type() == ADAPTIVE_OPERATION) {
-            Adaptive* ad_op = static_cast<Adaptive*>( op );
-            ad_op->set_qbit_num( qbit_num_in );
-        }
-        else {
+            break;
+        default:
             std::string err("Gates_block::set_qbit_num: unimplemented gate"); 
             throw err;
         }
@@ -2250,120 +1969,21 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
 
     for ( std::vector<Gate*>::iterator it=gates.begin(); it != gates.end(); ++it ) {
         Gate* op = *it;
-
-        if (op->get_type() == CNOT_OPERATION) {
-            CNOT* cnot_op = static_cast<CNOT*>( op );
-            CNOT* cnot_op_cloned = cnot_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( cnot_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == CZ_OPERATION) {
-            CZ* cz_op = static_cast<CZ*>( op );
-            CZ* cz_op_cloned = cz_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( cz_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == CH_OPERATION) {
-            CH* ch_op = static_cast<CH*>( op );
-            CH* ch_op_cloned = ch_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( ch_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == SYC_OPERATION) {
-            SYC* syc_op = static_cast<SYC*>( op );
-            SYC* syc_op_cloned = syc_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( syc_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == U3_OPERATION) {
-            U3* u3_op = static_cast<U3*>( op );
-            U3* u3_op_cloned = u3_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( u3_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == RX_OPERATION) {
-            RX* rx_op = static_cast<RX*>( op );
-            RX* rx_op_cloned = rx_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( rx_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == RY_OPERATION) {
-            RY* ry_op = static_cast<RY*>( op );
-            RY* ry_op_cloned = ry_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( ry_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == CRY_OPERATION) {
-            CRY* cry_op = static_cast<CRY*>( op );
-            CRY* cry_op_cloned = cry_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( cry_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == RZ_OPERATION) {
-            RZ* rz_op = static_cast<RZ*>( op );
-            RZ* rz_op_cloned = rz_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( rz_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == X_OPERATION) {
-            X* x_op = static_cast<X*>( op );
-            X* x_op_cloned = x_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( x_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == Y_OPERATION) {
-            Y* y_op = static_cast<Y*>( op );
-            Y* y_op_cloned = y_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( y_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == Z_OPERATION) {
-            Z* z_op = static_cast<Z*>( op );
-            Z* z_op_cloned = z_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( z_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == SX_OPERATION) {
-            SX* sx_op = static_cast<SX*>( op );
-            SX* sx_op_cloned = sx_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( sx_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == BLOCK_OPERATION) {
-            Gates_block* block_op = static_cast<Gates_block*>( op );
-            Gates_block* block_op_cloned = block_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( block_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == UN_OPERATION) {
-            UN* un_op = static_cast<UN*>( op );
-            UN* un_op_cloned = un_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( un_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == ON_OPERATION) {
-            ON* on_op = static_cast<ON*>( op );
-            ON* on_op_cloned = on_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( on_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == COMPOSITE_OPERATION) {
-            Composite* com_op = static_cast<Composite*>( op );
-            Composite* com_op_cloned = com_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( com_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == GENERAL_OPERATION) {
+        switch (op->get_type()) {
+        case CNOT_OPERATION: case CZ_OPERATION:
+        case CH_OPERATION: case SYC_OPERATION:
+        case U3_OPERATION: case RY_OPERATION:
+        case CRY_OPERATION: case RX_OPERATION:
+        case RZ_OPERATION: case X_OPERATION:
+        case Y_OPERATION: case Z_OPERATION:
+        case SX_OPERATION: case BLOCK_OPERATION:
+        case GENERAL_OPERATION: case UN_OPERATION:
+        case ON_OPERATION: case COMPOSITE_OPERATION:
+        case ADAPTIVE_OPERATION: {
             Gate* op_cloned = op->clone();
             op_block->add_gate_to_end( op_cloned );
-        }
-        else if (op->get_type() == ADAPTIVE_OPERATION) {
-            Adaptive* ad_op = static_cast<Adaptive*>( op );
-            Adaptive* ad_op_cloned = ad_op->clone();
-            Gate* op_cloned = static_cast<Gate*>( ad_op_cloned );
-            op_block->add_gate_to_end( op_cloned );
-        }
-        else {
+            break; }
+        default:
             std::string err("Gates_block::extract_gates: unimplemented gate"); 
             throw err;
         }
