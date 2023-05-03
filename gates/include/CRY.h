@@ -58,7 +58,7 @@ CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in);
 /**
 @brief Destructor of the class
 */
-~CRY();
+virtual ~CRY();
 
 /**
 @brief Call to retrieve the gate matrix
@@ -105,7 +105,7 @@ Matrix_real get_optimized_parameters();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-CRY* clone();
+virtual CRY* clone();
 
 };
 
