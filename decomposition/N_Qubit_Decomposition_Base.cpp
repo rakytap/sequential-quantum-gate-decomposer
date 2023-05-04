@@ -1704,7 +1704,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( const Ma
     parameters_gsl.owner = 0; 
 
     // call the method to calculate the cost function and the gradients
-    optimization_problem_combined( &parameters_gsl, this, Umtx, Umtx_deriv );
+    optimization_problem_combined_unitary( &parameters_gsl, this, Umtx, Umtx_deriv );
 
 }
 
