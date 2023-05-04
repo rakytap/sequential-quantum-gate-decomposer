@@ -1621,7 +1621,7 @@ std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
 
 }
 
-void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( const gsl_vector* parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix> Umtx_deriv ) {
+void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( const gsl_vector* parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv ) {
     // vector containing gradients of the transformed matrix
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
 
