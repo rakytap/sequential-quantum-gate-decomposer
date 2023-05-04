@@ -1689,6 +1689,25 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( const Matrix_rea
 
 }
 
+void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( const Matrix_real& parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv ) {
+
+    // create GSL wrappers around the pointers
+    gsl_block block_tmp;
+    block_tmp.data = parameters.get_data();
+    block_tmp.size = parameters.size(); 
+
+    gsl_vector parameters_gsl;
+    parameters_gsl.data = parameters.get_data();
+    parameters_gsl.size = parameters.size();
+    parameters_gsl.stride = 1;   
+    parameters_gsl.block = &block_tmp; 
+    parameters_gsl.owner = 0; 
+
+    // call the method to calculate the cost function and the gradients
+    optimization_problem_combined( &parameters_gsl, this, Umtx, Umtx_deriv );
+
+}
+
 
 /**
 @brief Call to get the variant of the cost function used in the calculations
