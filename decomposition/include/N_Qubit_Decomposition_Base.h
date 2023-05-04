@@ -291,6 +291,7 @@ static void optimization_problem_combined_unitary( const gsl_vector* parameters,
 */
 void optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad );
 
+void optimization_problem_combined_unitary( const Matrix_real& parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
 /**
 // @brief The optimization problem of the final optimization
