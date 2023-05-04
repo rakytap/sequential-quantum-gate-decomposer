@@ -1627,8 +1627,9 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( const gs
 
     tbb::parallel_invoke(
         [&]{
+            Matrix Umtx_loc = instance->get_Umtx();
             Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
-            instance->get_transformed_matrix( parameters_mtx, instance->gates.begin(), instance->gates.size(), Umtx );
+            Umtx = instance->get_transformed_matrix( parameters_mtx, instance->gates.begin(), instance->gates.size(), Umtx_loc );
         },
         [&]{
             Matrix Umtx_loc = instance->get_Umtx();
