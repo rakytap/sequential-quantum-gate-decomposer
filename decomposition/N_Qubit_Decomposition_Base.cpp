@@ -1621,7 +1621,21 @@ std::string error("N_Qubit_Decomposition_Base::optimization_problem_combined");
 
 }
 
+void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( const gsl_vector* parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix> Umtx_deriv ) {
+    // vector containing gradients of the transformed matrix
+    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
 
+    tbb::parallel_invoke(
+        [&]{
+            Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
+            instance->get_transformed_matrix( parameters_mtx, instance->gates.begin(), instance->gates.size(), Umtx );
+        },
+        [&]{
+            Matrix Umtx_loc = instance->get_Umtx();
+            Matrix_real parameters_mtx(parameters->data, 1, parameters->size);
+            Umtx_deriv = instance->apply_derivate_to( parameters_mtx, Umtx_loc );
+        });
+}
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
