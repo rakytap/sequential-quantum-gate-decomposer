@@ -280,6 +280,7 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 */
 static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad );
 
+static void optimization_problem_combined_unitary( const gsl_vector* parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
@@ -290,6 +291,7 @@ static void optimization_problem_combined( const gsl_vector* parameters, void* v
 */
 void optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad );
 
+void optimization_problem_combined_unitary( const Matrix_real& parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
 /**
 // @brief The optimization problem of the final optimization
