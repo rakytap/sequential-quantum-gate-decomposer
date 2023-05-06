@@ -1247,7 +1247,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
         return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
     }
     else if ( cost_fnc == SUM_OF_SQUARES) {
-        decomposition_error = get_cost_function_sum_of_squares(matrix_new);
+        return get_cost_function_sum_of_squares(matrix_new);
     }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
@@ -1314,7 +1314,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
         return 1.0 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(instance->get_previous_cost_function_value())*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
     }
     else if ( cost_fnc == SUM_OF_SQUARES) {
-        decomposition_error = get_cost_function_sum_of_squares(matrix_new);
+        return get_cost_function_sum_of_squares(matrix_new);
     }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
