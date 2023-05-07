@@ -1448,7 +1448,9 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined( qgd_N_
     Py_DECREF(parameters_arg);
 
 
-    return Py_BuildValue("(dO)", f0, grad_py);
+    PyObject* p = Py_BuildValue("(dO)", f0, grad_py);
+    Py_DECREF(grad_py);
+    return p;
 }
 
 /**
@@ -1515,7 +1517,9 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined_Unitary
     Py_DECREF(parameters_arg);
 
 
-    return Py_BuildValue("(OO)", unitary_py, graduni_py);
+    PyObject* p = Py_BuildValue("(OO)", unitary_py, graduni_py);
+    Py_DECREF(unitary_py); Py_DECREF(graduni_py);
+    return p;
 }
 
 
