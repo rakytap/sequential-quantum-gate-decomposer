@@ -34,6 +34,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 void
 apply_kernel_to_input_AVX_small(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
 
+    input.ensure_aligned();
 
     int index_step_target = 1 << target_qbit;
     int current_idx = 0;
@@ -215,11 +216,11 @@ apply_kernel_to_input_AVX_small(Matrix& u3_1qbit, Matrix& input, const bool& der
 void
 apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
 
+    input.ensure_aligned();
 
     int index_step_target = 1 << target_qbit;
     int current_idx = 0;
     int current_idx_pair = current_idx + index_step_target;
-
 
     // load elements of the U3 unitary into 256bit registers (8 registers)
     __m256d u3_1bit_00r_vec = _mm256_broadcast_sd(&u3_1qbit[0].real);
