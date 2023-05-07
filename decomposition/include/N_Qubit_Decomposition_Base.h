@@ -295,6 +295,8 @@ void optimization_problem_combined( const Matrix_real& parameters, double* f0, M
 
 void optimization_problem_combined_unitary( const Matrix_real& parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
+Matrix_real optimization_problem_batch( Matrix_real batch );
+
 /**
 // @brief The optimization problem of the final optimization
 @param parameters A GNU Scientific Library containing the parameters to be optimized.
