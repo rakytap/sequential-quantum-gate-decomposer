@@ -1509,7 +1509,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined_Unitary
     PyObject* graduni_py = PyList_New(Umtx_deriv.size());
     for (size_t i = 0; i < Umtx_deriv.size(); i++) {
         Umtx_deriv[i].set_owner(false);
-        PyList_SetItem(graduni_py, i, Py_BuildValue("O", matrix_to_numpy(Umtx_deriv[i])));
+        PyList_SetItem(graduni_py, i, matrix_to_numpy(Umtx_deriv[i]));
     }
 
     Py_DECREF(parameters_arg);
