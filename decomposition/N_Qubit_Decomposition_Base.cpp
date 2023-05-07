@@ -277,6 +277,9 @@ N_Qubit_Decomposition_Base::calc_decomposition_error(Matrix& decomposed_matrix )
         double d = 1.0/decomposed_matrix.cols;
         decomposition_error = 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
     }
+    else if ( cost_fnc == SUM_OF_SQUARES) {
+        decomposition_error = get_cost_function_sum_of_squares(decomposed_matrix);
+    }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -1188,6 +1191,9 @@ double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
         double d = 1.0/matrix_new.cols;
         return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
     }
+    else if ( cost_fnc == SUM_OF_SQUARES) {
+        return get_cost_function_sum_of_squares(matrix_new);
+    }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -1239,6 +1245,9 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
         Matrix&& ret = get_trace_with_correction2(matrix_new, qbit_num);
         double d = 1.0/matrix_new.cols;
         return 1 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
+    }
+    else if ( cost_fnc == SUM_OF_SQUARES) {
+        return get_cost_function_sum_of_squares(matrix_new);
     }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
@@ -1303,6 +1312,9 @@ double N_Qubit_Decomposition_Base::optimization_problem( const gsl_vector* param
         double d = 1.0/matrix_new.cols;
         for (int idx=0; idx<4; idx++){ret_temp[idx].real=ret[idx].real;ret_temp[idx].imag=ret[idx].imag;}
         return 1.0 - d*d*(ret[0].real*ret[0].real+ret[0].imag*ret[0].imag+std::sqrt(instance->get_previous_cost_function_value())*(correction1_scale*(ret[1].real*ret[1].real+ret[1].imag*ret[1].imag)+correction2_scale*(ret[2].real*ret[2].real+ret[2].imag*ret[2].imag)));
+    }
+    else if ( cost_fnc == SUM_OF_SQUARES) {
+        return get_cost_function_sum_of_squares(matrix_new);
     }
     else {
         std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
@@ -1566,6 +1578,9 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
                 double d = 1.0/Umtx_deriv[idx].cols;
                 grad_comp = -2.0*d*d* (trace_tmp[0].real*deriv_tmp[0].real+trace_tmp[0].imag*deriv_tmp[0].imag+std::sqrt(prev_cost_fnv_val)*(correction1_scale*(trace_tmp[1].real*deriv_tmp[1].real+trace_tmp[1].imag*deriv_tmp[1].imag) + correction2_scale*(trace_tmp[2].real*deriv_tmp[2].real+trace_tmp[2].imag*deriv_tmp[2].imag)));
             }
+            else if ( cost_fnc == SUM_OF_SQUARES) {
+                grad_comp = get_cost_function_sum_of_squares(Umtx_deriv[idx]);
+            }
             else {
                 std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
                 throw err;
@@ -1707,6 +1722,24 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( const Ma
     // call the method to calculate the cost function and the gradients
     optimization_problem_combined_unitary( &parameters_gsl, this, Umtx, Umtx_deriv );
 
+}
+
+Matrix_real N_Qubit_Decomposition_Base::optimization_problem_batch( Matrix_real parameters )
+{
+    // create GSL wrappers around the pointers
+    gsl_block block_tmp;
+    block_tmp.data = parameters.get_data();
+    block_tmp.size = parameters.size(); 
+
+    gsl_vector parameters_gsl;
+    parameters_gsl.data = parameters.get_data();
+    parameters_gsl.size = parameters.size();
+    parameters_gsl.stride = 1; //assert parameters.cols == parameters.stride == get_num_parameters()...   
+    parameters_gsl.block = &block_tmp; 
+    parameters_gsl.owner = 0; 
+    
+    Matrix_real result = optimization_problem_batch(parameters.rows, &parameters_gsl, this);
+    return result;
 }
 
 

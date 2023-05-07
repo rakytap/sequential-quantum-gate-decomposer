@@ -27,7 +27,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Decomposition_Base.h"
 
 /// @brief Type definition of the fifferent types of the cost function
-typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2, HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2} cost_function_type;
+typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
+    HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2,
+    SUM_OF_SQUARES} cost_function_type;
 
 
 
@@ -292,6 +294,8 @@ static void optimization_problem_combined_unitary( const gsl_vector* parameters,
 void optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad );
 
 void optimization_problem_combined_unitary( const Matrix_real& parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
+
+Matrix_real optimization_problem_batch( Matrix_real batch );
 
 /**
 // @brief The optimization problem of the final optimization

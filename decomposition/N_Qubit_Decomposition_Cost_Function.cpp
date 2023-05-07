@@ -314,6 +314,22 @@ Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num, int 
 
 }
 
+double get_cost_function_sum_of_squares(Matrix& matrix)
+{
+    double ret = 0.0;
+    for (int rowidx = 0; rowidx < matrix.rows; rowidx++) {
+        int baseidx = rowidx*matrix.stride;
+        for (int colidx = 0; colidx < matrix.cols; colidx++) {
+            if (rowidx == colidx) {
+                ret += (matrix[baseidx+colidx].real - 1.0) * (matrix[baseidx+colidx].real - 1.0) + matrix[baseidx+colidx].imag * matrix[baseidx+colidx].imag;
+            } else {
+                ret += matrix[baseidx+colidx].real * matrix[baseidx+colidx].real + matrix[baseidx+colidx].imag * matrix[baseidx+colidx].imag;
+            }
+        }
+    }
+    return ret;
+}
+
 /**
 @brief Call to calculate the real and imaginary parts of the trace
 @param matrix The square shaped complex matrix from which the trace is calculated.
