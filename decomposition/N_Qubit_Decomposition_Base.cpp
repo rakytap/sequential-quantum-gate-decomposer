@@ -771,9 +771,11 @@ pure_DFE_time = 0.0;
         current_minimum =   optimization_problem( optimized_parameters_mtx );  
 std::cout << "tttttttttttttttttttttt " <<  current_minimum << std::endl;   
 
-        long long max_inner_iterations_loc;
+        int max_inner_iterations_loc;
         if ( config.count("max_inner_iterations_agent") > 0 ) {
-             config["max_inner_iterations_agent"].get_property( max_inner_iterations_loc );  
+			long long value;
+             config["max_inner_iterations_agent"].get_property( value );
+             max_inner_iterations_loc = (int) value;
         }
         else {
             max_inner_iterations_loc = max_inner_iterations;
@@ -782,7 +784,9 @@ std::cout << "tttttttttttttttttttttt " <<  current_minimum << std::endl;
 
         double optimization_tolerance_loc;
         if ( config.count("optimization_tolerance_agent") > 0 ) {
-             config["optimization_tolerance_agent"].get_property( optimization_tolerance_loc );  
+             long long value;
+             config["optimization_tolerance_agent"].get_property( value );
+             optimization_tolerance_loc = (double) value;
         }
         else {
             optimization_tolerance_loc = optimization_tolerance;
@@ -793,7 +797,7 @@ std::cout << "tttttttttttttttttttttt " <<  current_minimum << std::endl;
         if ( config.count("agent_lifetime") > 0 ) {
              long long agent_lifetime_loc_tmp;
              config["agent_lifetime"].get_property( agent_lifetime_loc_tmp );  
-             agent_lifetime_loc = agent_lifetime_loc_tmp;
+             agent_lifetime_loc = (int)agent_lifetime_loc_tmp;
         }
         else {
             agent_lifetime_loc = 1000;
