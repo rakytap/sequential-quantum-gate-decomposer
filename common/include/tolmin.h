@@ -19,19 +19,24 @@ private:
     double lmargin, rmargin;
     double (* f) (const gsl_vector * x, void * params);
     void (* df) (const gsl_vector * x, void * params, gsl_vector * g);
+    void (* fdf) (const gsl_vector * x, void * params, double * f, gsl_vector * g);
     void* void_instance;
 
 public:
     /** @brief Problem the constructor of the class.
      * 	@param p is the objective problem to be minimized
      * **/
-    Problem(int dimension, double lmargin, double rmargin, double (* f) (const gsl_vector *, void *), void (* df) (const gsl_vector *, void *, gsl_vector *), void* void_instance)
+    Problem(int dimension, double lmargin, double rmargin, double (* f) (const gsl_vector *, void *),
+        void (* df) (const gsl_vector *, void *, gsl_vector *),
+        void (* fdf) (const gsl_vector *, void *, double *, gsl_vector *),
+        void* void_instance)
     {
         this->dimension = dimension;
         this->lmargin = lmargin;
         this->rmargin = rmargin;
         this->f = f;
         this->df = df;
+        this->fdf = fdf;
         this->void_instance = void_instance;
     }
     /**
@@ -74,6 +79,18 @@ public:
     double funmin(double *x) {
         gsl_vector gx = { (size_t)dimension, 1, x, NULL, 0 };
         return f(&gx, void_instance);
+    }
+    /**
+     * @brief granal
+     * @param x is the sample
+     * @param g if granal of sample.
+     */
+    double funmingranal(Data &x, Data &g) {
+        double f;
+        gsl_vector gx = { (size_t)dimension, 1, x.data(), NULL, 0 };
+        gsl_vector gg = { (size_t)dimension, 1, g.data(), NULL, 0 };
+        fdf(&gx, void_instance, &f, &gg);
+        return f;
     }
     /**
      * @brief granal
