@@ -139,9 +139,9 @@ RX::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     double ThetaOver2, Phi, Lambda;
 
-    ThetaOver2 = parameters[0];
+    /*ThetaOver2 = parameters[0];
     Phi = phi0;
-    Lambda = lambda0;
+    Lambda = lambda0;*/
     
 
     // get the U3 gate of one qubit

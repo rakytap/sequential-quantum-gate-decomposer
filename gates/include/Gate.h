@@ -28,6 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "common.h"
 #include "matrix.h"
 #include "logging.h"
+#include "matrix_real.h"
 
 
 /// @brief Type definition of operation types (also generalized for decomposition classes derived from the class Operation_Block)
@@ -177,6 +178,15 @@ Gate* clone();
 @return Returns with the matrix of the one-qubit matrix.
 */
 Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
+
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+void parameters_for_calc_one_qubit();
 
 
 
