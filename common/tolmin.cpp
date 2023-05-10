@@ -1847,10 +1847,11 @@ int Tolmin::fgcalc_(long *n,double *x,double *f,double *g)
     tempg.resize(*n);
     for(int i=0;i<*n;i++)
         tempx[i]=x[i];
-    *f=myProblem->funmin(tempx);
+    //*f=myProblem->funmin(tempx);
+    *f = myProblem->funmingranal(tempx, tempg);
     if(hasDebug)
 	printf("Fstar[%d] %lf \n",totcal_1.itnocs,*f);
-    myProblem->granal(tempx,tempg);
+    //myProblem->granal(tempx,tempg);
     for(int i=0;i<*n;i++)
     {
         x[i]=tempx[i];
