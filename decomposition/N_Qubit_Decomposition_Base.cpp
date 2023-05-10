@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Base.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "Adam.h"
+#include "tolmin.h"
 
 #include <fstream>
 
@@ -811,7 +812,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
 	    
-            int iter = 0;
+            /*int iter = 0;
             int status;
 
             const gsl_multimin_fdfminimizer_type *T;
@@ -848,6 +849,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
                 status = gsl_multimin_test_gradient (s->gradient, gradient_threshold);
 
             } while (status == GSL_CONTINUE && iter < iter_max);
+            
 
             if (current_minimum > s->f) {
                 current_minimum = s->f;
@@ -863,6 +865,22 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
                     solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen);
                 }
                 gsl_multimin_fdfminimizer_free (s);
+            }*/
+            Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad, (void*)this);
+            Tolmin tolmin(&p);
+            std::vector<double> x(solution_guess_gsl->data, solution_guess_gsl->data + num_of_parameters); 
+            double f = tolmin.Solve(x, false, iter_max);
+            if (current_minimum > f) {
+                current_minimum = f;
+                memcpy( optimized_parameters_mtx.get_data(), x.data(), num_of_parameters*sizeof(double) );
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen)/100;
+                }
+            }
+            else {
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen);
+                }
             }
 
 #ifdef __MPI__        
@@ -1724,24 +1742,6 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( const Ma
 
 }
 
-Matrix_real N_Qubit_Decomposition_Base::optimization_problem_batch( Matrix_real parameters )
-{
-    // create GSL wrappers around the pointers
-    gsl_block block_tmp;
-    block_tmp.data = parameters.get_data();
-    block_tmp.size = parameters.size(); 
-
-    gsl_vector parameters_gsl;
-    parameters_gsl.data = parameters.get_data();
-    parameters_gsl.size = parameters.size();
-    parameters_gsl.stride = 1; //assert parameters.cols == parameters.stride == get_num_parameters()...   
-    parameters_gsl.block = &block_tmp; 
-    parameters_gsl.owner = 0; 
-    
-    Matrix_real result = optimization_problem_batch(parameters.rows, &parameters_gsl, this);
-    return result;
-}
-
 
 /**
 @brief Call to get the variant of the cost function used in the calculations
@@ -1816,8 +1816,8 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
             return;
 
         case BFGS:
-            iter_max = 100;
-            gradient_threshold = 1e-1;
+            iter_max = 10000;
+            gradient_threshold = 1e-8;
             random_shift_count_max = 1;  
             max_iterations = 1e8; 
             return;
