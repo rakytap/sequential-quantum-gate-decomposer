@@ -866,7 +866,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
                 }
                 gsl_multimin_fdfminimizer_free (s);
             }*/
-            Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad, (void*)this);
+            Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad,
+                optimization_problem_combined, (void*)this);
             Tolmin tolmin(&p);
             std::vector<double> x(solution_guess_gsl->data, solution_guess_gsl->data + num_of_parameters); 
             double f = tolmin.Solve(x, false, iter_max);
