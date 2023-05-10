@@ -1742,6 +1742,23 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( const Ma
 
 }
 
+Matrix_real N_Qubit_Decomposition_Base::optimization_problem_batch( Matrix_real parameters )
+{
+    // create GSL wrappers around the pointers
+    gsl_block block_tmp;
+    block_tmp.data = parameters.get_data();
+    block_tmp.size = parameters.size(); 
+
+    gsl_vector parameters_gsl;
+    parameters_gsl.data = parameters.get_data();
+    parameters_gsl.size = parameters.size();
+    parameters_gsl.stride = 1; //assert parameters.cols == parameters.stride == get_num_parameters()...   
+    parameters_gsl.block = &block_tmp; 
+    parameters_gsl.owner = 0; 
+
+    Matrix_real result = optimization_problem_batch(parameters.rows, &parameters_gsl, this);
+    return result;
+}
 
 /**
 @brief Call to get the variant of the cost function used in the calculations
