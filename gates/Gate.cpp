@@ -482,10 +482,9 @@ Gate::parameters_for_calc_one_qubit(  ) {
 
     double ThetaOver2, Phi, Lambda;
     Matrix_real parameters;
-
+    Matrix u3_1qbit(2,2);
 
     if (type==RX_OPERATION) {
-        Matrix u3_1qbit(2,2);
         parameter_num = 1;
         parameters = Matrix_real(1, parameter_num);
     	ThetaOver2 = parameters[0];
@@ -495,7 +494,6 @@ Gate::parameters_for_calc_one_qubit(  ) {
     }
 
     if (type==RY_OPERATION) {
-        Matrix u3_1qbit(2,2);
         parameter_num = 1;
         parameters = Matrix_real(1, parameter_num);
     	ThetaOver2 = parameters[0];
@@ -504,7 +502,6 @@ Gate::parameters_for_calc_one_qubit(  ) {
     }
 
     if (type==RZ_OPERATION) {
-        Matrix u3_1qbit(2,2);
         parameter_num = 1;
         parameters = Matrix_real(1, parameter_num);
     	ThetaOver2 = 0;
@@ -514,7 +511,6 @@ Gate::parameters_for_calc_one_qubit(  ) {
 
 
     if (type==CH_OPERATION) {
-        Matrix u3_1qbit(2,2);
         u3_1qbit[0].real = 1.0/sqrt(2); u3_1qbit[0].imag = 0.0; 
         u3_1qbit[1].real = 1.0/sqrt(2); u3_1qbit[1].imag = 0.0;
         u3_1qbit[2].real = 1.0/sqrt(2); u3_1qbit[2].imag = 0.0;
@@ -522,7 +518,6 @@ Gate::parameters_for_calc_one_qubit(  ) {
     }
 
     if (type==CNOT_OPERATION) {
-        Matrix u3_1qbit(2,2);
         u3_1qbit[0].real = 0.0; u3_1qbit[0].imag = 0.0; 
         u3_1qbit[1].real = 1.0; u3_1qbit[1].imag = 0.0;
         u3_1qbit[2].real = 1.0; u3_1qbit[2].imag = 0.0;
@@ -530,7 +525,6 @@ Gate::parameters_for_calc_one_qubit(  ) {
     }
 
     if (type==CZ_OPERATION) {
-        Matrix u3_1qbit(2,2);
         u3_1qbit[0].real = 1.0; u3_1qbit[0].imag = 0.0; 
         u3_1qbit[1].real = 0.0; u3_1qbit[1].imag = 0.0;
         u3_1qbit[2].real = 0.0; u3_1qbit[2].imag = 0.0;
@@ -538,7 +532,6 @@ Gate::parameters_for_calc_one_qubit(  ) {
     }
 
     if (type==SX_OPERATION) {
-        Matrix u3_1qbit(2,2);
         u3_1qbit[0].real = 0.5; u3_1qbit[0].imag = 0.5; 
         u3_1qbit[1].real = 0.5; u3_1qbit[1].imag = -0.5;
         u3_1qbit[2].real = 0.5; u3_1qbit[2].imag = -0.5;
@@ -546,7 +539,6 @@ Gate::parameters_for_calc_one_qubit(  ) {
     }
 
     if (type==X_OPERATION) {
-        Matrix u3_1qbit(2,2);
         u3_1qbit[0].real = 0.0; u3_1qbit[0].imag = 0.0; 
         u3_1qbit[1].real = 1.0; u3_1qbit[1].imag = 0.0;
         u3_1qbit[2].real = 1.0; u3_1qbit[2].imag = 0.0;
@@ -554,7 +546,6 @@ Gate::parameters_for_calc_one_qubit(  ) {
     }
 
     if (type==Y_OPERATION) {
-        Matrix u3_1qbit(2,2);
         u3_1qbit[0].real = 0.0; u3_1qbit[0].imag = 0.0; 
         u3_1qbit[1].real = 0.0; u3_1qbit[1].imag = -1.0;
         u3_1qbit[2].real = 0.0; u3_1qbit[2].imag = 1.0;
@@ -562,7 +553,6 @@ Gate::parameters_for_calc_one_qubit(  ) {
     }
 
     if (type==Z_OPERATION) {
-        Matrix u3_1qbit(2,2);
         u3_1qbit[0].real = 1.0; u3_1qbit[0].imag = 0.0; 
         u3_1qbit[1].real = 0.0; u3_1qbit[1].imag = 0.0;
         u3_1qbit[2].real = 0.0; u3_1qbit[2].imag = 0.0;
