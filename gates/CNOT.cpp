@@ -121,15 +121,15 @@ void
 CNOT::apply_to( Matrix& input ) {
  
     // the not gate of one qubit
-    /*Matrix not_1qbit(2,2);
+    Matrix not_1qbit(2,2);
     not_1qbit[0].real = 0.0; not_1qbit[0].imag = 0.0; 
     not_1qbit[1].real = 1.0; not_1qbit[1].imag = 0.0;
     not_1qbit[2].real = 1.0; not_1qbit[2].imag = 0.0;
-    not_1qbit[3].real = 0.0; not_1qbit[3].imag = 0.0;*/
+    not_1qbit[3].real = 0.0; not_1qbit[3].imag = 0.0;
 
 
-    Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
-    apply_kernel_to(u3_1qbit, input);
+    //Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
+    apply_kernel_to(not_1qbit, input);
 
 
 }
@@ -150,6 +150,7 @@ CNOT::apply_from_right( Matrix& input ) {
     not_1qbit[1].real = 1.0; not_1qbit[1].imag = 0.0;
     not_1qbit[2].real = 1.0; not_1qbit[2].imag = 0.0;
     not_1qbit[3].real = 0.0; not_1qbit[3].imag = 0.0;
+
 
     apply_kernel_from_right(not_1qbit, input);
 

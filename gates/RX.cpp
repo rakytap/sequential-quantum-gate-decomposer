@@ -100,8 +100,8 @@ RX::RX(int qbit_num_in, int target_qbit_in) {
         lambda = false;
 
         // set static values for the angles
-        phi0 = -M_PI/2;
-        lambda0 = M_PI/2;
+        //phi0 = -M_PI/2;
+        //lambda0 = M_PI/2;
 
         parameter_num = 1;
 
@@ -139,9 +139,9 @@ RX::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     double ThetaOver2, Phi, Lambda;
 
-    /*ThetaOver2 = parameters[0];
+    ThetaOver2 = parameters[0];
     Phi = phi0;
-    Lambda = lambda0;*/
+    Lambda = lambda0;
     
 
     // get the U3 gate of one qubit

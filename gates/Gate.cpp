@@ -428,7 +428,7 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 
     if (ThetaOver2!=0 or Phi!=0 or Lambda!=0) {
    
-        parameters_for_calc_one_qubit(  );
+        //parameters_for_calc_one_qubit(  );
 #ifdef DEBUG
     	if (isnan(ThetaOver2)) {
             std::stringstream sstream;
