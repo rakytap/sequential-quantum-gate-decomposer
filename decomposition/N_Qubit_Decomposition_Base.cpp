@@ -26,6 +26,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "Adam.h"
 
+#include "RL_experience.h"
+
 #include <fstream>
 
 
@@ -40,6 +42,9 @@ static double pure_DFE_time = 0;
 
 static double DFE_time = 0.0;
 static double CPU_time = 0.0;
+
+
+extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, int lda, int *ipiv, double *b, int ldb); 	
 
 
 /**
@@ -831,7 +836,8 @@ std::cout << "agent_lifetime_loc: " << agent_lifetime_loc << std::endl;
         
         sstream.str("");
         sstream << "AGENTS: number of agents " << agent_num << std::endl;
-        print(sstream, 2);        
+        print(sstream, 2);    
+    
         
         bool terminate_optimization = false;
         
@@ -865,91 +871,136 @@ std::cout << "agent_lifetime_loc: " << agent_lifetime_loc << std::endl;
 
 tbb::tick_count t0_CPU = tbb::tick_count::now();
 
+        // vector storing the parameter set usedby the individual agents.
+
         std::vector<Matrix_real> solution_guess_mtx_agents( agent_num );
         solution_guess_mtx_agents.reserve( agent_num );
-
-
         
-        Matrix_real current_minimum_agents;
-
+        std::uniform_real_distribution<> distrib_real(0.0, M_PI_double);         
+        
         for(int agent_idx=0; agent_idx<agent_num; agent_idx++) {
-
-            std::uniform_real_distribution<> distrib_real(0.0, M_PI_double); 
-
+      
+      
             // initialize random parameters for the agent            
             Matrix_real solution_guess_mtx_agent = Matrix_real( num_of_parameters, 1 );
+            memset( solution_guess_mtx_agent.get_data(), 0.0, solution_guess_mtx_agent.size()*sizeof(double) );              
 
-            if ( agent_idx == 0 ) {
-                memcpy( solution_guess_mtx_agent.get_data(), solution_guess_gsl->data, solution_guess_gsl->size*sizeof(double) );
-            }
-            else {
-                randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  ); 
-            }
+#ifdef __MPI__        
+            if ( current_rank == 0 ) {
+#endif
+
+                if ( agent_idx == 0 ) {
+                    memcpy( solution_guess_mtx_agent.get_data(), solution_guess_gsl->data, solution_guess_gsl->size*sizeof(double) );
+                }
+                else {
+                    randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  ); 
+                }
+
+
+#ifdef __MPI__        
+            } 
+            
+            MPI_Bcast( solution_guess_mtx_agent.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
 
             solution_guess_mtx_agents[ agent_idx ] = solution_guess_mtx_agent;
 
-
         }
+        
+        
 
-
+        // array storing the current minimum of th eindividual agents
+        Matrix_real current_minimum_agents;
 
         // intitial cost function for each of the agents
         current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents );
 
 
-                
-        std::vector<double> parameter_value_save_agents( agent_num );
-        parameter_value_save_agents.reserve( agent_num );        
+        // arrays to store some parameter values needed to be restored later
+        Matrix_real parameter_value_save_agents( agent_num, 1 );    
        
+        // arrays to store the cost functions at shifted parameters
         Matrix_real f0_shifted_pi2_agents( agent_num, 1 );
-        Matrix_real f0_shifted_pi_agents( agent_num, 1 );        
-        Matrix_real f0_shifted_3pi2_agents( agent_num, 1 );                 
+        Matrix_real f0_shifted_pi_agents( agent_num, 1 );                 
        
-   
 
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();       
+
+   
+        // CPU time
+        CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();       
        
-        
+        ///////////////////////////////////////////////////////////////////////////
         for (long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++) {
         
-t0_CPU = tbb::tick_count::now();        
         
-            for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
+            // CPU time
+            t0_CPU = tbb::tick_count::now();        
+
+
+#ifdef __MPI__        
+
+            memset( param_idx_agents.get_data(), 0, param_idx_agents.size()*sizeof(int) );
+            memset( parameter_value_save_agents.get_data(), 0.0, parameter_value_save_agents.size()*sizeof(double) );            
+
+            if ( current_rank == 0 ) {
+#endif
+        
+                for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
             
-            
-                Matrix_real& solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];
+                    // agent local parameter set
+                    Matrix_real& solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];
                 
-                int param_idx       = distrib_int(gen);
-                param_idx_agents[agent_idx] = param_idx;
+                    // determine parameter indices to be altered
+                    int param_idx       = distrib_int(gen);
+                    param_idx_agents[agent_idx] = param_idx;
                 
-                parameter_value_save_agents[agent_idx] = solution_guess_mtx_agent[param_idx];                
+                    // save the parameters to  be restored later
+                    parameter_value_save_agents[agent_idx] = solution_guess_mtx_agent[param_idx];                
                 
                                    
-            }
+                }
        
-#ifdef __MPI__        
+#ifdef __MPI__  
+            }
+                  
             MPI_Bcast( (void*)param_idx_agents.get_data(), agent_num, MPI_INT, 0, MPI_COMM_WORLD);
+            MPI_Bcast( (void*)parameter_value_save_agents.get_data(), agent_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);            
 #endif        
                       
+                      
+            // calsulate the cist functions at shifted parameter values
             for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
                 Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ]; 
                 solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;                
-            }                 
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();                   
+            }   
+            
+            // CPU time              
+            CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();  
+            
+            // calculate batched cost function                 
             f0_shifted_pi2_agents = optimization_problem_batched( solution_guess_mtx_agents );              
-t0_CPU = tbb::tick_count::now();                                         
+            
+            // CPU time
+            t0_CPU = tbb::tick_count::now();                                         
                         
 
             for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
                 Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
                 solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;
-            }   
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();                   
+            }  
+            
+            // CPU time             
+            CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();        
+            
+            // calculate batched cost function                         
             f0_shifted_pi_agents = optimization_problem_batched( solution_guess_mtx_agents );             
                 
                                                      
-                                       
-t0_CPU = tbb::tick_count::now();                                  
+            // CPU time                                      
+            t0_CPU = tbb::tick_count::now();                                  
+            
+            
+            // determine the parameters of the cosine function and determine the parameter shift at the minimum
             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
 
                 double current_minimum_agent = current_minimum_agents[agent_idx];         
@@ -962,34 +1013,79 @@ t0_CPU = tbb::tick_count::now();
 
                 double A_times_sin = offset - f0_shifted_pi2;
 
-                //double A_times_sin = (f0_shifted_3pi2 - f0_shifted_pi2)/2;
-
-                    //double amplitude = np.sqrt( A_times_cos**2 + A_times_sin**2 )
-                    //print( "Amplitude: ", amplitude )
-
                 double phi0 = atan2( A_times_sin, A_times_cos);
-                    //print( "phase: ", phi0 )
-
-                    //offset = (f0+f0_shifted_pi)/2
-                    //print( "offset: ", offset )
 
 
                 double parameter_shift = phi0 > 0 ? M_PI-phi0 : -phi0-M_PI;
 		
 		
                 //update  the parameter vector
-                Matrix_real solution_guess_mtx_agent                    = solution_guess_mtx_agents[ agent_idx ];                             
-                solution_guess_mtx_agent[param_idx_agents[ agent_idx ]] = parameter_value_save_agents[ agent_idx ] + parameter_shift;        
-                                    
+                Matrix_real& solution_guess_mtx_agent                    = solution_guess_mtx_agents[ agent_idx ];                             
+                solution_guess_mtx_agent[param_idx_agents[ agent_idx ]] = parameter_value_save_agents[ agent_idx ] + parameter_shift; 
                 
             }
                
-CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
-                         
+            // CPU time                                                     
+            CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
+            
+            
+            // determine the current minimum  at the shifted parameters        
             current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
   
-t0_CPU = tbb::tick_count::now();                       
+            // CPU time                                        
+            t0_CPU = tbb::tick_count::now();        
 
+
+            // generate random numbers to manage the behavior of the agents
+            Matrix_real random_numbers(   agent_num, 2 );
+            memset( random_numbers.get_data(), 0.0, 2*agent_num*sizeof(double) );
+            
+#ifdef __MPI__        
+            if ( current_rank == 0 ) {
+#endif
+
+                std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0);
+
+                for ( int agent_idx=0; agent_idx<2*agent_num; agent_idx++ ) {           
+                    random_numbers[agent_idx] = distrib_to_choose( gen );
+                }
+
+#ifdef __MPI__    
+            }    
+            MPI_Bcast( random_numbers.get_data(), 2*agent_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif   
+
+
+
+            // build up probability distribution to use to chose between the agents
+            Matrix_real agent_probs(  current_minimum_agents.size(), 1 );
+
+            // create probability distribution in each 1000-th iteration
+            if ( iter_idx % agent_lifetime_loc == 0 ) {
+                double prob_sum = 0.0;
+                double current_minimum_agents_min = DBL_MAX;
+                for( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
+                    if ( current_minimum_agents_min > current_minimum_agents[agent_idx] ) {
+                        current_minimum_agents_min = current_minimum_agents[agent_idx];
+                    }
+                }
+
+
+                for( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
+                    double prob_loc = exp( (current_minimum_agents_min - current_minimum_agents[agent_idx])*40.0/current_minimum_agents_min );
+                    agent_probs[agent_idx] = prob_loc;
+                    prob_sum = prob_sum + prob_loc;
+                }
+
+                for( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
+                    agent_probs[agent_idx] = agent_probs[agent_idx]/prob_sum;
+                }
+
+
+            }
+
+            
+            // govern the behavior of the agents
             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
                 double& current_minimum_agent = current_minimum_agents[ agent_idx ];
                    
@@ -1001,12 +1097,11 @@ t0_CPU = tbb::tick_count::now();
                 
                
                 
-                Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];                             
+                Matrix_real& solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];                             
 
                 // look for the best agent periodicaly
                 if ( iter_idx % agent_lifetime_loc == 0 )
                 {
-
                              
                     if ( current_minimum_agent <= current_minimum ) {
 
@@ -1014,7 +1109,7 @@ t0_CPU = tbb::tick_count::now();
                     
                         // export the parameters of the curremt, most successful agent
                         memcpy(optimized_parameters_mtx.get_data(), solution_guess_mtx_agent.get_data(), num_of_parameters*sizeof(double) );
-                        
+
                         std::string filename("initial_circuit_iteration.binary");
                         if (project_name != "") { 
                             filename=project_name+ "_"  +filename;
@@ -1030,43 +1125,38 @@ t0_CPU = tbb::tick_count::now();
                     else {
                         // less successful agent migh choose to keep their current state, or choose the state of more successful agents
                         
-                        std::uniform_real_distribution<> distrib_to_choose(0.0, 1.0); 
-                        double random_num = distrib_to_choose( gen );
-
 #ifdef __MPI__        
-                        MPI_Bcast( (void*)&random_num, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif   
+                        if ( current_rank == 0 ) {
+#endif
+                                                
+                            double random_num = random_numbers[ agent_idx*random_numbers.stride ]; 
                                          
-                        if ( random_num < agent_exploration_rate && agent_idx != most_successfull_agent) {
-                            // choose the state of the most succesfull agent
+                            if ( random_num < agent_exploration_rate && agent_idx != most_successfull_agent) {
+                                // choose the state of the most succesfull agent
                             
-                            std::stringstream sstream;
-                            sstream << "agent " << agent_idx << ": adopts the state of the most succesful agent. " << most_successfull_agent << std::endl;
-                            print(sstream, 5);            
+                                std::stringstream sstream;
+                                sstream << "agent " << agent_idx << ": adopts the state of the most succesful agent. " << most_successfull_agent << std::endl;
+                                print(sstream, 5);  
 
-                            memcpy(solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[most_successfull_agent].get_data(), num_of_parameters*sizeof(double) );
                             
-                            random_num = distrib_to_choose( gen );
-#ifdef __MPI__        
-                            MPI_Bcast( (void*)&random_num, 1, MPI_DOUBLE, 0, MPI_COMM_WORLD);
-#endif   
+                                random_num = random_numbers[ agent_idx*random_numbers.stride + 1 ];
                             
-                            if ( random_num < agent_randomization_rate ) {
-                                randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, 1.0  );                              
-                            }     
+                                if ( random_num < agent_randomization_rate ) {
+                                    randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, radius  );                              
+                                }     
 
                        
-                        }
-                        else {
-                            // keep the current state  of the agent                    
-                        }
+                            }
+                            else {
+                                // keep the current state  of the agent                    
+                            }
 
 #ifdef __MPI__        
+                        }
+                        
                         MPI_Bcast( (void*)solution_guess_mtx_agent.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif     
-                    
-                    
-                    
+                                                                                  
                     }
                  
 
@@ -1083,7 +1173,7 @@ t0_CPU = tbb::tick_count::now();
                         var_current_minimum = std::sqrt(var_current_minimum)/current_minimum_vec.size();
                                   
                             
-                        if ( std::abs( current_minimum_mean - current_minimum) < 1e-5  && var_current_minimum < 1e-5 ) {
+                        if ( std::abs( current_minimum_mean - current_minimum) < 1e-7  && var_current_minimum < 1e-7 ) {
                             std::stringstream sstream;
                             sstream << "AGENTS, iterations converged to "<< current_minimum << std::endl;
                             print(sstream, 0); 
@@ -1107,7 +1197,9 @@ t0_CPU = tbb::tick_count::now();
 
            
                 
-                                      
+#ifdef __MPI__    
+                MPI_Barrier(MPI_COMM_WORLD);
+#endif                                       
                 
             }  // for agent_idx                        
 CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();       
@@ -1119,7 +1211,6 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
             }      
         
         }
-
 
 
 
@@ -1137,6 +1228,8 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, gsl_vector *solution_guess_gsl)  {
+
+
 
     optimized_parameters_mtx = Matrix_real(solution_guess_gsl->data, solution_guess_gsl->size, 1);
 
@@ -1166,14 +1259,213 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINE
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
 
-        solve_layer_optimization_problem_AGENTS( num_of_parameters, solution_guess_gsl );
+#ifdef __DFE__
+        if ( qbit_num >= 5 ) {
+            upload_Umtx_to_DFE();
+        }
+#endif
 
 
-        gsl_vector *solution_guess_gsl_COSINE = gsl_vector_alloc(num_of_parameters);
-        memcpy( solution_guess_gsl_COSINE->data, optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
 
-        solve_layer_optimization_problem_COSINE( num_of_parameters, solution_guess_gsl_COSINE );
+        if (gates.size() == 0 ) {
+            return;
+        }
 
+
+        if (solution_guess_gsl == NULL) {
+            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
+        }
+//memset( solution_guess_gsl->data, 0.0, solution_guess_gsl->size*sizeof(double) );
+
+        if (optimized_parameters_mtx.size() == 0) {
+            optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+        }
+
+
+        int random_shift_count = 0;
+        int sub_iter_idx = 0;
+        double current_minimum_hold = current_minimum;
+    
+
+        tbb::tick_count adam_start = tbb::tick_count::now();
+        adam_time = 0.0;
+pure_DFE_time = 0.0;
+        Adam optimizer;
+        optimizer.initialize_moment_and_variance( num_of_parameters );
+
+
+
+        // the array storing the optimized parameters
+        gsl_vector* grad_gsl = gsl_vector_alloc(num_of_parameters);
+        gsl_vector* solution_guess_tmp = gsl_vector_alloc(num_of_parameters);
+        memcpy(solution_guess_tmp->data, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+
+        Matrix_real solution_guess_tmp_mtx = Matrix_real( solution_guess_tmp->data, num_of_parameters, 1 );
+        Matrix_real grad_mtx = Matrix_real( grad_gsl->data, num_of_parameters, 1 );
+        //solution_guess_tmp_mtx.print_matrix();
+
+
+        long long max_inner_iterations_loc;
+        if ( config.count("max_inner_iterations_agent") > 0 ) {
+             config["max_inner_iterations_agent"].get_property( max_inner_iterations_loc );  
+        }
+        else {
+            max_inner_iterations_loc = max_inner_iterations;
+        }
+
+        double f0 = DBL_MAX;
+        std::stringstream sstream;
+        sstream << "iter_max: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization << ", randomization radius: " << radius << std::endl;
+        print(sstream, 2); 
+
+        int ADAM_status = 0;
+
+
+
+        Matrix Umtx_orig = Umtx;
+        int batch_size_min = Umtx_orig.cols*5/6;
+        std::uniform_int_distribution<> distrib_trace_offset(0, Umtx_orig.cols-batch_size_min);
+
+
+        int batch_num = 100;
+        for (int batch_idx=0; batch_idx<batch_num; batch_idx++ ) {
+
+            trace_offset = distrib_trace_offset(gen);
+
+            std::uniform_int_distribution<> distrib_col_num(batch_size_min, Umtx_orig.cols-trace_offset);
+            int col_num = distrib_col_num(gen);
+
+            // create a slice from the original Umtx
+            Matrix Umtx_slice(Umtx_orig.rows, col_num);
+            for (int row_idx=0; row_idx<Umtx_orig.rows; row_idx++) {
+                memcpy( Umtx_slice.get_data() + row_idx*Umtx_slice.stride, Umtx_orig.get_data() + row_idx*Umtx_orig.stride + trace_offset, col_num*sizeof(QGD_Complex16) );
+            }
+
+            Umtx = Umtx_slice;
+
+            for ( long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++ ) {
+
+            
+
+
+                optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_gsl );
+
+                prev_cost_fnv_val = f0;
+  
+                if (sub_iter_idx == 1 ) {
+                    current_minimum_hold = f0;   
+               
+                    if ( adaptive_eta )  { 
+                        optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3; 
+                        //std::cout << "reset learning rate to " << optimizer.eta << std::endl;
+                    }                 
+
+                }
+
+
+                if (current_minimum_hold*0.95 > f0 || (current_minimum_hold*0.97 > f0 && f0 < 1e-3) ||  (current_minimum_hold*0.99 > f0 && f0 < 1e-4) ) {
+                    sub_iter_idx = 0;
+                    current_minimum_hold = f0;        
+                }
+    
+    
+                if (current_minimum > f0 ) {
+                    current_minimum = f0;
+                    memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp->data, num_of_parameters*sizeof(double) );
+                    //double new_eta = 1e-3 * f0 * f0;
+                
+                    if ( adaptive_eta )  {
+                        double new_eta = 1e-3 * f0;
+                        optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;
+                        optimizer.eta = new_eta < 1e-1 ? new_eta : 1e-1;
+                    }
+                
+                }
+    
+
+                if ( iter_idx % 5000 == 0 ) {
+
+                    Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+
+                    std::stringstream sstream;
+                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100;
+                    sstream << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new, trace_offset) << std::endl;
+                    print(sstream, 0);   
+                    std::string filename("initial_circuit_iteration.binary");
+                    export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+
+                }
+
+//std::cout << grad_norm  << std::endl;
+                if (f0 < optimization_tolerance || random_shift_count > random_shift_count_max ) {
+                    break;
+                }
+
+
+
+                // calculate the gradient norm
+                double norm = 0.0;
+                for ( int grad_idx=0; grad_idx<num_of_parameters; grad_idx++ ) {
+                    norm += grad_gsl->data[grad_idx]*grad_gsl->data[grad_idx];
+                }
+                norm = std::sqrt(norm);
+                    
+
+                if ( sub_iter_idx> iteration_threshold_of_randomization || ADAM_status != 0 ) {
+
+                    //random_shift_count++;
+                    sub_iter_idx = 0;
+                    random_shift_count++;
+                    current_minimum_hold = current_minimum;   
+
+
+                
+                    std::stringstream sstream;
+                    if ( ADAM_status == 0 ) {
+                        sstream << "ADAM: initiate randomization at " << f0 << ", gradient norm " << norm << std::endl;
+                    }
+                    else {
+                        sstream << "ADAM: leaving local minimum " << f0 << ", gradient norm " << norm << " eta: " << optimizer.eta << std::endl;
+                    }
+                    print(sstream, 0);   
+                    
+                    Matrix_real solution_guess_tmp_mtx( solution_guess_tmp->data, solution_guess_tmp->size, 1);
+                    randomize_parameters(optimized_parameters_mtx, solution_guess_tmp_mtx, f0 );
+        
+                    optimizer.reset();
+                    optimizer.initialize_moment_and_variance( num_of_parameters );   
+
+                    ADAM_status = 0;   
+
+                    //optimizer.eta = 1e-3;
+        
+                }
+
+                else {
+                    ADAM_status = optimizer.update(solution_guess_tmp_mtx, grad_mtx, f0);
+                }
+
+                sub_iter_idx++;
+
+            }
+
+
+
+
+        }
+
+        sstream.str("");
+        sstream << "obtained minimum: " << current_minimum << std::endl;
+
+
+        gsl_vector_free(grad_gsl);
+        gsl_vector_free(solution_guess_tmp);
+        tbb::tick_count adam_end = tbb::tick_count::now();
+        adam_time  = adam_time + (adam_end-adam_start).seconds();
+        sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
+        
+        print(sstream, 0); 
         
 
 }
