@@ -83,8 +83,6 @@ public:
     double eta;
     /// unique id indentifying the instance of the class
     int id;
-    /// En/Dis -able compression
-    int compression_enabled;
 protected:
 
 

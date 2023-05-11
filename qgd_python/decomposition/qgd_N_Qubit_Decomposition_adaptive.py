@@ -81,7 +81,27 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 	# call the C wrapper function
         super(qgd_N_Qubit_Decomposition_adaptive, self).Start_Decomposition(prepare_export=prepare_export)
+##
+# @brief Wrapper function to call the get_initial_circuit method of C++ class N_Qubit_Decomposition
+    def get_Initial_Circuit(self):
 
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_adaptive, self).get_Initial_Circuit()
+        
+##
+# @brief Wrapper function to call the compress_circuit method of C++ class N_Qubit_Decomposition
+    def Compress_Circuit(self,prepare_export=True):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_adaptive, self).Compress_Circuit()
+
+##
+# @brief Wrapper function to call the finalize_circuit method of C++ class N_Qubit_Decomposition
+# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
+    def Finalize_Circuit(self,prepare_export=True):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_adaptive, self).Finalize_Circuit(prepare_export=prepare_export)
 
 ##
 # @brief Call to reorder the qubits in the matrix of the gate

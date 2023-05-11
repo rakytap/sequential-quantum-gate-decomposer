@@ -1,0 +1,272 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Fri Jun 26 14:42:56 2020
+Copyright (C) 2020 Peter Rakyta, Ph.D.
+
+This program is free software: you can redistribute it and/or modify
+it under the terms of the GNU General Public License as published by
+the Free Software Foundation, either version 3 of the License, or
+(at your option) any later version.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see http://www.gnu.org/licenses/.
+
+@author: Peter Rakyta, Ph.D.
+"""
+## \file test_decomposition.py
+## \brief Functionality test cases for the qgd_N_Qubit_Decomposition class.
+
+
+
+# cerate unitary q-bit matrix
+from scipy.stats import unitary_group
+import numpy as np
+from squander import utils
+
+
+try:
+    from mpi4py import MPI
+    MPI_imported = True
+except ModuleNotFoundError:
+    MPI_imported = False
+
+
+
+class Test_Decomposition:
+    """This is a test class of the python iterface to the decompsition classes of the QGD package"""
+
+    def test_IBM_Chellenge_full(self):
+        r"""
+        This method is called by pytest. 
+        Test to decompose a 4-qubit unitary of the IBM chellenge
+
+        """
+
+        from squander import N_Qubit_Decomposition_adaptive       
+        from scipy.io import loadmat
+    
+        # load the unitary from file
+        data = loadmat('Umtx.mat')  
+        # The unitary to be decomposed  
+        Umtx = data['Umtx']
+        
+
+        # creating a class to decompose the unitary
+        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
+
+
+        # setting the verbosity of the decomposition
+        cDecompose.set_Verbose( 3 )
+
+        # starting the decomposition
+        cDecompose.get_Initial_Circuit()
+        cDecompose.Compress_Circuit()
+        cDecompose.Finalize_Circuit()
+
+        # list the decomposing operations
+        cDecompose.List_Gates()
+
+        # get the decomposing operations
+        quantum_circuit = cDecompose.get_Quantum_Circuit()
+
+        # print the quantum circuit
+        print(quantum_circuit)
+
+        import numpy.linalg as LA
+    
+        # the unitary matrix from the result object
+        decomposed_matrix = utils.get_unitary_from_qiskit_circuit( quantum_circuit )
+        product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
+        phase = np.angle(product_matrix[0,0])
+        product_matrix = product_matrix*np.exp(-1j*phase)
+    
+        product_matrix = np.eye(16)*2 - product_matrix - product_matrix.conj().T
+        # the error of the decomposition
+        decomposition_error = (np.real(np.trace(product_matrix)))/2
+       
+        print('The error of the decomposition is ' + str(decomposition_error))
+
+        assert( decomposition_error < 1e-3 )
+       
+    def test_IBM_Chellenge_no_compression(self):
+        r"""
+        This method is called by pytest. 
+        Test to decompose a 4-qubit unitary of the IBM chellenge
+
+        """
+
+        from squander import N_Qubit_Decomposition_adaptive       
+        from scipy.io import loadmat
+    
+        # load the unitary from file
+        data = loadmat('Umtx.mat')  
+        # The unitary to be decomposed  
+        Umtx = data['Umtx']
+        
+
+        # creating a class to decompose the unitary
+        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
+
+
+        # setting the verbosity of the decomposition
+        cDecompose.set_Verbose( 3 )
+
+        # starting the decomposition
+        cDecompose.get_Initial_Circuit()
+        cDecompose.Finalize_Circuit()
+
+        # list the decomposing operations
+        cDecompose.List_Gates()
+
+        # get the decomposing operations
+        quantum_circuit = cDecompose.get_Quantum_Circuit()
+
+        # print the quantum circuit
+        print(quantum_circuit)
+
+        import numpy.linalg as LA
+    
+        # the unitary matrix from the result object
+        decomposed_matrix = utils.get_unitary_from_qiskit_circuit( quantum_circuit )
+        product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
+        phase = np.angle(product_matrix[0,0])
+        product_matrix = product_matrix*np.exp(-1j*phase)
+    
+        product_matrix = np.eye(16)*2 - product_matrix - product_matrix.conj().T
+        # the error of the decomposition
+        decomposition_error = (np.real(np.trace(product_matrix)))/2
+       
+        print('The error of the decomposition is ' + str(decomposition_error))
+
+        assert( decomposition_error < 1e-3 )
+
+
+    def test_IBM_Chellenge_compression_only(self):
+        r"""
+        This method is called by pytest. 
+        Test to decompose a 4-qubit unitary of the IBM chellenge
+
+        """
+
+        from squander import N_Qubit_Decomposition_adaptive       
+        from scipy.io import loadmat
+    
+        # load the unitary from file
+        data = loadmat('Umtx.mat')  
+        # The unitary to be decomposed  
+        Umtx = data['Umtx']
+        
+
+        # creating a class to decompose the unitary
+        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
+
+
+        # setting the verbosity of the decomposition
+        cDecompose.set_Verbose( 3 )
+
+
+        # starting the compression
+        cDecompose.set_Gate_Structure_From_Binary("circuit_squander.binary")
+        
+        cDecompose.Compress_Circuit()
+        cDecompose.Finalize_Circuit()
+
+        # list the decomposing operations
+        cDecompose.List_Gates()
+
+        # get the decomposing operations
+        quantum_circuit = cDecompose.get_Quantum_Circuit()
+
+        # print the quantum circuit
+        print(quantum_circuit)
+
+        import numpy.linalg as LA
+    
+        # the unitary matrix from the result object
+        decomposed_matrix = utils.get_unitary_from_qiskit_circuit( quantum_circuit )
+        product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
+        phase = np.angle(product_matrix[0,0])
+        product_matrix = product_matrix*np.exp(-1j*phase)
+    
+        product_matrix = np.eye(16)*2 - product_matrix - product_matrix.conj().T
+        # the error of the decomposition
+        decomposition_error = (np.real(np.trace(product_matrix)))/2
+       
+        print('The error of the decomposition is ' + str(decomposition_error))
+
+        assert( decomposition_error < 1e-3 )
+
+
+    def test_IBM_Chellenge_multiple_optim(self):
+        r"""
+        This method is called by pytest. 
+        Test to decompose a 4-qubit unitary of the IBM chellenge
+
+        """
+
+        from squander import N_Qubit_Decomposition_adaptive       
+        from scipy.io import loadmat
+    
+        # load the unitary from file
+        data = loadmat('Umtx.mat')  
+        # The unitary to be decomposed  
+        Umtx = data['Umtx']
+        config = { 'max_outer_iterations': 1, 
+		'max_inner_iterations_agent': 25000, 
+		'max_inner_iterations_compression': 10000,
+		'max_inner_iterations' : 500,
+		'max_inner_iterations_final': 5000, 
+		'randomization_threshold': int(1e4),  			
+		'Randomized_Radius': 0.3, 
+        'randomized_adaptive_layers': 1,
+		'optimization_tolerance_agent': 1e-4,
+		'optimization_tolerance': 1e-5}
+
+        # creating a class to decompose the unitary
+        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0, config=config )
+
+
+        # setting the verbosity of the decomposition
+        cDecompose.set_Verbose( 3 )
+
+        
+        cDecompose.set_Optimizer("AGENTS")
+        cDecompose.get_Initial_Circuit()
+        cDecompose.set_Optimizer("BFGS")
+        cDecompose.get_Initial_Circuit()
+        cDecompose.Compress_Circuit()
+        cDecompose.Finalize_Circuit()
+
+        # list the decomposing operations
+        cDecompose.List_Gates()
+
+        # get the decomposing operations
+        quantum_circuit = cDecompose.get_Quantum_Circuit()
+
+        # print the quantum circuit
+        print(quantum_circuit)
+
+        import numpy.linalg as LA
+    
+        # the unitary matrix from the result object
+        decomposed_matrix = utils.get_unitary_from_qiskit_circuit( quantum_circuit )
+        product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
+        phase = np.angle(product_matrix[0,0])
+        product_matrix = product_matrix*np.exp(-1j*phase)
+    
+        product_matrix = np.eye(16)*2 - product_matrix - product_matrix.conj().T
+        # the error of the decomposition
+        decomposition_error = (np.real(np.trace(product_matrix)))/2
+       
+        print('The error of the decomposition is ' + str(decomposition_error))
+
+        assert( decomposition_error < 1e-3 )
+    
+        
+
+

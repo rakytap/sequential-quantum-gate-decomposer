@@ -140,17 +140,7 @@ class Test_State_Preparation:
 
         """
 
-        self.State_Preparation_adaptive_base('BFGS', 0)
-
-    def test_State_Preparation_ADAM_BATCHED(self):
-        r"""
-        This method is called by pytest. 
-        Test for a 4 qubit state preparation using the ADAM optimizer 
-
-        """
-
-        self.State_Preparation_adaptive_base('ADAM_BATCHED', 0, 0)
-
+        self.State_Preparation_adaptive_base('BFGS', 0)	
 
     def test_State_Preparation_HS(self):
         r"""
@@ -160,12 +150,3 @@ class Test_State_Preparation:
         """
 
         self.State_Preparation_adaptive_base('BFGS', 3)
-
-    def test_State_Preparation_No_Compression(self):
-        r"""
-        This method is called by pytest. 
-        Test for a 4 qubit state preparation using the Hilbert Schmidt test
-
-        """
-
-        self.State_Preparation_adaptive_base('BFGS', 0, 0)

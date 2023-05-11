@@ -124,9 +124,20 @@ virtual ~N_Qubit_Decomposition_adaptive();
 virtual void start_decomposition(bool prepare_export=true);
 
 /**
-@brief Start the compressing process of the unitary
+@brief get initial circuit
 */
-virtual void start_compression();
+virtual void get_initial_circuit();
+
+/**
+@brief Compress the circuit
+*/
+virtual void compress_circuit();
+
+/**
+@brief Finalize the circuit
+@param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
+*/
+virtual void finalize_circuit(bool prepare_export=true);
 
 /**
 @brief ??????????????
