@@ -27,7 +27,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Decomposition_Base.h"
 
 /// @brief Type definition of the fifferent types of the cost function
-typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2, HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2} cost_function_type;
+typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
+    HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2,
+    SUM_OF_SQUARES} cost_function_type;
 
 
 
@@ -284,6 +286,15 @@ static double optimization_problem( const gsl_vector* parameters, void* void_ins
 
 
 /**
+@brief The optimization problem of the final optimization
+@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param grad A GNU Scientific Library vector containing the calculated gradient components.
+*/
+static Matrix_real optimization_problem_batch( int batchsize, const gsl_vector* parameters, void* void_instance );
+
+
+/**
 @brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
 @param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
@@ -302,6 +313,7 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 */
 static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad );
 
+static void optimization_problem_combined_unitary( const gsl_vector* parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
@@ -312,6 +324,9 @@ static void optimization_problem_combined( const gsl_vector* parameters, void* v
 */
 void optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad );
 
+void optimization_problem_combined_unitary( const Matrix_real& parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
+
+Matrix_real optimization_problem_batch( Matrix_real batch );
 
 /**
 // @brief The optimization problem of the final optimization

@@ -55,6 +55,7 @@ Matrix_real get_cost_function_with_correction(Matrix matrix, int qbit_num, int t
 */
 Matrix_real get_cost_function_with_correction2(Matrix matrix, int qbit_num, int trace_offset=0);
 
+double get_cost_function_sum_of_squares(Matrix& matrix);
 
 /**
 @brief Call to calculate the real and imaginary parts of the trace
