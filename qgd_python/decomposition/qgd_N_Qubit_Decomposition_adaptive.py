@@ -625,8 +625,3 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def set_Cost_Function_Variant(self, cost_func):
     
         super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(cost_func)
-##
-# @brief call to start the compression
-    def Start_Compression(self):
-    
-        super(qgd_N_Qubit_Decomposition_adaptive, self).Start_Compression() 
