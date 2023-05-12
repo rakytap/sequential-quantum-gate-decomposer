@@ -225,16 +225,16 @@ Firstly we construct a Python map to set hyperparameters during the gate synthes
         #Python map containing hyperparameters
         config = { 'max_outer_iterations': 1, 
                     'max_inner_iterations_agent': 25000, 
-		                  'max_inner_iterations_compression': 10000,
-		                  'max_inner_iterations' : 500,
-		                  'max_inner_iterations_final': 5000, 		
-		                  'Randomized_Radius': 0.3, 
+                    'max_inner_iterations_compression': 10000,
+                    'max_inner_iterations' : 500,
+                    'max_inner_iterations_final': 5000, 		
+                    'Randomized_Radius': 0.3, 
                     'randomized_adaptive_layers': 1,
-		                  'optimization_tolerance_agent': 1e-4,
-		                  'optimization_tolerance': 1e-5,
+                    'optimization_tolerance_agent': 1e-4,
+                    'optimization_tolerance': 1e-8,
                     'agent_num': 10}
  
-Then we initialize the decomposition class with the unitary Umtx to be decomposed. 
+Next we initialize the decomposition class with the unitary Umtx to be decomposed. 
 
         # creating a class to decompose the unitary
         from squander import N_Qubit_Decomposition_adaptive
@@ -246,44 +246,53 @@ The verbosity of the execution output can be controlled by the function call
         cDecompose.set_Verbose( 3 )
 
 
-We contruct the initial trial gate structure for the optimization consisting of 2 levels of adaptive layer. 
+We construct the initial trial gate structure for the optimization consisting of 2 levels of adaptive layer. 
 (1 level is made of qubit_num*(qubit_num-1) two-qubit building blocks if all-to-all connectivity is assumed)
 
 
-	       # adding decomposing layers to the gate structure
+        # adding decomposing layers to the gate structure
         levels = 2
         for idx in range(levels):
             cDecompose.add_Adaptive_Layers()
 
         cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
         
-
+We can construct an initial parameters set for the optimization by retriving the number of free parameters. If the initial parameter set is not set, random parameters are used by default.
 
         # setting intial parameter set
         parameter_num = cDecompose.get_Parameter_Num()
         parameters = np.zeros( (parameter_num,1), dtype=np.float64 )
         cDecompose.set_Optimized_Parameters( parameters )
 
+We can use between several engines to solve the optimization problem. Here we use an evolutionary based algorithm named 'AGENTS'
+
         # setting optimizer
         cDecompose.set_Optimizer("AGENTS")
+	
+The optimization process is started by the function call	
 
         # starting the decomposition
         cDecompose.get_Initial_Circuit()
+	
+The optimization process terminates by either reaching the tolerance 'optimization_tolerance_agent' or by reaching the maximal iteration number 'max_inner_iterations_agent', or if the engines identifies a convergence to a local minimum. The SQUANDER framework enables one to continue the optimization using a different engine. In particular we set a second order gradient descend method 'BFGS' 
 
         # setting optimizer
         cDecompose.set_Optimizer("BFGS")
 
         # continue the decomposition with a second optimizer method
         cDecompose.get_Initial_Circuit()
+	
+After solving the optimization problem for the initial gate structure, we can initiate gate compression iterations. (This step can be omited.)	
 
         # starting compression iterations
         cDecompose.Compress_Circuit()
+	
+By finalyzing the gate structure we replace the CRY gates with CNOT gates. (CRY gates with small rotation angle are approximately expressed with a sigle CNOT gate, so further optimization process needs to be initiated.)
 
         # finalize the gate structur (replace CRY gates with CNOT gates)
         cDecompose.Finalize_Circuit()
 
-        # list the decomposing operations
-        cDecompose.List_Gates()
+Finally, we can retrieve the decomposed quantum circuit in QISKIT format.
 
         # get the decomposing operations
         quantum_circuit = cDecompose.get_Quantum_Circuit()
