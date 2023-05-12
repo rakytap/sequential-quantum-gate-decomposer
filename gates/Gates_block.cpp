@@ -1989,7 +1989,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         }
 
     }
-
+    
     return 0;
 
 }
@@ -2397,6 +2397,84 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
 
 }
 
+
+/**
+@brief Method to create random initial parameters for the optimization
+@return 
+*/
+DFEgate_kernel_type* 
+Gates_block::convert_to_batched_DFE_gates( std::vector<Matrix_real>& parameters_mtx_vec, int& gatesNum, int& gateSetNum, int& redundantGateSets ) {
+
+
+    gates_num gate_nums   = get_gate_nums();
+    int gates_total_num   = gate_nums.total; 
+    int chained_gates_num = get_chained_gates_num();
+    int gate_padding      = gates_total_num % chained_gates_num == 0 ? 0 : chained_gates_num - (gates_total_num % chained_gates_num);
+    gatesNum              = gates_total_num+gate_padding;
+/*
+std::cout << "chained gates num: " << chained_gates_num << std::endl;
+std::cout << "number of gates: " << gatesNum << std::endl;
+*/
+
+
+    gateSetNum = parameters_mtx_vec.size();
+
+#ifdef __MPI__
+    int rem = gateSetNum % (4 * world_size );
+    if ( rem == 0 ) {
+        redundantGateSets = 0;
+    }
+    else {
+        redundantGateSets = (4 * world_size ) - (gateSetNum % (4 * world_size ));
+        gateSetNum = gateSetNum + redundantGateSets;
+    }
+#else
+    int rem = gateSetNum % 4;
+    if ( rem == 0 ) {
+        redundantGateSets = 0;
+    }
+    else {
+        redundantGateSets = 4 - (gateSetNum % 4);
+        gateSetNum = gateSetNum + redundantGateSets;
+    }
+#endif
+
+    DFEgate_kernel_type* DFEgates = new DFEgate_kernel_type[gatesNum*gateSetNum];
+
+
+    tbb::parallel_for( 0, gateSetNum, 1, [&](int gateset_idx) {
+    
+        int gate_idx = gateset_idx * gatesNum;
+
+        if ( gateset_idx < parameters_mtx_vec.size() ) {
+            Matrix_real& parameters_mtx = parameters_mtx_vec[gateset_idx];
+            convert_to_DFE_gates( parameters_mtx, DFEgates, gate_idx );
+        }
+
+        // padding with identity gates
+        for (int idx=gate_idx; idx<(gateset_idx+1)*gatesNum; idx++ ){
+
+            DFEgate_kernel_type& DFEGate = DFEgates[idx];
+
+        
+            DFEGate.target_qbit = 0;
+            DFEGate.control_qbit = -1;
+            DFEGate.gate_type = U3_OPERATION;
+            DFEGate.ThetaOver2 = (int32_t)(0);
+            DFEGate.Phi = (int32_t)(0);
+            DFEGate.Lambda = (int32_t)(0); 
+            DFEGate.metadata = 0;
+
+            gate_idx++;
+
+        }
+
+    });
+    
+
+    return DFEgates;
+
+}
 
 /**
 @brief Method to create random initial parameters for the optimization

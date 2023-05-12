@@ -40,8 +40,9 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param Umtx The unitary matrix to be decomposed.
 # @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
+# @param compression_enabled_in Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
 # @return An instance of the class
-    def __init__( self, Umtx, level_limit_max=8, level_limit_min=0, topology=None, accelerator_num=0 ):
+    def __init__( self, Umtx, level_limit_max=8, level_limit_min=0, topology=None, config={}, accelerator_num=0 ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
@@ -64,8 +65,13 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             return
         
 
+        # config
+        if not( type(config) is dict):
+            print("Input parameter config should be a dictionary describing the following hyperparameters:") #TODO
+            return
+
         # call the constructor of the wrapper class
-        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, topology=topology_validated, accelerator_num=accelerator_num)
+        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, topology=topology_validated, config=config, accelerator_num=accelerator_num)
 
 
 ##
@@ -75,7 +81,27 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 	# call the C wrapper function
         super(qgd_N_Qubit_Decomposition_adaptive, self).Start_Decomposition(prepare_export=prepare_export)
+##
+# @brief Wrapper function to call the get_initial_circuit method of C++ class N_Qubit_Decomposition
+    def get_Initial_Circuit(self):
 
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_adaptive, self).get_Initial_Circuit()
+        
+##
+# @brief Wrapper function to call the compress_circuit method of C++ class N_Qubit_Decomposition
+    def Compress_Circuit(self,prepare_export=True):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_adaptive, self).Compress_Circuit()
+
+##
+# @brief Wrapper function to call the finalize_circuit method of C++ class N_Qubit_Decomposition
+# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
+    def Finalize_Circuit(self,prepare_export=True):
+
+	# call the C wrapper function
+        super(qgd_N_Qubit_Decomposition_adaptive, self).Finalize_Circuit(prepare_export=prepare_export)
 
 ##
 # @brief Call to reorder the qubits in the matrix of the gate
@@ -485,7 +511,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Imported_Gate_Structure()
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
-# @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2", "ADAM_BATCHED".
+# @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2", "ADAM_BATCHED", "AGENTS", "COSINE", "AGENTS_COMBINED".
     def set_Optimizer( self, optimizer="BFGS" ):
 
         # Set the optimizer
@@ -598,4 +624,4 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param cost_func int argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for HILBERT_SCHMIDT_TEST, 4 for HILBERT_SCHMIDT_TEST_CORRECTION1, 5 for HILBERT_SCHMIDT_TEST_CORRECTION2 see more at: https://arxiv.org/abs/2210.09191
     def set_Cost_Function_Variant(self, cost_func):
     
-        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(cost_func) 
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(cost_func)

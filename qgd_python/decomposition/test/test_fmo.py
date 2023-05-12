@@ -2,14 +2,14 @@ import numpy as np
 import scipy.constants as cnst
 import scipy.linalg as linalg
 
-from qgd_python.decomposition.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition
-from qgd_python.decomposition.qgd_N_Qubit_Decomposition_custom import qgd_N_Qubit_Decomposition_custom
+from squander import N_Qubit_Decomposition
+from squander import N_Qubit_Decomposition_custom
 
 from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 from qiskit import assemble,Aer
 from qiskit import execute
-from qgd_python.utils import get_unitary_from_qiskit_circuit
+from squander import utils
 
 try:
     from mpi4py import MPI
@@ -29,18 +29,18 @@ class Test_Decomposition:
 
         """
 
-        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
+        from squander import Gates_Block
 
         qbit_num = 3
 
-        # creating an instance of the wrapper class qgd_Gates_Block
-        Gates_Block_ret = qgd_Gates_Block( qbit_num )
+        # creating an instance of the wrapper class Gates_Block
+        Gates_Block_ret = Gates_Block( qbit_num )
 
 
         for idx in range(0,layer_num,2):
 
-            # creating an instance of the wrapper class qgd_Gates_Block
-            Layer = qgd_Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Gates_Block
+            Layer = Gates_Block( qbit_num )
 
 #Rz Ry Rz = Rz Sx Rz Sx^+ Rz
 
@@ -64,8 +64,8 @@ class Test_Decomposition:
             Gates_Block_ret.add_Gates_Block( Layer )
 
 
-            # creating an instance of the wrapper class qgd_Gates_Block
-            Layer = qgd_Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Gates_Block
+            Layer = Gates_Block( qbit_num )
 
             Layer.add_RZ( 1 ) 
             #Layer.add_RY( 1 ) 
@@ -99,20 +99,20 @@ class Test_Decomposition:
 
         """
 
-        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
+        from squander import Gates_Block
 
 
         qbit_num = 2
 
         if Gates_Block_ret == None:
-            # creating an instance of the wrapper class qgd_Gates_Block
-            Gates_Block_ret = qgd_Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Gates_Block
+            Gates_Block_ret = Gates_Block( qbit_num )
 
 
         for idx in range(layer_num):
 
-            # creating an instance of the wrapper class qgd_Gates_Block
-            Layer = qgd_Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Gates_Block
+            Layer = Gates_Block( qbit_num )
 
             Layer.add_RZ( 1 ) 
             #Layer.add_RY( 1 ) 
@@ -144,19 +144,19 @@ class Test_Decomposition:
 
         """
 
-        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
+        from squander import Gates_Block
 
 
 
         if Gates_Block_ret == None:
-            # creating an instance of the wrapper class qgd_Gates_Block
-            Gates_Block_ret = qgd_Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Gates_Block
+            Gates_Block_ret = Gates_Block( qbit_num )
 
 
         for idx in range(qbit_num):
 
-            # creating an instance of the wrapper class qgd_Gates_Block
-            Layer = qgd_Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Gates_Block
+            Layer = Gates_Block( qbit_num )
 
             Layer.add_RZ( idx ) 
             #Layer.add_RY( idx ) 
@@ -214,7 +214,7 @@ class Test_Decomposition:
 
 
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition_custom( Umtx.conj().T, initial_guess="random" )
+        decomp = N_Qubit_Decomposition_custom( Umtx.conj().T, initial_guess="random" )
 
         # adding custom gate structure to the decomposition
         decomp.set_Gate_Structure( gate_structure )
@@ -240,7 +240,7 @@ class Test_Decomposition:
 	
         # test the decomposition of the matrix
         # the unitary matrix from the result object
-        decomposed_matrix = np.asarray( get_unitary_from_qiskit_circuit( quantum_circuit ) )
+        decomposed_matrix = np.asarray( utils.get_unitary_from_qiskit_circuit( quantum_circuit ) )
         product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
         phase = np.angle(product_matrix[0,0])
         product_matrix = product_matrix*np.exp(-1j*phase)
