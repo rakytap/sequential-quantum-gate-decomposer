@@ -220,9 +220,9 @@ We use two optimization engines for the decomposition:
 1. An evolutionary engine called AGENTS
 2. Second order gradient descend algorithm (BFGS)
 
-Firstly we construct a Python map to set hyperparameters during the gate synthesis.
+Firstly we construct a Python map to set hyper-parameters during the gate synthesis.
 
-        #Python map containing hyperparameters
+        #Python map containing hyper-parameters
         config = { 'max_outer_iterations': 1, 
                     'max_inner_iterations_agent': 25000, 
                     'max_inner_iterations_compression': 10000,
@@ -257,7 +257,7 @@ We construct the initial trial gate structure for the optimization consisting of
 
         cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
         
-We can construct an initial parameters set for the optimization by retriving the number of free parameters. If the initial parameter set is not set, random parameters are used by default.
+We can construct an initial parameters set for the optimization by retrieving the number of free parameters. If the initial parameter set is not set, random parameters are used by default.
 
         # setting intial parameter set
         parameter_num = cDecompose.get_Parameter_Num()
@@ -287,9 +287,9 @@ After solving the optimization problem for the initial gate structure, we can in
         # starting compression iterations
         cDecompose.Compress_Circuit()
 	
-By finalyzing the gate structure we replace the CRY gates with CNOT gates. (CRY gates with small rotation angle are approximately expressed with a sigle CNOT gate, so further optimization process needs to be initiated.)
+By finalizing the gate structure we replace the CRY gates with CNOT gates. (CRY gates with small rotation angle are approximately expressed with a single CNOT gate, so further optimization process needs to be initiated.)
 
-        # finalize the gate structur (replace CRY gates with CNOT gates)
+        # finalize the gate structure (replace CRY gates with CNOT gates)
         cDecompose.Finalize_Circuit()
 
 Finally, we can retrieve the decomposed quantum circuit in QISKIT format.
