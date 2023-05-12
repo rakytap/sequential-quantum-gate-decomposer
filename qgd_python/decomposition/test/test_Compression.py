@@ -56,7 +56,7 @@ class Test_Decomposition:
         Umtx = data['Umtx']
 
         # generate config structure
-        config = { 'max_outer_iterations': 1, 
+        config = { 'max_outer_iterations': 10, 
 		'max_inner_iterations': 300000, 	
 		'max_inner_iterations_compression': 10000, 
 		'max_inner_iterations_final': 1000, 	
@@ -133,7 +133,7 @@ class Test_Decomposition:
         Umtx = data['Umtx']
         
         # generate config structure
-        config = { 'max_outer_iterations': 1, 
+        config = { 'max_outer_iterations': 10, 
 		'max_inner_iterations': 300000, 	
 		'max_inner_iterations_compression': 10000, 
 		'max_inner_iterations_final': 1000, 	
@@ -150,7 +150,7 @@ class Test_Decomposition:
 
 
 	# adding decomposing layers to the gate structure
-        levels = 2
+        levels = 3
         for idx in range(levels):
             cDecompose.add_Adaptive_Layers()
 
@@ -206,7 +206,7 @@ class Test_Decomposition:
 
 
         # generate config structure
-        config = { 'max_outer_iterations': 1, 
+        config = { 'max_outer_iterations': 10, 
 		'max_inner_iterations': 300000, 	
 		'max_inner_iterations_compression': 10000, 
 		'max_inner_iterations_final': 1000, 	
@@ -221,13 +221,6 @@ class Test_Decomposition:
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( 3 )
 
-
-	# adding decomposing layers to the gate structure
-        levels = 2
-        for idx in range(levels):
-            cDecompose.add_Adaptive_Layers()
-
-        cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
 
 
         # importing circuit from a binary
