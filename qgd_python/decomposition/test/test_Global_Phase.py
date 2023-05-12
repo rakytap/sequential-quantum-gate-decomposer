@@ -18,8 +18,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 """
-## \file test_decomposition.py
-## \brief Functionality test cases for the qgd_N_Qubit_Decomposition class.
+## \file test_Global_Phase.py
+## \brief Functionality test cases for the N_Qubit_Decomposition_adaptive class.
 
 
 
@@ -34,7 +34,7 @@ try:
 except ModuleNotFoundError:
     MPI_imported = False
 
-from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive
+from squander import N_Qubit_Decomposition_adaptive
 from scipy.io import loadmat
 
 def test_global_phase():
@@ -43,7 +43,7 @@ def test_global_phase():
 	# The unitary to be decomposed  
 	Umtx = data['Umtx']
 	# creating a class to decompose the unitary
-	cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
+	cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
 	angl = cDecompose.get_Global_Phase()
 	Umtx_assert = cDecompose.get_Unitary()
 

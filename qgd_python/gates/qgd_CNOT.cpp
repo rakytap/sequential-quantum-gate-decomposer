@@ -308,6 +308,9 @@ static PyModuleDef  qgd_CNOT_Module = {
 PyMODINIT_FUNC
 PyInit_qgd_CNOT(void)
 {
+    // initialize Numpy API
+    import_array();
+
     PyObject *m;
     if (PyType_Ready(& qgd_CNOT_Type) < 0)
         return NULL;

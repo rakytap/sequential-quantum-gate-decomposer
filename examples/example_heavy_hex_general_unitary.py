@@ -25,7 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 # cerate unitary q-bit matrix
 from scipy.stats import unitary_group
-from qgd_python.utils import get_unitary_from_qiskit_circuit
+from squander import utils
 import numpy as np
 
 
@@ -36,10 +36,10 @@ def create_custom_gate_structure_heavy_hex_3(qbit_num):
 
     """
 
-    from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
+    from squander import Gates_Block
 
-    # creating an instance of the wrapper class qgd_Gates_Block
-    Gates_Block_ret = qgd_Gates_Block( qbit_num )
+    # creating an instance of the wrapper class Gates_Block
+    Gates_Block_ret = Gates_Block( qbit_num )
 
     disentangle_qubit = qbit_num - 1 
 
@@ -47,8 +47,8 @@ def create_custom_gate_structure_heavy_hex_3(qbit_num):
 
     for qbit in range(0, disentangle_qubit ):
 
-        # creating an instance of the wrapper class qgd_Gates_Block
-        Layer = qgd_Gates_Block( qbit_num )
+        # creating an instance of the wrapper class Gates_Block
+        Layer = Gates_Block( qbit_num )
 
 
         if qbit == 0:
@@ -105,10 +105,10 @@ def create_custom_gate_structure_heavy_hex_4(qbit_num):
 
     """
 
-    from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
+    from squander import Gates_Block
 
-    # creating an instance of the wrapper class qgd_Gates_Block
-    Gates_Block_ret = qgd_Gates_Block( qbit_num )
+    # creating an instance of the wrapper class Gates_Block
+    Gates_Block_ret = Gates_Block( qbit_num )
 
     disentangle_qubit = qbit_num - 1 
 
@@ -116,8 +116,8 @@ def create_custom_gate_structure_heavy_hex_4(qbit_num):
 
     for qbit in range(0, disentangle_qubit ):
 
-        # creating an instance of the wrapper class qgd_Gates_Block
-        Layer = qgd_Gates_Block( qbit_num )
+        # creating an instance of the wrapper class Gates_Block
+        Layer = Gates_Block( qbit_num )
 
 
         if qbit == 0:
@@ -166,7 +166,7 @@ def create_custom_gate_structure_heavy_hex_4(qbit_num):
     
 
 
-from qgd_python.decomposition.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition
+from squander import N_Qubit_Decomposition
 
 # the number of qubits spanning the unitary
 qbit_num = 4
@@ -178,7 +178,7 @@ matrix_size = int(2**qbit_num)
 Umtx = unitary_group.rvs(matrix_size)
     
 # creating an instance of the C++ class
-decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T )
+decomp = N_Qubit_Decomposition( Umtx.conj().T )
 
 
 # create custom gate structure
@@ -209,7 +209,7 @@ quantum_circuit = decomp.get_Quantum_Circuit()
 import numpy.linalg as LA
     
 # the unitary matrix from the result object
-decomposed_matrix = get_unitary_from_qiskit_circuit( quantum_circuit )
+decomposed_matrix = utils.get_unitary_from_qiskit_circuit( quantum_circuit )
 product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
 phase = np.angle(product_matrix[0,0])
 product_matrix = product_matrix*np.exp(-1j*phase)

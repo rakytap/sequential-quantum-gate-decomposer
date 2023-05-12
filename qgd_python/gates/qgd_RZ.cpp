@@ -333,6 +333,9 @@ static PyModuleDef  qgd_RZ_Module = {
 PyMODINIT_FUNC
 PyInit_qgd_RZ(void)
 {
+    // initialize Numpy API
+    import_array();
+
     PyObject *m;
     if (PyType_Ready(& qgd_RZ_Type) < 0)
         return NULL;
