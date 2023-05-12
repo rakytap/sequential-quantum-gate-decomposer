@@ -216,7 +216,7 @@ The usage of the SQUANDER Python interface is demonstrated in the example files 
 ### Example code snippet
 
 Here we provide an example to use the SQUANDER package. The following python interface is accessible from version 1.8.0. 
-We use two optimization engines for the decomposition:
+In this example we use two optimization engines for the decomposition:
 1. An evolutionary engine called AGENTS
 2. Second order gradient descend algorithm (BFGS)
 
