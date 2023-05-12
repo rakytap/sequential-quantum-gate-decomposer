@@ -54,18 +54,41 @@ class Test_Decomposition:
         data = loadmat('Umtx.mat')  
         # The unitary to be decomposed  
         Umtx = data['Umtx']
+
+        # generate config structure
+        config = { 'max_outer_iterations': 1, 
+		'max_inner_iterations': 300000, 	
+		'max_inner_iterations_compression': 10000, 
+		'max_inner_iterations_final': 1000, 	
+	        'randomized_adaptive_layers': 1,
+		'optimization_tolerance': 1e-8 }
+
+        
         
 
         # creating a class to decompose the unitary
-        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
+        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, config=config )
 
 
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( 3 )
 
+	# adding decomposing layers to the gate structure
+        levels = 2
+        for idx in range(levels):
+            cDecompose.add_Adaptive_Layers()
+
+        cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
+	
+
+
         # starting the decomposition
         cDecompose.get_Initial_Circuit()
+
+        # compress the initial gate structure
         cDecompose.Compress_Circuit()
+
+        # finalize the gate structur (replace CRY gates with CNOT gates)
         cDecompose.Finalize_Circuit()
 
         # list the decomposing operations
@@ -92,6 +115,7 @@ class Test_Decomposition:
         print('The error of the decomposition is ' + str(decomposition_error))
 
         assert( decomposition_error < 1e-3 )
+
        
     def test_IBM_Chellenge_no_compression(self):
         r"""
@@ -108,16 +132,35 @@ class Test_Decomposition:
         # The unitary to be decomposed  
         Umtx = data['Umtx']
         
+        # generate config structure
+        config = { 'max_outer_iterations': 1, 
+		'max_inner_iterations': 300000, 	
+		'max_inner_iterations_compression': 10000, 
+		'max_inner_iterations_final': 1000, 	
+	        'randomized_adaptive_layers': 1,
+		'optimization_tolerance': 1e-8 }
+
 
         # creating a class to decompose the unitary
-        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
+        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, config=config )
 
 
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( 3 )
 
+
+	# adding decomposing layers to the gate structure
+        levels = 2
+        for idx in range(levels):
+            cDecompose.add_Adaptive_Layers()
+
+        cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
+
+
         # starting the decomposition
         cDecompose.get_Initial_Circuit()
+
+        # finalize the gate structur (replace CRY gates with CNOT gates)
         cDecompose.Finalize_Circuit()
 
         # list the decomposing operations
@@ -160,20 +203,40 @@ class Test_Decomposition:
         data = loadmat('Umtx.mat')  
         # The unitary to be decomposed  
         Umtx = data['Umtx']
+
+
+        # generate config structure
+        config = { 'max_outer_iterations': 1, 
+		'max_inner_iterations': 300000, 	
+		'max_inner_iterations_compression': 10000, 
+		'max_inner_iterations_final': 1000, 	
+	        'randomized_adaptive_layers': 1,
+		'optimization_tolerance': 1e-8 }
         
 
         # creating a class to decompose the unitary
-        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
+        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, config=config )
 
 
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( 3 )
 
 
-        # starting the compression
+	# adding decomposing layers to the gate structure
+        levels = 2
+        for idx in range(levels):
+            cDecompose.add_Adaptive_Layers()
+
+        cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
+
+
+        # importing circuit from a binary
         cDecompose.set_Gate_Structure_From_Binary("circuit_squander.binary")
         
+        # starting compression iterations
         cDecompose.Compress_Circuit()
+
+        # finalize the gate structur (replace CRY gates with CNOT gates)
         cDecompose.Finalize_Circuit()
 
         # list the decomposing operations
@@ -220,26 +283,51 @@ class Test_Decomposition:
 		'max_inner_iterations_agent': 25000, 
 		'max_inner_iterations_compression': 10000,
 		'max_inner_iterations' : 500,
-		'max_inner_iterations_final': 5000, 
-		'randomization_threshold': int(1e4),  			
+		'max_inner_iterations_final': 5000, 		
 		'Randomized_Radius': 0.3, 
-        'randomized_adaptive_layers': 1,
+                'randomized_adaptive_layers': 1,
 		'optimization_tolerance_agent': 1e-4,
-		'optimization_tolerance': 1e-5}
+		'optimization_tolerance': 1e-5,
+                'agent_num': 10}
 
         # creating a class to decompose the unitary
-        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0, config=config )
+        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, config=config )
 
 
         # setting the verbosity of the decomposition
         cDecompose.set_Verbose( 3 )
 
+
+	# adding decomposing layers to the gate structure
+        levels = 2
+        for idx in range(levels):
+            cDecompose.add_Adaptive_Layers()
+
+        cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
         
+
+
+        # setting intial parameter set
+        parameter_num = cDecompose.get_Parameter_Num()
+        parameters = np.zeros( (parameter_num,1), dtype=np.float64 )
+        cDecompose.set_Optimized_Parameters( parameters )
+
+        # setting optimizer
         cDecompose.set_Optimizer("AGENTS")
+
+        # starting the decomposition
         cDecompose.get_Initial_Circuit()
+
+        # setting optimizer
         cDecompose.set_Optimizer("BFGS")
+
+        # continue the decomposition with a second optimizer method
         cDecompose.get_Initial_Circuit()
+
+        # starting compression iterations
         cDecompose.Compress_Circuit()
+
+        # finalize the gate structur (replace CRY gates with CNOT gates)
         cDecompose.Finalize_Circuit()
 
         # list the decomposing operations
