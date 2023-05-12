@@ -343,11 +343,13 @@ endif()
 
 list(APPEND qgd_files 
     ${PROJECT_SOURCE_DIR}/common/common.cpp
+    ${PROJECT_SOURCE_DIR}/common/config_element.cpp
     ${PROJECT_SOURCE_DIR}/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix_real.cpp
     ${PROJECT_SOURCE_DIR}/common/logging.cpp
     ${PROJECT_SOURCE_DIR}/common/Adam.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/RL_experience.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
@@ -368,6 +370,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/gates/RZ.cpp
     ${PROJECT_SOURCE_DIR}/gates/Composite.cpp
     ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_state_vector_input.cpp
     ${PROJECT_SOURCE_DIR}/nn/NN.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Base.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Base.cpp
@@ -434,6 +437,7 @@ target_include_directories(qgd PRIVATE
                             ./gates/include
                             ./decomposition/include
                             ./random_unitary/include
+                            ./optimization_engines/include
                             ./nn/include
                             ./gates/kernels/include
                             ${EXTRA_INCLUDES})

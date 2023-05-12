@@ -19,14 +19,14 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 """
 ## \file test_decomposition.py
-## \brief Functionality test cases for the qgd_N_Qubit_Decomposition class.
+## \brief Functionality test cases for the N_Qubit_Decomposition class.
 
 
 
 # cerate unitary q-bit matrix
 from scipy.stats import unitary_group
 import numpy as np
-from qgd_python.utils import get_unitary_from_qiskit_circuit
+from squander import utils
 
 try:
     from mpi4py import MPI
@@ -38,14 +38,14 @@ except ModuleNotFoundError:
 class Test_Decomposition:
     """This is a test class of the python iterface to the decompsition classes of the QGD package"""
 
-    def ctest_N_Qubit_Decomposition_creation(self):
+    def test_N_Qubit_Decomposition_creation(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of class N_Qubit_Decomposition.
 
         """
 
-        from qgd_python.decomposition.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition
+        from squander import N_Qubit_Decomposition
 
         # the number of qubits spanning the unitary
         qbit_num = 3
@@ -57,7 +57,7 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
     
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="random" )
+        decomp = N_Qubit_Decomposition( Umtx.conj().T, optimize_layer_num=False, initial_guess="random" )
 
     def test_N_Qubit_Decomposition_3qubit(self):
         r"""
@@ -66,7 +66,7 @@ class Test_Decomposition:
 
         """
 
-        from qgd_python.decomposition.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition
+        from squander import N_Qubit_Decomposition
 
         # the number of qubits spanning the unitary
         qbit_num = 3
@@ -78,7 +78,7 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
 
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx )
+        decomp = N_Qubit_Decomposition( Umtx )
 
         # start the decomposition
         decomp.Start_Decomposition(prepare_export=True)
@@ -92,7 +92,7 @@ class Test_Decomposition:
 
         """
 
-        from qgd_python.decomposition.qgd_N_Qubit_Decomposition import qgd_N_Qubit_Decomposition
+        from squander import N_Qubit_Decomposition
 
         # the number of qubits spanning the unitary
         qbit_num = 2
@@ -104,7 +104,7 @@ class Test_Decomposition:
         Umtx = unitary_group.rvs(matrix_size)
 
         # creating an instance of the C++ class
-        decomp = qgd_N_Qubit_Decomposition( Umtx.conj().T )
+        decomp = N_Qubit_Decomposition( Umtx.conj().T )
 
         # set the number of block to be optimized in one shot
         decomp.set_Optimization_Blocks( 20 )
@@ -133,7 +133,7 @@ class Test_Decomposition:
         # test the decomposition of the matrix
     
         # the unitary matrix from the result object
-        decomposed_matrix = np.asarray( get_unitary_from_qiskit_circuit( quantum_circuit ) )
+        decomposed_matrix = np.asarray( utils.get_unitary_from_qiskit_circuit( quantum_circuit ) )
         product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
         phase = np.angle(product_matrix[0,0])
         product_matrix = product_matrix*np.exp(-1j*phase)
