@@ -122,15 +122,15 @@ void
 CH::apply_to( Matrix& input ) {
 
     // the Hadamard gate of one qubit
-    Matrix h_1qbit(2,2);
+    /*Matrix h_1qbit(2,2);
     h_1qbit[0].real = 1.0/sqrt(2); h_1qbit[0].imag = 0.0; 
     h_1qbit[1].real = 1.0/sqrt(2); h_1qbit[1].imag = 0.0;
     h_1qbit[2].real = 1.0/sqrt(2); h_1qbit[2].imag = 0.0;
-    h_1qbit[3].real = -1.0/sqrt(2); h_1qbit[3].imag = 0.0;
+    h_1qbit[3].real = -1.0/sqrt(2); h_1qbit[3].imag = 0.0;*/
 
-    //Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
+    Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
 
-    apply_kernel_to(h_1qbit, input);
+    apply_kernel_to(u3_1qbit, input);
 
 }
 
