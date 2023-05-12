@@ -22,7 +22,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 ## \brief Simple example python code demonstrating the basic usage of the Python interface of the Quantum Gate Decomposer package
 
 ## [import adaptive]
-from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive       
+from squander import N_Qubit_Decomposition_adaptive       
 ## [import adaptive]
 
 import numpy as np
@@ -87,7 +87,7 @@ def create_randomized_parameters( num_of_parameters ):
 
 
 # creating a class to decompose the unitary
-cDecompose = qgd_N_Qubit_Decomposition_adaptive( np.eye(matrix_size), level_limit_max=5, level_limit_min=0 )
+cDecompose = N_Qubit_Decomposition_adaptive( np.eye(matrix_size), level_limit_max=5, level_limit_min=0 )
 
 # adding decomposing layers to the gat structure
 for idx in range(level):

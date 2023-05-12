@@ -59,13 +59,13 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
         set_optimizer( BFGS );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 4;
+        max_outer_iterations = 4;
     }
     else {
         set_optimizer( ADAM );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 1;
+        max_outer_iterations = 1;
     }
     
 
@@ -81,26 +81,24 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
 @param qbit_num_in The number of qubits spanning the unitary Umtx
 @param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@param compression_enabled_in Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, int accelerator_num ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, false, RANDOM, accelerator_num) {
+N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, false, config, RANDOM, accelerator_num) {
 
 
     // set the level limit
     level_limit = level_limit_in;
     level_limit_min = level_limit_min_in;
 
-
-
-
     // BFGS is better for smaller problems, while ADAM for larger ones
     if ( qbit_num <= 5 ) {
         set_optimizer( BFGS );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 4;
+        max_outer_iterations = 4;
         
-        iter_max = 10000;
+        max_inner_iterations = 10000;
         gradient_threshold = 1e-8;
 
     }
@@ -108,7 +106,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         set_optimizer( ADAM );
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 1;
+        max_outer_iterations = 1;
 
     }
 
@@ -126,9 +124,10 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 @param qbit_num_in The number of qubits spanning the unitary Umtx
 @param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@param compression_enabled_in Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, int accelerator_num ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, false, RANDOM, accelerator_num) {
+N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, false, config, RANDOM, accelerator_num) {
 
 
 
@@ -137,10 +136,10 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
     level_limit_min = level_limit_min_in;
 
     // Maximal number of iteartions in the optimization process
-    max_iterations = 1;
+    max_outer_iterations = 1;
 
     gradient_threshold = 1e-8;
-
+    
     // setting the topology
     topology = topology_in;
 
@@ -152,13 +151,13 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
         alg = BFGS;
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 4;
+        max_outer_iterations = 4;
     }
     else {
         alg = ADAM;
 
         // Maximal number of iteartions in the optimization process
-        max_iterations = 1;
+        max_outer_iterations = 1;
     }
 
     // Boolean variable to determine whether randomized adaptive layers are used or not
@@ -225,18 +224,17 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     Gates_block* gate_structure_loc = NULL;
     if ( gates.size() > 0 ) {
         std::stringstream sstream;
-	sstream << "Using imported gate structure for the decomposition." << std::endl;
+        sstream << "Using imported gate structure for the decomposition." << std::endl;
         print(sstream, 1);	
 	        
         gate_structure_loc = optimize_imported_gate_structure(optimized_parameters_mtx);
     }
     else {
         std::stringstream sstream;
-	sstream << "Construct initial gate structure for the decomposition." << std::endl;
+        sstream << "Construct initial gate structure for the decomposition." << std::endl;
         print(sstream, 1);
         gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
     }
-
 
 
     std::string filename("circuit_squander.binary");
@@ -245,7 +243,6 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     }
 
     export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
-
 
     sstream.str("");
     sstream << std::endl;
@@ -295,6 +292,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
         if (uncompressed_iter_num>10) break;
 
     }
+    
 
     sstream.str("");
     sstream << "**************************************************************" << std::endl;
@@ -321,6 +319,64 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     release_gates();
     optimized_parameters_mtx = optimized_parameters_save;
 
+    // solve the optimization problem
+    N_Qubit_Decomposition_custom cDecomp_custom;
+
+
+    std::map<std::string, Config_Element> config_copy;
+    config_copy.insert(config.begin(), config.end());
+    if ( config.count("max_inner_iterations_final") > 0 ) {
+        long long val;
+        config["max_inner_iterations_final"].get_property( val ); 
+        Config_Element element;
+        element.set_property( "max_inner_iterations", val ); 
+        config_copy["max_inner_iterations"] = element;
+    }
+
+
+    // solve the optimization problem in isolated optimization process
+    cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config_copy, initial_guess, accelerator_num);
+    cDecomp_custom.set_custom_gate_structure( gate_structure_tmp );
+    cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size() );
+    cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+    cDecomp_custom.set_max_iteration( max_outer_iterations );
+    cDecomp_custom.set_verbose(verbose);
+    cDecomp_custom.set_cost_function_variant( cost_fnc );
+    cDecomp_custom.set_debugfile("");
+    cDecomp_custom.set_iteration_loops( iteration_loops );
+    cDecomp_custom.set_optimization_tolerance( optimization_tolerance ); 
+    cDecomp_custom.set_trace_offset( trace_offset ); 
+    cDecomp_custom.set_optimizer( alg );  
+    if (alg==ADAM || alg==BFGS2) { 
+        int param_num_loc = gate_structure_loc->get_parameter_num();
+        int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
+        cDecomp_custom.set_random_shift_count_max( 10000 );   
+        cDecomp_custom.set_adaptive_eta( true );      
+        cDecomp_custom.set_randomized_radius( radius );             
+    }
+    else if ( alg==ADAM_BATCHED ) {
+        cDecomp_custom.set_optimizer( alg );  
+        int max_inner_iterations_loc = 2500;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
+        cDecomp_custom.set_random_shift_count_max( 5 );   
+        cDecomp_custom.set_adaptive_eta( true );      
+        cDecomp_custom.set_randomized_radius( radius );   
+    }
+    else if ( alg==BFGS ) {
+        cDecomp_custom.set_optimizer( alg );  
+        int max_inner_iterations_loc = 10000;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
+        cDecomp_custom.set_randomized_radius( radius );   
+    }
+    cDecomp_custom.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
+    cDecomp_custom.start_decomposition(true);
+    number_of_iters += cDecomp_custom.get_num_iters();
+
+    current_minimum = cDecomp_custom.get_current_minimum();
+    optimized_parameters_mtx = cDecomp_custom.get_optimized_parameters();
+
+
     combine( gate_structure_tmp );
     delete( gate_structure_tmp );
     delete( gate_structure_loc );
@@ -329,14 +385,6 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
     print(sstream, 3);	
     	
-    // reset the global minimum before final tuning
-    current_minimum = DBL_MAX;
-
-    set_adaptive_eta( true );
-
-    // final tuning of the decomposition parameters
-    final_optimization();
-
     std::string filename2("circuit_final.binary");
 
     if (project_name != "") {
@@ -349,12 +397,9 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
     if (prepare_export) {
         prepare_gates_to_export();
     }
-
-    // calculating the final error of the decomposition
-    Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
-    calc_decomposition_error( matrix_decomposed );
-
-
+    
+    decomposition_error = optimization_problem(optimized_parameters_mtx);
+    
     // get the number of gates used in the decomposition
     gates_num gates_num = get_gate_nums();
 
@@ -382,10 +427,6 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 	sstream << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
     	print(sstream, 1);	    	
     	
-            
-         
-    
-
 
 #if BLAS==0 // undefined BLAS
     omp_set_num_threads(num_threads);
@@ -396,7 +437,326 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 #endif
 
 }
+void N_Qubit_Decomposition_adaptive::get_initial_circuit(){
+// temporarily turn off OpenMP parallelism
+#if BLAS==0 // undefined BLAS
+    num_threads = omp_get_max_threads();
+    omp_set_num_threads(1);
+#elif BLAS==1 // MKL
+    num_threads = mkl_get_max_threads();
+    MKL_Set_Num_Threads(1);
+#elif BLAS==2 //OpenBLAS
+    num_threads = openblas_get_num_threads();
+    openblas_set_num_threads(1);
+#endif
+    //measure the time for the decompositin
+    tbb::tick_count start_time = tbb::tick_count::now();
 
+    if (level_limit == 0 ) {
+        std::stringstream sstream;
+	sstream << "please increase level limit" << std::endl;
+        print(sstream, 0);	
+        return;
+    }
+
+
+
+    double optimization_tolerance_orig = optimization_tolerance;
+
+
+    Gates_block* gate_structure_loc = NULL;
+    if ( gates.size() > 0 ) {
+        std::stringstream sstream;
+        sstream << "Using imported gate structure for the decomposition." << std::endl;
+        print(sstream, 1);	
+	        
+        gate_structure_loc = optimize_imported_gate_structure(optimized_parameters_mtx);
+    }
+    else {
+        std::stringstream sstream;
+        sstream << "Construct initial gate structure for the decomposition." << std::endl;
+        print(sstream, 1);
+        gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
+    }
+
+
+    std::string filename("circuit_squander.binary");
+    if (project_name != "") {
+        filename = project_name+ "_" +filename;
+    }
+
+    export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
+    std::string unitaryname("unitary_squander.binary");
+    if (project_name != "") {
+        filename = project_name+ "_" +unitaryname;
+    }
+    export_unitary(unitaryname);
+    release_gates();
+	combine( gate_structure_loc );
+	delete( gate_structure_loc );
+#if BLAS==0 // undefined BLAS
+    omp_set_num_threads(num_threads);
+#elif BLAS==1 //MKL
+    MKL_Set_Num_Threads(num_threads);
+#elif BLAS==2 //OpenBLAS
+    openblas_set_num_threads(num_threads);
+#endif
+}
+
+void N_Qubit_Decomposition_adaptive::compress_circuit(){
+// temporarily turn off OpenMP parallelism
+#if BLAS==0 // undefined BLAS
+    num_threads = omp_get_max_threads();
+    omp_set_num_threads(1);
+#elif BLAS==1 // MKL
+    num_threads = mkl_get_max_threads();
+    MKL_Set_Num_Threads(1);
+#elif BLAS==2 //OpenBLAS
+    num_threads = openblas_get_num_threads();
+    openblas_set_num_threads(1);
+#endif
+	std::stringstream sstream;
+    sstream.str("");
+    sstream << std::endl;
+    sstream << std::endl;
+    sstream << "**************************************************************" << std::endl;
+    sstream << "***************** Compressing Gate structure *****************" << std::endl;
+    sstream << "**************************************************************" << std::endl;
+    print(sstream, 1);	    	
+	Gates_block* gate_structure_loc = NULL;
+    if ( gates.size() > 0 ) {
+		std::stringstream sstream;
+		sstream << "Using imported gate structure for the compression." << std::endl;
+		print(sstream, 1);	
+		    
+		gate_structure_loc =  static_cast<Gates_block*>(this)->clone();
+    }
+    else {
+        std::stringstream sstream;
+        sstream << "No circuit initalised." << std::endl;
+        print(sstream, 1);
+        return;
+    }
+    int iter = 0;
+    int uncompressed_iter_num = 0;
+    while ( iter<25 || uncompressed_iter_num <= 5 ) {
+        std::stringstream sstream;
+        sstream.str("");
+        sstream << "iteration " << iter+1 << ": ";
+        print(sstream, 1);	
+
+       
+        Gates_block* gate_structure_compressed = compress_gate_structure( gate_structure_loc );
+
+        if ( gate_structure_compressed->get_gate_num() < gate_structure_loc->get_gate_num() ) {
+            uncompressed_iter_num = 0;
+        }
+        else {
+            uncompressed_iter_num++;
+        }
+
+        if ( gate_structure_compressed != gate_structure_loc ) {
+            delete( gate_structure_loc );
+            gate_structure_loc = gate_structure_compressed;
+            gate_structure_compressed = NULL;
+            
+
+            std::string filename("circuit_compression.binary");
+            if (project_name != "") { 
+                filename=project_name+ "_"  +filename;
+            }
+
+            export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose); 
+            std::string filename_unitary("unitary_compression.binary");
+            export_unitary(filename_unitary);
+        }
+
+        iter++;
+
+        if (uncompressed_iter_num>10) break;
+            // store the decomposing gate structure
+    }
+    release_gates();
+	combine( gate_structure_loc );
+	delete( gate_structure_loc );
+#if BLAS==0 // undefined BLAS
+    omp_set_num_threads(num_threads);
+#elif BLAS==1 //MKL
+    MKL_Set_Num_Threads(num_threads);
+#elif BLAS==2 //OpenBLAS
+    openblas_set_num_threads(num_threads);
+#endif
+}
+
+void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export){
+// temporarily turn off OpenMP parallelism
+#if BLAS==0 // undefined BLAS
+    num_threads = omp_get_max_threads();
+    omp_set_num_threads(1);
+#elif BLAS==1 // MKL
+    num_threads = mkl_get_max_threads();
+    MKL_Set_Num_Threads(1);
+#elif BLAS==2 //OpenBLAS
+    num_threads = openblas_get_num_threads();
+    openblas_set_num_threads(1);
+#endif
+	Gates_block* gate_structure_loc = NULL;
+    if ( gates.size() > 0 ) {
+        std::stringstream sstream;
+        sstream << "Using imported gate structure for the compression." << std::endl;
+        print(sstream, 1);	
+	        
+        gate_structure_loc =  static_cast<Gates_block*>(this)->clone();
+    }
+    else {
+        std::stringstream sstream;
+        sstream << "No circuit initalised." << std::endl;
+        print(sstream, 1);
+        return;
+    }
+    std::stringstream sstream;
+    sstream.str("");
+    sstream << "**************************************************************" << std::endl;
+    sstream << "************ Final tuning of the Gate structure **************" << std::endl;
+    sstream << "**************************************************************" << std::endl;
+    print(sstream, 1);	    	
+    
+	// maximal number of inner iterations overriden by config
+    if ( config.count("optimization_tolerance") > 0 ) {
+        long long value;
+        config["optimization_tolerance"].get_property( value );
+        optimization_tolerance = (double)value; 
+    }
+    else {optimization_tolerance = 1e-4;}
+
+
+
+    optimization_block = get_gate_num();
+
+
+    sstream.str("");
+    sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+    print(sstream, 3);	
+    	
+    Gates_block* gate_structure_tmp = replace_trivial_CRY_gates( gate_structure_loc, optimized_parameters_mtx );
+    Matrix_real optimized_parameters_save = optimized_parameters_mtx;
+
+    release_gates();
+    optimized_parameters_mtx = optimized_parameters_save;
+
+    // solve the optimization problem
+    N_Qubit_Decomposition_custom cDecomp_custom;
+
+
+    std::map<std::string, Config_Element> config_copy;
+    config_copy.insert(config.begin(), config.end());
+    if ( config.count("max_inner_iterations_final") > 0 ) {
+        long long val;
+        config["max_inner_iterations_final"].get_property( val ); 
+        Config_Element element;
+        element.set_property( "max_inner_iterations", val ); 
+        config_copy["max_inner_iterations"] = element;
+    }
+
+
+    // solve the optimization problem in isolated optimization process
+    cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config_copy, initial_guess, accelerator_num);
+    cDecomp_custom.set_custom_gate_structure( gate_structure_tmp );
+    cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size() );
+    cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+    cDecomp_custom.set_max_iteration( max_outer_iterations );
+    cDecomp_custom.set_verbose(verbose);
+    cDecomp_custom.set_cost_function_variant( cost_fnc );
+    cDecomp_custom.set_debugfile("");
+    cDecomp_custom.set_iteration_loops( iteration_loops );
+    cDecomp_custom.set_optimization_tolerance( optimization_tolerance ); 
+    cDecomp_custom.set_trace_offset( trace_offset ); 
+    cDecomp_custom.set_optimizer( alg );  
+    if (alg==ADAM || alg==BFGS2) { 
+        int param_num_loc = gate_structure_loc->get_parameter_num();
+        int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
+        cDecomp_custom.set_random_shift_count_max( 10000 );   
+        cDecomp_custom.set_adaptive_eta( true );      
+        cDecomp_custom.set_randomized_radius( radius );             
+    }
+    else if ( alg==ADAM_BATCHED ) {
+        cDecomp_custom.set_optimizer( alg );  
+        int max_inner_iterations_loc = 2500;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
+        cDecomp_custom.set_random_shift_count_max( 5 );   
+        cDecomp_custom.set_adaptive_eta( true );      
+        cDecomp_custom.set_randomized_radius( radius );   
+    }
+    else if ( alg==BFGS ) {
+        cDecomp_custom.set_optimizer( alg );  
+        int max_inner_iterations_loc = 10000;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
+        cDecomp_custom.set_randomized_radius( radius );   
+    }
+    cDecomp_custom.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
+    cDecomp_custom.start_decomposition(true);
+    number_of_iters += cDecomp_custom.get_num_iters();
+
+    current_minimum = cDecomp_custom.get_current_minimum();
+    optimized_parameters_mtx = cDecomp_custom.get_optimized_parameters();
+
+
+    combine( gate_structure_tmp );
+    delete( gate_structure_tmp );
+    delete( gate_structure_loc );
+
+    sstream.str("");
+    sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+    print(sstream, 3);	
+    	
+    std::string filename2("circuit_final.binary");
+
+    if (project_name != "") {
+        filename2=project_name+ "_"  +filename2;
+    }
+
+    export_gate_list_to_binary(optimized_parameters_mtx, this, filename2, verbose);  
+
+    // prepare gates to export
+    if (prepare_export) {
+        prepare_gates_to_export();
+    }
+    
+    decomposition_error = optimization_problem(optimized_parameters_mtx);
+    
+    // get the number of gates used in the decomposition
+    gates_num gates_num = get_gate_nums();
+
+    
+    sstream.str("");
+    sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
+      
+        if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 gates," << std::endl;
+        if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX gates," << std::endl;
+        if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY gates," << std::endl;
+        if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ gates," << std::endl;
+        if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT gates," << std::endl;
+        if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ gates," << std::endl;
+        if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH gates," << std::endl;
+        if ( gates_num.x>0 ) sstream << gates_num.x << " X gates," << std::endl;
+        if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX gates," << std::endl; 
+        if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore gates," << std::endl;   
+        if ( gates_num.un>0 ) sstream << gates_num.un << " UN gates," << std::endl;
+        if ( gates_num.cry>0 ) sstream << gates_num.cry << " CRY gates," << std::endl;  
+        if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive gates," << std::endl;
+    
+        sstream << std::endl;
+    	print(sstream, 1);	    	
+    	
+#if BLAS==0 // undefined BLAS
+    omp_set_num_threads(num_threads);
+#elif BLAS==1 //MKL
+    MKL_Set_Num_Threads(num_threads);
+#elif BLAS==2 //OpenBLAS
+    openblas_set_num_threads(num_threads);
+#endif
+}
 
 /**
 @brief ??????????????
@@ -417,27 +777,44 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
     // solve the optimization problem
     N_Qubit_Decomposition_custom cDecomp_custom;
     // solve the optimization problem in isolated optimization process
-    cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, initial_guess, accelerator_num);
+    cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, initial_guess, accelerator_num);
     cDecomp_custom.set_custom_gate_structure( gate_structure_loc );
     cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx_loc.get_data(), optimized_parameters_mtx_loc.size() );
     cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
-    cDecomp_custom.set_max_iteration( max_iterations );
+    cDecomp_custom.set_max_iteration( max_outer_iterations );
     cDecomp_custom.set_verbose(verbose);
     cDecomp_custom.set_cost_function_variant( cost_fnc );
     cDecomp_custom.set_debugfile("");
     cDecomp_custom.set_iteration_loops( iteration_loops );
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance ); 
+    cDecomp_custom.set_trace_offset( trace_offset ); 
+    cDecomp_custom.set_optimizer( alg );  
+    cDecomp_custom.set_project_name( project_name );
     if (alg==ADAM || alg==BFGS2) { 
-        cDecomp_custom.set_optimizer( alg );  
         int param_num_loc = gate_structure_loc->get_parameter_num();
-        int iter_max_loc = (double)param_num_loc/852 * 1e7;
-        cDecomp_custom.set_iter_max( iter_max_loc );  
+        int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
         cDecomp_custom.set_random_shift_count_max( 10000 );   
         cDecomp_custom.set_adaptive_eta( true );      
         cDecomp_custom.set_randomized_radius( radius );             
     }
+    else if ( alg==ADAM_BATCHED ) {
+        cDecomp_custom.set_optimizer( alg );  
+        int max_inner_iterations_loc = 2500;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
+        cDecomp_custom.set_random_shift_count_max( 5 );   
+        cDecomp_custom.set_adaptive_eta( true );      
+        cDecomp_custom.set_randomized_radius( radius );   
+    }
+    else if ( alg==BFGS ) {
+        cDecomp_custom.set_optimizer( alg );  
+        int max_inner_iterations_loc = 10000;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
+        cDecomp_custom.set_randomized_radius( radius );   
+    }
     cDecomp_custom.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
     cDecomp_custom.start_decomposition(true);
+    number_of_iters += cDecomp_custom.get_num_iters();
     //cDecomp_custom.list_gates(0);
 
     tbb::tick_count end_time_loc = tbb::tick_count::now();
@@ -484,17 +861,17 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
     std::vector<double> minimum_vec;
     std::vector<Gates_block*> gate_structure_vec;
     std::vector<Matrix_real> optimized_parameters_vec;
+    
+
 
     int level = level_limit_min;
     while ( current_minimum > optimization_tolerance && level <= level_limit) {
 
-        // reset optimized parameters
-        optimized_parameters_mtx_loc = Matrix_real(0,0);
-
-
         // create gate structure to be optimized
-        Gates_block* gate_structure_loc = new Gates_block(qbit_num);
-
+        Gates_block* gate_structure_loc = new Gates_block(qbit_num);  
+        
+        optimized_parameters_mtx_loc = Matrix_real(0,0);
+                   
         for (int idx=0; idx<level; idx++) {
 
             // create the new decomposing layer and add to the gate staructure
@@ -504,6 +881,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
            
         // add finalyzing layer to the top of the gate structure
         add_finalyzing_layer( gate_structure_loc );
+            
 
         //measure the time for the decompositin
         tbb::tick_count start_time_loc = tbb::tick_count::now();
@@ -513,34 +891,63 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 
         std::stringstream sstream;
         sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
-        print(sstream, 1);	
+        print(sstream, 1);
 
+	
+/*
 #ifndef __DFE__
         // try the decomposition withrandom and with close to zero initial values
         tbb::parallel_invoke(
             [&]{            
 #endif
+*/
                 // solve the optimization problem in isolated optimization process
-                cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, RANDOM, accelerator_num);
+                cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
                 cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
                 cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
-                cDecomp_custom_random.set_max_iteration( max_iterations );
+                cDecomp_custom_random.set_max_iteration( max_outer_iterations );
+#ifndef __DFE__
                 cDecomp_custom_random.set_verbose(verbose);
+#else
+                cDecomp_custom_random.set_verbose(0);
+#endif
                 cDecomp_custom_random.set_cost_function_variant( cost_fnc );
                 cDecomp_custom_random.set_debugfile("");
                 cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance );
+                cDecomp_custom_random.set_trace_offset( trace_offset ); 
+                cDecomp_custom_random.set_optimizer( alg );
+                cDecomp_custom_random.set_project_name( project_name );
                 if ( alg == ADAM || alg == BFGS2 ) {
-                    cDecomp_custom_random.set_optimizer( alg );  
                     int param_num_loc = gate_structure_loc->get_parameter_num();
-                    int iter_max_loc = (double)param_num_loc/852 * 1e7;
-                    cDecomp_custom_random.set_iter_max( iter_max_loc );  
+                    int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+                    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
                     cDecomp_custom_random.set_random_shift_count_max( 10000 );       
                     cDecomp_custom_random.set_adaptive_eta( true );    
                     cDecomp_custom_random.set_randomized_radius( radius );
                 }
+                else if ( alg==ADAM_BATCHED ) {
+                    cDecomp_custom_random.set_optimizer( alg );  
+                    int max_inner_iterations_loc = 2000;
+                    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+                    cDecomp_custom_random.set_random_shift_count_max( 5 );   
+                    cDecomp_custom_random.set_adaptive_eta( true );      
+                    cDecomp_custom_random.set_randomized_radius( radius );   
+                }
+                else if ( alg==BFGS ) {
+                    cDecomp_custom_random.set_optimizer( alg );  
+                    int max_inner_iterations_loc = 10000;
+                    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );    
+                    cDecomp_custom_random.set_randomized_radius( radius );   
+                }
                 cDecomp_custom_random.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
+                
+            
                 cDecomp_custom_random.start_decomposition(true);
+                
 
+                
+                number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization
+/*
 #ifndef __DFE__
             },
             [&]{
@@ -548,17 +955,28 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 cDecomp_custom_close_to_zero = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, CLOSE_TO_ZERO);
                 cDecomp_custom_close_to_zero.set_custom_gate_structure( gate_structure_loc );
                 cDecomp_custom_close_to_zero.set_optimization_blocks( gate_structure_loc->get_gate_num() );    
-                cDecomp_custom_close_to_zero.set_max_iteration( max_iterations );
+                cDecomp_custom_close_to_zero.set_max_iteration( max_outer_iterations );
                 cDecomp_custom_close_to_zero.set_verbose(0);
                 cDecomp_custom_close_to_zero.set_cost_function_variant( cost_fnc );
                 cDecomp_custom_close_to_zero.set_debugfile("");
                 cDecomp_custom_close_to_zero.set_optimization_tolerance( optimization_tolerance );  
-                cDecomp_custom_close_to_zero.start_decomposition(true);
+                cDecomp_custom_close_to_zero.set_optimizer( alg );
+                if ( alg == ADAM || alg == BFGS2 ) {
+                    int param_num_loc = gate_structure_loc->get_parameter_num();
+                    int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+                    cDecomp_custom_close_to_zero.set_max_inner_iterations( max_inner_iterations_loc );  
+                    cDecomp_custom_close_to_zero.set_random_shift_count_max( 10000 );       
+                    cDecomp_custom_close_to_zero.set_adaptive_eta( true );    
+                    cDecomp_custom_close_to_zero.set_randomized_radius( radius );
+                }
                 cDecomp_custom_close_to_zero.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
+                cDecomp_custom.close_to_zero.set_trace_offset( trace_offset ); 
+                cDecomp_custom_close_to_zero.start_decomposition(true);
+                number_of_iters += cDecomp_custom_close_to_zero.get_num_iters();
                }
          );
 #endif
-
+*/
          tbb::tick_count end_time_loc = tbb::tick_count::now();
 /*
 #ifdef __DFE__
@@ -647,6 +1065,7 @@ return NULL;
         }
     }
      
+
     Gates_block* gate_structure_loc = gate_structure_vec[idx_min];
     optimized_parameters_mtx_loc = optimized_parameters_vec[idx_min];
 
@@ -722,15 +1141,17 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     std::vector<Matrix_real> optimized_parameters_vec(panelties_num, Matrix_real(0,0));
     std::vector<double> current_minimum_vec(panelties_num, DBL_MAX);
     std::vector<Matrix> Umtx_vec(panelties_num);
+    std::vector<int> iteration_num_vec(panelties_num, 0);
 
     for (int idx=0; idx<panelties_num; idx++) {
 
         Umtx = Umtx_orig.copy();
 
         double current_minimum_loc = DBL_MAX;//current_minimum;
+        int iteration_num = 0;
         Matrix_real optimized_parameters_loc = optimized_parameters_mtx.copy();
 
-        Gates_block* gate_structure_reduced = compress_gate_structure( gate_structure, layers_to_remove[idx], optimized_parameters_loc,  current_minimum_loc  );
+        Gates_block* gate_structure_reduced = compress_gate_structure( gate_structure, layers_to_remove[idx], optimized_parameters_loc,  current_minimum_loc, iteration_num  );
         if ( optimized_parameters_loc.size() == 0 ) optimized_parameters_loc = optimized_parameters_mtx.copy();
 
         // remove further adaptive gates if possible
@@ -745,6 +1166,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         gate_structures_vec[idx] = gate_structure_tmp;
         optimized_parameters_vec[idx] = optimized_parameters_loc;
         current_minimum_vec[idx] = current_minimum_loc;
+        iteration_num_vec[idx] = iteration_num;
         Umtx_vec[idx] = Umtx;
         
 
@@ -798,6 +1220,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     gate_structure = gate_structures_vec[idx_min];
     optimized_parameters_mtx = optimized_parameters_vec[idx_min];
     current_minimum =  current_minimum_vec[idx_min];
+    number_of_iters += iteration_num_vec[idx_min];
     Umtx = Umtx_vec[idx_min];
     
     int layer_num = gate_structure->get_gate_num();
@@ -824,7 +1247,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 @brief ???????????????
 */
 Gates_block* 
-N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& current_minimum_loc ) {
+N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& current_minimum_loc, int& iteration_num ) {
 
     // create reduced gate structure without layer indexed by layer_idx
     Gates_block* gate_structure_reduced = gate_structure->clone();
@@ -841,27 +1264,47 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 
 
     N_Qubit_Decomposition_custom cDecomp_custom;
+
+    std::map<std::string, Config_Element> config_copy;
+    config_copy.insert(config.begin(), config.end());
+    if ( config.count("max_inner_iterations_compression") > 0 ) {
+        long long val;
+        config["max_inner_iterations_compression"].get_property( val ); 
+        Config_Element element;
+        element.set_property( "max_inner_iterations", val ); 
+        config_copy["max_inner_iterations"] = element;
+    }
+
+
        
     // solve the optimization problem in isolated optimization process
-    cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, initial_guess, accelerator_num);
+    cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config_copy, initial_guess, accelerator_num);
     cDecomp_custom.set_custom_gate_structure( gate_structure_reduced );
     cDecomp_custom.set_optimized_parameters( parameters_reduced.get_data(), parameters_reduced.size() );
     cDecomp_custom.set_verbose(0);
     cDecomp_custom.set_cost_function_variant( cost_fnc );
     cDecomp_custom.set_debugfile("");
-    cDecomp_custom.set_max_iteration( max_iterations );
+    cDecomp_custom.set_max_iteration( max_outer_iterations );
     cDecomp_custom.set_iteration_loops( iteration_loops );
     cDecomp_custom.set_optimization_blocks( gate_structure_reduced->get_gate_num() ) ;
     cDecomp_custom.set_optimization_tolerance( optimization_tolerance );
+    cDecomp_custom.set_trace_offset( trace_offset ); 
+    cDecomp_custom.set_optimizer( alg );
     if ( alg == ADAM || alg==BFGS2) {
-        cDecomp_custom.set_optimizer( alg );      
-        cDecomp_custom.set_iter_max( 1e5 );  
+        cDecomp_custom.set_max_inner_iterations( 1e5 );  
         cDecomp_custom.set_random_shift_count_max( 1 );     
         cDecomp_custom.set_adaptive_eta( false );
         cDecomp_custom.set_randomized_radius( radius );        
     }
+    else if ( alg==BFGS ) {
+        cDecomp_custom.set_optimizer( alg );  
+        int max_inner_iterations_loc = 100;
+        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
+        cDecomp_custom.set_randomized_radius( radius );   
+    }
     cDecomp_custom.set_iteration_threshold_of_randomization( 2500 );
     cDecomp_custom.start_decomposition(true);
+    iteration_num = cDecomp_custom.get_num_iters();
     double current_minimum_tmp = cDecomp_custom.get_current_minimum();
 
     if ( current_minimum_tmp < optimization_tolerance ) {
@@ -1204,8 +1647,10 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
             print(sstream, 3);
                
             // remove gate from the structure
-            Gates_block* gate_structure_tmp = compress_gate_structure( gate_structure_loc, idx, optimized_parameters_loc, current_minimum_loc );
-
+            int iteration_num_loc = 0;
+            Gates_block* gate_structure_tmp = compress_gate_structure( gate_structure_loc, idx, optimized_parameters_loc, current_minimum_loc, iteration_num_loc );
+	    number_of_iters += iteration_num_loc;
+	    
             optimized_parameters = optimized_parameters_loc;
             delete( gate_structure_loc );
             gate_structure_loc = gate_structure_tmp;
@@ -1369,8 +1814,17 @@ N_Qubit_Decomposition_adaptive::construct_adaptive_gate_layers() {
     }
 */
 
+    bool randomized_adaptive_layers_loc;
+    if ( config.count("randomized_adaptive_layers") > 0 ) {
+        config["randomized_adaptive_layers"].get_property( randomized_adaptive_layers_loc );  
+    }
+    else {
+        randomized_adaptive_layers_loc = randomized_adaptive_layers;
+    }
+
+
     // make difference between randomized adaptive layers and deterministic one
-    if (randomized_adaptive_layers) {
+    if (randomized_adaptive_layers_loc) {
 
         std::uniform_int_distribution<> distrib_int(0, 5000);
 

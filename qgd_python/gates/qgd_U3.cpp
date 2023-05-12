@@ -348,6 +348,9 @@ static PyModuleDef  qgd_U3_Module = {
 PyMODINIT_FUNC
 PyInit_qgd_U3(void)
 {
+    // initialize Numpy API
+    import_array();
+
     PyObject *m;
     if (PyType_Ready(& qgd_U3_Type) < 0)
         return NULL;

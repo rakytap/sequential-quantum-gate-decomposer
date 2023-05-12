@@ -19,7 +19,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 """
 ## \file test_decomposition.py
-## \brief Functionality test cases for the qgd_N_Qubit_Decomposition class.
+## \brief Functionality test cases for the N_Qubit_Decomposition_adaptive class.
 
 
 
@@ -34,7 +34,7 @@ try:
 except ModuleNotFoundError:
     MPI_imported = False
 
-from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive
+from squander import N_Qubit_Decomposition_adaptive
 from scipy.io import loadmat
 
 def test_unitary():
@@ -43,7 +43,7 @@ def test_unitary():
 	# The unitary to be decomposed  
 	Umtx = data['Umtx']
 	# creating a class to decompose the unitary
-	cDecompose = qgd_N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
+	cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
 	Umtx_assert = cDecompose.get_Unitary()
 
 	assert(np.sum(np.abs(Umtx_assert-Umtx.conj().T))<0.00001)

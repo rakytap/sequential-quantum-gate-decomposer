@@ -146,13 +146,64 @@ qgd_CH_get_Matrix( qgd_CH *self ) {
 }
 
 
+
+
+/**
+@brief Call to apply the gate operation on the inut matrix
+*/
+static PyObject *
+qgd_CH_apply_to( qgd_CH *self, PyObject *args ) {
+
+    PyObject * unitary_arg = NULL;
+
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &unitary_arg )) 
+        return Py_BuildValue("i", -1);
+
+    // convert python object array to numpy C API array
+    if ( unitary_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+
+    if ( PyArray_Check(unitary_arg) && PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
+        Py_INCREF(unitary_arg);
+    }
+    else {
+        unitary_arg = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    }
+
+   PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
+        PyErr_SetString(PyExc_Exception, "input mtrix is not memory contiguous");
+        return NULL;
+    }
+
+
+    // create QGD version of the input matrix
+    Matrix unitary_mtx = numpy2matrix(unitary);
+
+    self->gate->apply_to( unitary_mtx );
+    
+    Py_DECREF(unitary);
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+
 /**
 @brief Structure containing metadata about the members of class  qgd_CH.
 */
 static PyMemberDef  qgd_CH_members[] = {
     {NULL}  /* Sentinel */
 };
-
 
 
 /**
@@ -168,6 +219,9 @@ static PyMemberDef  qgd_CH_members[] = {
 static PyMethodDef qgd_CH_methods[] = {
     {"get_Matrix", (PyCFunction) qgd_CH_get_Matrix, METH_NOARGS,
      "Method to get the matrix of the operation."
+    },
+    {"apply_to", (PyCFunction) qgd_CH_apply_to, METH_VARARGS,
+     "Call to apply the gate on the input matrix."
     },
     {NULL}  /* Sentinel */
 };
@@ -263,6 +317,11 @@ static PyModuleDef  qgd_CH_Module = {
 PyMODINIT_FUNC
 PyInit_qgd_CH(void)
 {
+
+    // initialize Numpy API
+    import_array();
+
+
     PyObject *m;
     if (PyType_Ready(& qgd_CH_Type) < 0)
         return NULL;

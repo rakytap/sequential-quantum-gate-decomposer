@@ -36,6 +36,7 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
     set_optimizer( BFGS );
 
 
+
 }
 
 
@@ -50,9 +51,10 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, optimize_layer_num_in, initial_guess_in) {
+N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, optimize_layer_num_in, config_in, initial_guess_in) {
 
     set_optimizer( BFGS );
+
 }
 
 
@@ -104,7 +106,7 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
     tbb::tick_count start_time = tbb::tick_count::now();
 
     // create an instance of class to disentangle the given qubit pair
-    Sub_Matrix_Decomposition* cSub_decomposition = new Sub_Matrix_Decomposition(Umtx, qbit_num, optimize_layer_num, initial_guess);
+    Sub_Matrix_Decomposition* cSub_decomposition = new Sub_Matrix_Decomposition(Umtx, qbit_num, optimize_layer_num, config, initial_guess);
 
     // setting the verbosity
     cSub_decomposition->set_verbose( verbose );
@@ -134,7 +136,7 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
     cSub_decomposition->optimization_block = optimization_block;
 
     // setting the number of operators in one sub-layer of the disentangling process
-    //cSub_decomposition->max_iterations = self.max_iterations
+    //cSub_decomposition->max_outer_iterations = self.max_outer_iterations
 
     //start to disentangle the qubit pair
     cSub_decomposition->disentangle_submatrices();
@@ -163,8 +165,10 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
         }
 
         int optimization_block_orig = optimization_block;
-        optimization_block = optimization_block*3;
-        //max_iterations = 4;
+        if ( optimization_block > 0 ) {
+            optimization_block = optimization_block*3;
+        }
+        //max_outer_iterations = 4;
 
 
         // final tuning of the decomposition parameters
@@ -299,7 +303,7 @@ N_Qubit_Decomposition::decompose_submatrix() {
         // if the qubit number in the submatirx is greater than 2 new N-qubit decomposition is started
 
         // create class tp decompose submatrices
-        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(most_unitary_submatrix_mtx, qbit_num-1, optimize_layer_num, initial_guess);
+        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(most_unitary_submatrix_mtx, qbit_num-1, optimize_layer_num, config, initial_guess);
 
         // setting the verbosity
         cdecomposition->set_verbose( verbose );
@@ -308,7 +312,7 @@ N_Qubit_Decomposition::decompose_submatrix() {
         cdecomposition->set_debugfile( debugfile_name );
 
         // Maximal number of iteartions in the optimization process
-        cdecomposition->set_max_iteration(max_iterations);
+        cdecomposition->set_max_iteration(max_outer_iterations);
 
         // Set the number of identical successive blocks in the sub-decomposition
         cdecomposition->set_identical_blocks(identical_blocks);
@@ -776,7 +780,7 @@ N_Qubit_Decomposition::simplify_layer( Gates_block* layer, double* parameters, i
         }
 
         // decompose the chosen 2-qubit unitary
-        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(submatrix, 2, true, initial_guess);
+        N_Qubit_Decomposition* cdecomposition = new N_Qubit_Decomposition(submatrix, 2, true, config, initial_guess);
 
         // set the maximal number of layers
         cdecomposition->set_max_layer_num( max_layer_num_loc );

@@ -91,9 +91,10 @@ N_Qubit_Decomposition_adaptive();
 @param qbit_num_in The number of qubits spanning the unitary Umtx
 @param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@param compression_enabled_in Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, int accelerator_num=0 );
+N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
 
 
 /**
@@ -102,9 +103,10 @@ N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit
 @param qbit_num_in The number of qubits spanning the unitary Umtx
 @param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
+@param compression_enabled Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
 @return An instance of the class
 */
-N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, int accelerator_num=0 );
+N_Qubit_Decomposition_adaptive( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
 
 
 
@@ -120,6 +122,22 @@ virtual ~N_Qubit_Decomposition_adaptive();
 @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
 */
 virtual void start_decomposition(bool prepare_export=true);
+
+/**
+@brief get initial circuit
+*/
+virtual void get_initial_circuit();
+
+/**
+@brief Compress the circuit
+*/
+virtual void compress_circuit();
+
+/**
+@brief Finalize the circuit
+@param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
+*/
+virtual void finalize_circuit(bool prepare_export=true);
 
 /**
 @brief ??????????????
@@ -142,7 +160,7 @@ Gates_block* compress_gate_structure( Gates_block* gate_structure );
 /**
 @brief ???????????????
 */
-Gates_block* compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& currnt_minimum_loc );
+Gates_block* compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& currnt_minimum_loc, int& iteration_num );
 
 /**
 @brief ???????????????

@@ -104,7 +104,7 @@ Matrix_real get_optimized_parameters();
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-RY* clone();
+virtual RY* clone();
 
 };
 

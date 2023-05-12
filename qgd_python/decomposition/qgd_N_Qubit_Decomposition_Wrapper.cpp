@@ -69,9 +69,9 @@ typedef struct qgd_N_Qubit_Decomposition_Wrapper {
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 N_Qubit_Decomposition* 
-create_N_Qubit_Decomposition( Matrix& Umtx, int qbit_num, bool optimize_layer_num, guess_type initial_guess ) {
+create_N_Qubit_Decomposition( Matrix& Umtx, int qbit_num, bool optimize_layer_num, std::map<std::string, Config_Element>& config, guess_type initial_guess ) {
 
-    return new N_Qubit_Decomposition( Umtx, qbit_num, optimize_layer_num, initial_guess );
+    return new N_Qubit_Decomposition( Umtx, qbit_num, optimize_layer_num, config, initial_guess );
 }
 
 
@@ -193,9 +193,15 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
         qgd_initial_guess = ZEROS;     
     }
 
+    // parse config and create C++ version of the hyperparameters
+
+    // integer type config metadata utilized during the optimization
+    std::map<std::string, Config_Element> config;
+
+
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
-        self->decomp =  create_N_Qubit_Decomposition( Umtx_mtx, qbit_num, optimize_layer_num, qgd_initial_guess);
+        self->decomp =  create_N_Qubit_Decomposition( Umtx_mtx, qbit_num, optimize_layer_num, config, qgd_initial_guess);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;

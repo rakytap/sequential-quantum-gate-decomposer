@@ -41,13 +41,18 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 # @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
 # @return An instance of the class
-    def __init__( self, Umtx, initial_guess="RANDOM", accelerator_num=0 ):
+    def __init__( self, Umtx, initial_guess="RANDOM", config={}, accelerator_num=0 ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
+        
+        # config
+        if not( type(config) is dict):
+            print("Input parameter config should be a dictionary describing the following hyperparameters:") #TODO
+            return
 
         # call the constructor of the wrapper class
-        super(qgd_N_Qubit_Decomposition_custom, self).__init__(Umtx, self.qbit_num, initial_guess, accelerator_num)
+        super(qgd_N_Qubit_Decomposition_custom, self).__init__(Umtx, self.qbit_num, initial_guess, config=config, accelerator_num=accelerator_num)
 
 
 
@@ -241,7 +246,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
         from qiskit.circuit import ParameterExpression
         from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
 
-        qc = qc_in#transpile(qc_in, optimization_level=3, basis_gates=['cz', 'cx', 'u3'], layout_method='sabre')
+        qc = transpile(qc_in, optimization_level=3, basis_gates=['cz', 'cx', 'u3'], layout_method='sabre')
         #print('Depth of Qiskit transpiled quantum circuit:', qc.depth())
         #print('Gate counts in Qiskit transpiled quantum circuit:', qc.count_ops())
 
@@ -355,7 +360,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
-# @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2".
+# @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2", "AGENTS", "COSINE", "AGENTS_COMBINED".
 # @return An instance of the class
     def set_Optimizer( self, optimizer="BFGS" ):
 

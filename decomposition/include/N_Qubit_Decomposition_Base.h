@@ -27,7 +27,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Decomposition_Base.h"
 
 /// @brief Type definition of the fifferent types of the cost function
-typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2} cost_function_type;
+typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
+    HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2,
+    SUM_OF_SQUARES} cost_function_type;
 
 
 
@@ -59,7 +61,7 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 
 
 /// implemented optimization algorithms
-enum optimization_aglorithms{ ADAM, BFGS, BFGS2 };
+enum optimization_aglorithms{ ADAM, BFGS, BFGS2, ADAM_BATCHED, AGENTS, COSINE, AGENTS_COMBINED };
 
 
 /**
@@ -72,7 +74,7 @@ class N_Qubit_Decomposition_Base : public Decomposition_Base {
 public:
 
     ///
-    int iter_max;
+    int max_inner_iterations;
     ///
     int gradient_threshold;
     /// 
@@ -99,6 +101,10 @@ protected:
     double correction1_scale;
     ///
     double correction2_scale;    
+    
+
+    /// number of iterations
+    int number_of_iters;
 
     /// logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     bool adaptive_eta;
@@ -111,10 +117,9 @@ protected:
     /// number of utilized accelerators
     int accelerator_num;
 
+    /// The offset in the first columns from which the "trace" is calculated. In this case Tr(A) = sum_(i-offset=j) A_{ij}
+    int trace_offset;
 
-
-    Matrix_real randomization_probs;
-    matrix_base<int> randomized_probs;
 
     
 
@@ -139,7 +144,7 @@ N_Qubit_Decomposition_Base();
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, guess_type initial_guess_in, int accelerator_num_in=0 );
+N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in, int accelerator_num_in=0 );
 
 
 
@@ -175,6 +180,29 @@ void final_optimization();
 void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 
+/**
+@brief Call to solve layer by layer the optimization problem via the COSINE algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void solve_layer_optimization_problem_COSINE( int num_of_parameters, gsl_vector *solution_guess_gsl);
+
+
+/**
+@brief Call to solve layer by layer the optimization problem via the AGENT algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void solve_layer_optimization_problem_AGENTS( int num_of_parameters, gsl_vector *solution_guess_gsl);
+
+
+
+/**
+@brief Call to solve layer by layer the optimization problem via the AGENT COMBINED algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 
 /**
@@ -193,6 +221,12 @@ void solve_layer_optimization_problem_BFGS( int num_of_parameters, gsl_vector *s
 */
 void solve_layer_optimization_problem_BFGS2( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
+/**
+@brief Call to solve layer by layer the optimization problem via batched ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 /**
 @brief Call to solve layer by layer the optimization problem via ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
@@ -204,7 +238,7 @@ void solve_layer_optimization_problem_ADAM( int num_of_parameters, gsl_vector *s
 /**
 @brief ?????????????
 */
-void randomize_parameters( Matrix_real& input, gsl_vector* output, const int randomization_succesful, const double& f0 );
+void randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0 );
 
 /**
 @brief The optimization problem of the final optimization
@@ -222,6 +256,23 @@ double optimization_problem( double* parameters);
 double optimization_problem( Matrix_real& parameters);
 
 
+/**
+@brief The optimization problem of the final optimization with batched input (implemented only for the Frobenius norm cost function)
+@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+Matrix_real optimization_problem_batched( std::vector<Matrix_real>& parameters_vec);
+
+
+/**
+@brief The optimization problem of the final optimization useful for gradient
+@param parameters A GNU Scientific Library containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param ret_temp A matrix to store trace in for gradient
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double optimization_problem( const gsl_vector* parameters, void* void_instance, Matrix ret_temp );
+
 
 /**
 @brief The optimization problem of the final optimization
@@ -230,6 +281,15 @@ double optimization_problem( Matrix_real& parameters);
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 static double optimization_problem( const gsl_vector* parameters, void* void_instance );
+
+
+/**
+@brief The optimization problem of the final optimization
+@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param grad A GNU Scientific Library vector containing the calculated gradient components.
+*/
+static Matrix_real optimization_problem_batch( int batchsize, const gsl_vector* parameters, void* void_instance );
 
 
 /**
@@ -251,6 +311,7 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 */
 static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad );
 
+static void optimization_problem_combined_unitary( const gsl_vector* parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
@@ -261,6 +322,9 @@ static void optimization_problem_combined( const gsl_vector* parameters, void* v
 */
 void optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad );
 
+void optimization_problem_combined_unitary( const Matrix_real& parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
+
+Matrix_real optimization_problem_batch( Matrix_real batch );
 
 /**
 // @brief The optimization problem of the final optimization
@@ -334,7 +398,7 @@ void set_iteration_threshold_of_randomization( const unsigned long long& thresho
 /**
 @brief ?????????????
 */
-void set_iter_max( int iter_max_in  );
+void set_max_inner_iterations( int max_inner_iterations_in  );
 
 
 /**
@@ -360,6 +424,23 @@ void set_adaptive_eta( bool adaptive_eta_in  );
 */
 void set_randomized_radius( double radius_in  );
 
+
+/**
+@brief Get the trace ffset used in the evaluation of the cost function
+*/
+int get_trace_offset();
+
+/**
+@brief Set the trace offset used in the evaluation of the cost function
+*/
+void set_trace_offset(int trace_offset_in);
+
+
+/**
+@brief Get the number of processed iterations during the optimization process
+*/
+int get_num_iters();
+
 #ifdef __DFE__
 
 /**
@@ -372,6 +453,7 @@ void upload_Umtx_to_DFE();
 @brief Get the number of accelerators to be reserved on DFEs on users demand.
 */
 int get_accelerator_num();
+
 
 
 #endif

@@ -58,7 +58,7 @@ CNOT(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 /**
 @brief Destructor of the class
 */
-~CNOT();
+virtual ~CNOT();
 
 /**
 @brief Call to retrieve the operation matrix
@@ -70,33 +70,33 @@ Matrix get_matrix();
 @brief Call to apply the gate on the input array/matrix by CNOT*input
 @param input The input array on which the gate is applied
 */
-void apply_to( Matrix& input );
+virtual void apply_to( Matrix& input );
 
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*CNOT
 @param input The input array on which the gate is applied
 */
-void apply_from_right( Matrix& input );
+virtual void apply_from_right( Matrix& input );
 
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the operation
 @param qbit_num The number of qubits
 */
-void set_qbit_num(int qbit_num);
+virtual void set_qbit_num(int qbit_num);
 
 /**
 @brief Call to reorder the qubits in the matrix of the operation
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void reorder_qubits( std::vector<int> qbit_list);
+virtual void reorder_qubits( std::vector<int> qbit_list);
 
 /**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-CNOT* clone();
+virtual CNOT* clone();
 
 };
 

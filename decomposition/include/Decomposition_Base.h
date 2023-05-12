@@ -51,6 +51,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "gsl/gsl_statistics.h"
 #include <tbb/cache_aligned_allocator.h>
 
+#include "config_element.h"
+
 #include <random>
 
 /// @brief Type definition of the types of the initial guess
@@ -79,6 +81,10 @@ public:
     
     ///the name of the project
     std::string project_name;
+
+    /// config metadata utilized during the optimization
+    std::map<std::string, Config_Element> config;
+
 
 protected:
 
@@ -119,7 +125,7 @@ protected:
     bool optimization_problem_solved;
 
     /// Maximal number of iterations allowed in the optimization process
-    int max_iterations;
+    int max_outer_iterations;
 
     /// type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
     guess_type initial_guess;
@@ -150,7 +156,7 @@ Decomposition_Base();
 @param initial_guess_in Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
 @return An instance of the class
 */
-Decomposition_Base( Matrix Umtx_in, int qbit_num_in, guess_type initial_guess_in);
+Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in);
 
 /**
 @brief Destructor of the class
@@ -166,9 +172,9 @@ void set_optimization_blocks( int optimization_block_in );
 
 /**
 @brief Call to set the maximal number of the iterations in the optimization process
-@param max_iterations_in maximal number of iteartions in the optimization process
+@param max_outer_iterations_in maximal number of iteartions in the optimization process
 */
-void set_max_iteration( int max_iterations_in);
+void set_max_iteration( int max_outer_iterations_in);
 
 
 /**

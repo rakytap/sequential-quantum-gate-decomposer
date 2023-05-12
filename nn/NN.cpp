@@ -409,9 +409,12 @@ NN::get_nn_chanels(int qbit_num, int levels, Matrix_real& chanels, matrix_base<i
     //matrix size of the unitary
     int matrix_size = 1 << qbit_num;
 
+    // empty config parameters
+    std::map<std::string, Config_Element> config_int;
+
 
     // creating a class to decompose the unitary
-    N_Qubit_Decomposition_adaptive cDecompose( Matrix(0,0), qbit_num, 0, 0, topology );
+    N_Qubit_Decomposition_adaptive cDecompose( Matrix(0,0), qbit_num, 0, 0, topology, config_int );
         
     //adding decomposing layers to the gat structure
     for( int idx=0; idx<levels; idx++) {
