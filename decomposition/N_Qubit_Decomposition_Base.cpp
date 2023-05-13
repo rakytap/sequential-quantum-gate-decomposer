@@ -1822,7 +1822,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
                 optimization_problem_combined, (void*)this);
             Tolmin tolmin(&p);
             std::vector<double> x(solution_guess_gsl->data, solution_guess_gsl->data + num_of_parameters); 
-            double f = tolmin.Solve(x, false, iter_max);
+            double f = tolmin.Solve(x, false, max_inner_iterations);
             if (current_minimum > f) {
                 current_minimum = f;
                 memcpy( optimized_parameters_mtx.get_data(), x.data(), num_of_parameters*sizeof(double) );

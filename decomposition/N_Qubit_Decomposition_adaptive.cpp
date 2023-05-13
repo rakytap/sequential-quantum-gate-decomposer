@@ -60,7 +60,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
 
         // Maximal number of iteartions in the optimization process
         max_outer_iterations = 4;
-        iter_max = 10000;
+        max_inner_iterations = 10000;
     }
     else {
         set_optimizer( ADAM );
@@ -153,7 +153,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 
         // Maximal number of iteartions in the optimization process
         max_outer_iterations = 4;
-        iter_max = 10000;
+        max_inner_iterations = 10000;
     }
     else {
         alg = ADAM;
