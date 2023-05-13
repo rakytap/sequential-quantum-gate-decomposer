@@ -1818,14 +1818,18 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
                 }
                 gsl_multimin_fdfminimizer_free (s);
             }*/
-            Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad,
-                optimization_problem_combined, (void*)this);
+
+
+            Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
             Tolmin tolmin(&p);
-            std::vector<double> x(solution_guess_gsl->data, solution_guess_gsl->data + num_of_parameters); 
+
+            Matrix_real x(solution_guess_gsl->data, num_of_parameters, 1); 
+
             double f = tolmin.Solve(x, false, max_inner_iterations);
+
             if (current_minimum > f) {
                 current_minimum = f;
-                memcpy( optimized_parameters_mtx.get_data(), x.data(), num_of_parameters*sizeof(double) );
+                memcpy( optimized_parameters_mtx.get_data(), x.get_data(), num_of_parameters*sizeof(double) );
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen)/100;
                 }

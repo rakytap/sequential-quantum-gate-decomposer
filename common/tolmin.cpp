@@ -1842,9 +1842,9 @@ int Tolmin::fgcalc_(long *n,double *x,double *f,double *g)
 {
 	totcal_1.itnocs++;
 
-    Data tempx,tempg;
-    tempx.resize(*n);
-    tempg.resize(*n);
+    Data tempx( *n, 1); 
+    Data tempg( *n, 1);
+
     for(int i=0;i<*n;i++)
         tempx[i]=x[i];
     //*f=myProblem->funmin(tempx);

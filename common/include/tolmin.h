@@ -1,13 +1,16 @@
 # ifndef __TOLMIN__H
 # define __TOLMIN__H
 using namespace std;
-#include <vector>
-typedef std::vector<double> Data;
+
+#include "matrix_real.h"
+typedef Matrix_real Data;
 
 #ifndef PROBLEM_H
 #define PROBLEM_H
 #include "gsl/gsl_vector.h"
 #define integer long
+
+
 
 /**
  * @brief The Problem class implements the objective function to be optimized.
@@ -69,7 +72,7 @@ public:
      */
     double funmin(Data &x)
     {
-        return funmin(x.data());
+        return funmin(x.get_data());
     }
     /**
      * @brief funmin
@@ -87,8 +90,8 @@ public:
      */
     double funmingranal(Data &x, Data &g) {
         double f;
-        gsl_vector gx = { (size_t)dimension, 1, x.data(), NULL, 0 };
-        gsl_vector gg = { (size_t)dimension, 1, g.data(), NULL, 0 };
+        gsl_vector gx = { (size_t)dimension, 1, x.get_data(), NULL, 0 };
+        gsl_vector gg = { (size_t)dimension, 1, g.get_data(), NULL, 0 };
         fdf(&gx, void_instance, &f, &gg);
         return f;
     }
@@ -98,7 +101,7 @@ public:
      * @param g if granal of sample.
      */
     void granal(Data &x, Data &g) {
-        return granal(x.data(), g.data());
+        return granal(x.get_data(), g.get_data());
     }
     /**
      * @brief granal
