@@ -275,12 +275,31 @@ double optimization_problem( const gsl_vector* parameters, void* void_instance, 
 
 
 /**
+// @brief The optimization problem of the final optimization
+@param parameters Array containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param ret_temp A matrix to store trace in for gradient for HS test 
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double optimization_problem( Matrix_real parameters, void* void_instance, Matrix ret_temp);
+
+
+/**
 @brief The optimization problem of the final optimization
 @param parameters A GNU Scientific Library containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 static double optimization_problem( const gsl_vector* parameters, void* void_instance );
+
+
+/**
+// @brief The optimization problem of the final optimization
+@param parameters Array containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
+double optimization_problem( Matrix_real parameters, void* void_instance);
 
 
 /**
@@ -301,6 +320,15 @@ static Matrix_real optimization_problem_batch( int batchsize, const gsl_vector* 
 static void optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad );
 
 
+/**
+@brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
+@param parameters Array containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param grad Array containing the calculated gradient components.
+*/
+void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad );
+
+
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
@@ -310,6 +338,18 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
 static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad );
+
+
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters Array containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param f0 The value of the cost function at x0.
+@param grad Array containing the calculated gradient components.
+*/
+static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
+
+
 
 static void optimization_problem_combined_unitary( const gsl_vector* parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
