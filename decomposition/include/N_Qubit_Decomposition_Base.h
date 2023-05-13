@@ -185,7 +185,7 @@ void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *soluti
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void solve_layer_optimization_problem_COSINE( int num_of_parameters, gsl_vector *solution_guess_gsl);
+void solve_layer_optimization_problem_COSINE( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
 
 /**
@@ -193,7 +193,7 @@ void solve_layer_optimization_problem_COSINE( int num_of_parameters, gsl_vector 
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void solve_layer_optimization_problem_AGENTS( int num_of_parameters, gsl_vector *solution_guess_gsl);
+void solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
 
 
@@ -202,7 +202,7 @@ void solve_layer_optimization_problem_AGENTS( int num_of_parameters, gsl_vector 
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, gsl_vector *solution_guess_gsl);
+void solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
 
 /**
@@ -210,7 +210,7 @@ void solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, gs
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void solve_layer_optimization_problem_BFGS( int num_of_parameters, gsl_vector *solution_guess_gsl);
+void solve_layer_optimization_problem_BFGS( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
 
 
@@ -226,14 +226,14 @@ void solve_layer_optimization_problem_BFGS2( int num_of_parameters, gsl_vector *
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, gsl_vector *solution_guess_gsl);
+void solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
 /**
 @brief Call to solve layer by layer the optimization problem via ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void solve_layer_optimization_problem_ADAM( int num_of_parameters, gsl_vector *solution_guess_gsl);
+void solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
 /**
 @brief ?????????????

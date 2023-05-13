@@ -337,24 +337,26 @@ void  N_Qubit_Decomposition_Base::final_optimization() {
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) {
 
+    Matrix_real solution_guess_mtx( solution_guess_gsl->data, solution_guess_gsl->size, 1 );
+
     switch ( alg ) {
         case ADAM:
-            solve_layer_optimization_problem_ADAM( num_of_parameters, solution_guess_gsl);
+            solve_layer_optimization_problem_ADAM( num_of_parameters, solution_guess_mtx);
             return;
         case ADAM_BATCHED:
-            solve_layer_optimization_problem_ADAM_BATCHED( num_of_parameters, solution_guess_gsl);
+            solve_layer_optimization_problem_ADAM_BATCHED( num_of_parameters, solution_guess_mtx);
             return;
         case AGENTS:
-            solve_layer_optimization_problem_AGENTS( num_of_parameters, solution_guess_gsl);
+            solve_layer_optimization_problem_AGENTS( num_of_parameters, solution_guess_mtx);
             return;
         case COSINE:
-            solve_layer_optimization_problem_COSINE( num_of_parameters, solution_guess_gsl);
+            solve_layer_optimization_problem_COSINE( num_of_parameters, solution_guess_mtx);
             return;
         case AGENTS_COMBINED:
-            solve_layer_optimization_problem_AGENTS_COMBINED( num_of_parameters, solution_guess_gsl);
+            solve_layer_optimization_problem_AGENTS_COMBINED( num_of_parameters, solution_guess_mtx);
             return;
         case BFGS:
-            solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess_gsl);
+            solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess_mtx);
             return;
         case BFGS2:
             solve_layer_optimization_problem_BFGS2( num_of_parameters, solution_guess_gsl);
@@ -372,9 +374,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 /**
 @brief Call to solve layer by layer the optimization problem via the COSINE algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int num_of_parameters, Matrix_real& solution_guess) {
 
 #ifdef __DFE__
         if ( qbit_num >= 5 && get_accelerator_num() > 0 ) {
@@ -392,21 +394,20 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
         double M_PI_half = M_PI/2;
         double M_PI_double = M_PI*2;
 
-
-        if (solution_guess_gsl == NULL) {
-            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
+        if (solution_guess.size() == 0 ) {
+            solution_guess = Matrix_real(num_of_parameters,1);
             std::uniform_real_distribution<> distrib_real(0, M_PI_double); 
             for ( int idx=0; idx<num_of_parameters; idx++) {
-                solution_guess_gsl->data[idx] = distrib_real(gen);
+                solution_guess[idx] = distrib_real(gen);
             }
+
         }
 
 
 
-//memset( solution_guess_gsl->data, 0.0, solution_guess_gsl->size*sizeof(double) );
         if (optimized_parameters_mtx.size() == 0) {
             optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
-            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
         }
 
 
@@ -721,9 +722,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
 /**
 @brief Call to solve layer by layer the optimization problem via the AGENT algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real& solution_guess) {
 
 
 #ifdef __DFE__
@@ -742,26 +743,27 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int nu
         double M_PI_half = M_PI/2;
         double M_PI_double = M_PI*2;
 
-
-        if (solution_guess_gsl == NULL) {
-            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
+        if (solution_guess.size() == 0 ) {
+            solution_guess = Matrix_real(num_of_parameters,1);
             std::uniform_real_distribution<> distrib_real(0, M_PI_double); 
             for ( int idx=0; idx<num_of_parameters; idx++) {
-                solution_guess_gsl->data[idx] = distrib_real(gen);
+                solution_guess[idx] = distrib_real(gen);
             }
+
         }
 
 
+
 #ifdef __MPI__        
-        MPI_Bcast( (void*)solution_guess_gsl->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+        MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
 
 
-//memset( solution_guess_gsl->data, 0.0, solution_guess_gsl->size*sizeof(double) );
+
         if (optimized_parameters_mtx.size() == 0) {
             optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
-            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
         }
 
 
@@ -893,7 +895,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 #endif
 
                 if ( agent_idx == 0 ) {
-                    memcpy( solution_guess_mtx_agent.get_data(), solution_guess_gsl->data, solution_guess_gsl->size*sizeof(double) );
+                    memcpy( solution_guess_mtx_agent.get_data(), solution_guess.get_data(), solution_guess.size()*sizeof(double) );
                 }
                 else {
                     randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  ); 
@@ -1228,26 +1230,26 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
 /**
 @brief Call to solve layer by layer the optimization problem via the AGENT COMBINED algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, gsl_vector *solution_guess_gsl)  {
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, Matrix_real& solution_guess)  {
 
 
 
-    optimized_parameters_mtx = Matrix_real(solution_guess_gsl->data, solution_guess_gsl->size, 1);
+    optimized_parameters_mtx = Matrix_real(solution_guess.get_data(), solution_guess.size(), 1);
 
     for( int loop_idx=0; loop_idx<1; loop_idx++ ) {
 
-        gsl_vector *solution_guess_gsl_AGENTS = gsl_vector_alloc(num_of_parameters);
-        memcpy( solution_guess_gsl_AGENTS->data, optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
+        Matrix_real solution_guess_AGENTS(num_of_parameters ,1);
+        memcpy( solution_guess_AGENTS.get_data(), optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
 
-        solve_layer_optimization_problem_AGENTS( num_of_parameters, solution_guess_gsl_AGENTS );
+        solve_layer_optimization_problem_AGENTS( num_of_parameters, solution_guess_AGENTS );
 
 
-        gsl_vector *solution_guess_gsl_COSINE = gsl_vector_alloc(num_of_parameters);
-        memcpy( solution_guess_gsl_COSINE->data, optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
+        Matrix_real solution_guess_COSINE(num_of_parameters, 1);
+        memcpy( solution_guess_COSINE.get_data(), optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
 
-        solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess_gsl_COSINE );
+        solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess_COSINE );
 
     }
         
@@ -1257,9 +1259,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINE
 /**
 @brief Call to solve layer by layer the optimization problem via batched ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, Matrix_real& solution_guess) {
 
 
 #ifdef __DFE__
@@ -1275,14 +1277,13 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( 
         }
 
 
-        if (solution_guess_gsl == NULL) {
-            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
+        if (solution_guess.size() == 0 ) {
+            solution_guess = Matrix_real(num_of_parameters,1);
         }
-//memset( solution_guess_gsl->data, 0.0, solution_guess_gsl->size*sizeof(double) );
 
         if (optimized_parameters_mtx.size() == 0) {
             optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
-            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
         }
 
 
@@ -1302,7 +1303,7 @@ pure_DFE_time = 0.0;
         // the array storing the optimized parameters
         gsl_vector* grad_gsl = gsl_vector_alloc(num_of_parameters);
         gsl_vector* solution_guess_tmp = gsl_vector_alloc(num_of_parameters);
-        memcpy(solution_guess_tmp->data, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+        memcpy(solution_guess_tmp->data, solution_guess.get_data(), num_of_parameters*sizeof(double) );
 
         Matrix_real solution_guess_tmp_mtx = Matrix_real( solution_guess_tmp->data, num_of_parameters, 1 );
         Matrix_real grad_mtx = Matrix_real( grad_gsl->data, num_of_parameters, 1 );
@@ -1476,9 +1477,9 @@ pure_DFE_time = 0.0;
 /**
 @brief Call to solve layer by layer the optimization problem via ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& solution_guess) {
 
 #ifdef __DFE__
         if ( qbit_num >= 2 && get_accelerator_num() > 0 ) {
@@ -1494,14 +1495,14 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
 
 
 
-        if (solution_guess_gsl == NULL) {
-            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
+        if (solution_guess.size() == 0 ) {
+            solution_guess = Matrix_real(num_of_parameters,1);
         }
-//memset( solution_guess_gsl->data, 0.0, solution_guess_gsl->size*sizeof(double) );
+
 
         if (optimized_parameters_mtx.size() == 0) {
             optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
-            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
         }
 
         int random_shift_count = 0;
@@ -1520,7 +1521,7 @@ pure_DFE_time = 0.0;
         // the array storing the optimized parameters
         gsl_vector* grad_gsl = gsl_vector_alloc(num_of_parameters);
         gsl_vector* solution_guess_tmp = gsl_vector_alloc(num_of_parameters);
-        memcpy(solution_guess_tmp->data, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+        memcpy(solution_guess_tmp->data, solution_guess.get_data(), num_of_parameters*sizeof(double) );
 
         Matrix_real solution_guess_tmp_mtx = Matrix_real( solution_guess_tmp->data, num_of_parameters, 1 );
         Matrix_real grad_mtx = Matrix_real( grad_gsl->data, num_of_parameters, 1 );
@@ -1675,7 +1676,6 @@ pure_DFE_time = 0.0;
                 }
                 print(sstream, 0);   
                     
-                 Matrix_real solution_guess_gsl_mtx( solution_guess_gsl->data, solution_guess_gsl->size, 1 );
                 randomize_parameters(optimized_parameters_mtx, solution_guess_tmp_mtx, f0 );
                 randomization_successful = 0;
         
@@ -1714,9 +1714,9 @@ pure_DFE_time = 0.0;
 /**
 @brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_of_parameters, Matrix_real& solution_guess) {
 
 
 #ifdef __DFE__
@@ -1730,14 +1730,14 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
         }
 
 
-        if (solution_guess_gsl == NULL) {
-            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
+        if (solution_guess.size() == 0 ) {
+            solution_guess = Matrix_real(num_of_parameters,1);
         }
 
 
         if (optimized_parameters_mtx.size() == 0) {
             optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
-            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
         }
 
         // maximal number of iteration loops
@@ -1765,83 +1765,30 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
         // do the optimization loops
         for (int idx=0; idx<iteration_loops_max; idx++) {
 	    
-            /*long long iter = 0;
-            int status;
-
-            const gsl_multimin_fdfminimizer_type *T;
-            gsl_multimin_fdfminimizer *s;
-
-            N_Qubit_Decomposition_Base* par = this;
-
-
-            gsl_multimin_function_fdf my_func;
-
-
-            my_func.n = num_of_parameters;
-            my_func.f = optimization_problem;
-            my_func.df = optimization_problem_grad;
-            my_func.fdf = optimization_problem_combined;
-            my_func.params = par;
-
-
-            T = gsl_multimin_fdfminimizer_vector_bfgs2;
-            s = gsl_multimin_fdfminimizer_alloc (T, num_of_parameters);
-
-            gsl_multimin_fdfminimizer_set(s, &my_func, solution_guess_gsl, 0.01, 0.1);
-
-            do {
-                iter++;
-                number_of_iters++;
-                gsl_set_error_handler_off();
-                status = gsl_multimin_fdfminimizer_iterate (s);
-
-                if (status) {
-                  break;
-                }
-
-                status = gsl_multimin_test_gradient (s->gradient, gradient_threshold);
-
-            } while (status == GSL_CONTINUE && iter < max_inner_iterations_loc);
-
-            if (current_minimum > s->f) {
-                current_minimum = s->f;
-                memcpy( optimized_parameters_mtx.get_data(), s->x->data, num_of_parameters*sizeof(double) );
-                gsl_multimin_fdfminimizer_free (s);
-
-                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen)/100;
-                }
-            }
-            else {
-                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen);
-                }
-                gsl_multimin_fdfminimizer_free (s);
-            }*/
 
 
             Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
             Tolmin tolmin(&p);
 
-            Matrix_real x(solution_guess_gsl->data, num_of_parameters, 1); 
+            Matrix_real x(solution_guess.get_data(), num_of_parameters, 1); 
 
             double f = tolmin.Solve(x, false, max_inner_iterations);
 
             if (current_minimum > f) {
                 current_minimum = f;
-                memcpy( optimized_parameters_mtx.get_data(), x.get_data(), num_of_parameters*sizeof(double) );
+                memcpy( optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen)/100;
+                    solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen)/100;
                 }
             }
             else {
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen);
+                    solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen);
                 }
             }
 
 #ifdef __MPI__        
-            MPI_Bcast( (void*)solution_guess_gsl->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
 
