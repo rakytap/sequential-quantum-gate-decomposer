@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "Adam.h"
 #include "tolmin.h"
+#include "lbfgs.h"
 
 #include "RL_experience.h"
 
@@ -1759,9 +1760,16 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
 
             Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
-            Tolmin tolmin(&p);
 
-            double f = tolmin.Solve(solution_guess, false, max_inner_iterations);
+            double f; 
+            if (num_of_parameters > 250) {
+                Lbfgs lbfgs(&p);
+                f = lbfgs.Solve(solution_guess);
+            } else {
+                Tolmin tolmin(&p);
+                f = tolmin.Solve(solution_guess, false, max_inner_iterations);
+            }
+
 
             if (current_minimum > f) {
                 current_minimum = f;
