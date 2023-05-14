@@ -7,7 +7,6 @@ typedef Matrix_real Data;
 
 #ifndef PROBLEM_H
 #define PROBLEM_H
-#include "gsl/gsl_vector.h"
 #define integer long
 
 
