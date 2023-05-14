@@ -34,7 +34,7 @@ setup(
             "test_standalone", "test_standalone.*",
         )
     ),
-    version='1.8.0',
+    version='1.8.1',
     url="https://github.com/rakytap/sequential-quantum-gate-decomposer", 
     maintainer="Peter Rakyta",
     maintainer_email="peter.rakyta@ttk.elte.hu",

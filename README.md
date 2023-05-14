@@ -36,12 +36,9 @@ Have a question about the SQUANDER package? Don't hesitate to contact us at the 
 
 ### Dependencies
 
-The optimization algorithm of SQUANDER relies on the [multimin](https://www.gnu.org/software/gsl/doc/html/multimin.html) component of the [GNU Scientific Library](https://www.gnu.org/software/gsl/doc/html/index.html). 
-We developed and tested the SQUANDER package with GNU Scientific Library of version 2.5, 2.6 and 2.7.
 The dependencies necessary to compile and build the SQUANDER package are the followings:
 
 * [CMake](https://cmake.org/) (>=3.10.2)
-* [GNU Scientific Library](https://www.gnu.org/software/gsl/doc/html/index.html) (>=2.5, shipped with the gsl python package)
 * C++/C [Intel](https://software.intel.com/content/www/us/en/develop/tools/compilers/c-compilers.html) (>=14.0.1) or [GNU](https://gcc.gnu.org/) (>=v4.8.1) compiler
 * [TBB](https://github.com/oneapi-src/oneTBB) library (shipped with tbb-devel Python package)
 * [Intel MKL](https://software.intel.com/content/www/us/en/develop/tools/math-kernel-library.html) (optional)
@@ -57,51 +54,15 @@ The SQUANDER Python interface needs the following packages to be installed on th
 * [scipy](https://www.scipy.org/install.html)
 * [scikit-build](https://scikit-build.readthedocs.io/en/latest/)
 * [tbb-devel](https://pypi.org/project/tbb-devel/) (containing the TBB Library)
-* [gsl](https://anaconda.org/conda-forge/gsl) (containing the GNU Scientific Library)
 
 
 
-
-### How to obtain GNU Scientific Library
-
-In order to build and use the SQUANDER we recommend the Anaconda virtual python environment providing all the required dependencies for SQUANDER.
-One can easily install the GNU Scientific Library for local users by the command
-
-$ conda install -c conda-forge gsl
-
-Alternatively, a python binding project alongside the GNU GSL library is accessible via pypi repository:
-
-$ pip install numpy swig
-
-$ pip install pygsl
-
-Here we describe an alternative way to deploy GNU Scientific Library from source by the end user without administrative privileges. 
-The GNU Scientific Library can be downloaded from the site [https://www.gnu.org/software/gsl/](https://www.gnu.org/software/gsl/).
-After the downloaded package is extracted somewhere in the home directory of the user (**path/to/gsl/source**), one should configure the building environment using the **configure** tool.
-Depending on the individual settings the default compiler to be invoked might be different from HPC to HPC. 
-To ensure the usage of the GNU compiler, the following shell command should be executed inside the directory **path/to/gsl/source**:
-
-$ ./configure --prefix=path/to/gsl FC=gfortran CC=gcc CXX=g++
-
-(Similarly, Intel compiler can be forced by setting FC=ifort CC=icc and CXX=icpc.)
-The installation directory of the compiled GNU Scientific Library is given by **--prefix=path/to/gsl** (which is different from the directory path of 
-the source files given by **path/to/gslsource**).
-To install GNU Scientific Library the user should have read and write permissions on the path **path/to/gsl** (which might be for example /home/username/gsl).
-After the successful configuration the GNU Scientific Library can be compiled by the shell command
-
-$ make
-
-The compilation of the GNU Scientific Library takes some time. When the compilation is done, the package (including the C header files and the static and shared libraries) is installed into the directory **path/to/gsl** by the shell command:
-
-$ make install
 
 ### Install SQUANDER from Python Package Index (PyPI)
 
 Since version 1.7.1 the SQUANDER package is accessible at Python Package Index (PyPI). The package can be installed on linux systems following the steps outlined below:
 
 $ pip install numpy swig tbb-devel wheel scikit-build ninja qiskit
-
-$ pip install pygsl
 
 $ pip install squander
 
@@ -115,12 +76,6 @@ After the package is downloaded into the directory **path/to/SQUANDER/package** 
 ### How to build the SQUANDER package
 
 The SQUANDER package is equipped with a Python build script and CMake tools to ease the compilation and the deployment of the package.
-To ensure that SQUANDER package would find the necessary libraries and header files during compilation time it is advised to define the following environment variables:
-
-$ export GSL_LIB_DIR=path/to/gsl/lib(64)
-
-$ export GSL_INC_DIR=path/to/gsl/include
-
 The SQUANDER package is parallelized via Threading Building Block (TBB) libraries. If TBB is not present in the system, it can be easily installed via python package [tbb-devel](https://pypi.org/project/tbb-devel/).
 Alternatively the TBB libraries can be installed via apt or yum utility (sudo apt install libtbb-dev) or it can be downloaded from [https://github.com/oneapi-src/oneTBB](https://github.com/oneapi-src/oneTBB)   and built from source. 
 In this case one should supply the necessary environment variables pointing to the header and library files of the TBB package. For newer
@@ -154,8 +109,6 @@ $ conda activate qgd
 Install dependencies:
 
 $ conda install numpy scipy pip pytest scikit-build tbb-devel
-
-$ conda install -c conda-forge gsl
 
 $ pip install qiskit matplotlib 
 
