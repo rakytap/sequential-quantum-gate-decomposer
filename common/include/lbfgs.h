@@ -1,3 +1,7 @@
+/*
+This code is credited to the OPTIMUS project of Ioannis G. Tsoulos
+*/
+
 #ifndef LBFGS_H
 #define LBFGS_H
 # include "tolmin.h"
