@@ -1,3 +1,7 @@
+/*
+This code is credited to the OPTIMUS project of Ioannis G. Tsoulos
+*/
+
 #include "lbfgs.h"
 
 static integer c__1 = 1;
