@@ -20,18 +20,18 @@ class Problem
 private:
     int dimension;
     double lmargin, rmargin;
-    double (* f) (const gsl_vector * x, void * params);
-    void (* df) (const gsl_vector * x, void * params, gsl_vector * g);
-    void (* fdf) (const gsl_vector * x, void * params, double * f, gsl_vector * g);
+    double (* f) (Data x, void * params);
+    void (* df) (Data x, void * params, Data g);
+    void (* fdf) (Data x, void * params, double * f, Data g);
     void* void_instance;
 
 public:
     /** @brief Problem the constructor of the class.
      * 	@param p is the objective problem to be minimized
      * **/
-    Problem(int dimension, double lmargin, double rmargin, double (* f) (const gsl_vector *, void *),
-        void (* df) (const gsl_vector *, void *, gsl_vector *),
-        void (* fdf) (const gsl_vector *, void *, double *, gsl_vector *),
+    Problem(int dimension, double lmargin, double rmargin, double (* f) (Data, void *),
+        void (* df) (Data, void *, Data),
+        void (* fdf) (Data, void *, double *, Data),
         void* void_instance)
     {
         this->dimension = dimension;
@@ -80,8 +80,8 @@ public:
      * @return f(sample), minimum value.
      */
     double funmin(double *x) {
-        gsl_vector gx = { (size_t)dimension, 1, x, NULL, 0 };
-        return f(&gx, void_instance);
+        Data gx( x, 1, dimension);
+        return f(gx, void_instance);
     }
     /**
      * @brief granal
@@ -90,9 +90,9 @@ public:
      */
     double funmingranal(Data &x, Data &g) {
         double f;
-        gsl_vector gx = { (size_t)dimension, 1, x.get_data(), NULL, 0 };
-        gsl_vector gg = { (size_t)dimension, 1, g.get_data(), NULL, 0 };
-        fdf(&gx, void_instance, &f, &gg);
+        Data gx( x.get_data(), 1, dimension);
+        Data gg( g.get_data(), 1, dimension);
+        fdf(gx, void_instance, &f, gg);
         return f;
     }
     /**
@@ -110,9 +110,9 @@ public:
      */
     void granal(double *x, double *g)
     {
-        gsl_vector gx = { (size_t)dimension, 1, x, NULL, 0 };
-        gsl_vector gg = { (size_t)dimension, 1, g, NULL, 0 };
-        df(&gx, void_instance, &gg);
+        Data gx( x, 1, dimension);
+        Data gg( g, 1, dimension);
+        df(gx, void_instance, gg);
     }
     /**
      * @brief isPointIn

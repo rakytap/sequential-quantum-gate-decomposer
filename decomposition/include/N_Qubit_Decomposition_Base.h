@@ -172,12 +172,6 @@ virtual void add_finalyzing_layer();
 */
 void final_optimization();
 
-/**
-@brief Call to solve layer by layer the optimization problem via calling one of the implemented algorithms. The optimalized parameters are stored in attribute optimized_parameters.
-@param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
-*/
-void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
 
 
 /**
@@ -227,7 +221,7 @@ void solve_layer_optimization_problem_BFGS( int num_of_parameters, Matrix_real& 
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void solve_layer_optimization_problem_BFGS2( int num_of_parameters, gsl_vector *solution_guess_gsl);
+void solve_layer_optimization_problem_BFGS2( int num_of_parameters, Matrix_real solution_guess);
 
 /**
 @brief Call to solve layer by layer the optimization problem via batched ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
@@ -272,15 +266,6 @@ double optimization_problem( Matrix_real& parameters);
 Matrix_real optimization_problem_batched( std::vector<Matrix_real>& parameters_vec);
 
 
-/**
-@brief The optimization problem of the final optimization useful for gradient
-@param parameters A GNU Scientific Library containing the parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param ret_temp A matrix to store trace in for gradient
-@return Returns with the cost function. (zero if the qubits are desintangled.)
-*/
-double optimization_problem( const gsl_vector* parameters, void* void_instance, Matrix ret_temp );
-
 
 /**
 // @brief The optimization problem of the final optimization
@@ -293,39 +278,12 @@ double optimization_problem( Matrix_real parameters, void* void_instance, Matrix
 
 
 /**
-@brief The optimization problem of the final optimization
-@param parameters A GNU Scientific Library containing the parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@return Returns with the cost function. (zero if the qubits are desintangled.)
-*/
-static double optimization_problem( const gsl_vector* parameters, void* void_instance );
-
-
-/**
 // @brief The optimization problem of the final optimization
 @param parameters Array containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double optimization_problem( Matrix_real parameters, void* void_instance);
-
-
-/**
-@brief The optimization problem of the final optimization
-@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param grad A GNU Scientific Library vector containing the calculated gradient components.
-*/
-static Matrix_real optimization_problem_batch( int batchsize, const gsl_vector* parameters, void* void_instance );
-
-
-/**
-@brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
-@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param grad A GNU Scientific Library vector containing the calculated gradient components.
-*/
-static void optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad );
+static double optimization_problem( Matrix_real parameters, void* void_instance);
 
 
 /**
@@ -334,7 +292,7 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad Array containing the calculated gradient components.
 */
-void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad );
+static void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad );
 
 
 
@@ -345,7 +303,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real paramete
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad );
+//static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad );
 
 
 /**
@@ -355,11 +313,10 @@ static void optimization_problem_combined( const gsl_vector* parameters, void* v
 @param f0 The value of the cost function at x0.
 @param grad Array containing the calculated gradient components.
 */
-static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
+static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real grad );
 
 
 
-static void optimization_problem_combined_unitary( const gsl_vector* parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
@@ -368,11 +325,13 @@ static void optimization_problem_combined_unitary( const gsl_vector* parameters,
 @param grad An array storing the calculated gradient components
 @param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
 */
-void optimization_problem_combined( const Matrix_real& parameters, double* f0, Matrix_real& grad );
+void optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad );
 
-void optimization_problem_combined_unitary( const Matrix_real& parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
-Matrix_real optimization_problem_batch( Matrix_real batch );
+
+static void optimization_problem_combined_unitary( Matrix_real parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
+void optimization_problem_combined_unitary( Matrix_real parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
+
 
 /**
 // @brief The optimization problem of the final optimization

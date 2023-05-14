@@ -518,7 +518,7 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are disentangled.)
 */
-double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* parameters, void* void_instance ) {
+double Sub_Matrix_Decomposition::optimization_problem( Matrix_real parameters, void* void_instance ) {
 
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
@@ -529,8 +529,7 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 //tbb::spin_mutex::scoped_lock my_lock{my_mutex};
 
     Umtx_loc = instance->get_Umtx();
-    Matrix_real parameters_mtx(parameters->data, 1, instance->get_parameter_num() );
-    matrix_new = instance->get_transformed_matrix( parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx_loc );
+    matrix_new = instance->get_transformed_matrix( parameters, gates_loc.begin(), gates_loc.size(), Umtx_loc );
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
@@ -559,7 +558,7 @@ double Sub_Matrix_Decomposition::optimization_problem( const gsl_vector* paramet
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-void Sub_Matrix_Decomposition::optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad ) {
+void Sub_Matrix_Decomposition::optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real grad ) {
 
     // The function value at x0
     double f0;
@@ -578,14 +577,14 @@ void Sub_Matrix_Decomposition::optimization_problem_grad( const gsl_vector* para
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad ) {
+void Sub_Matrix_Decomposition::optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real grad ) {
 
     Sub_Matrix_Decomposition* instance = reinterpret_cast<Sub_Matrix_Decomposition*>(void_instance);
 
     int parameter_num_loc = instance->get_parameter_num();
 
     // storage for the function values calculated at the displaced points x
-    gsl_vector* f = gsl_vector_alloc(grad->size);
+    Matrix_real f(1, grad.size());
 
     // the difference in one direction in the parameter for the gradient calculation
     double dparam = 1e-8;
@@ -593,22 +592,17 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* 
     // calculate the function values at displaced x and the central x0 points through TBB parallel for
     tbb::parallel_for(0, parameter_num_loc+1, 1, [&](int i) {
 
-        if (i == (int)parameters->size) {
+        if (i == (int)parameters.size()) {
             // calculate function value at x0
             *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance));
         }
         else {
 
-            gsl_vector* parameters_d = gsl_vector_calloc(parameters->size);
-            memcpy( parameters_d->data, parameters->data, parameters->size*sizeof(double) );
-            parameters_d->data[i] = parameters_d->data[i] + dparam;
+            Matrix_real parameters_d = parameters.copy();
+            parameters_d[i] = parameters_d[i] + dparam;
 
             // calculate the cost function at the displaced point
-            f->data[i] = instance->optimization_problem(parameters_d, reinterpret_cast<void*>(instance));
-
-            // release vectors
-            gsl_vector_free(parameters_d);
-            parameters_d = NULL;
+            f[i] = instance->optimization_problem(parameters_d, reinterpret_cast<void*>(instance));
 
         }
     });
@@ -633,11 +627,10 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( const gsl_vector* 
           exit(-1);
         }
 #endif // DEBUG
-        gsl_vector_set(grad, idx, (f->data[idx]-(*f0))/dparam);
+        grad[idx] = (f[idx]-(*f0))/dparam;
     }
 
 
-    gsl_vector_free(f);
 
 }
 
