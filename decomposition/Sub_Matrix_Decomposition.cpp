@@ -24,6 +24,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Sub_Matrix_Decomposition.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
 
+#include "tolmin.h"
+
 
 #ifdef __MPI__
 #include <mpi.h>
@@ -51,6 +53,8 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( ) {
 
     // custom gate structure used in the decomposition
     unit_gate_structure = NULL;
+
+    max_inner_iterations = 100;
 
 }
 
@@ -89,6 +93,8 @@ Sub_Matrix_Decomposition::Sub_Matrix_Decomposition( Matrix Umtx_in, int qbit_num
 
     // custom gate structure used in the decomposition
     unit_gate_structure = NULL;
+
+    max_inner_iterations = 100;
 
 
 }
@@ -180,7 +186,6 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 */
                 // solve the optimization problem to find the correct minimum
                 solve_optimization_problem( NULL, 0);
-
 
                 if (check_optimization_solution()) {
                     break;
@@ -404,7 +409,7 @@ void Sub_Matrix_Decomposition::set_custom_gate_layers( Gates_block* block_in) {
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_parameters, Matrix_real solution_guess) {
 
 
         if (gates.size() == 0 ) {
@@ -412,18 +417,14 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
         }
 
 
-        if (solution_guess_gsl == NULL) {
-            solution_guess_gsl = gsl_vector_alloc(num_of_parameters);
+        if (solution_guess.size() == 0 ) {
+            solution_guess = Matrix_real(num_of_parameters,1);
         }
-/*
-        if (optimized_parameters == NULL) {
-            optimized_parameters = (double*)qgd_calloc(num_of_parameters,sizeof(double), 64);
-            memcpy(optimized_parameters, solution_guess_gsl->data, num_of_parameters*sizeof(double) );
-        }
-*/
+
+
         if (optimized_parameters_mtx.size() == 0) {
             optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
-            memcpy(optimized_parameters_mtx.get_data(), solution_guess_gsl->data, num_of_parameters*sizeof(double) );
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
         }
 
 
@@ -436,72 +437,43 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
             iteration_loops_max = 1;
         }
 
+        // maximal number of inner iterations overriden by config
+        long long max_inner_iterations_loc;
+        if ( config.count("max_inner_iterations") > 0 ) {
+            config["max_inner_iterations"].get_property( max_inner_iterations_loc );         
+        }
+        else {
+            max_inner_iterations_loc =max_inner_iterations;
+        }
+
         // random generator of real numbers   
         std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
 
         // do the optimization loops
-        for (int idx=0; idx<iteration_loops_max; idx++) {
+        for (long long idx=0; idx<iteration_loops_max; idx++) {
 
-            int iter = 0;
-            int status;
+            Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
+            Tolmin tolmin(&p);
 
-            const gsl_multimin_fdfminimizer_type *T;
-            gsl_multimin_fdfminimizer *s;
+            Matrix_real x(solution_guess.get_data(), num_of_parameters, 1); 
 
-            Sub_Matrix_Decomposition* par = this;
+            double f = tolmin.Solve(x, false, max_inner_iterations);
 
-
-            gsl_multimin_function_fdf my_func;
-
-
-            my_func.n = num_of_parameters;
-            my_func.f = optimization_problem;
-            my_func.df = optimization_problem_grad;
-            my_func.fdf = optimization_problem_combined;
-            my_func.params = par;
-
-
-            T = gsl_multimin_fdfminimizer_vector_bfgs2;
-            s = gsl_multimin_fdfminimizer_alloc (T, num_of_parameters);
-
-
-            gsl_multimin_fdfminimizer_set (s, &my_func, solution_guess_gsl, 0.1, 0.1);
-
-            do {
-                iter++;
-
-                status = gsl_multimin_fdfminimizer_iterate (s);
-
-                if (status) {
-                  break;
-                }
-
-                status = gsl_multimin_test_gradient (s->gradient, 1e-1);
-                /*if (status == GSL_SUCCESS) {
-                    printf ("Minimum found\n");
-                }*/
-
-            } while (status == GSL_CONTINUE && iter < 100);
-
-            if (current_minimum > s->f) {
-                current_minimum = s->f;
-                memcpy( optimized_parameters_mtx.get_data(), s->x->data, num_of_parameters*sizeof(double) );
-                gsl_multimin_fdfminimizer_free (s);
-
+            if (current_minimum > f) {
+                current_minimum = f;
+                memcpy( optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen)/100;
+                    solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen)/100;
                 }
             }
             else {
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = solution_guess_gsl->data[jdx] + distrib_real(gen);
+                    solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen);
                 }
-
-                gsl_multimin_fdfminimizer_free (s);
             }
 
 #ifdef __MPI__        
-            MPI_Bcast( (void*)solution_guess_gsl->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
 

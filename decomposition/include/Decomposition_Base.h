@@ -216,6 +216,15 @@ virtual void solve_layer_optimization_problem( int num_of_parameters, gsl_vector
 
 
 /**
+@brief Abstarct function to be used to solve a single sub-layer optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
+@param 'num_of_parameters' The number of free parameters to be optimized
+@param solution_guess_gsl Array containing the free parameters to be optimized.
+*/
+virtual void solve_layer_optimization_problem( int num_of_parameters, Matrix_real solution_guess_gsl);
+
+
+
+/**
 @brief This is an abstact definition of function giving the cost functions measuring the entaglement of the qubits. When the qubits are indepent, teh cost function should be zero.
 @param parameters An array of the free parameters to be optimized. (The number of the free paramaters should be equal to the number of parameters in one sub-layer)
 */

@@ -51,6 +51,9 @@ public:
     /// Custom gate structure describing the gate structure used in the decomposition. The gate structure is repeated periodically in the decomposing gate structure
     Gates_block* unit_gate_structure;
 
+    /// maximal number of inner iterations
+    long long max_inner_iterations;
+
 
 public:
 
@@ -106,7 +109,7 @@ void set_custom_gate_layers( Gates_block* block_in);
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
+void solve_layer_optimization_problem( int num_of_parameters, Matrix_real solution_guess_gsl);
 
 
 

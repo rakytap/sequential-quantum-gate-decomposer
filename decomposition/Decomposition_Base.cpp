@@ -572,7 +572,10 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             memcpy( solution_guess_gsl->data, optimized_parameters_gsl->data+parameter_num_loc - pre_gate_parameter_num - block_parameter_num, parameter_num*sizeof(double) );
 
             // solve the optimization problem of the block
-            solve_layer_optimization_problem( parameter_num, solution_guess_gsl  );
+            Matrix_real solution_guess_mtx( solution_guess_gsl->data, solution_guess_gsl->size, 1 );
+
+            //solve_layer_optimization_problem( parameter_num, solution_guess_gsl );
+            solve_layer_optimization_problem( parameter_num, solution_guess_mtx );
 
             // add the current minimum to the array of minimums and calculate the mean
             double minvec_mean = 0;
@@ -673,6 +676,16 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 @param solution_guess_gsl A GNU Scientific Libarary vector containing the free parameters to be optimized.
 */
 void Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+    return;
+}
+
+
+/**
+@brief Abstarct function to be used to solve a single sub-layer optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
+@param 'num_of_parameters' The number of free parameters to be optimized
+@param solution_guess Array containing the free parameters to be optimized.
+*/
+void Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, Matrix_real solution_guess) {
     return;
 }
 

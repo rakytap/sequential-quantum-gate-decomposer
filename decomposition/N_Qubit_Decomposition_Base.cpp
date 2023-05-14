@@ -370,6 +370,48 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 }
 
 
+/**
+@brief Call to solve layer by layer the optimization problem via calling one of the implemented algorithms. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess Array containing the solution guess.
+*/
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, Matrix_real solution_guess) {
+
+
+    switch ( alg ) {
+        case ADAM:
+            solve_layer_optimization_problem_ADAM( num_of_parameters, solution_guess);
+            return;
+        case ADAM_BATCHED:
+            solve_layer_optimization_problem_ADAM_BATCHED( num_of_parameters, solution_guess);
+            return;
+        case AGENTS:
+            solve_layer_optimization_problem_AGENTS( num_of_parameters, solution_guess);
+            return;
+        case COSINE:
+            solve_layer_optimization_problem_COSINE( num_of_parameters, solution_guess);
+            return;
+        case AGENTS_COMBINED:
+            solve_layer_optimization_problem_AGENTS_COMBINED( num_of_parameters, solution_guess);
+            return;
+        case BFGS:
+            solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess);
+            return;
+        case BFGS2:
+            gsl_vector* solution_guess_gsl = gsl_vector_alloc (num_of_parameters);
+            memcpy( solution_guess_gsl->data, solution_guess.get_data(), num_of_parameters*sizeof(double) );
+            solve_layer_optimization_problem_BFGS2( num_of_parameters, solution_guess_gsl);
+            gsl_vector_free( solution_guess_gsl );
+            return;
+        default:
+            std::string error("N_Qubit_Decomposition_Base::solve_layer_optimization_problem: unimplemented optimization algorithm");
+            throw error;
+    }
+
+
+}
+
+
 
 /**
 @brief Call to solve layer by layer the optimization problem via the COSINE algorithm. The optimalized parameters are stored in attribute optimized_parameters.
@@ -1301,12 +1343,10 @@ pure_DFE_time = 0.0;
 
 
         // the array storing the optimized parameters
-        gsl_vector* grad_gsl = gsl_vector_alloc(num_of_parameters);
-        gsl_vector* solution_guess_tmp = gsl_vector_alloc(num_of_parameters);
-        memcpy(solution_guess_tmp->data, solution_guess.get_data(), num_of_parameters*sizeof(double) );
+        Matrix_real solution_guess_tmp = Matrix_real( num_of_parameters, 1 );
+        memcpy(solution_guess_tmp.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
 
-        Matrix_real solution_guess_tmp_mtx = Matrix_real( solution_guess_tmp->data, num_of_parameters, 1 );
-        Matrix_real grad_mtx = Matrix_real( grad_gsl->data, num_of_parameters, 1 );
+        Matrix_real grad_mtx = Matrix_real( num_of_parameters, 1 );
         //solution_guess_tmp_mtx.print_matrix();
 
 
@@ -1353,7 +1393,7 @@ pure_DFE_time = 0.0;
             
 
 
-                optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_gsl );
+                optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_mtx );
 
                 prev_cost_fnv_val = f0;
   
@@ -1376,7 +1416,7 @@ pure_DFE_time = 0.0;
     
                 if (current_minimum > f0 ) {
                     current_minimum = f0;
-                    memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp->data, num_of_parameters*sizeof(double) );
+                    memcpy( optimized_parameters_mtx.get_data(),  solution_guess.get_data(), num_of_parameters*sizeof(double) );
                     //double new_eta = 1e-3 * f0 * f0;
                 
                     if ( adaptive_eta )  {
@@ -1411,7 +1451,7 @@ pure_DFE_time = 0.0;
                 // calculate the gradient norm
                 double norm = 0.0;
                 for ( int grad_idx=0; grad_idx<num_of_parameters; grad_idx++ ) {
-                    norm += grad_gsl->data[grad_idx]*grad_gsl->data[grad_idx];
+                    norm += grad_mtx[grad_idx]*grad_mtx[grad_idx];
                 }
                 norm = std::sqrt(norm);
                     
@@ -1434,8 +1474,8 @@ pure_DFE_time = 0.0;
                     }
                     print(sstream, 0);   
                     
-                    Matrix_real solution_guess_tmp_mtx( solution_guess_tmp->data, solution_guess_tmp->size, 1);
-                    randomize_parameters(optimized_parameters_mtx, solution_guess_tmp_mtx, f0 );
+
+                    randomize_parameters(optimized_parameters_mtx, solution_guess_tmp, f0 );
         
                     optimizer.reset();
                     optimizer.initialize_moment_and_variance( num_of_parameters );   
@@ -1447,7 +1487,7 @@ pure_DFE_time = 0.0;
                 }
 
                 else {
-                    ADAM_status = optimizer.update(solution_guess_tmp_mtx, grad_mtx, f0);
+                    ADAM_status = optimizer.update(solution_guess_tmp, grad_mtx, f0);
                 }
 
                 sub_iter_idx++;
@@ -1463,8 +1503,6 @@ pure_DFE_time = 0.0;
         sstream << "obtained minimum: " << current_minimum << std::endl;
 
 
-        gsl_vector_free(grad_gsl);
-        gsl_vector_free(solution_guess_tmp);
         tbb::tick_count adam_end = tbb::tick_count::now();
         adam_time  = adam_time + (adam_end-adam_start).seconds();
         sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
@@ -1519,13 +1557,10 @@ pure_DFE_time = 0.0;
 
 
         // the array storing the optimized parameters
-        gsl_vector* grad_gsl = gsl_vector_alloc(num_of_parameters);
-        gsl_vector* solution_guess_tmp = gsl_vector_alloc(num_of_parameters);
-        memcpy(solution_guess_tmp->data, solution_guess.get_data(), num_of_parameters*sizeof(double) );
+        Matrix_real solution_guess_tmp = Matrix_real( num_of_parameters, 1 );
+        memcpy(solution_guess_tmp.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
 
-        Matrix_real solution_guess_tmp_mtx = Matrix_real( solution_guess_tmp->data, num_of_parameters, 1 );
-        Matrix_real grad_mtx = Matrix_real( grad_gsl->data, num_of_parameters, 1 );
-        //solution_guess_tmp_mtx.print_matrix();
+        Matrix_real grad_mtx = Matrix_real( num_of_parameters, 1 );
 
 
 
@@ -1574,7 +1609,7 @@ pure_DFE_time = 0.0;
             number_of_iters++;
 
 
-            optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_gsl );
+            optimization_problem_combined( solution_guess_tmp, (void*)(this), &f0, grad_mtx );
 
             prev_cost_fnv_val = f0;
   
@@ -1597,7 +1632,7 @@ pure_DFE_time = 0.0;
     
             if (current_minimum > f0 ) {
                 current_minimum = f0;
-                memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp->data, num_of_parameters*sizeof(double) );
+                memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp.get_data(), num_of_parameters*sizeof(double) );
                 //double new_eta = 1e-3 * f0 * f0;
                 
                 if ( adaptive_eta )  {
@@ -1612,8 +1647,7 @@ pure_DFE_time = 0.0;
 
             if ( iter_idx % 5000 == 0 ) {
 
-                Matrix_real solution_guess_tmp_mtx( solution_guess_tmp->data, solution_guess_tmp->size, 1 );
-                Matrix matrix_new = get_transformed_matrix( solution_guess_tmp_mtx, gates.begin(), gates.size(), Umtx );
+                Matrix matrix_new = get_transformed_matrix( solution_guess_tmp, gates.begin(), gates.size(), Umtx );
 
                 std::stringstream sstream;
                 sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << ", current cost function:" << get_cost_function(matrix_new, trace_offset) << ", sub_iter_idx:" << sub_iter_idx <<std::endl;
@@ -1632,7 +1666,7 @@ pure_DFE_time = 0.0;
                 // calculate the gradient norm
                 double norm = 0.0;
                 for ( int grad_idx=0; grad_idx<num_of_parameters; grad_idx++ ) {
-                    norm += grad_gsl->data[grad_idx]*grad_gsl->data[grad_idx];
+                    norm += grad_mtx[grad_idx]*grad_mtx[grad_idx];
                 }
                 norm = std::sqrt(norm);
                 
@@ -1676,7 +1710,7 @@ pure_DFE_time = 0.0;
                 }
                 print(sstream, 0);   
                     
-                randomize_parameters(optimized_parameters_mtx, solution_guess_tmp_mtx, f0 );
+                randomize_parameters(optimized_parameters_mtx, solution_guess_tmp, f0 );
                 randomization_successful = 0;
         
                 optimizer.reset();
@@ -1689,7 +1723,7 @@ pure_DFE_time = 0.0;
             }
 
             else {
-                ADAM_status = optimizer.update(solution_guess_tmp_mtx, grad_mtx, f0);
+                ADAM_status = optimizer.update(solution_guess_tmp, grad_mtx, f0);
             }
 
             sub_iter_idx++;
@@ -1699,8 +1733,6 @@ pure_DFE_time = 0.0;
         sstream << "obtained minimum: " << current_minimum << std::endl;
 
 
-        gsl_vector_free(grad_gsl);
-        gsl_vector_free(solution_guess_tmp);
         tbb::tick_count adam_end = tbb::tick_count::now();
         adam_time  = adam_time + (adam_end-adam_start).seconds();
         sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
@@ -1763,7 +1795,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
 
         // do the optimization loops
-        for (int idx=0; idx<iteration_loops_max; idx++) {
+        for (long long idx=0; idx<iteration_loops_max; idx++) {
 	    
 
 

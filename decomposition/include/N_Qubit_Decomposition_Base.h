@@ -181,6 +181,14 @@ void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *soluti
 
 
 /**
+@brief Call to solve layer by layer the optimization problem via calling one of the implemented algorithms. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess Array containing the solution guess.
+*/
+void solve_layer_optimization_problem( int num_of_parameters, Matrix_real solution_guess);
+
+
+/**
 @brief Call to solve layer by layer the optimization problem via the COSINE algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
