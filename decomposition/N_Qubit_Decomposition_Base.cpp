@@ -1761,9 +1761,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
             Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
             Tolmin tolmin(&p);
 
-            Matrix_real x(solution_guess.get_data(), num_of_parameters, 1); 
-
-            double f = tolmin.Solve(x, false, max_inner_iterations);
+            double f = tolmin.Solve(solution_guess, false, max_inner_iterations);
 
             if (current_minimum > f) {
                 current_minimum = f;
@@ -1869,27 +1867,31 @@ bfgs_time = 0.0;
         std::stringstream sstream;
         sstream << "max_inner_iterations: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization_loc << std::endl;
         print(sstream, 2); 
-/*
+
         // do the optimization loops
-        for (long long idx=0; idx<iteration_loops_max; idx++) {
+        double f = DBL_MAX;
+        for (long long iter_idx=0; iter_idx<iteration_loops_max; iter_idx++) {
 
             
-                
+                Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
+                Tolmin tolmin(&p);
+
+                f = tolmin.Solve(solution_guess, false, max_inner_iterations);             
                 
                 if (sub_iter_idx == 1 ) {
-                     current_minimum_hold = s->f;    
+                     current_minimum_hold = f;    
                 }
 
 
-                if (current_minimum_hold*0.95 > s->f || (current_minimum_hold*0.97 > s->f && s->f < 1e-3) ||  (current_minimum_hold*0.99 > s->f && s->f < 1e-4) ) {
+                if (current_minimum_hold*0.95 > f || (current_minimum_hold*0.97 > f && f < 1e-3) ||  (current_minimum_hold*0.99 > f && f < 1e-4) ) {
                      sub_iter_idx = 0;
-                     current_minimum_hold = s->f;        
+                     current_minimum_hold = f;        
                 }
     
     
-                if (current_minimum > s->f ) {
-                     current_minimum = s->f;
-                     memcpy( optimized_parameters_mtx.get_data(),  s->x->data, num_of_parameters*sizeof(double) );
+                if (current_minimum > f ) {
+                     current_minimum = f;
+                     memcpy( optimized_parameters_mtx.get_data(),  solution_guess.get_data(), num_of_parameters*sizeof(double) );
                 }
     
 
@@ -1903,7 +1905,7 @@ bfgs_time = 0.0;
                 }
 
 
-                if (s->f < optimization_tolerance || random_shift_count > random_shift_count_max ) {
+                if (f < optimization_tolerance || random_shift_count > random_shift_count_max ) {
                     break;
                 }
 
@@ -1912,27 +1914,26 @@ bfgs_time = 0.0;
                 iter_idx++;
                 number_of_iters++;
 
-            } while (iter_idx < max_inner_iterations_loc && s->f > optimization_tolerance);
+        
 
-            if (current_minimum > s->f) {
-                current_minimum = s->f;
-                memcpy( optimized_parameters_mtx.get_data(), s->x->data, num_of_parameters*sizeof(double) );                
+            if (current_minimum > f) {
+                current_minimum = f;
+                memcpy( optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );                
 
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*2*M_PI/100;
+                    solution_guess[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*2*M_PI/100;
                 }
             }
             else {
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
-                    solution_guess_gsl->data[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*2*M_PI;
+                    solution_guess[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*2*M_PI;
                 }
             }
 
 #ifdef __MPI__        
-            MPI_Bcast( (void*)solution_guess_gsl->data, num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
             
-            gsl_multimin_fdfminimizer_free (s);
             
             if (current_minimum < optimization_tolerance ) {
                 break;
@@ -1941,7 +1942,7 @@ bfgs_time = 0.0;
 
 
         }
-*/
+
         tbb::tick_count bfgs_end = tbb::tick_count::now();
         bfgs_time  = bfgs_time + (bfgs_end-bfgs_start).seconds();
         std::cout << "bfgs2 time: " << bfgs_time << " " << current_minimum << std::endl;
