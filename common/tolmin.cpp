@@ -1,3 +1,7 @@
+/*
+This code is credited to the OPTIMUS project of Ioannis G. Tsoulos
+*/
+
 # include <stdio.h>
 # include <stdlib.h>
 # include <math.h>
