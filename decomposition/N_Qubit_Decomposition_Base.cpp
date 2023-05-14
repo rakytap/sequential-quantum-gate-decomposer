@@ -2107,9 +2107,28 @@ tbb::tick_count t0_DFE_pure = tbb::tick_count::now();
 pure_DFE_time += (tbb::tick_count::now() - t0_DFE_pure).seconds();       
 
         // calculate the cost function
-        for ( int idx=0; idx<parameters_vec.size(); idx++ ) {
-            cost_fnc_mtx[idx] = 1-trace_DFE_mtx[idx*3]/Umtx.cols;
+        if ( cost_fnc == FROBENIUS_NORM ) {
+            for ( int idx=0; idx<parameters_vec.size(); idx++ ) {
+                cost_fnc_mtx[idx] = 1-trace_DFE_mtx[idx*3]/Umtx.cols;
+            }
         }
+        else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
+            for ( int idx=0; idx<parameters_vec.size(); idx++ ) {
+                cost_fnc_mtx[idx] = 1-(trace_DFE_mtx[idx*3] + std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[idx*3+1]*correction1_scale)/Umtx.cols;
+            }
+        }
+        else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
+            for ( int idx=0; idx<parameters_vec.size(); idx++ ) {
+                cost_fnc_mtx[idx] = 1-(trace_DFE_mtx[idx*3] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[idx*3+1]*correction1_scale + trace_DFE_mtx[idx*3+2]*correction2_scale))/Umtx.cols;
+            }
+        }
+        else {
+            std::string err("N_Qubit_Decomposition_Base::optimization_problem_batched: Cost function variant not implmented.");
+            throw err;
+        }
+
+
+       
 
 
         delete[] DFEgates;
@@ -2321,7 +2340,7 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
         *f0 = 1-trace_DFE_mtx[0]/Umtx_loc.cols;
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-        *f0 = 1 - (trace_DFE_mtx[0] + 0*std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[1]*correction1_scale)/Umtx_loc.cols;
+        *f0 = 1 - (trace_DFE_mtx[0] + std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[1]*correction1_scale)/Umtx_loc.cols;
     }
     else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
         *f0 = 1 - (trace_DFE_mtx[0] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[1]*correction1_scale + trace_DFE_mtx[2]*correction2_scale))/Umtx_loc.cols;
