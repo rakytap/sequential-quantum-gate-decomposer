@@ -206,14 +206,6 @@ Matrix get_finalizing_gates( Matrix& mtx, Gates_block* finalizing_gates, double*
 */
 void solve_optimization_problem( double* solution_guess, int solution_guess_num );
 
-/**
-@brief Abstarct function to be used to solve a single sub-layer optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
-@param 'num_of_parameters' The number of free parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Libarary vector containing the free parameters to be optimized.
-*/
-virtual void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
-
-
 
 /**
 @brief Abstarct function to be used to solve a single sub-layer optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
