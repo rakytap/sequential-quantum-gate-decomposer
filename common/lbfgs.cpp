@@ -22,8 +22,8 @@ double Lbfgs::Solve(Data &x)
     double *l=new double[x.size()];
     double *u=new double[x.size()];
     double *g=new double[x.size()];
-    Data gg;
-    gg.resize(x.size());
+    Data gg(x.rows, x.cols);
+
     myProblem->getleftmarginx(l);
     myProblem->getrightmarginx(u);
     for(int i=0;i<n;i++)
