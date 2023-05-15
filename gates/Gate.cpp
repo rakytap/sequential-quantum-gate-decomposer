@@ -467,13 +467,7 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 
     parameters_for_calc_one_qubit(  );
 
-    if (get_type() == CH_OPERATION) {
-    	Matrix u3_1qbit(2,2);
-        u3_1qbit[0].real = 1.0/sqrt(2); u3_1qbit[0].imag = 0.0; 
-        u3_1qbit[1].real = 1.0/sqrt(2); u3_1qbit[1].imag = 0.0;
-        u3_1qbit[2].real = 1.0/sqrt(2); u3_1qbit[2].imag = 0.0;
-        u3_1qbit[3].real = -1.0/sqrt(2);u3_1qbit[3].imag = 0.0;
-    }
+ 
     return u3_1qbit;
 
 }
@@ -521,7 +515,7 @@ Gate::parameters_for_calc_one_qubit(  ) {
     }
 
 
-    if (get_type() == CH_OPERATION) {
+    if (type == CH_OPERATION) {
     	Matrix u3_1qbit(2,2);
         u3_1qbit[0].real = 1.0/sqrt(2); u3_1qbit[0].imag = 0.0; 
         u3_1qbit[1].real = 1.0/sqrt(2); u3_1qbit[1].imag = 0.0;
