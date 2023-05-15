@@ -2364,13 +2364,13 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
     for (int idx=0; idx<parameter_num_loc; idx++) {
 
         if ( cost_fnc == FROBENIUS_NORM ) {
-            gsl_vector_set(grad, idx, -trace_DFE_mtx[3*(idx+1)]/Umtx_loc.cols);
+            grad[idx] = -trace_DFE_mtx[3*(idx+1)]/Umtx_loc.cols;
         }
         else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-            gsl_vector_set(grad, idx, -(trace_DFE_mtx[3*(idx+1)] + std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[3*(idx+1)+1]*correction1_scale)/Umtx_loc.cols);
+            grad[idx] = -(trace_DFE_mtx[3*(idx+1)] + std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[3*(idx+1)+1]*correction1_scale)/Umtx_loc.cols;
         }
         else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
-            gsl_vector_set(grad, idx, -(trace_DFE_mtx[3*(idx+1)] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[3*(idx+1)+1]*correction1_scale + trace_DFE_mtx[3*(idx+1)+2]*correction2_scale))/Umtx_loc.cols );
+            grad[idx] = -(trace_DFE_mtx[3*(idx+1)] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[3*(idx+1)+1]*correction1_scale + trace_DFE_mtx[3*(idx+1)+2]*correction2_scale))/Umtx_loc.cols;
         }
         else {
             std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
