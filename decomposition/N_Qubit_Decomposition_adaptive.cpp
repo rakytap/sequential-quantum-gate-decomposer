@@ -60,6 +60,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : N_Qubit_Decom
 
         // Maximal number of iteartions in the optimization process
         max_outer_iterations = 4;
+        max_inner_iterations = 10000;
     }
     else {
         set_optimizer( ADAM );
@@ -152,6 +153,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 
         // Maximal number of iteartions in the optimization process
         max_outer_iterations = 4;
+        max_inner_iterations = 10000;
     }
     else {
         alg = ADAM;
@@ -164,8 +166,6 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
     randomized_adaptive_layers = false;
 
 }
-
-
 
 /**
 @brief Destructor of the class
@@ -2042,7 +2042,6 @@ N_Qubit_Decomposition_adaptive::add_layer_to_imported_gate_structure() {
     optimized_parameters_mtx = tmp;    
 
 }
-
 
 
 

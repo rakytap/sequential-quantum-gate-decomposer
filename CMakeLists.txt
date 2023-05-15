@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10.2)
 # CMAKE to create the shared library of the quantum gate decomposition project
 
 # set the project name and version
-project(CQGD VERSION 1.7)
+project(CQGD VERSION 1.8.1)
 
 # reuse compilation time linking for use runtime linking 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -225,52 +225,6 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "MSVC")
 endif()
 
 
-############################################################
-# checking GNU Scientific libraries and headers
-
-# adding GSL library dir if given
-if(DEFINED ENV{GSL_LIB_DIR})
-
-  find_library(GSL_LIB gsl 
-               PATHS $ENV{GSL_LIB_DIR} 
-               NO_DEFAULT_PATH
-               REQUIRED)
-else()
-
-  find_library(GSL_LIB gsl
-               PATHS ${PYTHON_SYS_PATH}
-               REQUIRED)
-
-endif()
-
-
-# adding GSL include dir
-if(DEFINED ENV{GSL_INC_DIR})
-
-  set(CMAKE_REQUIRED_FLAGS "-c")
-  check_include_file_cxx(gsl/gsl_multimin.h GSL_HEADER "-I$ENV{GSL_INC_DIR}")
-
-  if(NOT GSL_HEADER)
-    message(FATAL_ERROR "GSL header gsl_multimin.h not found")
-  endif()
-
-  message("-- Adding include directory $ENV{GSL_INC_DIR}")
-  list(APPEND EXTRA_INCLUDES "$ENV{GSL_INC_DIR}")
-
-else()
-
-  set(CMAKE_REQUIRED_FLAGS "-c")
-  check_include_file_cxx(gsl/gsl_multimin.h GSL_HEADER)
-  list(APPEND EXTRA_INCLUDES "${CMAKE_REQUIRED_INCLUDES}") 
-
-  if(NOT GSL_HEADER)
-    message(FATAL_ERROR "GSL header gsl_multimin.h not found")
-  endif()
-
-
-endif()
-
-
 
 
 ############################################################xx
@@ -349,6 +303,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/common/matrix_real.cpp
     ${PROJECT_SOURCE_DIR}/common/logging.cpp
     ${PROJECT_SOURCE_DIR}/common/Adam.cpp
+    ${PROJECT_SOURCE_DIR}/common/tolmin.cpp
+    ${PROJECT_SOURCE_DIR}/common/lbfgs.cpp
     ${PROJECT_SOURCE_DIR}/optimization_engines/RL_experience.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/gates/SYC.cpp
@@ -426,7 +382,6 @@ target_link_libraries( qgd PRIVATE
     ${TBBMALLOC_LIB}
     ${TBBMALLOC_PROXY_LIB}
     ${TBB_LIB}
-    ${GSL_LIB}
     ${MPI_C_LIBRARIES}
     )
 

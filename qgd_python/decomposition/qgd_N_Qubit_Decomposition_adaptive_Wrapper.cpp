@@ -1681,7 +1681,12 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Batch( qgd_N_Qub
     Matrix_real result_mtx;
 
     try {
-        result_mtx = self->decomp->optimization_problem_batch(parameters_mtx );
+        std::vector<Matrix_real> parameters_vec;
+        parameters_vec.resize(parameters_mtx.rows);
+        for( int row_idx=0; row_idx<parameters_mtx.rows; row_idx++ ) {
+            parameters_vec[row_idx] = Matrix_real( parameters_mtx.get_data() + row_idx*parameters_mtx.stride, 1, parameters_mtx.cols, parameters_mtx.stride );
+        }
+        result_mtx = self->decomp->optimization_problem_batched( parameters_vec );
     }
     catch (std::string err ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
