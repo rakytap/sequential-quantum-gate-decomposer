@@ -1121,13 +1121,13 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     
                         // export the parameters of the curremt, most successful agent
                         memcpy(optimized_parameters_mtx.get_data(), solution_guess_mtx_agent.get_data(), num_of_parameters*sizeof(double) );
-/*
+
                         std::string filename("initial_circuit_iteration.binary");
                         if (project_name != "") { 
                             filename=project_name+ "_"  +filename;
                         }
                         export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
-*/
+
                         
                         current_minimum = current_minimum_agent;      
                         
