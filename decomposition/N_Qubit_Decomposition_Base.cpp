@@ -821,7 +821,6 @@ pure_DFE_time = 0.0;
         sstream << "agent_lifetime_loc: " << agent_lifetime_loc << std::endl;
         print(sstream, 2); 
 
-        
         double agent_randomization_rate = 0.2;
         
         int agent_num;
@@ -835,18 +834,14 @@ pure_DFE_time = 0.0;
         }
 
 
-        double agent_decay_rate;
-        if ( config.count("agent_decay_rate") > 0 ) {
-             double value;
-             config["agent_decay_rate"].get_property( agent_decay_rate );
-        }
-        else {
-            agent_decay_rate = 2.0;
+        double agent_exploration_rate = 0.2;
+        if ( config.count("agent_exploration_rate") > 0 ) {
+             config["agent_exploration_rate"].get_property( agent_exploration_rate );
         }
         
         sstream.str("");
         sstream << "AGENTS: number of agents " << agent_num << std::endl;
-        sstream << "AGENTS: decay rate " << agent_decay_rate << std::endl;
+        sstream << "AGENTS: exploration_rate " << agent_exploration_rate << std::endl;
         sstream << "AGENTS: lifetime " << agent_lifetime_loc << std::endl;
         print(sstream, 2);    
     
@@ -1143,9 +1138,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                                                 
                             double random_num = random_numbers[ agent_idx*random_numbers.stride ]; 
 
-                            double agent_decay_prob = exp( -agent_decay_rate*(current_minimum_agent-current_minimum)/current_minimum );
-                                         
-                            if ( random_num > agent_decay_prob && agent_idx != most_successfull_agent) {
+                            if ( random_num < agent_exploration_rate && agent_idx != most_successfull_agent) {
                                 // choose the state of the most succesfull agent
                             
                                 std::stringstream sstream;
