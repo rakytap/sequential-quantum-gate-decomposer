@@ -821,14 +821,7 @@ pure_DFE_time = 0.0;
         sstream << "agent_lifetime_loc: " << agent_lifetime_loc << std::endl;
         print(sstream, 2); 
 
-
-
         
-        
-        /// mutual exclusion to set the most successful agent
-        tbb::spin_mutex agent_mutex;
-        
-        double agent_exploration_rate = 0.2;
         double agent_randomization_rate = 0.2;
         
         int agent_num;
@@ -840,9 +833,21 @@ pure_DFE_time = 0.0;
         else {
             agent_num = 64;
         }
+
+
+        double agent_decay_rate;
+        if ( config.count("agent_decay_rate") > 0 ) {
+             double value;
+             config["agent_decay_rate"].get_property( agent_decay_rate );
+        }
+        else {
+            agent_decay_rate = 2.0;
+        }
         
         sstream.str("");
         sstream << "AGENTS: number of agents " << agent_num << std::endl;
+        sstream << "AGENTS: decay rate " << agent_decay_rate << std::endl;
+        sstream << "AGENTS: lifetime " << agent_lifetime_loc << std::endl;
         print(sstream, 2);    
     
         
@@ -1063,7 +1068,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 #endif   
 
 
-
+/*
             // build up probability distribution to use to chose between the agents
             Matrix_real agent_probs(  current_minimum_agents.size(), 1 );
 
@@ -1090,7 +1095,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 
 
             }
-
+*/
             
             // govern the behavior of the agents
             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
@@ -1116,13 +1121,13 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     
                         // export the parameters of the curremt, most successful agent
                         memcpy(optimized_parameters_mtx.get_data(), solution_guess_mtx_agent.get_data(), num_of_parameters*sizeof(double) );
-
+/*
                         std::string filename("initial_circuit_iteration.binary");
                         if (project_name != "") { 
                             filename=project_name+ "_"  +filename;
                         }
                         export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
-
+*/
                         
                         current_minimum = current_minimum_agent;      
                         
@@ -1137,8 +1142,10 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 #endif
                                                 
                             double random_num = random_numbers[ agent_idx*random_numbers.stride ]; 
+
+                            double agent_decay_prob = exp( -agent_decay_rate*(current_minimum_agent-current_minimum)/current_minimum );
                                          
-                            if ( random_num < agent_exploration_rate && agent_idx != most_successfull_agent) {
+                            if ( random_num > agent_decay_prob && agent_idx != most_successfull_agent) {
                                 // choose the state of the most succesfull agent
                             
                                 std::stringstream sstream;
@@ -2364,13 +2371,13 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
     for (int idx=0; idx<parameter_num_loc; idx++) {
 
         if ( cost_fnc == FROBENIUS_NORM ) {
-            gsl_vector_set(grad, idx, -trace_DFE_mtx[3*(idx+1)]/Umtx_loc.cols);
+            grad[idx] = -trace_DFE_mtx[3*(idx+1)]/Umtx_loc.cols;
         }
         else if ( cost_fnc == FROBENIUS_NORM_CORRECTION1 ) {
-            gsl_vector_set(grad, idx, -(trace_DFE_mtx[3*(idx+1)] + std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[3*(idx+1)+1]*correction1_scale)/Umtx_loc.cols);
+            grad[idx] = -(trace_DFE_mtx[3*(idx+1)] + std::sqrt(prev_cost_fnv_val)*trace_DFE_mtx[3*(idx+1)+1]*correction1_scale)/Umtx_loc.cols;
         }
         else if ( cost_fnc == FROBENIUS_NORM_CORRECTION2 ) {
-            gsl_vector_set(grad, idx, -(trace_DFE_mtx[3*(idx+1)] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[3*(idx+1)+1]*correction1_scale + trace_DFE_mtx[3*(idx+1)+2]*correction2_scale))/Umtx_loc.cols );
+            grad[idx] = -(trace_DFE_mtx[3*(idx+1)] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[3*(idx+1)+1]*correction1_scale + trace_DFE_mtx[3*(idx+1)+2]*correction2_scale))/Umtx_loc.cols;
         }
         else {
             std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
