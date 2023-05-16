@@ -128,9 +128,11 @@ CH::apply_to( Matrix& input ) {
     h_1qbit[2].real = 1.0/sqrt(2); h_1qbit[2].imag = 0.0;
     h_1qbit[3].real = -1.0/sqrt(2); h_1qbit[3].imag = 0.0;*/
 
-    Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
+    Matrix u3_1qbit = calc_one_qubit_u3( 0,0,0  );
 
     apply_kernel_to(u3_1qbit, input);
+
+
 
 }
 

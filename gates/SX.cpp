@@ -139,15 +139,15 @@ SX::apply_to( Matrix& input ) {
 
 
     // the SX gate of one qubit
-    Matrix sx_1qbit(2,2);
+    /*Matrix sx_1qbit(2,2);
     sx_1qbit[0].real = 0.5; sx_1qbit[0].imag = 0.5;
     sx_1qbit[1].real = 0.5; sx_1qbit[1].imag = -0.5;
     sx_1qbit[2].real = 0.5; sx_1qbit[2].imag = -0.5;
-    sx_1qbit[3].real = 0.5; sx_1qbit[3].imag = 0.5;
+    sx_1qbit[3].real = 0.5; sx_1qbit[3].imag = 0.5;*/
 
-    //Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
+    Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
     //apply_kernel_to function to SX gate 
-    apply_kernel_to( sx_1qbit, input );
+    apply_kernel_to( u3_1qbit, input );
    
   /*  int index_step = Power_of_2(target_qbit);
     int current_idx = 0;

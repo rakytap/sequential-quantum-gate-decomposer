@@ -139,16 +139,16 @@ Y::apply_to( Matrix& input ) {
 
 
     // the X gate of one qubit
-    Matrix y_1qbit(2,2);
+    /*Matrix y_1qbit(2,2);
     y_1qbit[0].real = 0.0; y_1qbit[0].imag = 0.0; 
     y_1qbit[1].real = 0.0; y_1qbit[1].imag = -1.0;
     y_1qbit[2].real = 0.0; y_1qbit[2].imag = 1.0;
-    y_1qbit[3].real = 0.0; y_1qbit[3].imag = 0.0;
+    y_1qbit[3].real = 0.0; y_1qbit[3].imag = 0.0;*/
 
-    //Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
+    Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
 
     //apply_kernel_to function to X gate 
-    apply_kernel_to( y_1qbit, input );
+    apply_kernel_to( u3_1qbit, input );
    
 
 
