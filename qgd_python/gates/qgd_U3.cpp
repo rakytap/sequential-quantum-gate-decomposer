@@ -228,6 +228,10 @@ qgd_U3_apply_to( qgd_U3 *self, PyObject *args ) {
 
     self->gate->apply_to( parameters_mtx, unitary_mtx );
     
+    if (unitary_mtx.data != PyArray_DATA(unitary)) {
+        memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
+    }
+
     Py_DECREF(parameters_arr);
     Py_DECREF(unitary);
 
