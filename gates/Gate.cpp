@@ -422,13 +422,13 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
 */
 Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 
-    Matrix u3_1qbit = Matrix(2,2);
-    parameters_for_calc_one_qubit(u3_1qbit);
-   
+    gate_type type = get_type();
+    Matrix u3_1qbit = Matrix(2,2); 
+    parameters_for_calc_one_qubit(u3_1qbit,  ThetaOver2, Phi,  Lambda);
 
-    if (ThetaOver2!=0 or Phi!=0 or Lambda!=0) {
-   
-        parameters_for_calc_one_qubit( u3_1qbit );
+
+    if (type==RX_OPERATION || type==RY_OPERATION || type==RZ_OPERATION) {
+
 #ifdef DEBUG
     	if (isnan(ThetaOver2)) {
             std::stringstream sstream;
@@ -447,10 +447,13 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
         }
 #endif // DEBUG
 
+        
+        parameters_for_calc_one_qubit(u3_1qbit, ThetaOver2, Phi,  Lambda);
+
         double cos_theta = cos(ThetaOver2);
         double sin_theta = sin(ThetaOver2);
 
-
+    
         // the 1,1 element
         u3_1qbit[0].real = cos_theta;
         u3_1qbit[0].imag = 0;
@@ -464,12 +467,11 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
     	u3_1qbit[3].real = cos(Phi+Lambda)*cos_theta;
     	u3_1qbit[3].imag = sin(Phi+Lambda)*cos_theta;
 
+       return u3_1qbit;
+
     }
 
- 
- 
- 
-    return u3_1qbit;
+  return u3_1qbit;
 
 }
 
@@ -481,42 +483,28 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 @param Lambda Real parameter standing for the parameter lambda.
 */
 void
-Gate::parameters_for_calc_one_qubit(Matrix& u3_1qbit) {
-
-    
-    double ThetaOver2, Phi, Lambda;
-    Matrix_real parameters;
+Gate::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda ) {
 
 
-    if (type==RX_OPERATION) {
+   gate_type type = get_type();
 
-        parameter_num = 1;
-        parameters = Matrix_real(1, parameter_num);
-    	ThetaOver2 = parameters[0];
-    	Phi = -M_PI/2;
-    	Lambda = M_PI/2;
-	
-    }
-
+   // set static values for the angles
     if (type==RY_OPERATION) {
-
-        parameter_num = 1;
-        parameters = Matrix_real(1, parameter_num);
-    	ThetaOver2 = parameters[0];
-    	Phi = 0;
-    	Lambda = 0;
+        Phi = 0;
+        Lambda = 0;
     }
 
     if (type==RZ_OPERATION) {
-
-        parameter_num = 1;
-        parameters = Matrix_real(1, parameter_num);
-    	ThetaOver2 = 0;
-    	Phi = parameters[0];;
-    	Lambda = 0;
+        ThetaOver2 = 0;
+        Lambda = 0;
+    }
+  
+    if (type==RX_OPERATION) {
+        Phi = -M_PI/2;
+        Lambda = M_PI/2;
     }
 
-
+    // define the constant one qubit gates
     if (type == CH_OPERATION) {
 
         u3_1qbit[0].real = 1.0/sqrt(2); u3_1qbit[0].imag = 0.0; 
@@ -574,5 +562,8 @@ Gate::parameters_for_calc_one_qubit(Matrix& u3_1qbit) {
     }
 
 
-
 }
+
+
+
+
