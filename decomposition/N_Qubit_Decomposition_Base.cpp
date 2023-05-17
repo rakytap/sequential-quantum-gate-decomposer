@@ -1764,10 +1764,10 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 	    
 
 
-            Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
+            Problem p(num_of_parameters, -1e100, 1e100, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
 
             double f; 
-            if (num_of_parameters > 250) {
+            if (num_of_parameters > 3168) {
                 Lbfgs lbfgs(&p);
                 f = lbfgs.Solve(solution_guess);
             } else {
@@ -1886,7 +1886,7 @@ bfgs_time = 0.0;
         for (long long iter_idx=0; iter_idx<iteration_loops_max; iter_idx++) {
 
             
-                Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
+                Problem p(num_of_parameters, -1e100, 1e100, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
                 Tolmin tolmin(&p);
 
                 f = tolmin.Solve(solution_guess, false, max_inner_iterations);             
