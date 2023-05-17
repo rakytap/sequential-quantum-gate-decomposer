@@ -1006,7 +1006,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
             // CPU time                                      
             t0_CPU = tbb::tick_count::now();                                  
             
-            
+         
             // determine the parameters of the cosine function and determine the parameter shift at the minimum
             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
 
@@ -1029,6 +1029,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                 //update  the parameter vector
                 Matrix_real& solution_guess_mtx_agent                    = solution_guess_mtx_agents[ agent_idx ];                             
                 solution_guess_mtx_agent[param_idx_agents[ agent_idx ]] = parameter_value_save_agents[ agent_idx ] + parameter_shift; 
+
                 
             }
                
@@ -1038,6 +1039,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
             
             // determine the current minimum  at the shifted parameters        
             current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
+
   
             // CPU time                                        
             t0_CPU = tbb::tick_count::now();        
@@ -1144,6 +1146,9 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                                 std::stringstream sstream;
                                 sstream << "agent " << agent_idx << ": adopts the state of the most succesful agent. " << most_successfull_agent << std::endl;
                                 print(sstream, 5);  
+                                
+                                current_minimum_agents[ agent_idx ] = current_minimum_agents[ most_successfull_agent ];
+                                memcpy( solution_guess_mtx_agent.get_data(), solution_guess_mtx_agents[ most_successfull_agent ].get_data(), solution_guess_mtx_agent.size()*sizeof(double) );
 
                             
                                 random_num = random_numbers[ agent_idx*random_numbers.stride + 1 ];
