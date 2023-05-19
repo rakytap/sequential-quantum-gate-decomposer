@@ -1167,6 +1167,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                         }
                         
                         MPI_Bcast( (void*)solution_guess_mtx_agent.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+                        MPI_Bcast( (void*)current_minimum_agents.get_data(), agent_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif     
                                                                                   
                     }
