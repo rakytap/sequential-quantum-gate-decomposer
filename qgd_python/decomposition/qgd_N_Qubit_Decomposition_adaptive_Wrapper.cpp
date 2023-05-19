@@ -2012,6 +2012,9 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimizer( qgd_N_Qubit_Decomposit
     else if ( strcmp("agents", optimizer_C)==0 or strcmp("AGENTS", optimizer_C)==0) {
         qgd_optimizer = AGENTS;        
     }
+    else if ( strcmp("cosine", optimizer_C)==0 or strcmp("COSINE", optimizer_C)==0) {
+        qgd_optimizer = COSINE;        
+    }
     else if ( strcmp("agents_combined", optimizer_C)==0 or strcmp("AGENTS_COMBINED", optimizer_C)==0) {
         qgd_optimizer = AGENTS_COMBINED;        
     }
