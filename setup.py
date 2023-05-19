@@ -34,7 +34,7 @@ setup(
             "test_standalone", "test_standalone.*",
         )
     ),
-    version='1.8.1',
+    version='1.8.2',
     url="https://github.com/rakytap/sequential-quantum-gate-decomposer", 
     maintainer="Peter Rakyta",
     maintainer_email="peter.rakyta@ttk.elte.hu",
@@ -47,7 +47,7 @@ setup(
         "scipy",
     ],
     tests_require=["pytest"],
-    description='The C++ binding for the SQUANDER package',
+    description='Package to decompose unitaries into a quantum circuit and for quantum state preparation.',
     long_description=open("./README.md", 'r').read(),
     long_description_content_type="text/markdown",
     keywords="test, cmake, extension",
