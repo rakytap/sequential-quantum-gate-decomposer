@@ -584,6 +584,23 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 
 ## 
+# @brief Call to evaluate the gradient components.
+# @param parameters A float64 numpy array
+    def Optimization_Problem_Grad( self, parameters=None ):
+
+        if parameters is None:
+            print( "Optimization_Problem: array of input parameters is None")
+            return None
+
+        # evaluate the cost function and gradients
+        grad = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem_Grad(parameters)  
+
+        grad = grad.reshape( (-1,))
+
+        return grad
+
+
+## 
 # @brief Call to evaluate the cost function and the gradient components.
 # @param parameters A float64 numpy array
     def Optimization_Problem_Combined( self, parameters=None ):

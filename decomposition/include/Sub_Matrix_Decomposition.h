@@ -51,6 +51,9 @@ public:
     /// Custom gate structure describing the gate structure used in the decomposition. The gate structure is repeated periodically in the decomposing gate structure
     Gates_block* unit_gate_structure;
 
+    /// maximal number of inner iterations
+    long long max_inner_iterations;
+
 
 public:
 
@@ -106,7 +109,7 @@ void set_custom_gate_layers( Gates_block* block_in);
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
-void solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl);
+void solve_layer_optimization_problem( int num_of_parameters, Matrix_real solution_guess_gsl);
 
 
 
@@ -126,7 +129,7 @@ double optimization_problem( double* parameters);
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-static double optimization_problem( const gsl_vector* parameters, void* void_instance );
+static double optimization_problem( Matrix_real parameters, void* void_instance );
 
 
 /**
@@ -135,7 +138,7 @@ static double optimization_problem( const gsl_vector* parameters, void* void_ins
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-static void optimization_problem_grad( const gsl_vector* parameters, void* void_instance, gsl_vector* grad  );
+static void optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real grad  );
 
 
 /**
@@ -145,7 +148,7 @@ static void optimization_problem_grad( const gsl_vector* parameters, void* void_
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad );
+static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real grad );
 
 /**
 @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.

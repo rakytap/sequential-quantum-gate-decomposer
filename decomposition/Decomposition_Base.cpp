@@ -423,32 +423,32 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
 
         // the array storing the optimized parameters
-        gsl_vector* optimized_parameters_gsl = gsl_vector_alloc (parameter_num_loc);
+        Matrix_real optimized_parameters(1, parameter_num_loc);
 
         // preparing solution guess for the iterations
         if ( initial_guess == ZEROS ) {
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
-                optimized_parameters_gsl->data[idx] = 0;
+                optimized_parameters[idx] = 0;
             }
         }
         else if ( initial_guess == RANDOM ) {
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
-                optimized_parameters_gsl->data[idx] = distrib_real(gen);
+                optimized_parameters[idx] = distrib_real(gen);
             }
 
 #ifdef __MPI__        
-            MPI_Bcast( (void*)optimized_parameters_gsl->data, parameter_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Bcast( (void*)optimized_parameters.get_data(), parameter_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
 
         }
         else if ( initial_guess == CLOSE_TO_ZERO ) {
             for(int idx = 0; idx < parameter_num-solution_guess_num; idx++) {
-                optimized_parameters_gsl->data[idx] = distrib_real(gen)/100;
+                optimized_parameters[idx] = distrib_real(gen)/100;
             }
 
 #ifdef __MPI__        
-            MPI_Bcast( (void*)optimized_parameters_gsl->data, parameter_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+            MPI_Bcast( (void*)optimized_parameters.get_data(), parameter_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
 
         }
@@ -460,7 +460,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
 
         if ( solution_guess_num > 0) {
-            memcpy(optimized_parameters_gsl->data + parameter_num-solution_guess_num, solution_guess, solution_guess_num*sizeof(double));
+            memcpy(optimized_parameters.get_data() + parameter_num-solution_guess_num, solution_guess, solution_guess_num*sizeof(double));
         }
 
         // starting number of gate block applied prior to the optimalized gate blocks
@@ -478,7 +478,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         Matrix Identity =  create_identity( matrix_size );
 
 
-        gsl_vector *solution_guess_gsl = NULL;
+        Matrix_real solution_guess_tmp;
 
 
         // maximal number of outer iterations overriden by config
@@ -537,7 +537,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // create a list of post gates matrices
             if (block_idx_start == (int)gates_loc.size() ) {
                 // matrix of the fixed gates aplied after the gates to be varied
-                double* fixed_parameters_post = optimized_parameters_gsl->data;
+                double* fixed_parameters_post = optimized_parameters.get_data();
                 std::vector<Gate*>::iterator fixed_gates_post_it = gates_loc.begin();
 
                 gates_mtxs_post = get_gate_products(fixed_parameters_post, fixed_gates_post_it, block_idx_end);
@@ -562,17 +562,16 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
             // constructing solution guess for the optimization
             parameter_num = block_parameter_num;
-            if ( solution_guess_gsl == NULL ) {
-                solution_guess_gsl = gsl_vector_alloc (parameter_num);
+            if ( solution_guess_tmp.size() == 0 ) {
+                solution_guess_tmp = Matrix_real(1, parameter_num);
             }
-            else if ( parameter_num != (int)solution_guess_gsl->size ) {
-                gsl_vector_free(solution_guess_gsl);
-                solution_guess_gsl = gsl_vector_alloc (parameter_num);
+            else if ( parameter_num != (int)solution_guess_tmp.size() ) {
+                solution_guess_tmp = Matrix_real(1, parameter_num);
             }
-            memcpy( solution_guess_gsl->data, optimized_parameters_gsl->data+parameter_num_loc - pre_gate_parameter_num - block_parameter_num, parameter_num*sizeof(double) );
+            memcpy( solution_guess_tmp.get_data(), optimized_parameters.get_data()+parameter_num_loc - pre_gate_parameter_num - block_parameter_num, parameter_num*sizeof(double) );
 
             // solve the optimization problem of the block
-            solve_layer_optimization_problem( parameter_num, solution_guess_gsl  );
+            solve_layer_optimization_problem( parameter_num, solution_guess_tmp );
 
             // add the current minimum to the array of minimums and calculate the mean
             double minvec_mean = 0;
@@ -585,7 +584,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             minvec_mean = minvec_mean/min_vec_num;
 
             // store the obtained optimalized parameters for the block
-            memcpy( optimized_parameters_gsl->data+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );
+            memcpy( optimized_parameters.get_data()+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );
 
             if (block_idx_end == 0) {
                 block_idx_start = gates_loc.size();
@@ -608,7 +607,12 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
             // calculate the variance of the last 10 minimums
-            double minvec_std = sqrt(gsl_stats_variance_m( minimum_vec, 1, min_vec_num, minvec_mean));
+            double minvec_std = 0.0;
+            for ( int kdx=0; kdx<min_vec_num; kdx++ ) {
+                double tmp = minimum_vec[kdx] - minvec_mean;
+                minvec_std += tmp*tmp;
+            }
+            minvec_std = sqrt(minvec_std/(min_vec_num-1));
 
             // conditions to break the iteration cycles
             if (std::abs(minvec_std/minimum_vec[min_vec_num-1]) < convergence_threshold ) {              
@@ -642,20 +646,12 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         gates = gates_loc;
 
         parameter_num = parameter_num_loc;
-/*
-        if (optimized_parameters != NULL ) {
-            qgd_free( optimized_parameters );
-        }
-*/
+
+
         optimized_parameters_mtx = Matrix_real( 1, parameter_num );
-        memcpy( optimized_parameters_mtx.get_data(), optimized_parameters_gsl->data, parameter_num*sizeof(double) );
+        memcpy( optimized_parameters_mtx.get_data(), optimized_parameters.get_data(), parameter_num*sizeof(double) );
 
 
-        // free unnecessary resources
-        gsl_vector_free(optimized_parameters_gsl);
-        gsl_vector_free(solution_guess_gsl);
-        optimized_parameters_gsl = NULL;
-        solution_guess_gsl = NULL;
 
         delete(fixed_gate_post);
 
@@ -667,12 +663,13 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
 
+
 /**
 @brief Abstarct function to be used to solve a single sub-layer optimization problem. The optimalized parameters are stored in attribute optimized_parameters.
 @param 'num_of_parameters' The number of free parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Libarary vector containing the free parameters to be optimized.
+@param solution_guess Array containing the free parameters to be optimized.
 */
-void Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, gsl_vector *solution_guess_gsl) {
+void Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, Matrix_real solution_guess) {
     return;
 }
 

@@ -1507,7 +1507,67 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem( qgd_N_Qubit_Dec
 }
 
 
+/**
+@brief Wrapper function to evaluate the cost function an dthe gradient components.
+@return Unitarty numpy matrix
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Grad( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args)
+{
 
+
+    PyObject* parameters_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg )) {
+
+        std::string err( "Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;      
+
+    } 
+
+    // establish memory contiguous arrays for C calculations
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ){
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
+        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err( "Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arg );
+    Matrix_real grad_mtx(parameters_mtx.size(), 1);
+
+    try {
+        self->decomp->optimization_problem_grad(parameters_mtx, &self->decomp, grad_mtx );
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // convert to numpy array
+    grad_mtx.set_owner(false);
+    PyObject *grad_py = matrix_real_to_numpy( grad_mtx );
+
+    Py_DECREF(parameters_arg);
+
+
+    Py_DECREF(grad_py);
+    return grad_py;
+}
 
 /**
 @brief Wrapper function to evaluate the cost function an dthe gradient components.
@@ -1681,7 +1741,12 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Batch( qgd_N_Qub
     Matrix_real result_mtx;
 
     try {
-        result_mtx = self->decomp->optimization_problem_batch(parameters_mtx );
+        std::vector<Matrix_real> parameters_vec;
+        parameters_vec.resize(parameters_mtx.rows);
+        for( int row_idx=0; row_idx<parameters_mtx.rows; row_idx++ ) {
+            parameters_vec[row_idx] = Matrix_real( parameters_mtx.get_data() + row_idx*parameters_mtx.stride, 1, parameters_mtx.cols, parameters_mtx.stride );
+        }
+        result_mtx = self->decomp->optimization_problem_batched( parameters_vec );
     }
     catch (std::string err ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -2347,6 +2412,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     {"Optimization_Problem_Combined_Unitary", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined_Unitary, METH_VARARGS,
      "Wrapper function to evaluate the unitary function and the gradient components."
     },	
+    {"Optimization_Problem_Grad", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Grad, METH_VARARGS,
+     "Wrapper function to evaluate the gradient components."
+    },
     {"Optimization_Problem_Combined", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined, METH_VARARGS,
      "Wrapper function to evaluate the cost function and the gradient components."
     },
