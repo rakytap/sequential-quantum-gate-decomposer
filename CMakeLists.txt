@@ -285,11 +285,6 @@ if(DEFINED ENV{TBB_LIB_DIR})
                NO_DEFAULT_PATH
                REQUIRED)
 
-  find_library(TBB_LIB12 tbb12
-               PATHS $ENV{TBB_LIB_DIR}
-               NO_DEFAULT_PATH
-               REQUIRED)
-
   find_library(TBBMALLOC_LIB tbbmalloc
                PATHS $ENV{TBB_LIB_DIR}
                NO_DEFAULT_PATH
@@ -303,11 +298,6 @@ if(DEFINED ENV{TBB_LIB_DIR})
 else()
 
   find_library(TBB_LIB tbb
-               PATHS ${PYTHON_SYS_PATH}
-               NO_DEFAULT_PATH
-               REQUIRED)
-
-  find_library(TBB_LIB12 tbb12
                PATHS ${PYTHON_SYS_PATH}
                NO_DEFAULT_PATH
                REQUIRED)
@@ -434,7 +424,6 @@ target_link_libraries( qgd PRIVATE
     ${LAPACKE_LIBRARIES}
     ${TBBMALLOC_LIB}
     ${TBBMALLOC_PROXY_LIB}
-    ${TBB_LIB12}
     ${TBB_LIB}
     ${GSL_LIB}
     ${MPI_C_LIBRARIES}
