@@ -10,7 +10,7 @@ add_library( qgd_nn_Wrapper MODULE
 
 ADD_DEPENDENCIES (qgd_nn_Wrapper qgd)
 
-target_link_libraries (qgd_nn_Wrapper qgd  ${BLAS_LIBRARIES}  ${LAPACKE_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_nn_Wrapper qgd  ${BLAS_LIBRARIES}  ${LAPACKE_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
 python_extension_module(qgd_nn_Wrapper)
 
