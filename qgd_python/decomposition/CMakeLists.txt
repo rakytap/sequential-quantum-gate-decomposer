@@ -57,7 +57,7 @@ add_library( qgd_N_Qubit_Decomposition_adaptive_Wrapper MODULE
 
 ADD_DEPENDENCIES (qgd_N_Qubit_Decomposition_adaptive_Wrapper qgd)
 
-target_link_libraries (qgd_N_Qubit_Decomposition_adaptive_Wrapper qgd  ${BLAS_LIBRARIES}  ${LAPACKE_LIBRARIES} ${TBB_LIB12} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_N_Qubit_Decomposition_adaptive_Wrapper qgd  ${BLAS_LIBRARIES}  ${LAPACKE_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
 python_extension_module(qgd_N_Qubit_Decomposition_adaptive_Wrapper)
 
@@ -105,7 +105,7 @@ add_library( qgd_N_Qubit_Decomposition_custom_Wrapper MODULE
 
 ADD_DEPENDENCIES (qgd_N_Qubit_Decomposition_custom_Wrapper qgd)
 
-target_link_libraries (qgd_N_Qubit_Decomposition_custom_Wrapper qgd  ${BLAS_LIBRARIES}  ${LAPACKE_LIBRARIES}   ${TBB_LIB12} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_N_Qubit_Decomposition_custom_Wrapper qgd  ${BLAS_LIBRARIES}  ${LAPACKE_LIBRARIES}   ${TBB_LIB} ${TBBMALLOC_LIB})
 
 python_extension_module(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
