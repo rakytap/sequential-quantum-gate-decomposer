@@ -187,6 +187,10 @@ qgd_CNOT_apply_to( qgd_CNOT *self, PyObject *args ) {
     Matrix unitary_mtx = numpy2matrix(unitary);
 
     self->gate->apply_to( unitary_mtx );
+
+    if (unitary_mtx.data != PyArray_DATA(unitary)) {
+        memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
+    }
     
     Py_DECREF(unitary);
 
