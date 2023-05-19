@@ -1365,7 +1365,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     cDecomp_custom.start_decomposition(true);
     iteration_num = cDecomp_custom.get_num_iters();
     double current_minimum_tmp = cDecomp_custom.get_current_minimum();
-std::cout << "qqqqqqqqqqqqqqqqqqqqq " << current_minimum_tmp << "  " << optimization_tolerance_loc << std::endl;
+
     if ( current_minimum_tmp < optimization_tolerance_loc ) {
         //cDecomp_custom.list_gates(0);
         optimized_parameters = cDecomp_custom.get_optimized_parameters();
