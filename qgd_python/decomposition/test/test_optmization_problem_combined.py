@@ -179,6 +179,38 @@ class Test_Decomposition:
 
         assert( np.abs( f0_CPU ) < 1e-8 )
 
+    def test_grad_batch_unitary_funcs(self):
+        # creating a class to decompose the unitary
+        cDecompose = N_Qubit_Decomposition_adaptive( np.eye(matrix_size, dtype=np.complex128), level_limit_max=5, level_limit_min=0, accelerator_num=0 )
+
+
+        # adding decomposing layers to the gat structure
+        for idx in range(levels):
+            cDecompose.add_Adaptive_Layers()
+
+        cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
+
+
+        # get the number of free parameters
+        num_of_parameters = cDecompose.get_Parameter_Num()
+
+
+        # create randomized parameters
+        parameters, nontrivial_adaptive_layers = create_randomized_parameters( num_of_parameters, real=real )
+
+
+
+        Umtx = cDecompose.get_Matrix( parameters )
+        mat, mat_deriv = cDecompose.Optimization_Problem_Combined_Unitary(parameters)
+        assert np.allclose(Umtx, mat)
+        
+        cost = cDecompose.Optimization_Problem(parameters)
+        assert np.allclose(np.array([cost, cost, cost]), cDecompose.Optimization_Problem_Batch(np.vstack([parameters, parameters, parameters])))
+        grad = cDecompose.Optimization_Problem_Grad(parameters)
+        f0_CPU, grad_CPU = cDecompose.Optimization_Problem_Combined( parameters )
+        assert np.allclose(grad, grad_CPU)
+        assert np.isclose(f0_CPU, cost)
+
 
 
 
