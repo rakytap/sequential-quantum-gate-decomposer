@@ -24,7 +24,7 @@ private:
     double lmargin, rmargin;
     double (* f) (Data x, void * params);
     void (* df) (Data x, void * params, Data g);
-    void (* fdf) (Data x, void * params, double * f, Data g);
+    void (* fdf) (Data x, void * params, double * f, Data& g);
     void* void_instance;
 
 public:
@@ -33,7 +33,7 @@ public:
      * **/
     Problem(int dimension, double lmargin, double rmargin, double (* f) (Data, void *),
         void (* df) (Data, void *, Data),
-        void (* fdf) (Data, void *, double *, Data),
+        void (* fdf) (Data, void *, double *, Data&),
         void* void_instance)
     {
         this->dimension = dimension;
