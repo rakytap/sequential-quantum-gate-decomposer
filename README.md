@@ -66,14 +66,12 @@ $ pip install numpy swig tbb-devel wheel scikit-build ninja qiskit
 
 $ pip install squander
 
-
-
 ### Download the SQUANDER package
 
 The developer version of the Quantum Gate Decomposer package can be downloaded from github repository [https://github.com/rakytap/quantum-gate-decomposer/tree/master](https://github.com/rakytap/quantum-gate-decomposer/tree/master).
 After the package is downloaded into the directory **path/to/SQUANDER/package** (which would be the path to the source code of the SQUANDER package), one can proceed to the compilation steps described in the next section.
 
-### How to build the SQUANDER package
+### How to build the SQUANDER package on Unix/Linux/MacOS
 
 The SQUANDER package is equipped with a Python build script and CMake tools to ease the compilation and the deployment of the package.
 The SQUANDER package is parallelized via Threading Building Block (TBB) libraries. If TBB is not present in the system, it can be easily installed via python package [tbb-devel](https://pypi.org/project/tbb-devel/).
@@ -91,7 +89,27 @@ The SQUANDER package with C++ Python extensions can be compiled via the Python s
 The script automatically finds out the CBLAS library working behind the numpy package and uses it in further linking. 
 The **setup.py** script also build the C++ library of the SQUANDER package by making the appropriate CMake calls. 
 
+### Build and Install on Microsoft Windows with Microsoft Visual C++
 
+CMake must be in the path and able to find the MSVC compiler e.g.
+$ set PATH=%PATH%;C:\Program Files\cmake\bin
+
+Now set the TBB and BLAS folders and build via:
+
+$ set TBB_LOCATION=<Python_Folder>/LocalCache/local-packages
+$ set TBB_INC_DIR=%TBB_LOCATION%/Library/include
+$ set TBB_LIB_DIR=%TBB_LOCATION%/Library/lib
+$ set LIB=<BLAS_Location>/lib;<LAPACK_Location>/lib
+$ python setup.py build_ext -DTBB_HEADER=<TBB_Location>\Library\include\
+
+Installation merely requires copying DLL files (if they are not in the path):
+
+$ copy _skbuild\win-amd64-3.9\cmake-install\bin .\qgd_python\decomposition
+$ copy "%TBB_LOCATION%\Library\bin\tbb12.dll" .\qgd_python\decomposition
+$ copy "%TBB_LOCATION%\Library\bin\tbbmalloc.dll" .\qgd_python\decomposition
+
+Verify the installation:
+$ python -m pytest
 
 ### Developer build
 
