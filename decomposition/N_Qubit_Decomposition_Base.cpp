@@ -447,6 +447,15 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
         else {
             max_inner_iterations_loc = max_inner_iterations;
         }
+        
+        
+        long long export_circuit_2_binary_loc;
+        if ( config.count("export_circuit_2_binary") > 0 ) {
+             config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
+        }
+        else {
+            export_circuit_2_binary_loc = 0;
+        }        
 
 
         double optimization_tolerance_loc;
@@ -666,8 +675,13 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
                 std::stringstream sstream;
                 sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << std::endl;
                 print(sstream, 0);   
-                std::string filename("initial_circuit_iteration.binary");
-                export_gate_list_to_binary(solution_guess_tmp_mtx, this, filename, verbose);
+                if ( export_circuit_2_binary_loc > 0 ) {
+                    std::string filename("initial_circuit_iteration.binary");
+                    if (project_name != "") { 
+                        filename=project_name+ "_"  +filename;
+                    }
+                    export_gate_list_to_binary(solution_guess_tmp_mtx, this, filename, verbose);
+                }
 
 
             }
@@ -694,8 +708,13 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
                 std::stringstream sstream;
                 sstream << "COSINE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << std::endl;
                 print(sstream, 0);   
-                std::string filename("initial_circuit_iteration.binary");
-                export_gate_list_to_binary(solution_guess_tmp_mtx, this, filename, verbose);
+                if ( export_circuit_2_binary_loc > 0 ) {
+                    std::string filename("initial_circuit_iteration.binary");
+                    if (project_name != "") { 
+                        filename=project_name+ "_"  +filename;
+                    }
+                    export_gate_list_to_binary(solution_guess_tmp_mtx, this, filename, verbose);
+                }
                 
 
                 break;
@@ -802,6 +821,14 @@ pure_DFE_time = 0.0;
         else {
             optimization_tolerance_loc = optimization_tolerance;
         }
+        
+        long long export_circuit_2_binary_loc;
+        if ( config.count("export_circuit_2_binary") > 0 ) {
+             config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
+        }
+        else {
+            export_circuit_2_binary_loc = 0;
+        }            
 
         
         int agent_lifetime_loc;
@@ -1119,11 +1146,13 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                         // export the parameters of the curremt, most successful agent
                         memcpy(optimized_parameters_mtx.get_data(), solution_guess_mtx_agent.get_data(), num_of_parameters*sizeof(double) );
 
-                        std::string filename("initial_circuit_iteration.binary");
-                        if (project_name != "") { 
-                            filename=project_name+ "_"  +filename;
+                        if ( export_circuit_2_binary_loc > 0 ) {
+                            std::string filename("initial_circuit_iteration.binary");
+                            if (project_name != "") { 
+                                filename=project_name+ "_"  +filename;
+                            }
+                            export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
                         }
-                        export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
 
                         
                         current_minimum = current_minimum_agent;      
@@ -1167,6 +1196,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                         }
                         
                         MPI_Bcast( (void*)solution_guess_mtx_agent.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+                        MPI_Bcast( (void*)current_minimum_agents.get_data(), agent_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif     
                                                                                   
                     }
@@ -1322,6 +1352,15 @@ pure_DFE_time = 0.0;
         else {
             max_inner_iterations_loc = max_inner_iterations;
         }
+        
+        
+        long long export_circuit_2_binary_loc;
+        if ( config.count("export_circuit_2_binary") > 0 ) {
+             config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
+        }
+        else {
+            export_circuit_2_binary_loc = 0;
+        }            
 
         double f0 = DBL_MAX;
         std::stringstream sstream;
@@ -1401,8 +1440,14 @@ pure_DFE_time = 0.0;
                     sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100;
                     sstream << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new, trace_offset) << std::endl;
                     print(sstream, 0);   
-                    std::string filename("initial_circuit_iteration.binary");
-                    export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+                    
+                    if ( export_circuit_2_binary_loc > 0 ) {
+                        std::string filename("initial_circuit_iteration.binary");
+                        if (project_name != "") { 
+                            filename=project_name+ "_"  +filename;
+                        }
+                        export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+                    }
 
                 }
 
@@ -1553,6 +1598,14 @@ pure_DFE_time = 0.0;
             iteration_threshold_of_randomization_loc = iteration_threshold_of_randomization;
         }
         
+        long long export_circuit_2_binary_loc;
+        if ( config.count("export_circuit_2_binary") > 0 ) {
+             config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
+        }
+        else {
+            export_circuit_2_binary_loc = 0;
+        }            
+        
         
         double optimization_tolerance_loc;
         if ( config.count("optimization_tolerance") > 0 ) {
@@ -1617,8 +1670,14 @@ pure_DFE_time = 0.0;
                 std::stringstream sstream;
                 sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << ", current cost function:" << get_cost_function(matrix_new, trace_offset) << ", sub_iter_idx:" << sub_iter_idx <<std::endl;
                 print(sstream, 0);   
-                std::string filename("initial_circuit_iteration.binary");
-                export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+                
+                if ( export_circuit_2_binary_loc > 0 ) {
+                    std::string filename("initial_circuit_iteration.binary");
+                    if (project_name != "") { 
+                        filename=project_name+ "_"  +filename;
+                    }
+                    export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+                }
             }
 
 //std::cout << grad_norm  << std::endl;
@@ -1869,6 +1928,15 @@ bfgs_time = 0.0;
         }
 
 
+        long long export_circuit_2_binary_loc;
+        if ( config.count("export_circuit_2_binary") > 0 ) {
+             config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
+        }
+        else {
+            export_circuit_2_binary_loc = 0;
+        }    
+        
+
         long long iteration_threshold_of_randomization_loc;
         if ( config.count("randomization_threshold") > 0 ) {
             config["randomization_threshold"].get_property( iteration_threshold_of_randomization_loc );  
@@ -1913,8 +1981,13 @@ bfgs_time = 0.0;
                      sstream << "BFGS2: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << std::endl;
                      print(sstream, 2);  
 
-                     std::string filename("initial_circuit_iteration.binary");
-                     export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+                     if ( export_circuit_2_binary_loc>0) {
+                         std::string filename("initial_circuit_iteration.binary");
+                         if (project_name != "") { 
+                             filename=project_name+ "_"  +filename;
+                         }
+                         export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
+                     }
                 }
 
 

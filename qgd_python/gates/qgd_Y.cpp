@@ -223,6 +223,10 @@ qgd_Y_apply_to( qgd_Y *self, PyObject *args ) {
 
     self->gate->apply_to( unitary_mtx );
     
+    if (unitary_mtx.data != PyArray_DATA(unitary)) {
+        memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
+    }
+
     Py_DECREF(unitary);
 
     return Py_BuildValue("i", 0);

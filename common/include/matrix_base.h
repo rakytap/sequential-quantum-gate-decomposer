@@ -437,6 +437,13 @@ matrix_base<scalar> copy() const {
 
 }
 
+void ensure_aligned() {
+    if (((uintptr_t)(void*)data & (CACHELINE-1)) == 0) return; //CACHELINE must be power of 2, 16 sufficient, 64 is okay though
+    scalar* newdata = (scalar*)scalable_aligned_malloc( rows*stride*sizeof(scalar), CACHELINE);
+    memcpy( newdata, data, rows*stride*sizeof(scalar));
+    replace_data(newdata, true);
+}
+
 
 
 /**
