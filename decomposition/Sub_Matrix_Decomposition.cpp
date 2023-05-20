@@ -452,7 +452,7 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
         // do the optimization loops
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 
-            Problem p(num_of_parameters, 0, 2*M_PI, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
+            Problem p(num_of_parameters, -1e100, 1e100, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
             Tolmin tolmin(&p);
 
             Matrix_real x(solution_guess.get_data(), num_of_parameters, 1); 
@@ -558,7 +558,7 @@ double Sub_Matrix_Decomposition::optimization_problem( Matrix_real parameters, v
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-void Sub_Matrix_Decomposition::optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real grad ) {
+void Sub_Matrix_Decomposition::optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad ) {
 
     // The function value at x0
     double f0;
