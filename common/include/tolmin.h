@@ -4,7 +4,6 @@ This code is credited to the OPTIMUS project of Ioannis G. Tsoulos
 
 # ifndef __TOLMIN__H
 # define __TOLMIN__H
-using namespace std;
 
 #include "matrix_real.h"
 typedef Matrix_real Data;
@@ -24,8 +23,8 @@ private:
     int dimension;
     double lmargin, rmargin;
     double (* f) (Data x, void * params);
-    void (* df) (Data x, void * params, Data g);
-    void (* fdf) (Data x, void * params, double * f, Data g);
+    void (* df) (Data x, void * params, Data& g);
+    void (* fdf) (Data x, void * params, double * f, Data& g);
     void* void_instance;
 
 public:
@@ -33,8 +32,8 @@ public:
      * 	@param p is the objective problem to be minimized
      * **/
     Problem(int dimension, double lmargin, double rmargin, double (* f) (Data, void *),
-        void (* df) (Data, void *, Data),
-        void (* fdf) (Data, void *, double *, Data),
+        void (* df) (Data, void *, Data&),
+        void (* fdf) (Data, void *, double *, Data&),
         void* void_instance)
     {
         this->dimension = dimension;

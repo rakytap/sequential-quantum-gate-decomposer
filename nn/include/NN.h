@@ -51,8 +51,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <cstdlib>
 #include <time.h>
 #include <ctime>
-#include "gsl/gsl_multimin.h"
-#include "gsl/gsl_statistics.h"
 #include <tbb/cache_aligned_allocator.h>
 
 

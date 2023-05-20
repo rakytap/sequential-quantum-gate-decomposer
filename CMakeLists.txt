@@ -11,6 +11,7 @@ SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
 # specify the C++ standard
 set(CMAKE_CXX_STANDARD 11)
 set(CMAKE_CXX_STANDARD_REQUIRED True)
+set(CMAKE_WINDOWS_EXPORT_ALL_SYMBOLS ON) #for lib not just dll when no exports
 
 # include CMAKE modules
 include(CheckIncludeFile)
@@ -46,7 +47,7 @@ if(PLATLIB_NOT_FOUND)
 endif()
 
 set(ENV{PYTHONPATH} "$ENV{PYTHONPATH};${PYTHON_PLAT_LIB}")
-message("PYTHONPATH is set to "$ENV{PYTHONPATH})
+message("PYTHONPATH is set to $ENV{PYTHONPATH}")
 
 # contruct library directories
 exec_program(${PYTHON_EXECUTABLE}
@@ -227,16 +228,23 @@ endif()
 
 
 
+
 ############################################################xx
 # checking TBB libraries and headers
 
 # adding TBB library dir if given by environment variable
 if(DEFINED ENV{TBB_LIB_DIR})
-
-  find_library(TBB_LIB tbb
-               PATHS $ENV{TBB_LIB_DIR}
-               NO_DEFAULT_PATH
-               REQUIRED)
+  if (WIN32)
+    find_library(TBB_LIB tbb12
+                 PATHS $ENV{TBB_LIB_DIR}
+                 NO_DEFAULT_PATH
+                 REQUIRED)
+  else()
+    find_library(TBB_LIB tbb
+                 PATHS $ENV{TBB_LIB_DIR}
+                 NO_DEFAULT_PATH
+                 REQUIRED)
+  endif()
 
   find_library(TBBMALLOC_LIB tbbmalloc
                PATHS $ENV{TBB_LIB_DIR}
@@ -250,10 +258,17 @@ if(DEFINED ENV{TBB_LIB_DIR})
 
 else()
 
-  find_library(TBB_LIB tbb
-               PATHS ${PYTHON_SYS_PATH}
-               NO_DEFAULT_PATH
-               REQUIRED)
+  if (WIN32)
+    find_library(TBB_LIB tbb12
+                 PATHS ${PYTHON_SYS_PATH}
+                 NO_DEFAULT_PATH
+                 REQUIRED)
+  else()
+    find_library(TBB_LIB tbb
+                 PATHS ${PYTHON_SYS_PATH}
+                 NO_DEFAULT_PATH
+                 REQUIRED)  
+  endif()
 
   find_library(TBBMALLOC_LIB tbbmalloc
                PATHS ${PYTHON_SYS_PATH}
@@ -264,7 +279,6 @@ else()
                PATHS ${PYTHON_SYS_PATH}
                NO_DEFAULT_PATH
                REQUIRED)
-  
 endif()
 
 
@@ -291,6 +305,7 @@ else()
     message(FATAL_ERROR "TBB header tbb.h not found")
   endif()
 
+  list(APPEND EXTRA_INCLUDES "${TBB_HEADER}")
 
 endif()
 
@@ -372,13 +387,11 @@ target_compile_options(qgd PUBLIC
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
 )
 
-
-
 # adding linking options
 target_link_libraries( qgd PRIVATE
-    ${BLAS_LIBRARIES}
-    ${LAPACK_LIBRARIES}
-    ${LAPACKE_LIBRARIES}
+    "${BLAS_LIBRARIES}"
+    "${LAPACK_LIBRARIES}"
+    "${LAPACKE_LIBRARIES}"
     ${TBBMALLOC_LIB}
     ${TBBMALLOC_PROXY_LIB}
     ${TBB_LIB}

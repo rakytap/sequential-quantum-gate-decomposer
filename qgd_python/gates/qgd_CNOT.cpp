@@ -300,9 +300,9 @@ static PyTypeObject  qgd_CNOT_Type = {
 */
 static PyModuleDef  qgd_CNOT_Module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_CNOT",
-    .m_doc = "Python binding for QGD CNOT gate",
-    .m_size = -1,
+    "qgd_CNOT",
+    "Python binding for QGD CNOT gate",
+    -1,
 };
 
 

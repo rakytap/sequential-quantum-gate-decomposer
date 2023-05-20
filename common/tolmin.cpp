@@ -404,11 +404,11 @@ int  Tolmin::lsrch_(integer *n, double *x, double *g,
 /* L10: */
     }
     amx = (float)1.;
-    *step = min(amx,*stepcb);
+    *step = std::min(amx,*stepcb);
 /* Computing MAX */
     d__1 = *relacc * ratio, d__2 = *step * (float)1e-19;
-    stpmin = max(d__1,d__2);
-    *step = max(stpmin,*step);
+    stpmin = std::max(d__1,d__2);
+    *step = std::max(stpmin,*step);
     sbase = (float)0.;
     fbase = *f;
     ddotgb = *ddotg;
@@ -489,7 +489,7 @@ L60:
 	}
 /* Computing MIN */
 	d__1 = temp * *step;
-	*step = min(d__1,*stepcb);
+	*step = std::min(d__1,*stepcb);
 	goto L20;
     } else if (icount == 1 || stplow > (float)0.) {
 	dgknot = (fhgh - flow) * (float)2. / (stphgh - stplow) - (dglow + 
@@ -498,7 +498,7 @@ L60:
 	    amx = (float).1;
 /* Computing MAX */
 	    d__1 = amx, d__2 = dglow * (float).5 / (dglow - dgknot);
-	    ratio = max(d__1,d__2);
+	    ratio = std::max(d__1,d__2);
 	} else {
 	    ratio = (dghgh * (float).5 - dgknot) / (dghgh - dgknot);
 	}
@@ -591,7 +591,7 @@ int Tolmin::minflc_(integer *n, integer *m, integer *meq, double
     *info = 4;
 /* Computing MAX */
     i__1 = 1 - *n, i__2 = *meq * (*meq - *m);
-    if (max(i__1,i__2) > 0) {
+    if (std::max(i__1,i__2) > 0) {
 	if (*iprint != 0) {
 	    //io___56.ciunit = units_1.iuout;
 	    //s_wsfe(&io___56);
@@ -607,7 +607,7 @@ int Tolmin::minflc_(integer *n, integer *m, integer *meq, double
     amx = (float).01;
 /* Computing MAX */
     d__1 = amx, d__2 = relacc * (float)10.;
-    tol = max(d__1,d__2);
+    tol = std::max(d__1,d__2);
     if (*info == 4) {
 	if (*iprint != 0) {
 	    //io___61.ciunit = units_1.iuout;
@@ -852,7 +852,7 @@ L20:
 
 /* Computing MAX */
     d__1 = diff, d__2 = ddotg * (float)-.5;
-    if (*tol > *relacc && *iterc > iterk && relaxf * (float).1 >= max(d__1,
+    if (*tol > *relacc && *iterc > iterk && relaxf * (float).1 >= std::max(d__1,
 	    d__2)) {
 	goto L70;
     }
@@ -888,7 +888,7 @@ L40:
 /* L60: */
 /* Computing MAX */
 	d__2 = xbig[i__], d__3 = (d__1 = x[i__], fabs(d__1));
-	xbig[i__] = max(d__2,d__3);
+	xbig[i__] = std::max(d__2,d__3);
     }
 
 /*     Revise the second derivative approximation. */
@@ -1099,8 +1099,8 @@ L80:
 /* L110: */
 	sumabs += fabs(temp);
     }
-    savsum = min(savsum,sum);
-    savabs = max(savabs,sumabs);
+    savsum = std::min(savsum,sum);
+    savabs = std::max(savabs,sumabs);
     --k;
     if (k >= 1) {
 	goto L80;
@@ -1231,7 +1231,7 @@ int Tolmin::satact_(integer *n, integer *m, double *a, integer *
 /* L20: */
 /* Computing MAX */
 		    d__2 = xbig[i__], d__3 = (d__1 = x[i__], fabs(d__1));
-		    xbig[i__] = max(d__2,d__3);
+		    xbig[i__] = std::max(d__2,d__3);
 		}
 		if (j > *m) {
 		    x[jx] = savex;
@@ -1372,7 +1372,7 @@ L50:
     if (k == *nact) {
 /* Computing MIN */
 	d__1 = parnew[k];
-	parnew[k] = min(d__1,amx);
+	parnew[k] = std::min(d__1,amx);
     }
     j = iact[k];
     if (j <= *m) {
@@ -1418,7 +1418,7 @@ L50:
 /* L90: */
 /* Computing MIN */
 	d__1 = theta * parnew[k] + ratio * par[k];
-	par[k] = min(d__1,amx);
+	par[k] = std::min(d__1,amx);
     }
     i__1 = *n;
     for (i__ = 1; i__ <= i__1; ++i__) {
@@ -1738,10 +1738,10 @@ L20:
 	*zznorm = dd / dg;
     } else {
 	temp = sqrt(*zznorm * dd / dg);
-	*zznorm = min(*zznorm,temp);
+	*zznorm = std::min(*zznorm,temp);
 /* Computing MAX */
 	d__1 = *zznorm, d__2 = temp * (float).1;
-	*zznorm = max(d__1,d__2);
+	*zznorm = std::max(d__1,d__2);
     }
 
 /*     Complete the updating of Z. */
@@ -1941,7 +1941,7 @@ L30:
 /* L40: */
 /* Computing MAX */
 	    d__2 = xbig[i__], d__3 = (d__1 = x[i__], fabs(d__1));
-	    xbig[i__] = max(d__2,d__3);
+	    xbig[i__] = std::max(d__2,d__3);
 	}
 	addcon_(n, m, &a[a_offset], ia, &iact[1], nact, &z__[1], &u[1], 
 		relacc, &indxbd, &gmnew[1], &cgrad[1]);
@@ -2223,7 +2223,7 @@ int Tolmin::adjtol_(integer *n, integer *m, double *a, integer *
 	    if (res > (float)0.) {
 /* Computing MAX */
 		d__1 = viol, d__2 = res / resabs;
-		viol = max(d__1,d__2);
+		viol = std::max(d__1,d__2);
 	    }
 /* L20: */
 	}
@@ -2231,7 +2231,7 @@ int Tolmin::adjtol_(integer *n, integer *m, double *a, integer *
 
 /*     Adjust TOL. */
 
-    *tol = min(*tol,viol) * (float).1;
+    *tol = std::min(*tol,viol) * (float).1;
     if (*tol <= *relacc + *relacc) {
 	*tol = *relacc;
 	i__1 = *n;

@@ -302,9 +302,9 @@ static PyTypeObject  qgd_SX_Type = {
 */
 static PyModuleDef  qgd_SX_Module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_SX",
-    .m_doc = "Python binding for QGD SX gate",
-    .m_size = -1,
+    "qgd_SX",
+    "Python binding for QGD SX gate",
+    -1,
 };
 
 

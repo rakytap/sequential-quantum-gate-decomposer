@@ -178,13 +178,13 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_custom_W
     const char* initial_guess_C = PyBytes_AS_STRING(initial_guess_string_unicode);
 
     guess_type qgd_initial_guess;
-    if ( strcmp("zeros", initial_guess_C) == 0 or strcmp("ZEROS", initial_guess_C) == 0) {
+    if ( strcmp("zeros", initial_guess_C) == 0 || strcmp("ZEROS", initial_guess_C) == 0) {
         qgd_initial_guess = ZEROS;        
     }
-    else if ( strcmp("random", initial_guess_C)==0 or strcmp("RANDOM", initial_guess_C)==0) {
+    else if ( strcmp("random", initial_guess_C)==0 || strcmp("RANDOM", initial_guess_C)==0) {
         qgd_initial_guess = RANDOM;        
     }
-    else if ( strcmp("close_to_zero", initial_guess_C)==0 or strcmp("CLOSE_TO_ZERO", initial_guess_C)==0) {
+    else if ( strcmp("close_to_zero", initial_guess_C)==0 || strcmp("CLOSE_TO_ZERO", initial_guess_C)==0) {
         qgd_initial_guess = CLOSE_TO_ZERO;        
     }
     else {
@@ -1000,25 +1000,25 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer( qgd_N_Qubit_Decompositio
     const char* optimizer_C = PyBytes_AS_STRING(optimizer_string_unicode);
 
     optimization_aglorithms qgd_optimizer;
-    if ( strcmp("bfgs", optimizer_C) == 0 or strcmp("BFGS", optimizer_C) == 0) {
+    if ( strcmp("bfgs", optimizer_C) == 0 || strcmp("BFGS", optimizer_C) == 0) {
         qgd_optimizer = BFGS;        
     }
-    else if ( strcmp("adam", optimizer_C)==0 or strcmp("ADAM", optimizer_C)==0) {
+    else if ( strcmp("adam", optimizer_C)==0 || strcmp("ADAM", optimizer_C)==0) {
         qgd_optimizer = ADAM;        
     }
-    else if ( strcmp("adam_batched", optimizer_C)==0 or strcmp("ADAM_BATCHED", optimizer_C)==0) {
+    else if ( strcmp("adam_batched", optimizer_C)==0 || strcmp("ADAM_BATCHED", optimizer_C)==0) {
         qgd_optimizer = ADAM_BATCHED;        
     }
-    else if ( strcmp("agents", optimizer_C)==0 or strcmp("AGENTS", optimizer_C)==0) {
+    else if ( strcmp("agents", optimizer_C)==0 || strcmp("AGENTS", optimizer_C)==0) {
         qgd_optimizer = AGENTS;        
     }
-    else if ( strcmp("cosine", optimizer_C)==0 or strcmp("COSINE", optimizer_C)==0) {
+    else if ( strcmp("cosine", optimizer_C)==0 || strcmp("COSINE", optimizer_C)==0) {
         qgd_optimizer = COSINE;        
     }
-    else if ( strcmp("agents_combined", optimizer_C)==0 or strcmp("AGENTS_COMBINED", optimizer_C)==0) {
+    else if ( strcmp("agents_combined", optimizer_C)==0 || strcmp("AGENTS_COMBINED", optimizer_C)==0) {
         qgd_optimizer = AGENTS_COMBINED;        
     }
-    else if ( strcmp("bfgs2", optimizer_C)==0 or strcmp("BFGS2", optimizer_C)==0) {
+    else if ( strcmp("bfgs2", optimizer_C)==0 || strcmp("BFGS2", optimizer_C)==0) {
         qgd_optimizer = BFGS2;        
     }
     else {
@@ -1222,9 +1222,9 @@ static PyTypeObject qgd_N_Qubit_Decomposition_custom_Wrapper_Type = {
 */
 static PyModuleDef qgd_N_Qubit_Decomposition_custom_Wrapper_Module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_N_Qubit_Decomposition_custom_Wrapper",
-    .m_doc = "Python binding for QGD N_Qubit_Decomposition class",
-    .m_size = -1,
+    "qgd_N_Qubit_Decomposition_custom_Wrapper",
+    "Python binding for QGD N_Qubit_Decomposition class",
+    -1,
 };
 
 

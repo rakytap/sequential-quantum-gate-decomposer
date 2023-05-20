@@ -101,7 +101,7 @@ Matrix_real(const Matrix_real &in);
 @brief Call to create a copy of the matrix
 @return Returns with the instance of the class.
 */
-Matrix_real copy();
+Matrix_real copy() const;
 
 
 /**
