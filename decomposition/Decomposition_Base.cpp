@@ -23,7 +23,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Decomposition_Base.h"
 
-
+double cblas_dznrm2(OPENBLAS_CONST blasint N, OPENBLAS_CONST void *X, OPENBLAS_CONST blasint incX);
 
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
