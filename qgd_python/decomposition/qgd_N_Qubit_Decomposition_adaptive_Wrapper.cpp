@@ -1546,7 +1546,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Grad( qgd_N_Qubi
     Matrix_real grad_mtx(parameters_mtx.size(), 1);
 
     try {
-        self->decomp->optimization_problem_grad(parameters_mtx, &self->decomp, grad_mtx );
+        self->decomp->optimization_problem_grad(parameters_mtx, self->decomp, grad_mtx );
     }
     catch (std::string err ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1565,7 +1565,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Grad( qgd_N_Qubi
     Py_DECREF(parameters_arg);
 
 
-    Py_DECREF(grad_py);
     return grad_py;
 }
 
