@@ -47,7 +47,7 @@ if(PLATLIB_NOT_FOUND)
 endif()
 
 set(ENV{PYTHONPATH} "$ENV{PYTHONPATH};${PYTHON_PLAT_LIB}")
-message("PYTHONPATH is set to "$ENV{PYTHONPATH})
+message("PYTHONPATH is set to $ENV{PYTHONPATH}")
 
 # contruct library directories
 exec_program(${PYTHON_EXECUTABLE}
