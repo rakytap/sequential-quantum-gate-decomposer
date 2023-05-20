@@ -389,9 +389,9 @@ target_compile_options(qgd PUBLIC
 
 # adding linking options
 target_link_libraries( qgd PRIVATE
-    ${BLAS_LIBRARIES}
-    ${LAPACK_LIBRARIES}
-    ${LAPACKE_LIBRARIES}
+    "${BLAS_LIBRARIES}"
+    "${LAPACK_LIBRARIES}"
+    "${LAPACKE_LIBRARIES}"
     ${TBBMALLOC_LIB}
     ${TBBMALLOC_PROXY_LIB}
     ${TBB_LIB}
