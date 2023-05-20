@@ -4,7 +4,6 @@ This code is credited to the OPTIMUS project of Ioannis G. Tsoulos
 
 # ifndef __TOLMIN__H
 # define __TOLMIN__H
-using namespace std;
 
 #include "matrix_real.h"
 typedef Matrix_real Data;
