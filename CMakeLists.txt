@@ -234,10 +234,17 @@ endif()
 
 # adding TBB library dir if given by environment variable
 if(DEFINED ENV{TBB_LIB_DIR})
-  find_library(TBB_LIB tbb
-               PATHS $ENV{TBB_LIB_DIR}
-               NO_DEFAULT_PATH
-               REQUIRED)
+  if (WIN32)
+    find_library(TBB_LIB tbb12
+                 PATHS $ENV{TBB_LIB_DIR}
+                 NO_DEFAULT_PATH
+                 REQUIRED)
+  else()
+    find_library(TBB_LIB tbb
+                 PATHS $ENV{TBB_LIB_DIR}
+                 NO_DEFAULT_PATH
+                 REQUIRED)
+  endif()
 
   find_library(TBBMALLOC_LIB tbbmalloc
                PATHS $ENV{TBB_LIB_DIR}
@@ -251,10 +258,17 @@ if(DEFINED ENV{TBB_LIB_DIR})
 
 else()
 
-  find_library(TBB_LIB tbb
-               PATHS ${PYTHON_SYS_PATH}
-               NO_DEFAULT_PATH
-               REQUIRED)
+  if (WIN32)
+    find_library(TBB_LIB tbb12
+                 PATHS ${PYTHON_SYS_PATH}
+                 NO_DEFAULT_PATH
+                 REQUIRED)
+  else()
+    find_library(TBB_LIB tbb
+                 PATHS ${PYTHON_SYS_PATH}
+                 NO_DEFAULT_PATH
+                 REQUIRED)  
+  endif()
 
   find_library(TBBMALLOC_LIB tbbmalloc
                PATHS ${PYTHON_SYS_PATH}
