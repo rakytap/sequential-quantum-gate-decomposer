@@ -997,7 +997,7 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Max_Iterations(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
 
     // initiate variables for input arguments
-    PyObject* max_iters_input; 
+    int max_iters_input; 
 
     // parsing input arguments
     if (!PyArg_ParseTuple(args, "|i", &max_iters_input )) return Py_BuildValue("i", -1);
