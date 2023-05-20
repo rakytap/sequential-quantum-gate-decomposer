@@ -45,7 +45,7 @@ np.set_printoptions(linewidth=200)
 
 
 # number of qubits
-qbit_num = 9
+qbit_num = 8
 
 # cost function variant
 cost_function_variant = 0
@@ -150,7 +150,7 @@ class Test_Decomposition:
 
         # cut the matrixt by trace offset
         trace_offset = 80
-        Umtx = Umtx[trace_offset:400, :]
+        Umtx = Umtx[trace_offset:240, :]
 
 
 	###################################################################################
@@ -178,6 +178,9 @@ class Test_Decomposition:
         f0_CPU, grad_CPU = cDecompose_CPU.Optimization_Problem_Combined( parameters )
 
         assert( np.abs( f0_CPU ) < 1e-8 )
+        
+        
+        
 
     def test_grad_batch_unitary_funcs(self):
         # creating a class to decompose the unitary
@@ -206,7 +209,7 @@ class Test_Decomposition:
         
         cost = cDecompose.Optimization_Problem(parameters)
         assert np.allclose(np.array([cost, cost, cost]), cDecompose.Optimization_Problem_Batch(np.vstack([parameters, parameters, parameters])))
-        grad = cDecompose.Optimization_Problem_Grad(parameters)
+        grad = cDecompose.Optimization_Problem_Grad(parameters)        
         f0_CPU, grad_CPU = cDecompose.Optimization_Problem_Combined( parameters )
         assert np.allclose(grad, grad_CPU)
         assert np.isclose(f0_CPU, cost)
