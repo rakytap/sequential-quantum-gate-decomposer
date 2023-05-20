@@ -1000,25 +1000,25 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer( qgd_N_Qubit_Decompositio
     const char* optimizer_C = PyBytes_AS_STRING(optimizer_string_unicode);
 
     optimization_aglorithms qgd_optimizer;
-    if ( strcmp("bfgs", optimizer_C) == 0 or strcmp("BFGS", optimizer_C) == 0) {
+    if ( strcmp("bfgs", optimizer_C) == 0 || strcmp("BFGS", optimizer_C) == 0) {
         qgd_optimizer = BFGS;        
     }
-    else if ( strcmp("adam", optimizer_C)==0 or strcmp("ADAM", optimizer_C)==0) {
+    else if ( strcmp("adam", optimizer_C)==0 || strcmp("ADAM", optimizer_C)==0) {
         qgd_optimizer = ADAM;        
     }
-    else if ( strcmp("adam_batched", optimizer_C)==0 or strcmp("ADAM_BATCHED", optimizer_C)==0) {
+    else if ( strcmp("adam_batched", optimizer_C)==0 || strcmp("ADAM_BATCHED", optimizer_C)==0) {
         qgd_optimizer = ADAM_BATCHED;        
     }
-    else if ( strcmp("agents", optimizer_C)==0 or strcmp("AGENTS", optimizer_C)==0) {
+    else if ( strcmp("agents", optimizer_C)==0 || strcmp("AGENTS", optimizer_C)==0) {
         qgd_optimizer = AGENTS;        
     }
-    else if ( strcmp("cosine", optimizer_C)==0 or strcmp("COSINE", optimizer_C)==0) {
+    else if ( strcmp("cosine", optimizer_C)==0 || strcmp("COSINE", optimizer_C)==0) {
         qgd_optimizer = COSINE;        
     }
-    else if ( strcmp("agents_combined", optimizer_C)==0 or strcmp("AGENTS_COMBINED", optimizer_C)==0) {
+    else if ( strcmp("agents_combined", optimizer_C)==0 || strcmp("AGENTS_COMBINED", optimizer_C)==0) {
         qgd_optimizer = AGENTS_COMBINED;        
     }
-    else if ( strcmp("bfgs2", optimizer_C)==0 or strcmp("BFGS2", optimizer_C)==0) {
+    else if ( strcmp("bfgs2", optimizer_C)==0 || strcmp("BFGS2", optimizer_C)==0) {
         qgd_optimizer = BFGS2;        
     }
     else {
