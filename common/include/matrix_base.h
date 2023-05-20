@@ -420,7 +420,7 @@ scalar& operator[](int idx)  {
 @brief Call to create a copy of the matrix
 @return Returns with the instance of the class.
 */
-matrix_base<scalar> copy() {
+matrix_base<scalar> copy() const {
 
   matrix_base<scalar> ret = matrix_base<scalar>(rows, cols, stride);
 
