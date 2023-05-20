@@ -75,7 +75,7 @@ typedef BLASLONG blasint;
 #define blasabs(x) labs(x)
 #endif
 
-double cblas_dznrm2(OPENBLAS_CONST blasint N, OPENBLAS_CONST void *X, OPENBLAS_CONST blasint incX);
+extern "C" double cblas_dznrm2(OPENBLAS_CONST blasint N, OPENBLAS_CONST void *X, OPENBLAS_CONST blasint incX);
 
 /**
 @brief A class containing basic methods for the decomposition process.
