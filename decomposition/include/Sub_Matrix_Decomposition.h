@@ -148,7 +148,7 @@ static void optimization_problem_grad( Matrix_real parameters, void* void_instan
 @param f0 The value of the cost function at x0.
 @param grad A GNU Scientific Library vector containing the calculated gradient components.
 */
-static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real grad );
+static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
 /**
 @brief Set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
