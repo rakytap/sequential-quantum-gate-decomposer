@@ -193,248 +193,16 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
     print(sstream, 1);   
 
-
-    // temporarily turn off OpenMP parallelism
-#if BLAS==0 // undefined BLAS
-    num_threads = omp_get_max_threads();
-    omp_set_num_threads(1);
-#elif BLAS==1 // MKL
-    num_threads = mkl_get_max_threads();
-    MKL_Set_Num_Threads(1);
-#elif BLAS==2 //OpenBLAS
-    num_threads = openblas_get_num_threads();
-    openblas_set_num_threads(1);
-#endif
-
-    //measure the time for the decompositin
-    tbb::tick_count start_time = tbb::tick_count::now();
-
-    if (level_limit == 0 ) {
-        std::stringstream sstream;
-	sstream << "please increase level limit" << std::endl;
-        print(sstream, 0);	
-        return;
-    }
-
-
-
-    double optimization_tolerance_orig = optimization_tolerance;
-
-
-    Gates_block* gate_structure_loc = NULL;
-    if ( gates.size() > 0 ) {
-        std::stringstream sstream;
-        sstream << "Using imported gate structure for the decomposition." << std::endl;
-        print(sstream, 1);	
-	        
-        gate_structure_loc = optimize_imported_gate_structure(optimized_parameters_mtx);
-    }
-    else {
-        std::stringstream sstream;
-        sstream << "Construct initial gate structure for the decomposition." << std::endl;
-        print(sstream, 1);
-        gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
-    }
-
-
-    std::string filename("circuit_squander.binary");
-    if (project_name != "") {
-        filename = project_name+ "_" +filename;
-    }
-
-    export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
-
-    sstream.str("");
-    sstream << std::endl;
-    sstream << std::endl;
-    sstream << "**************************************************************" << std::endl;
-    sstream << "***************** Compressing Gate structure *****************" << std::endl;
-    sstream << "**************************************************************" << std::endl;
-    print(sstream, 1);	    	
+    // get the initial circuit including redundand 2-qbit blocks.
+    get_initial_circuit();
     
+    // comppress the gate structure
+    compress_circuit();
 
-    int iter = 0;
-    int uncompressed_iter_num = 0;
-    while ( iter<25 || uncompressed_iter_num <= 5 ) {
-
-        sstream.str("");
-        sstream << "iteration " << iter+1 << ": ";
-        print(sstream, 1);	
-
-       
-        Gates_block* gate_structure_compressed = compress_gate_structure( gate_structure_loc );
-
-        if ( gate_structure_compressed->get_gate_num() < gate_structure_loc->get_gate_num() ) {
-            uncompressed_iter_num = 0;
-        }
-        else {
-            uncompressed_iter_num++;
-        }
-
-        if ( gate_structure_compressed != gate_structure_loc ) {
-            delete( gate_structure_loc );
-            gate_structure_loc = gate_structure_compressed;
-            gate_structure_compressed = NULL;
-            
-
-            std::string filename("circuit_compression.binary");
-            if (project_name != "") { 
-                filename=project_name+ "_"  +filename;
-            }
-
-            export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);    
-            std::string filename_unitary("unitary_compression_unitary");
-            export_unitary(filename_unitary);
-        }
-
-        iter++;
-
-        if (uncompressed_iter_num>10) break;
-
-    }
-    
-
-    sstream.str("");
-    sstream << "**************************************************************" << std::endl;
-    sstream << "************ Final tuning of the Gate structure **************" << std::endl;
-    sstream << "**************************************************************" << std::endl;
-    print(sstream, 1);	    	
-    
-
-    optimization_tolerance = optimization_tolerance_orig;
-
-    // store the decomposing gate structure   
-    release_gates();
-    combine( gate_structure_loc );
-    optimization_block = get_gate_num();
-
-
-    sstream.str("");
-    sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
-    print(sstream, 3);	
-    	
-    Gates_block* gate_structure_tmp = replace_trivial_CRY_gates( gate_structure_loc, optimized_parameters_mtx );
-    Matrix_real optimized_parameters_save = optimized_parameters_mtx;
-
-    release_gates();
-    optimized_parameters_mtx = optimized_parameters_save;
-
-    // solve the optimization problem
-    N_Qubit_Decomposition_custom cDecomp_custom;
-
-
-    std::map<std::string, Config_Element> config_copy;
-    config_copy.insert(config.begin(), config.end());
-    if ( config.count("max_inner_iterations_final") > 0 ) {
-        long long val;
-        config["max_inner_iterations_final"].get_property( val ); 
-        Config_Element element;
-        element.set_property( "max_inner_iterations", val ); 
-        config_copy["max_inner_iterations"] = element;
-    }
-
-
-    // solve the optimization problem in isolated optimization process
-    cDecomp_custom = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config_copy, initial_guess, accelerator_num);
-    cDecomp_custom.set_custom_gate_structure( gate_structure_tmp );
-    cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size() );
-    cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
-    cDecomp_custom.set_max_iteration( max_outer_iterations );
-    cDecomp_custom.set_verbose(verbose);
-    cDecomp_custom.set_cost_function_variant( cost_fnc );
-    cDecomp_custom.set_debugfile("");
-    cDecomp_custom.set_iteration_loops( iteration_loops );
-    cDecomp_custom.set_optimization_tolerance( optimization_tolerance ); 
-    cDecomp_custom.set_trace_offset( trace_offset ); 
-    cDecomp_custom.set_optimizer( alg );  
-    if (alg==ADAM || alg==BFGS2) { 
-        int param_num_loc = gate_structure_loc->get_parameter_num();
-        int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
-        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
-        cDecomp_custom.set_random_shift_count_max( 10000 );   
-        cDecomp_custom.set_adaptive_eta( true );      
-        cDecomp_custom.set_randomized_radius( radius );             
-    }
-    else if ( alg==ADAM_BATCHED ) {
-        cDecomp_custom.set_optimizer( alg );  
-        int max_inner_iterations_loc = 2500;
-        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
-        cDecomp_custom.set_random_shift_count_max( 5 );   
-        cDecomp_custom.set_adaptive_eta( true );      
-        cDecomp_custom.set_randomized_radius( radius );   
-    }
-    else if ( alg==BFGS ) {
-        cDecomp_custom.set_optimizer( alg );  
-        int max_inner_iterations_loc = 10000;
-        cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
-        cDecomp_custom.set_randomized_radius( radius );   
-    }
-    cDecomp_custom.set_iteration_threshold_of_randomization( iteration_threshold_of_randomization );
-    cDecomp_custom.start_decomposition(true);
-    number_of_iters += cDecomp_custom.get_num_iters();
-
-    current_minimum = cDecomp_custom.get_current_minimum();
-    optimized_parameters_mtx = cDecomp_custom.get_optimized_parameters();
-
-
-    combine( gate_structure_tmp );
-    delete( gate_structure_tmp );
-    delete( gate_structure_loc );
-
-    sstream.str("");
-    sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
-    print(sstream, 3);	
-    	
-    std::string filename2("circuit_final.binary");
-
-    if (project_name != "") {
-        filename2=project_name+ "_"  +filename2;
-    }
-
-    export_gate_list_to_binary(optimized_parameters_mtx, this, filename2, verbose);  
-
-    // prepare gates to export
-    if (prepare_export) {
-        prepare_gates_to_export();
-    }
-    
-    decomposition_error = optimization_problem(optimized_parameters_mtx);
-    
-    // get the number of gates used in the decomposition
-    gates_num gates_num = get_gate_nums();
-
-    
-    sstream.str("");
-    sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
-      
-        if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 gates," << std::endl;
-        if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX gates," << std::endl;
-        if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY gates," << std::endl;
-        if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ gates," << std::endl;
-        if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT gates," << std::endl;
-        if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ gates," << std::endl;
-        if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH gates," << std::endl;
-        if ( gates_num.x>0 ) sstream << gates_num.x << " X gates," << std::endl;
-        if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX gates," << std::endl; 
-        if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore gates," << std::endl;   
-        if ( gates_num.un>0 ) sstream << gates_num.un << " UN gates," << std::endl;
-        if ( gates_num.cry>0 ) sstream << gates_num.cry << " CRY gates," << std::endl;  
-        if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive gates," << std::endl;
-    
-        sstream << std::endl;
-        tbb::tick_count current_time = tbb::tick_count::now();
-
-	sstream << "--- In total " << (current_time - start_time).seconds() << " seconds elapsed during the decomposition ---" << std::endl;
-    	print(sstream, 1);	    	
-    	
-
-#if BLAS==0 // undefined BLAS
-    omp_set_num_threads(num_threads);
-#elif BLAS==1 //MKL
-    MKL_Set_Num_Threads(num_threads);
-#elif BLAS==2 //OpenBLAS
-    openblas_set_num_threads(num_threads);
-#endif
+ 
+    // finalyzing the gate structure by turning CRY gates inti CNOT gates and do optimization cycles to correct approximation in this transformation 
+    // (CRY gates with small rotation angles are expressed with a single CNOT gate
+    finalize_circuit(prepare_export);
 
 }
 
@@ -445,7 +213,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 /**
 @brief ???????????????????
 */
-void N_Qubit_Decomposition_adaptive::get_initial_circuit(){
+void N_Qubit_Decomposition_adaptive::get_initial_circuit() {
 // temporarily turn off OpenMP parallelism
 #if BLAS==0 // undefined BLAS
     num_threads = omp_get_max_threads();
@@ -469,8 +237,6 @@ void N_Qubit_Decomposition_adaptive::get_initial_circuit(){
 
 
 
-    double optimization_tolerance_orig = optimization_tolerance;
-
 
     Gates_block* gate_structure_loc = NULL;
     if ( gates.size() > 0 ) {
@@ -488,20 +254,36 @@ void N_Qubit_Decomposition_adaptive::get_initial_circuit(){
     }
 
 
-    std::string filename("circuit_squander.binary");
-    if (project_name != "") {
-        filename = project_name+ "_" +filename;
+    long long export_circuit_2_binary_loc;
+    if ( config.count("export_circuit_2_binary") > 0 ) {
+        config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
     }
-
-    export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
-    std::string unitaryname("unitary_squander.binary");
-    if (project_name != "") {
-        filename = project_name+ "_" +unitaryname;
+    else {
+        export_circuit_2_binary_loc = 0;
+    }     
+        
+        
+    if ( export_circuit_2_binary_loc > 0 ) {
+        std::string filename("circuit_squander.binary");
+        if (project_name != "") {
+            filename = project_name+ "_" +filename;
+        }
+        export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
+        
+        std::string unitaryname("unitary_squander.binary");
+        if (project_name != "") {
+            filename = project_name+ "_" +unitaryname;
+        }
+        export_unitary(unitaryname);
+        
     }
-    export_unitary(unitaryname);
+    
+    // store the created gate structure
     release_gates();
 	combine( gate_structure_loc );
 	delete( gate_structure_loc );
+	
+	
 #if BLAS==0 // undefined BLAS
     omp_set_num_threads(num_threads);
 #elif BLAS==1 //MKL
@@ -517,7 +299,7 @@ void N_Qubit_Decomposition_adaptive::get_initial_circuit(){
 /**
 @brief ???????????????????
 */
-void N_Qubit_Decomposition_adaptive::compress_circuit(){
+void N_Qubit_Decomposition_adaptive::compress_circuit() {
 // temporarily turn off OpenMP parallelism
 #if BLAS==0 // undefined BLAS
     num_threads = omp_get_max_threads();
@@ -551,8 +333,20 @@ void N_Qubit_Decomposition_adaptive::compress_circuit(){
         print(sstream, 1);
         return;
     }
+    
+    
     int iter = 0;
     int uncompressed_iter_num = 0;
+    
+    long long export_circuit_2_binary_loc;
+    if ( config.count("export_circuit_2_binary") > 0 ) {
+        config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
+    }
+    else {
+        export_circuit_2_binary_loc = 0;
+    }      
+    
+        
     while ( iter<25 || uncompressed_iter_num <= 5 ) {
         std::stringstream sstream;
         sstream.str("");
@@ -575,14 +369,23 @@ void N_Qubit_Decomposition_adaptive::compress_circuit(){
             gate_structure_compressed = NULL;
             
 
-            std::string filename("circuit_compression.binary");
-            if (project_name != "") { 
-                filename=project_name+ "_"  +filename;
-            }
 
-            export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose); 
-            std::string filename_unitary("unitary_compression.binary");
-            export_unitary(filename_unitary);
+            if ( export_circuit_2_binary_loc > 0 ) {
+                std::string filename("circuit_compression.binary");
+                if (project_name != "") { 
+                    filename=project_name+ "_"  +filename;
+                }
+                export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose); 
+            
+            
+                std::string filename_unitary("unitary_compression.binary");
+                if (project_name != "") { 
+                    filename_unitary=project_name+ "_"  +filename_unitary;
+                }  
+                export_unitary(filename_unitary);
+                
+                
+            }
         }
 
         iter++;
@@ -611,7 +414,9 @@ void N_Qubit_Decomposition_adaptive::compress_circuit(){
 /**
 @brief ???????????????????
 */
-void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export){
+void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export) {
+
+
 // temporarily turn off OpenMP parallelism
 #if BLAS==0 // undefined BLAS
     num_threads = omp_get_max_threads();
@@ -623,6 +428,8 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export){
     num_threads = openblas_get_num_threads();
     openblas_set_num_threads(1);
 #endif
+
+
 	Gates_block* gate_structure_loc = NULL;
     if ( gates.size() > 0 ) {
         std::stringstream sstream;
@@ -637,6 +444,8 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export){
         print(sstream, 1);
         return;
     }
+    
+    
     std::stringstream sstream;
     sstream.str("");
     sstream << "**************************************************************" << std::endl;
@@ -732,14 +541,26 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export){
     sstream.str("");
     sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
     print(sstream, 3);	
-    	
-    std::string filename2("circuit_final.binary");
-
-    if (project_name != "") {
-        filename2=project_name+ "_"  +filename2;
+    
+    long long export_circuit_2_binary_loc;
+    if ( config.count("export_circuit_2_binary") > 0 ) {
+        config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
     }
+    else {
+        export_circuit_2_binary_loc = 0;
+    }       
+    	
+    	
+    if ( export_circuit_2_binary_loc > 0 ) {
+        std::string filename2("circuit_final.binary");
 
-    export_gate_list_to_binary(optimized_parameters_mtx, this, filename2, verbose);  
+        if (project_name != "") {
+            filename2=project_name+ "_"  +filename2;
+        }
+
+        export_gate_list_to_binary(optimized_parameters_mtx, this, filename2, verbose);  
+    
+    }
 
     // prepare gates to export
     if (prepare_export) {
