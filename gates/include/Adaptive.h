@@ -27,6 +27,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CRY.h"
 #include "matrix.h"
 #include "matrix_real.h"
+#define _USE_MATH_DEFINES
 #include <math.h>
 
 

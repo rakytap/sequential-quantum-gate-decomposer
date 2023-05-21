@@ -346,9 +346,9 @@ static PyTypeObject qgd_nn_Wrapper_Type = {
 */
 static PyModuleDef qgd_nn_Wrapper_Module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_nn_Wrapper",
-    .m_doc = "Python binding for the neural network component of SQUANDER",
-    .m_size = -1,
+    "qgd_nn_Wrapper",
+    "Python binding for the neural network component of SQUANDER",
+    -1,
 };
 
 

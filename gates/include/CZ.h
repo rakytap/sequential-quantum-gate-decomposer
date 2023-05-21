@@ -26,6 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "matrix.h"
 #include "Gate.h"
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include "CNOT.h"
 

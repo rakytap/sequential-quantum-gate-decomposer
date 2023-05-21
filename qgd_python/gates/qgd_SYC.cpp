@@ -294,9 +294,9 @@ static PyTypeObject  qgd_SYC_Type = {
 */
 static PyModuleDef  qgd_SYC_Module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_SYC",
-    .m_doc = "Python binding for QGD SYC gate",
-    .m_size = -1,
+    "qgd_SYC",
+    "Python binding for QGD SYC gate",
+    -1,
 };
 
 

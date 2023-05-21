@@ -340,9 +340,9 @@ static PyTypeObject  qgd_U3_Type = {
 */
 static PyModuleDef  qgd_U3_Module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_U3",
-    .m_doc = "Python binding for QGD U3 gate",
-    .m_size = -1,
+    "qgd_U3",
+    "Python binding for QGD U3 gate",
+    -1,
 };
 
 

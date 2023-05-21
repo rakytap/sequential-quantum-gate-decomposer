@@ -313,7 +313,7 @@ static void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real p
 @param f0 The value of the cost function at x0.
 @param grad Array containing the calculated gradient components.
 */
-static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real grad );
+static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
 
 

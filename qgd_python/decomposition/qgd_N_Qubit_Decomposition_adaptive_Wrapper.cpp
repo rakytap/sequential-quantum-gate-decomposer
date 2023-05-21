@@ -997,7 +997,7 @@ static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Max_Iterations(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
 
     // initiate variables for input arguments
-    PyObject* max_iters_input; 
+    int max_iters_input; 
 
     // parsing input arguments
     if (!PyArg_ParseTuple(args, "|i", &max_iters_input )) return Py_BuildValue("i", -1);
@@ -1546,7 +1546,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Grad( qgd_N_Qubi
     Matrix_real grad_mtx(parameters_mtx.size(), 1);
 
     try {
-        self->decomp->optimization_problem_grad(parameters_mtx, &self->decomp, grad_mtx );
+        self->decomp->optimization_problem_grad(parameters_mtx, self->decomp, grad_mtx );
     }
     catch (std::string err ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1565,7 +1565,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Grad( qgd_N_Qubi
     Py_DECREF(parameters_arg);
 
 
-    Py_DECREF(grad_py);
     return grad_py;
 }
 
@@ -1997,25 +1996,25 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimizer( qgd_N_Qubit_Decomposit
     const char* optimizer_C = PyBytes_AS_STRING(optimizer_string_unicode);
 
     optimization_aglorithms qgd_optimizer;
-    if ( strcmp("bfgs", optimizer_C) == 0 or strcmp("BFGS", optimizer_C) == 0) {
+    if ( strcmp("bfgs", optimizer_C) == 0 || strcmp("BFGS", optimizer_C) == 0) {
         qgd_optimizer = BFGS;        
     }
-    else if ( strcmp("adam", optimizer_C)==0 or strcmp("ADAM", optimizer_C)==0) {
+    else if ( strcmp("adam", optimizer_C)==0 || strcmp("ADAM", optimizer_C)==0) {
         qgd_optimizer = ADAM;        
     }
-    else if ( strcmp("adam_batched", optimizer_C)==0 or strcmp("ADAM_BATCHED", optimizer_C)==0) {
+    else if ( strcmp("adam_batched", optimizer_C)==0 || strcmp("ADAM_BATCHED", optimizer_C)==0) {
         qgd_optimizer = ADAM_BATCHED;        
     }
-    else if ( strcmp("bfgs2", optimizer_C)==0 or strcmp("BFGS2", optimizer_C)==0) {
+    else if ( strcmp("bfgs2", optimizer_C)==0 || strcmp("BFGS2", optimizer_C)==0) {
         qgd_optimizer = BFGS2;        
     }
-    else if ( strcmp("agents", optimizer_C)==0 or strcmp("AGENTS", optimizer_C)==0) {
+    else if ( strcmp("agents", optimizer_C)==0 || strcmp("AGENTS", optimizer_C)==0) {
         qgd_optimizer = AGENTS;        
     }
-    else if ( strcmp("cosine", optimizer_C)==0 or strcmp("COSINE", optimizer_C)==0) {
+    else if ( strcmp("cosine", optimizer_C)==0 || strcmp("COSINE", optimizer_C)==0) {
         qgd_optimizer = COSINE;        
     }
-    else if ( strcmp("agents_combined", optimizer_C)==0 or strcmp("AGENTS_COMBINED", optimizer_C)==0) {
+    else if ( strcmp("agents_combined", optimizer_C)==0 || strcmp("AGENTS_COMBINED", optimizer_C)==0) {
         qgd_optimizer = AGENTS_COMBINED;        
     }
     else {
@@ -2069,7 +2068,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Cost_Function_Variant( qgd_N_Qubi
  
     }
    
-    cost_function_type qgd_costfnc = costfnc_arg;
+    cost_function_type qgd_costfnc = (cost_function_type)costfnc_arg;
 
 
     try {
@@ -2516,9 +2515,9 @@ static PyTypeObject qgd_N_Qubit_Decomposition_adaptive_Wrapper_Type = {
 */
 static PyModuleDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_Module = {
     PyModuleDef_HEAD_INIT,
-    .m_name = "qgd_N_Qubit_Decomposition_adaptive_Wrapper",
-    .m_doc = "Python binding for QGD N_Qubit_Decomposition class",
-    .m_size = -1,
+    "qgd_N_Qubit_Decomposition_adaptive_Wrapper",
+    "Python binding for QGD N_Qubit_Decomposition class",
+    -1,
 };
 
 

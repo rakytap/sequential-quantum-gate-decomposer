@@ -23,8 +23,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "Decomposition_Base.h"
 
-
-
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
 
@@ -392,7 +390,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
 
         // array containing minimums to check convergence of the solution
-        int min_vec_num = 20;
+        const int min_vec_num = 20;
         double minimum_vec[min_vec_num];
         for ( int idx=0; idx<min_vec_num; idx++) {
             minimum_vec[idx] = 0;

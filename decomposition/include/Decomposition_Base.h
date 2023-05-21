@@ -58,6 +58,24 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /// @brief Type definition of the types of the initial guess
 typedef enum guess_type {ZEROS, RANDOM, CLOSE_TO_ZERO} guess_type;
 
+#ifndef OPENBLAS_CONST
+# define OPENBLAS_CONST const
+#endif
+#if defined(OS_WINDOWS) && defined(__64BIT__)
+typedef long long BLASLONG;
+typedef unsigned long long BLASULONG;
+#else
+typedef long BLASLONG;
+typedef unsigned long BLASULONG;
+#endif
+typedef BLASLONG blasint;
+#if defined(OS_WINDOWS) && defined(__64BIT__)
+#define blasabs(x) llabs(x)
+#else
+#define blasabs(x) labs(x)
+#endif
+
+extern "C" double cblas_dznrm2(OPENBLAS_CONST blasint N, OPENBLAS_CONST void *X, OPENBLAS_CONST blasint incX);
 
 /**
 @brief A class containing basic methods for the decomposition process.

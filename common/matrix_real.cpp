@@ -101,7 +101,7 @@ Matrix_real::Matrix_real(const Matrix_real &in) : matrix_base<double>(in)  {
 @return Returns with the instance of the class.
 */
 Matrix_real
-Matrix_real::copy() {
+Matrix_real::copy() const {
 
   Matrix_real ret = Matrix_real(rows, cols, stride);
 

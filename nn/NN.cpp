@@ -102,7 +102,7 @@ NN::create_randomized_parameters( int num_of_parameters, int qbit_num, int level
     //parameters[3*qbit_num-1] = 0
     //parameters[3*qbit_num-2] = 0
 
-    std::uniform_int_distribution<int8_t> distrib(0, 1);    
+    std::uniform_int_distribution<int16_t> distrib(0, 1);    
     std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);    
     std::uniform_real_distribution<> distrib_real2(0.0, M_PI);    
 
