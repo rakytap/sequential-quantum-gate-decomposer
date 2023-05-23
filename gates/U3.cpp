@@ -552,7 +552,7 @@ Matrix U3::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
     u3_1qbit[0].imag = 0;
     // the 1,2 element
     u3_1qbit[1].real = -cos_lambda*sin_theta;
-    u3_1qbit[1].imag = -sin_Lambda*sin_theta;
+    u3_1qbit[1].imag = -sin_lambda*sin_theta;
     // the 2,1 element
     u3_1qbit[2].real = cos_phi*sin_theta;
     u3_1qbit[2].imag = sin_phi*sin_theta;
