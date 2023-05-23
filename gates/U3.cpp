@@ -542,20 +542,27 @@ Matrix U3::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 
     double cos_theta = cos(ThetaOver2);
     double sin_theta = sin(ThetaOver2);
-
+    double cos_phi = cos(Phi);
+    double sin_phi = sin(Phi);
+    double cos_lambda = cos(Lambda);
+    double sin_lambda = sin(Lambda);
 
     // the 1,1 element
     u3_1qbit[0].real = cos_theta;
     u3_1qbit[0].imag = 0;
     // the 1,2 element
-    u3_1qbit[1].real = -cos(Lambda)*sin_theta;
-    u3_1qbit[1].imag = -sin(Lambda)*sin_theta;
+    u3_1qbit[1].real = -cos_lambda*sin_theta;
+    u3_1qbit[1].imag = -sin_lambda*sin_theta;
     // the 2,1 element
-    u3_1qbit[2].real = cos(Phi)*sin_theta;
-    u3_1qbit[2].imag = sin(Phi)*sin_theta;
+    u3_1qbit[2].real = cos_phi*sin_theta;
+    u3_1qbit[2].imag = sin_phi*sin_theta;
     // the 2,2 element
-    u3_1qbit[3].real = cos(Phi+Lambda)*cos_theta;
-    u3_1qbit[3].imag = sin(Phi+Lambda)*cos_theta;
+    //cos(a+b)=cos(a)cos(b)-sin(a)sin(b)
+    //sin(a+b)=sin(a)cos(b)+cos(a)sin(b)
+    u3_1qbit[3].real = (cos_phi*cos_lambda-sin_phi*sin_lambda)*cos_theta;
+    u3_1qbit[3].imag = (sin_phi*cos_lambda+cos_phi*sin_lambda)*cos_theta;
+    //u3_1qbit[3].real = cos(Phi+Lambda)*cos_theta;
+    //u3_1qbit[3].imag = sin(Phi+Lambda)*cos_theta;
 
 
     return u3_1qbit;
