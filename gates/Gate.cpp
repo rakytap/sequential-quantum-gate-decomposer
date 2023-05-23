@@ -273,7 +273,7 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
         apply_kernel_to_input_AVX_small(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
         return;
     }
-    else if ( qbit_num < 6 || (qbit_num < 10 && input.cols < 32) ) {
+    else if ( qbit_num < 10) {
         apply_kernel_to_input_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
         return;
      }
