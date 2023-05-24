@@ -143,8 +143,8 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
-    Phi = phi0;
-    Lambda = lambda0;
+    //Phi = phi0;
+    //Lambda = lambda0;
     
 
     // get the U3 gate of one qubit
@@ -176,8 +176,8 @@ RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
-    Phi = phi0;
-    Lambda = lambda0;
+    //Phi = phi0;
+    //Lambda = lambda0;
     
 
     // get the U3 gate of one qubit
