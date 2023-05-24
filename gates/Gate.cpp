@@ -447,21 +447,6 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
         }
 #endif // DEBUG
 
-           // set static values for the angles
-    if (type==RY_OPERATION) {
-        Phi = 0;
-        Lambda = 0;
-    }
-
-    if (type==RZ_OPERATION) {
-        ThetaOver2 = 0;
-        Lambda = 0;
-    }
-  
-    if (type==RX_OPERATION) {
-        Phi = -M_PI/2;
-        Lambda = M_PI/2;
-    }
 
     parameters_for_calc_one_qubit(u3_1qbit, ThetaOver2, Phi,  Lambda);
 
@@ -502,6 +487,21 @@ Gate::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, doubl
 
 
    gate_type type = get_type();
+           // set static values for the angles
+    if (type==RY_OPERATION) {
+        Phi = 0;
+        Lambda = 0;
+    }
+
+    if (type==RZ_OPERATION) {
+        ThetaOver2 = 0;
+        Lambda = 0;
+    }
+  
+    if (type==RX_OPERATION) {
+        Phi = -M_PI/2;
+        Lambda = M_PI/2;
+    }
 
 
     // define the constant one qubit gates
