@@ -424,10 +424,10 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 
     gate_type type = get_type();
     Matrix u3_1qbit = Matrix(2,2); 
-    parameters_for_calc_one_qubit(u3_1qbit,  ThetaOver2, Phi,  Lambda);
+     parameters_for_calc_one_qubit(u3_1qbit,  ThetaOver2, Phi,  Lambda);
 
 
-    if (type==RX_OPERATION || type==RY_OPERATION || type==RZ_OPERATION) {
+    if (ThetaOver2!=0 || Phi!=0 || Lambda!=0) {
 
 #ifdef DEBUG
     	if (isnan(ThetaOver2)) {
@@ -447,8 +447,23 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
         }
 #endif // DEBUG
 
-        
-        parameters_for_calc_one_qubit(u3_1qbit, ThetaOver2, Phi,  Lambda);
+           // set static values for the angles
+    if (type==RY_OPERATION) {
+        Phi = 0;
+        Lambda = 0;
+    }
+
+    if (type==RZ_OPERATION) {
+        ThetaOver2 = 0;
+        Lambda = 0;
+    }
+  
+    if (type==RX_OPERATION) {
+        Phi = -M_PI/2;
+        Lambda = M_PI/2;
+    }
+
+    parameters_for_calc_one_qubit(u3_1qbit, ThetaOver2, Phi,  Lambda);
 
         double cos_theta = cos(ThetaOver2);
         double sin_theta = sin(ThetaOver2);
@@ -467,7 +482,7 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
     	u3_1qbit[3].real = cos(Phi+Lambda)*cos_theta;
     	u3_1qbit[3].imag = sin(Phi+Lambda)*cos_theta;
 
-       return u3_1qbit;
+     return u3_1qbit;
 
     }
 
@@ -483,26 +498,11 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 @param Lambda Real parameter standing for the parameter lambda.
 */
 void
-Gate::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda ) {
+Gate::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda  ) {
 
 
    gate_type type = get_type();
 
-   // set static values for the angles
-    if (type==RY_OPERATION) {
-        Phi = 0;
-        Lambda = 0;
-    }
-
-    if (type==RZ_OPERATION) {
-        ThetaOver2 = 0;
-        Lambda = 0;
-    }
-  
-    if (type==RX_OPERATION) {
-        Phi = -M_PI/2;
-        Lambda = M_PI/2;
-    }
 
     // define the constant one qubit gates
     if (type == CH_OPERATION) {
