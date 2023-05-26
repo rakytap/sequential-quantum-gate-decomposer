@@ -49,6 +49,45 @@ static double CPU_time = 0.0;
 extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, int lda, int *ipiv, double *b, int ldb); 	
 
 
+
+/**
+@brief ???????????????
+@return ???????????
+*/
+double HS_partial_optimization_problem( Matrix_real parameters, void* void_params) {
+
+    double* params = (double*)void_params;
+
+    return params[0]*sin(2*parameters[0] + params[1]) + params[2]*sin(parameters[0] + params[3] ) + params[4];
+}
+
+
+/**
+@brief ???????????????
+@return ???????????
+*/
+void HS_partial_optimization_problem_grad( Matrix_real parameters, void* void_params, Matrix_real& grad) {
+
+
+    double* params = (double*)void_params;
+    grad[0] = 2*params[0]*cos(2*parameters[0] + params[1]) + params[2]*cos(parameters[0] + params[3] );
+
+}
+
+
+/**
+@brief ???????????????
+@return ???????????
+*/
+void HS_partial_optimization_problem_combined( Matrix_real parameters, void* void_params, double* f0, Matrix_real& grad) {
+
+    *f0 = HS_partial_optimization_problem( parameters, void_params );
+    HS_partial_optimization_problem_grad( parameters, void_params, grad);
+
+
+}
+
+
 /**
 @brief Nullary constructor of the class.
 @return An instance of the class
@@ -379,6 +418,13 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 @param solution_guess Array containing the solution guess.
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int num_of_parameters, Matrix_real& solution_guess) {
+
+
+        if ( cost_fnc != FROBENIUS_NORM ) {
+            std::string err("N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE: Only cost function 0 is implemented");
+            throw err;
+        }
+
 
 #ifdef __DFE__
         if ( qbit_num >= 5 && get_accelerator_num() > 0 ) {
@@ -748,6 +794,12 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real& solution_guess) {
 
 
+
+        if ( (cost_fnc != FROBENIUS_NORM) && (cost_fnc != HILBERT_SCHMIDT_TEST) ) {
+            std::string err("N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS: Only cost functions 0 and 3 are implemented");
+            throw err;
+        }
+
 #ifdef __DFE__
         if ( qbit_num >= 5 && get_accelerator_num() > 0 ) {
             upload_Umtx_to_DFE();
@@ -761,6 +813,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int nu
         }
 
 
+        double M_PI_quarter = M_PI/4;
         double M_PI_half = M_PI/2;
         double M_PI_double = M_PI*2;
 
@@ -954,8 +1007,11 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
         Matrix_real parameter_value_save_agents( agent_num, 1 );    
        
         // arrays to store the cost functions at shifted parameters
-        Matrix_real f0_shifted_pi2_agents( agent_num, 1 );
-        Matrix_real f0_shifted_pi_agents( agent_num, 1 );                 
+        Matrix_real f0_shifted_pi2_agents;
+        Matrix_real f0_shifted_pi_agents;                 
+        Matrix_real f0_shifted_pi4_agents;
+        Matrix_real f0_shifted_3pi4_agents;        
+        Matrix_real f0_shifted_3pi2_agents;           
        
 
 
@@ -1001,64 +1057,228 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
             MPI_Bcast( (void*)parameter_value_save_agents.get_data(), agent_num, MPI_DOUBLE, 0, MPI_COMM_WORLD);            
 #endif        
                       
-                      
-            // calsulate the cist functions at shifted parameter values
-            for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
-                Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ]; 
-                solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;                
-            }   
+                 
+            if ( cost_fnc == FROBENIUS_NORM ) {
+                                      
+                // calsulate the cist functions at shifted parameter values
+                for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
+                    Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ]; 
+                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;                
+                }   
             
-            // CPU time              
-            CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();  
+                // CPU time              
+                CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();  
             
-            // calculate batched cost function                 
-            f0_shifted_pi2_agents = optimization_problem_batched( solution_guess_mtx_agents );              
+                // calculate batched cost function                 
+                f0_shifted_pi2_agents = optimization_problem_batched( solution_guess_mtx_agents );              
             
-            // CPU time
-            t0_CPU = tbb::tick_count::now();                                         
+                // CPU time
+                t0_CPU = tbb::tick_count::now();                                         
                         
 
-            for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
-                Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
-                solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;
-            }  
+                for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
+                    Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
+                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;
+                }  
             
-            // CPU time             
-            CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();        
+                // CPU time             
+                CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();        
             
-            // calculate batched cost function                         
-            f0_shifted_pi_agents = optimization_problem_batched( solution_guess_mtx_agents );             
+                // calculate batched cost function                         
+                f0_shifted_pi_agents = optimization_problem_batched( solution_guess_mtx_agents );             
                 
                                                      
-            // CPU time                                      
-            t0_CPU = tbb::tick_count::now();                                  
+                // CPU time                                      
+                t0_CPU = tbb::tick_count::now();                                  
             
          
-            // determine the parameters of the cosine function and determine the parameter shift at the minimum
-            for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
+                // determine the parameters of the cosine function and determine the parameter shift at the minimum
+                for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
 
-                double current_minimum_agent = current_minimum_agents[agent_idx];         
-                double f0_shifted_pi         = f0_shifted_pi_agents[agent_idx];
-                double f0_shifted_pi2        = f0_shifted_pi2_agents[agent_idx];                                                  
+                    double current_minimum_agent = current_minimum_agents[agent_idx];         
+                    double f0_shifted_pi         = f0_shifted_pi_agents[agent_idx];
+                    double f0_shifted_pi2        = f0_shifted_pi2_agents[agent_idx];                                                  
             
 
-                double A_times_cos = (current_minimum_agent-f0_shifted_pi)/2;
-                double offset      = (current_minimum_agent+f0_shifted_pi)/2;
+                    double A_times_cos = (current_minimum_agent-f0_shifted_pi)/2;
+                    double offset      = (current_minimum_agent+f0_shifted_pi)/2;
 
-                double A_times_sin = offset - f0_shifted_pi2;
+                    double A_times_sin = offset - f0_shifted_pi2;
 
-                double phi0 = atan2( A_times_sin, A_times_cos);
+                    double phi0 = atan2( A_times_sin, A_times_cos);
 
 
-                double parameter_shift = phi0 > 0 ? M_PI-phi0 : -phi0-M_PI;
+                    double parameter_shift = phi0 > 0 ? M_PI-phi0 : -phi0-M_PI;
 		
 		
-                //update  the parameter vector
-                Matrix_real& solution_guess_mtx_agent                    = solution_guess_mtx_agents[ agent_idx ];                             
-                solution_guess_mtx_agent[param_idx_agents[ agent_idx ]] = parameter_value_save_agents[ agent_idx ] + parameter_shift; 
+                    //update  the parameter vector
+                    Matrix_real& solution_guess_mtx_agent                    = solution_guess_mtx_agents[ agent_idx ];                             
+                    solution_guess_mtx_agent[param_idx_agents[ agent_idx ]] = parameter_value_save_agents[ agent_idx ] + parameter_shift; 
+                    
+                }
+                
+            }  
+            else if ( cost_fnc == HILBERT_SCHMIDT_TEST){
+           
+                
+                // calsulate the cist functions at shifted parameter values
+                for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
+                    Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ]; 
+                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_quarter;                
+                }   
+            
+                // CPU time              
+                CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();  
+            
+                // calculate batched cost function                 
+                f0_shifted_pi4_agents = optimization_problem_batched( solution_guess_mtx_agents );              
+            
+                // CPU time
+                t0_CPU = tbb::tick_count::now();                                         
+                        
 
+                for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
+                    Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
+                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_quarter;
+                }  
+            
+                // CPU time             
+                CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();        
+            
+                // calculate batched cost function                         
+                f0_shifted_pi2_agents = optimization_problem_batched( solution_guess_mtx_agents );             
+                
+                                                     
+                // CPU time                                      
+                t0_CPU = tbb::tick_count::now();       
+                
+                
+                for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
+                    Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
+                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_quarter;
+                }  
+            
+                // CPU time             
+                CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();        
+            
+                // calculate batched cost function                         
+                f0_shifted_3pi4_agents = optimization_problem_batched( solution_guess_mtx_agents );             
+                
+                                                     
+                // CPU time                                      
+                t0_CPU = tbb::tick_count::now(); 
+                
+                
+                for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
+                    Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
+                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_quarter;
+                }  
+            
+                // CPU time             
+                CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();        
+            
+                // calculate batched cost function                         
+                f0_shifted_pi_agents = optimization_problem_batched( solution_guess_mtx_agents );             
+                
+                                                     
+                // CPU time                                      
+                t0_CPU = tbb::tick_count::now();    
+                
+                for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
+                    Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
+                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;
+                }  
+            
+                // CPU time             
+                CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();        
+            
+                // calculate batched cost function                         
+                f0_shifted_3pi2_agents = optimization_problem_batched( solution_guess_mtx_agents );             
+                
+                                                     
+                // CPU time                                      
+                t0_CPU = tbb::tick_count::now();  
+		                
+                
+                // determine the parameters of the cosine function and determine the parameter shift at the minimum
+                for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
+
+                    double current_minimum_agent = current_minimum_agents[agent_idx];         
+                    double f0_shifted_pi4        = f0_shifted_pi4_agents[agent_idx];                    
+                    double f0_shifted_pi2        = f0_shifted_pi2_agents[agent_idx];   
+                    double f0_shifted_3pi4       = f0_shifted_3pi4_agents[agent_idx];                    
+                    double f0_shifted_pi         = f0_shifted_pi_agents[agent_idx];                   
+                    double f0_shifted_3pi2       = f0_shifted_3pi2_agents[agent_idx];   
+                                                                              
+                    
+                    
+                    double f1 = current_minimum_agent -  f0_shifted_pi;
+                    double f2 = f0_shifted_pi2 - f0_shifted_3pi2;
+
+                    double gamma = sqrt( f1*f1 + f2*f2 )*0.5;
+                    //print( "gamma: ", gamma )
+
+                    double varphi = atan2( f1, f2) - parameter_value_save_agents[ agent_idx ];
+                    //print( "varphi: ", varphi )
+
+
+                    double f3 = current_minimum_agent - f0_shifted_pi2;
+                    double f4 = f0_shifted_pi4 - f0_shifted_3pi4;
+
+                    f3 = f3 - gamma*(sin(parameter_value_save_agents[ agent_idx ]+varphi) - cos(parameter_value_save_agents[ agent_idx ]+varphi) );
+                    f4 = f4 - gamma*(sin(parameter_value_save_agents[ agent_idx ] + M_PI_quarter + varphi) - sin(parameter_value_save_agents[ agent_idx ] + 3*M_PI_quarter + varphi) );
+
+
+                    double kappa = 0.5*sqrt( f3*f3 + f4*f4);
+                    //print( "kappa: ", kappa )
+
+                    double xi = atan2( f3, f4) - 2*parameter_value_save_agents[ agent_idx ];
+                    //print( "xi: ", xi )
+
+
+
+                    double offset = current_minimum_agent - kappa*sin(2*parameter_value_save_agents[ agent_idx ]+xi) - gamma*sin(parameter_value_save_agents[ agent_idx ]+varphi);
+                    //print( "offset: ", offset )
+
+
+
+
+                    double params[5];
+                    params[0] = kappa;
+                    params[1] = xi + 2*parameter_value_save_agents[ agent_idx ];
+                    params[2] = gamma;
+                    params[3] = varphi + parameter_value_save_agents[ agent_idx ];
+                    params[4] = offset;
+                    Problem p(1, -100, 100, HS_partial_optimization_problem, HS_partial_optimization_problem_grad, HS_partial_optimization_problem_combined, (void*)&params);
+                    
+
+                    double f; 
+                    Matrix_real parameter_shift(1,1);
+                    if ( abs(gamma) > abs(kappa) ) {
+                        parameter_shift[0] = 3*M_PI/2 - varphi - parameter_value_save_agents[ agent_idx ];                        
+                    }
+                    else {
+                        parameter_shift[0] = 3*M_PI/4 - xi/2 - parameter_value_save_agents[ agent_idx ]/2;
+                        
+
+                    }
+                   
+                    parameter_shift[0] = std::fmod( parameter_shift[0], M_PI_double);    
+                                                 
+                    Tolmin tolmin(&p);                                                 
+                    f = tolmin.Solve(parameter_shift, false, 10);
+		
+                    //update  the parameter vector
+                    Matrix_real& solution_guess_mtx_agent                   = solution_guess_mtx_agents[ agent_idx ];                             
+                    solution_guess_mtx_agent[param_idx_agents[ agent_idx ]] = parameter_value_save_agents[ agent_idx ] + parameter_shift[0]; 
+                    
+                }                                                                                                                         
                 
             }
+    
+
+                
+            
                
             // CPU time                                                     
             CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
@@ -1138,7 +1358,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                 // look for the best agent periodicaly
                 if ( iter_idx % agent_lifetime_loc == 0 )
                 {
-                             
+                            
                     if ( current_minimum_agent <= current_minimum ) {
 
                         most_successfull_agent = agent_idx;
@@ -2209,7 +2429,7 @@ pure_DFE_time += (tbb::tick_count::now() - t0_DFE_pure).seconds();
             }
         }
         else {
-            std::string err("N_Qubit_Decomposition_Base::optimization_problem_batched: Cost function variant not implmented.");
+            std::string err("N_Qubit_Decomposition_Base::optimization_problem_batched: Cost function variant not implmented for DFE.");
             throw err;
         }
 
