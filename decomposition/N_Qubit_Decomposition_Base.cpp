@@ -50,26 +50,35 @@ extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, i
 
 
 
-
+/**
+@brief ???????????????
+@return ???????????
+*/
 double HS_partial_optimization_problem( Matrix_real parameters, void* void_params) {
 
     double* params = (double*)void_params;
 
-    return 1.0 - sqrt( params[0]*sin(2*parameters[0] + params[1]) + params[2]*sin(parameters[0] + params[3] ) + params[4]);
+    return params[0]*sin(2*parameters[0] + params[1]) + params[2]*sin(parameters[0] + params[3] ) + params[4];
 }
 
 
-
+/**
+@brief ???????????????
+@return ???????????
+*/
 void HS_partial_optimization_problem_grad( Matrix_real parameters, void* void_params, Matrix_real& grad) {
 
 
     double* params = (double*)void_params;
-    //grad[0] = 2*params[0]*cos(2*parameters[0] + params[1]) + params[2]*cos(parameters[0] + params[3] );
-    grad[0] = -0.5*(2*params[0]*cos(2*parameters[0] + params[1]) + params[2]*cos(parameters[0] + params[3] ))/(sqrt( params[0]*sin(2*parameters[0] + params[1]) + params[2]*sin(parameters[0] + params[3] ) + params[4]));
+    grad[0] = 2*params[0]*cos(2*parameters[0] + params[1]) + params[2]*cos(parameters[0] + params[3] );
 
 }
 
 
+/**
+@brief ???????????????
+@return ???????????
+*/
 void HS_partial_optimization_problem_combined( Matrix_real parameters, void* void_params, double* f0, Matrix_real& grad) {
 
     *f0 = HS_partial_optimization_problem( parameters, void_params );
@@ -409,6 +418,13 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 @param solution_guess Array containing the solution guess.
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int num_of_parameters, Matrix_real& solution_guess) {
+
+
+        if ( cost_fnc != FROBENIUS_NORM ) {
+            std::string err("N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE: Only cost function 0 is implemented");
+            throw err;
+        }
+
 
 #ifdef __DFE__
         if ( qbit_num >= 5 && get_accelerator_num() > 0 ) {
@@ -777,6 +793,12 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
 */
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real& solution_guess) {
 
+
+
+        if ( (cost_fnc != FROBENIUS_NORM) && (cost_fnc != HILBERT_SCHMIDT_TEST) ) {
+            std::string err("N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS: Only cost functions 0 and 3 are implemented");
+            throw err;
+        }
 
 #ifdef __DFE__
         if ( qbit_num >= 5 && get_accelerator_num() > 0 ) {
@@ -1187,13 +1209,6 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     double f0_shifted_3pi4       = f0_shifted_3pi4_agents[agent_idx];                    
                     double f0_shifted_pi         = f0_shifted_pi_agents[agent_idx];                   
                     double f0_shifted_3pi2       = f0_shifted_3pi2_agents[agent_idx];   
-                    
-                    current_minimum_agent = (1.0-current_minimum_agent)*(1.0-current_minimum_agent);
-                    f0_shifted_pi4        = (1.0-f0_shifted_pi4)*(1.0-f0_shifted_pi4);
-                    f0_shifted_pi2        = (1.0-f0_shifted_pi2)*(1.0-f0_shifted_pi2);
-                    f0_shifted_3pi4       = (1.0-f0_shifted_3pi4)*(1.0-f0_shifted_3pi4);
-                    f0_shifted_pi         = (1.0-f0_shifted_pi)*(1.0-f0_shifted_pi);
-                    f0_shifted_3pi2        = (1.0-f0_shifted_3pi2)*(1.0-f0_shifted_3pi2); 
                                                                               
                     
                     
@@ -1249,21 +1264,9 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     }
                    
                     parameter_shift[0] = std::fmod( parameter_shift[0], M_PI_double);    
-
-/*
-if ( agent_idx==0 ) {
-std::cout << "kkkkkkk " << parameter_shift[0]  << " " << gamma << " " << kappa << std::endl;
-}
-  */                                                     
+                                                 
                     Tolmin tolmin(&p);                                                 
                     f = tolmin.Solve(parameter_shift, false, 10);
-/*                                         
-if ( agent_idx==0 ) {
-Matrix_real tmp(1,1);
-tmp[0] = 0.0;
-std::cout << current_minimum_agents[0] << " " << HS_partial_optimization_problem(tmp, (void*)&params) << " " << f << " " << parameter_shift[0] << std::endl;
-}
-*/
 		
                     //update  the parameter vector
                     Matrix_real& solution_guess_mtx_agent                   = solution_guess_mtx_agents[ agent_idx ];                             
@@ -1283,8 +1286,7 @@ std::cout << current_minimum_agents[0] << " " << HS_partial_optimization_problem
             
             // determine the current minimum  at the shifted parameters        
             current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
-//std::cout << current_minimum_agents[0] << std::endl;
-//exit(-1);
+
   
             // CPU time                                        
             t0_CPU = tbb::tick_count::now();        
