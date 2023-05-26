@@ -365,7 +365,8 @@ double get_hilbert_schmidt_test(Matrix& matrix){
     double d = 1.0/matrix.cols;
     double cost_function = 0.0;
     QGD_Complex16 ret = get_trace(matrix);
-    cost_function = 1.0-d*d*ret.real*ret.real-d*d*ret.imag*ret.imag;
+//    cost_function = 1.0-d*d*ret.real*ret.real-d*d*ret.imag*ret.imag;
+cost_function = 1.0- sqrt(  ret.real*ret.real + ret.imag*ret.imag )/matrix.cols; 
     return cost_function;
 }
 
