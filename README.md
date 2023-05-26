@@ -89,35 +89,7 @@ The SQUANDER package with C++ Python extensions can be compiled via the Python s
 The script automatically finds out the CBLAS library working behind the numpy package and uses it in further linking. 
 The **setup.py** script also build the C++ library of the SQUANDER package by making the appropriate CMake calls. 
 
-### Build and Install on Microsoft Windows with Microsoft Visual C++
 
-CMake must be in the path and able to find the MSVC compiler e.g.
-
-$ set PATH=%PATH%;C:\Program Files\cmake\bin
-
-Now set the TBB and BLAS folders and build via:
-
-$ set TBB_LOCATION=<Python_Folder>/LocalCache/local-packages
-
-$ set TBB_INC_DIR=%TBB_LOCATION%/Library/include
-
-$ set TBB_LIB_DIR=%TBB_LOCATION%/Library/lib
-
-$ set LIB=<BLAS_Location>/lib;<LAPACK_Location>/lib
-
-$ python setup.py build_ext -DTBB_HEADER=<TBB_Location>\Library\include\
-
-Installation merely requires copying DLL files (if they are not in the path):
-
-$ copy _skbuild\win-amd64-3.9\cmake-install\bin .\qgd_python\decomposition
-
-$ copy "%TBB_LOCATION%\Library\bin\tbb12.dll" .\qgd_python\decomposition
-
-$ copy "%TBB_LOCATION%\Library\bin\tbbmalloc.dll" .\qgd_python\decomposition
-
-Verify the installation:
-
-$ python -m pytest
 
 ### Developer build
 
@@ -179,6 +151,37 @@ $ pip3 install qgd-*.tar.gz
 
 issued from directory **path/to/SQUANDER/package/dist**
 (It is optional to install the ninja package which speeds up the building process by parallel compilation.)
+
+
+### Build and Install on Microsoft Windows with Microsoft Visual C++
+
+CMake must be in the path and able to find the MSVC compiler e.g.
+
+$ set PATH=%PATH%;C:\Program Files\cmake\bin
+
+Now set the TBB and BLAS folders and build via:
+
+$ set TBB_LOCATION=<Python_Folder>/LocalCache/local-packages
+
+$ set TBB_INC_DIR=%TBB_LOCATION%/Library/include
+
+$ set TBB_LIB_DIR=%TBB_LOCATION%/Library/lib
+
+$ set LIB=<BLAS_Location>/lib;<LAPACK_Location>/lib
+
+$ python setup.py build_ext -DTBB_HEADER=<TBB_Location>\Library\include\
+
+Installation merely requires copying DLL files (if they are not in the path):
+
+$ copy _skbuild\win-amd64-3.9\cmake-install\bin .\qgd_python\decomposition
+
+$ copy "%TBB_LOCATION%\Library\bin\tbb12.dll" .\qgd_python\decomposition
+
+$ copy "%TBB_LOCATION%\Library\bin\tbbmalloc.dll" .\qgd_python\decomposition
+
+Verify the installation:
+
+$ python -m pytest
 
 
 ### How to use
