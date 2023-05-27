@@ -899,19 +899,6 @@ pure_DFE_time = 0.0;
             optimization_tolerance_loc = optimization_tolerance;
         }
 
-
-        double radius_loc;
-        if ( config.count("radius_agent") > 0 ) {
-             double value;
-             config["radius_agent"].get_property( optimization_tolerance_loc );
-        }
-        else if ( config.count("radius") > 0 ) {
-             double value;
-             config["radius"].get_property( optimization_tolerance_loc );
-        }
-        else {
-            optimization_tolerance_loc = optimization_tolerance;
-        }
         
         long long export_circuit_2_binary_loc;
         if ( config.count("export_circuit_2_binary_agent") > 0 ) {
@@ -1063,8 +1050,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
         // arrays to store the cost functions at shifted parameters
         Matrix_real f0_shifted_pi2_agents;
         Matrix_real f0_shifted_pi_agents;                 
-        Matrix_real f0_shifted_pi4_agents;
-        Matrix_real f0_shifted_3pi4_agents;        
+        Matrix_real f0_shifted_pi4_agents;    
         Matrix_real f0_shifted_3pi2_agents;           
        
 
@@ -1163,11 +1149,15 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 
 
                     double parameter_shift = phi0 > 0 ? M_PI-phi0 : -phi0-M_PI;
+                    double amplitude = sqrt(A_times_sin*A_times_sin + A_times_cos*A_times_cos);
 		
-		
+
+
                     //update  the parameter vector
-                    Matrix_real& solution_guess_mtx_agent                    = solution_guess_mtx_agents[ agent_idx ];                             
+                    Matrix_real& solution_guess_mtx_agent                    = solution_guess_mtx_agents[ agent_idx ];  
                     solution_guess_mtx_agent[param_idx_agents[ agent_idx ]] = parameter_value_save_agents[ agent_idx ] + parameter_shift; 
+
+                    current_minimum_agents[agent_idx] = offset - amplitude;
                     
                 }
                 
@@ -1201,22 +1191,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
             
                 // calculate batched cost function                         
                 f0_shifted_pi2_agents = optimization_problem_batched( solution_guess_mtx_agents );             
-                
-                                                     
-                // CPU time                                      
-                t0_CPU = tbb::tick_count::now();       
-                
-                
-                for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
-                    Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
-                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_quarter;
-                }  
-            
-                // CPU time             
-                CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();        
-            
-                // calculate batched cost function                         
-                f0_shifted_3pi4_agents = optimization_problem_batched( solution_guess_mtx_agents );             
+                          
                 
                                                      
                 // CPU time                                      
@@ -1225,7 +1200,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                 
                 for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
                     Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
-                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_quarter;
+                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;
                 }  
             
                 // CPU time             
@@ -1259,13 +1234,17 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 
                     double current_minimum_agent = current_minimum_agents[agent_idx];         
                     double f0_shifted_pi4        = f0_shifted_pi4_agents[agent_idx];                    
-                    double f0_shifted_pi2        = f0_shifted_pi2_agents[agent_idx];   
-                    double f0_shifted_3pi4       = f0_shifted_3pi4_agents[agent_idx];                    
+                    double f0_shifted_pi2        = f0_shifted_pi2_agents[agent_idx];                    
                     double f0_shifted_pi         = f0_shifted_pi_agents[agent_idx];                   
                     double f0_shifted_3pi2       = f0_shifted_3pi2_agents[agent_idx];   
-                                                                              
-                    
-                    
+/*                                                                              
+                    f(p)          = kappa*sin(2p+xi) + gamma*sin(p+phi) + offset
+                    f(p + pi/4)   = kappa*cos(2p+xi) + gamma*sin(p+pi/4+phi) + offset
+                    f(p + pi/2)   = -kappa*sin(2p+xi) + gamma*cos(p+phi) + offset
+                    f(p + pi)     = kappa*sin(2p+xi) - gamma*sin(p+phi) + offset
+                    f(p + 3*pi/2) = -kappa*sin(2p+xi) - gamma*cos(p+phi) + offset
+*/
+
                     double f1 = current_minimum_agent -  f0_shifted_pi;
                     double f2 = f0_shifted_pi2 - f0_shifted_3pi2;
 
@@ -1275,25 +1254,16 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     double varphi = atan2( f1, f2) - parameter_value_save_agents[ agent_idx ];
                     //print( "varphi: ", varphi )
 
-
-                    double f3 = current_minimum_agent - f0_shifted_pi2;
-                    double f4 = f0_shifted_pi4 - f0_shifted_3pi4;
-
-                    f3 = f3 - gamma*(sin(parameter_value_save_agents[ agent_idx ]+varphi) - cos(parameter_value_save_agents[ agent_idx ]+varphi) );
-                    f4 = f4 - gamma*(sin(parameter_value_save_agents[ agent_idx ] + M_PI_quarter + varphi) - sin(parameter_value_save_agents[ agent_idx ] + 3*M_PI_quarter + varphi) );
+                    double offset = 0.25*(current_minimum_agent +  f0_shifted_pi + f0_shifted_pi2 + f0_shifted_3pi2);
+                    double f3     = 0.5*(current_minimum_agent +  f0_shifted_pi - 2*offset);
+                    double f4     = f0_shifted_pi4 - offset - gamma*sin(parameter_value_save_agents[ agent_idx ]+M_PI_quarter+varphi);
 
 
-                    double kappa = 0.5*sqrt( f3*f3 + f4*f4);
+                    double kappa = sqrt( f3*f3 + f4*f4);
                     //print( "kappa: ", kappa )
 
                     double xi = atan2( f3, f4) - 2*parameter_value_save_agents[ agent_idx ];
                     //print( "xi: ", xi )
-
-
-
-                    double offset = current_minimum_agent - kappa*sin(2*parameter_value_save_agents[ agent_idx ]+xi) - gamma*sin(parameter_value_save_agents[ agent_idx ]+varphi);
-                    //print( "offset: ", offset )
-
 
 
 
@@ -1325,6 +1295,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     //update  the parameter vector
                     Matrix_real& solution_guess_mtx_agent                   = solution_guess_mtx_agents[ agent_idx ];                             
                     solution_guess_mtx_agent[param_idx_agents[ agent_idx ]] = parameter_value_save_agents[ agent_idx ] + parameter_shift[0]; 
+
+                    current_minimum_agents[agent_idx] = f;
                     
                 }                                                                                                                         
                 
@@ -1337,9 +1309,9 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
             // CPU time                                                     
             CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
             
-            
-            // determine the current minimum  at the shifted parameters        
-            current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
+          
+            // determine the current minimum  at the shifted parameters  
+            //current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
 
   
             // CPU time                                        
@@ -1457,7 +1429,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                                 random_num = random_numbers[ agent_idx*random_numbers.stride + 1 ];
                             
                                 if ( random_num < agent_randomization_rate ) {
-                                    randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                              
+                                    randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );  
+                                    current_minimum_agents[agent_idx] = optimization_problem( solution_guess_mtx_agent );                             
                                 }     
 
                        
@@ -1495,6 +1468,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                             print(sstream, 0); 
                             terminate_optimization = true;
                         }                    
+
                    }   
                     
 
@@ -1529,11 +1503,12 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
         }
 
 
-
         tbb::tick_count optimization_end = tbb::tick_count::now();
         optimization_time  = optimization_time + (optimization_end-optimization_start).seconds();
+        sstream.str("");
         sstream << "AGENTS time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << current_minimum << std::endl;
 
+        print(sstream, 0); 
 }
 
 
