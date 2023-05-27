@@ -1362,6 +1362,15 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 
             }
 */
+
+            // ocassionaly recalculate teh current cost functions of the agents
+            if ( iter_idx % agent_lifetime_loc == 0 )
+            {
+                // recalculate the current cost functions
+                current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
+            }
+
+
             
             // govern the behavior of the agents
             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
@@ -1381,8 +1390,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                 if ( iter_idx % agent_lifetime_loc == 0 )
                 {
 
-                    // recalculate the current cost functions
-                    current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
+                    
                             
                     if ( current_minimum_agent <= current_minimum ) {
 
