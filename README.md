@@ -212,7 +212,7 @@ Firstly we construct a Python map to set hyper-parameters during the gate synthe
                     'max_inner_iterations_final': 5000, 		
                     'Randomized_Radius': 0.3, 
                     'randomized_adaptive_layers': 1,
-                    'optimization_tolerance_agent': 1e-4,
+                    'optimization_tolerance_agent': 1e-2,
                     'optimization_tolerance': 1e-8,
                     'agent_num': 10}
  
@@ -246,7 +246,7 @@ We can construct an initial parameters set for the optimization by retrieving th
         parameters = np.zeros( (parameter_num,1), dtype=np.float64 )
         cDecompose.set_Optimized_Parameters( parameters )
 
-We can use between several engines to solve the optimization problem. Here we use an evolutionary based algorithm named 'AGENTS'
+We can choose between several engines to solve the optimization problem. Here we use an evolutionary based algorithm named 'AGENTS'
 
         # setting optimizer
         cDecompose.set_Optimizer("AGENTS")
@@ -257,6 +257,7 @@ The optimization process is started by the function call
         cDecompose.get_Initial_Circuit()
 	
 The optimization process terminates by either reaching the tolerance 'optimization_tolerance_agent' or by reaching the maximal iteration number 'max_inner_iterations_agent', or if the engines identifies a convergence to a local minimum. The SQUANDER framework enables one to continue the optimization using a different engine. In particular we set a second order gradient descend method 'BFGS' 
+In order to achieve the best performance one can play around with the hyper-parameters in the map 'config'. (Optimization strategy AGENTS is good in avoiding local minima or get through flat areas of the optimization landscape. Then a gradient descend method can be used for faster convergence toward a solution.)
 
         # setting optimizer
         cDecompose.set_Optimizer("BFGS")
