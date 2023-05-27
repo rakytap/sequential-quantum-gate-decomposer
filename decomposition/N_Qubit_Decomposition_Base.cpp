@@ -476,7 +476,12 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
         memcpy(solution_guess_tmp_mtx.get_data(), optimized_parameters_mtx.get_data(), num_of_parameters*sizeof(double) );
 
         int agent_num;
-        if ( config.count("agent_num") > 0 ) { 
+        if ( config.count("agent_num_cosine") > 0 ) { 
+             long long value;                   
+             config["agent_num_cosine"].get_property( value );  
+             agent_num = (int) value;
+        }
+        else if ( config.count("agent_num") > 0 ) { 
              long long value;                   
              config["agent_num"].get_property( value );  
              agent_num = (int) value;
@@ -487,7 +492,10 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
 
 
         long long max_inner_iterations_loc;
-        if ( config.count("max_inner_iterations") > 0 ) {
+        if ( config.count("max_inner_iterations_cosine") > 0 ) {
+             config["max_inner_iterations_cosine"].get_property( max_inner_iterations_loc );  
+        }
+        else if ( config.count("max_inner_iterations") > 0 ) {
              config["max_inner_iterations"].get_property( max_inner_iterations_loc );  
         }
         else {
@@ -496,7 +504,10 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
         
         
         long long export_circuit_2_binary_loc;
-        if ( config.count("export_circuit_2_binary") > 0 ) {
+        if ( config.count("export_circuit_2_binary_cosine") > 0 ) {
+             config["export_circuit_2_binary_cosine"].get_property( export_circuit_2_binary_loc );  
+        }
+        else if ( config.count("export_circuit_2_binary") > 0 ) {
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
         }
         else {
@@ -505,8 +516,12 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
 
 
         double optimization_tolerance_loc;
-        if ( config.count("optimization_tolerance") > 0 ) {
-             config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
+        if ( config.count("optimization_tolerance_cosine") > 0 ) {
+             config["optimization_tolerance_cosine"].get_property( optimization_tolerance_loc );  
+        }
+        else if ( config.count("optimization_tolerance") > 0 ) {
+             double value;
+             config["optimization_tolerance"].get_property( optimization_tolerance_loc );
         }
         else {
             optimization_tolerance_loc = optimization_tolerance;
@@ -861,6 +876,11 @@ pure_DFE_time = 0.0;
              config["max_inner_iterations_agent"].get_property( value );
              max_inner_iterations_loc = (int) value;
         }
+        else if ( config.count("max_inner_iterations") > 0 ) {
+             long long value;
+             config["max_inner_iterations"].get_property( value );
+             max_inner_iterations_loc = (int) value;
+        }
         else {
             max_inner_iterations_loc = max_inner_iterations;
         }
@@ -871,12 +891,33 @@ pure_DFE_time = 0.0;
              double value;
              config["optimization_tolerance_agent"].get_property( optimization_tolerance_loc );
         }
+        else if ( config.count("optimization_tolerance") > 0 ) {
+             double value;
+             config["optimization_tolerance"].get_property( optimization_tolerance_loc );
+        }
+        else {
+            optimization_tolerance_loc = optimization_tolerance;
+        }
+
+
+        double radius_loc;
+        if ( config.count("radius_agent") > 0 ) {
+             double value;
+             config["radius_agent"].get_property( optimization_tolerance_loc );
+        }
+        else if ( config.count("radius") > 0 ) {
+             double value;
+             config["radius"].get_property( optimization_tolerance_loc );
+        }
         else {
             optimization_tolerance_loc = optimization_tolerance;
         }
         
         long long export_circuit_2_binary_loc;
-        if ( config.count("export_circuit_2_binary") > 0 ) {
+        if ( config.count("export_circuit_2_binary_agent") > 0 ) {
+             config["export_circuit_2_binary_agent"].get_property( export_circuit_2_binary_loc );  
+        }
+        else if ( config.count("export_circuit_2_binary") > 0 ) {
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
         }
         else {
@@ -885,7 +926,12 @@ pure_DFE_time = 0.0;
 
         
         int agent_lifetime_loc;
-        if ( config.count("agent_lifetime") > 0 ) {
+        if ( config.count("agent_lifetime_agent") > 0 ) {
+             long long agent_lifetime_loc_tmp;
+             config["agent_lifetime_agent"].get_property( agent_lifetime_loc_tmp );  
+             agent_lifetime_loc = (int)agent_lifetime_loc_tmp;
+        }
+        else if ( config.count("agent_lifetime") > 0 ) {
              long long agent_lifetime_loc_tmp;
              config["agent_lifetime"].get_property( agent_lifetime_loc_tmp );  
              agent_lifetime_loc = (int)agent_lifetime_loc_tmp;
@@ -904,7 +950,12 @@ pure_DFE_time = 0.0;
         double agent_randomization_rate = 0.2;
         
         int agent_num;
-        if ( config.count("agent_num") > 0 ) { 
+        if ( config.count("agent_num_agent") > 0 ) { 
+             long long value;                   
+             config["agent_num_agent"].get_property( value );  
+             agent_num = (int) value;
+        }
+        else if ( config.count("agent_num") > 0 ) { 
              long long value;                   
              config["agent_num"].get_property( value );  
              agent_num = (int) value;
@@ -915,7 +966,10 @@ pure_DFE_time = 0.0;
 
 
         double agent_exploration_rate = 0.2;
-        if ( config.count("agent_exploration_rate") > 0 ) {
+        if ( config.count("agent_exploration_rate_agent") > 0 ) {
+             config["agent_exploration_rate_agent"].get_property( agent_exploration_rate );
+        }
+        else if ( config.count("agent_exploration_rate") > 0 ) {
              config["agent_exploration_rate"].get_property( agent_exploration_rate );
         }
         
@@ -1403,7 +1457,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                                 random_num = random_numbers[ agent_idx*random_numbers.stride + 1 ];
                             
                                 if ( random_num < agent_randomization_rate ) {
-                                    randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, radius  );                              
+                                    randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );                              
                                 }     
 
                        
@@ -1522,7 +1576,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( 
 
 
 #ifdef __DFE__
-        if ( qbit_num >= 2 && get_accelerator_num() > 0 ) {
+        if ( qbit_num >= 5 && get_accelerator_num() > 0 ) {
             upload_Umtx_to_DFE();
         }
 #endif
@@ -1566,25 +1620,55 @@ pure_DFE_time = 0.0;
 
 
         long long max_inner_iterations_loc;
-        if ( config.count("max_inner_iterations_agent") > 0 ) {
-             config["max_inner_iterations_agent"].get_property( max_inner_iterations_loc );  
+        if ( config.count("max_inner_iterations_adam_batched") > 0 ) {
+             config["max_inner_iterations_adam_batched"].get_property( max_inner_iterations_loc );  
+        }
+        if ( config.count("max_inner_iterations") > 0 ) {
+             config["max_inner_iterations"].get_property( max_inner_iterations_loc );  
         }
         else {
             max_inner_iterations_loc = max_inner_iterations;
         }
-        
+
+        long long iteration_threshold_of_randomization_loc;
+        if ( config.count("randomization_threshold_adam") > 0 ) {
+            config["randomization_threshold_adam"].get_property( iteration_threshold_of_randomization_loc );  
+        }
+        else if ( config.count("randomization_threshold") > 0 ) {
+            config["randomization_threshold"].get_property( iteration_threshold_of_randomization_loc );  
+        }
+        else {
+            iteration_threshold_of_randomization_loc = iteration_threshold_of_randomization;
+        }
+
         
         long long export_circuit_2_binary_loc;
-        if ( config.count("export_circuit_2_binary") > 0 ) {
+        if ( config.count("export_circuit_2_binary_adam") > 0 ) {
+             config["export_circuit_2_binary_adam"].get_property( export_circuit_2_binary_loc );  
+        }
+        else if ( config.count("export_circuit_2_binary") > 0 ) {
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
         }
         else {
             export_circuit_2_binary_loc = 0;
         }            
 
+        double optimization_tolerance_loc;
+        if ( config.count("optimization_tolerance_adam_batched") > 0 ) {
+             double value;
+             config["optimization_tolerance_adam_batched"].get_property( optimization_tolerance_loc );
+        }
+        else if ( config.count("optimization_tolerance") > 0 ) {
+             double value;
+             config["optimization_tolerance"].get_property( optimization_tolerance_loc );
+        }
+        else {
+            optimization_tolerance_loc = optimization_tolerance;
+        }
+
         double f0 = DBL_MAX;
         std::stringstream sstream;
-        sstream << "iter_max: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization << ", randomization radius: " << radius << std::endl;
+        sstream << "iter_max: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization_loc << std::endl;
         print(sstream, 2); 
 
         int ADAM_status = 0;
@@ -1660,19 +1744,13 @@ pure_DFE_time = 0.0;
                     sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100;
                     sstream << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new, trace_offset) << std::endl;
                     print(sstream, 0);   
-                    
-                    if ( export_circuit_2_binary_loc > 0 ) {
-                        std::string filename("initial_circuit_iteration.binary");
-                        if (project_name != "") { 
-                            filename=project_name+ "_"  +filename;
-                        }
-                        export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
-                    }
+                    std::string filename("initial_circuit_iteration.binary");
+                    export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);
 
                 }
 
 //std::cout << grad_norm  << std::endl;
-                if (f0 < optimization_tolerance || random_shift_count > random_shift_count_max ) {
+                if (f0 < optimization_tolerance_loc || random_shift_count > random_shift_count_max ) {
                     break;
                 }
 
@@ -1686,7 +1764,7 @@ pure_DFE_time = 0.0;
                 norm = std::sqrt(norm);
                     
 
-                if ( sub_iter_idx> iteration_threshold_of_randomization || ADAM_status != 0 ) {
+                if ( sub_iter_idx> iteration_threshold_of_randomization_loc || ADAM_status != 0 ) {
 
                     //random_shift_count++;
                     sub_iter_idx = 0;
@@ -1803,7 +1881,10 @@ pure_DFE_time = 0.0;
 
 
         long long max_inner_iterations_loc;
-        if ( config.count("max_inner_iterations") > 0 ) {
+        if ( config.count("max_inner_iterations_adam") > 0 ) {
+            config["max_inner_iterations_adam"].get_property( max_inner_iterations_loc );         
+        }
+        else if ( config.count("max_inner_iterations") > 0 ) {
             config["max_inner_iterations"].get_property( max_inner_iterations_loc );         
         }
         else {
@@ -1811,7 +1892,10 @@ pure_DFE_time = 0.0;
         }
 
         long long iteration_threshold_of_randomization_loc;
-        if ( config.count("randomization_threshold") > 0 ) {
+        if ( config.count("randomization_threshold_adam") > 0 ) {
+            config["randomization_threshold_adam"].get_property( iteration_threshold_of_randomization_loc );  
+        }
+        else if ( config.count("randomization_threshold") > 0 ) {
             config["randomization_threshold"].get_property( iteration_threshold_of_randomization_loc );  
         }
         else {
@@ -1819,7 +1903,10 @@ pure_DFE_time = 0.0;
         }
         
         long long export_circuit_2_binary_loc;
-        if ( config.count("export_circuit_2_binary") > 0 ) {
+        if ( config.count("export_circuit_2_binary_adam") > 0 ) {
+             config["export_circuit_2_binary_adam"].get_property( export_circuit_2_binary_loc );  
+        }
+        else if ( config.count("export_circuit_2_binary") > 0 ) {
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
         }
         else {
@@ -1828,12 +1915,16 @@ pure_DFE_time = 0.0;
         
         
         double optimization_tolerance_loc;
-        if ( config.count("optimization_tolerance") > 0 ) {
+        if ( config.count("optimization_tolerance_adam") > 0 ) {
+             config["optimization_tolerance_adam"].get_property( optimization_tolerance_loc );  
+        }
+        else if ( config.count("optimization_tolerance") > 0 ) {
              config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
         }
         else {
             optimization_tolerance_loc = optimization_tolerance;
-        }        
+        }       
+ 
 
 
         double f0 = DBL_MAX;
@@ -2030,7 +2121,10 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
         // maximal number of inner iterations overriden by config
         long long max_inner_iterations_loc;
-        if ( config.count("max_inner_iterations") > 0 ) {
+        if ( config.count("max_inner_iterations_bfgs") > 0 ) {
+            config["max_inner_iterations_bfgs"].get_property( max_inner_iterations_loc );         
+        }
+        else if ( config.count("max_inner_iterations") > 0 ) {
             config["max_inner_iterations"].get_property( max_inner_iterations_loc );         
         }
         else {
@@ -2140,7 +2234,10 @@ bfgs_time = 0.0;
 
 
         long long max_inner_iterations_loc;
-        if ( config.count("max_inner_iterations") > 0 ) {
+        if ( config.count("max_inner_iterations_bfgs2") > 0 ) {
+            config["max_inner_iterations_bfgs2"].get_property( max_inner_iterations_loc );  
+        }
+        else if ( config.count("max_inner_iterations") > 0 ) {
             config["max_inner_iterations"].get_property( max_inner_iterations_loc );  
         }
         else {
@@ -2149,7 +2246,10 @@ bfgs_time = 0.0;
 
 
         long long export_circuit_2_binary_loc;
-        if ( config.count("export_circuit_2_binary") > 0 ) {
+        if ( config.count("export_circuit_2_binary_bfgs2") > 0 ) {
+             config["export_circuit_2_binary_bfgs2"].get_property( export_circuit_2_binary_loc );  
+        }
+        else if ( config.count("export_circuit_2_binary") > 0 ) {
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
         }
         else {
@@ -2158,7 +2258,10 @@ bfgs_time = 0.0;
         
 
         long long iteration_threshold_of_randomization_loc;
-        if ( config.count("randomization_threshold") > 0 ) {
+        if ( config.count("randomization_threshold_bfgs2") > 0 ) {
+            config["randomization_threshold_bfgs2"].get_property( iteration_threshold_of_randomization_loc );  
+        }
+        else if ( config.count("randomization_threshold") > 0 ) {
             config["randomization_threshold"].get_property( iteration_threshold_of_randomization_loc );  
         }
         else {
