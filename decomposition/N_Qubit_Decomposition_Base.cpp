@@ -1309,10 +1309,6 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
             // CPU time                                                     
             CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
             
-          
-            // determine the current minimum  at the shifted parameters  
-            //current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
-
   
             // CPU time                                        
             t0_CPU = tbb::tick_count::now();        
@@ -1384,6 +1380,9 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                 // look for the best agent periodicaly
                 if ( iter_idx % agent_lifetime_loc == 0 )
                 {
+
+                    // recalculate the current cost functions
+                    current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents ); 
                             
                     if ( current_minimum_agent <= current_minimum ) {
 
