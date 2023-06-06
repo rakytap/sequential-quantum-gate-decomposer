@@ -121,18 +121,8 @@ CH::get_matrix() {
 void 
 CH::apply_to( Matrix& input ) {
 
-    // the Hadamard gate of one qubit
-    /*Matrix h_1qbit(2,2);
-    h_1qbit[0].real = 1.0/sqrt(2); h_1qbit[0].imag = 0.0; 
-    h_1qbit[1].real = 1.0/sqrt(2); h_1qbit[1].imag = 0.0;
-    h_1qbit[2].real = 1.0/sqrt(2); h_1qbit[2].imag = 0.0;
-    h_1qbit[3].real = -1.0/sqrt(2); h_1qbit[3].imag = 0.0;*/
-
     Matrix u3_1qbit = calc_one_qubit_u3( 0,0,0  );
-
     apply_kernel_to(u3_1qbit, input);
-
-
 
 }
 
@@ -145,12 +135,6 @@ CH::apply_to( Matrix& input ) {
 void 
 CH::apply_from_right( Matrix& input ) {
 
-    // the Hadamard gate of one qubit
-    /*Matrix h_1qbit(2,2);
-    h_1qbit[0].real = 1.0/sqrt(2); h_1qbit[0].imag = 0.0; 
-    h_1qbit[1].real = 1.0/sqrt(2); h_1qbit[1].imag = 0.0;
-    h_1qbit[2].real = 1.0/sqrt(2); h_1qbit[2].imag = 0.0;
-    h_1qbit[3].real = -1.0/sqrt(2); h_1qbit[3].imag = 0.0;*/
 
     Matrix u3_1qbit = calc_one_qubit_u3( 0,0,0  );
     apply_kernel_from_right(u3_1qbit, input);
@@ -180,6 +164,23 @@ void CH::reorder_qubits( vector<int> qbit_list) {
 
 }
 
+
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+void 
+CH::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda){
+
+    u3_1qbit[0].real = 1.0/sqrt(2); u3_1qbit[0].imag = 0.0; 
+    u3_1qbit[1].real = 1.0/sqrt(2); u3_1qbit[1].imag = 0.0;
+    u3_1qbit[2].real = 1.0/sqrt(2); u3_1qbit[2].imag = 0.0;
+    u3_1qbit[3].real = -1.0/sqrt(2);u3_1qbit[3].imag = 0.0;
+
+}
 
 
 /**

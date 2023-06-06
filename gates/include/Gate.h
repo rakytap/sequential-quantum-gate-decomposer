@@ -186,10 +186,7 @@ Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-void parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda);
-
-
-
+virtual void parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda);
 
 
 

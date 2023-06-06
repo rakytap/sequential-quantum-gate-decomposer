@@ -113,6 +113,7 @@ CNOT::get_matrix() {
 }
 
 
+
 /**
 @brief Call to apply the gate on the input array/matrix CNOT*input
 @param input The input array on which the gate is applied
@@ -120,13 +121,6 @@ CNOT::get_matrix() {
 void 
 CNOT::apply_to( Matrix& input ) {
  
-    // the not gate of one qubit
-    /*Matrix not_1qbit(2,2);
-    not_1qbit[0].real = 0.0; not_1qbit[0].imag = 0.0; 
-    not_1qbit[1].real = 1.0; not_1qbit[1].imag = 0.0;
-    not_1qbit[2].real = 1.0; not_1qbit[2].imag = 0.0;
-    not_1qbit[3].real = 0.0; not_1qbit[3].imag = 0.0;*/
-
 
     Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
     apply_kernel_to(u3_1qbit, input);
@@ -142,14 +136,6 @@ CNOT::apply_to( Matrix& input ) {
 */
 void 
 CNOT::apply_from_right( Matrix& input ) {
-
-   
-    // the not gate of one qubit
-    /*Matrix not_1qbit(2,2);
-    not_1qbit[0].real = 0.0; not_1qbit[0].imag = 0.0; 
-    not_1qbit[1].real = 1.0; not_1qbit[1].imag = 0.0;
-    not_1qbit[2].real = 1.0; not_1qbit[2].imag = 0.0;
-    not_1qbit[3].real = 0.0; not_1qbit[3].imag = 0.0;*/
 
     Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
     apply_kernel_from_right(u3_1qbit, input);
@@ -183,7 +169,21 @@ void CNOT::reorder_qubits( vector<int> qbit_list) {
 
 }
 
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+void 
+CNOT::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda){
 
+    u3_1qbit[0].real = 0.0; u3_1qbit[0].imag = 0.0; 
+    u3_1qbit[1].real = 1.0; u3_1qbit[1].imag = 0.0;
+    u3_1qbit[2].real = 1.0; u3_1qbit[2].imag = 0.0;
+    u3_1qbit[3].real = 0.0; u3_1qbit[3].imag = 0.0;
+}
 
 /**
 @brief Call to create a clone of the present class

@@ -104,8 +104,18 @@ void set_qbit_num(int qbit_num_in);
 */
 void reorder_qubits( std::vector<int> qbit_list);
 
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+void parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda);
+
 
 };
+
 
 
 #endif //Y

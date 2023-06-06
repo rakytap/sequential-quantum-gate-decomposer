@@ -423,8 +423,9 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
 Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 
     gate_type type = get_type();
+    type=0;	
     Matrix u3_1qbit = Matrix(2,2); 
-     parameters_for_calc_one_qubit(u3_1qbit,  ThetaOver2, Phi,  Lambda);
+    parameters_for_calc_one_qubit(u3_1qbit,  ThetaOver2, Phi,  Lambda);
 
 
     if (ThetaOver2!=0 || Phi!=0 || Lambda!=0) {
@@ -448,7 +449,7 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 #endif // DEBUG
 
 
-    parameters_for_calc_one_qubit(u3_1qbit, ThetaOver2, Phi,  Lambda);
+    parameters_for_calc_one_qubit(u3_1qbit,  ThetaOver2, Phi,  Lambda);
 
         double cos_theta = cos(ThetaOver2);
         double sin_theta = sin(ThetaOver2);
@@ -485,9 +486,15 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 void
 Gate::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda  ) {
 
+   /*double ThetaOver2;
+   double Phi;
+   double Lambda;
+   Matrix& u3_1qbit;
 
    gate_type type = get_type();
            // set static values for the angles
+
+
     if (type==RY_OPERATION) {
         Phi = 0;
         Lambda = 0;
@@ -559,8 +566,9 @@ Gate::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, doubl
         u3_1qbit[1].real = 0.0; u3_1qbit[1].imag = 0.0;
         u3_1qbit[2].real = 0.0; u3_1qbit[2].imag = 0.0;
         u3_1qbit[3].real = -1.0;u3_1qbit[3].imag = 0.0;
-    }
+    }*/
 
+ return;
 
 }
 

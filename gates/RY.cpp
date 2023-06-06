@@ -143,10 +143,7 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
-    //Phi = phi0;
-    //Lambda = lambda0;
     
-
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
@@ -176,10 +173,7 @@ RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
-    //Phi = phi0;
-    //Lambda = lambda0;
-    
-
+  
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
@@ -248,7 +242,19 @@ Matrix_real RY::get_optimized_parameters() {
 
 }
 
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+void 
+RY::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda){
 
+    Phi = 0;
+    Lambda = 0;
+}
 
 /**
 @brief Call to create a clone of the present class

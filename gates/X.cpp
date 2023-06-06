@@ -137,15 +137,8 @@ X::apply_to( Matrix& input ) {
         exit(-1);
     }
 
-
-    // the X gate of one qubit
-    /*Matrix x_1qbit(2,2);
-    x_1qbit[0].real = 0.0; x_1qbit[0].imag = 0.0; 
-    x_1qbit[1].real = 1.0; x_1qbit[1].imag = 0.0;
-    x_1qbit[2].real = 1.0; x_1qbit[2].imag = 0.0;
-    x_1qbit[3].real = 0.0; x_1qbit[3].imag = 0.0;*/
-
     Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
+
     //apply_kernel_to function to X gate 
     apply_kernel_to( u3_1qbit, input );
    
@@ -214,15 +207,8 @@ X::apply_from_right( Matrix& input ) {
         exit(-1);
     }
 
-    // the X gate of one qubit
-    /*Matrix x_1qbit(2,2);
-    x_1qbit[0].real = 0.0; x_1qbit[0].imag = 0.0; 
-    x_1qbit[1].real = 1.0; x_1qbit[1].imag = 0.0;
-    x_1qbit[2].real = 1.0; x_1qbit[2].imag = 0.0;
-    x_1qbit[3].real = 0.0; x_1qbit[3].imag = 0.0;*/
-
-
     Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );   
+
     //apply_kernel_from_right function to X gate 
     apply_kernel_from_right(u3_1qbit, input);
 
@@ -309,4 +295,21 @@ void X::set_qbit_num(int qbit_num_in) {
 
         // setting the number of qubits
         Gate::set_qbit_num(qbit_num_in);
+}
+
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+void 
+X::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda){
+
+    u3_1qbit[0].real = 0.0; u3_1qbit[0].imag = 0.0; 
+    u3_1qbit[1].real = 1.0; u3_1qbit[1].imag = 0.0;
+    u3_1qbit[2].real = 1.0; u3_1qbit[2].imag = 0.0;
+    u3_1qbit[3].real = 0.0;u3_1qbit[3].imag = 0.0;
+
 }

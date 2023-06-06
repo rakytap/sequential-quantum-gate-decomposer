@@ -122,13 +122,6 @@ CZ::get_matrix() {
 void 
 CZ::apply_to( Matrix& input ) {
 
-    // the not gate of one qubit
-    /*Matrix z_1qbit(2,2);
-    z_1qbit[0].real = 1.0; z_1qbit[0].imag = 0.0; 
-    z_1qbit[1].real = 0.0; z_1qbit[1].imag = 0.0;
-    z_1qbit[2].real = 0.0; z_1qbit[2].imag = 0.0;
-    z_1qbit[3].real = -1.0; z_1qbit[3].imag = 0.0;*/
-
     Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
     apply_kernel_to(u3_1qbit, input);
 
@@ -142,13 +135,6 @@ CZ::apply_to( Matrix& input ) {
 */
 void 
 CZ::apply_from_right( Matrix& input ) {
-
-    // the not gate of one qubit
-    /*Matrix z_1qbit(2,2);
-    z_1qbit[0].real = 1.0; z_1qbit[0].imag = 0.0; 
-    z_1qbit[1].real = 0.0; z_1qbit[1].imag = 0.0;
-    z_1qbit[2].real = 0.0; z_1qbit[2].imag = 0.0;
-    z_1qbit[3].real = -1.0; z_1qbit[3].imag = 0.0;*/
 
     Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
     apply_kernel_from_right(u3_1qbit, input);
@@ -179,7 +165,22 @@ void CZ::reorder_qubits( vector<int> qbit_list) {
 
 }
 
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+void 
+CZ::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda){
 
+    u3_1qbit[0].real = 1.0; u3_1qbit[0].imag = 0.0; 
+    u3_1qbit[1].real = 0.0; u3_1qbit[1].imag = 0.0;
+    u3_1qbit[2].real = 0.0; u3_1qbit[2].imag = 0.0;
+    u3_1qbit[3].real = -1.0;u3_1qbit[3].imag = 0.0;
+
+}
 
 /**
 @brief Call to create a clone of the present class
