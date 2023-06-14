@@ -540,12 +540,12 @@ Matrix U3::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 #endif // DEBUG
 
 
-    double cos_theta = cos(ThetaOver2);
-    double sin_theta = sin(ThetaOver2);
-    double cos_phi = cos(Phi);
-    double sin_phi = sin(Phi);
-    double cos_lambda = cos(Lambda);
-    double sin_lambda = sin(Lambda);
+    double cos_theta = theta ? cos(ThetaOver2) : 1.0;
+    double sin_theta = theta ? sin(ThetaOver2) : 0.0;
+    double cos_phi = phi ? cos(Phi) : 1.0;
+    double sin_phi = phi ? sin(Phi) : 0.0;
+    double cos_lambda = lambda ? cos(Lambda) : 1.0;
+    double sin_lambda = lambda ? sin(Lambda) : 0.0;
 
     // the 1,1 element
     u3_1qbit[0].real = cos_theta;
