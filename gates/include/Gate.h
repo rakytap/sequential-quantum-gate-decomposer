@@ -180,6 +180,12 @@ Gate* clone();
 Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
 
 /**
+@brief Calculate the matrix of the constans gates.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+Matrix calc_one_qubit_u3( );
+
+/**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
 @param Theta Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.

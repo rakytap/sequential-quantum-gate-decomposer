@@ -138,7 +138,7 @@ Z::apply_to( Matrix& input ) {
     }
 
 
-    Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );
+    Matrix u3_1qbit = calc_one_qubit_u3();
 
     //apply_kernel_to function to Z gate 
     apply_kernel_to( u3_1qbit, input );
@@ -168,7 +168,7 @@ Z::apply_from_right( Matrix& input ) {
     }
 
 
-    Matrix u3_1qbit = calc_one_qubit_u3(0, 0, 0 );   
+    Matrix u3_1qbit = calc_one_qubit_u3();   
     //apply_kernel_from_right function to Z gate 
     apply_kernel_from_right(u3_1qbit, input);
 

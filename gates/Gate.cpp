@@ -422,14 +422,7 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
 */
 Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 
-    gate_type type = get_type();
-    type=0;	
     Matrix u3_1qbit = Matrix(2,2); 
-    parameters_for_calc_one_qubit(u3_1qbit,  ThetaOver2, Phi,  Lambda);
-
-
-    if (ThetaOver2!=0 || Phi!=0 || Lambda!=0) {
-
 #ifdef DEBUG
     	if (isnan(ThetaOver2)) {
             std::stringstream sstream;
@@ -468,14 +461,25 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
     	u3_1qbit[3].real = cos(Phi+Lambda)*cos_theta;
     	u3_1qbit[3].imag = sin(Phi+Lambda)*cos_theta;
 
-     return u3_1qbit;
-
-    }
-
   return u3_1qbit;
 
 }
 
+/**
+@brief Calculate the matrix of the constans gates.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+Matrix Gate::calc_one_qubit_u3( ) {
+
+  Matrix u3_1qbit = Matrix(2,2); 
+  double ThetaOver2 =0;
+  double Phi =0;
+  double Lambda =0;
+
+  parameters_for_calc_one_qubit(u3_1qbit,  ThetaOver2, Phi,  Lambda);
+  return u3_1qbit;
+
+}
 
 /**
 @brief set static values for the angles and constans parameters for calculating the matrix of the gates.
