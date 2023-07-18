@@ -270,7 +270,7 @@ Matrix_real RZ::get_optimized_parameters() {
 @return Returns with the matrix of the one-qubit matrix.
 */
 void 
-RZ::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda){
+RZ::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda){
 
     ThetaOver2 = 0;
     Lambda = 0;

@@ -442,7 +442,7 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 #endif // DEBUG
 
 
-    parameters_for_calc_one_qubit(u3_1qbit,  ThetaOver2, Phi,  Lambda);
+    parameters_for_calc_one_qubit(ThetaOver2, Phi,  Lambda);
 
         double cos_theta = cos(ThetaOver2);
         double sin_theta = sin(ThetaOver2);
@@ -472,28 +472,38 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 Matrix Gate::calc_one_qubit_u3( ) {
 
   Matrix u3_1qbit = Matrix(2,2); 
-  double ThetaOver2 =0;
+  /*double ThetaOver2 =0;
   double Phi =0;
-  double Lambda =0;
+  double Lambda =0;*/
 
-  parameters_for_calc_one_qubit(u3_1qbit,  ThetaOver2, Phi,  Lambda);
+  parameters_for_calc_one_qubit(u3_1qbit );
   return u3_1qbit;
 
 }
 
 /**
-@brief set static values for the angles and constans parameters for calculating the matrix of the gates.
+@brief Set static values for the angles and constans parameters for calculating the matrix of the gates.
 @param ThetaOver2 Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.
 @param Lambda Real parameter standing for the parameter lambda.
 */
 void
-Gate::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda  ) {
+Gate::parameters_for_calc_one_qubit(double& ThetaOver2, double& Phi, double& Lambda  ) {
 
  return;
 
 }
 
 
+/**
+@brief Set static values for matrix of the gates.
+@param u3_1qbit Matrix parameter for the gate.
 
+*/
+void
+Gate::parameters_for_calc_one_qubit(Matrix& u3_1qbit ) {
+
+ return;
+
+}
 

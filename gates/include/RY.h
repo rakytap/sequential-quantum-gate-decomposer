@@ -106,7 +106,7 @@ Matrix_real get_optimized_parameters();
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-void parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda);
+void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda);
 
 /**
 @brief Call to create a clone of the present class

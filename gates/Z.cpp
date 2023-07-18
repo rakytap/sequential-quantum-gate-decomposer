@@ -215,14 +215,12 @@ void Z::set_qbit_num(int qbit_num_in) {
 }
 
 /**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the one-qubit matrix.
+@brief Set static values for matrix of the gates.
+@param u3_1qbit Matrix parameter for the gate.
+
 */
 void 
-Z::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda){
+Z::parameters_for_calc_one_qubit( Matrix& u3_1qbit){
  
     u3_1qbit[0].real = 1.0; u3_1qbit[0].imag = 0.0; 
     u3_1qbit[1].real = 0.0; u3_1qbit[1].imag = 0.0;

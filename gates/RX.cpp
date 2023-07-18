@@ -249,7 +249,7 @@ Matrix_real RX::get_optimized_parameters() {
 @return Returns with the matrix of the one-qubit matrix.
 */
 void 
-RX::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda){
+RX::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda){
 
     Phi = -M_PI/2;
     Lambda = M_PI/2;

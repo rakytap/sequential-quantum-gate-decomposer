@@ -250,7 +250,7 @@ Matrix_real RY::get_optimized_parameters() {
 @return Returns with the matrix of the one-qubit matrix.
 */
 void 
-RY::parameters_for_calc_one_qubit( Matrix& u3_1qbit, double& ThetaOver2, double& Phi, double& Lambda){
+RY::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda){
 
     Phi = 0;
     Lambda = 0;
