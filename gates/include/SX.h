@@ -112,7 +112,7 @@ void reorder_qubits( std::vector<int> qbit_list);
 @param u3_1qbit Matrix parameter for the gate.
 
 */
-void parameters_for_calc_one_qubit( Matrix& u3_1qbit);
+Matrix calc_one_qubit_u3( );
 
 };
 

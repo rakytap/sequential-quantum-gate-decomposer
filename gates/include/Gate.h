@@ -183,7 +183,7 @@ Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
 @brief Calculate the matrix of the constans gates.
 @return Returns with the matrix of the one-qubit matrix.
 */
-Matrix calc_one_qubit_u3( );
+virtual Matrix calc_one_qubit_u3( );
 
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
@@ -194,12 +194,7 @@ Matrix calc_one_qubit_u3( );
 */
 virtual void parameters_for_calc_one_qubit(double& ThetaOver2, double& Phi, double& Lambda);
 
-/**
-@brief Set static values for matrix of the gates.
-@param u3_1qbit Matrix parameter for the gate.
 
-*/
-virtual void parameters_for_calc_one_qubit(Matrix& u3_1qbit);
 
 
 

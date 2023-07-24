@@ -313,12 +313,14 @@ void SX::set_qbit_num(int qbit_num_in) {
 @param u3_1qbit Matrix parameter for the gate.
 
 */
-void 
-SX::parameters_for_calc_one_qubit( Matrix& u3_1qbit){
+Matrix
+SX::calc_one_qubit_u3( ){
  
+    Matrix u3_1qbit = Matrix(2,2);
     u3_1qbit[0].real = 0.5; u3_1qbit[0].imag = 0.5; 
     u3_1qbit[1].real = 0.5; u3_1qbit[1].imag = -0.5;
     u3_1qbit[2].real = 0.5; u3_1qbit[2].imag = -0.5;
     u3_1qbit[3].real = 0.5;u3_1qbit[3].imag = 0.5;
+    return u3_1qbit;
 
 }
