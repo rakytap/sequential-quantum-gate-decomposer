@@ -952,10 +952,23 @@ pure_DFE_time = 0.0;
 
         double agent_exploration_rate = 0.2;
         if ( config.count("agent_exploration_rate_agent") > 0 ) {
+        
              config["agent_exploration_rate_agent"].get_property( agent_exploration_rate );
         }
         else if ( config.count("agent_exploration_rate") > 0 ) {
              config["agent_exploration_rate"].get_property( agent_exploration_rate );
+        }
+        
+        int convergence_length = 20;
+        if ( config.count("convergence_length_agent") > 0 ) {
+             long long value;                   
+             config["convergence_length_agent"].get_property( value );
+             convergence_length = (int) value;
+        }
+        else if ( config.count("convergence_length") > 0 ) {
+             long long value;                   
+             config["convergence_length"].get_property( value );
+             convergence_length = (int) value;
         }
         
         sstream.str("");
@@ -968,7 +981,7 @@ pure_DFE_time = 0.0;
         bool terminate_optimization = false;
         
         // vector stroing the lates values of current minimums to identify convergence
-        Matrix_real current_minimum_vec(1, 20); 
+        Matrix_real current_minimum_vec(1, convergence_length); 
         memset( current_minimum_vec.get_data(), 0.0, current_minimum_vec.size()*sizeof(double) );
         double current_minimum_mean = 0.0;
         int current_minimum_idx = 0;   
@@ -1474,14 +1487,12 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                             terminate_optimization = true;
                         }                    
 
-                   }   
-                    
-
+                    }   
                     
                 }   
 
 
-                if ( iter_idx % 2000 == 0 && agent_idx == 0) {
+                if ( iter_idx % 200 == 0 && agent_idx == 0) {
                     std::stringstream sstream;
                     sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
                     sstream << ", current minimum of agent 0: " << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time;
@@ -1502,15 +1513,6 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
             
             // terminate the agent if the whole optimization problem was solved
             if ( terminate_optimization ) {                 
-             for ( int agent_idx=0; agent_idx<agent_num; agent_idx++ ) {
-                double& current_minimum_agent = current_minimum_agents[ agent_idx ];
-                Matrix_real& solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];                             
-                if ( current_minimum_agent <= current_minimum ) {
-                    // export the parameters of the curremt, most successful agent
-                    memcpy(optimized_parameters_mtx.get_data(), solution_guess_mtx_agent.get_data(), num_of_parameters*sizeof(double) );
-
-                    }
-             }  
                 break;                    
             }      
         
@@ -2142,9 +2144,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
                 f = lbfgs.Solve(solution_guess);
             } else {
                 Tolmin tolmin(&p);
-                f = tolmin.Solve(solution_guess, false, max_inner_iterations);
+                f = tolmin.Solve(solution_guess, false, max_inner_iterations_loc);
             }
-
 
             if (current_minimum > f) {
                 current_minimum = f;

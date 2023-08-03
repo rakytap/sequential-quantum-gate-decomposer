@@ -252,12 +252,12 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Optimized_Parameters( qgd_V
 
 
 static PyObject *
-qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Initial_Circuit(qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self)
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Ground_State(qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self)
 {
 
     // starting the decomposition
     try {
-        self->vqe->Get_initial_circuit();
+        self->vqe->Get_ground_state();
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -788,7 +788,7 @@ static PyMemberDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_members[] = 
 @brief Structure containing metadata about the methods of class qgd_N_Qubit_Decomposition_Wrapper.
 */
 static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = {
-    {"get_Initial_Circuit", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Initial_Circuit, METH_NOARGS,
+    {"get_Ground_State", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Ground_State, METH_NOARGS,
      "Method to start the decomposition."
     },
     {"get_Optimized_Parameters", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Optimized_Parameters, METH_NOARGS,

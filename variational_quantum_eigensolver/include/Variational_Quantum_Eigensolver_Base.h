@@ -56,77 +56,18 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 
 class Variational_Quantum_Eigensolver_Base : public N_Qubit_Decomposition_Base {
 public:
-    /// The maximal allowed error of the optimization problem (The error of the decomposition would scale with the square root of this value)
-    double optimization_tolerance;
-    
-    ///the name of the project
-    std::string project_name;
 
-    /// config metadata utilized during the optimization
-    std::map<std::string, Config_Element> config;
-    
-
-    
 protected: 
     std::map<int, Gates_block*> gate_structure;    
 
-private:
-    ///  A map of <int n: int num> indicating that how many layers should be used in the subdecomposition process for the subdecomposing of the nth qubits.
-    std::map<int,int> max_layer_num;
 
-    /// A map of <int n: int num> indicating the number of iteration in each step of the decomposition.
-    std::map<int,int> iteration_loops;
+private:
 
     /// The Unitary of the system
     Matrix_sparse Hamiltonian;
     
     Matrix Zero_state;
-    
-    int random_shift_count_max;
-    
-    optimization_aglorithms alg;
-    
-    /// The optimized parameters for the gates
-    Matrix_real optimized_parameters_mtx;
 
-	int qbit_num;
-    /// The optimized parameters for the gates
-    //double* optimized_parameters;
-
-    /// logical value describing whether the decomposition was finalized or not (i.e. whether the decomposed qubits were rotated into the state |0> or not)
-    bool decomposition_finalized;
-
-    /// error of the final decomposition
-    double decomposition_error;
-
-    unsigned long long iteration_threshold_of_randomization;
-
-    /// The current minimum of the optimization problem
-    double current_minimum;
-
-
-    /// logical value describing whether the optimization problem was solved or not
-    bool optimization_problem_solved;
-
-    /// Store the number of OpenMP threads. (During the calculations OpenMP multithreading is turned off.)
-    int num_threads;
-
-    /// The convergence threshold in the optimization process
-    double convergence_threshold;
-    
-    double learning_rate;
-    
-    int max_iters;
-    
-        /// Standard mersenne_twister_engine seeded with rd()
-    std::mt19937 gen; 
-
-    /// logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
-    bool adaptive_eta;
-    
-    double prev_cost_fnv_val;
-    
-    
 public:
 
 Variational_Quantum_Eigensolver_Base();
@@ -152,7 +93,8 @@ static void optimization_problem_grad_vqe( Matrix_real parameters, void* void_in
 void initialize_zero_state();
 
 virtual Problem create_BFGS_problem(int num_of_parameters) override;
-void Get_initial_circuit();
+
+void Get_ground_state();
 
 void set_adaptive_gate_structure( std::string filename );
 

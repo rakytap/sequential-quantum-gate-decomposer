@@ -86,9 +86,6 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
     // The convergence threshold in the optimization process
     convergence_threshold = -1;
     
-    learning_rate = 0.1;
-    
-    max_iters = 500;
     
     iteration_threshold_of_randomization = 2500000;
 
@@ -111,7 +108,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
 
 Variational_Quantum_Eigensolver_Base::~Variational_Quantum_Eigensolver_Base(){}
 
-void Variational_Quantum_Eigensolver_Base::Get_initial_circuit(){
+void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
 
 	initialize_zero_state();
 	int num_of_parameters =  optimized_parameters_mtx.cols;
@@ -121,6 +118,8 @@ void Variational_Quantum_Eigensolver_Base::Get_initial_circuit(){
     }
     Matrix_real parameters = optimized_parameters_mtx.copy();
     solve_layer_optimization_problem(num_of_parameters,parameters);
+    double f0=optimization_problem(optimized_parameters_mtx);
+    std::cout<<"Ground state found, energy: "<<f0<<std::endl;
     prepare_gates_to_export();
     return;
 }
@@ -148,6 +147,8 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_vqe(Matrix_rea
 	Matrix State = instance->Zero_state.copy();
 	gate_structure_loc->apply_to(parameters, State);
 	Energy = instance->Expected_energy(State);
+    State.release_data();
+    delete gate_structure_loc;
 	return Energy;
 }
 
@@ -182,6 +183,7 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_vqe( Ma
         [&]{
             Matrix State_loc = instance->Zero_state.copy();
             State_deriv = instance->apply_derivate_to( parameters, State_loc );
+            State_loc.release_data();
     });
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {

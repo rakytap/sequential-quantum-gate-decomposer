@@ -20,7 +20,7 @@ def create_circuit(n,l,b,topology):
         for qbit in range(n):
             rot_layer.add_RZ(qbit)
             rot_layer.add_RY(qbit)
-            rot_layer.add_RZ(qbit)
+            #rot_layer.add_RZ(qbit)
     Gates_Block_ret.add_Gates_Block( rot_layer )
     return Gates_Block_ret
 topology = []
@@ -70,24 +70,22 @@ State = (np.zeros((2**n,1))).astype(np.complex128)
 State[0] = 1+0j
 parameters = np.random.randn(n*3)*2*np.pi
 gate_structure.apply_to(parameters,State)
-config = {"agent_lifetime":500,
+config = {"agent_lifetime":100,
         "optimization_tolerance": -7.1,
         "max_inner_iterations":10000,
         "max_iterations":500,
         "learning_rate": 2e-1,
         "agent_num":64,
         "agent_exploration_rate":0.3,
+        "convergence_length":5,
         "max_inner_iterations_adam":50000}
 Hamiltonian = generate_hamiltonian(topology,n)#sp.sparse.eye(2**n,format="csr")
 cDecompose = Variational_Quantum_Eigensolver_Base(Hamiltonian, n, config)
-parameters = np.random.randn(n*3*l)*2*np.pi
 cDecompose.set_Gate_Structure_from_Binary("squander.binary")
-cDecompose.set_Optimized_Parameters(np.zeros(n*3*l))
-cDecompose.set_Optimizer("ADAM")
-cDecompose.get_Initial_Circuit()
+cDecompose.set_Optimizer("BFGS")
+cDecompose.get_Ground_State()
 # get the decomposing operations
 quantum_circuit = cDecompose.get_Quantum_Circuit()
-
 # print the quantum circuit
 print(quantum_circuit)
 print(cDecompose.get_Optimized_Parameters())
