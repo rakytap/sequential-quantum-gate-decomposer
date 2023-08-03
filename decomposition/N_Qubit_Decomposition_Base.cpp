@@ -1512,7 +1512,7 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
                                   
             
             // terminate the agent if the whole optimization problem was solved
-            if ( terminate_optimization ) {                 
+            if ( terminate_optimization ) {
                 break;                    
             }      
         
@@ -1811,6 +1811,12 @@ pure_DFE_time = 0.0;
 
 }
 
+void N_Qubit_Decomposition_Base::optimization_problem_combined_ADAM( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ){
+    optimization_problem_combined( parameters, void_instance, f0, grad );
+    return;
+
+}
+
 /**
 @brief Call to solve layer by layer the optimization problem via ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
@@ -1929,7 +1935,7 @@ pure_DFE_time = 0.0;
             number_of_iters++;
 
 
-            optimization_problem_combined( solution_guess_tmp, &f0, grad_mtx );
+            optimization_problem_combined_ADAM( solution_guess_tmp,(void*)(this), &f0, grad_mtx );
 
             prev_cost_fnv_val = f0;
   
@@ -1944,11 +1950,10 @@ pure_DFE_time = 0.0;
             }
 
 
-            if (current_minimum_hold*0.95 > f0 || (current_minimum_hold*0.97 > f0 && f0 < 1e-3) ||  (current_minimum_hold*0.99 > f0 && f0 < 1e-4) ) {
+            if ((cost_fnc != VQE) && (current_minimum_hold*0.95 > f0 || (current_minimum_hold*0.97 > f0 && f0 < 1e-3) ||  (current_minimum_hold*0.99 > f0 && f0 < 1e-4) )) {
                 sub_iter_idx = 0;
                 current_minimum_hold = f0;        
             }
-    
     
             if (current_minimum > f0 ) {
                 current_minimum = f0;

@@ -77,12 +77,11 @@ config = {"agent_lifetime":100,
         "learning_rate": 2e-1,
         "agent_num":64,
         "agent_exploration_rate":0.3,
-        "convergence_length":5,
         "max_inner_iterations_adam":50000}
 Hamiltonian = generate_hamiltonian(topology,n)#sp.sparse.eye(2**n,format="csr")
 cDecompose = Variational_Quantum_Eigensolver_Base(Hamiltonian, n, config)
 cDecompose.set_Gate_Structure_from_Binary("squander.binary")
-cDecompose.set_Optimizer("BFGS")
+cDecompose.set_Optimizer("AGENTS")
 cDecompose.get_Ground_State()
 # get the decomposing operations
 quantum_circuit = cDecompose.get_Quantum_Circuit()

@@ -163,13 +163,17 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 	return Energy;
 }
 
+void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_ADAM( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ){
+    optimization_problem_combined_vqe( parameters, void_instance, f0, grad );
+    return;
 
+}
 
 void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_vqe( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
 
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
     // the number of free parameters
-    int parameter_num_loc = parameters.cols;
+    int parameter_num_loc = parameters.size();
 
     Matrix_real cost_function_terms;
 
