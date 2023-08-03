@@ -302,7 +302,7 @@ static double optimization_problem( Matrix_real parameters, void* void_instance)
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad Array containing the calculated gradient components.
 */
-static void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad );
+static void optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad );
 
 
 
@@ -325,7 +325,7 @@ static void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real p
 */
 static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
-
+virtual void optimization_problem_combined_ADAM( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
 
 /**

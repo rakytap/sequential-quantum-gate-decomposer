@@ -94,6 +94,8 @@ void initialize_zero_state();
 
 virtual Problem create_BFGS_problem(int num_of_parameters) override;
 
+virtual void optimization_problem_combined_ADAM( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
+
 void Get_ground_state();
 
 void set_adaptive_gate_structure( std::string filename );
