@@ -56,10 +56,10 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Optimizer(alg)
         
-    def get_Initial_Circuit(self):
+    def get_Ground_State(self):
 
 	# call the C wrapper function
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Initial_Circuit()
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Ground_State()
     
     def get_Optimized_Parameters(self):
     
