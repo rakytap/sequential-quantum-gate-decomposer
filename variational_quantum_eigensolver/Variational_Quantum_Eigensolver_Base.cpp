@@ -137,11 +137,12 @@ double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix State){
 	for (int idx=0; idx<State.rows; idx++){
 		Energy += State[idx].real*tmp[idx].real + State[idx].imag*tmp[idx].imag;
 	} 
+	tmp.release_data();
 	return Energy;
 }
 
 double Variational_Quantum_Eigensolver_Base::optimization_problem_vqe(Matrix_real parameters, void* void_instance){
-	double Energy;
+	double Energy=0.;
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
     Gates_block* gate_structure_loc = static_cast<Gates_block*>(instance)->clone();
 	Matrix State = instance->Zero_state.copy();
@@ -151,11 +152,13 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_vqe(Matrix_rea
 }
 
 double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& parameters)  {
-	double Energy;
-    Gates_block* gate_structure_loc = static_cast<Gates_block*>(this)->clone();
+	double Energy=0.;
 	Matrix State = Zero_state.copy();
+    Gates_block* gate_structure_loc = static_cast<Gates_block*>(this)->clone();
 	gate_structure_loc->apply_to(parameters, State);
 	Energy = Expected_energy(State);
+    State.release_data();
+    delete gate_structure_loc;
 	return Energy;
 }
 
