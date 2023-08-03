@@ -771,7 +771,35 @@ qgd_Gates_Block_apply_to( qgd_Gates_Block *self, PyObject *args ) {
     return Py_BuildValue("i", 0);
 }
 
+static PyObject *
+qgd_Gates_export_gate_list_to_binary( qgd_Gates_Block *self, PyObject *args ) {
 
+    PyObject * parameters_arr = NULL;
+    PyObject* filename=NULL; 
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|OO", &parameters_arr, &filename )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+	PyObject* filename_string = PyObject_Str(filename);
+    PyObject* filename_unicode = PyUnicode_AsEncodedString(filename_string, "utf-8", "~E~");
+    const char* filename_C = PyBytes_AS_STRING(filename_unicode);
+    std::string filename_str = ( filename_C );
+	export_gate_list_to_binary(parameters_mtx,self->gate,filename_str,0);
+    return Py_BuildValue("i", 0);
+}
 
 
 
@@ -831,6 +859,9 @@ static PyMethodDef qgd_Gates_Block_Methods[] = {
     },
     {"get_Parameter_Num", (PyCFunction) qgd_Gates_Block_get_Parameter_Num, METH_NOARGS,
      "Call to get the number of free parameters in the circuit"
+    },
+    {"export_gate_list_to_binary", (PyCFunction) qgd_Gates_export_gate_list_to_binary, METH_VARARGS,
+     "Call to export gate list to a binary."
     },
     {"apply_to", (PyCFunction) qgd_Gates_Block_apply_to, METH_VARARGS,
      "Call to apply the gate on the input matrix."

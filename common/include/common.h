@@ -32,7 +32,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <omp.h>
 #include "QGDTypes.h"
 #include "dot.h"
-
+#include "matrix_sparse.h"
 
 #include <string>
 #include <stdio.h>
@@ -160,7 +160,7 @@ QGD_Complex16 mult( double a, QGD_Complex16 b );
 */
 void mult( QGD_Complex16 a, Matrix& b );
 
-
+Matrix mult(Matrix_sparse a, Matrix& b);
 
 /**
 @brief ???????????????????

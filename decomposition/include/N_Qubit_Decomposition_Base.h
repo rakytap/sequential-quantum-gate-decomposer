@@ -25,11 +25,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define N_Qubit_Decomposition_Base_H
 
 #include "Decomposition_Base.h"
+#include "lbfgs.h"
 
 /// @brief Type definition of the fifferent types of the cost function
 typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
     HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2,
-    SUM_OF_SQUARES} cost_function_type;
+    SUM_OF_SQUARES, VQE} cost_function_type;
 
 
 
@@ -207,6 +208,8 @@ void solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real
 void solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
 
+virtual Problem create_BFGS_problem(int num_of_parameters);
+
 /**
 @brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
@@ -255,7 +258,7 @@ double optimization_problem( double* parameters);
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double optimization_problem( Matrix_real& parameters);
+virtual double optimization_problem( Matrix_real& parameters);
 
 
 /**
@@ -325,11 +328,12 @@ static void optimization_problem_combined( Matrix_real parameters, void* void_in
 @param grad An array storing the calculated gradient components
 @param onlyCPU Set true to use only CPU in the calculations (has effect if compiled to use accelerator devices)
 */
-void optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad );
+virtual void optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad );
 
 
 
 static void optimization_problem_combined_unitary( Matrix_real parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
+
 void optimization_problem_combined_unitary( Matrix_real parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
 

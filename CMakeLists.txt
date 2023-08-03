@@ -316,6 +316,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix_real.cpp
+    ${PROJECT_SOURCE_DIR}/common/matrix_sparse.cpp
     ${PROJECT_SOURCE_DIR}/common/logging.cpp
     ${PROJECT_SOURCE_DIR}/common/Adam.cpp
     ${PROJECT_SOURCE_DIR}/common/tolmin.cpp
@@ -350,7 +351,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_custom.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
-    ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition.cpp  
+    ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition.cpp
+    ${PROJECT_SOURCE_DIR}/variational_quantum_eigensolver/Variational_Quantum_Eigensolver_Base.cpp  
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Unitary.cpp
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Orthogonal.cpp
 )
@@ -408,6 +410,7 @@ target_include_directories(qgd PRIVATE
                             ./optimization_engines/include
                             ./nn/include
                             ./gates/kernels/include
+                            ./variational_quantum_eigensolver/include
                             ${EXTRA_INCLUDES})
 
 
@@ -420,6 +423,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix_base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix_real.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix_sparse.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/QGDTypes.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CNOT.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/SYC.h
@@ -449,6 +453,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Sub_Matrix_Decomposition_Cost_Function.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Sub_Matrix_Decomposition.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/variational_quantum_eigensolver/include/Variational_Quantum_Eigensolver_Base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Unitary.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Orthogonal.h
 )
@@ -471,7 +476,7 @@ set_target_properties(
 add_subdirectory (qgd_python/decomposition)
 add_subdirectory (qgd_python/gates)
 add_subdirectory (qgd_python/nn)
-
+add_subdirectory (qgd_python/variational_quantum_eigensolver)
 
 if(DEFINED ENV{QGD_CTEST})
     # adding CMAKE files for executables
