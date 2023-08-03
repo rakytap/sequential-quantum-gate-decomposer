@@ -304,6 +304,25 @@ void mult( QGD_Complex16 a, Matrix& b ) {
 
 }
 
+Matrix mult(Matrix_sparse a, Matrix& b){
+    
+    int n_rows = a.rows;
+    Matrix ret = Matrix(n_rows,1);
+    for (int idx=0; idx<n_rows; idx++){
+        ret[idx].imag = 0.;
+        ret[idx].real = 0.;
+        int nz_start = a.indptr[idx];
+        int nz_end = a.indptr[idx+1];
+        for (int nz_idx=nz_start; nz_idx<nz_end; nz_idx++){
+            int jdx = a.indices[nz_idx];
+            QGD_Complex16 result = mult(a.data[nz_idx],b[jdx]);
+            ret[idx].imag += result.imag;
+            ret[idx].real += result.real;
+        }
+    }
+   return ret;
+}
+
 
 
 /**
