@@ -442,8 +442,6 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 #endif // DEBUG
 
 
-    parameters_for_calc_one_qubit(ThetaOver2, Phi,  Lambda);
-
         double cos_theta = cos(ThetaOver2);
         double sin_theta = sin(ThetaOver2);
 

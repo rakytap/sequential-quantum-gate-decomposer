@@ -183,6 +183,7 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     double Theta, Phi, Lambda;
 
     Phi = parameters[0];
+    parameters_for_calc_one_qubit(Theta, Phi, Lambda);
 
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );

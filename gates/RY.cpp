@@ -143,6 +143,7 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
     
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
