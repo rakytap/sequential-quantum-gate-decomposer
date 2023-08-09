@@ -137,16 +137,10 @@ X::apply_to( Matrix& input ) {
         exit(-1);
     }
 
-
-    // the X gate of one qubit
-    Matrix x_1qbit(2,2);
-    x_1qbit[0].real = 0.0; x_1qbit[0].imag = 0.0; 
-    x_1qbit[1].real = 1.0; x_1qbit[1].imag = 0.0;
-    x_1qbit[2].real = 1.0; x_1qbit[2].imag = 0.0;
-    x_1qbit[3].real = 0.0; x_1qbit[3].imag = 0.0;
+    Matrix u3_1qbit = calc_one_qubit_u3();
 
     //apply_kernel_to function to X gate 
-    apply_kernel_to( x_1qbit, input );
+    apply_kernel_to( u3_1qbit, input );
    
 
 
@@ -213,15 +207,10 @@ X::apply_from_right( Matrix& input ) {
         exit(-1);
     }
 
-    // the X gate of one qubit
-    Matrix x_1qbit(2,2);
-    x_1qbit[0].real = 0.0; x_1qbit[0].imag = 0.0; 
-    x_1qbit[1].real = 1.0; x_1qbit[1].imag = 0.0;
-    x_1qbit[2].real = 1.0; x_1qbit[2].imag = 0.0;
-    x_1qbit[3].real = 0.0; x_1qbit[3].imag = 0.0;
-   
+    Matrix u3_1qbit = calc_one_qubit_u3();   
+
     //apply_kernel_from_right function to X gate 
-    apply_kernel_from_right(x_1qbit, input);
+    apply_kernel_from_right(u3_1qbit, input);
 
 
    /* int index_step = Power_of_2(target_qbit);
@@ -306,4 +295,21 @@ void X::set_qbit_num(int qbit_num_in) {
 
         // setting the number of qubits
         Gate::set_qbit_num(qbit_num_in);
+}
+
+/**
+@brief Set static values for matrix of the gates.
+@param u3_1qbit Matrix parameter for the gate.
+
+*/
+Matrix 
+X::calc_one_qubit_u3( ){
+
+    Matrix u3_1qbit = Matrix(2,2);
+    u3_1qbit[0].real = 0.0; u3_1qbit[0].imag = 0.0; 
+    u3_1qbit[1].real = 1.0; u3_1qbit[1].imag = 0.0;
+    u3_1qbit[2].real = 1.0; u3_1qbit[2].imag = 0.0;
+    u3_1qbit[3].real = 0.0;u3_1qbit[3].imag = 0.0;
+    return u3_1qbit;
+
 }
