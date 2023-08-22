@@ -193,13 +193,15 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
 
     print(sstream, 1);   
 
+
+
     // get the initial circuit including redundand 2-qbit blocks.
     get_initial_circuit();
-    
+  
     // comppress the gate structure
     compress_circuit();
 
- 
+   
     // finalyzing the gate structure by turning CRY gates inti CNOT gates and do optimization cycles to correct approximation in this transformation 
     // (CRY gates with small rotation angles are expressed with a single CNOT gate
     finalize_circuit(prepare_export);
@@ -300,6 +302,7 @@ void N_Qubit_Decomposition_adaptive::get_initial_circuit() {
 @brief ???????????????????
 */
 void N_Qubit_Decomposition_adaptive::compress_circuit() {
+
 // temporarily turn off OpenMP parallelism
 #if BLAS==0 // undefined BLAS
     num_threads = omp_get_max_threads();
@@ -311,7 +314,8 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
     num_threads = openblas_get_num_threads();
     openblas_set_num_threads(1);
 #endif
-	std::stringstream sstream;
+
+    std::stringstream sstream;
     sstream.str("");
     sstream << std::endl;
     sstream << std::endl;
@@ -346,7 +350,6 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
         export_circuit_2_binary_loc = 0;
     }      
     
-        
     while ( iter<25 || uncompressed_iter_num <= 5 ) {
         std::stringstream sstream;
         sstream.str("");
@@ -364,6 +367,7 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
         }
 
         if ( gate_structure_compressed != gate_structure_loc ) {
+
             delete( gate_structure_loc );
             gate_structure_loc = gate_structure_compressed;
             gate_structure_compressed = NULL;
@@ -393,9 +397,13 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
         if (uncompressed_iter_num>10) break;
             // store the decomposing gate structure
     }
+
     release_gates();
-	combine( gate_structure_loc );
-	delete( gate_structure_loc );
+
+
+    combine( gate_structure_loc );
+    delete( gate_structure_loc );
+
 #if BLAS==0 // undefined BLAS
     omp_set_num_threads(num_threads);
 #elif BLAS==1 //MKL
@@ -403,6 +411,7 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
 #elif BLAS==2 //OpenBLAS
     openblas_set_num_threads(num_threads);
 #endif
+
 }
 
 
@@ -566,7 +575,7 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export) {
     if (prepare_export) {
         prepare_gates_to_export();
     }
-    
+
     decomposition_error = optimization_problem(optimized_parameters_mtx);
     
     // get the number of gates used in the decomposition
@@ -600,6 +609,7 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export) {
 #elif BLAS==2 //OpenBLAS
     openblas_set_num_threads(num_threads);
 #endif
+
 }
 
 /**
@@ -965,7 +975,6 @@ return NULL;
 Gates_block*
 N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure ) {
 
-
     int layer_num_max;
     int layer_num_orig = gate_structure->get_gate_num()-1;
     if ( layer_num_orig < 50 ) layer_num_max = 10;
@@ -1006,13 +1015,21 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 
     int panelties_num = layer_num_max < layer_num_orig ? layer_num_max : layer_num_orig;
 
+    if ( panelties_num == 0 ) {
+        return gate_structure;
+    }
+
     // preallocate panelties associated with the number of remaining two-qubit controlled gates
     std::vector<unsigned int> panelties(panelties_num, 1<<31);
     std::vector<Gates_block*> gate_structures_vec(panelties_num, NULL);
-    std::vector<Matrix_real> optimized_parameters_vec(panelties_num, Matrix_real(0,0));
     std::vector<double> current_minimum_vec(panelties_num, DBL_MAX);
-    std::vector<Matrix> Umtx_vec(panelties_num);
     std::vector<int> iteration_num_vec(panelties_num, 0);
+
+
+    std::vector<Matrix_real> optimized_parameters_vec(panelties_num, Matrix_real(0,0));
+    std::vector<Matrix> Umtx_vec(panelties_num, Matrix(0,0));
+  
+
 
     for (int idx=0; idx<panelties_num; idx++) {
 
@@ -1023,7 +1040,9 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         Matrix_real optimized_parameters_loc = optimized_parameters_mtx.copy();
 
         Gates_block* gate_structure_reduced = compress_gate_structure( gate_structure, layers_to_remove[idx], optimized_parameters_loc,  current_minimum_loc, iteration_num  );
-        if ( optimized_parameters_loc.size() == 0 ) optimized_parameters_loc = optimized_parameters_mtx.copy();
+        if ( optimized_parameters_loc.size() == 0 ) {
+            optimized_parameters_loc = optimized_parameters_mtx.copy();
+        }
 
         // remove further adaptive gates if possible
         Gates_block* gate_structure_tmp;
@@ -1034,12 +1053,14 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
             gate_structure_tmp = remove_trivial_gates( gate_structure_reduced, optimized_parameters_loc, current_minimum_loc );
         }
       
-        panelties[idx] = get_panelty(gate_structure_tmp, optimized_parameters_loc);
-        gate_structures_vec[idx] = gate_structure_tmp;
+        panelties[idx]                = get_panelty(gate_structure_tmp, optimized_parameters_loc);
+        gate_structures_vec[idx]      = gate_structure_tmp;
+        current_minimum_vec[idx]      = current_minimum_loc;
+        iteration_num_vec[idx]        = iteration_num; // the accumulated number of optimization iterations
+
+
         optimized_parameters_vec[idx] = optimized_parameters_loc;
-        current_minimum_vec[idx] = current_minimum_loc;
-        iteration_num_vec[idx] = iteration_num;
-        Umtx_vec[idx] = Umtx;
+        Umtx_vec[idx]                 = Umtx;
         
 
         delete(gate_structure_reduced);
@@ -1052,19 +1073,19 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
     }
 
 
-//panelties.print_matrix();
 
     // determine the reduction with the lowest penalty
     unsigned int panelty_min = panelties[0];
-    unsigned int idx_min = 0;
+    unsigned int idx_min     = 0;
+
     for (size_t idx=0; idx<panelties.size(); idx++) {
         if ( panelty_min > panelties[idx] ) {
             panelty_min = panelties[idx];
             idx_min = idx;
         }
+
         else if ( panelty_min == panelties[idx] ) {
 
-            // randomly choose the solution between identical penalties
             if ( (distrib_int(gen) % 2) == 1 ) {
                 idx_min = idx;
 
@@ -1072,28 +1093,38 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
             }
 
         }
+
     }
-    
+
 #ifdef __MPI__        
     MPI_Bcast( &idx_min, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
 #endif    
 
+
+    // release gate structures other than the best one
     for (size_t idx=0; idx<panelties.size(); idx++) {
-        if (idx==idx_min) continue;
-        if ( gate_structures_vec[idx] == gate_structure) continue;
+        if (idx==idx_min) {
+            continue;
+        }
+
+
+        if ( gate_structures_vec[idx] == gate_structure) {
+            continue;
+        }
+
         if ( gate_structures_vec[idx]  ) {
             delete( gate_structures_vec[idx] );
             gate_structures_vec[idx] = NULL;
         }
+
     }
 
 
-    // release the reduced gate structure, keep only the most efficient one
-    gate_structure = gate_structures_vec[idx_min];
+    gate_structure           = gate_structures_vec[idx_min];
     optimized_parameters_mtx = optimized_parameters_vec[idx_min];
-    current_minimum =  current_minimum_vec[idx_min];
-    number_of_iters += iteration_num_vec[idx_min];
-    Umtx = Umtx_vec[idx_min];
+    current_minimum          = current_minimum_vec[idx_min];
+    number_of_iters         += iteration_num_vec[idx_min]; // the total number of the accumulated optimization iterations
+    Umtx                     = Umtx_vec[idx_min];
     
     int layer_num = gate_structure->get_gate_num();
 
