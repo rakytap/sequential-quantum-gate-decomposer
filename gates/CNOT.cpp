@@ -113,6 +113,7 @@ CNOT::get_matrix() {
 }
 
 
+
 /**
 @brief Call to apply the gate on the input array/matrix CNOT*input
 @param input The input array on which the gate is applied
@@ -120,15 +121,9 @@ CNOT::get_matrix() {
 void 
 CNOT::apply_to( Matrix& input ) {
  
-    // the not gate of one qubit
-    Matrix not_1qbit(2,2);
-    not_1qbit[0].real = 0.0; not_1qbit[0].imag = 0.0; 
-    not_1qbit[1].real = 1.0; not_1qbit[1].imag = 0.0;
-    not_1qbit[2].real = 1.0; not_1qbit[2].imag = 0.0;
-    not_1qbit[3].real = 0.0; not_1qbit[3].imag = 0.0;
 
-
-    apply_kernel_to(not_1qbit, input);
+    Matrix u3_1qbit = calc_one_qubit_u3();
+    apply_kernel_to(u3_1qbit, input);
 
 
 }
@@ -142,15 +137,8 @@ CNOT::apply_to( Matrix& input ) {
 void 
 CNOT::apply_from_right( Matrix& input ) {
 
-   
-    // the not gate of one qubit
-    Matrix not_1qbit(2,2);
-    not_1qbit[0].real = 0.0; not_1qbit[0].imag = 0.0; 
-    not_1qbit[1].real = 1.0; not_1qbit[1].imag = 0.0;
-    not_1qbit[2].real = 1.0; not_1qbit[2].imag = 0.0;
-    not_1qbit[3].real = 0.0; not_1qbit[3].imag = 0.0;
-
-    apply_kernel_from_right(not_1qbit, input);
+    Matrix u3_1qbit = calc_one_qubit_u3();
+    apply_kernel_from_right(u3_1qbit, input);
 
 
 
@@ -181,7 +169,21 @@ void CNOT::reorder_qubits( vector<int> qbit_list) {
 
 }
 
+/**
+@brief Set static values for matrix of the gates.
+@param u3_1qbit Matrix parameter for the gate.
 
+*/
+Matrix
+CNOT::calc_one_qubit_u3( ){
+
+    Matrix u3_1qbit = Matrix(2,2);
+    u3_1qbit[0].real = 0.0; u3_1qbit[0].imag = 0.0; 
+    u3_1qbit[1].real = 1.0; u3_1qbit[1].imag = 0.0;
+    u3_1qbit[2].real = 1.0; u3_1qbit[2].imag = 0.0;
+    u3_1qbit[3].real = 0.0; u3_1qbit[3].imag = 0.0;
+    return u3_1qbit;
+}
 
 /**
 @brief Call to create a clone of the present class
