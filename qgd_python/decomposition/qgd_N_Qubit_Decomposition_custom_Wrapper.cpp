@@ -37,12 +37,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /**
-@brief Type definition of the qgd_gates_Block Python class of the qgd_Gates_Block module
+@brief Type definition of the qgd_Gates_Block_Wrapper Python class of the qgd_Gates_Block_Wrapper module
 */
-typedef struct qgd_Gates_Block {
+typedef struct qgd_Gates_Block_Wrapper {
     PyObject_HEAD
     Gates_block* gate;
-} qgd_Gates_Block;
+} qgd_Gates_Block_Wrapper;
 
 
 /**
@@ -896,8 +896,8 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decompo
     if (!PyArg_ParseTuple(args, "|O", &gate_structure_py )) return Py_BuildValue("i", -1);
 
 
-    // convert gate structure from PyObject to qgd_Gates_Block
-    qgd_Gates_Block* qgd_op_block = (qgd_Gates_Block*) gate_structure_py;
+    // convert gate structure from PyObject to qgd_Gates_Block_Wrapper
+    qgd_Gates_Block_Wrapper* qgd_op_block = (qgd_Gates_Block_Wrapper*) gate_structure_py;
     self->decomp->set_custom_gate_structure( qgd_op_block->gate );
 
     return Py_BuildValue("i", 0);

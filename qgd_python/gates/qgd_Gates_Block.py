@@ -26,13 +26,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import numpy as np
 from os import path
-from qgd_python.gate.qgd_Gates_Block import qgd_Gates_Block
+from qgd_python.gate.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper
 
 
 
 ##
 # @brief A QGD Python interface class for the Gates_Block.
-class qgd_Gates_Block(qgd_Gates_Block):
+class qgd_Gates_Block(qgd_Gates_Block_Wrapper):
     
     
 ## 
@@ -46,7 +46,7 @@ class qgd_Gates_Block(qgd_Gates_Block):
     def __init__( self ):
 
         # initiate variables for input arguments
-        int  qbit_num = -1; 
+        #int  qbit_num = -1; 
         # call the constructor of the wrapper class
         super(qgd_python.gate.qgd_Gates_Block, self).__init__()
 
@@ -174,10 +174,10 @@ class qgd_Gates_Block(qgd_Gates_Block):
 #@param self A pointer pointing to an instance of the class qgd_Gates_Block.
 #@param Input arguments: target_qbit (int), control_qbit (int).
 
-    def add_Gates_Block( self, qgd_op_block.gate.clone()):
+    def add_Gates_Block( self, gate):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Gates_Block, self).add_adaptive(qgd_op_block.gate.clone())
+        super(qgd_python.gate.qgd_Gates_Block_Wrapper, self).add_adaptive(gate) 
 
 #@brief Call to retrieve the matrix of the operation. 
 #@param self A pointer pointing to an instance of the class qgd_Gates_Block.

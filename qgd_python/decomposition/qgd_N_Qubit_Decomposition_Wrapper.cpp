@@ -38,12 +38,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /**
-@brief Type definition of the qgd_gates_Block Python class of the qgd_Gates_Block module
+@brief Type definition of the qgd_Gates_Block_Wrapper Python class of the qgd_Gates_Block_Wrapper module
 */
-typedef struct qgd_Gates_Block {
+typedef struct qgd_Gates_Block_Wrapper {
     PyObject_HEAD
     Gates_block* gate;
-} qgd_Gates_Block;
+} qgd_Gates_Block_Wrapper;
 
 
 /**
@@ -896,8 +896,8 @@ qgd_N_Qubit_Decomposition_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decomposition_
         assert(PyLong_Check(key) == 1);
         int key_int = (int) PyLong_AsLong(key);
 
-        // convert keylue from PyObject to qgd_Gates_Block
-        qgd_Gates_Block* qgd_op_block = (qgd_Gates_Block*) value;
+        // convert keylue from PyObject to qgd_Gates_Block_Wrapper
+        qgd_Gates_Block_Wrapper* qgd_op_block = (qgd_Gates_Block_Wrapper*) value;
 
         gate_structure.insert( std::pair<int, Gates_block*>( key_int, qgd_op_block->gate ));
 

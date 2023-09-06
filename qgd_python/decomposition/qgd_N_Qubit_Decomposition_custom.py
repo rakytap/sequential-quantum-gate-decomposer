@@ -244,7 +244,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
         from qiskit import QuantumCircuit, transpile
         from qiskit.circuit import ParameterExpression
-        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
+        from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper
 
         qc = transpile(qc_in, optimization_level=3, basis_gates=['cz', 'cx', 'u3'], layout_method='sabre')
         #print('Depth of Qiskit transpiled quantum circuit:', qc.depth())
@@ -265,7 +265,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
         two_qubit_gates = list()
 
         # construct the qgd gate structure            
-        Gates_Block_ret = qgd_Gates_Block(register_size)
+        Gates_Block_ret = qgd_Gates_Block_Wrapper(register_size)
         optimized_parameters = list()
 
 
@@ -291,8 +291,8 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                 two_qubit_gate = {'type': name, 'qubits': [qubit0, qubit1]}
 
 
-                # creating an instance of the wrapper class qgd_Gates_Block
-                Layer = qgd_Gates_Block( register_size )
+                # creating an instance of the wrapper class qgd_Gates_Block_Wrapper
+                Layer = qgd_Gates_Block_Wrapper( register_size )
 
                 # retrive the corresponding single qubit gates and create layer from them
                 if len(single_qubit_gates[qubit0])>0:
@@ -332,8 +332,8 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
        
 
         # add remaining single qubit gates
-        # creating an instance of the wrapper class qgd_Gates_Block
-        Layer = qgd_Gates_Block( register_size )
+        # creating an instance of the wrapper class qgd_Gates_Block_Wrapper
+        Layer = qgd_Gates_Block_Wrapper( register_size )
 
         for qubit in range(register_size):
 
