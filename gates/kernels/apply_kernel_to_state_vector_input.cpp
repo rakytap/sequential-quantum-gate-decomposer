@@ -96,8 +96,49 @@ apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& 
 
 }
 
+void apply_large_kernel_to_state_vector_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size){
 
+    int index_step_outer = 1 << outer_qbit;
+    int index_step_inner = 1 << inner_qbit;
+    int current_idx = 0;
+    
+    for (int current_idx_pair_outer=current_idx + index_step_outer; current_idx_pair_outer<matrix_size; current_idx_pair_outer=current_idx_pair_outer+(index_step_outer << 1)){
+    
+        for (int current_idx_inner = current_idx; current_idx_inner < index_step_outer; current_idx_inner=current_idx_inner+(index_step_inner<<1)){
+        
+        	for (int idx=0; idx<index_step_inner; idx++){
+        	
 
+			int current_idx_outer_loc = current_idx_inner + idx;
+			int current_idx_inner_loc = current_idx_inner + idx + index_step_inner;
+		    	int current_idx_outer_pair_loc = current_idx_pair_outer + idx + current_idx_inner;
+			int current_idx_inner_pair_loc = current_idx_pair_outer + idx + current_idx_inner + index_step_inner;
+			int indexes[4] = {current_idx_outer_loc,current_idx_inner_loc,current_idx_outer_pair_loc,current_idx_inner_pair_loc};
+			
+			QGD_Complex16 element_outer = input[current_idx_outer_loc];
+			QGD_Complex16 element_outer_pair = input[current_idx_outer_pair_loc];
+			QGD_Complex16 element_inner = input[current_idx_inner_loc];
+			QGD_Complex16 element_inner_pair = input[current_idx_inner_pair_loc];
+			
+			QGD_Complex16 tmp1;
+			QGD_Complex16 tmp2;
+			QGD_Complex16 tmp3;
+			QGD_Complex16 tmp4;
+			for (int mult_idx=0; mult_idx<4; mult_idx++){
+			
+				tmp1 = mult(two_qbit_unitary[mult_idx*4], element_outer);
+				tmp2 = mult(two_qbit_unitary[mult_idx*4 + 1], element_inner);
+				tmp3 = mult(two_qbit_unitary[mult_idx*4 + 2], element_outer_pair);
+				tmp4 = mult(two_qbit_unitary[mult_idx*4 + 3], element_inner_pair);
+				input[indexes[mult_idx]].real = tmp1.real + tmp2.real + tmp3.real + tmp4.real;
+				input[indexes[mult_idx]].imag = tmp1.imag + tmp2.imag + tmp3.imag + tmp4.imag;
+			}
+        	}
+        }
+        current_idx = current_idx + (index_step_outer << 1);
+    }
+
+}
 
 
 /**
