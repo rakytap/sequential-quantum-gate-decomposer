@@ -117,6 +117,9 @@ virtual void apply_from_right( Matrix& input );
 */
 void set_matrix( Matrix input );
 
+void set_control_qbit(int control_qbit_in);
+
+void set_target_qbit(int target_qbit_in);
 
 /**
 @brief Set the number of qubits spanning the matrix of the operation

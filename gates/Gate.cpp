@@ -157,6 +157,13 @@ Gate::set_matrix( Matrix input ) {
     matrix_alloc = input;
 }
 
+void Gate::set_control_qbit(int control_qbit_in){
+    control_qbit = control_qbit_in;
+}
+
+void Gate::set_target_qbit(int target_qbit_in){
+    target_qbit = target_qbit_in;
+}
 
 /**
 @brief Call to reorder the qubits in the matrix of the operation
