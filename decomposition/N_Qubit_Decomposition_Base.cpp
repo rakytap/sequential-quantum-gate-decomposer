@@ -26,8 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "Adam.h"
 #include "grad_descend.h"
-#include "tolmin.h"
-#include "lbfgs.h"
+#include "BFGS_Powell.h"
 
 #include "RL_experience.h"
 
@@ -1277,10 +1276,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     params[2] = gamma;
                     params[3] = varphi + parameter_value_save_agents[ agent_idx ];
                     params[4] = offset;
-                    Problem p(1, -100, 100, HS_partial_optimization_problem, HS_partial_optimization_problem_grad, HS_partial_optimization_problem_combined, (void*)&params);
                     
 
-                    double f; 
                     Matrix_real parameter_shift(1,1);
                     if ( abs(gamma) > abs(kappa) ) {
                         parameter_shift[0] = 3*M_PI/2 - varphi - parameter_value_save_agents[ agent_idx ];                        
@@ -1293,8 +1290,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                    
                     parameter_shift[0] = std::fmod( parameter_shift[0], M_PI_double);    
                                                  
-                    Tolmin tolmin(&p);                                                 
-                    f = tolmin.Solve(parameter_shift, false, 10);
+                    BFGS_Powell cBFGS_Powell(HS_partial_optimization_problem_combined, this);
+                    double f = cBFGS_Powell.Start_Optimization(parameter_shift, 10);
 		
                     //update  the parameter vector
                     Matrix_real& solution_guess_mtx_agent                   = solution_guess_mtx_agents[ agent_idx ];                             
@@ -2210,18 +2207,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 	    
 
-
-            Problem p(num_of_parameters, -1e100, 1e100, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
-
-            double f; 
-            if (num_of_parameters > 3168) {
-                Lbfgs lbfgs(&p);
-                f = lbfgs.Solve(solution_guess);
-            } else {
-                Tolmin tolmin(&p);
-                f = tolmin.Solve(solution_guess, false, max_inner_iterations);
-            }
-
+            BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
+            double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
 
             if (current_minimum > f) {
                 current_minimum = f;
@@ -2351,10 +2338,8 @@ bfgs_time = 0.0;
         for (long long iter_idx=0; iter_idx<iteration_loops_max; iter_idx++) {
 
             
-                Problem p(num_of_parameters, -1e100, 1e100, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
-                Tolmin tolmin(&p);
-
-                f = tolmin.Solve(solution_guess, false, max_inner_iterations);             
+                BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
+                double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);           
                 
                 if (sub_iter_idx == 1 ) {
                      current_minimum_hold = f;    

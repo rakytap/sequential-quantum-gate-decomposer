@@ -18,7 +18,7 @@ Grad_Descend::Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Ma
 
     
     costfnc__and__gradient = f_pointer;
-meta_data = meta_data_in;
+    meta_data = meta_data_in;
 
     // number of function calls during the optimization process
     function_call_count = 0;
@@ -83,7 +83,7 @@ int  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sear
     memcpy( x0_search.get_data(), x.get_data(), x.size()*sizeof(double) );
     memcpy( g0_search.get_data(), g.get_data(), g.size()*sizeof(double) );
 
-    Matrix_real g_best = g.copy(); //gopt
+    Matrix_real g_best = g.copy(); 
 
 
     double step = std::min(1.0,*stepcb);
@@ -91,7 +91,7 @@ int  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sear
     double f_lowest  = *f;
     double f_highest = *f;
 
-    double step_highest = *stepcb;//0.0; (a)
+    double step_highest = *stepcb;
     double step_lowest = 0.0;
 
     double step_best = 0.0;
@@ -102,7 +102,7 @@ int  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sear
     double d__dot__g_highest = 0.0;
 
     
-    for( long iter_idx=0; iter_idx<max_loops; iter_idx++) { //while( true ) {
+    for( long iter_idx=0; iter_idx<max_loops; iter_idx++) { 
     
         for (long idx = 0; idx < variable_num; idx++) {
             x[idx] = x0_search[idx] + step * search_direction[idx];
@@ -154,7 +154,7 @@ int  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sear
     
     
 
-/*     Calculate the next step length or end the iterations. */
+        // Calculate the next step length
 
         if (iter_idx == 0 || step_lowest > 0.0) {
 
@@ -220,7 +220,6 @@ int Grad_Descend::Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_d
 {
 
 
-    long iterc = 0;
     // The norm of the matrix Z (initialized to an imposiible value)
     double norm_Z = -1.0;
      
@@ -235,7 +234,6 @@ int Grad_Descend::Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_d
     }
     
     double fprev = fabs(*f + *f + 1.0);
-    long iterp = -1;
 
     // Calculate the next search direction. 
 
@@ -248,7 +246,7 @@ int Grad_Descend::Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_d
         get_search_direction(g, search_direction, search_direction__grad_overlap);
 
 
-       /*     Calculate the (bound on the) step-length due to the constraints. */
+        // Calculate the bound on the step-length
 
         if (search_direction__grad_overlap < 0.0) {
             get_Maximal_Line_Search_Step(search_direction, stepcb, search_direction__grad_overlap);
@@ -292,21 +290,8 @@ int Grad_Descend::Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_d
             return 0;
         }
 
-
-        if (iterp == iterc) {
-            iterp = iterc;
-
-            if (iterp < 0) {
-                return 0;
-            }
-
-
-        }
-
-        ++(iterc);
         
         // perform line search in the direction search_direction
-        //line_search_Thuente(x, g, search_direction, x0_search, g0_search, &stepcb, d__dot__g, f);
         line_search(x, g, search_direction, x0_search, g0_search, &stepcb, d__dot__g, f);
     
         if (status == ZERO_STEP_SIZE_OCCURED) {
@@ -315,7 +300,7 @@ int Grad_Descend::Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_d
 
 
 
-    } //while
+    }
 
     
 

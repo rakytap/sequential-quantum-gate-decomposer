@@ -1,7 +1,3 @@
-/*
-This code is credited to the OPTIMUS project of Ioannis G. Tsoulos
-*/
-
 # ifndef __GRAD_DESCEND__H
 # define __GRAD_DESCEND__H
 
@@ -16,24 +12,8 @@ enum solver_status{INITIAL_STATE=0, VARIABLES_INITIALIZED=1, ZERO_STEP_SIZE_OCCU
  */
 class Grad_Descend
 {
-private:
+protected:
 
-  
-    int line_search(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double *stepcb, double& ddotg, double *f);
-
-
-
-    int Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double *f);
-
-
-    int get_Maximal_Line_Search_Step(Matrix_real& search_direction, double& stepcb, double& search_direction__grad_overlap);
-
-
-
-    int get_search_direction(Matrix_real& g, Matrix_real& search_direction, double& search_direction__grad_overlap);
-
-    int get_f_ang_fradient(Matrix_real& x, double *f, Matrix_real& g);
-    
 
     /// number of independent variables in the problem
     int variable_num;
@@ -50,10 +30,22 @@ private:
     /// function pointer to evaluate the cost function and its gardient vector
     void (*costfnc__and__gradient) (Matrix_real x, void * params, double * f, Matrix_real& g);
      
-void* meta_data;
+    /// additional data needed to evaluate the cost function
+    void* meta_data;
 
-enum solver_status status;
+    /// status of the solver
+    enum solver_status status;
 
+  
+    int line_search(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double *stepcb, double& ddotg, double *f);
+
+    virtual int Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double *f);
+
+    int get_Maximal_Line_Search_Step(Matrix_real& search_direction, double& stepcb, double& search_direction__grad_overlap);
+
+    virtual int get_search_direction(Matrix_real& g, Matrix_real& search_direction, double& search_direction__grad_overlap);
+
+    int get_f_ang_fradient(Matrix_real& x, double *f, Matrix_real& g);    
 
 
 public:
