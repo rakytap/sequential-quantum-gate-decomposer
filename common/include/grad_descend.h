@@ -4,14 +4,15 @@
 #include "matrix_real.h"
 #include <vector>
 
-enum solver_status{INITIAL_STATE=0, VARIABLES_INITIALIZED=1, ZERO_STEP_SIZE_OCCURED=2, WORKSPACE_RESERVED=3, MAXIMAL_ITERATIONS_REACHED=4, NO_DECREASING_SEARCH_DIRECTION=5, MINIMUM_REACHED=6, MAX_ITERATIONS_REACHED_DURING_LINE_SEARCH=7};
+enum solver_status{INITIAL_STATE=0, VARIABLES_INITIALIZED=1, ZERO_STEP_SIZE_OCCURED=2, MAXIMAL_ITERATIONS_REACHED=4, NO_DECREASING_SEARCH_DIRECTION=5, MINIMUM_REACHED=6, MAX_ITERATIONS_REACHED_DURING_LINE_SEARCH=7};
 
 
 /**
  * @brief A class implementing the BFGS iterations on the 
  */
-class Grad_Descend
-{
+class Grad_Descend {
+
+
 protected:
 
 
@@ -36,23 +37,57 @@ protected:
     /// status of the solver
     enum solver_status status;
 
-  
-    int line_search(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double *stepcb, double& ddotg, double *f);
+protected:
 
-    virtual int Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double *f);
+/**
+@brief Call to perform inexact line search terminated with Wolfe 1st and 2nd conditions
+@param x The guess for the starting point. The coordinated of the optimized cost function are returned via x.
+@param g The gradient at x. The updated gradient is returned via this argument.
+@param search_direction The search direction.
+@param x0_search Stores the starting point. (automatically updated with the starting x during the execution)
+@param g0_search Stores the starting gradient. (automatically updated with the starting x during the execution)
+@param maximal_step The maximal allowed step in the search direction
+@param d__dot__g The overlap of the gradient with the search direction to test downhill.
+@param f The value of the minimized cost function is returned via this argument
+*/  
+    void line_search(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double& maximal_step, double& d__dot__g, double& f);
+
+/**
+@brief Call this method to start the optimization process
+@param x The guess for the starting point. The coordinated of the optimized cost function are returned via x.
+@param f The value of the minimized cost function
+*/
+    virtual void Optimize(Matrix_real& x, double& f);
 
     int get_Maximal_Line_Search_Step(Matrix_real& search_direction, double& stepcb, double& search_direction__grad_overlap);
 
-    virtual int get_search_direction(Matrix_real& g, Matrix_real& search_direction, double& search_direction__grad_overlap);
 
-    int get_f_ang_fradient(Matrix_real& x, double *f, Matrix_real& g);    
+/**
+@brief Method to get the search direction in the next line search
+@param g The gradient at the current coordinates.
+@param search_direction The search direction is returned via this argument (it is -g)
+@param search_direction__grad_overlap The overlap of the gradient with the search direction to test downhill.
+*/
+    virtual void get_search_direction(Matrix_real& g, Matrix_real& search_direction, double& search_direction__grad_overlap);
+
+    int get_f_ang_gradient(Matrix_real& x, double& f, Matrix_real& g);    
 
 
 public:
+
+/**
+@brief Constructor of the class.
+@param f_pointer A function pointer (x, meta_data, f, grad) to evaluate the cost function and its gradients. The cost function and the gradient vector are returned via reference by the two last arguments.
+@param meta_data void pointer to additional meta data needed to evaluate the cost function.
+@return An instance of the class
+*/
     Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Matrix_real&), void* meta_data_in);
 
     double Start_Optimization(Matrix_real &x, long maximal_iterations_in = 5001);
 
+/**
+@brief Destructor of the class
+*/
     ~Grad_Descend();
 };
 

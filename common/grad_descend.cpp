@@ -6,7 +6,12 @@
 
 
 
-
+/**
+@brief Constructor of the class.
+@param f_pointer A function pointer (x, meta_data, f, grad) to evaluate the cost function and its gradients. The cost function and the gradient vector are returned via reference by the two last arguments.
+@param meta_data void pointer to additional meta data needed to evaluate the cost function.
+@return An instance of the class
+*/
 Grad_Descend::Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Matrix_real&), void* meta_data_in) {
 
     maximal_iterations = 5001;
@@ -42,18 +47,6 @@ double Grad_Descend::Start_Optimization(Matrix_real &x, long maximal_iterations_
     status = INITIAL_STATE;
     
     
-    Matrix_real g( variable_num, 1 );      
-
-    /// the current search direction
-    Matrix_real search_direction( variable_num, 1 ); 
-
-    // the initial gradient during the line search
-    Matrix_real g0_search( variable_num, 1 ); 
-
-    // the initial point during the line search
-    Matrix_real x0_search( variable_num, 1 ); 
-    
-    status = WORKSPACE_RESERVED;
 
       
     // test for dimension
@@ -64,7 +57,7 @@ double Grad_Descend::Start_Optimization(Matrix_real &x, long maximal_iterations_
 
     //     Minimize the objective function
     double f;  
-    Optimize(x, g, search_direction, x0_search, g0_search, &f);
+    Optimize(x, f);
     
     return f;
 
@@ -73,29 +66,44 @@ double Grad_Descend::Start_Optimization(Matrix_real &x, long maximal_iterations_
 
 
 
-
-int  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double *stepcb, double& d__dot__g0, double *f)
+/**
+@brief Call to perform inexact line search terminated with Wolfe 1st and 2nd conditions
+@param x The guess for the starting point. The coordinated of the optimized cost function are returned via x.
+@param g The gradient at x. The updated gradient is returned via this argument.
+@param search_direction The search direction.
+@param x0_search Stores the starting point. (automatically updated with the starting x during the execution)
+@param g0_search Stores the starting gradient. (automatically updated with the starting x during the execution)
+@param maximal_step The maximal allowed step in the search direction
+@param d__dot__g The overlap of the gradient with the search direction to test downhill.
+@param f The value of the minimized cost function is returned via this argument
+*/  
+void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double& maximal_step, double& d__dot__g0, double& f)
 {
 
 
-    long max_loops = 50;//1 << 30;
+
 
     memcpy( x0_search.get_data(), x.get_data(), x.size()*sizeof(double) );
     memcpy( g0_search.get_data(), g.get_data(), g.size()*sizeof(double) );
 
+
+    long max_loops = 50;//1 << 30;
+
+
+
     Matrix_real g_best = g.copy(); 
 
 
-    double step = std::min(1.0,*stepcb);
+    double step = std::min(1.0, maximal_step);
     
-    double f_lowest  = *f;
-    double f_highest = *f;
+    double f_lowest  = f;
+    double f_highest = f;
 
-    double step_highest = *stepcb;
+    double step_highest = maximal_step;
     double step_lowest = 0.0;
 
     double step_best = 0.0;
-    double f_best         = *f;
+    double f_best         = f;
     double d__dot__g_abs_best = fabs(d__dot__g0);
 
     double d__dot__g_lowest = d__dot__g0;
@@ -109,7 +117,7 @@ int  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sear
         }
 
 
-        get_f_ang_fradient(x, f, g);
+        get_f_ang_gradient(x, f, g);
 
         // overlap between the search direction and the gradient 
         double d__dot__g_current = 0.0;
@@ -118,10 +126,10 @@ int  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sear
         }
 
         // update best solution
-        if (*f < f_best || fabs(d__dot__g_current) < d__dot__g_abs_best) {
+        if (f < f_best || fabs(d__dot__g_current) < d__dot__g_abs_best) {
 
             step_best      = step;
-            f_best         = *f;
+            f_best         = f;
             d__dot__g_abs_best = fabs(d__dot__g_current);
 
             memcpy( g_best.get_data(), g.get_data(), g.size()*sizeof(double) );
@@ -134,10 +142,10 @@ int  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sear
         }
 
         // modify the upper and lower bound of the step inetrval 
-        if (*f >= f_lowest + step * 0.1 * d__dot__g0) {  // Armijo test (Wolfe 1st condition)
+        if (f >= f_lowest + step * 0.1 * d__dot__g0) {  // Armijo test (Wolfe 1st condition)
 
             step_highest      = step;
-            f_highest         = *f;
+            f_highest         = f;
             d__dot__g_highest = d__dot__g_current;
         
         }
@@ -148,7 +156,7 @@ int  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sear
             }
 
             step_lowest      = step;
-            f_lowest         = *f;
+            f_lowest         = f;
             d__dot__g_lowest = d__dot__g_current;
         }
     
@@ -196,7 +204,7 @@ int  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sear
     if (step != step_best) {
 
         step = step_best;
-        *f = f_best;
+        f = f_best;
 
         g = g_best;
 
@@ -209,15 +217,33 @@ int  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sear
         status = ZERO_STEP_SIZE_OCCURED;
     }
 
-    return 0;
+    return;
 } 
 
 
 
 
-
-int Grad_Descend::Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double *f)
+/**
+@brief Call this method to start the optimization process
+@param x The guess for the starting point. The coordinated of the optimized cost function are returned via x.
+@param f The value of the minimized cost function
+*/
+void Grad_Descend::Optimize(Matrix_real& x, double& f)
 {
+
+    // the initial gradient during the line search
+    Matrix_real g0_search( variable_num, 1 ); 
+
+    // the initial point during the line search
+    Matrix_real x0_search( variable_num, 1 ); 
+
+    // The calculated graient of the cost function at position x
+    Matrix_real g( variable_num, 1 );       
+
+    // the current search direction
+    Matrix_real search_direction( variable_num, 1 );  
+
+    status = VARIABLES_INITIALIZED;
 
 
     // The norm of the matrix Z (initialized to an imposiible value)
@@ -227,20 +253,20 @@ int Grad_Descend::Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_d
     // inner product of the search direction and the gradient
     double d__dot__g;
 
-    double stepcb; // The upper bound of the allowed step in the search direction
+    double maximal_step; // The upper bound of the allowed step in the search direction
     
     if (function_call_count == 0 || status == VARIABLES_INITIALIZED) {
-        get_f_ang_fradient(x, f, g);
+        get_f_ang_gradient(x, f, g);
     }
     
-    double fprev = fabs(*f + *f + 1.0);
+    double fprev = fabs(f + f + 1.0);
 
     // Calculate the next search direction. 
 
 
     while ( true ) {
 
-        stepcb = 0.0;
+        maximal_step = 0.0;
     
         double search_direction__grad_overlap = 0.0;
         get_search_direction(g, search_direction, search_direction__grad_overlap);
@@ -249,7 +275,7 @@ int Grad_Descend::Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_d
         // Calculate the bound on the step-length
 
         if (search_direction__grad_overlap < 0.0) {
-            get_Maximal_Line_Search_Step(search_direction, stepcb, search_direction__grad_overlap);
+            get_Maximal_Line_Search_Step(search_direction, maximal_step, search_direction__grad_overlap);
         }  
         d__dot__g = search_direction__grad_overlap;
 
@@ -265,37 +291,37 @@ int Grad_Descend::Optimize(Matrix_real& x, Matrix_real& g, Matrix_real& search_d
         // Test for convergence by measuring the magnitude of the gradient.
         if (gradient_norm <= acc * acc) {
             status = MINIMUM_REACHED;
-            return 0;
+            return;
         }
     
         // in case the cost fuction does not show decrement in the direction of the line search
         if (d__dot__g >= 0.0) {
             status = NO_DECREASING_SEARCH_DIRECTION;
-            return 0;
+            return;
         }
 
 
         // terminate cycles if the cost function is not decreased any more
-        if (*f >= fprev) {
+        if (f >= fprev) {
             status = MINIMUM_REACHED;
-            return 0;
+            return;
         }
 
-        fprev = *f;
+        fprev = f;
 
 
         // terminate if maximal number of iteration reached
         if (function_call_count >= maximal_iterations) {
             status = MAXIMAL_ITERATIONS_REACHED;
-            return 0;
+            return;
         }
 
         
         // perform line search in the direction search_direction
-        line_search(x, g, search_direction, x0_search, g0_search, &stepcb, d__dot__g, f);
+        line_search(x, g, search_direction, x0_search, g0_search, maximal_step, d__dot__g, f);
     
         if (status == ZERO_STEP_SIZE_OCCURED) {
-            return 0;
+            return;
         }
 
 
@@ -343,11 +369,11 @@ int Grad_Descend::get_Maximal_Line_Search_Step(Matrix_real& search_direction, do
 
 
 
-int Grad_Descend::get_f_ang_fradient(Matrix_real& x, double *f, Matrix_real& g)
+int Grad_Descend::get_f_ang_gradient(Matrix_real& x, double& f, Matrix_real& g)
 {
 
     function_call_count++;
-    costfnc__and__gradient(x, meta_data, f, g);
+    costfnc__and__gradient(x, meta_data, &f, g);
     
     return 0;
 }
@@ -355,8 +381,13 @@ int Grad_Descend::get_f_ang_fradient(Matrix_real& x, double *f, Matrix_real& g)
 
 
 
-
-int Grad_Descend::get_search_direction(Matrix_real& g, Matrix_real& search_direction, double& search_direction__grad_overlap )
+/**
+@brief Method to get the search direction in the next line search
+@param g The gradient at the current coordinates.
+@param search_direction The search direction is returned via this argument (it is -g)
+@param search_direction__grad_overlap The overlap of the gradient with the search direction to test downhill.
+*/
+void Grad_Descend::get_search_direction(Matrix_real& g, Matrix_real& search_direction, double& search_direction__grad_overlap )
 {
 
 
@@ -375,10 +406,14 @@ int Grad_Descend::get_search_direction(Matrix_real& g, Matrix_real& search_direc
             search_direction__grad_overlap += search_direction[idx] * g[idx];
     }
 
-    return 0;
+    return;
 } 
 
 
+
+/**
+@brief Destructor of the class
+*/
 Grad_Descend::~Grad_Descend()  {
 
 }
