@@ -98,6 +98,7 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix> input );
 virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input );
 
 
+void apply_operation(Matrix& input, int idx, Matrix_real parameters_mtx, double* parameters);
 /**
 @brief Call to apply the gate on the input array/matrix by input*CNOT
 @param input The input array on which the gate is applied
