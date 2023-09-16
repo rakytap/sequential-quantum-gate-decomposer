@@ -192,7 +192,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     std::vector<int> involved_qbits = get_involved_qubits();
     
-  if ((involved_qbits.size() == 2 && qbit_num>2) && input.cols == 1){
+  if ((involved_qbits.size() == 2 && qbit_num>100) && input.cols == 1){
 	int inner;
 	int outer;
 	if (involved_qbits[0]<involved_qbits[1]){
@@ -223,14 +223,90 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
             }
         }
         gates_block_mini->apply_to(parameters_mtx,Umtx_mini);
-        apply_large_kernel_to_state_vector_input(Umtx_mini,input,inner,outer,input.size());
+        apply_large_kernel_to_state_vector_input_parallel_AVX(Umtx_mini,input,inner,outer,input.size());
+    }
+    else if(qbit_num>2 && input.cols == 1){
+        Matrix Umtx_mini = create_identity(4);
+        Gates_block* gates_block_mini = this->clone();
+        int qbit_1=-1;
+        int qbit_2=-1;
+        for (int idx = gates_block_mini->gates.size()-1; idx>=0; idx--){
+            Gate* gate = gates_block_mini->gates[idx];
+            int target_new = gate -> get_target_qbit();
+            int control_new = gate->get_control_qbit();
+            if (qbit_1 == -1) {
+
+                qbit_1 = target_new;
+            }
+            else if (qbit_2 == -1 && (target_new != qbit_1 && control_new == -1)){
+                qbit_2 = target_new;
+            }
+            else if (qbit_2 == -1 && (target_new == qbit_1 && control_new > -1)){
+
+                qbit_2 = control_new;
+            }
+            else if (((qbit_1 != -1 && qbit_2 != -1) && (qbit_1 != target_new && qbit_2 != target_new)) || ((qbit_1 != -1 && qbit_2 != -1) && (qbit_1 != control_new && qbit_2 != control_new)) ){
+            	int inner;
+	            int outer;
+	            if (qbit_1<qbit_2){
+	            inner = qbit_1;
+	            outer = qbit_2;
+	            }
+	            else{
+	            inner = qbit_2;
+	            outer = qbit_1;
+	            }
+                apply_large_kernel_to_state_vector_input_parallel_AVX(Umtx_mini,input,inner,outer,input.size());
+                qbit_1 = -1;
+                qbit_2 = -1;
+                Umtx_mini = create_identity(4);
+                idx++;
+                continue;
+            }
+            gate -> set_qbit_num(2);
+            int target_qubit_new = (target_new==qbit_1) ? 1 : 0;
+            gate->set_target_qbit(target_qubit_new);
+            if (control_new>0){
+            	int control_qubit_new = 1 - target_qubit_new;
+                gate->set_control_qbit(control_qubit_new);
+            }
+            parameters = parameters - gate->get_parameter_num();
+            Matrix_real parameters_mtx(parameters, 1, gate->get_parameter_num());
+            gates_block_mini->apply_operation(Umtx_mini, idx, parameters_mtx, parameters);
+        }
+        	int inner;
+            int outer;
+            if (qbit_1<qbit_2){
+            inner = qbit_1;
+            outer = qbit_2;
+            }
+            else{
+            inner = qbit_2;
+            outer = qbit_1;
+            }
+            apply_large_kernel_to_state_vector_input_AVX(Umtx_mini,input,inner,outer,input.size());
     }
     else {
     for( int idx=gates.size()-1; idx>=0; idx--) {
-
+    
         Gate* operation = gates[idx];
         parameters = parameters - operation->get_parameter_num();
         Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
+        apply_operation(input, idx, parameters_mtx, parameters);
+       
+
+   }
+   }
+
+
+
+}
+
+
+void 
+Gates_block::apply_operation(Matrix& input, int idx, Matrix_real parameters_mtx, double* parameters){
+
+        Gate* operation = gates[idx];
 
         switch (operation->get_type()) {
         case CNOT_OPERATION: case CZ_OPERATION:
@@ -302,15 +378,8 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
             print(sstream, 0);	
         }
 #endif
-
-
-    }
-   }
-
-
-
+    
 }
-
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*Gate_block
