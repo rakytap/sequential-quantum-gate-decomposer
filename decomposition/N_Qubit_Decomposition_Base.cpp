@@ -25,6 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "N_Qubit_Decomposition_Base.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "Adam.h"
+#include "grad_descend.h"
 #include "tolmin.h"
 #include "lbfgs.h"
 
@@ -386,6 +387,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
             return;
         case ADAM_BATCHED:
             solve_layer_optimization_problem_ADAM_BATCHED( num_of_parameters, solution_guess);
+            return;
+        case GRAD_DESCEND:
+            solve_layer_optimization_problem_GRAD_DESCEND( num_of_parameters, solution_guess);
             return;
         case AGENTS:
             solve_layer_optimization_problem_AGENTS( num_of_parameters, solution_guess);
@@ -1546,6 +1550,94 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINE
 
     }
         
+
+}
+
+
+/**
+@brief Call to solve layer by layer the optimization problem via the GRAD_DESCEND (line search in the direction determined by the gradient) algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND( int num_of_parameters, Matrix_real& solution_guess) {
+
+
+#ifdef __DFE__
+        if ( qbit_num >= 2 && get_accelerator_num() > 0 ) {
+            upload_Umtx_to_DFE();
+        }
+#endif
+
+        if (gates.size() == 0 ) {
+            return;
+        }
+
+
+        if (solution_guess.size() == 0 ) {
+            solution_guess = Matrix_real(num_of_parameters,1);
+        }
+
+
+        if (optimized_parameters_mtx.size() == 0) {
+            optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
+        }
+
+        // maximal number of iteration loops
+        int iteration_loops_max;
+        try {
+            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
+        }
+        catch (...) {
+            iteration_loops_max = 1;
+        }
+
+        // random generator of real numbers   
+        std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
+
+        // maximal number of inner iterations overriden by config
+        long long max_inner_iterations_loc;
+        if ( config.count("max_inner_iterations_grad_descend") > 0 ) {
+            config["max_inner_iterations_grad_descend"].get_property( max_inner_iterations_loc );         
+        }
+        else if ( config.count("max_inner_iterations") > 0 ) {
+            config["max_inner_iterations"].get_property( max_inner_iterations_loc );         
+        }
+        else {
+            max_inner_iterations_loc =max_inner_iterations;
+        }
+
+
+        // do the optimization loops
+        for (long long idx=0; idx<iteration_loops_max; idx++) {
+	    
+
+            Grad_Descend cGrad_Descend(optimization_problem_combined, this);
+            double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations);
+
+            if (current_minimum > f) {
+                current_minimum = f;
+                memcpy( optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen)/100;
+                }
+            }
+            else {
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen);
+                }
+            }
+
+#ifdef __MPI__        
+            MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
+
+
+
+        }
+
+
+
 
 }
 
@@ -2974,6 +3066,13 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
             max_outer_iterations = 1;
             return;
 
+        case GRAD_DESCEND:
+            max_inner_iterations = 10000;
+            gradient_threshold = 1e-8;
+            random_shift_count_max = 1;  
+            max_outer_iterations = 1e8; 
+            return;
+
         case COSINE:
             max_inner_iterations = 2.5e3;
             random_shift_count_max = 3;
@@ -3010,7 +3109,7 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
             return;
 
         default:
-            std::string error("N_Qubit_Decomposition_Base::solve_layer_optimization_problem: unimplemented optimization algorithm");
+            std::string error("N_Qubit_Decomposition_Base::set_optimizer: unimplemented optimization algorithm");
             throw error;
     }
 
