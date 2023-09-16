@@ -276,6 +276,12 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
         }
         	int inner;
             int outer;
+            if (qbit_1 == -1){
+                qbit_1 = (qbit_2 != qbit_num-1) ? qbit_2+1 : qbit_2-1;
+            }
+            if (qbit_2 == -1){
+                qbit_2 = (qbit_1 != qbit_num-1) ? qbit_1+1 : qbit_1-1;
+            }
             if (qbit_1<qbit_2){
             inner = qbit_1;
             outer = qbit_2;
