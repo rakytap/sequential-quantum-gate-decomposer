@@ -318,8 +318,6 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/common/matrix_real.cpp
     ${PROJECT_SOURCE_DIR}/common/logging.cpp
     ${PROJECT_SOURCE_DIR}/common/Adam.cpp
-    ${PROJECT_SOURCE_DIR}/common/tolmin.cpp
-    ${PROJECT_SOURCE_DIR}/common/lbfgs.cpp
     ${PROJECT_SOURCE_DIR}/common/grad_descend.cpp
     ${PROJECT_SOURCE_DIR}/common/BFGS_Powell.cpp
     ${PROJECT_SOURCE_DIR}/optimization_engines/RL_experience.cpp
