@@ -32,7 +32,11 @@ Grad_Descend::Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Ma
 
 
 
-
+/**
+@brief Call this method to start the optimization.
+@param x The initial solution guess.
+@param maximal_iterations_in The maximal number of function+gradient evaluations. Reaching this threshold the solver returns with the current solution.
+*/
 double Grad_Descend::Start_Optimization(Matrix_real &x, long maximal_iterations_in)
 {
 
