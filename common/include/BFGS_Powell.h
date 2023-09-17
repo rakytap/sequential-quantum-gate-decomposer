@@ -4,15 +4,14 @@
 #include "grad_descend.h"
 
 /**
- * @brief A class implementing the BFGS optimizer based on conjugate gradient direction method of M. J. D. Powell: A tolerant algorithm for linearly constrained optimization calculations, Mathematical Programming volume 45, pages 547–566 (1989)
+@brief A class implementing the BFGS optimizer based on conjugate gradient direction method of M. J. D. Powell: A tolerant algorithm for linearly constrained optimization calculations, Mathematical Programming volume 45, pages 547–566 (1989)
 */
- */
 class BFGS_Powell : public Grad_Descend 
 {
 protected:
 
 
-    // Z @ Z^T = B^-1 approximated Hesse matrix (second derivate of the cost function) (B is the inverse of the Hesse matrix) Eq (1.8) in 
+    // Z @ Z^T = B^-1 approximated Hesse matrix (second derivative of the cost function) (B is the inverse of the Hesse matrix) Eq (1.8) in 
     // M. J. D. Powell: A tolerant algorithm for linearly constrained optimization calculations, Mathematical Programming volume 45, pages 547–566 (1989)
     // B is not stored, Z is updated during the BFGS formula
     Matrix_real Zmtx;   

@@ -4,6 +4,7 @@
 #include "matrix_real.h"
 #include <vector>
 
+/// status indicators of the solver
 enum solver_status{INITIAL_STATE=0, VARIABLES_INITIALIZED=1, ZERO_STEP_SIZE_OCCURED=2, MAXIMAL_ITERATIONS_REACHED=4, NO_DECREASING_SEARCH_DIRECTION=5, MINIMUM_REACHED=6, MAX_ITERATIONS_REACHED_DURING_LINE_SEARCH=7};
 
 
@@ -19,7 +20,7 @@ protected:
     /// number of independent variables in the problem
     int variable_num;
 
-    /// maximal count of iterations during the optimiation
+    /// maximal count of iterations during the optimization
     long maximal_iterations;
 
     /// number of function calls during the optimization process
@@ -28,7 +29,7 @@ protected:
     /// numerical precision used in the calculations
     double num_precision;
 
-    /// function pointer to evaluate the cost function and its gardient vector
+    /// function pointer to evaluate the cost function and its gradient vector
     void (*costfnc__and__gradient) (Matrix_real x, void * params, double * f, Matrix_real& g);
      
     /// additional data needed to evaluate the cost function
@@ -50,16 +51,23 @@ protected:
 @param d__dot__g The overlap of the gradient with the search direction to test downhill.
 @param f The value of the minimized cost function is returned via this argument
 */  
-    void line_search(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double& maximal_step, double& d__dot__g, double& f);
+void line_search(Matrix_real& x, Matrix_real& g, Matrix_real& search_direction, Matrix_real& x0_search, Matrix_real& g0_search, double& maximal_step, double& d__dot__g, double& f);
 
 /**
 @brief Call this method to start the optimization process
 @param x The guess for the starting point. The coordinated of the optimized cost function are returned via x.
 @param f The value of the minimized cost function
 */
-    virtual void Optimize(Matrix_real& x, double& f);
+virtual void Optimize(Matrix_real& x, double& f);
 
-    int get_Maximal_Line_Search_Step(Matrix_real& search_direction, double& stepcb, double& search_direction__grad_overlap);
+
+/**
+@brief Call this method to obtain the maximal step size during the line search. providing at least 2*PI periodicity, unless the search direction component in a specific direction is to small.
+@param search_direction The search direction.
+@param maximal_step The maximal allowed step in the search direction returned via this argument.
+@param search_direction__grad_overlap The overlap of the gradient with the search direction to test downhill.
+*/
+void get_Maximal_Line_Search_Step(Matrix_real& search_direction, double& maximal_step, double& search_direction__grad_overlap);
 
 
 /**
@@ -68,9 +76,16 @@ protected:
 @param search_direction The search direction is returned via this argument (it is -g)
 @param search_direction__grad_overlap The overlap of the gradient with the search direction to test downhill.
 */
-    virtual void get_search_direction(Matrix_real& g, Matrix_real& search_direction, double& search_direction__grad_overlap);
+virtual void get_search_direction(Matrix_real& g, Matrix_real& search_direction, double& search_direction__grad_overlap);
 
-    int get_f_ang_gradient(Matrix_real& x, double& f, Matrix_real& g);    
+
+/**
+@brief Call this method to obtain the cost function and its gradient at a gives position given by x.
+@param x The array of the current coordinates
+@param f The value of the cost function is returned via this argument.
+@param g The gradient of  the cost function at x.
+*/
+void get_f_ang_gradient(Matrix_real& x, double& f, Matrix_real& g);    
 
 
 public:
@@ -81,14 +96,23 @@ public:
 @param meta_data void pointer to additional meta data needed to evaluate the cost function.
 @return An instance of the class
 */
-    Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Matrix_real&), void* meta_data_in);
+Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Matrix_real&), void* meta_data_in);
 
-    double Start_Optimization(Matrix_real &x, long maximal_iterations_in = 5001);
+
+/**
+@brief Call this method to start the optimization.
+@param x The initial solution guess.
+@param maximal_iterations_in The maximal number of function+gradient evaluations. Reaching this threshold the solver returns with the current solution.
+*/
+double Start_Optimization(Matrix_real &x, long maximal_iterations_in = 5001);
 
 /**
 @brief Destructor of the class
 */
-    ~Grad_Descend();
+~Grad_Descend();
+
+
+
 };
 
 

@@ -1,8 +1,8 @@
-# include <stdio.h>
-# include <stdlib.h>
-# include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
-# include <grad_descend.h>
+#include <grad_descend.h>
 
 
 
@@ -51,7 +51,7 @@ double Grad_Descend::Start_Optimization(Matrix_real &x, long maximal_iterations_
       
     // test for dimension
     if ( variable_num <= 1 ) {
-        return 0;   
+        return 0.0;   
     }
 
 
@@ -141,15 +141,9 @@ void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sea
             break;
         }
 
-        // modify the upper and lower bound of the step inetrval 
-        if (f >= f_lowest + step * 0.1 * d__dot__g0) {  // Armijo test (Wolfe 1st condition)
 
-            step_highest      = step;
-            f_highest         = f;
-            d__dot__g_highest = d__dot__g_current;
-        
-        }
-        else {
+        // modify the upper and lower bound of the step inetrval 
+        if (f < f_lowest + step * 0.1 * d__dot__g0) {  // Armijo test (Wolfe 1st condition)
 
             if (d__dot__g_current >= d__dot__g0 * 0.7) { // Wolfe 2nd (curvature) condition to exit the iterations
                 break;
@@ -158,8 +152,20 @@ void  Grad_Descend::line_search(Matrix_real& x, Matrix_real& g, Matrix_real& sea
             step_lowest      = step;
             f_lowest         = f;
             d__dot__g_lowest = d__dot__g_current;
+            
+        
         }
-    
+        else {
+
+            step_highest      = step;
+            f_highest         = f;
+            d__dot__g_highest = d__dot__g_current;
+
+
+        }
+
+
+
     
 
         // Calculate the next step length
@@ -245,10 +251,7 @@ void Grad_Descend::Optimize(Matrix_real& x, double& f)
 
     status = VARIABLES_INITIALIZED;
 
-
-    // The norm of the matrix Z (initialized to an imposiible value)
-    double norm_Z = -1.0;
-     
+   
 
     // inner product of the search direction and the gradient
     double d__dot__g;
@@ -338,44 +341,61 @@ void Grad_Descend::Optimize(Matrix_real& x, double& f)
 
 
 
-
-int Grad_Descend::get_Maximal_Line_Search_Step(Matrix_real& search_direction, double& stepcb, double& search_direction__grad_overlap)
+/**
+@brief Call this method to obtain the maximal step size during the line search. Providing at least 2*PI periodicity, unless the search direction component in a specific direction is to small.
+@param search_direction The search direction.
+@param maximal_step The maximal allowed step in the search direction returned via this argument.
+@param search_direction__grad_overlap The overlap of the gradient with the search direction to test downhill.
+*/
+void Grad_Descend::get_Maximal_Line_Search_Step(Matrix_real& search_direction, double& maximal_step, double& search_direction__grad_overlap)
 {
 
     // Set steps to constraint boundaries and find the least positive one.
 
 
-    stepcb = 0.0;
+    maximal_step = 0.0;
     
     // the optimization landscape is periodic in 2PI
     // the maximal step will be the 2PI step in the direction of the smallest component of the search direction
     for( long kdx = 0; kdx < variable_num; kdx++ ) {
-    
+
+        // skip the current direction if it is too small    
+        if ( fabs(search_direction[kdx]) < 1e-5 ) {
+            continue;
+        } 
+
         double step_bound_tmp = std::abs(2*M_PI/search_direction[kdx]);
+  
+  
 
-        if (stepcb == 0.0 || step_bound_tmp < stepcb) {
+        if (maximal_step == 0.0 || step_bound_tmp < maximal_step) {
 
-            stepcb = step_bound_tmp;
+            maximal_step = step_bound_tmp;
 
         }
         
     }
 
-    return 0;
+    return;
 
 }
 
 
 
 
-
-int Grad_Descend::get_f_ang_gradient(Matrix_real& x, double& f, Matrix_real& g)
+/**
+@brief Call this method to obtain the cost function and its gradient at a gives position given by x.
+@param x The array of the current coordinates
+@param f The value of the cost function is returned via this argument.
+@param g The gradient of  the cost function at x.
+*/
+void Grad_Descend::get_f_ang_gradient(Matrix_real& x, double& f, Matrix_real& g)
 {
 
     function_call_count++;
     costfnc__and__gradient(x, meta_data, &f, g);
     
-    return 0;
+    return;
 }
 
 

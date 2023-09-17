@@ -1,8 +1,8 @@
-# include <stdio.h>
-# include <stdlib.h>
-# include <math.h>
+#include <stdio.h>
+#include <stdlib.h>
+#include <math.h>
 
-# include <BFGS_Powell.h>
+#include <BFGS_Powell.h>
 
 
 
@@ -77,7 +77,7 @@ void BFGS_Powell::Optimize(Matrix_real& x, double& f)
     Initialize_Zmtx();
 
 
-    // Z.T @ g see 
+    // Z.T @ g as an intermediate result for search direction update and the BFGS iteration 
     Z_T__dot__g = Matrix_real( variable_num, 1 ); 
 
     status = VARIABLES_INITIALIZED; 
@@ -293,7 +293,7 @@ void BFGS_Powell::BFGS_iteration(Matrix_real& x, Matrix_real& g, Matrix_real& x0
     }
 
 
-    // calculate the dot product of gamma.T @ Z = tmp
+    // calculate the dot product of gamma.T @ Z
     Matrix_real gamma_T__dot__Z(1, variable_num);
     memset( gamma_T__dot__Z.get_data(), 0.0, gamma_T__dot__Z.size()*sizeof(double) );
 
@@ -342,7 +342,7 @@ void BFGS_Powell::BFGS_iteration(Matrix_real& x, Matrix_real& g, Matrix_real& x0
 
 
     // renormalize the columns of the Z matrix     
-    // When the column norm of the new Z is small, need to sclae it up to preserve numerical accuracy
+    // When the column norm of the new Z is small, need to scale it up to preserve numerical accuracy
     // this scaling will broke the Z^T @ Z = inv(B) relation, but it will preserve the quadratic termination properties of the BFGS 
     // (see M.J.D. POWELL: UPDATING CONJUGATE DIRECTIONS BY THE BFGS FORMULA, Mathematical Programming 38 (1987) 29-46)
     for (long col_idx = 1; col_idx < variable_num; col_idx++) {
