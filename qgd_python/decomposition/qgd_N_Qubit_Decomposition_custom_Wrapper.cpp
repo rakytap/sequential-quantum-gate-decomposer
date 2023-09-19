@@ -999,6 +999,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer( qgd_N_Qubit_Decompositio
     PyObject* optimizer_string_unicode = PyUnicode_AsEncodedString(optimizer_string, "utf-8", "~E~");
     const char* optimizer_C = PyBytes_AS_STRING(optimizer_string_unicode);
 
+
     optimization_aglorithms qgd_optimizer;
     if ( strcmp("bfgs", optimizer_C) == 0 || strcmp("BFGS", optimizer_C) == 0) {
         qgd_optimizer = BFGS;        
@@ -1006,8 +1007,14 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer( qgd_N_Qubit_Decompositio
     else if ( strcmp("adam", optimizer_C)==0 || strcmp("ADAM", optimizer_C)==0) {
         qgd_optimizer = ADAM;        
     }
+    else if ( strcmp("grad_descend", optimizer_C)==0 || strcmp("GRAD_DESCEND", optimizer_C)==0) {
+        qgd_optimizer = GRAD_DESCEND;        
+    }
     else if ( strcmp("adam_batched", optimizer_C)==0 || strcmp("ADAM_BATCHED", optimizer_C)==0) {
         qgd_optimizer = ADAM_BATCHED;        
+    }
+    else if ( strcmp("bfgs2", optimizer_C)==0 || strcmp("BFGS2", optimizer_C)==0) {
+        qgd_optimizer = BFGS2;        
     }
     else if ( strcmp("agents", optimizer_C)==0 || strcmp("AGENTS", optimizer_C)==0) {
         qgd_optimizer = AGENTS;        
@@ -1018,11 +1025,8 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer( qgd_N_Qubit_Decompositio
     else if ( strcmp("agents_combined", optimizer_C)==0 || strcmp("AGENTS_COMBINED", optimizer_C)==0) {
         qgd_optimizer = AGENTS_COMBINED;        
     }
-    else if ( strcmp("bfgs2", optimizer_C)==0 || strcmp("BFGS2", optimizer_C)==0) {
-        qgd_optimizer = BFGS2;        
-    }
     else {
-        std::cout << "Wrong optimizer. Using default: BFGS" << std::endl; 
+        std::cout << "Wrong optimizer: " << optimizer_C << ". Using default: BFGS" << std::endl; 
         qgd_optimizer = BFGS;     
     }
 

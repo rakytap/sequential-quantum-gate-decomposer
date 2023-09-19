@@ -172,6 +172,7 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 			break
 		
 	            
+	assert( decomposition_error < 1e-3 )
 	if decomposition_error < 1e-3:
 		return qc_final, optimized_parameters_loc
 	else:
@@ -194,10 +195,13 @@ class Test_parametric_circuit:
         qc, optimized_parameters = get_optimized_circuit( alpha, optimizer='BFGS2' )
 
         # determine the quantum circuit at parameter value alpha with BFGS optimizer
-        qc, optimized_parameters = get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=optimized_parameters )
+        qc, optimized_parameters_tmp = get_optimized_circuit( alpha+0.005, optimizer='BFGS', optimized_parameters=optimized_parameters )
 
         # determine the quantum circuit at parameter value alpha with ADAM optimizer
-        qc, optimized_parameters = get_optimized_circuit( alpha+0.005, optimizer='ADAM', optimized_parameters=optimized_parameters )
+        qc, optimized_parameters_tmp = get_optimized_circuit( alpha+0.005, optimizer='GRAD_DESCEND', optimized_parameters=optimized_parameters )
+
+        # determine the quantum circuit at parameter value alpha with ADAM optimizer
+        qc, optimized_parameters_tmp = get_optimized_circuit( alpha+0.005, optimizer='ADAM', optimized_parameters=optimized_parameters )
 
 
 

@@ -24,7 +24,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Sub_Matrix_Decomposition.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
 
-#include "tolmin.h"
+#include "BFGS_Powell.h"
 
 
 #ifdef __MPI__
@@ -452,12 +452,9 @@ void Sub_Matrix_Decomposition::solve_layer_optimization_problem( int num_of_para
         // do the optimization loops
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 
-            Problem p(num_of_parameters, -1e100, 1e100, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
-            Tolmin tolmin(&p);
+            BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
+            double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
 
-            Matrix_real x(solution_guess.get_data(), num_of_parameters, 1); 
-
-            double f = tolmin.Solve(x, false, max_inner_iterations);
 
             if (current_minimum > f) {
                 current_minimum = f;

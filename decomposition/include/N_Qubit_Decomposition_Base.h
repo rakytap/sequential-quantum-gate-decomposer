@@ -61,7 +61,7 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 
 
 /// implemented optimization algorithms
-enum optimization_aglorithms{ ADAM, BFGS, BFGS2, ADAM_BATCHED, AGENTS, COSINE, AGENTS_COMBINED };
+enum optimization_aglorithms{ ADAM, BFGS, BFGS2, ADAM_BATCHED, AGENTS, COSINE, AGENTS_COMBINED, GRAD_DESCEND };
 
 
 /**
@@ -188,6 +188,13 @@ void solve_layer_optimization_problem( int num_of_parameters, Matrix_real soluti
 @param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
 */
 void solve_layer_optimization_problem_COSINE( int num_of_parameters, Matrix_real& solution_guess_gsl);
+
+/**
+@brief Call to solve layer by layer the optimization problem via the GRAD_DESCEND (line search in the direction determined by the gradient) algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+*/
+void solve_layer_optimization_problem_GRAD_DESCEND( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
 
 /**

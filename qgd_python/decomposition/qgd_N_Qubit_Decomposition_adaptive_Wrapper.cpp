@@ -2002,6 +2002,9 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimizer( qgd_N_Qubit_Decomposit
     else if ( strcmp("adam", optimizer_C)==0 || strcmp("ADAM", optimizer_C)==0) {
         qgd_optimizer = ADAM;        
     }
+    else if ( strcmp("grad_descend", optimizer_C)==0 || strcmp("GRAD_DESCEND", optimizer_C)==0) {
+        qgd_optimizer = GRAD_DESCEND;        
+    }
     else if ( strcmp("adam_batched", optimizer_C)==0 || strcmp("ADAM_BATCHED", optimizer_C)==0) {
         qgd_optimizer = ADAM_BATCHED;        
     }
@@ -2018,7 +2021,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimizer( qgd_N_Qubit_Decomposit
         qgd_optimizer = AGENTS_COMBINED;        
     }
     else {
-        std::cout << "Wrong optimizer. Using default: BFGS" << std::endl; 
+        std::cout << "Wrong optimizer: " << optimizer_C << ". Using default: BFGS" << std::endl; 
         qgd_optimizer = BFGS;     
     }
 
