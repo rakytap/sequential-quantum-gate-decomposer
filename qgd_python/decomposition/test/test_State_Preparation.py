@@ -1,11 +1,5 @@
 #!/usr/bin/python
 # -*- coding: utf-8 -*-
-
-## \file test_State_Preparation.py
-## \brief Functionality test cases for state prepaartion
-
-# cerate unitary q-bit matrix
-
 """
 Created on Fri Jun 26 14:42:56 2020
 Copyright 2020 Peter Rakyta, Ph.D.
