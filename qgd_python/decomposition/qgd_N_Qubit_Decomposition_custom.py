@@ -2,17 +2,19 @@
 # -*- coding: utf-8 -*-
 """
 Created on Tue Jun 30 15:44:26 2020
-Copyright (C) 2020 Peter Rakyta, Ph.D.
+Copyright 2020 Peter Rakyta, Ph.D.
 
-This program is free software: you can redistribute it and/or modify
-it under the terms of the GNU General Public License as published by
-the Free Software Foundation, either version 3 of the License, or
-(at your option) any later version.
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
 
-This program is distributed in the hope that it will be useful,
-but WITHOUT ANY WARRANTY; without even the implied warranty of
-MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
-GNU General Public License for more details.
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
 
 You should have received a copy of the GNU General Public License
 along with this program.  If not, see http://www.gnu.org/licenses/.
@@ -244,7 +246,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
         from qiskit import QuantumCircuit, transpile
         from qiskit.circuit import ParameterExpression
-        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
+        from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper
 
         qc = transpile(qc_in, optimization_level=3, basis_gates=['cz', 'cx', 'u3'], layout_method='sabre')
         #print('Depth of Qiskit transpiled quantum circuit:', qc.depth())
@@ -265,7 +267,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
         two_qubit_gates = list()
 
         # construct the qgd gate structure            
-        Gates_Block_ret = qgd_Gates_Block(register_size)
+        Gates_Block_ret = qgd_Gates_Block_Wrapper(register_size)
         optimized_parameters = list()
 
 
@@ -291,8 +293,8 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                 two_qubit_gate = {'type': name, 'qubits': [qubit0, qubit1]}
 
 
-                # creating an instance of the wrapper class qgd_Gates_Block
-                Layer = qgd_Gates_Block( register_size )
+                # creating an instance of the wrapper class qgd_Gates_Block_Wrapper
+                Layer = qgd_Gates_Block_Wrapper( register_size )
 
                 # retrive the corresponding single qubit gates and create layer from them
                 if len(single_qubit_gates[qubit0])>0:
@@ -332,8 +334,8 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
        
 
         # add remaining single qubit gates
-        # creating an instance of the wrapper class qgd_Gates_Block
-        Layer = qgd_Gates_Block( register_size )
+        # creating an instance of the wrapper class qgd_Gates_Block_Wrapper
+        Layer = qgd_Gates_Block_Wrapper( register_size )
 
         for qubit in range(register_size):
 

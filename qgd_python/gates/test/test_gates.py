@@ -1,4 +1,21 @@
+'''
+Copyright 2020 Peter Rakyta, Ph.D.
 
+Licensed under the Apache License, Version 2.0 (the "License");
+you may not use this file except in compliance with the License.
+You may obtain a copy of the License at
+
+    http://www.apache.org/licenses/LICENSE-2.0
+
+Unless required by applicable law or agreed to in writing, software
+distributed under the License is distributed on an "AS IS" BASIS,
+WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
+See the License for the specific language governing permissions and
+limitations under the License.
+
+You should have received a copy of the GNU General Public License
+along with this program.  If not, see http://www.gnu.org/licenses/.
+'''
 
 
 class Test_operations:
@@ -232,14 +249,14 @@ class Test_operations:
 
         """
 
-        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block        
+        from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper        
 
         # number of qubits
         qbit_num = 3
      
 
         # creating an instance of the C++ class
-        cGates_Block = qgd_Gates_Block( qbit_num )
+        cGates_Block = qgd_Gates_Block_Wrapper( qbit_num )
 
 
 
@@ -250,14 +267,14 @@ class Test_operations:
 
         """
 
-        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block        
+        from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper        
 
         # number of qubits
         qbit_num = 3
      
 
         # creating an instance of the C++ class
-        cGates_Block = qgd_Gates_Block( qbit_num )
+        cGates_Block = qgd_Gates_Block_Wrapper( qbit_num )
 
 
 
@@ -294,14 +311,14 @@ class Test_operations:
 
         """
 
-        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block        
+        from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper        
 
         # number of qubits
         qbit_num = 3
      
 
         # creating an instance of the C++ class
-        layer = qgd_Gates_Block( qbit_num )
+        layer = qgd_Gates_Block_Wrapper( qbit_num )
 
         # target qbit
         target_qbit = 0
@@ -331,7 +348,7 @@ class Test_operations:
         layer.add_RX( target_qbit )
 
         # creating an instance of the C++ class
-        cGates_Block = qgd_Gates_Block( qbit_num )   
+        cGates_Block = qgd_Gates_Block_Wrapper( qbit_num )   
 
         # add inner operation block to the outher operation block
         cGates_Block.add_Gates_Block( layer )
