@@ -25,7 +25,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define N_Qubit_Decomposition_Base_H
 
 #include "Decomposition_Base.h"
-#include "lbfgs.h"
+#include "BFGS_Powell.h"
 
 /// @brief Type definition of the fifferent types of the cost function
 typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
@@ -214,8 +214,7 @@ void solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real
 */
 void solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
-
-virtual Problem create_BFGS_problem(int num_of_parameters);
+virtual BFGS_Powell N_Qubit_Decomposition_Base::create_bfgs_problem();
 
 /**
 @brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
@@ -302,7 +301,7 @@ static double optimization_problem( Matrix_real parameters, void* void_instance)
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad Array containing the calculated gradient components.
 */
-static void optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad );
+static void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad );
 
 
 
@@ -325,7 +324,7 @@ static void optimization_problem_grad( Matrix_real parameters, void* void_instan
 */
 static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
-virtual void optimization_problem_combined_ADAM( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
+
 
 
 /**

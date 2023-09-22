@@ -26,7 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define  VARIATIONAL_QUANTUM_EIGENSOLVER_BASE_H
 
 #include "N_Qubit_Decomposition_Base.h"
-
+#include "BFGS_Powell.h"
 
 #ifdef __cplusplus
 extern "C" 
@@ -84,6 +84,8 @@ virtual double optimization_problem(Matrix_real& parameters) override;
 
 double optimization_problem( double* parameters);
 
+virtual BFGS_Powell create_bfgs_problem() override;
+
 static void optimization_problem_combined_vqe( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
 virtual void optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad ) override;
@@ -91,10 +93,6 @@ virtual void optimization_problem_combined( Matrix_real parameters, double* f0, 
 static void optimization_problem_grad_vqe( Matrix_real parameters, void* void_instance, Matrix_real& grad );
 
 void initialize_zero_state();
-
-virtual Problem create_BFGS_problem(int num_of_parameters) override;
-
-virtual void optimization_problem_combined_ADAM( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
 void Get_ground_state();
 

@@ -813,7 +813,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int nu
 
 
 
-        if ( (cost_fnc != FROBENIUS_NORM) && (cost_fnc != HILBERT_SCHMIDT_TEST) && (cost_fnc != VQE) ) {
+        if ( ((cost_fnc != FROBENIUS_NORM) && (cost_fnc != HILBERT_SCHMIDT_TEST)) && cost_fnc != VQE  ) {
             std::string err("N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS: Only cost functions 0 and 3 are implemented");
             throw err;
         }
@@ -891,9 +891,11 @@ pure_DFE_time = 0.0;
 
         double optimization_tolerance_loc;
         if ( config.count("optimization_tolerance_agent") > 0 ) {
+             double value;
              config["optimization_tolerance_agent"].get_property( optimization_tolerance_loc );
         }
         else if ( config.count("optimization_tolerance") > 0 ) {
+             double value;
              config["optimization_tolerance"].get_property( optimization_tolerance_loc );
         }
         else {
@@ -955,23 +957,10 @@ pure_DFE_time = 0.0;
 
         double agent_exploration_rate = 0.2;
         if ( config.count("agent_exploration_rate_agent") > 0 ) {
-        
              config["agent_exploration_rate_agent"].get_property( agent_exploration_rate );
         }
         else if ( config.count("agent_exploration_rate") > 0 ) {
              config["agent_exploration_rate"].get_property( agent_exploration_rate );
-        }
-        
-        int convergence_length = 20;
-        if ( config.count("convergence_length_agent") > 0 ) {
-             long long value;                   
-             config["convergence_length_agent"].get_property( value );
-             convergence_length = (int) value;
-        }
-        else if ( config.count("convergence_length") > 0 ) {
-             long long value;                   
-             config["convergence_length"].get_property( value );
-             convergence_length = (int) value;
         }
         
         sstream.str("");
@@ -984,7 +973,7 @@ pure_DFE_time = 0.0;
         bool terminate_optimization = false;
         
         // vector stroing the lates values of current minimums to identify convergence
-        Matrix_real current_minimum_vec(1, convergence_length); 
+        Matrix_real current_minimum_vec(1, 20); 
         memset( current_minimum_vec.get_data(), 0.0, current_minimum_vec.size()*sizeof(double) );
         double current_minimum_mean = 0.0;
         int current_minimum_idx = 0;   
@@ -1391,7 +1380,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
            
                 
                 if (current_minimum_agents[agent_idx] < optimization_tolerance_loc ) {
-                    terminate_optimization = true;    
+                    terminate_optimization = true;                    
                 }  
                 
                
@@ -1488,12 +1477,14 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                             terminate_optimization = true;
                         }                    
 
-                    }   
+                   }   
+                    
+
                     
                 }   
 
 
-                if ( iter_idx % 200 == 0 && agent_idx == 0) {
+                if ( iter_idx % 2000 == 0 && agent_idx == 0) {
                     std::stringstream sstream;
                     sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
                     sstream << ", current minimum of agent 0: " << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time;
@@ -1513,7 +1504,7 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
                                   
             
             // terminate the agent if the whole optimization problem was solved
-            if ( terminate_optimization ) {
+            if ( terminate_optimization ) {                   
                 break;                    
             }      
         
@@ -1900,12 +1891,6 @@ pure_DFE_time = 0.0;
 
 }
 
-void N_Qubit_Decomposition_Base::optimization_problem_combined_ADAM( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ){
-    optimization_problem_combined( parameters, void_instance, f0, grad );
-    return;
-
-}
-
 /**
 @brief Call to solve layer by layer the optimization problem via ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
@@ -2024,7 +2009,7 @@ pure_DFE_time = 0.0;
             number_of_iters++;
 
 
-            optimization_problem_combined_ADAM( solution_guess_tmp,(void*)(this), &f0, grad_mtx );
+            optimization_problem_combined( solution_guess_tmp, &f0, grad_mtx );
 
             prev_cost_fnv_val = f0;
   
@@ -2039,10 +2024,11 @@ pure_DFE_time = 0.0;
             }
 
 
-            if ((cost_fnc != VQE) && (current_minimum_hold*0.95 > f0 || (current_minimum_hold*0.97 > f0 && f0 < 1e-3) ||  (current_minimum_hold*0.99 > f0 && f0 < 1e-4) )) {
+            if (current_minimum_hold*0.95 > f0 || (current_minimum_hold*0.97 > f0 && f0 < 1e-3) ||  (current_minimum_hold*0.99 > f0 && f0 < 1e-4) ) {
                 sub_iter_idx = 0;
                 current_minimum_hold = f0;        
             }
+    
     
             if (current_minimum > f0 ) {
                 current_minimum = f0;
@@ -2060,18 +2046,13 @@ pure_DFE_time = 0.0;
     
 
             if ( iter_idx % 5000 == 0 ) {
-                if (cost_fnc != VQE){
+
                 Matrix matrix_new = get_transformed_matrix( solution_guess_tmp, gates.begin(), gates.size(), Umtx );
 
                 std::stringstream sstream;
                 sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << ", current cost function:" << get_cost_function(matrix_new, trace_offset) << ", sub_iter_idx:" << sub_iter_idx <<std::endl;
                 print(sstream, 0);   
-                }
-                else{
-                    std::stringstream sstream;
-                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum <<", sub_iter_idx:" << sub_iter_idx <<std::endl;
-                    print(sstream, 0);   
-                }
+                
                 if ( export_circuit_2_binary_loc > 0 ) {
                     std::string filename("initial_circuit_iteration.binary");
                     if (project_name != "") { 
@@ -2166,9 +2147,9 @@ pure_DFE_time = 0.0;
 
 }
 
-Problem N_Qubit_Decomposition_Base::create_BFGS_problem(int num_of_parameters){
-    Problem p(num_of_parameters, -1e100, 1e100, optimization_problem, optimization_problem_grad, optimization_problem_combined, (void*)this);
-    return p;
+
+BFGS_Powell N_Qubit_Decomposition_Base::create_bfgs_problem(){
+    return BFGS_Powell(optimization_problem_combined, this);
 }
 
 /**
@@ -2229,7 +2210,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 	    
 
-            BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
+            BFGS_Powell cBFGS_Powell = create_bfgs_problem();
             double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
 
             if (current_minimum > f) {
@@ -2627,6 +2608,7 @@ pure_DFE_time += (tbb::tick_count::now() - t0_DFE_pure).seconds();
     else{
 
 #endif
+
         tbb::parallel_for( 0, (int)parameters_vec.size(), 1, [&]( int idx) {
             cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
         });

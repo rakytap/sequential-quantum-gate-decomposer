@@ -124,11 +124,6 @@ void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
     return;
 }
 
-Problem Variational_Quantum_Eigensolver_Base::create_BFGS_problem(int num_of_parameters){
-    Problem p(num_of_parameters, -1e100, 1e100, optimization_problem_vqe, optimization_problem_grad_vqe, optimization_problem_combined_vqe, (void*)this);
-    return p;
-}
-
 double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix State){
 	Matrix tmp = mult(Hamiltonian, State);
 	
@@ -163,11 +158,6 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 	return Energy;
 }
 
-void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_ADAM( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ){
-    optimization_problem_combined_vqe( parameters, void_instance, f0, grad );
-    return;
-
-}
 
 void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_vqe( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
 
@@ -214,6 +204,9 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_grad_vqe( Matrix
     return;
 }
 
+BFGS_Powell Variational_Quantum_Eigensolver_Base::create_bfgs_problem(){
+    return BFGS_Powell(optimization_problem_combined_vqe, this);
+}
 
 double Variational_Quantum_Eigensolver_Base::optimization_problem( double* parameters ) {
 
