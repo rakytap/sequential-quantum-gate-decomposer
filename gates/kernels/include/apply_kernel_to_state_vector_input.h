@@ -65,9 +65,6 @@ void apply_large_kernel_to_state_vector_input(Matrix& two_qbit_unitary, Matrix& 
 
 void apply_large_kernel_to_state_vector_input_AVX(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
 
-void apply_large_kernel_to_state_vector_input_AVX_experimental(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
-
 void apply_large_kernel_to_state_vector_input_parallel_AVX(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
 
-void apply_large_kernel_to_state_vector_input_parallel_AVX_experimental(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
 #endif

@@ -251,7 +251,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
                 parameters = parameters - gates_block_mini.get_parameter_num();
                 Matrix_real parameters_mtx(parameters, 1, gates_block_mini.get_parameter_num());
                 gates_block_mini.apply_to(parameters_mtx, Umtx_mini);
-                apply_large_kernel_to_state_vector_input_parallel_AVX_experimental(Umtx_mini,input,inner,outer,input.size());
+                apply_large_kernel_to_state_vector_input_parallel_AVX(Umtx_mini,input,inner,outer,input.size());
                 outer_idx = block_end[block_idx]-1;
             }
             else{
