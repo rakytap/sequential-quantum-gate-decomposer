@@ -36,7 +36,7 @@ setup(
             "test_standalone", "test_standalone.*",
         )
     ),
-    version='1.8.5',
+    version='1.8.6',
     url="https://github.com/rakytap/sequential-quantum-gate-decomposer", 
     maintainer="Peter Rakyta",
     maintainer_email="peter.rakyta@ttk.elte.hu",
@@ -59,7 +59,7 @@ setup(
         "Programming Language :: C",
         "Programming Language :: C++"
     ],
-    license='GNU General Public License v3.0',
+    license='Apache-2.0 license',
 )
 
 
