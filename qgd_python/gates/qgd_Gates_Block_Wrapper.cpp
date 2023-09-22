@@ -37,10 +37,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 /**
 @brief Type definition of the qgd_Operation_Block Python class of the qgd_Operation_Block module
 */
-typedef struct qgd_Gates_Block {
+typedef struct qgd_Gates_Block_Wrapper {
     PyObject_HEAD
     Gates_block* gate;
-} qgd_Gates_Block;
+} qgd_Gates_Block_Wrapper;
 
 
 /**
@@ -72,11 +72,11 @@ extern "C"
 {
 
 /**
-@brief Method called when a python instance of the class qgd_Gates_Block is destroyed
-@param self A pointer pointing to an instance of class qgd_Gates_Block.
+@brief Method called when a python instance of the class qgd_Gates_Block_Wrapper is destroyed
+@param self A pointer pointing to an instance of class qgd_Gates_Block_Wrapper.
 */
 static void
-qgd_Gates_Block_dealloc(qgd_Gates_Block *self)
+qgd_Gates_Block_Wrapper_dealloc(qgd_Gates_Block_Wrapper *self)
 {
 
     // deallocate the instance of class N_Qubit_Decomposition
@@ -86,28 +86,28 @@ qgd_Gates_Block_dealloc(qgd_Gates_Block *self)
 }
 
 /**
-@brief Method called when a python instance of the class qgd_Gates_Block is allocated
+@brief Method called when a python instance of the class qgd_Gates_Block_Wrapper is allocated
 @param type A pointer pointing to a structure describing the type of the class Gates_Block.
 */
 static PyObject *
-qgd_Gates_Block_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    qgd_Gates_Block *self;
-    self = (qgd_Gates_Block *) type->tp_alloc(type, 0);
+    qgd_Gates_Block_Wrapper *self;
+    self = (qgd_Gates_Block_Wrapper *) type->tp_alloc(type, 0);
     if (self != NULL) {}
     return (PyObject *) self;
 }
 
 
 /**
-@brief Method called when a python instance of the class qgd_Gates_Block is initialized
-@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@brief Method called when a python instance of the class qgd_Gates_Block_Wrapper is initialized
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
 @param args A tuple of the input arguments: qbit_num (integer)
 qbit_num: the number of qubits spanning the operations
 @param kwds A tuple of keywords
 */
 static int
-qgd_Gates_Block_init(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_init(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
     static char *kwlist[] = {(char*)"qbit_num", NULL};
@@ -129,9 +129,9 @@ qgd_Gates_Block_init(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 
 /**
-@brief Structure containing metadata about the members of class qgd_Gates_Block.
+@brief Structure containing metadata about the members of class qgd_Gates_Block_Wrapper.
 */
-static PyMemberDef qgd_Gates_Block_Members[] = {
+static PyMemberDef qgd_Gates_Block_Wrapper_Members[] = {
     {NULL}  /* Sentinel */
 };
 
@@ -139,12 +139,12 @@ static PyMemberDef qgd_Gates_Block_Members[] = {
 
 /**
 @brief Wrapper function to add a U3 gate to the front of the gate structure.
-@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
 @param args A tuple of the input arguments: target_qbit (int), Theta (bool), Phi (bool), Lambda (bool)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_U3(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_U3(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -174,12 +174,12 @@ qgd_Gates_Block_add_U3(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 /**
 @brief Wrapper function to add a RX gate to the front of the gate structure.
-@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
 @param args A tuple of the input arguments: target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_RX(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_RX(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -207,12 +207,12 @@ qgd_Gates_Block_add_RX(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 /**
 @brief Wrapper function to add a RY gate to the front of the gate structure.
-@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
 @param args A tuple of the input arguments: target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_RY(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_RY(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -240,12 +240,12 @@ qgd_Gates_Block_add_RY(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 /**
 @brief Wrapper function to add a RZ gate to the front of the gate structure.
-@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
 @param args A tuple of the input arguments: target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_RZ(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_RZ(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -271,12 +271,12 @@ qgd_Gates_Block_add_RZ(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 /**
 @brief Wrapper function to add a CNOT gate to the front of the gate structure.
-@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
 @param args A tuple of the input arguments: control_qbit (int), target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_CNOT(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_CNOT(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -305,12 +305,12 @@ qgd_Gates_Block_add_CNOT(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 /**
 @brief Wrapper function to add a CZ gate to the front of the gate structure.
-@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
 @param args A tuple of the input arguments: control_qbit (int), target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_CZ(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_CZ(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -340,12 +340,12 @@ qgd_Gates_Block_add_CZ(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 /**
 @brief Wrapper function to add a CH gate to the front of the gate structure.
-@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
 @param args A tuple of the input arguments: control_qbit (int), target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_CH(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_CH(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -376,12 +376,12 @@ qgd_Gates_Block_add_CH(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 /**
 @brief Wrapper function to add a Sycamore gate to the front of the gate structure.
-@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
 @param args A tuple of the input arguments: control_qbit (int), target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_SYC(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_SYC(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -415,7 +415,7 @@ qgd_Gates_Block_add_SYC(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_X(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_X(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -447,7 +447,7 @@ qgd_Gates_Block_add_X(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_Y(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_Y(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -479,7 +479,7 @@ qgd_Gates_Block_add_Y(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_Z(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_Z(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -512,7 +512,7 @@ qgd_Gates_Block_add_Z(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_SX(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_SX(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -540,12 +540,12 @@ qgd_Gates_Block_add_SX(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
 
 /**
 @brief Wrapper function to add an adaptive gate to the front of the gate structure.
-@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
 @param args A tuple of the input arguments: target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
-qgd_Gates_Block_add_adaptive(qgd_Gates_Block *self, PyObject *args, PyObject *kwds)
+qgd_Gates_Block_Wrapper_add_adaptive(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
     // The tuple of expected keywords
@@ -572,12 +572,12 @@ qgd_Gates_Block_add_adaptive(qgd_Gates_Block *self, PyObject *args, PyObject *kw
 
 /**
 @brief Wrapper function to add a block of operations to the front of the gate structure.
-@param self A pointer pointing to an instance of the class qgd_Gates_Block.
-@param args A tuple of the input arguments: Py_qgd_Gates_Block (PyObject)
-Py_qgd_Gates_Block: an instance of qgd_Gates_Block containing the custom gate structure
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
+@param args A tuple of the input arguments: Py_qgd_Gates_Block_Wrapper (PyObject)
+Py_qgd_Gates_Block_Wrapper: an instance of qgd_Gates_Block_Wrapper containing the custom gate structure
 */
 static PyObject *
-qgd_Gates_Block_add_Gates_Block(qgd_Gates_Block *self, PyObject *args)
+qgd_Gates_Block_Wrapper_add_Gates_Block(qgd_Gates_Block_Wrapper *self, PyObject *args)
 {
 
     // initiate variables for input arguments
@@ -589,7 +589,7 @@ qgd_Gates_Block_add_Gates_Block(qgd_Gates_Block *self, PyObject *args)
         return Py_BuildValue("i", -1);
 
 
-    qgd_Gates_Block* qgd_op_block = (qgd_Gates_Block*) Py_Gates_Block;
+    qgd_Gates_Block_Wrapper* qgd_op_block = (qgd_Gates_Block_Wrapper*) Py_Gates_Block;
 
 
     // adding general gate to the end of the gate structure
@@ -634,7 +634,7 @@ DFEgatePython_to_QGD(PyObject* obj)
 }
 
 static PyObject *
-qgd_Gates_Block_convert_to_DFE_gates_with_derivates(qgd_Gates_Block *self, PyObject *args)
+qgd_Gates_Block_Wrapper_convert_to_DFE_gates_with_derivates(qgd_Gates_Block_Wrapper *self, PyObject *args)
 {
     bool only_derivates = false;
     PyObject* parameters_mtx_np = NULL;
@@ -659,7 +659,7 @@ qgd_Gates_Block_convert_to_DFE_gates_with_derivates(qgd_Gates_Block *self, PyObj
 }
 
 static PyObject *
-qgd_Gates_Block_adjust_parameters_for_derivation(qgd_Gates_Block *self, PyObject *args)
+qgd_Gates_Block_Wrapper_adjust_parameters_for_derivation(qgd_Gates_Block_Wrapper *self, PyObject *args)
 {
     int gatesNum = -1;
     PyObject* dfegates = NULL;
@@ -673,7 +673,7 @@ qgd_Gates_Block_adjust_parameters_for_derivation(qgd_Gates_Block *self, PyObject
 }
 
 static PyObject *
-qgd_Gates_Block_convert_to_DFE_gates(qgd_Gates_Block *self, PyObject *args)
+qgd_Gates_Block_Wrapper_convert_to_DFE_gates(qgd_Gates_Block_Wrapper *self, PyObject *args)
 {
     PyObject* parameters_mtx_np = NULL;
     if (!PyArg_ParseTuple(args, "|O",
@@ -697,7 +697,7 @@ qgd_Gates_Block_convert_to_DFE_gates(qgd_Gates_Block *self, PyObject *args)
 }
 
 static PyObject *
-qgd_Gates_block_convert_to_DFE_gates(qgd_Gates_Block *self, PyObject *args)
+qgd_Gates_Block_Wrapper_convert_to_DFE_gates(qgd_Gates_Block_Wrapper *self, PyObject *args)
 {
     int start_index = -1;
     PyObject* parameters_mtx_np = NULL, *dfegates = NULL;
@@ -728,7 +728,7 @@ qgd_Gates_block_convert_to_DFE_gates(qgd_Gates_Block *self, PyObject *args)
 @param start_index The index of the first inverse gate
 */
 static PyObject *
-qgd_Gates_Block_get_Matrix( qgd_Gates_Block *self, PyObject *args ) {
+qgd_Gates_Block_Wrapper_get_Matrix( qgd_Gates_Block_Wrapper *self, PyObject *args ) {
 
     PyObject * parameters_arr = NULL;
 
@@ -768,7 +768,7 @@ qgd_Gates_Block_get_Matrix( qgd_Gates_Block *self, PyObject *args ) {
 @brief Get the number of free parameters in the gate structure used for the decomposition
 */
 static PyObject *
-qgd_Gates_Block_get_Parameter_Num( qgd_Gates_Block *self ) {
+qgd_Gates_Block_Wrapper_get_Parameter_Num( qgd_Gates_Block_Wrapper *self ) {
 
     int parameter_num = self->gate->get_parameter_num();
 
@@ -781,7 +781,7 @@ qgd_Gates_Block_get_Parameter_Num( qgd_Gates_Block *self ) {
 @brief Call to apply the gate operation on the inut matrix
 */
 static PyObject *
-qgd_Gates_Block_apply_to( qgd_Gates_Block *self, PyObject *args ) {
+qgd_Gates_Block_Wrapper_apply_to( qgd_Gates_Block_Wrapper *self, PyObject *args ) {
 
     PyObject * parameters_arr = NULL;
     PyObject * unitary_arg = NULL;
@@ -838,70 +838,70 @@ qgd_Gates_Block_apply_to( qgd_Gates_Block *self, PyObject *args ) {
 
 
 
-static PyMethodDef qgd_Gates_Block_Methods[] = {
-    {"add_U3", (PyCFunction) qgd_Gates_Block_add_U3, METH_VARARGS | METH_KEYWORDS,
+static PyMethodDef qgd_Gates_Block_Wrapper_Methods[] = {
+    {"add_U3", (PyCFunction) qgd_Gates_Block_Wrapper_add_U3, METH_VARARGS | METH_KEYWORDS,
      "Call to add a U3 gate to the front of the gate structure"
     },
-    {"add_RX", (PyCFunction) qgd_Gates_Block_add_RX, METH_VARARGS | METH_KEYWORDS,
+    {"add_RX", (PyCFunction) qgd_Gates_Block_Wrapper_add_RX, METH_VARARGS | METH_KEYWORDS,
      "Call to add a RX gate to the front of the gate structure"
     },
-    {"add_RY", (PyCFunction) qgd_Gates_Block_add_RY, METH_VARARGS | METH_KEYWORDS,
+    {"add_RY", (PyCFunction) qgd_Gates_Block_Wrapper_add_RY, METH_VARARGS | METH_KEYWORDS,
      "Call to add a RY gate to the front of the gate structure"
     },
-    {"add_RZ", (PyCFunction) qgd_Gates_Block_add_RZ, METH_VARARGS | METH_KEYWORDS,
+    {"add_RZ", (PyCFunction) qgd_Gates_Block_Wrapper_add_RZ, METH_VARARGS | METH_KEYWORDS,
      "Call to add a RZ gate to the front of the gate structure"
     },
-    {"add_CNOT", (PyCFunction) qgd_Gates_Block_add_CNOT, METH_VARARGS | METH_KEYWORDS,
+    {"add_CNOT", (PyCFunction) qgd_Gates_Block_Wrapper_add_CNOT, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CNOT gate to the front of the gate structure"
     },
-    {"add_CZ", (PyCFunction) qgd_Gates_Block_add_CZ, METH_VARARGS | METH_KEYWORDS,
+    {"add_CZ", (PyCFunction) qgd_Gates_Block_Wrapper_add_CZ, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CZ gate to the front of the gate structure"
     },
-    {"add_CH", (PyCFunction) qgd_Gates_Block_add_CH, METH_VARARGS | METH_KEYWORDS,
+    {"add_CH", (PyCFunction) qgd_Gates_Block_Wrapper_add_CH, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CH gate to the front of the gate structure"
     },
-    {"add_SYC", (PyCFunction) qgd_Gates_Block_add_SYC, METH_VARARGS | METH_KEYWORDS,
+    {"add_SYC", (PyCFunction) qgd_Gates_Block_Wrapper_add_SYC, METH_VARARGS | METH_KEYWORDS,
      "Call to add a Sycamore gate to the front of the gate structure"
     },
-    {"add_X", (PyCFunction) qgd_Gates_Block_add_X, METH_VARARGS | METH_KEYWORDS,
+    {"add_X", (PyCFunction) qgd_Gates_Block_Wrapper_add_X, METH_VARARGS | METH_KEYWORDS,
      "Call to add a X gate to the front of the gate structure"
     },
-    {"add_Y", (PyCFunction) qgd_Gates_Block_add_X, METH_VARARGS | METH_KEYWORDS,
+    {"add_Y", (PyCFunction) qgd_Gates_Block_Wrapper_add_X, METH_VARARGS | METH_KEYWORDS,
      "Call to add a Y gate to the front of the gate structure"
     },
-    {"add_Z", (PyCFunction) qgd_Gates_Block_add_X, METH_VARARGS | METH_KEYWORDS,
+    {"add_Z", (PyCFunction) qgd_Gates_Block_Wrapper_add_X, METH_VARARGS | METH_KEYWORDS,
      "Call to add a Z gate to the front of the gate structure"
     },
-    {"add_SX", (PyCFunction) qgd_Gates_Block_add_SX, METH_VARARGS | METH_KEYWORDS,
+    {"add_SX", (PyCFunction) qgd_Gates_Block_Wrapper_add_SX, METH_VARARGS | METH_KEYWORDS,
      "Call to add a SX gate to the front of the gate structure"
     },
-    {"add_adaptive", (PyCFunction) qgd_Gates_Block_add_adaptive, METH_VARARGS | METH_KEYWORDS,
+    {"add_adaptive", (PyCFunction) qgd_Gates_Block_Wrapper_add_adaptive, METH_VARARGS | METH_KEYWORDS,
      "Call to add an adaptive gate to the front of the gate structure"
     },
-    {"add_Gates_Block", (PyCFunction) qgd_Gates_Block_add_Gates_Block, METH_VARARGS,
+    {"add_Gates_Block", (PyCFunction) qgd_Gates_Block_Wrapper_add_Gates_Block, METH_VARARGS,
      "Call to add a block of operations to the front of the gate structure."
     },
 #ifdef __DFE__
-    {"convert_to_DFE_gates_with_derivates", (PyCFunction) qgd_Gates_Block_convert_to_DFE_gates_with_derivates, METH_VARARGS,
+    {"convert_to_DFE_gates_with_derivates", (PyCFunction) qgd_Gates_Block_Wrapper_convert_to_DFE_gates_with_derivates, METH_VARARGS,
      "Call to convert to DFE gates with derivates."
     },
-    {"adjust_parameters_for_derivation", (PyCFunction) qgd_Gates_Block_adjust_parameters_for_derivation, METH_VARARGS,
+    {"adjust_parameters_for_derivation", (PyCFunction) qgd_Gates_Block_Wrapper_adjust_parameters_for_derivation, METH_VARARGS,
      "Call to adjust parameters for derivation."
     },
-    {"convert_to_DFE_gates", (PyCFunction) qgd_Gates_Block_convert_to_DFE_gates, METH_VARARGS,
+    {"convert_to_DFE_gates", (PyCFunction) qgd_Gates_Block_Wrapper_convert_to_DFE_gates, METH_VARARGS,
      "Call to convert to DFE gates."
     },
-    {"convert_to_DFE_gates", (PyCFunction) qgd_Gates_block_convert_to_DFE_gates, METH_VARARGS,
+    {"convert_to_DFE_gates", (PyCFunction) qgd_Gates_Block_Wrapper_convert_to_DFE_gates, METH_VARARGS,
      "Call to convert to DFE gates."
     },
 #endif
-    {"get_Matrix", (PyCFunction) qgd_Gates_Block_get_Matrix, METH_VARARGS,
+    {"get_Matrix", (PyCFunction) qgd_Gates_Block_Wrapper_get_Matrix, METH_VARARGS,
      "Method to get the matrix of the operation."
     },
-    {"get_Parameter_Num", (PyCFunction) qgd_Gates_Block_get_Parameter_Num, METH_NOARGS,
+    {"get_Parameter_Num", (PyCFunction) qgd_Gates_Block_Wrapper_get_Parameter_Num, METH_NOARGS,
      "Call to get the number of free parameters in the circuit"
     },
-    {"apply_to", (PyCFunction) qgd_Gates_Block_apply_to, METH_VARARGS,
+    {"apply_to", (PyCFunction) qgd_Gates_Block_Wrapper_apply_to, METH_VARARGS,
      "Call to apply the gate on the input matrix."
     },
     {NULL}  /* Sentinel */
@@ -911,12 +911,12 @@ static PyMethodDef qgd_Gates_Block_Methods[] = {
 /**
 @brief A structure describing the type of the class Gates_Block.
 */
-static PyTypeObject qgd_Gates_Block_Type = {
+static PyTypeObject qgd_Gates_Block_Wrapper_Type = {
   PyVarObject_HEAD_INIT(NULL, 0)
-  "qgd_Gates_Block.qgd_Gates_Block", /*tp_name*/
-  sizeof(qgd_Gates_Block), /*tp_basicsize*/
+  "qgd_Gates_Block_Wrapper.qgd_Gates_Block_Wrapper", /*tp_name*/
+  sizeof(qgd_Gates_Block_Wrapper), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  (destructor) qgd_Gates_Block_dealloc, /*tp_dealloc*/
+  (destructor) qgd_Gates_Block_Wrapper_dealloc, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -942,24 +942,24 @@ static PyTypeObject qgd_Gates_Block_Type = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-  "Object to represent a qgd_Gates_block class of the QGD package.", /*tp_doc*/
+  "Object to represent a qgd_Gates_Block_Wrapper class of the QGD package.", /*tp_doc*/
   0, /*tp_traverse*/
   0, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  qgd_Gates_Block_Methods, /*tp_methods*/
-  qgd_Gates_Block_Members, /*tp_members*/
+  qgd_Gates_Block_Wrapper_Methods, /*tp_methods*/
+  qgd_Gates_Block_Wrapper_Members, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
   0, /*tp_dictoffset*/
-  (initproc) qgd_Gates_Block_init, /*tp_init*/
+  (initproc) qgd_Gates_Block_Wrapper_init, /*tp_init*/
   0, /*tp_alloc*/
-  qgd_Gates_Block_new, /*tp_new*/
+  qgd_Gates_Block_Wrapper_new, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -983,9 +983,9 @@ static PyTypeObject qgd_Gates_Block_Type = {
 /**
 @brief Structure containing metadata about the module.
 */
-static PyModuleDef qgd_Gates_Block_Module = {
+static PyModuleDef qgd_Gates_Block_Wrapper_Module = {
     PyModuleDef_HEAD_INIT,
-    "qgd_Gates_Block",
+    "qgd_Gates_Block_Wrapper",
     "Python binding for QGD Gates_block class",
     -1,
 };
@@ -994,23 +994,23 @@ static PyModuleDef qgd_Gates_Block_Module = {
 @brief Method called when the Python module is initialized
 */
 PyMODINIT_FUNC
-PyInit_qgd_Gates_Block(void)
+PyInit_qgd_Gates_Block_Wrapper(void)
 {
 
     // initialize Numpy API
     import_array();
 
     PyObject *m;
-    if (PyType_Ready(&qgd_Gates_Block_Type) < 0)
+    if (PyType_Ready(&qgd_Gates_Block_Wrapper_Type) < 0)
         return NULL;
 
-    m = PyModule_Create(&qgd_Gates_Block_Module);
+    m = PyModule_Create(&qgd_Gates_Block_Wrapper_Module);
     if (m == NULL)
         return NULL;
 
-    Py_INCREF(&qgd_Gates_Block_Type);
-    if (PyModule_AddObject(m, "qgd_Gates_Block", (PyObject *) &qgd_Gates_Block_Type) < 0) {
-        Py_DECREF(&qgd_Gates_Block_Type);
+    Py_INCREF(&qgd_Gates_Block_Wrapper_Type);
+    if (PyModule_AddObject(m, "qgd_Gates_Block_Wrapper", (PyObject *) &qgd_Gates_Block_Wrapper_Type) < 0) {
+        Py_DECREF(&qgd_Gates_Block_Wrapper_Type);
         Py_DECREF(m);
         return NULL;
     }
