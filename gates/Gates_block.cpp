@@ -192,40 +192,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     std::vector<int> involved_qbits = get_involved_qubits();
     
-  if ((involved_qbits.size() == 2 && qbit_num>100) && input.cols == 1){
-	int inner;
-	int outer;
-	if (involved_qbits[0]<involved_qbits[1]){
-	inner = involved_qbits[0];
-	outer = involved_qbits[1];
-	}
-	else{
-	inner = involved_qbits[1];
-	outer = involved_qbits[0];
-	}
-        Gates_block* gates_block_mini = this->clone();
-        Matrix Umtx_mini = create_identity(4);
-        for (int idx = gates_block_mini->gates.size()-1; idx>=0; idx--){
-     
-            Gate* gate = gates_block_mini->gates[idx];
-            
-            int trgt_qbit = gate->get_target_qbit();
-            int ctrl_qbit = gate->get_control_qbit();
-            
-            gate->set_qbit_num(2);
-            
-            int target_qubit_new = (trgt_qbit==outer) ? 1 : 0;
-            gate->set_target_qbit(target_qubit_new);
-            
-            if (ctrl_qbit>0){
-            	int control_qubit_new = 1 - target_qubit_new;
-                gate->set_control_qbit(control_qubit_new);
-            }
-        }
-        gates_block_mini->apply_to(parameters_mtx,Umtx_mini);
-        apply_large_kernel_to_state_vector_input_parallel_AVX(Umtx_mini,input,inner,outer,input.size());
-    }
-    else if((qbit_num>2 && input.cols == 1) && involved_qbits.size()>1){
+    if((qbit_num>14 && input.cols == 1) && involved_qbits.size()>1){
         std::vector<int> inner_vec;
         std::vector<int> outer_vec;
         std::vector<int> block_end;

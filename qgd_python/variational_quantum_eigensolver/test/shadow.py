@@ -2,7 +2,6 @@ from scipy.stats import unitary_group
 import numpy as np
 from qgd_python.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolver_Base import qgd_Variational_Quantum_Eigensolver_Base as Variational_Quantum_Eigensolver_Base
 from qgd_python import utils as utils
-import pandas as pd
 import time
 import sys
 from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block as Gates_Block
@@ -81,7 +80,7 @@ config = {"agent_lifetime":100,
 Hamiltonian = generate_hamiltonian(topology,n)#sp.sparse.eye(2**n,format="csr")
 cDecompose = Variational_Quantum_Eigensolver_Base(Hamiltonian, n, config)
 cDecompose.set_Gate_Structure_from_Binary("squander.binary")
-cDecompose.set_Optimizer("AGENTS")
+cDecompose.set_Optimizer("BFGS")
 cDecompose.get_Ground_State()
 # get the decomposing operations
 quantum_circuit = cDecompose.get_Quantum_Circuit()
