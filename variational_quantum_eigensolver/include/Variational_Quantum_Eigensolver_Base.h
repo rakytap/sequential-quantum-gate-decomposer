@@ -27,6 +27,9 @@ limitations under the License.
 #include "N_Qubit_Decomposition_Base.h"
 #include "BFGS_Powell.h"
 
+/// @brief Type definition of the fifferent types of ansatz
+typedef enum ansatz_type {HEA} ansatz_type;
+    
 #ifdef __cplusplus
 extern "C" 
 {
@@ -66,6 +69,8 @@ private:
     Matrix_sparse Hamiltonian;
     
     Matrix Zero_state;
+    
+    ansatz_type ansatz;
 
 public:
 
@@ -94,6 +99,10 @@ static void optimization_problem_grad_vqe( Matrix_real parameters, void* void_in
 void initialize_zero_state();
 
 void Get_ground_state();
+
+void set_ansatz(ansatz_type ansatz_in);
+
+void generate_initial_circuit( int layers, int blocks, int rot_layers );
 
 void set_adaptive_gate_structure( std::string filename );
 

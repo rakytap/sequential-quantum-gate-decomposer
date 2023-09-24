@@ -76,6 +76,19 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
     def set_Gate_Structure_from_Binary(self, filename):
     
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Gate_Structure_From_Binary(filename)
+        
+    def set_Ansatz(self, ansatz_new):
+        
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Ansatz(ansatz_new)
+        
+    def Generate_initial_circuit(self, layers, blocks, rot_layers):
+    
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_initial_circuit(layers, blocks, rot_layers)
+        
+    def Optimization_Problem(self, parameters):
+    
+        return super(qgd_Variational_Quantum_Eigensolver_Base, self).Optimization_Problem(parameters)
+        
     def get_Quantum_Circuit(self):
         from qiskit import QuantumCircuit
 

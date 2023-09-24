@@ -746,6 +746,148 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer( qgd_Variational_
 
 }
 
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Ansatz( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"optimizer", NULL};
+
+    PyObject* ansatz_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &ansatz_arg)) {
+
+        std::string err( "Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;       
+ 
+    }
+
+
+    if ( ansatz_arg == NULL ) {
+        std::string err( "optimizer argument not set");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;        
+    }
+
+   
+
+    PyObject* ansatz_string = PyObject_Str(ansatz_arg);
+    PyObject* ansatz_string_unicode = PyUnicode_AsEncodedString(ansatz_string, "utf-8", "~E~");
+    const char* ansatz_C = PyBytes_AS_STRING(ansatz_string_unicode);
+
+
+    ansatz_type qgd_ansatz;
+    
+    if ( strcmp("hea", ansatz_C) == 0 || strcmp("HEA", ansatz_C) == 0) {
+        qgd_ansatz = HEA;        
+    }
+    else {
+        std::cout << "Wrong ansatz. Using default: HEA" << std::endl; 
+        qgd_ansatz = HEA;     
+    }
+    try {
+        self->vqe->set_ansatz(qgd_ansatz);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("i", 0);
+
+}
+
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_initial_circuit( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    int layers;
+    int blocks;
+    int rot_layers;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|iii", &layers, &blocks, &rot_layers )) return Py_BuildValue("i", -1);
+ try {
+        self->vqe->generate_initial_circuit(layers, blocks, rot_layers);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    return Py_BuildValue("i", 0);
+
+
+}
+
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args)
+{
+
+
+    PyObject* parameters_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg )) {
+
+        std::string err( "Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;      
+
+    } 
+
+    // establish memory contiguous arrays for C calculations
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ){
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
+        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err( "Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arg );
+    double f0;
+
+    try {
+        f0 = self->vqe->optimization_problem(parameters_mtx );
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    Py_DECREF(parameters_arg);
+
+
+    return Py_BuildValue("d", f0);
+}
 
 static PyObject *
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self ) {
@@ -806,6 +948,15 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"set_Optimizer", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer, METH_VARARGS,
      "Method to set optimizer."
+    },
+    {"set_Ansatz", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Ansatz, METH_VARARGS,
+     "Method to set ansatz type."
+    },
+    {"Generate_initial_circuit", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_initial_circuit, METH_VARARGS,
+     "Method to set the initial circuit based on the ansatz type."
+    },
+    {"Optimization_Problem", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem, METH_VARARGS,
+     "Method to get the expected energy of the circuit at parameters."
     },
     {"set_Gate_Structure", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure, METH_VARARGS,
      "Call to set custom gate structure in the decomposition."

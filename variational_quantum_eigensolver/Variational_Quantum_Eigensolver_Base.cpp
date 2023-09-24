@@ -55,6 +55,8 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
     adaptive_eta = false;
     
     cost_fnc = VQE;
+    
+    ansatz = HEA;
 }
 
 Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in) : N_Qubit_Decomposition_Base(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
@@ -102,6 +104,8 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
     alg = AGENTS;
     
     cost_fnc = VQE;
+    
+    ansatz = HEA;
 }
 
 Variational_Quantum_Eigensolver_Base::~Variational_Quantum_Eigensolver_Base(){}
@@ -114,8 +118,7 @@ void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
     if (gates.size() == 0 ) {
             return;
     }
-    Matrix_real parameters = optimized_parameters_mtx.copy();
-    solve_layer_optimization_problem(num_of_parameters,parameters);
+    solve_layer_optimization_problem(num_of_parameters,optimized_parameters_mtx);
     double f0=optimization_problem(optimized_parameters_mtx);
     std::cout<<"Ground state found, energy: "<<f0<<std::endl;
     prepare_gates_to_export();
@@ -217,15 +220,54 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem( double* param
 }
 
 void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
-	Matrix tmp = Matrix((int)std::pow(2,qbit_num),1);
-	tmp[0].real = 1.;
-	tmp[0].imag = 0.;
-	for (int idx=1; idx<(int)std::pow(2,qbit_num);idx++){
-		tmp[idx].real = 0.;
-		tmp[idx].imag = 0.;
-	}
-	Zero_state = tmp.copy();
+
+	Zero_state[0].real = 1.0;
+    memset(Zero_state.get_data()+1, 0.0, (Zero_state.size()*2-1)*sizeof(double) );              
 	return;
+}
+
+void Variational_Quantum_Eigensolver_Base::set_ansatz(ansatz_type ansatz_in){
+
+    ansatz = ansatz_in;
+    
+    return;
+}
+
+void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers, int blocks, int rot_layers ) {
+
+
+    switch (ansatz){
+    
+        case HEA:
+        {
+            Gates_block* gate_structure_tmp = new Gates_block(qbit_num);
+            for (int target_qbit=0; target_qbit<qbit_num-1;target_qbit++){
+                gate_structure_tmp->add_u3(target_qbit, true, true, true);
+            }
+            for (int layer_idx=0; layer_idx<layers ;layer_idx++){
+                for (int control_qbit=0; control_qbit<qbit_num-2; control_qbit++){
+                    for (int bidx=0; bidx<blocks; bidx++){
+                        gate_structure_tmp->add_adaptive(control_qbit+1,control_qbit);
+                    }
+                    for (int ridx=0; ridx<rot_layers; ridx++){
+                        gate_structure_tmp->add_u3(control_qbit+1, true, true, true);
+                        gate_structure_tmp->add_u3(control_qbit, true, true, true);
+                    }
+                }
+            }
+            gate_structure_tmp->combine( static_cast<Gates_block*>(this) );
+            release_gates();
+            combine( gate_structure_tmp );
+            Matrix_real optimized_parameters_mtx_tmp( 1, get_parameter_num() );
+            memset( optimized_parameters_mtx_tmp.get_data(), 0.0, optimized_parameters_mtx_tmp.size()*sizeof(double) ); 
+            optimized_parameters_mtx = optimized_parameters_mtx_tmp;
+            return;
+        }
+        default:
+            std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: ansatz not implemented");
+            throw error;
+    }
+
 }
 
 void 
