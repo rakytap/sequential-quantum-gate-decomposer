@@ -1279,7 +1279,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     //print( "xi: ", xi )
 
 
-
+                    double f; 
                     double params[5];
                     params[0] = kappa;
                     params[1] = xi + 2*parameter_value_save_agents[ agent_idx ];
@@ -1300,8 +1300,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                    
                     parameter_shift[0] = std::fmod( parameter_shift[0], M_PI_double);    
                                                  
-                    BFGS_Powell cBFGS_Powell(HS_partial_optimization_problem_combined, this);
-                    double f = cBFGS_Powell.Start_Optimization(parameter_shift, 10);
+                    BFGS_Powell cBFGS_Powell(HS_partial_optimization_problem_combined,(void*)&params);
+                    f = cBFGS_Powell.Start_Optimization(parameter_shift, 10);
 		
                     //update  the parameter vector
                     Matrix_real& solution_guess_mtx_agent                   = solution_guess_mtx_agents[ agent_idx ];                             

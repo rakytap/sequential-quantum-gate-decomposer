@@ -70,9 +70,9 @@ double Grad_Descend::Start_Optimization(Matrix_real &x, long maximal_iterations_
 
       
     // test for dimension
-    if ( variable_num <= 1 ) {
+    /*if ( variable_num <= 1 ) {
         return 0.0;   
-    }
+    }*/
 
 
     //     Minimize the objective function

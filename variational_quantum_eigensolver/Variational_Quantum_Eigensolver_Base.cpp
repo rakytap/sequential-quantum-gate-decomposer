@@ -149,7 +149,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_vqe(Matrix_rea
 }
 
 double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& parameters)  {
-	double Energy=0.;
+	double Energy;
 	Matrix State = Zero_state.copy();
     Gates_block* gate_structure_loc = static_cast<Gates_block*>(this)->clone();
 	gate_structure_loc->apply_to(parameters, State);

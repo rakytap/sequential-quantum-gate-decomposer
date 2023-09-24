@@ -92,7 +92,7 @@ class Test_VQE:
         "max_inner_iterations_adam":50000,
         "convergence_length": 300}
         VQE_Heisenberg = Variational_Quantum_Eigensolver_Base(Hamiltonian, n, config)
-        VQE_Heisenberg.set_Optimizer("ADAM")
+        VQE_Heisenberg.set_Optimizer("AGENTS")
         VQE_Heisenberg.set_Ansatz("HEA")
         VQE_Heisenberg.Generate_initial_circuit(layers, blocks, rot_layers)
         VQE_Heisenberg.get_Ground_State()
@@ -101,5 +101,5 @@ class Test_VQE:
         print(quantum_circuit)
         lambdas, vecs = sp.sparse.linalg.eigs(Hamiltonian)
         Energy = VQE_Heisenberg.Optimization_Problem(VQE_Heisenberg.get_Optimized_Parameters())
-        print(lambdas)
-        assert (abs(Energy - np.real(lambdas[0]))<1)
+        print(np.real(np.min(lambdas)))
+        assert (Energy < np.real(np.min(lambdas)))
