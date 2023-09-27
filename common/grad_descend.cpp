@@ -17,7 +17,7 @@ limitations under the License.
 #include <stdio.h>
 #include <stdlib.h>
 #include <math.h>
-
+#include<cfloat>
 #include <grad_descend.h>
 
 
@@ -70,9 +70,9 @@ double Grad_Descend::Start_Optimization(Matrix_real &x, long maximal_iterations_
 
       
     // test for dimension
-    /*if ( variable_num <= 1 ) {
-        return 0.0;   
-    }*/
+    if ( variable_num <= 0 ) {
+        return DBL_MAX;   
+    }
 
 
     //     Minimize the objective function
