@@ -2459,7 +2459,7 @@ void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, Matri
     int changed_parameters = 0;
     for ( int jdx=0; jdx<num_of_parameters; jdx++) {
         if ( distrib_prob(gen) <= randomization_rate ) {
-            output[jdx] = input[jdx] + distrib_real(gen)*std::sqrt(f0)*radius_loc;
+            output[jdx] = (cost_fnc!=VQE) ? input[jdx] + distrib_real(gen)*std::sqrt(f0)*radius_loc : input[jdx] + distrib_real(gen)*radius_loc*std::sqrt((qbit_num-f0)/qbit_num);
             changed_parameters++;
         }
         else {

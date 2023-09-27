@@ -59,9 +59,6 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 class Variational_Quantum_Eigensolver_Base : public N_Qubit_Decomposition_Base {
 public:
 
-protected: 
-    std::map<int, Gates_block*> gate_structure;    
-
 
 private:
 
@@ -80,7 +77,7 @@ Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num
 
 virtual ~Variational_Quantum_Eigensolver_Base();
 
-double Expected_energy(Matrix State);
+double Expected_energy(Matrix& State);
 
 static double optimization_problem_vqe(Matrix_real parameters, void* void_instance);
 
@@ -106,7 +103,6 @@ void generate_initial_circuit( int layers, int blocks, int rot_layers );
 
 void set_adaptive_gate_structure( std::string filename );
 
-void set_custom_gate_structure( std::map<int, Gates_block*> gate_structure_in );
 
 };
 

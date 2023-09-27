@@ -314,7 +314,9 @@ Matrix mult(Matrix_sparse a, Matrix& b){
         int nz_end = a.indptr[idx+1];
         for (int nz_idx=nz_start; nz_idx<nz_end; nz_idx++){
             int jdx = a.indices[nz_idx];
-            QGD_Complex16 result = mult(a.data[nz_idx],b[jdx]);
+            QGD_Complex16 state = b[jdx];
+            state.imag = -1.0*state.imag;
+            QGD_Complex16 result = mult(a.data[nz_idx],state);
             ret[idx].imag += result.imag;
             ret[idx].real += result.real;
         }

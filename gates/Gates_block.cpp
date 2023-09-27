@@ -188,7 +188,6 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
     double* parameters = parameters_mtx.get_data();
 
     parameters = parameters + parameter_num;
-
     std::vector<int> involved_qbits = get_involved_qubits();
     
     if((qbit_num>14 && input.cols == 1) && involved_qbits.size()>1){
@@ -234,9 +233,6 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
         }
     }
     else {
-    double* parameters = parameters_mtx.get_data();
-
-    parameters = parameters + parameter_num;
 
     for( int idx=gates.size()-1; idx>=0; idx--) {
 

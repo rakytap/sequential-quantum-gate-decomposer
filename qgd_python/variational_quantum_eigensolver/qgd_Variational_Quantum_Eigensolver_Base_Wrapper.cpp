@@ -276,57 +276,6 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Ground_State(qgd_Variationa
 
 
 /**
-@brief Wrapper function to set custom gate structure for the decomposition.
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
-@param args A tuple of the input arguments: gate_structure_dict (PyDict)
-gate_structure_dict: ?????????????????????????????
-@return Returns with zero on success.
-*/
-static PyObject *
-qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
-
-
-    // initiate variables for input arguments
-    PyObject* gate_structure_dict; 
-
-    // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &gate_structure_dict )) return Py_BuildValue("i", -1);
-
-    // Check whether input is dictionary
-    if (!PyDict_Check(gate_structure_dict)) {
-        printf("Input must be dictionary!\n");
-        return Py_BuildValue("i", -1);
-    }
-
-
-    PyObject* key = NULL;
-    PyObject* value = NULL;
-    Py_ssize_t pos = 0;
-
-    std::map< int, Gates_block* > gate_structure;
-
-
-    while (PyDict_Next(gate_structure_dict, &pos, &key, &value)) {
-
-        // convert keylue from PyObject to int
-        assert(PyLong_Check(key) == 1);
-        int key_int = (int) PyLong_AsLong(key);
-
-        // convert keylue from PyObject to qgd_Gates_Block
-        qgd_Gates_Block* qgd_op_block = (qgd_Gates_Block*) value;
-
-        gate_structure.insert( std::pair<int, Gates_block*>( key_int, qgd_op_block->gate ));
-
-    }
-
-    self->vqe->set_custom_gate_structure( gate_structure );
-
-    return Py_BuildValue("i", 0);
-
-
-}
-
-/**
 @brief Extract the optimized parameters
 @param start_index The index of the first inverse gate
 */
@@ -957,9 +906,6 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"Optimization_Problem", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem, METH_VARARGS,
      "Method to get the expected energy of the circuit at parameters."
-    },
-    {"set_Gate_Structure", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure, METH_VARARGS,
-     "Call to set custom gate structure in the decomposition."
     },
     {NULL}  /* Sentinel */
 };

@@ -84,7 +84,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
     optimization_tolerance = -25;
 
     // The convergence threshold in the optimization process
-    convergence_threshold = -1;
+    convergence_threshold = -40;
     
     
     iteration_threshold_of_randomization = 2500000;
@@ -106,6 +106,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
     cost_fnc = VQE;
     
     ansatz = HEA;
+    
 }
 
 Variational_Quantum_Eigensolver_Base::~Variational_Quantum_Eigensolver_Base(){}
@@ -113,8 +114,7 @@ Variational_Quantum_Eigensolver_Base::~Variational_Quantum_Eigensolver_Base(){}
 void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
 
 	initialize_zero_state();
-	int num_of_parameters =  optimized_parameters_mtx.cols;
-
+	int num_of_parameters =  optimized_parameters_mtx.size();
     if (gates.size() == 0 ) {
             return;
     }
@@ -125,12 +125,11 @@ void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
     return;
 }
 
-double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix State){
+double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix& State){
 	Matrix tmp = mult(Hamiltonian, State);
-	
-	double Energy= 0.;
+	double Energy= 0.0;
 	for (int idx=0; idx<State.rows; idx++){
-		Energy += State[idx].real*tmp[idx].real + State[idx].imag*tmp[idx].imag;
+		Energy += State[idx].real*tmp[idx].real - State[idx].imag*tmp[idx].imag;
 	} 
 	tmp.release_data();
 	return Energy;
@@ -139,23 +138,19 @@ double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix State){
 double Variational_Quantum_Eigensolver_Base::optimization_problem_vqe(Matrix_real parameters, void* void_instance){
 	double Energy=0.;
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
-    Gates_block* gate_structure_loc = static_cast<Gates_block*>(instance)->clone();
 	Matrix State = instance->Zero_state.copy();
-	gate_structure_loc->apply_to(parameters, State);
+	instance->apply_to(parameters, State);
 	Energy = instance->Expected_energy(State);
-    State.release_data();
-    delete gate_structure_loc;
+
 	return Energy;
 }
 
 double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& parameters)  {
 	double Energy;
+	initialize_zero_state();
 	Matrix State = Zero_state.copy();
-    Gates_block* gate_structure_loc = static_cast<Gates_block*>(this)->clone();
-	gate_structure_loc->apply_to(parameters, State);
+	apply_to(parameters, State);
 	Energy = Expected_energy(State);
-    State.release_data();
-    delete gate_structure_loc;
 	return Energy;
 }
 
@@ -222,7 +217,8 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem( double* param
 void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
 
 	Zero_state[0].real = 1.0;
-    memset(Zero_state.get_data()+1, 0.0, (Zero_state.size()*2-1)*sizeof(double) );              
+	Zero_state[0].imag = 0.0;
+    memset(Zero_state.get_data()+2, 0.0, (Zero_state.size()*2-2)*sizeof(double) );      
 	return;
 }
 
@@ -241,19 +237,20 @@ void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers,
         case HEA:
         {
             Gates_block* gate_structure_tmp = new Gates_block(qbit_num);
-            for (int target_qbit=0; target_qbit<qbit_num-1;target_qbit++){
-                gate_structure_tmp->add_u3(target_qbit, true, true, true);
-            }
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
-                for (int control_qbit=0; control_qbit<qbit_num-2; control_qbit++){
-                    for (int bidx=0; bidx<blocks; bidx++){
-                        gate_structure_tmp->add_adaptive(control_qbit+1,control_qbit);
-                    }
+                for (int control_qbit=0; control_qbit<qbit_num-1; control_qbit++){
                     for (int ridx=0; ridx<rot_layers; ridx++){
                         gate_structure_tmp->add_u3(control_qbit+1, true, true, true);
                         gate_structure_tmp->add_u3(control_qbit, true, true, true);
                     }
+                    for (int bidx=0; bidx<blocks; bidx++){
+                        gate_structure_tmp->add_adaptive(control_qbit+1,control_qbit);
+                    }
                 }
+            }
+
+            for (int target_qbit=0; target_qbit<qbit_num-1;target_qbit++){
+                gate_structure_tmp->add_u3(target_qbit, true, true, true);
             }
             gate_structure_tmp->combine( static_cast<Gates_block*>(this) );
             release_gates();
@@ -311,22 +308,6 @@ Variational_Quantum_Eigensolver_Base::set_adaptive_gate_structure( std::string f
 
 }
 
-void Variational_Quantum_Eigensolver_Base::set_custom_gate_structure( std::map<int, Gates_block*> gate_structure_in ) {
 
-
-    for ( std::map<int,Gates_block*>::iterator it=gate_structure_in.begin(); it!= gate_structure_in.end(); it++ ) {
-        int key = it->first;
-
-        std::map<int,Gates_block*>::iterator key_it = gate_structure.find( key );
-
-        if ( key_it != gate_structure.end() ) {
-            gate_structure.erase( key_it );
-        }
-
-        gate_structure.insert( std::pair<int,Gates_block*>(key, it->second->clone()));
-
-    }
-
-}
 
 
