@@ -644,3 +644,11 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def set_Cost_Function_Variant(self, cost_func):
     
         super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(cost_func)
+
+
+##
+# @brief Call to get the error of the decomposition. (i.e. the final value of the cost function)
+# @return Returns with the error of the decmposition
+    def get_Decomposition_Error(self):
+    
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Decomposition_Error()

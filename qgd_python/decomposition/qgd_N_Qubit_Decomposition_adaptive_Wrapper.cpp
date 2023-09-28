@@ -1395,6 +1395,21 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Project_Name( qgd_N_Qubit_Decompo
    return Py_BuildValue("i", 0);
 }
 
+
+/**
+@brief Cll to get the error of the decomposition (i.e. the final value of the cost function)
+@return The error of the decomposition
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Decomposition_Error( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self) {
+
+
+    double decomposition_error = self->decomp->get_decomposition_error();
+    
+
+    return Py_BuildValue("d", decomposition_error);
+}
+
 /**
 @brief export unitary to binary file
 @param filename file to be exported to
@@ -2439,6 +2454,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Trace_Offset", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Trace_Offset, METH_VARARGS | METH_KEYWORDS,
      "Call to set the trace offset used in the cost function. In this case Tr(A) = sum_(i-offset=j) A_{ij}"
+    },
+    {"get_Decomposition_Error", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Decomposition_Error, METH_NOARGS,
+     "Call to get the error of the decomposition. (i.e. the final value of the cost function)"
     },
     {NULL}  /* Sentinel */
 };
