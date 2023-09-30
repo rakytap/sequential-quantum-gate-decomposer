@@ -38,7 +38,7 @@ limitations under the License.
 #include "Adaptive.h"
 #include "Composite.h"
 #include "Gates_block.h"
-#include "apply_kernel_to_state_vector_input.h"
+#include "apply_large_kernel_to_input.h"
 
 
 
