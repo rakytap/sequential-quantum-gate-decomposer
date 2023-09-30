@@ -191,33 +191,50 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
     std::vector<int> involved_qbits = get_involved_qubits();
     
     if((qbit_num>14 && input.cols == 1) && involved_qbits.size()>1){
-        std::vector<int> inner_vec;
-        std::vector<int> outer_vec;
+        std::vector< std::vector<int>> involved_qbits;
         std::vector<int> block_end;
         std::vector<int> block_type;
-        fragment_circuit(inner_vec,outer_vec,block_end,block_type);
+        int max_fusion = (qbit_num>18) ? 3:2;
+        fragment_circuit(involved_qbits,block_end,block_type,max_fusion);
         int outer_idx = gates.size()-1;
-        for (int block_idx=0; block_idx<inner_vec.size(); block_idx++){
-            if (block_type[block_idx]==0){
-                Gates_block gates_block_mini = Gates_block(2);
-                int inner = inner_vec[block_idx];
-                int outer = outer_vec[block_idx];
+        for (int block_idx=0; block_idx<involved_qbits.size(); block_idx++){
+            //std::cout<<block_type[block_idx]<<std::endl;
+            if (block_type[block_idx]!=1){
+                Gates_block gates_block_mini = Gates_block(block_type[block_idx]);
+                std::vector<int> qbits = involved_qbits[block_idx];
+                int indices[qbit_num];
+                for (int jdx=0; jdx<(int)qbits.size(); jdx++){
+                    indices[qbits[jdx]]=jdx;
+                }
                 for (int idx=outer_idx;idx>=block_end[block_idx];idx--){
                     Gate* gate = gates[idx]->clone();
                     int trgt_qbit = gate->get_target_qbit();
                     int ctrl_qbit = gate->get_control_qbit();
-                    int target_qubit_new = (trgt_qbit==outer) ? 1 : 0;
+                    int target_qubit_new = indices[trgt_qbit];
                     gate->set_target_qbit(target_qubit_new);
-                	int control_qubit_new = (ctrl_qbit==-1) ? -1 : 1 - target_qubit_new;
+                	int control_qubit_new = (ctrl_qbit==-1) ? -1:indices[ctrl_qbit];
                     gate->set_control_qbit(control_qubit_new);
                     gates_block_mini.add_gate(gate);
                 }
-                Matrix Umtx_mini = create_identity(4);
+                Matrix Umtx_mini = create_identity(Power_of_2(block_type[block_idx]));
                 parameters = parameters - gates_block_mini.get_parameter_num();
                 Matrix_real parameters_mtx(parameters, 1, gates_block_mini.get_parameter_num());
                 gates_block_mini.apply_to(parameters_mtx, Umtx_mini);
-                apply_large_kernel_to_state_vector_input_parallel_AVX(Umtx_mini,input,inner,outer,input.size());
                 outer_idx = block_end[block_idx]-1;
+                switch(block_type[block_idx]){
+                case 2:{
+                    int inner = qbits[0];
+                    int outer = qbits[1];
+                    apply_large_kernel_to_state_vector_input_parallel_AVX(Umtx_mini,input,inner,outer,input.size());
+                    break;
+                }
+                case 3:{
+                    apply_3qbit_kernel_to_state_vector_input_parallel_AVX(Umtx_mini,input,qbits,input.size());
+                    break;
+                }
+                }
+
+
             }
             else{
 
@@ -318,49 +335,78 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 }
 
-void Gates_block::fragment_circuit( std::vector<int>&  inner_vec, std::vector<int>&  outer_vec, std::vector<int>&  block_end,  std::vector<int>&  block_type){
-    int qbit_1=-1;
-    int qbit_2=-1;
+bool Gates_block::is_qbit_present(std::vector<int> involved_qbits, int new_qbit, int num_of_qbits){
+    bool contained=false;
+    for (int idx=0; idx<num_of_qbits; idx++){
+        if(involved_qbits[idx] == new_qbit){
+        contained=true;
+        }
+    }
+    return contained;
+}
+
+void Gates_block::fragment_circuit( std::vector<std::vector<int>>& involved_qbits, std::vector<int>&  block_end,  std::vector<int>&  block_type, int max_fusion){
+    std::vector<int> qbits;
+    int num_of_qbits=0;
     for (int idx = gates.size()-1; idx>=0; idx--){            
         Gate* gate = gates[idx];
         int target_new = gate -> get_target_qbit();
         int control_new = gate->get_control_qbit();
-        if (qbit_1 == -1) {
-
-            qbit_1 = target_new;
+        if (num_of_qbits == 0) {
+            qbits.push_back(target_new);
+            num_of_qbits++;
         }
-        else if (qbit_2 == -1 && (target_new != qbit_1 && control_new == -1)){
-            qbit_2 = target_new;
-        }
-        else if (qbit_2 == -1 && (target_new == qbit_1 && control_new > -1)){
-
-            qbit_2 = control_new;
-        }
-        else if (((qbit_1 != -1 && qbit_2 != -1) && (qbit_1 != target_new && qbit_2 != target_new)) || ((qbit_1 != -1 && qbit_2 != -1) && (qbit_1 != control_new && qbit_2 != control_new)) ){
-            int inner = (qbit_1<qbit_2) ? qbit_1 : qbit_2;
-            int outer = (inner == qbit_2) ? qbit_1 : qbit_2;
-            inner_vec.push_back(inner);
-            outer_vec.push_back(outer);
+        bool target_contained=is_qbit_present(qbits,target_new,num_of_qbits);
+        bool control_contained= (control_new==-1) ? true : is_qbit_present(qbits,control_new,num_of_qbits);
+                if (num_of_qbits==max_fusion && (target_contained==false || control_contained==false)){
+            int vidx = 1;
+            while(vidx<num_of_qbits){
+                int jdx=vidx;
+                while(jdx>0 && qbits[jdx-1]>qbits[jdx]){
+                    int qbit_temp = qbits[jdx];
+                    qbits[jdx] = qbits[jdx-1];
+                    qbits[jdx-1] =  qbit_temp;
+                    jdx--;
+                }
+            vidx++;
+            }
+            involved_qbits.push_back(qbits);
             block_end.push_back(idx+1);
-            block_type.push_back(0);
-            idx++;
-            qbit_1=-1;
-            qbit_2=-1;
+            block_type.push_back(num_of_qbits);
+            idx++;    
+            qbits=std::vector<int>{};
+            num_of_qbits=0;
             continue;
         }
+        if (num_of_qbits<max_fusion && target_contained==false){
+            qbits.push_back(target_new);
+            num_of_qbits++;
+        }
+        if (num_of_qbits<max_fusion && control_contained==false){
+            qbits.push_back(control_new);
+            num_of_qbits++;
+        }
+
     }
-    if (qbit_2 == -1){
-        int inner = qbit_1;
-        inner_vec.push_back(inner);
+    if (num_of_qbits == 1){
+        involved_qbits.push_back(qbits);
         block_type.push_back(1);
     }
     else{
-        int inner = (qbit_1<qbit_2) ? qbit_1 : qbit_2;
-        int outer = (inner == qbit_2) ? qbit_1 : qbit_2;
-        inner_vec.push_back(inner);
-        outer_vec.push_back(outer);
+        int vidx = 1;
+        while(vidx<num_of_qbits){
+            int jdx=vidx;
+            while(jdx>0 && qbits[jdx-1]>qbits[jdx]){
+                int qbit_temp = qbits[jdx];
+                qbits[jdx] = qbits[jdx-1];
+                qbits[jdx-1] =  qbit_temp;
+                jdx--;
+            }
+        vidx++;
+        }
+        involved_qbits.push_back(qbits);
+        block_type.push_back(num_of_qbits);
         block_end.push_back(0);
-        block_type.push_back(0);
     }
     block_end.push_back(0);
 

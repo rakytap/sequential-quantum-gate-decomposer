@@ -454,3 +454,279 @@ void apply_large_kernel_to_state_vector_input_parallel_AVX(Matrix& two_qbit_unit
     });
     
 }
+
+void apply_3qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+
+    int index_step_inner = 1 << involved_qbits[0];
+    int index_step_middle = 1 << involved_qbits[1];
+    int index_step_outer = 1 << involved_qbits[2];
+    int current_idx = 0;
+    
+    for (int current_idx_pair_outer=current_idx + index_step_outer; current_idx_pair_outer<matrix_size; current_idx_pair_outer=current_idx_pair_outer+(index_step_outer << 1)){
+    
+        for (int current_idx_middle = 0; current_idx_middle < index_step_outer; current_idx_middle=current_idx_middle+(index_step_middle<<1)){
+        
+                for (int current_idx_inner = 0; current_idx_inner < index_step_middle; current_idx_inner=current_idx_inner+(index_step_inner<<1)){
+                
+    	        for (int idx=0; idx<index_step_inner; idx++){
+    	        
+        	    int current_idx_loc = current_idx + current_idx_middle + current_idx_inner + idx;
+                int current_idx_pair_loc = current_idx_pair_outer + idx + current_idx_inner + current_idx_middle;
+
+			    int current_idx_outer_loc = current_idx_loc;
+			    int current_idx_inner_loc = current_idx_loc + index_step_inner;
+			    
+			    int current_idx_middle_loc = current_idx_loc + index_step_middle;
+			    int current_idx_middle_inner_loc = current_idx_loc + index_step_middle + index_step_inner;
+			    
+	        	int current_idx_outer_pair_loc = current_idx_pair_loc;
+			    int current_idx_inner_pair_loc = current_idx_pair_loc + index_step_inner;
+			    
+			    int current_idx_middle_pair_loc =current_idx_pair_loc + index_step_middle;
+			    int current_idx_middle_inner_pair_loc = current_idx_pair_loc + index_step_middle + index_step_inner;
+			    
+			    int indexes[8] = {current_idx_outer_loc,current_idx_inner_loc,current_idx_middle_loc,current_idx_middle_inner_loc,current_idx_outer_pair_loc,current_idx_inner_pair_loc,current_idx_middle_pair_loc,current_idx_middle_inner_pair_loc};
+			    //input.print_matrix();
+			    QGD_Complex16 element_outer = input[current_idx_outer_loc];
+			    QGD_Complex16 element_outer_pair = input[current_idx_outer_pair_loc];
+			    
+			    QGD_Complex16 element_inner = input[current_idx_inner_loc];
+			    QGD_Complex16 element_inner_pair = input[current_idx_inner_pair_loc];
+			    
+			    QGD_Complex16 element_middle = input[current_idx_middle_loc];
+			    QGD_Complex16 element_middle_pair = input[current_idx_middle_pair_loc];
+			    
+			    QGD_Complex16 element_middle_inner = input[current_idx_middle_inner_loc];
+			    QGD_Complex16 element_middle_inner_pair = input[current_idx_middle_inner_pair_loc];
+			    
+			    QGD_Complex16 tmp1;
+			    QGD_Complex16 tmp2;
+			    QGD_Complex16 tmp3;
+			    QGD_Complex16 tmp4;
+			    QGD_Complex16 tmp5;
+			    QGD_Complex16 tmp6;
+			    QGD_Complex16 tmp7;
+			    QGD_Complex16 tmp8;
+			   for (int mult_idx=0; mult_idx<8; mult_idx++){
+				    tmp1 = mult(unitary[mult_idx*8], element_outer);
+				    tmp2 = mult(unitary[mult_idx*8 + 1], element_inner);
+				    tmp3 = mult(unitary[mult_idx*8 + 2], element_middle);
+				    tmp4 = mult(unitary[mult_idx*8 + 3], element_middle_inner);
+				    tmp5 = mult(unitary[mult_idx*8 + 4], element_outer_pair);
+				    tmp6 = mult(unitary[mult_idx*8 + 5], element_inner_pair);
+				    tmp7 = mult(unitary[mult_idx*8 + 6], element_middle_pair);
+				    tmp8 = mult(unitary[mult_idx*8 + 7], element_middle_inner_pair);
+				    input[indexes[mult_idx]].real = tmp1.real + tmp2.real + tmp3.real + tmp4.real + tmp5.real + tmp6.real + tmp7.real + tmp8.real;
+				    input[indexes[mult_idx]].imag = tmp1.imag + tmp2.imag + tmp3.imag + tmp4.imag + tmp5.imag + tmp6.imag + tmp7.imag + tmp8.imag;
+		        }
+        	  }
+            }
+            current_idx = current_idx + (index_step_outer << 1);
+        }
+     }
+}
+
+__m256d get_AVX_vector(double* element_outer, double* element_inner){
+
+    __m256d element_outer_vec = _mm256_loadu_pd(element_outer);
+    element_outer_vec = _mm256_permute4x64_pd(element_outer_vec,0b11011000);
+    __m256d element_inner_vec = _mm256_loadu_pd(element_inner);
+    element_inner_vec = _mm256_permute4x64_pd(element_inner_vec,0b11011000);
+    __m256d outer_inner_vec = _mm256_shuffle_pd(element_outer_vec,element_inner_vec,0b0000);
+    outer_inner_vec = _mm256_permute4x64_pd(outer_inner_vec,0b11011000);
+    
+    return outer_inner_vec;
+}
+
+__m256d complex_mult_AVX(__m256d input_vec, __m256d unitary_row_vec, __m256d neg){
+
+    __m256d vec3 = _mm256_mul_pd(input_vec, unitary_row_vec);
+    __m256d unitary_row_switched = _mm256_permute_pd(unitary_row_vec, 0x5);
+    unitary_row_switched = _mm256_mul_pd(unitary_row_switched, neg);
+    __m256d vec4 = _mm256_mul_pd(input_vec, unitary_row_switched);
+    __m256d result_vec = _mm256_hsub_pd(vec3, vec4);
+    result_vec = _mm256_permute4x64_pd(result_vec,0b11011000);
+    
+    return result_vec;
+}
+
+
+void apply_3qbit_kernel_to_state_vector_input_parallel_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size){
+    
+    __m256d neg = _mm256_setr_pd(1.0, -1.0, 1.0, -1.0);
+    
+    int index_step_inner = 1 << involved_qbits[0];
+    
+    int index_step_middle = 1 << involved_qbits[1];
+    
+    int index_step_outer = 1 << involved_qbits[2];
+    
+    
+    int parallel_outer_cycles = matrix_size/(index_step_outer << 1);
+    
+    int parallel_inner_cycles = index_step_middle/(index_step_inner << 1);
+    
+    int parallel_middle_cycles = index_step_outer/(index_step_middle << 1);
+    
+    int outer_grain_size;
+    int inner_grain_size;
+    int middle_grain_size;
+    
+    if ( index_step_outer <= 8 ) {
+        outer_grain_size = 16;
+    }
+    else if ( index_step_outer <= 16 ) {
+        outer_grain_size = 8;
+    }
+    else {
+        outer_grain_size = 2;
+    }
+    
+    if ( index_step_middle <= 4 ) {
+       middle_grain_size = 32;
+    }
+    else if ( index_step_middle <= 8 ) {
+        middle_grain_size = 16;
+    }
+    else if ( index_step_middle <= 16 ) {
+        middle_grain_size = 8;
+    }
+    else {
+       middle_grain_size = 2;
+    }
+    
+    if (index_step_inner <=2){
+        inner_grain_size = 64;
+    }
+    else if ( index_step_inner <= 4 ) {
+        inner_grain_size = 32;
+    }
+    else if ( index_step_inner <= 8 ) {
+        inner_grain_size = 16;
+    }
+    else if ( index_step_inner <= 16 ) {
+        inner_grain_size = 8;
+    }
+    else {
+        inner_grain_size = 2;
+    }
+
+    
+    tbb::parallel_for( tbb::blocked_range<int>(0,parallel_outer_cycles,outer_grain_size), [&](tbb::blocked_range<int> r) { 
+    
+        int current_idx = r.begin()*(index_step_outer<<1);
+        
+        int current_idx_pair_outer = current_idx + index_step_outer;
+        
+
+        for (int outer_rdx=r.begin(); outer_rdx<r.end(); outer_rdx++){
+        
+        tbb::parallel_for( tbb::blocked_range<int>(0,parallel_middle_cycles,middle_grain_size), [&](tbb::blocked_range<int> r) {
+            
+            int current_idx_middle = r.begin()*(index_step_middle<<1);
+            for (int middle_rdx=r.begin(); middle_rdx<r.end(); middle_rdx++){
+            
+            tbb::parallel_for( tbb::blocked_range<int>(0,parallel_inner_cycles,inner_grain_size), [&](tbb::blocked_range<int> r) {
+                int current_idx_inner = r.begin()*(index_step_inner<<1);
+
+                for (int inner_rdx=r.begin(); inner_rdx<r.end(); inner_rdx++){
+
+                    tbb::parallel_for(tbb::blocked_range<int>(0,index_step_inner,64),[&](tbb::blocked_range<int> r){
+                    
+        	            for (int idx=r.begin(); idx<r.end(); ++idx){
+        	
+                    	    int current_idx_loc = current_idx + current_idx_middle + current_idx_inner + idx;
+                            int current_idx_pair_loc = current_idx_pair_outer + idx + current_idx_inner + current_idx_middle;
+
+		                    int current_idx_outer_loc = current_idx_loc;
+		                    int current_idx_inner_loc = current_idx_loc + index_step_inner;
+		                    
+		                    int current_idx_middle_loc = current_idx_loc + index_step_middle;
+		                    int current_idx_middle_inner_loc = current_idx_loc + index_step_middle + index_step_inner;
+		                    
+                        	int current_idx_outer_pair_loc = current_idx_pair_loc;
+		                    int current_idx_inner_pair_loc = current_idx_pair_loc + index_step_inner;
+		                    
+		                    int current_idx_middle_pair_loc =current_idx_pair_loc + index_step_middle;
+		                    int current_idx_middle_inner_pair_loc = current_idx_pair_loc + index_step_middle + index_step_inner;
+			                
+			                QGD_Complex16 results[8];
+			                
+                            double* element_outer = (double*)input.get_data() + 2 * current_idx_outer_loc;
+                            double* element_inner = (double*)input.get_data() + 2 * current_idx_inner_loc;
+                            
+                            double* element_middle = (double*)input.get_data() + 2 * current_idx_middle_loc;
+                            double* element_middle_inner = (double*)input.get_data() + 2 * current_idx_middle_inner_loc;
+                            
+                            double* element_outer_pair = (double*)input.get_data() + 2 * current_idx_outer_pair_loc;
+                            double* element_inner_pair = (double*)input.get_data() + 2 * current_idx_inner_pair_loc;
+                                                        
+                            double* element_middle_pair = (double*)input.get_data() + 2 * current_idx_middle_pair_loc;
+                            double* element_middle_inner_pair = (double*)input.get_data() + 2 * current_idx_middle_inner_pair_loc;
+			                
+                            __m256d outer_inner_vec = get_AVX_vector(element_outer, element_inner);
+
+                           __m256d middle_inner_vec = get_AVX_vector(element_middle,element_middle_inner);
+
+                            __m256d outer_inner_pair_vec =  get_AVX_vector(element_outer_pair, element_inner_pair);
+                            
+                            __m256d middle_inner_pair_vec =  get_AVX_vector(element_middle_pair, element_middle_inner_pair);
+
+
+
+			                for (int mult_idx=0; mult_idx<8; mult_idx++){
+			                
+			                    double* unitary_row_01 = (double*)unitary.get_data() + 16*mult_idx;
+			                    double* unitary_row_23 = (double*)unitary.get_data() + 16*mult_idx + 4;
+			                    double* unitary_row_45 = (double*)unitary.get_data() + 16*mult_idx + 8;
+			                    double* unitary_row_67 = (double*)unitary.get_data() + 16*mult_idx + 12;
+			                    
+                                __m256d unitary_row_01_vec = _mm256_loadu_pd(unitary_row_01);
+                                __m256d unitary_row_23_vec = _mm256_loadu_pd(unitary_row_23);
+                                __m256d unitary_row_45_vec = _mm256_loadu_pd(unitary_row_45);
+                                __m256d unitary_row_67_vec = _mm256_loadu_pd(unitary_row_67);
+                                
+                                
+                                __m256d result_upper_vec = complex_mult_AVX(outer_inner_vec,unitary_row_01_vec,neg);
+                                
+                                __m256d result_upper_middle_vec = complex_mult_AVX(middle_inner_vec,unitary_row_23_vec,neg);
+                                
+                                __m256d result_lower_vec = complex_mult_AVX(outer_inner_pair_vec,unitary_row_45_vec,neg);
+                                
+                                __m256d result_lower_middle_vec = complex_mult_AVX(middle_inner_pair_vec,unitary_row_67_vec,neg);
+                                
+                                
+                                __m256d result1_vec = _mm256_hadd_pd(result_upper_vec,result_upper_middle_vec);
+                                __m256d result2_vec = _mm256_hadd_pd(result_lower_vec,result_lower_middle_vec);
+                                __m256d result_vec = _mm256_hadd_pd(result1_vec,result2_vec);
+                                result_vec = _mm256_hadd_pd(result_vec,result_vec);
+                                double* result = (double*)&result_vec;
+                                results[mult_idx].real = result[0];
+                                results[mult_idx].imag = result[2];
+			                }
+		                input[current_idx_outer_loc] = results[0];
+		                input[current_idx_inner_loc] = results[1];
+		                input[current_idx_middle_loc]  = results[2];
+		                input[current_idx_middle_inner_loc] = results[3];
+		                input[current_idx_outer_pair_loc] = results[4];
+		                input[current_idx_inner_pair_loc] = results[5];
+		                input[current_idx_middle_pair_loc] = results[6];
+		                input[current_idx_middle_inner_pair_loc] = results[7];
+            	    }
+                   });
+                
+               
+                current_idx_inner = current_idx_inner +(index_step_inner << 1);
+                }
+            });
+                current_idx_middle = current_idx_middle +(index_step_middle << 1);
+            }
+            });
+        current_idx = current_idx + (index_step_outer << 1);
+        current_idx_pair_outer = current_idx_pair_outer + (index_step_outer << 1);
+
+    }
+    });
+    
+
+}

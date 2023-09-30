@@ -96,7 +96,9 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix> input );
 */
 virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input );
 
-void fragment_circuit( std::vector<int>&  inner_vec, std::vector<int>&  outer_vec, std::vector<int>&  block_end,  std::vector<int>& block_type);
+bool is_qbit_present(std::vector<int> involved_qbits, int new_qbit, int num_of_qbits);
+
+void fragment_circuit( std::vector<std::vector<int>>& involved_qbits, std::vector<int>&  block_end,  std::vector<int>&  block_type, int max_fusion);
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*CNOT
