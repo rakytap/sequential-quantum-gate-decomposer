@@ -190,11 +190,12 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
     parameters = parameters + parameter_num;
     std::vector<int> involved_qbits = get_involved_qubits();
     
-    if((qbit_num>14 && input.cols == 1) && involved_qbits.size()>1){
+    if((qbit_num>4 && input.cols == 1) && involved_qbits.size()>1){
         std::vector< std::vector<int>> involved_qbits;
         std::vector<int> block_end;
         std::vector<int> block_type;
-        int max_fusion = (qbit_num>18) ? 3:2;
+        //int max_fusion = (qbit_num>18) ? 3:2;
+        int max_fusion = 4;
         fragment_circuit(involved_qbits,block_end,block_type,max_fusion);
         int outer_idx = gates.size()-1;
         for (int block_idx=0; block_idx<involved_qbits.size(); block_idx++){
@@ -221,18 +222,8 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
                 Matrix_real parameters_mtx(parameters, 1, gates_block_mini.get_parameter_num());
                 gates_block_mini.apply_to(parameters_mtx, Umtx_mini);
                 outer_idx = block_end[block_idx]-1;
-                switch(block_type[block_idx]){
-                case 2:{
-                    int inner = qbits[0];
-                    int outer = qbits[1];
-                    apply_large_kernel_to_state_vector_input_parallel_AVX(Umtx_mini,input,inner,outer,input.size());
-                    break;
-                }
-                case 3:{
-                    apply_3qbit_kernel_to_state_vector_input_parallel_AVX(Umtx_mini,input,qbits,input.size());
-                    break;
-                }
-                }
+                apply_large_kernel_to_state_vector_input(Umtx_mini,input,qbits,input.size());
+       
 
 
             }
