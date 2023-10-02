@@ -242,7 +242,26 @@ void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers,
         {
             Gates_block* gate_structure_tmp = new Gates_block(qbit_num);
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
-                for (int control_qbit=0; control_qbit<qbit_num-1; control_qbit++){
+                for (int ridx=0; ridx<rot_layers; ridx++){
+                        gate_structure_tmp->add_u3(1, true, true, true);
+                        gate_structure_tmp->add_u3(0, true, true, true);
+                }
+                for (int bidx=0; bidx<blocks; bidx++){
+                    gate_structure_tmp->add_adaptive(1,0);
+                }
+                if (layer_idx==layers-1){
+                    gate_structure_tmp->add_u3(0, true, true, true);
+                }
+                for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
+                    if (control_qbit+2<qbit_num){
+                        for (int ridx=0; ridx<rot_layers; ridx++){
+                            gate_structure_tmp->add_u3(control_qbit+1, true, true, true);
+                            gate_structure_tmp->add_u3(control_qbit+2, true, true, true);
+                        }
+                        for (int bidx=0; bidx<blocks; bidx++){
+                            gate_structure_tmp->add_adaptive(control_qbit+2,control_qbit+1);
+                        }
+                    }
                     for (int ridx=0; ridx<rot_layers; ridx++){
                         gate_structure_tmp->add_u3(control_qbit+1, true, true, true);
                         gate_structure_tmp->add_u3(control_qbit, true, true, true);
@@ -250,11 +269,14 @@ void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers,
                     for (int bidx=0; bidx<blocks; bidx++){
                         gate_structure_tmp->add_adaptive(control_qbit+1,control_qbit);
                     }
+                    if (layer_idx==layers-1){
+                        gate_structure_tmp->add_u3(control_qbit, true, true, true);
+                        gate_structure_tmp->add_u3(control_qbit+1, true, true, true);
+                    }
                 }
             }
-
-            for (int target_qbit=0; target_qbit<qbit_num-1;target_qbit++){
-                gate_structure_tmp->add_u3(target_qbit, true, true, true);
+            if (qbit_num%2==0){
+                gate_structure_tmp->add_u3(qbit_num-1, true, true, true);
             }
             gate_structure_tmp->combine( static_cast<Gates_block*>(this) );
             release_gates();
@@ -262,6 +284,9 @@ void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers,
             Matrix_real optimized_parameters_mtx_tmp( 1, get_parameter_num() );
             memset( optimized_parameters_mtx_tmp.get_data(), 0.0, optimized_parameters_mtx_tmp.size()*sizeof(double) ); 
             optimized_parameters_mtx = optimized_parameters_mtx_tmp;
+            max_fusion = 3;
+            fragmentation_type = 2;
+            fragment_circuit();
             return;
         }
         default:

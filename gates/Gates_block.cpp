@@ -67,6 +67,11 @@ Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
     type = BLOCK_OPERATION;
     // number of operation layers
     layer_num = 0;
+    
+    fragmented = false;
+    fragmentation_type = -1;
+    max_fusion = -1;
+    
 }
 
 
@@ -188,15 +193,12 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
     double* parameters = parameters_mtx.get_data();
 
     parameters = parameters + parameter_num;
-    std::vector<int> involved_qbits = get_involved_qubits();
+    std::vector<int> involved_qubits = get_involved_qubits();
     
-    if((qbit_num>4 && input.cols == 1) && involved_qbits.size()>1){
-        std::vector< std::vector<int>> involved_qbits;
-        std::vector<int> block_end;
-        std::vector<int> block_type;
-        //int max_fusion = (qbit_num>18) ? 3:2;
-        int max_fusion = 4;
-        fragment_circuit(involved_qbits,block_end,block_type,max_fusion);
+    if(max_fusion !=-1 && ((qbit_num>max_fusion && input.cols == 1) && involved_qubits.size()>1)){
+        if (fragmented==false){
+            fragment_circuit();
+        };  
         int outer_idx = gates.size()-1;
         for (int block_idx=0; block_idx<involved_qbits.size(); block_idx++){
             if (block_type[block_idx]!=1){
@@ -325,19 +327,20 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
 }
 
-bool Gates_block::is_qbit_present(std::vector<int> involved_qbits, int new_qbit, int num_of_qbits){
+bool Gates_block::is_qbit_present(std::vector<int> involved_qubits, int new_qbit, int num_of_qbits){
     bool contained=false;
     for (int idx=0; idx<num_of_qbits; idx++){
-        if(involved_qbits[idx] == new_qbit){
+        if(involved_qubits[idx] == new_qbit){
         contained=true;
         }
     }
     return contained;
 }
 
-void Gates_block::fragment_circuit( std::vector<std::vector<int>>& involved_qbits, std::vector<int>&  block_end,  std::vector<int>&  block_type, int max_fusion){
+void Gates_block::fragment_circuit(){
     std::vector<int> qbits;
     int num_of_qbits=0;
+    int max_fusion_temp = (fragmentation_type==-1) ? max_fusion:fragmentation_type;
     for (int idx = gates.size()-1; idx>=0; idx--){            
         Gate* gate = gates[idx];
         int target_new = gate -> get_target_qbit();
@@ -348,7 +351,7 @@ void Gates_block::fragment_circuit( std::vector<std::vector<int>>& involved_qbit
         }
         bool target_contained=is_qbit_present(qbits,target_new,num_of_qbits);
         bool control_contained= (control_new==-1) ? true : is_qbit_present(qbits,control_new,num_of_qbits);
-                if (num_of_qbits==max_fusion && (target_contained==false || control_contained==false)){
+        if (num_of_qbits==max_fusion_temp && (target_contained==false || control_contained==false)){
             int vidx = 1;
             while(vidx<num_of_qbits){
                 int jdx=vidx;
@@ -363,16 +366,17 @@ void Gates_block::fragment_circuit( std::vector<std::vector<int>>& involved_qbit
             involved_qbits.push_back(qbits);
             block_end.push_back(idx+1);
             block_type.push_back(num_of_qbits);
+            max_fusion_temp = max_fusion;
             idx++;    
             qbits=std::vector<int>{};
             num_of_qbits=0;
             continue;
         }
-        if (num_of_qbits<max_fusion && target_contained==false){
+        if (num_of_qbits<max_fusion_temp && target_contained==false){
             qbits.push_back(target_new);
             num_of_qbits++;
         }
-        if (num_of_qbits<max_fusion && control_contained==false){
+        if (num_of_qbits<max_fusion_temp && control_contained==false){
             qbits.push_back(control_new);
             num_of_qbits++;
         }
@@ -399,6 +403,7 @@ void Gates_block::fragment_circuit( std::vector<std::vector<int>>& involved_qbit
         block_end.push_back(0);
     }
     block_end.push_back(0);
+    fragmented = true;
 
 }
 
