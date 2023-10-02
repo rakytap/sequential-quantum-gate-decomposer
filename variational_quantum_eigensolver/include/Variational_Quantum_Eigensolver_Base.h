@@ -87,6 +87,8 @@ double optimization_problem( double* parameters);
 
 virtual BFGS_Powell create_bfgs_problem() override;
 
+virtual Grad_Descend create_grad_descent_problem() override;
+
 static void optimization_problem_combined_vqe( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
 virtual void optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad ) override;

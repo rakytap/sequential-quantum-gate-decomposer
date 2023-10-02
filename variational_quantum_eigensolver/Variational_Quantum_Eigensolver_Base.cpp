@@ -204,6 +204,10 @@ BFGS_Powell Variational_Quantum_Eigensolver_Base::create_bfgs_problem(){
     return BFGS_Powell(optimization_problem_combined_vqe, this);
 }
 
+Grad_Descend Variational_Quantum_Eigensolver_Base::create_grad_descent_problem(){
+    return Grad_Descend(optimization_problem_combined_vqe, this);
+}
+
 double Variational_Quantum_Eigensolver_Base::optimization_problem( double* parameters ) {
 
     // get the transformed matrix with the gates in the list

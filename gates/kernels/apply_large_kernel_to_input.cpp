@@ -672,8 +672,6 @@ void apply_4qbit_kernel_to_state_vector_input_parallel_AVX(Matrix& unitary, Matr
     
     int index_step_outer = 1 << involved_qbits[3];
     
-    std::cout<<involved_qbits[0]<<involved_qbits[1]<<involved_qbits[2]<<involved_qbits[3]<<std::endl;
-    
     int parallel_outer_cycles = matrix_size/(index_step_outer << 1);
     
     int parallel_inner_cycles = index_step_middle1/(index_step_inner << 1);

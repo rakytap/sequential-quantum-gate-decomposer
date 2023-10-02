@@ -199,7 +199,6 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
         fragment_circuit(involved_qbits,block_end,block_type,max_fusion);
         int outer_idx = gates.size()-1;
         for (int block_idx=0; block_idx<involved_qbits.size(); block_idx++){
-            //std::cout<<block_type[block_idx]<<std::endl;
             if (block_type[block_idx]!=1){
                 Gates_block gates_block_mini = Gates_block(block_type[block_idx]);
                 std::vector<int> qbits = involved_qbits[block_idx];

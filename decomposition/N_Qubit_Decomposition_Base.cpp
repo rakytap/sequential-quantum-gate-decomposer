@@ -1559,6 +1559,10 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINE
 }
 
 
+Grad_Descend N_Qubit_Decomposition_Base::create_grad_descent_problem(){
+    return Grad_Descend(optimization_problem_combined, this);
+}
+
 /**
 @brief Call to solve layer by layer the optimization problem via the GRAD_DESCEND (line search in the direction determined by the gradient) algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
@@ -1617,7 +1621,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND( 
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 	    
 
-            Grad_Descend cGrad_Descend(optimization_problem_combined, this);
+            Grad_Descend cGrad_Descend=create_grad_descent_problem();
             double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations);
 
             if (current_minimum > f) {

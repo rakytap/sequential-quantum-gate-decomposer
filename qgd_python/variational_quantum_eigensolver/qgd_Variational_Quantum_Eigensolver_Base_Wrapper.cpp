@@ -672,6 +672,9 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer( qgd_Variational_
     else if ( strcmp("adam", optimizer_C)==0 || strcmp("ADAM", optimizer_C)==0) {
         qgd_optimizer = ADAM;        
     }
+    else if ( strcmp("grad_descend", optimizer_C)==0 || strcmp("GRAD_DESCEND", optimizer_C)==0) {
+        qgd_optimizer = GRAD_DESCEND;        
+    }
     else {
         std::cout << "Wrong optimizer. Using default: AGENTS" << std::endl; 
         qgd_optimizer = AGENTS;     

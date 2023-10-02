@@ -307,7 +307,8 @@ Matrix mult(Matrix_sparse a, Matrix& b){
     
     int n_rows = a.rows;
     Matrix ret = Matrix(n_rows,1);
-    for (int idx=0; idx<n_rows; idx++){
+    tbb::parallel_for( tbb::blocked_range<int>(0,n_rows,32), [&](tbb::blocked_range<int> r) { 
+    for (int idx=r.begin(); idx<r.end(); ++idx){
         ret[idx].imag = 0.;
         ret[idx].real = 0.;
         int nz_start = a.indptr[idx];
@@ -321,6 +322,7 @@ Matrix mult(Matrix_sparse a, Matrix& b){
             ret[idx].real += result.real;
         }
     }
+    });
    return ret;
 }
 

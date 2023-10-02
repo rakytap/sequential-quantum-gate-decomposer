@@ -213,7 +213,9 @@ void solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real
 */
 void solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
-virtual BFGS_Powell N_Qubit_Decomposition_Base::create_bfgs_problem();
+virtual Grad_Descend create_grad_descent_problem();
+
+virtual BFGS_Powell create_bfgs_problem();
 
 /**
 @brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
