@@ -129,7 +129,7 @@ double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix& State){
 	Matrix tmp = mult(Hamiltonian, State);
 	double Energy= 0.0;
 	for (int idx=0; idx<State.rows; idx++){
-		Energy += State[idx].real*tmp[idx].real - State[idx].imag*tmp[idx].imag;
+	Energy += State[idx].real*tmp[idx].real + State[idx].imag*tmp[idx].imag;
 	} 
 	tmp.release_data();
 	return Energy;

@@ -93,8 +93,8 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 
         gates = self.get_gates()
 
-        for idx in range(len(gates)):
-            
+        for idx in range(len(gates)-1, -1, -1):
+
             gate = gates[idx]
 
             if gate.get("type") == "CNOT":
