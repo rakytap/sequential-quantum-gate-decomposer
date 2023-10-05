@@ -1616,11 +1616,14 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND( 
             iteration_loops_max = 1;
         }*/
         int iteration_loops_max;
+        long long value;
         if ( config.count("max_iteration_loops_grad_descend") > 0 ) {
-            config["max_inner_iterations_grad_descend"].get_property( iteration_loops_max );         
+            config["max_inner_iterations_grad_descend"].get_property( value );
+            iteration_loops_max = (int) value;
         }
         else if ( config.count("max_iteration_loops") > 0 ) {
-            config["max_iteration_loops"].get_property( iteration_loops_max );         
+            config["max_iteration_loops"].get_property( value );       
+            iteration_loops_max = (int) value;  
         }
         else {
             try {
@@ -2228,11 +2231,14 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
         // maximal number of iteration loops
         int iteration_loops_max;
+        long long value;
         if ( config.count("max_iteration_loops_bfgs") > 0 ) {
-            config["max_inner_iterations_bfgs"].get_property( iteration_loops_max );         
+            config["max_inner_iterations_bfgs"].get_property( value );
+            iteration_loops_max = (int) value;
         }
         else if ( config.count("max_iteration_loops") > 0 ) {
-            config["max_iteration_loops"].get_property( iteration_loops_max );         
+            config["max_iteration_loops"].get_property( value );       
+            iteration_loops_max = (int) value;  
         }
         else {
             try {
