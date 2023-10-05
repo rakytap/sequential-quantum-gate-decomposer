@@ -1506,7 +1506,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     
 		}   
 
-                if ( iter_idx % agent_life == 0 && agent_idx == 0) {
+                if ( iter_idx % agent_lifetime_loc == 0 && agent_idx == 0) {
                     std::stringstream sstream;
                     sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
                     sstream << ", current minimum of agent 0: " << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time;
