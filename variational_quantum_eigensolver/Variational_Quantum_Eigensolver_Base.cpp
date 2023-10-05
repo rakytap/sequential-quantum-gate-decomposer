@@ -113,8 +113,8 @@ Variational_Quantum_Eigensolver_Base::~Variational_Quantum_Eigensolver_Base(){}
 
 void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
 
-	initialize_zero_state();
-	int num_of_parameters =  optimized_parameters_mtx.size();
+    initialize_zero_state();
+    int num_of_parameters =  optimized_parameters_mtx.size();
     if (gates.size() == 0 ) {
             return;
     }
@@ -137,7 +137,8 @@ double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix& State){
 
 double Variational_Quantum_Eigensolver_Base::optimization_problem_vqe(Matrix_real parameters, void* void_instance){
 	double Energy=0.;
-    Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
+        Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
+	instance->initialize_zero_state();
 	Matrix State = instance->Zero_state.copy();
 	instance->apply_to(parameters, State);
 	Energy = instance->Expected_energy(State);
@@ -150,7 +151,9 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 	initialize_zero_state();
 	Matrix State = Zero_state.copy();
 	apply_to(parameters, State);
+	//State.print_matrix();
 	Energy = Expected_energy(State);
+	number_of_iters++;
 	return Energy;
 }
 
@@ -168,9 +171,10 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_vqe( Ma
 
     tbb::parallel_invoke(
         [&]{
-            *f0 = instance->optimization_problem_vqe(parameters, reinterpret_cast<void*>(instance)); 
+            *f0 = instance->optimization_problem_vqe(parameters, reinterpret_cast<void*>(instance));
         },
         [&]{
+	    instance->initialize_zero_state();
             Matrix State_loc = instance->Zero_state.copy();
             State_deriv = instance->apply_derivate_to( parameters, State_loc );
             State_loc.release_data();
@@ -282,10 +286,13 @@ void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers,
             release_gates();
             combine( gate_structure_tmp );
             Matrix_real optimized_parameters_mtx_tmp( 1, get_parameter_num() );
-            memset( optimized_parameters_mtx_tmp.get_data(), 0.0, optimized_parameters_mtx_tmp.size()*sizeof(double) ); 
+            std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI); 
+	    for(int idx = 0; idx < get_parameter_num(); idx++) {
+                optimized_parameters_mtx_tmp[idx] = distrib_real(gen);
+            }
+	    //memset( optimized_parameters_mtx_tmp.get_data(), 0.0, optimized_parameters_mtx_tmp.size()*sizeof(double) ); 
             optimized_parameters_mtx = optimized_parameters_mtx_tmp;
-            max_fusion = 3;
-            fragmentation_type = 2;
+            max_fusion = 4;
             fragment_circuit();
             return;
         }

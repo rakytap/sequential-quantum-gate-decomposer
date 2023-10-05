@@ -70,6 +70,14 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
         
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Optimized_Parameters(new_params)
         
+    def set_Optimization_Tolerance(self, tolerance):
+    
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Optimization_Tolerance(tolerance)
+        
+    def set_Project_Name(self, project_name):
+    
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Project_Name(project_name)
+        
     def set_Gate_Structure_from_Binary(self, filename):
     
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Gate_Structure_From_Binary(filename)

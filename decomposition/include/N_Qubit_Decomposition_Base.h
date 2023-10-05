@@ -204,6 +204,7 @@ void solve_layer_optimization_problem_GRAD_DESCEND( int num_of_parameters, Matri
 */
 void solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
+void export_current_cost_fnc(double current_minimum);
 
 
 /**

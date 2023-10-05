@@ -219,7 +219,22 @@ N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
 
 }
 
+void N_Qubit_Decomposition_Base::export_current_cost_fnc(double current_minimum){
+	FILE* pFile;
+    std::string filename("costfuncs.txt");
+	if (project_name != ""){filename = project_name + "_" + filename;}
 
+	const char* c_filename = filename.c_str();
+	pFile = fopen(c_filename, "a");
+    	if (pFile==NULL) {
+            fputs ("File error",stderr); 
+            std::string error("Cannot open file.");
+            throw error;
+     }
+     fprintf(pFile,"%f\t%i\n",current_minimum,number_of_iters);
+     fclose(pFile);
+     return;
+}
 /**
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
@@ -1489,8 +1504,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 
                     }   
                     
-                }   
-
+		}   
 
                 if ( iter_idx % 200 == 0 && agent_idx == 0) {
                     std::stringstream sstream;
@@ -1511,6 +1525,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();       
                                   
             
+            export_current_cost_fnc(current_minimum);
             // terminate the agent if the whole optimization problem was solved
             if ( terminate_optimization ) {
                 break;                    
@@ -2054,7 +2069,7 @@ pure_DFE_time = 0.0;
                 
                 randomization_successful = 1;
             }
-    
+    	    export_current_cost_fnc(current_minimum);
 
             if ( iter_idx % 5000 == 0 ) {
                 if (cost_fnc != VQE){

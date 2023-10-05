@@ -349,6 +349,23 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure_From_Binary(
 
 }
 
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimization_Tolerance(qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    double tolerance;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|d", &tolerance )) return Py_BuildValue("i", -1);
+
+
+    // set maximal layer nums on the C++ side
+    self->vqe->set_optimization_tolerance( tolerance );
+
+
+    return Py_BuildValue("i", 0);
+}
+
 
 static PyObject *
 get_gate(  Variational_Quantum_Eigensolver_Base* vqe, int &idx ) {
@@ -869,6 +886,26 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates( qgd_Variational_Quan
 
 }
 
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Project_Name( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
+    // initiate variables for input arguments
+    PyObject* project_name_new=NULL; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &project_name_new)) return Py_BuildValue("i", -1);
+    
+    
+    PyObject* project_name_new_string = PyObject_Str(project_name_new);
+    PyObject* project_name_new_unicode = PyUnicode_AsEncodedString(project_name_new_string, "utf-8", "~E~");
+    const char* project_name_new_C = PyBytes_AS_STRING(project_name_new_unicode);
+    std::string project_name_new_str = ( project_name_new_C );
+    
+    // convert to python string
+    self->vqe->set_project_name(project_name_new_str);
+
+   return Py_BuildValue("i", 0);
+}
+
 /**
 @brief Structure containing metadata about the members of class qgd_N_Qubit_Decomposition_Wrapper.
 */
@@ -889,11 +926,17 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     {"set_Optimized_Parameters", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimized_Parameters, METH_VARARGS,
      "Method to set the array of optimized parameters."
     },
+    {"set_Optimization_Tolerance", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimization_Tolerance, METH_VARARGS,
+    "Method to set optimization tolerance"
+    },
     {"get_gate", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gate, METH_VARARGS,
      "Method to get nth gate."
     },
     {"get_gates", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates, METH_NOARGS,
      "Method to get gates."
+    },
+    {"set_Project_Name", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Project_Name, METH_VARARGS,
+    "method to set project name."
     },
     {"set_Gate_Structure_From_Binary", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure_From_Binary, METH_VARARGS,
      "Method to set the gate structure from a file created in SQUANDER."
