@@ -154,7 +154,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 	apply_to(parameters, State);
 	//State.print_matrix();
 	Energy = Expected_energy(State);
-
+	number_of_iters++;
 	return Energy;
 }
 
