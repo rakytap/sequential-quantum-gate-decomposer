@@ -1506,7 +1506,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     
 		}   
 
-                if ( iter_idx % 200 == 0 && agent_idx == 0) {
+                if ( iter_idx % agent_life == 0 && agent_idx == 0) {
                     std::stringstream sstream;
                     sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
                     sstream << ", current minimum of agent 0: " << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time;
@@ -1608,14 +1608,28 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND( 
         }
 
         // maximal number of iteration loops
-        int iteration_loops_max;
+        /*int iteration_loops_max;
         try {
             iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
         }
         catch (...) {
             iteration_loops_max = 1;
+        }*/
+        int iteration_loops_max;
+        if ( config.count("max_iteration_loops_grad_descend") > 0 ) {
+            config["max_inner_iterations_grad_descend"].get_property( iteration_loops_max );         
         }
-
+        else if ( config.count("max_iteration_loops") > 0 ) {
+            config["max_iteration_loops"].get_property( iteration_loops_max );         
+        }
+        else {
+            try {
+            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
+            }
+            catch (...) {
+                iteration_loops_max = 1;
+            }
+        }
         // random generator of real numbers   
         std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
 
@@ -1638,7 +1652,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND( 
 
             Grad_Descend cGrad_Descend=create_grad_descent_problem();
             double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations);
-
+            export_current_cost_fnc(current_minimum);
             if (current_minimum > f) {
                 current_minimum = f;
                 memcpy( optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
@@ -2214,11 +2228,19 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 
         // maximal number of iteration loops
         int iteration_loops_max;
-        try {
-            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
+        if ( config.count("max_iteration_loops_bfgs") > 0 ) {
+            config["max_inner_iterations_bfgs"].get_property( iteration_loops_max );         
         }
-        catch (...) {
-            iteration_loops_max = 1;
+        else if ( config.count("max_iteration_loops") > 0 ) {
+            config["max_iteration_loops"].get_property( iteration_loops_max );         
+        }
+        else {
+            try {
+            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
+            }
+            catch (...) {
+                iteration_loops_max = 1;
+            }
         }
 
         // random generator of real numbers   
@@ -2256,6 +2278,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
                     solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen);
                 }
             }
+            export_current_cost_fnc(current_minimum);
 
 #ifdef __MPI__        
             MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);

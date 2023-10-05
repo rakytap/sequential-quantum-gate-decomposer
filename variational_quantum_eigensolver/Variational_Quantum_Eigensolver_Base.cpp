@@ -132,6 +132,7 @@ double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix& State){
 	Energy += State[idx].real*tmp[idx].real + State[idx].imag*tmp[idx].imag;
 	} 
 	tmp.release_data();
+	number_of_iters++;
 	return Energy;
 }
 
@@ -153,7 +154,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 	apply_to(parameters, State);
 	//State.print_matrix();
 	Energy = Expected_energy(State);
-	number_of_iters++;
+
 	return Energy;
 }
 
@@ -286,11 +287,15 @@ void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers,
             release_gates();
             combine( gate_structure_tmp );
             Matrix_real optimized_parameters_mtx_tmp( 1, get_parameter_num() );
-            std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI); 
-	    for(int idx = 0; idx < get_parameter_num(); idx++) {
-                optimized_parameters_mtx_tmp[idx] = distrib_real(gen);
+            if (alg == AGENTS){
+	        memset( optimized_parameters_mtx_tmp.get_data(), 0.0, optimized_parameters_mtx_tmp.size()*sizeof(double) ); 
             }
-	    //memset( optimized_parameters_mtx_tmp.get_data(), 0.0, optimized_parameters_mtx_tmp.size()*sizeof(double) ); 
+            else{
+            std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI); 
+	        for(int idx = 0; idx < get_parameter_num(); idx++) {
+                    optimized_parameters_mtx_tmp[idx] = distrib_real(gen);
+                }
+            }
             optimized_parameters_mtx = optimized_parameters_mtx_tmp;
             max_fusion = 4;
             fragment_circuit();

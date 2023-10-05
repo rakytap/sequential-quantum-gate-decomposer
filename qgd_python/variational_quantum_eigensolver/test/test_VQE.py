@@ -14,7 +14,7 @@ sigmay = sp.sparse.csr_matrix(np.array([[0,0+-1j],
 sigmaz = sp.sparse.csr_matrix(np.array([[1,0],
                    [0,-1]])+0.j)
 def generate_hamiltonian(topology, n):
-    Hamiltonian = sp.sparse.coo_array((2**n, 2**n), dtype=np.complex128)
+    Hamiltonian = sp.sparse.coo_matrix((2**n, 2**n), dtype=np.complex128)
     for i in topology:
         if i[0]==0:
             lhs_1 = sp.sparse.eye(1,format='coo')
