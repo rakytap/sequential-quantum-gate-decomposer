@@ -1437,7 +1437,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                         current_minimum = current_minimum_agent;      
                         
                                    
-                        
+
                     }
                     else {
                         // less successful agent migh choose to keep their current state, or choose the state of more successful agents
@@ -1484,6 +1484,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 
                     // test global convergence 
                     if ( agent_idx == 0 ) {
+                        export_current_cost_fnc(current_minimum);
                         current_minimum_mean = current_minimum_mean + (current_minimum - current_minimum_vec[ current_minimum_idx ])/current_minimum_vec.size();
                         current_minimum_vec[ current_minimum_idx ] = current_minimum;
                         current_minimum_idx = (current_minimum_idx + 1) % current_minimum_vec.size();
@@ -1503,6 +1504,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                         }                    
 
                     }   
+
                     
 		}   
 
@@ -1525,7 +1527,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();       
                                   
             
-            export_current_cost_fnc(current_minimum);
+
             // terminate the agent if the whole optimization problem was solved
             if ( terminate_optimization ) {
                 break;                    
@@ -1566,7 +1568,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINE
         Matrix_real solution_guess_COSINE(num_of_parameters, 1);
         memcpy( solution_guess_COSINE.get_data(), optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size()*sizeof(double) );
 
-        solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess_COSINE );
+        solve_layer_optimization_problem_GRAD_DESCEND( num_of_parameters, solution_guess_COSINE );
 
     }
         
@@ -1654,8 +1656,12 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND( 
 	    
 
             Grad_Descend cGrad_Descend=create_grad_descent_problem();
-            double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations);
-            export_current_cost_fnc(current_minimum);
+            double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations_loc);
+            //number_of_iters = number_of_iters + (int)cGrad_Descend.function_call_count;
+            std::stringstream sstream;
+            sstream<<"GRAD_DESCENT iteration loop: "<<idx<<" done."<<std::endl;
+            print(sstream, 0); 
+
             if (current_minimum > f) {
                 current_minimum = f;
                 memcpy( optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
@@ -1663,11 +1669,13 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND( 
                     solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen)/100;
                 }
             }
+           
             else {
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen);
                 }
             }
+            export_current_cost_fnc(current_minimum);
 
 #ifdef __MPI__        
             MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -2270,8 +2278,11 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 	    
 
             BFGS_Powell cBFGS_Powell = create_bfgs_problem();
-            double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
-
+            double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations_loc);
+            //number_of_iters = number_of_iters + (int)cBFGS_Powell.function_call_count;
+            std::stringstream sstream;
+            sstream<<"BFGS iteration loop: "<<idx<<" done."<<std::endl;
+            print(sstream, 0); 
             if (current_minimum > f) {
                 current_minimum = f;
                 memcpy( optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );

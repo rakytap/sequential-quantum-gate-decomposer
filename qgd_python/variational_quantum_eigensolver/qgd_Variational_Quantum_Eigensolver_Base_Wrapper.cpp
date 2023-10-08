@@ -683,6 +683,9 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer( qgd_Variational_
     if ( strcmp("agents", optimizer_C) == 0 || strcmp("AGENTS", optimizer_C) == 0) {
         qgd_optimizer = AGENTS;        
     }
+    else if ( strcmp("agents_combined", optimizer_C)==0 || strcmp("AGENTS_COMBINED", optimizer_C)==0) {
+        qgd_optimizer = AGENTS_COMBINED;        
+    }
     else if ( strcmp("bfgs", optimizer_C)==0 || strcmp("BFGS", optimizer_C)==0) {
         qgd_optimizer = BFGS;        
     }
