@@ -1609,7 +1609,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND( 
 	    
 
             Grad_Descend cGrad_Descend(optimization_problem_combined, this);
-            double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations);
+            double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations_loc);
 
             if (current_minimum > f) {
                 current_minimum = f;
@@ -2207,7 +2207,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
 	    
 
             BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
-            double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations);
+            double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations_loc);
 
             if (current_minimum > f) {
                 current_minimum = f;
