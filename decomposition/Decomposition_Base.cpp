@@ -1679,3 +1679,24 @@ Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
     	fclose(pFile);
 	return Umtx_;
 }
+
+
+
+/**
+@brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.
+@param qbit_num_in The number of qubits spanning the matrices.
+*/
+void Decomposition_Base::set_qbit_num( int qbit_num_in ) {
+
+    // check the size of the unitary
+    int matrix_size_loc = 1 << qbit_num_in;
+    if ( matrix_size_loc != matrix_size ) {
+        std::string err("Decomposition_Base::set_qbit_num: The new number of qubits is not in line with the input unitary to be decomposed");
+        throw err;
+    }
+
+    // setting the number of qubits
+    Gates_block::set_qbit_num(qbit_num_in);
+
+    
+}

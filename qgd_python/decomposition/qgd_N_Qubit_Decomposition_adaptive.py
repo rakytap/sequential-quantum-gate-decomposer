@@ -652,3 +652,38 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def get_Decomposition_Error(self):
     
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Decomposition_Error()
+
+
+
+##
+# @brief Call to get the second Rényi entropy
+# @param parameters A float64 numpy array
+# @param input_state A complex array storing the input state. If None |0> is created.
+# @Return Returns with the calculated entropy
+    def get_Second_Renyi_Entropy(self, parameters=None, input_state=None ):
+
+        if parameters is None:
+            print( "get_Second_Renyi_entropy: array of input parameters is None")
+            return None
+
+        if input_state is None:
+            qbit_num = self.get_Qbit_Num()
+            matrix_size = 1 << qbit_num
+            print(matrix_size )
+            input_state = np.zeros( (matrix_size,1) )
+            input_state[0] = 1
+
+        # evaluate the entropy
+        entropy = super(qgd_N_Qubit_Decomposition_adaptive, self).get_Second_Renyi_Entropy( parameters, input_state)  
+
+
+        return entropy
+
+
+
+##
+# @brief Call to get the number of qubits in the circuit
+# @return Returns with the number of qubits
+    def get_Qbit_Num(self):
+    
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Qbit_Num()

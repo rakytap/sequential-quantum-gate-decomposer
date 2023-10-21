@@ -838,6 +838,109 @@ qgd_Gates_Block_Wrapper_apply_to( qgd_Gates_Block_Wrapper *self, PyObject *args 
 
 
 
+/**
+@brief Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set.
+*/
+static PyObject *
+qgd_Gates_Block_Wrapper_get_Second_Renyi_Entropy( qgd_Gates_Block_Wrapper *self, PyObject *args)
+{
+
+
+    PyObject * parameters_arr = NULL;
+    PyObject * input_state_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|OO", &parameters_arr, &input_state_arg )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
+    // convert python object array to numpy C API array
+    if ( input_state_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+    PyObject* input_state = PyArray_FROM_OTF(input_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(input_state) ) {
+        PyErr_SetString(PyExc_Exception, "input mtrix is not memory contiguous");
+        return NULL;
+    }
+
+
+    // create QGD version of the input matrix
+    Matrix input_state_mtx = numpy2matrix(input_state);
+
+
+    double entropy = -1;
+
+
+    try {
+        entropy = self->gate->get_second_Renyi_entropy( parameters_mtx, input_state_mtx );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+std::cout << "oooooooooooooo " << std::endl;
+    //Py_DECREF(parameters_arr);
+    //Py_DECREF(input_state);
+
+
+
+    PyObject* p = Py_BuildValue("d", entropy);
+
+    return p;
+}
+
+
+/**
+@brief Call to retrieve the number of qubits in the circuit
+*/
+static PyObject *
+qgd_Gates_Block_Wrapper_get_Qbit_Num(qgd_Gates_Block_Wrapper *self ) {
+
+    int qbit_num = 0;
+
+    try {
+        qbit_num = self->gate->get_qbit_num();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("i", qbit_num );
+    
+}
+
 
 
 static PyMethodDef qgd_Gates_Block_Wrapper_Methods[] = {
@@ -905,6 +1008,12 @@ static PyMethodDef qgd_Gates_Block_Wrapper_Methods[] = {
     },
     {"apply_to", (PyCFunction) qgd_Gates_Block_Wrapper_apply_to, METH_VARARGS,
      "Call to apply the gate on the input matrix."
+    },
+    {"get_Second_Renyi_Entropy", (PyCFunction) qgd_Gates_Block_Wrapper_get_Second_Renyi_Entropy, METH_VARARGS,
+     "Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set."
+    },
+    {"get_Qbit_Num", (PyCFunction) qgd_Gates_Block_Wrapper_get_Qbit_Num, METH_NOARGS,
+     "Call to get the number of qubits in the circuit"
     },
     {NULL}  /* Sentinel */
 };

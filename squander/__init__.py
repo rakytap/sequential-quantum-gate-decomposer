@@ -13,7 +13,7 @@ from qgd_python.gates.qgd_U3 import qgd_U3 as U3
 from qgd_python.gates.qgd_X import qgd_X  as X
 from qgd_python.gates.qgd_Y import qgd_Y  as Y
 from qgd_python.gates.qgd_Z import qgd_Z  as Z 
-from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper as Gates_Block
+from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block as Gates_Block
 from qgd_python.gates.qgd_CH import qgd_CH  as CH 
 from qgd_python.gates.qgd_CNOT import qgd_CNOT  as CNOT
 from qgd_python.gates.qgd_CZ import qgd_CZ  as CZ 
