@@ -1167,7 +1167,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decom
     qgd_Gates_Block_Wrapper* qgd_op_block = (qgd_Gates_Block_Wrapper*) gate_structure_py;
 
     try {
-        self->decomp->set_adaptive_gate_structure( qgd_op_block->gate );
+        self->decomp->set_custom_gate_structure( qgd_op_block->gate );
     }
     catch (std::string err ) {
         PyErr_SetString(PyExc_Exception, err.c_str());

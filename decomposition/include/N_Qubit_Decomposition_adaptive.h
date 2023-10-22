@@ -217,13 +217,6 @@ void add_finalyzing_layer( Gates_block* gate_structure );
 
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the decomposition.
-@param gate_structure_in
-*/
-void set_adaptive_gate_structure( Gates_block* gate_structure_in );
-
-
-/**
-@brief Call to set custom layers to the gate structure that are intended to be used in the decomposition.
 @param filename
 */
 void set_adaptive_gate_structure( std::string filename );

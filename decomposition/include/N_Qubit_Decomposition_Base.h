@@ -454,6 +454,13 @@ void set_trace_offset(int trace_offset_in);
 */
 int get_num_iters();
 
+/**
+@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
+@param gate_structure An <int, Gates_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
+*/
+void set_custom_gate_structure( Gates_block* gate_structure_in );
+
+
 #ifdef __DFE__
 
 /**
