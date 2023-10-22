@@ -1923,6 +1923,11 @@ void Gates_block::combine(Gates_block* op_block) {
 */
 void Gates_block::set_qbit_num( int qbit_num_in ) {
 
+    if (qbit_num_in > 30) {
+        std::string err("Gates_block::set_qbit_num: Number of qubits supported up to 30"); 
+        throw err;        
+    }
+
     // setting the number of qubits
     Gate::set_qbit_num(qbit_num_in);
 
@@ -2060,9 +2065,10 @@ bool Gates_block::contains_adaptive_gate(int idx) {
 @brief Call to evaluate the seconf Rényi entropy. The quantum circuit is applied on an input state input. The entropy is evaluated for the transformed state.
 @param parameters An array of parameters to calculate the entropy
 @param input_state The input state on which the gate structure is applied
+@param qbit_list Subset of qubits for which the entropy should be calculated. (Should conatin unique elements)
 @Return Returns with the calculated entropy
 */
-double Gates_block::get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matrix& input_state ) {
+double Gates_block::get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matrix& input_state, matrix_base<int>& qbit_list ) {
 
     if (input_state.cols != 1) {
         std::string error("Gates_block::get_second_Renyi_entropy: The number of columns in input state should be 1");
@@ -2079,13 +2085,124 @@ double Gates_block::get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matri
     Matrix transformed_state = input_state.copy();  
     apply_to( parameters_mtx, transformed_state );
 
-    // retrieve the reduced density matrix
 
+qbit_list.print_matrix();
+
+    int subset_qbit_num = qbit_list.size();
+
+    // 000010000 one-hot encoded numbers indicating the bit position of the qubits in qbit_list
+    matrix_base<int> qbit_masks(subset_qbit_num, 1);
+    for (int qbit_idx=0; qbit_idx<subset_qbit_num; qbit_idx++) {
+
+        int qbit_loc = qbit_list[qbit_idx];
+  
+        if ( qbit_loc > 30 ) {
+            std::string err("Gates_block::get_second_Renyi_entropy: Number of qubits supported up to 30"); 
+            throw err;
+        }
+
+        qbit_masks[ qbit_idx ] = 1 << qbit_loc;
+
+        std::cout <<"ee " <<  qbit_masks[ qbit_idx ] << std::endl;
+
+    }
+
+    // retrieve the reduced density matrix
+    int rho_matrix_size = 1 << subset_qbit_num;
+
+    Matrix rho(rho_matrix_size, rho_matrix_size);
+    memset( rho.get_data(), 0.0, rho.size()*sizeof(QGD_Complex16) );
+
+
+    for ( int idx=0; idx<matrix_size; idx++ ) {
+
+        QGD_Complex16 element_idx = transformed_state[ idx ];
+
+        // conjugate because of the bra-vector
+        element_idx.imag = -element_idx.imag;
+
+        int idx_complementer_subset = idx;
+
+        // determine row index in the density matrix
+        int row_idx = 0;
+        for (int qbit_idx=0; qbit_idx<subset_qbit_num; qbit_idx++) {
+
+            idx_complementer_subset = idx_complementer_subset & (~qbit_masks[ qbit_idx ] );
+
+            if ( idx & qbit_masks[ qbit_idx ] ) {
+                row_idx = row_idx + ( 1 << qbit_idx );
+            }
+        }
+
+        for ( int jdx=idx; jdx<matrix_size; jdx++ ) {
+
+            QGD_Complex16& element_jdx = transformed_state[ jdx ];
+
+            int jdx_complementer_subset = jdx;
+
+            // determine row index in the density matrix
+            int col_idx = 0;
+            for (int qbit_idx=0; qbit_idx<subset_qbit_num; qbit_idx++) {
+
+                jdx_complementer_subset = jdx_complementer_subset & (~qbit_masks[ qbit_idx ] ); 
+
+                if ( jdx & qbit_masks[ qbit_idx ] ) {
+                    col_idx = col_idx + ( 1 << qbit_idx );
+                }
+            }
+
+            // the qbit states in the complementer of the subset must be equal
+            if ( idx_complementer_subset != jdx_complementer_subset ) {
+std::cout << "qqqqqqqqqqqqqqkkkkkkkkkkk" << std::endl;
+                continue;
+            }
+
+           
+            QGD_Complex16 rho_element = mult( element_idx, element_jdx );
+            rho[ row_idx * rho.stride + col_idx ] = rho_element;
+
+            rho_element.imag = -rho_element.imag;
+            rho[ col_idx * rho.stride + row_idx ] = rho_element;
+            
+
+        }
+    }
 
     // calculate the second Rényi entropy
 
-    // Matrix rho_2 = dot( rho, rho );
-    // enropy = -ln (trace(rho_2) );
+    Matrix rho_square = dot( rho, rho );
+    double trace_rho_square_test = 0.0;
+    double trace_rho_square_test2 = 0.0;
+    for (int idx=0; idx<rho_matrix_size; idx++) {
+        trace_rho_square_test = trace_rho_square_test + rho_square[ idx*rho.stride + idx ].real;
+        trace_rho_square_test2 = trace_rho_square_test2 + rho_square[ idx*rho.stride + idx ].imag;
+
+    }
+
+
+    double trace_rho_square = 0.0;
+
+    for (int idx=0; idx<rho_matrix_size; idx++) {
+
+        double trace_tmp = 0.0;
+
+        for (int jdx=0; jdx<rho_matrix_size; jdx++) {
+            QGD_Complex16& element = rho[ idx*rho.stride + jdx ];
+            double tmp = element.real * element.real + element.imag * element.imag;
+
+            trace_tmp = trace_tmp + tmp;
+        }
+
+
+        trace_rho_square = trace_rho_square + trace_tmp;
+
+
+    }
+
+
+std::cout << trace_rho_square << " " << trace_rho_square_test << " " << trace_rho_square_test2 << std::endl;
+
+    // entropy = -ln (trace(rho_2) );
 
 
     return 6.2;

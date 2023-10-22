@@ -209,24 +209,26 @@ class qgd_Gates_Block(qgd_Gates_Block_Wrapper):
 # @brief Call to get the second Rényi entropy
 # @param parameters A float64 numpy array
 # @param input_state A complex array storing the input state. If None |0> is created.
-# @param qubit_list A list of qubits for which the Rényi entropy should be calculated.
+# @param qubit_list A subset of qubits for which the Rényi entropy should be calculated.
 # @Return Returns with the calculated entropy
     def get_Second_Renyi_Entropy(self, parameters=None, input_state=None, qubit_list=None ):
 
         # validate input parameters
 
         qbit_num = self.get_Qbit_Num()
-        # TODO: uniqe elements in qubit list, create np.array from qubit_list
+
         qubit_list_validated = list()
         if isinstance(qubit_list, list) or isinstance(qubit_list, tuple):
             for item in qubit_list:
                 if isinstance(item, int):
                     qubit_list_validated.append(item)
+                    qubit_list_validated = list(set(qubit_list_validated))
                 else:
                     print("Elements of qbit_list should be integers")
                     return
         elif qubit_list == None:
             qubit_list_validated = [ x for x in range(qbit_num) ]
+
         else:
             print("Elements of qbit_list should be integers")
             return
@@ -244,7 +246,7 @@ class qgd_Gates_Block(qgd_Gates_Block_Wrapper):
             input_state[0] = 1
         print("iiiiiiiiiiiiiiiiiiiiiI")
         # evaluate the entropy
-        entropy = super(qgd_Gates_Block, self).get_Second_Renyi_Entropy( parameters, input_state)  
+        entropy = super(qgd_Gates_Block, self).get_Second_Renyi_Entropy( parameters, input_state, qubit_list_validated)  
 
 
         return entropy

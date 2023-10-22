@@ -2304,10 +2304,11 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Second_Renyi_Entropy( qgd_N_Qubit
 
     PyObject * parameters_arr = NULL;
     PyObject * input_state_arg = NULL;
+    PyObject * qubit_list_arg = NULL;
 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|OO", &parameters_arr, &input_state_arg )) 
+    if (!PyArg_ParseTuple(args, "|OOO", &parameters_arr, &input_state_arg, &qubit_list_arg )) 
         return Py_BuildValue("i", -1);
 
     
@@ -2341,11 +2342,28 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Second_Renyi_Entropy( qgd_N_Qubit
     Matrix input_state_mtx = numpy2matrix(input_state);
 
 
+    // check input argument qbit_list
+    if ( qubit_list_arg == NULL or (!PyList_Check( qubit_list_arg )) ) {
+        PyErr_SetString(PyExc_Exception, "qubit_list should be a list");
+        return NULL;
+    }
+
+    Py_ssize_t reduced_qbit_num = PyList_Size( qubit_list_arg );
+
+    matrix_base<int> qbit_list_mtx( (int)reduced_qbit_num, 1);
+    for ( int idx=0; idx<reduced_qbit_num; idx++ ) {
+
+        PyObject* item = PyList_GET_ITEM( qubit_list_arg, idx );
+        qbit_list_mtx[idx] = (int) PyLong_AsLong( item );
+
+    }
+
+
     double entropy = -1;
 
 
     try {
-        entropy = self->decomp->get_second_Renyi_entropy( parameters_mtx, input_state_mtx );
+        entropy = self->decomp->get_second_Renyi_entropy( parameters_mtx, input_state_mtx, qbit_list_mtx );
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
