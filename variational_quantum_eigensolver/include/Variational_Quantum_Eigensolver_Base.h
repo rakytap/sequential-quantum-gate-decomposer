@@ -25,7 +25,6 @@ limitations under the License.
 #define  VARIATIONAL_QUANTUM_EIGENSOLVER_BASE_H
 
 #include "N_Qubit_Decomposition_Base.h"
-#include "BFGS_Powell.h"
 
 /// @brief Type definition of the fifferent types of ansatz
 typedef enum ansatz_type {HEA} ansatz_type;
@@ -79,17 +78,13 @@ virtual ~Variational_Quantum_Eigensolver_Base();
 
 double Expected_energy(Matrix& State);
 
-static double optimization_problem_vqe(Matrix_real parameters, void* void_instance);
-
 virtual double optimization_problem(Matrix_real& parameters) override;
+
+virtual double optimization_problem_non_static( Matrix_real parameters, void* void_instance) override;
 
 double optimization_problem( double* parameters);
 
-virtual BFGS_Powell create_bfgs_problem() override;
-
-virtual Grad_Descend create_grad_descent_problem() override;
-
-static void optimization_problem_combined_vqe( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
+virtual void optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) override;
 
 virtual void optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad ) override;
 

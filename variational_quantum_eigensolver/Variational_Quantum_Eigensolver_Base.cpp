@@ -101,7 +101,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
     
     gen = std::mt19937(rd());
     
-    alg = AGENTS;
+    alg = BAYES_OPT;
     
     cost_fnc = VQE;
     
@@ -118,9 +118,10 @@ void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
     if (gates.size() == 0 ) {
             return;
     }
-    solve_layer_optimization_problem(num_of_parameters,optimized_parameters_mtx);
+    Matrix_real solution_guess = optimized_parameters_mtx.copy();
+    solve_layer_optimization_problem(num_of_parameters,solution_guess);
     double f0=optimization_problem(optimized_parameters_mtx);
-    std::cout<<"Ground state found, energy: "<<f0<<std::endl;
+    std::cout<<"Ground state found, energy: "<<current_minimum<<std::endl;
     prepare_gates_to_export();
     return;
 }
@@ -136,9 +137,10 @@ double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix& State){
 	return Energy;
 }
 
-double Variational_Quantum_Eigensolver_Base::optimization_problem_vqe(Matrix_real parameters, void* void_instance){
+
+double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Matrix_real parameters, void* void_instance){
 	double Energy=0.;
-        Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
+    Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
 	instance->initialize_zero_state();
 	Matrix State = instance->Zero_state.copy();
 	instance->apply_to(parameters, State);
@@ -159,8 +161,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 }
 
 
-void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_vqe( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
-
+void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
     // the number of free parameters
     int parameter_num_loc = parameters.size();
@@ -168,25 +169,27 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_vqe( Ma
     Matrix_real cost_function_terms;
 
     // vector containing gradients of the transformed matrix
-    std::vector<Matrix> State_deriv;
+    //std::vector<Matrix> State_deriv;
 
     tbb::parallel_invoke(
         [&]{
-            *f0 = instance->optimization_problem_vqe(parameters, reinterpret_cast<void*>(instance));
+            *f0 = instance->optimization_problem_non_static(parameters, reinterpret_cast<void*>(instance));
         },
         [&]{
 	    instance->initialize_zero_state();
             Matrix State_loc = instance->Zero_state.copy();
-            State_deriv = instance->apply_derivate_to( parameters, State_loc );
+            //State_deriv = instance->apply_derivate_to( parameters, State_loc );
             State_loc.release_data();
     });
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
-
-            double grad_comp;
-            grad_comp = instance->Expected_energy(State_deriv[idx]);
-            grad[idx] = grad_comp;
+            Matrix_real parameters_grad = parameters.copy();
+            parameters_grad[idx] = parameters_grad[idx] - M_PI/2;
+            double grad_comp_neg =  instance->optimization_problem_non_static(parameters_grad, reinterpret_cast<void*>(instance));
+            parameters_grad[idx] = parameters_grad[idx] + M_PI;
+            double grad_comp_pos =  instance->optimization_problem_non_static(parameters_grad, reinterpret_cast<void*>(instance));
+            grad[idx] = 0.5*(grad_comp_pos-grad_comp_neg);
 
         }
     });
@@ -195,22 +198,15 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_vqe( Ma
 
 void Variational_Quantum_Eigensolver_Base::optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad )  {
 
-    optimization_problem_combined_vqe( parameters, this, f0, grad );
+    optimization_problem_combined_non_static( parameters, this, f0, grad );
     return;
 }
 
 void Variational_Quantum_Eigensolver_Base::optimization_problem_grad_vqe( Matrix_real parameters, void* void_instance, Matrix_real& grad ) {
     double f0;
-    optimization_problem_combined_vqe(parameters, void_instance, &f0, grad);
+    Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
+    instance->optimization_problem_combined_non_static(parameters, void_instance, &f0, grad);
     return;
-}
-
-BFGS_Powell Variational_Quantum_Eigensolver_Base::create_bfgs_problem(){
-    return BFGS_Powell(optimization_problem_combined_vqe, this);
-}
-
-Grad_Descend Variational_Quantum_Eigensolver_Base::create_grad_descent_problem(){
-    return Grad_Descend(optimization_problem_combined_vqe, this);
 }
 
 double Variational_Quantum_Eigensolver_Base::optimization_problem( double* parameters ) {
@@ -297,8 +293,8 @@ void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers,
                 }
             }
             optimized_parameters_mtx = optimized_parameters_mtx_tmp;
-            max_fusion = 4;
-            fragment_circuit();
+            //max_fusion = (qbit_num>4)? 4:qbit_num-1;
+            //fragment_circuit();
             return;
         }
         default:

@@ -25,6 +25,8 @@ limitations under the License.
 
 #include "Decomposition_Base.h"
 #include "BFGS_Powell.h"
+#include "Bayes_Opt.h"
+#include "Powells_method.h"
 
 /// @brief Type definition of the fifferent types of the cost function
 typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
@@ -61,7 +63,7 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 
 
 /// implemented optimization algorithms
-enum optimization_aglorithms{ ADAM, BFGS, BFGS2, ADAM_BATCHED, AGENTS, COSINE, AGENTS_COMBINED, GRAD_DESCEND };
+enum optimization_aglorithms{ ADAM, BFGS, BFGS2, ADAM_BATCHED, AGENTS, COSINE, AGENTS_COMBINED, GRAD_DESCEND, BAYES_OPT, BAYES_AGENTS};
 
 
 /**
@@ -214,9 +216,6 @@ void export_current_cost_fnc(double current_minimum);
 */
 void solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
-virtual Grad_Descend create_grad_descent_problem();
-
-virtual BFGS_Powell create_bfgs_problem();
 
 /**
 @brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
@@ -226,7 +225,6 @@ virtual BFGS_Powell create_bfgs_problem();
 void solve_layer_optimization_problem_BFGS( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
 
-
 /**
 @brief Call to solve layer by layer the optimization problem via BBFG algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
@@ -234,6 +232,10 @@ void solve_layer_optimization_problem_BFGS( int num_of_parameters, Matrix_real& 
 */
 void solve_layer_optimization_problem_BFGS2( int num_of_parameters, Matrix_real solution_guess);
 
+
+void solve_layer_optimization_problem_BAYES_OPT( int num_of_parameters, Matrix_real& solution_guess_gsl);
+
+void solve_layer_optimization_problem_BAYES_AGENTS( int num_of_parameters, Matrix_real& solution_guess_gsl);
 /**
 @brief Call to solve layer by layer the optimization problem via batched ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
@@ -296,6 +298,8 @@ double optimization_problem( Matrix_real parameters, void* void_instance, Matrix
 */
 static double optimization_problem( Matrix_real parameters, void* void_instance);
 
+virtual double optimization_problem_non_static( Matrix_real parameters, void* void_instance);
+
 
 /**
 @brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
@@ -303,7 +307,7 @@ static double optimization_problem( Matrix_real parameters, void* void_instance)
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad Array containing the calculated gradient components.
 */
-static void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad );
+static void optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad );
 
 
 
@@ -326,7 +330,7 @@ static void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real p
 */
 static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
-
+virtual void optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
 
 /**

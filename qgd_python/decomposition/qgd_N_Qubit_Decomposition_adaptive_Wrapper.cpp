@@ -2022,6 +2022,9 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimizer( qgd_N_Qubit_Decomposit
     else if ( strcmp("agents_combined", optimizer_C)==0 || strcmp("AGENTS_COMBINED", optimizer_C)==0) {
         qgd_optimizer = AGENTS_COMBINED;        
     }
+    else if ( strcmp("bayes_opt", optimizer_C)==0 || strcmp("BAYES_OPT", optimizer_C)==0) {
+        qgd_optimizer = BAYES_OPT;        
+    }
     else {
         std::cout << "Wrong optimizer: " << optimizer_C << ". Using default: BFGS" << std::endl; 
         qgd_optimizer = BFGS;     

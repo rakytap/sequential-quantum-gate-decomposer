@@ -321,6 +321,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/common/Adam.cpp
     ${PROJECT_SOURCE_DIR}/common/grad_descend.cpp
     ${PROJECT_SOURCE_DIR}/common/BFGS_Powell.cpp
+    ${PROJECT_SOURCE_DIR}/common/Powells_method.cpp
+    ${PROJECT_SOURCE_DIR}/common/Bayes_Opt.cpp
     ${PROJECT_SOURCE_DIR}/optimization_engines/RL_experience.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/gates/SYC.cpp

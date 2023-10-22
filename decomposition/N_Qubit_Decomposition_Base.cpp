@@ -26,6 +26,7 @@ limitations under the License.
 #include "Adam.h"
 #include "grad_descend.h"
 #include "BFGS_Powell.h"
+#include "Bayes_Opt.h"
 
 #include "RL_experience.h"
 
@@ -415,6 +416,12 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
             return;
         case BFGS:
             solve_layer_optimization_problem_BFGS( num_of_parameters, solution_guess);
+            return;
+        case BAYES_OPT:
+            solve_layer_optimization_problem_BAYES_OPT( num_of_parameters, solution_guess);
+            return;
+        case BAYES_AGENTS:
+            solve_layer_optimization_problem_BAYES_AGENTS( num_of_parameters, solution_guess);
             return;
         case BFGS2:
             solve_layer_optimization_problem_BFGS2( num_of_parameters, solution_guess);
@@ -1576,9 +1583,6 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINE
 }
 
 
-Grad_Descend N_Qubit_Decomposition_Base::create_grad_descent_problem(){
-    return Grad_Descend(optimization_problem_combined, this);
-}
 
 /**
 @brief Call to solve layer by layer the optimization problem via the GRAD_DESCEND (line search in the direction determined by the gradient) algorithm. The optimalized parameters are stored in attribute optimized_parameters.
@@ -1655,12 +1659,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND( 
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 	    
 
-            Grad_Descend cGrad_Descend=create_grad_descent_problem();
-            double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations_loc);
-            //number_of_iters = number_of_iters + (int)cGrad_Descend.function_call_count;
-            std::stringstream sstream;
-            sstream<<"GRAD_DESCENT iteration loop: "<<idx<<" done."<<std::endl;
-            print(sstream, 0); 
+            Grad_Descend cGrad_Descend(optimization_problem_combined, this);
+            double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations);
 
             if (current_minimum > f) {
                 current_minimum = f;
@@ -2204,9 +2204,6 @@ pure_DFE_time = 0.0;
 }
 
 
-BFGS_Powell N_Qubit_Decomposition_Base::create_bfgs_problem(){
-    return BFGS_Powell(optimization_problem_combined, this);
-}
 
 /**
 @brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
@@ -2277,12 +2274,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 	    
 
-            BFGS_Powell cBFGS_Powell = create_bfgs_problem();
+            BFGS_Powell cBFGS_Powell(optimization_problem_combined, this);
             double f = cBFGS_Powell.Start_Optimization(solution_guess, max_inner_iterations_loc);
-            //number_of_iters = number_of_iters + (int)cBFGS_Powell.function_call_count;
-            std::stringstream sstream;
-            sstream<<"BFGS iteration loop: "<<idx<<" done."<<std::endl;
-            print(sstream, 0); 
+
             if (current_minimum > f) {
                 current_minimum = f;
                 memcpy( optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
@@ -2492,6 +2486,158 @@ bfgs_time = 0.0;
 }
 
 
+/**
+@brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess Array containing the solution guess.
+*/
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BAYES_OPT( int num_of_parameters, Matrix_real& solution_guess) {
+
+        if (gates.size() == 0 ) {
+            return;
+        }
+
+
+        if (solution_guess.size() == 0 ) {
+            solution_guess = Matrix_real(num_of_parameters,1);
+        }
+
+
+        if (optimized_parameters_mtx.size() == 0) {
+            optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
+        }
+
+        // maximal number of iteration loops
+        int iteration_loops_max = 1;
+        /*try {
+            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
+        }
+        catch (...) {
+            iteration_loops_max = 1;
+        }*/
+
+        // random generator of real numbers   
+        std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
+
+        // maximal number of inner iterations overriden by config
+        long long max_inner_iterations_loc;
+        if ( config.count("max_inner_iterations_bayes_opt") > 0 ) {
+            config["max_inner_iterations_bfgs"].get_property( max_inner_iterations_loc );         
+        }
+        else if ( config.count("max_inner_iterations") > 0 ) {
+            config["max_inner_iterations"].get_property( max_inner_iterations_loc );         
+        }
+        else {
+            max_inner_iterations_loc =max_inner_iterations;
+        }
+        Bayes_Opt cBayes_Opt(optimization_problem,this);
+        // do the optimization loops
+        for (long long idx=0; idx<iteration_loops_max; idx++) {
+	    
+
+
+            double f = cBayes_Opt.Start_Optimization(solution_guess, max_inner_iterations_loc);
+
+            if (current_minimum > f) {
+                current_minimum = f;
+                memcpy( optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
+            }
+            else {
+                for ( int jdx=0; jdx<num_of_parameters; jdx++) {
+                    solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen);
+                }
+            }
+
+        }
+        std::cout<<current_minimum<<std::endl;
+
+}
+
+void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BAYES_AGENTS( int num_of_parameters, Matrix_real& solution_guess) {
+        if (gates.size() == 0 ) {
+            return;
+        }
+
+
+        if (solution_guess.size() == 0 ) {
+            solution_guess = Matrix_real(num_of_parameters,1);
+        }
+
+
+        if (optimized_parameters_mtx.size() == 0) {
+            optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+            memcpy(optimized_parameters_mtx.get_data(), solution_guess.get_data(), num_of_parameters*sizeof(double) );
+        }
+
+        // maximal number of iteration loops
+        int iteration_loops_max = 1;
+        /*try {
+            iteration_loops_max = std::max(iteration_loops[qbit_num], 1);
+        }
+        catch (...) {
+            iteration_loops_max = 1;
+        }*/
+
+        // random generator of real numbers   
+        std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI);
+
+        // maximal number of inner iterations overriden by config
+        long long max_inner_iterations_loc;
+        if ( config.count("max_inner_iterations_bayes_opt") > 0 ) {
+            config["max_inner_iterations_bfgs"].get_property( max_inner_iterations_loc );         
+        }
+        else if ( config.count("max_inner_iterations") > 0 ) {
+            config["max_inner_iterations"].get_property( max_inner_iterations_loc );         
+        }
+        else {
+            max_inner_iterations_loc =max_inner_iterations;
+        }
+        int fragment_size = 5;
+        int leftover = num_of_parameters%fragment_size;
+        int number_of_agents = num_of_parameters/fragment_size;
+        Matrix_real cost_funcs(1,number_of_agents);
+        Matrix_real parameters_agents(1,num_of_parameters);
+        for (int iter=0;iter<max_inner_iterations_loc;iter++){
+            tbb::parallel_for( tbb::blocked_range<int>(0,number_of_agents,2), [&](tbb::blocked_range<int> r) {
+                for (int idx=r.begin(); idx<r.end(); ++idx) {
+                int start = idx*fragment_size;
+                Bayes_Opt_Beam cAgent(optimization_problem,this,start,solution_guess);
+                Matrix_real solution_guess_agent(1,fragment_size);
+                memcpy(solution_guess_agent.get_data(),solution_guess.get_data()+start,sizeof(double)*fragment_size);
+                cost_funcs[idx] = cAgent.Start_Optimization(solution_guess_agent,25);
+                memcpy(parameters_agents.get_data()+start,solution_guess_agent.get_data(),sizeof(double)*fragment_size);
+                } 
+            });
+            double cost_func_leftover = 100000.;
+            if (leftover!=0){
+            Bayes_Opt_Beam cAgent(optimization_problem,this,fragment_size*number_of_agents,solution_guess);
+            Matrix_real solution_guess_agent(1,leftover);
+            memcpy(solution_guess_agent.get_data(),solution_guess.get_data()+fragment_size*number_of_agents,sizeof(double)*leftover);
+            cost_func_leftover = cAgent.Start_Optimization(solution_guess_agent,25);
+            memcpy(parameters_agents.get_data()+fragment_size*number_of_agents,solution_guess_agent.get_data(),sizeof(double)*leftover);
+            }
+            int best_idx=0;
+            for (int idx=1;idx<number_of_agents;idx++){
+                best_idx = (cost_funcs[best_idx]<cost_funcs[idx])? best_idx:idx;
+            }
+            
+            if (cost_funcs[best_idx]<cost_func_leftover){
+                if (current_minimum>cost_funcs[best_idx]){
+                    current_minimum = cost_funcs[best_idx];
+                    int start = best_idx*fragment_size;
+                    memcpy(solution_guess.get_data() + start,parameters_agents.get_data()+start,sizeof(double)*fragment_size);
+                }
+            }
+            else{
+                if (current_minimum>cost_func_leftover && leftover!=0){
+                current_minimum = cost_func_leftover;
+                memcpy(solution_guess.get_data() + fragment_size*number_of_agents,parameters_agents.get_data()+fragment_size*number_of_agents,sizeof(double)*leftover);
+                }
+            }
+        }
+
+}
 /**
 @brief Call to randomize the parameter.
 @param input The parameters are randomized around the values stores in this array
@@ -2774,7 +2920,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters,
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters, void* void_instance) {
+double N_Qubit_Decomposition_Base::optimization_problem_non_static( Matrix_real parameters, void* void_instance) {
 
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
     Matrix ret(1,3);
@@ -2782,7 +2928,10 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters,
     return cost_func;
 }
 
-
+double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters, void* void_instance){
+    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+    return instance->optimization_problem_non_static(parameters, void_instance);
+}
 
 
 
@@ -2817,7 +2966,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real paramete
 @param f0 The value of the cost function at x0.
 @param grad Array containing the calculated gradient components.
 */
-void N_Qubit_Decomposition_Base::optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
+void N_Qubit_Decomposition_Base::optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
 
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
 
@@ -3005,6 +3154,11 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
 }
 
+void N_Qubit_Decomposition_Base::optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ){
+    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+    instance->optimization_problem_combined_non_static(parameters, void_instance, f0, grad );
+    return;
+}
 
 
 /**
@@ -3161,6 +3315,19 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
 
         case BFGS2:
             max_inner_iterations = 1e5;
+            random_shift_count_max = 100;
+            gradient_threshold = 1e-8;
+            max_outer_iterations = 1;
+            return;
+        
+        case BAYES_OPT:
+            max_inner_iterations = 100;
+            random_shift_count_max = 100;
+            gradient_threshold = 1e-8;
+            max_outer_iterations = 1;
+            return;
+        case BAYES_AGENTS:
+            max_inner_iterations = 100;
             random_shift_count_max = 100;
             gradient_threshold = 1e-8;
             max_outer_iterations = 1;
