@@ -689,7 +689,6 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         if input_state is None:
             matrix_size = 1 << qbit_num
-            print(matrix_size )
             input_state = np.zeros( (matrix_size,1) )
             input_state[0] = 1
 

@@ -2376,9 +2376,9 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Second_Renyi_Entropy( qgd_N_Qubit
         return NULL;
     }
 
-std::cout << "oooooooooooooo " << std::endl;
-    //Py_DECREF(parameters_arr);
-    //Py_DECREF(input_state);
+
+    Py_DECREF(parameters_arr);
+    Py_DECREF(input_state);
 
 
 

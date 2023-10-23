@@ -913,7 +913,6 @@ qgd_Gates_Block_Wrapper_get_Second_Renyi_Entropy( qgd_Gates_Block_Wrapper *self,
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
-        std::cout << err << std::endl;
         return NULL;
     }
     catch(...) {
@@ -922,9 +921,9 @@ qgd_Gates_Block_Wrapper_get_Second_Renyi_Entropy( qgd_Gates_Block_Wrapper *self,
         return NULL;
     }
 
-std::cout << "oooooooooooooo " << std::endl;
-    //Py_DECREF(parameters_arr);
-    //Py_DECREF(input_state);
+
+    Py_DECREF(parameters_arr);
+    Py_DECREF(input_state);
 
 
 

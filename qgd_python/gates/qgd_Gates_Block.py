@@ -241,10 +241,9 @@ class qgd_Gates_Block(qgd_Gates_Block_Wrapper):
 
         if input_state is None:
             matrix_size = 1 << qbit_num
-            print(matrix_size )
             input_state = np.zeros( (matrix_size,1) )
             input_state[0] = 1
-        print("iiiiiiiiiiiiiiiiiiiiiI")
+
         # evaluate the entropy
         entropy = super(qgd_Gates_Block, self).get_Second_Renyi_Entropy( parameters, input_state, qubit_list_validated)  
 
