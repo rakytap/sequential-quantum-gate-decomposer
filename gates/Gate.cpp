@@ -59,6 +59,11 @@ Gate::Gate() {
 */
 Gate::Gate(int qbit_num_in) {
 
+    if (qbit_num_in > 30) {
+        std::string err("Gate::Gate: Number of qubits supported up to 30"); 
+        throw err;        
+    }
+
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix
@@ -85,6 +90,13 @@ Gate::~Gate() {
 @param qbit_num_in The number of qubits spanning the matrix
 */
 void Gate::set_qbit_num( int qbit_num_in ) {
+
+    if (qbit_num_in > 30) {
+        std::string err("Gate::set_qbit_num: Number of qubits supported up to 30"); 
+        throw err;        
+    }
+
+
     // setting the number of qubits
     qbit_num = qbit_num_in;
 

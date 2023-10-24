@@ -644,3 +644,65 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def set_Cost_Function_Variant(self, cost_func):
     
         super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(cost_func)
+
+
+##
+# @brief Call to get the error of the decomposition. (i.e. the final value of the cost function)
+# @return Returns with the error of the decmposition
+    def get_Decomposition_Error(self):
+    
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Decomposition_Error()
+
+
+
+##
+# @brief Call to get the second Rényi entropy
+# @param parameters A float64 numpy array
+# @param input_state A complex array storing the input state. If None |0> is created.
+# @param qubit_list A subset of qubits for which the Rényi entropy should be calculated.
+# @Return Returns with the calculated entropy
+    def get_Second_Renyi_Entropy(self, parameters=None, input_state=None, qubit_list=None ):
+
+        qbit_num = self.get_Qbit_Num()
+
+        qubit_list_validated = list()
+        if isinstance(qubit_list, list) or isinstance(qubit_list, tuple):
+            for item in qubit_list:
+                if isinstance(item, int):
+                    qubit_list_validated.append(item)
+                    qubit_list_validated = list(set(qubit_list_validated))
+                else:
+                    print("Elements of qbit_list should be integers")
+                    return
+        elif qubit_list == None:
+            qubit_list_validated = [ x for x in range(qbit_num) ]
+
+        else:
+            print("Elements of qbit_list should be integers")
+            return
+        
+
+        if parameters is None:
+            print( "get_Second_Renyi_entropy: array of input parameters is None")
+            return None
+
+
+        if input_state is None:
+            matrix_size = 1 << qbit_num
+            input_state = np.zeros( (matrix_size,1) )
+            input_state[0] = 1
+
+        # evaluate the entropy
+        entropy = super(qgd_N_Qubit_Decomposition_adaptive, self).get_Second_Renyi_Entropy( parameters, input_state, qubit_list_validated)  
+
+
+        return entropy
+
+
+
+##
+# @brief Call to get the number of qubits in the circuit
+# @return Returns with the number of qubits
+    def get_Qbit_Num(self):
+    
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Qbit_Num()

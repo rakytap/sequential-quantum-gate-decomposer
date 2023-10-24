@@ -1660,7 +1660,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND( 
 	    
 
             Grad_Descend cGrad_Descend(optimization_problem_combined, this);
-            double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations);
+            double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations_loc);
 
             if (current_minimum > f) {
                 current_minimum = f;
@@ -3461,6 +3461,22 @@ int
 N_Qubit_Decomposition_Base::get_num_iters() {
 
     return number_of_iters;
+
+}
+
+
+/**
+@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
+@param gate_structure An <int, Gates_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
+*/
+void 
+N_Qubit_Decomposition_Base::set_custom_gate_structure( Gates_block* gate_structure_in ) {
+
+    release_gates();
+
+    set_qbit_num( gate_structure_in->get_qbit_num() );
+
+    combine( gate_structure_in );
 
 }
 

@@ -244,7 +244,6 @@ void N_Qubit_Decomposition_adaptive::get_initial_circuit() {
         std::stringstream sstream;
         sstream << "Using imported gate structure for the decomposition." << std::endl;
         print(sstream, 1);	
-	        
         gate_structure_loc = optimize_imported_gate_structure(optimized_parameters_mtx);
     }
     else {
@@ -617,16 +616,15 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export) {
 Gates_block* 
 N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& optimized_parameters_mtx_loc) {
 
-
-    Gates_block* gate_structure_loc = static_cast<Gates_block*>(this)->clone();
-
+    Gates_block* gate_structure_loc = (static_cast<Gates_block*>(this))->clone();
+        
     //measure the time for the decompositin
     tbb::tick_count start_time_loc = tbb::tick_count::now();
 
     std::stringstream sstream;
     sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
     print(sstream, 1);	
-    
+         
     double optimization_tolerance_loc;
     if ( config.count("optimization_tolerance") > 0 ) {
         config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
@@ -1809,17 +1807,6 @@ N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structur
 
 
 
-/**
-@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
-@param gate_structure An <int, Gates_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
-*/
-void 
-N_Qubit_Decomposition_adaptive::set_adaptive_gate_structure( Gates_block* gate_structure_in ) {
-
-    release_gates();
-    combine( gate_structure_in );
-
-}
 
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.

@@ -2011,18 +2011,33 @@ void Gates_block::combine(Gates_block* op_block) {
     // getting the list of gates
     std::vector<Gate*> gates_in = op_block->get_gates();
 
+    int qbit_num_loc = op_block->get_qbit_num();
+    if ( qbit_num_loc != qbit_num ) {
+        std::string err("Gates_block::combine: number of qubits in the circuits must be the same"); 
+        throw err;
+    }
+
     for(std::vector<Gate*>::iterator it = (gates_in).begin(); it != (gates_in).end(); ++it) {
         Gate* op = *it;
         switch (op->get_type()) {
-        case CNOT_OPERATION: case CZ_OPERATION:
-        case CH_OPERATION: case SYC_OPERATION:
-        case U3_OPERATION: case RY_OPERATION:
-        case CRY_OPERATION: case RX_OPERATION:
-        case RZ_OPERATION: case X_OPERATION:
-        case Y_OPERATION: case Z_OPERATION:
-        case SX_OPERATION: case BLOCK_OPERATION:
-        case GENERAL_OPERATION: case UN_OPERATION:
-        case ON_OPERATION: case COMPOSITE_OPERATION:
+        case CNOT_OPERATION: 
+        case CZ_OPERATION:
+        case CH_OPERATION: 
+        case SYC_OPERATION:
+        case U3_OPERATION: 
+        case RY_OPERATION:
+        case CRY_OPERATION: 
+        case RX_OPERATION:
+        case RZ_OPERATION: 
+        case X_OPERATION:
+        case Y_OPERATION: 
+        case Z_OPERATION:
+        case SX_OPERATION: 
+        case BLOCK_OPERATION:
+        case GENERAL_OPERATION: 
+        case UN_OPERATION:
+        case ON_OPERATION: 
+        case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: {
             Gate* op_cloned = op->clone();
             add_gate_to_end( op_cloned );
@@ -2042,6 +2057,11 @@ void Gates_block::combine(Gates_block* op_block) {
 @param qbit_num_in The number of qubits spanning the matrices.
 */
 void Gates_block::set_qbit_num( int qbit_num_in ) {
+
+    if (qbit_num_in > 30) {
+        std::string err("Gates_block::set_qbit_num: Number of qubits supported up to 30"); 
+        throw err;        
+    }
 
     // setting the number of qubits
     Gate::set_qbit_num(qbit_num_in);
@@ -2081,10 +2101,8 @@ Gates_block* Gates_block::clone() {
 
     // extracting the gates from the current class
     if (extract_gates( ret ) != 0 ) {
-	std::stringstream sstream;
-	sstream << "Gates_block::clone(): extracting gates was not succesfull" << std::endl;
-	print(sstream, 0);	    	        
-        exit(-1);
+        std::string err("Gates_block::clone(): extracting gates was not succesfull"); 
+        throw err;
     };
 
     return ret;
@@ -2179,6 +2197,225 @@ bool Gates_block::contains_adaptive_gate(int idx) {
 
 
 
+/**
+@brief Call to evaluate the reduced densiy matrix.
+@param parameters An array of parameters to calculate the entropy
+@param input_state The input state on which the gate structure is applied
+@param qbit_list Subset of qubits for which the entropy should be calculated. (Should conatin unique elements)
+@Return Returns with the reduced density matrix.
+*/
+Matrix
+Gates_block::get_reduced_density_matrix( Matrix_real& parameters_mtx, Matrix& input_state, matrix_base<int>& qbit_list_subset ) {
+
+
+    if (input_state.cols != 1) {
+        std::string error("Gates_block::get_reduced_density_matrix: The number of columns in input state should be 1");
+        throw error;
+    }
+
+
+    if (input_state.rows != matrix_size) {
+        std::string error("Gates_block::get_reduced_density_matrix: The number of rows in input state should be 2^qbit_num");
+        throw error;
+    }
+
+    // determine the transformed state
+    Matrix transformed_state = input_state.copy();  
+    apply_to( parameters_mtx, transformed_state );
+
+
+    int subset_qbit_num = qbit_list_subset.size();
+    int complementary_qbit_num = qbit_num - subset_qbit_num;
+
+
+    // list of complementary qubits
+    matrix_base<int> qbit_list_complementary( complementary_qbit_num, 1);
+    int qbit_idx_count = 0;
+    for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+
+        bool qbit_idx_in_subset = false;
+
+        for (int subset_qbit_idx=0; subset_qbit_idx<subset_qbit_num; subset_qbit_idx++) {
+            if ( qbit_idx == qbit_list_subset[subset_qbit_idx] ) {
+                qbit_idx_in_subset = true;
+                break;
+            }
+        }
+
+
+        if ( qbit_idx_in_subset ) {
+            continue;
+        }
+
+        qbit_list_complementary[qbit_idx_count] = qbit_idx;
+        qbit_idx_count++;
+    }
+
+
+    // 000010000 one-hot encoded numbers indicating the bit position of the qubits in the register
+    matrix_base<int> qbit_masks(qbit_num, 1);
+    for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++) {
+        qbit_masks[ qbit_idx ] = 1 << qbit_idx;
+    }
+
+
+
+    // retrieve the reduced density matrix
+    int rho_matrix_size = 1 << subset_qbit_num;
+
+    Matrix rho(rho_matrix_size, rho_matrix_size);
+    memset( rho.get_data(), 0.0, rho.size()*sizeof(QGD_Complex16) );
+
+
+
+
+    int complementary_basis_num = 1 << complementary_qbit_num;
+    for ( int row_idx=0; row_idx<rho_matrix_size; row_idx++ ) {
+
+        // index of the amplitude in the state vector
+        int idx = 0;
+        for (int qbit_idx=0; qbit_idx<subset_qbit_num; qbit_idx++) {
+            if ( row_idx & qbit_masks[ qbit_idx ] ) {
+                idx = idx | qbit_masks[ qbit_list_subset[qbit_idx] ]; 
+            }
+        }
+
+        for ( int col_idx=row_idx; col_idx<rho_matrix_size; col_idx++ ) {
+        
+            // index of the amplitude in the state vector
+            int jdx = 0;
+            for (int qbit_idx=0; qbit_idx<subset_qbit_num; qbit_idx++) {
+                if ( col_idx & qbit_masks[ qbit_idx ] ) {
+                    jdx = jdx | qbit_masks[ qbit_list_subset[qbit_idx] ]; 
+                }
+            }
+
+
+            // thread local storage for partial permanent
+            tbb::combinable<QGD_Complex16> priv_addend {[](){QGD_Complex16 ret; ret.real = 0.0; ret.imag = 0.0; return ret;}};
+
+
+            tbb::parallel_for( tbb::blocked_range<int>(0, complementary_basis_num, 1024), [&](tbb::blocked_range<int> r) {
+
+                QGD_Complex16& rho_element_priv = priv_addend.local();
+
+                for (int compl_idx=r.begin(); compl_idx<r.end(); compl_idx++) {
+
+ 
+                    int idx_loc = idx;
+                    int jdx_loc = jdx;
+
+                    for (int qbit_idx=0; qbit_idx<complementary_qbit_num; qbit_idx++) {
+                        if ( compl_idx & qbit_masks[ qbit_idx ] ) {
+                            idx_loc = idx_loc | qbit_masks[ qbit_list_complementary[qbit_idx] ]; 
+                            jdx_loc = jdx_loc | qbit_masks[ qbit_list_complementary[qbit_idx] ]; 
+                        }
+                    }
+
+                    QGD_Complex16  element_idx = transformed_state[ idx_loc ];
+                    QGD_Complex16& element_jdx = transformed_state[ jdx_loc ];
+
+                    // conjugate because of the bra-vector
+                    element_idx.imag = -element_idx.imag;
+
+                    QGD_Complex16 addend = mult( element_idx, element_jdx );
+
+                    rho_element_priv.real = rho_element_priv.real + addend.real;
+                    rho_element_priv.imag = rho_element_priv.imag + addend.imag;
+
+
+                }
+            });
+
+        
+
+            QGD_Complex16 rho_element;
+            rho_element.real = 0.0;
+            rho_element.imag = 0.0;
+
+            priv_addend.combine_each([&](QGD_Complex16 &a) {
+                rho_element.real = rho_element.real + a.real;
+                rho_element.imag = rho_element.imag + a.imag;
+            });
+
+            rho[ row_idx * rho.stride + col_idx ].real += rho_element.real;
+            rho[ row_idx * rho.stride + col_idx ].imag += rho_element.imag;
+
+            if ( row_idx == col_idx ) {
+                continue;
+            }
+
+            rho[ col_idx * rho.stride + row_idx ].real += rho_element.real;
+            rho[ col_idx * rho.stride + row_idx ].imag -= rho_element.imag;
+
+        }
+
+        
+    }
+
+
+    // test the trace of the reduced density matrix
+    double trace = 0.0;
+    for( int idx=0; idx<rho_matrix_size; idx++) {
+        trace = trace + rho[idx*rho.stride+idx].real;
+    }
+
+    if ( abs( trace-1.0 ) > 1e-6 ) {
+        std::string error("Gates_block::get_reduced_density_matrix: The trace of the reduced density matrix is not unity");
+        throw error;
+    }
+
+    return rho;
+
+
+}
+
+
+/**
+@brief Call to evaluate the seconf Rényi entropy. The quantum circuit is applied on an input state input. The entropy is evaluated for the transformed state.
+@param parameters An array of parameters to calculate the entropy
+@param input_state The input state on which the gate structure is applied
+@param qbit_list Subset of qubits for which the entropy should be calculated. (Should conatin unique elements)
+@Return Returns with the calculated entropy
+*/
+double Gates_block::get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matrix& input_state, matrix_base<int>& qbit_list_subset ) {
+
+    // determine the reduced density matrix
+    Matrix rho = get_reduced_density_matrix( parameters_mtx, input_state, qbit_list_subset );
+
+
+    // calculate the second Rényi entropy 
+    // Tr( rho @ rho )
+    double trace_rho_square = 0.0;
+
+    for (int idx=0; idx<rho.rows; idx++) {
+
+        double trace_tmp = 0.0;
+
+        for (int jdx=0; jdx<rho.rows; jdx++) {
+            QGD_Complex16& element = rho[ idx*rho.stride + jdx ];
+            double tmp = element.real * element.real + element.imag * element.imag;
+
+            trace_tmp = trace_tmp + tmp;
+        }
+
+
+        trace_rho_square = trace_rho_square + trace_tmp;
+
+
+    }
+
+
+
+
+    double entropy = -log(trace_rho_square);
+
+
+    return entropy;
+
+}
+
+
 
 #ifdef __DFE__
 
@@ -2191,7 +2428,7 @@ DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_re
 
     int parameter_num = get_parameter_num();
     if ( parameter_num != parameters_mtx.size() ) {
-        std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: wrong number of parameters");
+        std::string error("Gates_block::convert_to_DFE_gates: wrong number of parameters");
         throw error;
     }
 
@@ -2316,7 +2553,7 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == SYC_OPERATION) {
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: SYC_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: SYC_gate not implemented");
                 throw error;
             }
             else if (gate->get_type() == U3_OPERATION) {
@@ -2481,7 +2718,7 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
 
             }
             else if (gate->get_type() == SX_OPERATION) {
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: SX_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: SX_gate not implemented");
                 throw error;	    	
             }
             else if (gate->get_type() == BLOCK_OPERATION) {
@@ -2493,21 +2730,21 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
                 parameter_idx = parameter_idx - block_gate->get_parameter_num();
             }
             else if (gate->get_type() == UN_OPERATION) {
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: UN_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: UN_gate not implemented");
                 throw error;
             }
             else if (gate->get_type() == ON_OPERATION) {
 
                 // THE LAST GATE IS A GENERAL GATE APPENDED IN THE BLOCK-WISE OPTIMISATION ROUTINE OF DECOMPOSITION_BASE
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: ON_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: ON_gate not implemented");
                 throw error;
             }
             else if (gate->get_type() == COMPOSITE_OPERATION) {
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: Composite_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: Composite_gate not implemented");
                 throw error;
             }
             else if (gate->get_type() == GENERAL_OPERATION) {
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: general_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: general_gate not implemented");
                 throw error;
             }
             else if (gate->get_type() == ADAPTIVE_OPERATION) {
@@ -2618,7 +2855,7 @@ DFEgate_kernel_type* Gates_block::convert_to_DFE_gates( Matrix_real& parameters_
 
     int parameter_num = get_parameter_num();
     if ( parameter_num != parameters_mtx.size() ) {
-        std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: wrong number of parameters");
+        std::string error("Gates_block::convert_to_DFE_gates: wrong number of parameters");
         throw error;
     }
 
@@ -2718,7 +2955,7 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == SYC_OPERATION) {
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: SYC_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: SYC_gate not implemented");
                 throw error;
             }
             else if (gate->get_type() == U3_OPERATION) {
@@ -2903,7 +3140,7 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
             else if (gate->get_type() == SX_OPERATION) {
                 // get the inverse parameters of the U3 rotation
                 SX* sx_gate = static_cast<SX*>(gate);
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: SX_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: SX_gate not implemented");
                 throw error;	    	
             }
             else if (gate->get_type() == BLOCK_OPERATION) {
@@ -2913,21 +3150,21 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
                 parameter_idx = parameter_idx - block_gate->get_parameter_num();
             }
             else if (gate->get_type() == UN_OPERATION) {
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: UN_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: UN_gate not implemented");
                 throw error;
             }
             else if (gate->get_type() == ON_OPERATION) {
 
                 // THE LAST GATE IS A GENERAL GATE APPENDED IN THE BLOCK-WISE OPTIMISATION ROUTINE OF DECOMPOSITION_BASE
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: ON_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: ON_gate not implemented");
                 throw error;
             }
             else if (gate->get_type() == COMPOSITE_OPERATION) {
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: Composite_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: Composite_gate not implemented");
                 throw error;
             }
             else if (gate->get_type() == GENERAL_OPERATION) {
-                std::string error("N_Qubit_Decomposition_Base::convert_to_DFE_gates: general_gate not implemented");
+                std::string error("Gates_block::convert_to_DFE_gates: general_gate not implemented");
                 throw error;
             }
             else if (gate->get_type() == ADAPTIVE_OPERATION) {
