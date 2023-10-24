@@ -2153,38 +2153,66 @@ double Gates_block::get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matri
             }
 
 
-            for( int compl_idx=0; compl_idx<complementary_basis_num; compl_idx++ ) {
+            // thread local storage for partial permanent
+            tbb::combinable<QGD_Complex16> priv_addend {[](){QGD_Complex16 ret; ret.real = 0.0; ret.imag = 0.0; return ret;}};
+
+
+            tbb::parallel_for( tbb::blocked_range<int>(0, complementary_basis_num, 1024*1000000), [&](tbb::blocked_range<int> r) {
+
+                QGD_Complex16& rho_element_priv = priv_addend.local();
+
+                for (int compl_idx=r.begin(); compl_idx<r.end(); compl_idx++) {
+
  
-                int idx_loc = idx;
-                int jdx_loc = jdx;
+                    int idx_loc = idx;
+                    int jdx_loc = jdx;
 
-                for (int qbit_idx=0; qbit_idx<complementary_qbit_num; qbit_idx++) {
-                    if ( compl_idx & qbit_masks[ qbit_idx ] ) {
-                        idx_loc = idx_loc | qbit_masks[ qbit_list_complementary[qbit_idx] ]; 
-                        jdx_loc = jdx_loc | qbit_masks[ qbit_list_complementary[qbit_idx] ]; 
+                    for (int qbit_idx=0; qbit_idx<complementary_qbit_num; qbit_idx++) {
+                        if ( compl_idx & qbit_masks[ qbit_idx ] ) {
+                            idx_loc = idx_loc | qbit_masks[ qbit_list_complementary[qbit_idx] ]; 
+                            jdx_loc = jdx_loc | qbit_masks[ qbit_list_complementary[qbit_idx] ]; 
+                        }
                     }
+
+                    QGD_Complex16  element_idx = transformed_state[ idx_loc ];
+                    QGD_Complex16& element_jdx = transformed_state[ jdx_loc ];
+
+                    // conjugate because of the bra-vector
+                    element_idx.imag = -element_idx.imag;
+
+                    QGD_Complex16 addend = mult( element_idx, element_jdx );
+
+                    rho_element_priv.real = rho_element_priv.real + addend.real;
+                    rho_element_priv.imag = rho_element_priv.imag + addend.imag;
+
+
                 }
+            });
 
-                QGD_Complex16  element_idx = transformed_state[ idx_loc ];
-                QGD_Complex16& element_jdx = transformed_state[ jdx_loc ];
+        
 
-                // conjugate because of the bra-vector
-                element_idx.imag = -element_idx.imag;
+            QGD_Complex16 rho_element;
+            rho_element.real = 0.0;
+            rho_element.imag = 0.0;
 
-                QGD_Complex16 rho_element = mult( element_idx, element_jdx );
+            priv_addend.combine_each([&](QGD_Complex16 &a) {
+                rho_element.real = rho_element.real + a.real;
+                rho_element.imag = rho_element.imag + a.imag;
+            });
 
-                rho[ row_idx * rho.stride + col_idx ].real += rho_element.real;
-                rho[ row_idx * rho.stride + col_idx ].imag += rho_element.imag;
+            rho[ row_idx * rho.stride + col_idx ].real += rho_element.real;
+            rho[ row_idx * rho.stride + col_idx ].imag += rho_element.imag;
 
-                if ( row_idx == col_idx ) {
-                    continue;
-                }
-
-                rho[ col_idx * rho.stride + row_idx ].real += rho_element.real;
-                rho[ col_idx * rho.stride + row_idx ].imag -= rho_element.imag;
-
+            if ( row_idx == col_idx ) {
+                continue;
             }
+
+            rho[ col_idx * rho.stride + row_idx ].real += rho_element.real;
+            rho[ col_idx * rho.stride + row_idx ].imag -= rho_element.imag;
+
         }
+
+        
     }
 
 

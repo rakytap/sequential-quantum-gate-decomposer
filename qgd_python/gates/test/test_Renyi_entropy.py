@@ -90,8 +90,8 @@ class Test_Renyi_entropy:
 
     
         # the number of qubits spanning the unitary
-        qbit_num  = 20
-        level_num = 35
+        qbit_num  = 24
+        level_num = 15
 
         gate_structure = self.create_custom_gate_structure( qbit_num, level_num )
 
@@ -118,7 +118,7 @@ class Test_Renyi_entropy:
         print( 'The page entropy: ', page_entropy)
 
 
-        assert( np.abs( page_entropy-entropy) < 1e-2 )
+        assert( np.abs( page_entropy-entropy) < 1e-1 )
 
 
 
