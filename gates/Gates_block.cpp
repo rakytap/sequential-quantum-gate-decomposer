@@ -2061,23 +2061,26 @@ bool Gates_block::contains_adaptive_gate(int idx) {
 }
 
 
+
 /**
-@brief Call to evaluate the seconf Rényi entropy. The quantum circuit is applied on an input state input. The entropy is evaluated for the transformed state.
+@brief Call to evaluate the reduced densiy matrix.
 @param parameters An array of parameters to calculate the entropy
 @param input_state The input state on which the gate structure is applied
 @param qbit_list Subset of qubits for which the entropy should be calculated. (Should conatin unique elements)
-@Return Returns with the calculated entropy
+@Return Returns with the reduced density matrix.
 */
-double Gates_block::get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matrix& input_state, matrix_base<int>& qbit_list_subset ) {
+Matrix
+Gates_block::get_reduced_density_matrix( Matrix_real& parameters_mtx, Matrix& input_state, matrix_base<int>& qbit_list_subset ) {
+
 
     if (input_state.cols != 1) {
-        std::string error("Gates_block::get_second_Renyi_entropy: The number of columns in input state should be 1");
+        std::string error("Gates_block::get_reduced_density_matrix: The number of columns in input state should be 1");
         throw error;
     }
 
 
     if (input_state.rows != matrix_size) {
-        std::string error("Gates_block::get_second_Renyi_entropy: The number of rows in input state should be 2^qbit_num");
+        std::string error("Gates_block::get_reduced_density_matrix: The number of rows in input state should be 2^qbit_num");
         throw error;
     }
 
@@ -2157,7 +2160,7 @@ double Gates_block::get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matri
             tbb::combinable<QGD_Complex16> priv_addend {[](){QGD_Complex16 ret; ret.real = 0.0; ret.imag = 0.0; return ret;}};
 
 
-            tbb::parallel_for( tbb::blocked_range<int>(0, complementary_basis_num, 1024*1000000), [&](tbb::blocked_range<int> r) {
+            tbb::parallel_for( tbb::blocked_range<int>(0, complementary_basis_num, 1024), [&](tbb::blocked_range<int> r) {
 
                 QGD_Complex16& rho_element_priv = priv_addend.local();
 
@@ -2223,20 +2226,38 @@ double Gates_block::get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matri
     }
 
     if ( abs( trace-1.0 ) > 1e-6 ) {
-        std::string error("Gates_block::get_second_Renyi_entropy: The trace of the reduced density matrix is not unity");
+        std::string error("Gates_block::get_reduced_density_matrix: The trace of the reduced density matrix is not unity");
         throw error;
     }
+
+    return rho;
+
+
+}
+
+
+/**
+@brief Call to evaluate the seconf Rényi entropy. The quantum circuit is applied on an input state input. The entropy is evaluated for the transformed state.
+@param parameters An array of parameters to calculate the entropy
+@param input_state The input state on which the gate structure is applied
+@param qbit_list Subset of qubits for which the entropy should be calculated. (Should conatin unique elements)
+@Return Returns with the calculated entropy
+*/
+double Gates_block::get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matrix& input_state, matrix_base<int>& qbit_list_subset ) {
+
+    // determine the reduced density matrix
+    Matrix rho = get_reduced_density_matrix( parameters_mtx, input_state, qbit_list_subset );
 
 
     // calculate the second Rényi entropy 
     // Tr( rho @ rho )
     double trace_rho_square = 0.0;
 
-    for (int idx=0; idx<rho_matrix_size; idx++) {
+    for (int idx=0; idx<rho.rows; idx++) {
 
         double trace_tmp = 0.0;
 
-        for (int jdx=0; jdx<rho_matrix_size; jdx++) {
+        for (int jdx=0; jdx<rho.rows; jdx++) {
             QGD_Complex16& element = rho[ idx*rho.stride + jdx ];
             double tmp = element.real * element.real + element.imag * element.imag;
 

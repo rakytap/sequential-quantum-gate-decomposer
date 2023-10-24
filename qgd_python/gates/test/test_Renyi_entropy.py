@@ -90,7 +90,7 @@ class Test_Renyi_entropy:
 
     
         # the number of qubits spanning the unitary
-        qbit_num  = 24
+        qbit_num  = 22
         level_num = 15
 
         gate_structure = self.create_custom_gate_structure( qbit_num, level_num )

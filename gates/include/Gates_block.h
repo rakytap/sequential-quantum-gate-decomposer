@@ -489,6 +489,17 @@ bool contains_adaptive_gate(int idx);
 
 
 /**
+@brief Call to evaluate the reduced densiy matrix.
+@param parameters An array of parameters to calculate the entropy
+@param input_state The input state on which the gate structure is applied
+@param qbit_list Subset of qubits for which the entropy should be calculated. (Should conatin unique elements)
+@Return Returns with the reduced density matrix.
+*/
+Matrix get_reduced_density_matrix( Matrix_real& parameters_mtx, Matrix& input_state, matrix_base<int>& qbit_list_subset );
+
+
+
+/**
 @brief Call to evaluate the seconf Rényi entropy. The quantum circuit is applied on an input state input. The entropy is evaluated for the transformed state.
 @param parameters An array of parameters to calculate the entropy
 @param input_state The input state on which the gate structure is applied
