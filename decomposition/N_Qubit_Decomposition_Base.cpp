@@ -222,7 +222,7 @@ N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
 
 void N_Qubit_Decomposition_Base::export_current_cost_fnc(double current_minimum){
 	FILE* pFile;
-    std::string filename("costfuncs.txt");
+    std::string filename("costfuncs_and_entropy.txt");
 	if (project_name != ""){filename = project_name + "_" + filename;}
 
 	const char* c_filename = filename.c_str();
@@ -232,7 +232,15 @@ void N_Qubit_Decomposition_Base::export_current_cost_fnc(double current_minimum)
             std::string error("Cannot open file.");
             throw error;
      }
-     fprintf(pFile,"%f\t%i\n",current_minimum,number_of_iters);
+     Matrix input_state(Power_of_2(qbit_num),1);
+ 	 input_state[0].real = 1.0;
+     input_state[0].imag = 0.0;
+     memset(input_state.get_data()+2, 0.0, (input_state.size()*2-2)*sizeof(double) );
+     matrix_base<int> qbit_sublist(1,2);
+    qbit_sublist[0] = 0;
+    qbit_sublist[1] = 1;
+     double renyi_entropy = get_second_Renyi_entropy(optimized_parameters_mtx,input_state,qbit_sublist);
+     fprintf(pFile,"%i\t%f\t%f\n",number_of_iters,current_minimum,renyi_entropy);
      fclose(pFile);
      return;
 }
@@ -1624,7 +1632,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND( 
         int iteration_loops_max;
         long long value;
         if ( config.count("max_iteration_loops_grad_descend") > 0 ) {
-            config["max_inner_iterations_grad_descend"].get_property( value );
+            config["max_iteration_loops_grad_descend"].get_property( value );
             iteration_loops_max = (int) value;
         }
         else if ( config.count("max_iteration_loops") > 0 ) {
@@ -2238,7 +2246,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_
         int iteration_loops_max;
         long long value;
         if ( config.count("max_iteration_loops_bfgs") > 0 ) {
-            config["max_inner_iterations_bfgs"].get_property( value );
+            config["max_iteration_loops_bfgs"].get_property( value );
             iteration_loops_max = (int) value;
         }
         else if ( config.count("max_iteration_loops") > 0 ) {
