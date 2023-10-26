@@ -32,6 +32,7 @@ limitations under the License.
 #include "QGDTypes.h"
 #include "dot.h"
 #include "matrix_sparse.h"
+#include "matrix_real.h"
 
 #include <string>
 #include <stdio.h>
@@ -167,7 +168,7 @@ Matrix mult(Matrix_sparse a, Matrix& b);
 */
 double arg( const QGD_Complex16& a );
 
-
+void conjugate_gradient(Matrix_real A, Matrix_real b, Matrix_real& x0, double tol);
 
 
 #endif

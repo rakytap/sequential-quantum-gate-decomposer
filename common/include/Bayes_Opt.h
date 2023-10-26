@@ -66,6 +66,7 @@ class Bayes_Opt {
     //previous cost functions
     std::vector<double> f_prev;
     
+    Matrix_real deviation;
     
     //current minimum
     double current_maximum;
@@ -102,13 +103,11 @@ class Bayes_Opt {
     
     void update_covariance(Matrix_real cov_new);
     
-    void conjugate_gradient(Matrix_real A, Matrix_real b, Matrix_real& x0, double tol);
-    
     void conjugate_gradient_parallel(Matrix_real A, Matrix_real& b, Matrix_real& x0, double tol);
     public:
     double Start_Optimization(Matrix_real& x, int max_iterations_in);
     
-    Bayes_Opt(double (* f_pointer) (Matrix_real, void *), void* meta_data_in);
+    Bayes_Opt(double (* f_pointer) (Matrix_real, void *), void* meta_data_in, Matrix_real deviance_in);
    
    ~Bayes_Opt();
 };
@@ -133,6 +132,8 @@ class Bayes_Opt_Beam{
     //current minimum
     double current_maximum;
     
+    Matrix_real deviation;
+    
     Matrix_real parameters;
     
     int start;
@@ -141,7 +142,7 @@ class Bayes_Opt_Beam{
     protected:
     static double optimization_problem(Matrix_real x_Beam, void* void_instance);
     public:
-    Bayes_Opt_Beam(double (* f_pointer) (Matrix_real, void *), void* meta_data_in, int start_in, Matrix_real parameters_original_in);
+    Bayes_Opt_Beam(double (* f_pointer) (Matrix_real, void *), void* meta_data_in, int start_in, Matrix_real parameters_original_in, Matrix_real deviation_in);
     
     double Start_Optimization(Matrix_real& x, int max_iterations_in);
     

@@ -365,5 +365,52 @@ double arg( const QGD_Complex16& a ) {
 
 }
 
+void conjugate_gradient(Matrix_real A, Matrix_real b, Matrix_real& x0, double tol){
+    int samples = b.cols;
+    Matrix_real d(1,samples);
+    Matrix_real g(1,samples);
+    double sk =0.;
+    for (int rdx=0; rdx<samples; rdx++){
+        d[rdx] = b[rdx];
+        for(int cdx=0; cdx<samples; cdx++){
+            d[rdx] = d[rdx] - A[rdx*samples+cdx]*x0[cdx];
+        }
+        g[rdx] = -1.*d[rdx];
+        sk = sk + d[rdx]*d[rdx];
+    }
+    int iter=0.;
+    while (std::sqrt(sk/b.cols) > tol && iter<1000){
+    
+    double dAd=0.;
+    Matrix_real Ad(1,b.cols);
+    for (int rdx=0; rdx<samples; rdx++){
+        Ad[rdx] = 0.;
+        for(int cdx=0; cdx<samples; cdx++){
+            Ad[rdx] = Ad[rdx] + A[rdx*samples+cdx]*d[cdx];
+        }
+        
+        dAd = dAd + d[rdx]*Ad[rdx];
+    }
+
+    double mu_k = sk / dAd;
+    double sk_new = 0.;
+    for(int idx=0; idx<samples; idx++){
+        x0[idx] = x0[idx] + mu_k*d[idx];
+        g[idx] = g[idx] + mu_k*Ad[idx];
+        sk_new = sk_new + g[idx]*g[idx];
+
+    }
+
+    for (int idx=0; idx<samples;idx++){
+        d[idx] = (sk_new/sk)*d[idx] - g[idx];
+    }
+    sk = sk_new;
+
+    iter++;
+    }
+    return;
+    
+}
+
 
 

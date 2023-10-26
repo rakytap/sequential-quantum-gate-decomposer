@@ -141,7 +141,6 @@ double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix& State){
 double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Matrix_real parameters, void* void_instance){
 	double Energy=0.;
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
-	instance->initialize_zero_state();
 	Matrix State = instance->Zero_state.copy();
 	instance->apply_to(parameters, State);
 	Energy = instance->Expected_energy(State);
@@ -169,7 +168,7 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
     Matrix_real cost_function_terms;
 
     // vector containing gradients of the transformed matrix
-    //std::vector<Matrix> State_deriv;
+    std::vector<Matrix> State_deriv;
 
     tbb::parallel_invoke(
         [&]{
@@ -178,19 +177,13 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
         [&]{
 	    instance->initialize_zero_state();
             Matrix State_loc = instance->Zero_state.copy();
-            //State_deriv = instance->apply_derivate_to( parameters, State_loc );
+            State_deriv = instance->apply_derivate_to( parameters, State_loc );
             State_loc.release_data();
     });
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
-            Matrix_real parameters_grad = parameters.copy();
-            parameters_grad[idx] = parameters_grad[idx] - M_PI/2;
-            double grad_comp_neg =  instance->optimization_problem_non_static(parameters_grad, reinterpret_cast<void*>(instance));
-            parameters_grad[idx] = parameters_grad[idx] + M_PI;
-            double grad_comp_pos =  instance->optimization_problem_non_static(parameters_grad, reinterpret_cast<void*>(instance));
-            grad[idx] = 0.5*(grad_comp_pos-grad_comp_neg);
-
+            grad[idx] = instance->Expected_energy(State_deriv[idx]);
         }
     });
     return;
