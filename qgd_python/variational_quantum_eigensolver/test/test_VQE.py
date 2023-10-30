@@ -78,11 +78,13 @@ class Test_VQE:
         "agent_num":64,
         "agent_exploration_rate":0.3,
         "max_inner_iterations_adam":50000}
+        
         VQE_eye = Variational_Quantum_Eigensolver_Base(Hamiltonian, n, config)
         VQE_eye.set_Optimizer("GRAD_DESCEND")
         VQE_eye.set_Ansatz("HEA")
         VQE_eye.Generate_initial_circuit(layers, blocks, rot_layers)
         VQE_eye.get_Ground_State()
+        
         quantum_circuit = VQE_eye.get_Quantum_Circuit()
         # print the quantum circuit
         print(quantum_circuit)
@@ -90,6 +92,7 @@ class Test_VQE:
         assert (abs(Energy-1)<1e-4)
     
     def test_Heisenberg_XX(self):
+    
         layers = 1
         blocks = 1
         rot_layers = 1
@@ -97,7 +100,9 @@ class Test_VQE:
         topology = []
         for idx in range(n-1):
             topology.append( (idx, idx+1) )
+            
         Hamiltonian = generate_hamiltonian(topology,n)
+        
         config = {"agent_lifetime":10,
         "max_inner_iterations":1000,
         "max_iterations":1000,
@@ -106,6 +111,7 @@ class Test_VQE:
         "agent_exploration_rate":0.5,
         "max_inner_iterations_adam":500,
         "convergence_length": 300}
+        
         VQE_Heisenberg = Variational_Quantum_Eigensolver_Base(Hamiltonian, n, config)
         VQE_Heisenberg.set_Optimizer("AGENTS")
         VQE_Heisenberg.set_Ansatz("HEA")
@@ -113,9 +119,11 @@ class Test_VQE:
         VQE_Heisenberg.Generate_initial_circuit(layers, blocks, rot_layers)
         VQE_Heisenberg.get_Ground_State()
         quantum_circuit = VQE_Heisenberg.get_Quantum_Circuit()
+        
         # print the quantum circuit
         print(quantum_circuit)
         lambdas, vecs = sp.sparse.linalg.eigs(Hamiltonian)
         Energy = VQE_Heisenberg.Optimization_Problem(VQE_Heisenberg.get_Optimized_Parameters())
+        
         print(lambdas[0])
         assert ((Energy - np.real(lambdas[0]))<1e-2)
