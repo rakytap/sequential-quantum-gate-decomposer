@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import numpy as np
 from os import path
-from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper
+from .qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper
 
 
 
@@ -43,7 +43,7 @@ class qgd_Gates_Block(qgd_Gates_Block_Wrapper):
 # @return An instance of the class
 
     def __init__( self, qbit_num ):
-
+    
         # initiate variables for input arguments
         #int  qbit_num = -1; 
         # call the constructor of the wrapper class
@@ -84,7 +84,7 @@ class qgd_Gates_Block(qgd_Gates_Block_Wrapper):
 #@param Input arguments: target_qbit (int).
 
     def add_RZ( self, target_qbit):
-
+    
 	# call the C wrapper function
         super(qgd_Gates_Block, self).add_RZ(target_qbit)
 
