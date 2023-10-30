@@ -656,7 +656,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer( qgd_Variational_
 
     PyObject* optimizer_arg = NULL;
 
-   std::cout << "ppppppppppppppppp " << std::endl;
+
     // parsing input arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &optimizer_arg)) {
 
@@ -666,19 +666,17 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer( qgd_Variational_
  
     }
 
-   std::cout << "ppppppppppppppppp 2" << std::endl;
     if ( optimizer_arg == NULL ) {
         std::string err( "optimizer argument not set");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;        
     }
 
-   std::cout << "ppppppppppppppppp " << std::endl;   
 
     PyObject* optimizer_string = PyObject_Str(optimizer_arg);
     PyObject* optimizer_string_unicode = PyUnicode_AsEncodedString(optimizer_string, "utf-8", "~E~");
     const char* optimizer_C = PyBytes_AS_STRING(optimizer_string_unicode);
-   std::cout << "ppppppppppppppppp " << std::endl;
+    
     optimization_aglorithms qgd_optimizer;
     if ( strcmp("agents", optimizer_C) == 0 || strcmp("AGENTS", optimizer_C) == 0) {
         qgd_optimizer = AGENTS;        
