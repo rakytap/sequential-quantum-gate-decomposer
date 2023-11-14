@@ -126,6 +126,7 @@ qgd_Gates_Block_Wrapper_init(qgd_Gates_Block_Wrapper *self, PyObject *args, PyOb
     if (qbit_num > 0 ) {
         self->gate = create_Gates_block( qbit_num );
     }
+        
     return 0;
 }
 
@@ -265,7 +266,7 @@ qgd_Gates_Block_Wrapper_add_RZ(qgd_Gates_Block_Wrapper *self, PyObject *args, Py
     if (target_qbit != -1 ) {
         self->gate->add_rz(target_qbit);
     }
-
+    
     return Py_BuildValue("i", 0);
 
 }
@@ -1036,6 +1037,8 @@ static PyMethodDef qgd_Gates_Block_Wrapper_Methods[] = {
     },
     {NULL}  /* Sentinel */
 };
+
+
 
 
 /**

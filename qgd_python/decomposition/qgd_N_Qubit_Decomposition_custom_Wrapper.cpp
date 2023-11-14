@@ -900,6 +900,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decompo
 
     // convert gate structure from PyObject to qgd_Gates_Block_Wrapper
     qgd_Gates_Block_Wrapper* qgd_op_block = (qgd_Gates_Block_Wrapper*) gate_structure_py;
+    
     self->decomp->set_custom_gate_structure( qgd_op_block->gate );
 
     return Py_BuildValue("i", 0);

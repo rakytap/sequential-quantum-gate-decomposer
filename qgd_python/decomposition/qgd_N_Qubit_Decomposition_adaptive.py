@@ -29,6 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from os import path
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive_Wrapper import qgd_N_Qubit_Decomposition_adaptive_Wrapper
+from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block as Gates_Block
 
 
 
@@ -398,10 +399,24 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         optimized_parameters = np.asarray(optimized_parameters, dtype=np.float64)
 
         # setting gate structure and optimized initial parameters
-        self.set_Gate_Structure(Gates_Block_ret)
+        self.set_Gate_Structure( Gates_Block_ret )
         self.set_Optimized_Parameters( np.flip(optimized_parameters,0) )
         #self.set_Optimized_Parameters( optimized_parameters )
-          
+
+
+##
+# @brief Call to set custom gate structure to used in the decomposition
+# @param Gate_structure An instance of Gates_Block
+    def set_Gate_Structure( self, Gate_structure ):  
+
+        if not isinstance(Gate_structure, Gates_Block) :
+            raise Exception("Input parameter Gate_structure should be a an instance of Gates_Block")
+                    
+                    
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Gate_Structure( Gate_structure )
+        
+        
+                  
 ##
 # @brief Call to set custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
 # @param filename String containing the filename

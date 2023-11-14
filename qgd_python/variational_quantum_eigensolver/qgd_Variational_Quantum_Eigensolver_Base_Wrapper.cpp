@@ -666,19 +666,17 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer( qgd_Variational_
  
     }
 
-
     if ( optimizer_arg == NULL ) {
         std::string err( "optimizer argument not set");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;        
     }
 
-   
 
     PyObject* optimizer_string = PyObject_Str(optimizer_arg);
     PyObject* optimizer_string_unicode = PyUnicode_AsEncodedString(optimizer_string, "utf-8", "~E~");
     const char* optimizer_C = PyBytes_AS_STRING(optimizer_string_unicode);
-
+    
     optimization_aglorithms qgd_optimizer;
     if ( strcmp("agents", optimizer_C) == 0 || strcmp("AGENTS", optimizer_C) == 0) {
         qgd_optimizer = AGENTS;        
@@ -705,6 +703,9 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer( qgd_Variational_
         std::cout << "Wrong optimizer. Using default: AGENTS" << std::endl; 
         qgd_optimizer = AGENTS;     
     }
+    
+   std::cout << "ppppppppppppppppp " << std::endl;    
+    
     try {
         self->vqe->set_optimizer(qgd_optimizer);
     }
@@ -950,10 +951,10 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     {"set_Gate_Structure_From_Binary", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure_From_Binary, METH_VARARGS,
      "Method to set the gate structure from a file created in SQUANDER."
     },
-    {"set_Optimizer", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer, METH_VARARGS,
+    {"set_Optimizer", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer, METH_VARARGS | METH_KEYWORDS,
      "Method to set optimizer."
     },
-    {"set_Ansatz", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Ansatz, METH_VARARGS,
+    {"set_Ansatz", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Ansatz, METH_VARARGS | METH_KEYWORDS,
      "Method to set ansatz type."
     },
     {"Generate_initial_circuit", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_initial_circuit, METH_VARARGS,

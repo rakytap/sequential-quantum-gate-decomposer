@@ -29,6 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from os import path
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition_Wrapper import qgd_N_Qubit_Decomposition_Wrapper
+from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block as Gates_Block
 
 
 
@@ -76,6 +77,23 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
 
 	# call the C wrapper function
         super(qgd_N_Qubit_Decomposition, self).List_Gates()
+        
+        
+        
+    def set_Gate_Structure( self, gate_structure_dict ):
+    
+        if isinstance(gate_structure_dict, dict) :
+        
+            for key, item in gate_structure_dict.items():
+                        
+                if not isinstance(item, Gates_Block) :
+                    raise Exception("Input parameter gate_structure_dict should be a dictionary of (int, Gates_block) describing the gate structure unit cells at individual qubits")
+                    return
+        else:
+            raise Exception("Input parameter gate_structure_dict should be a dictionary of (int, Gates_block) describing the gate structure unit cells at individual qubits")
+            return
+    
+        super(qgd_N_Qubit_Decomposition, self).set_Gate_Structure( gate_structure_dict )    
 
 
 ##

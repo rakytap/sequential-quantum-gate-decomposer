@@ -50,7 +50,7 @@ class Test_Decomposition:
         """
 
         from squander import Gates_Block
-
+        
         qbit_num = 3
 
         # creating an instance of the wrapper class Gates_Block
@@ -226,7 +226,7 @@ class Test_Decomposition:
 
 
         Umtx = self.get_Unitary(H)
-
+        
         # create custom gate structure for the decomposition
         gate_structure = self.create_custom_gate_structure_lin_3qubit(14)
         gate_structure = self.create_custom_gate_structure_lin_2qubit(3, gate_structure)
