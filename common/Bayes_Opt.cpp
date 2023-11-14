@@ -20,8 +20,8 @@ limitations under the License.
 #include <cfloat>
 #include <Bayes_Opt.h>
 #include <Powells_method.h>
-#include "tbb/tbb.h"
 #include <common.h>
+#include "tbb/tbb.h"
 
 extern "C" int LAPACKE_dposv(int matrix_layout, char uplo, int n, int nrhs, double* A, int LDA, double* B, int LDB); 	
 /**
@@ -30,7 +30,7 @@ extern "C" int LAPACKE_dposv(int matrix_layout, char uplo, int n, int nrhs, doub
 @param meta_data void pointer to additional meta data needed to evaluate the cost function.
 @return An instance of the class
 */
-Bayes_Opt::Bayes_Opt(double (* f_pointer) (Matrix_real, void *), void* meta_data_in, Matrix_real deviation_in) {
+Bayes_Opt::Bayes_Opt(double (* f_pointer) (Matrix_real, void *), void* meta_data_in) {
 
     maximal_iterations = 101;
     
@@ -43,7 +43,6 @@ Bayes_Opt::Bayes_Opt(double (* f_pointer) (Matrix_real, void *), void* meta_data
     
     meta_data = meta_data_in;
 
-    deviation = deviation_in;
     
     initial_samples = 12;
     
@@ -70,9 +69,9 @@ double Bayes_Opt::Start_Optimization(Matrix_real& x, int max_iterations_in){
     for (int sample_idx=0; sample_idx<initial_samples; sample_idx++){
         Matrix_real covariance_new(sample_idx,sample_idx);
         Matrix_real parameters_new(1,variable_num);
+        std::normal_distribution<> distrib_real(0, M_PI/4);
         double f_random;
         for(int idx = 0; idx < variable_num; idx++) {
-            std::normal_distribution<> distrib_real(0, deviation[idx]);
             double random = distrib_real(gen);
             parameters_new[idx] = x[idx] + random;
         }
@@ -101,7 +100,7 @@ double Bayes_Opt::Start_Optimization(Matrix_real& x, int max_iterations_in){
     for (int iter = iterations; iter<maximal_iterations;iter++){
 
 
-        Matrix_real solution_guess = x.copy();//x_prev[iterations-1];
+        Matrix_real solution_guess = x_prev[iterations-1];
         
         Powells_method cPowells_method(optimization_problem,this);
         double f_Powell = cPowells_method.Start_Optimization(solution_guess, 100);
@@ -257,60 +256,6 @@ void Bayes_Opt::update_covariance(Matrix_real cov_new){
     return;
 }
 
-void Bayes_Opt::conjugate_gradient_parallel(Matrix_real A, Matrix_real& b, Matrix_real& x0, double tol){
-    int samples = b.rows;
-    Matrix_real d = Matrix_real(samples,variable_num);
-    Matrix_real g = Matrix_real(samples,variable_num);
-    Matrix_real sk = Matrix_real(1,variable_num);
-    for (int res_idx=0; res_idx<variable_num;res_idx++){
-        sk[res_idx] = 0.;
-        for (int rdx=0; rdx<samples; rdx++){
-            d[rdx*variable_num+res_idx] = b[rdx*variable_num+res_idx];
-            for(int cdx=0; cdx<samples; cdx++){
-                d[rdx*variable_num+res_idx] = d[rdx*variable_num+res_idx] - A[rdx*A.cols+cdx]*x0[cdx*variable_num+res_idx];
-            }
-            g[rdx*variable_num+res_idx] = -1.*d[rdx*variable_num+res_idx];
-            sk[res_idx] = sk[res_idx] + d[rdx*variable_num+res_idx]*d[rdx*variable_num+res_idx];
-        }
-    }
-    for (int res_idx=0; res_idx<variable_num; res_idx++){
-    int iter=0;
-    while (std::sqrt(sk[res_idx]/samples) > tol && iter<100){
-        
-        double dAd=0.;
-        Matrix_real Ad(1,samples);
-        for (int rdx=0; rdx<samples; rdx++){
-            Ad[rdx] = 0.;
-            for(int cdx=0; cdx<samples; cdx++){
-                Ad[rdx] = Ad[rdx] + A[rdx*A.cols+cdx]*d[cdx*variable_num+res_idx];
-            }
-            
-            dAd = dAd + d[rdx*variable_num+res_idx]*Ad[rdx];
-        }
-
-        double mu_k = sk[res_idx] / dAd;
-        double sk_new = 0.;
-        for(int idx=0; idx<samples; idx++){
-            x0[idx*variable_num+res_idx] = x0[idx*variable_num+res_idx] + mu_k*d[idx*variable_num+res_idx];
-            g[idx*variable_num+res_idx] = g[idx*variable_num+res_idx] + mu_k*Ad[idx];
-            sk_new = sk_new + g[idx*variable_num+res_idx]*g[idx*variable_num+res_idx];
-
-        }
-
-        for (int idx=0; idx<samples;idx++){
-            d[idx*b.rows+res_idx] = (sk_new/sk[res_idx])*d[idx*variable_num+res_idx] - g[idx*variable_num+res_idx];
-        }
-        sk[res_idx] = sk_new;
-
-        iter++;
-        
-        }
-
-        
-    }
-    return;
-}
-
 void Bayes_Opt::kernel_combined(Matrix_real x0, Matrix_real x, double& f, Matrix_real& grad, int grad_var, bool self){
 
     double dist=0.;
@@ -445,7 +390,7 @@ void Bayes_Opt::optimization_problem_combined(Matrix_real x_bfgs, void* void_ins
 Bayes_Opt::~Bayes_Opt()  {
 
 }
-Bayes_Opt_Beam::Bayes_Opt_Beam(double (* f_pointer) (Matrix_real, void *), void* meta_data_in, int start_in, Matrix_real parameters_original_in, Matrix_real deviation_in) {
+Bayes_Opt_Beam::Bayes_Opt_Beam(double (* f_pointer) (Matrix_real, void *), void* meta_data_in, int start_in, Matrix_real parameters_original_in) {
 
     maximal_iterations = 101;
     
@@ -460,8 +405,6 @@ Bayes_Opt_Beam::Bayes_Opt_Beam(double (* f_pointer) (Matrix_real, void *), void*
 
     // seedign the random generator
     gen = std::mt19937(rd());
-    
-    deviation = deviation;
     
     parameters = parameters_original_in;
     
@@ -480,7 +423,7 @@ double Bayes_Opt_Beam::Start_Optimization(Matrix_real& x, int max_iterations_in)
     variable_num = x.size();
 
     maximal_iterations = max_iterations_in;
-    Bayes_Opt cBayes_opt(optimization_problem,this,deviation);
+    Bayes_Opt cBayes_opt(optimization_problem,this);
     double f = cBayes_opt.Start_Optimization(x,maximal_iterations);
     
     return f;

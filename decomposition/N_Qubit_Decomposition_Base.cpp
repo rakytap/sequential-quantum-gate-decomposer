@@ -232,14 +232,14 @@ void N_Qubit_Decomposition_Base::export_current_cost_fnc(double current_minimum)
             std::string error("Cannot open file.");
             throw error;
      }
-     /*Matrix input_state(Power_of_2(qbit_num),1);
+     Matrix input_state(Power_of_2(qbit_num),1);
+     std::uniform_int_distribution<> distrib(0, qbit_num-2); 
+      memset(input_state.get_data(), 0.0, (input_state.size()*2)*sizeof(double) );
  	 input_state[0].real = 1.0;
-     input_state[0].imag = 0.0;
-     memset(input_state.get_data()+2, 0.0, (input_state.size()*2-2)*sizeof(double) );
      matrix_base<int> qbit_sublist(1,2);
-    qbit_sublist[0] = 0;
-    qbit_sublist[1] = 1;*/
-     double renyi_entropy = 0.;//get_second_Renyi_entropy(optimized_parameters_mtx,input_state,qbit_sublist);
+    qbit_sublist[0] = distrib(gen);
+    qbit_sublist[1] = qbit_sublist[0]+1;
+     double renyi_entropy = get_second_Renyi_entropy(optimized_parameters_mtx,input_state,qbit_sublist);
      fprintf(pFile,"%i\t%f\t%f\n",number_of_iters,current_minimum,renyi_entropy);
      fclose(pFile);
      return;
@@ -2494,6 +2494,7 @@ bfgs_time = 0.0;
 }
 
 
+
 /**
 @brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
@@ -2539,9 +2540,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BAYES_OPT( int
         else {
             max_inner_iterations_loc =max_inner_iterations;
         }
-        Matrix_real deviation(1,num_of_parameters);
-        memset(deviation.get_data(), 2.*M_PI, num_of_parameters*sizeof(double) );
-        Bayes_Opt cBayes_Opt(optimization_problem,this,deviation);
+        Bayes_Opt cBayes_Opt(optimization_problem,this);
         // do the optimization loops
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 	    
@@ -2602,7 +2601,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BAYES_AGENTS( 
         }
         else {
             max_inner_iterations_loc =max_inner_iterations;
-        }/*
+        }
         int fragment_size = 5;
         int leftover = num_of_parameters%fragment_size;
         int number_of_agents = num_of_parameters/fragment_size;
@@ -2646,7 +2645,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BAYES_AGENTS( 
                 }
             }
         export_current_cost_fnc(current_minimum);
-        }*/
+        }
 
 }
 /**

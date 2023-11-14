@@ -625,6 +625,60 @@ get_gate(  Variational_Quantum_Eigensolver_Base* vqe, int &idx ) {
 }
 
 
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_apply_to( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
+
+    PyObject * parameters_arr = NULL;
+    PyObject * unitary_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|OO", &parameters_arr, &unitary_arg )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
+    // convert python object array to numpy C API array
+    if ( unitary_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+    PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
+        PyErr_SetString(PyExc_Exception, "input mtrix is not memory contiguous");
+        return NULL;
+    }
+
+
+    // create QGD version of the input matrix
+    Matrix unitary_mtx = numpy2matrix(unitary);
+
+
+    self->vqe->apply_to( parameters_mtx, unitary_mtx );
+    
+    if (unitary_mtx.data != PyArray_DATA(unitary)) {
+        memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
+    }
+
+    Py_DECREF(parameters_arr);
+    Py_DECREF(unitary);
+
+    return Py_BuildValue("i", 0);
+}
+
 
 /**
 @brief Wrapper function to set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
@@ -951,6 +1005,9 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     {"set_Gate_Structure_From_Binary", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure_From_Binary, METH_VARARGS,
      "Method to set the gate structure from a file created in SQUANDER."
     },
+    {"apply_to", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_apply_to, METH_VARARGS,
+     "Call to apply the gate on the input matrix."
+    },
     {"set_Optimizer", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer, METH_VARARGS | METH_KEYWORDS,
      "Method to set optimizer."
     },
@@ -1078,4 +1135,5 @@ PyInit_qgd_Variational_Quantum_Eigensolver_Base_Wrapper(void)
 
 
 } //extern C
+
 
