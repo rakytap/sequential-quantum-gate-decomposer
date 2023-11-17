@@ -30,23 +30,23 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
 
 
     // error of the unitarity of the final decomposition
-    decomposition_error = 10;
+    decomposition_error = DBL_MAX;
 
 
     // The current minimum of the optimization problem
-    current_minimum = 1e10;
+    current_minimum = DBL_MAX;
     
-    global_target_minimum = -100;
+    global_target_minimum = -DBL_MAX;
 
     // logical value describing whether the optimization problem was solved or not
     optimization_problem_solved = false;
 
 
     // The maximal allowed error of the optimization problem
-    optimization_tolerance = -25;
+    optimization_tolerance = -DBL_MAX;
 
     // The convergence threshold in the optimization process
-    convergence_threshold = -1;
+    convergence_threshold = -DBL_MAX;
     
     alg = AGENTS;
     
@@ -75,22 +75,20 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
 
 
     // error of the unitarity of the final decomposition
-    decomposition_error = 10;
+    decomposition_error = DBL_MAX;
 
 
     // The current minimum of the optimization problem
-    current_minimum = 1e10;
+    current_minimum = DBL_MAX;
 
 
     // logical value describing whether the optimization problem was solved or not
     optimization_problem_solved = false;
 
-    global_target_minimum = -100;
-    // The maximal allowed error of the optimization problem
-    optimization_tolerance = -25;
-
-    // The convergence threshold in the optimization process
-    convergence_threshold = -40;
+    // override optimization parameters governing the convergence used in gate decomposition applications
+    global_target_minimum  = -DBL_MAX;
+    optimization_tolerance = -DBL_MAX;
+    convergence_threshold  = -DBL_MAX;
     
     
     iteration_threshold_of_randomization = 2500000;

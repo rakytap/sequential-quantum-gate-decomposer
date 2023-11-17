@@ -787,7 +787,6 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer( qgd_Variational_
         qgd_optimizer = AGENTS;     
     }
     
-   std::cout << "ppppppppppppppppp " << std::endl;    
     
     try {
         self->vqe->set_optimizer(qgd_optimizer);
@@ -897,7 +896,6 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Second_Renyi_Entropy( qgd_V
 
     // get the C++ wrapper around the data
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
-
 
     // convert python object array to numpy C API array
     if ( input_state_arg == NULL ) {

@@ -220,6 +220,11 @@ N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
 
 }
 
+
+/**
+@brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1.
+@param current_minimum The current minimum (to avoid calculating it again
+*/
 void N_Qubit_Decomposition_Base::export_current_cost_fnc(double current_minimum){
 
     FILE* pFile;
@@ -244,8 +249,8 @@ void N_Qubit_Decomposition_Base::export_current_cost_fnc(double current_minimum)
     input_state[0].real = 1.0;
 
     matrix_base<int> qbit_sublist(1,2);
-    qbit_sublist[0] = distrib(gen);
-    qbit_sublist[1] = qbit_sublist[0]+1;
+    qbit_sublist[0] = 0;//distrib(gen);
+    qbit_sublist[1] = 1;//qbit_sublist[0]+1;
 
     double renyi_entropy = get_second_Renyi_entropy(optimized_parameters_mtx,input_state,qbit_sublist);
 
@@ -254,6 +259,8 @@ void N_Qubit_Decomposition_Base::export_current_cost_fnc(double current_minimum)
 
     return;
 }
+
+
 /**
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */

@@ -2221,7 +2221,9 @@ Gates_block::get_reduced_density_matrix( Matrix_real& parameters_mtx, Matrix& in
 
     // determine the transformed state
     Matrix transformed_state = input_state.copy();  
-    apply_to( parameters_mtx, transformed_state );
+    if ( parameters_mtx.size() > 0 ) {
+        apply_to( parameters_mtx, transformed_state );
+    }
 
 
     int subset_qbit_num = qbit_list_subset.size();
