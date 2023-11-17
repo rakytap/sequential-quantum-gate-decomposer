@@ -585,8 +585,24 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 
 ## 
+# @brief Call to get the optimized parameters set in numpy array
+# @return Returns with the optimized parameters
+    def get_Optimized_Parameters(self):
+    
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Optimized_Parameters()
+
+
+## 
+# @brief Call to set the parameters which are used as a starting point in the optimization
+# @param A numpy array containing the parameters. The number of parameters can be  retrieved with method get_Parameter_Num
+    def set_Optimized_Parameters(self, new_params):
+        
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Optimized_Parameters(new_params)
+
+
+## 
 # @brief Call to evaluate the cost function.
-# @param parameters A float64 numpy array
+# @param parameters A float64 numpy array. The number of parameters can be  retrieved with method get_Parameter_Num 
     def Optimization_Problem( self, parameters=None ):
 
         if parameters is None:

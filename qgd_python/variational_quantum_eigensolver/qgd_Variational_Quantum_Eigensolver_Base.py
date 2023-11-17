@@ -49,47 +49,77 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
         self.qbit_num = qbit_num
 
 
-##
-# @brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
-# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
-    def set_Optimizer(self, alg):
-    
+## 
+# @brief Call to set the optimizer used in the VQE process
+# @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2", "ADAM_BATCHED", "AGENTS", "COSINE", "AGENTS_COMBINED".
+    def set_Optimizer(self, alg):    
 
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Optimizer(alg)
-        
+
+## 
+# @brief Call to start solving the VQE problem to get the approximation for the ground state   
     def get_Ground_State(self):
 
 	# call the C wrapper function
         super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Ground_State()
-    
+
+## 
+# @brief Call to get the optimized parameters set in numpy array
+# @return Returns with the optimized parameters    
     def get_Optimized_Parameters(self):
     
         return super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Optimized_Parameters()
-        
+
+
+## 
+# @brief Call to set the parameters which are used as a starting point in the optimization
+# @param A numpy array containing the parameters. The number of parameters can be  retrieved with method get_Parameter_Num        
     def set_Optimized_Parameters(self, new_params):
         
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Optimized_Parameters(new_params)
-        
+
+
+
+# TODO should be deleted!        
     def set_Optimization_Tolerance(self, tolerance):
     
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Optimization_Tolerance(tolerance)
-        
+
+
+##
+# @brief Call to set the name of the SQUANDER project
+# @param project_name_new new project name      
     def set_Project_Name(self, project_name):
     
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Project_Name(project_name)
-        
+
+##
+# @brief Call to set custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
+# @param filename String containing the filename        
     def set_Gate_Structure_from_Binary(self, filename):
     
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Gate_Structure_From_Binary(filename)
-        
+
+
+##
+# @brief Call to set the ansatz type. Currently imp
+# @param ansatz_new String of the ansatz . Possible values: "HEA" (hardware efficient ansatz with U3 and CNOT gates).
     def set_Ansatz(self, ansatz_new):
         
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Ansatz(ansatz_new)
         
+##
+# @brief Call to generate the circuit ansatz
+# @param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT-U3)
+# @param blocks TODO: delete
+# @param rot_layers TODO: delete
     def Generate_Circuit(self, layers, blocks, rot_layers):
     
         super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_Circuit(layers, blocks, rot_layers)
         
+## 
+# @brief Call to evaluate the VQE energy.
+# @param parameters A float64 numpy array. The number of parameters can be  retrieved with method get_Parameter_Num 
     def Optimization_Problem(self, parameters):
     
         return super(qgd_Variational_Quantum_Eigensolver_Base, self).Optimization_Problem(parameters)
@@ -153,7 +183,11 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 
         return super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Parameter_Num()
 
-        
+
+
+##
+# @brief Export the unitary decomposition into Qiskit format.
+# @return Return with a Qiskit compatible quantum circuit.        
     def get_Quantum_Circuit(self):
         from qiskit import QuantumCircuit
 
