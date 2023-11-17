@@ -22,7 +22,10 @@ limitations under the License.
 #include "Variational_Quantum_Eigensolver_Base.h"
 
 
-
+/**
+@brief A base class to solve VQE problems
+This class can be used to approximate the ground state of the input Hamiltonian (sparse format) via a quantum circuit
+*/
 Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
 
     // logical value describing whether the decomposition was finalized or not
@@ -64,7 +67,13 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
 
 
 
-
+/**
+@brief Constructor of the class.
+@param Hamiltonian_in The Hamiltonian describing the physical system
+@param qbit_num_in The number of qubits spanning the unitary Umtx
+@param config_in A map that can be used to set hyperparameters during the process
+@return An instance of the class
+*/
 Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in) : N_Qubit_Decomposition_Base(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
 	Hamiltonian = Hamiltonian_in;
@@ -97,9 +106,9 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
     
     adaptive_eta = false;
     
-	qbit_num = qbit_num_in;
+    qbit_num = qbit_num_in;
 	
-	Zero_state = Matrix(Power_of_2(qbit_num),1);
+    Zero_state = Matrix( Power_of_2(qbit_num) , 1);
 	
     std::random_device rd;  
     
@@ -116,7 +125,9 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
 
 
 
-
+/**
+@brief Destructor of the class
+*/
 Variational_Quantum_Eigensolver_Base::~Variational_Quantum_Eigensolver_Base(){
 
 }
@@ -124,7 +135,9 @@ Variational_Quantum_Eigensolver_Base::~Variational_Quantum_Eigensolver_Base(){
 
 
 
-
+/**
+@brief Call to start solving the VQE problem to get the approximation for the ground state  
+*/ 
 void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
 
     initialize_zero_state();
@@ -152,8 +165,12 @@ void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
 
 
 
-
-double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix& State) {
+/**
+@brief Call to evaluate the expectation value of the energy.
+@param State The state for which the expectation value is evaluated
+@return The calculated expectation value
+*/
+double Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy(Matrix& State) {
 
     Matrix tmp = mult(Hamiltonian, State);
     double Energy= 0.0;
@@ -171,7 +188,12 @@ double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix& State) {
 
 
 
-
+/**
+@brief The optimization problem of the final optimization
+@param parameters Array containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
 double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Matrix_real parameters, void* void_instance){
 
     double Energy=0.;
@@ -181,11 +203,17 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Mat
     Matrix State = instance->Zero_state.copy();
 
     instance->apply_to(parameters, State);
-    Energy = instance->Expected_energy(State);
+    Energy = instance->Expectation_value_of_energy(State);
 
     return Energy;
 }
 
+
+/**
+@brief The optimization problem of the final optimization
+@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
 double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& parameters)  {
 
     double Energy;
@@ -197,7 +225,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 	
     //State.print_matrix();
 	
-    Energy = Expected_energy(State);
+    Energy = Expectation_value_of_energy(State);
     number_of_iters++;
 	
     return Energy;
@@ -205,7 +233,13 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 
 
 
-
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters Array containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param f0 The value of the cost function at x0.
+@param grad Array containing the calculated gradient components.
+*/
 void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
 
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
@@ -231,7 +265,7 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
-            grad[idx] = instance->Expected_energy(State_deriv[idx]);
+            grad[idx] = instance->Expectation_value_of_energy(State_deriv[idx]);
         }
     });
 
@@ -244,7 +278,12 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
 
 
 
-
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters Array containing the free parameters to be optimized.
+@param f0 The value of the cost function at x0.
+@param grad Array containing the calculated gradient components.
+*/
 void Variational_Quantum_Eigensolver_Base::optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad )  {
 
     optimization_problem_combined_non_static( parameters, this, f0, grad );
@@ -254,7 +293,12 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined( Matrix
 
 
 
-
+/**
+@brief Calculate the derivative of the cost function with respect to the free parameters.
+@param parameters Array containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param grad Array containing the calculated gradient components.
+*/
 void Variational_Quantum_Eigensolver_Base::optimization_problem_grad_vqe( Matrix_real parameters, void* void_instance, Matrix_real& grad ) {
 
     double f0;
@@ -267,7 +311,11 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_grad_vqe( Matrix
 
 
 
-
+/**
+@brief The optimization problem of the final optimization
+@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
 double Variational_Quantum_Eigensolver_Base::optimization_problem( double* parameters ) {
 
     // get the transformed matrix with the gates in the list
@@ -281,7 +329,9 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem( double* param
 
 
 
-
+/**
+@brief Initialize the state used in the quantun circuit. All qubits are initialized to state 0
+*/
 void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
 
     Zero_state[0].real = 1.0;
@@ -295,7 +345,10 @@ void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
 
 
 
-
+/**
+@brief Call to set the ansatz type. Currently imp
+@param ansatz_in The ansatz type . Possible values: "HEA" (hardware efficient ansatz with U3 and CNOT gates).
+*/ 
 void Variational_Quantum_Eigensolver_Base::set_ansatz(ansatz_type ansatz_in){
 
     ansatz = ansatz_in;
@@ -307,7 +360,12 @@ void Variational_Quantum_Eigensolver_Base::set_ansatz(ansatz_type ansatz_in){
 
 
 
-
+/**
+@brief Call to generate the circuit ansatz
+@param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT-U3)
+@param blocks TODO: delete
+@param rot_layers TODO: delete
+*/
 void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int blocks, int rot_layers ) {
 
 
@@ -381,6 +439,11 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int blo
 
 }
 
+
+/**
+@brief Call to set custom layers to the gate structure that are intended to be used in the VQE process.
+@param filename The path to the binary file
+*/
 void 
 Variational_Quantum_Eigensolver_Base::set_adaptive_gate_structure( std::string filename ) {
 

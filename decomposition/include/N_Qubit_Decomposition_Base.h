@@ -143,6 +143,7 @@ N_Qubit_Decomposition_Base();
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
 @param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
+@param config_in A map that can be used to set hyperparameters during the process
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
@@ -296,18 +297,24 @@ double optimization_problem( Matrix_real parameters, void* void_instance, Matrix
 
 
 /**
-// @brief The optimization problem of the final optimization
+@brief The optimization problem of the final optimization
 @param parameters Array containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 static double optimization_problem( Matrix_real parameters, void* void_instance);
 
+
+/**
+@brief The optimization problem of the final optimization
+@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
 virtual double optimization_problem_non_static( Matrix_real parameters, void* void_instance);
 
 
 /**
-@brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
+@brief Calculate the derivative of the cost function with respect to the free parameters.
 @param parameters Array containing the free parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad Array containing the calculated gradient components.
@@ -335,6 +342,14 @@ static void optimization_problem_grad( Matrix_real parameters, void* void_instan
 */
 static void optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
+
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters Array containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param f0 The value of the cost function at x0.
+@param grad Array containing the calculated gradient components.
+*/
 virtual void optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad );
 
 
