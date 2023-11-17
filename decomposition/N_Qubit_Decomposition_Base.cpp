@@ -221,28 +221,38 @@ N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
 }
 
 void N_Qubit_Decomposition_Base::export_current_cost_fnc(double current_minimum){
-	FILE* pFile;
-    std::string filename("costfuncs_and_entropy.txt");
-	if (project_name != ""){filename = project_name + "_" + filename;}
 
-	const char* c_filename = filename.c_str();
+    FILE* pFile;
+    std::string filename("costfuncs_and_entropy.txt");
+    
+    if (project_name != ""){filename = project_name + "_" + filename;}
+
+        const char* c_filename = filename.c_str();
 	pFile = fopen(c_filename, "a");
-    	if (pFile==NULL) {
+
+        if (pFile==NULL) {
             fputs ("File error",stderr); 
             std::string error("Cannot open file.");
             throw error;
-     }
-     Matrix input_state(Power_of_2(qbit_num),1);
-     std::uniform_int_distribution<> distrib(0, qbit_num-2); 
-      memset(input_state.get_data(), 0.0, (input_state.size()*2)*sizeof(double) );
- 	 input_state[0].real = 1.0;
-     matrix_base<int> qbit_sublist(1,2);
+    }
+
+    Matrix input_state(Power_of_2(qbit_num),1);
+
+    std::uniform_int_distribution<> distrib(0, qbit_num-2); 
+
+    memset(input_state.get_data(), 0.0, (input_state.size()*2)*sizeof(double) ); 
+    input_state[0].real = 1.0;
+
+    matrix_base<int> qbit_sublist(1,2);
     qbit_sublist[0] = distrib(gen);
     qbit_sublist[1] = qbit_sublist[0]+1;
-     double renyi_entropy = get_second_Renyi_entropy(optimized_parameters_mtx,input_state,qbit_sublist);
-     fprintf(pFile,"%i\t%f\t%f\n",number_of_iters,current_minimum,renyi_entropy);
-     fclose(pFile);
-     return;
+
+    double renyi_entropy = get_second_Renyi_entropy(optimized_parameters_mtx,input_state,qbit_sublist);
+
+    fprintf(pFile,"%i\t%f\t%f\n",number_of_iters,current_minimum,renyi_entropy);
+    fclose(pFile);
+
+    return;
 }
 /**
 @brief Call to add further layer to the gate structure used in the subdecomposition.

@@ -16,8 +16,8 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file Gates_block.cpp
-    \brief Class responsible for grouping two-qubit (CNOT,CZ,CH) and one-qubit gates into layers
+/*! \file Variational_Quantum_Eigensolver_Base.h
+    \brief Class to solve VQE problems
 */
 
 

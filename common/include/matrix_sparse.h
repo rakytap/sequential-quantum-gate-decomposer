@@ -17,7 +17,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file matrix.h
+/*! \file matrix_sparse.h
     \brief Header file of complex array storage array with automatic and thread safe reference counting.
 */
 

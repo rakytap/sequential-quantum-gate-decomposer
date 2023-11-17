@@ -16,10 +16,12 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file Gates_block.cpp
-    \brief Class responsible for grouping two-qubit (CNOT,CZ,CH) and one-qubit gates into layers
+/*! \file Variational_Quantum_Eigensolver_Base.cpp
+    \brief Class to solve VQE problems
 */
 #include "Variational_Quantum_Eigensolver_Base.h"
+
+
 
 Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
 
@@ -58,6 +60,10 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
     
     ansatz = HEA;
 }
+
+
+
+
 
 Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in) : N_Qubit_Decomposition_Base(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
@@ -109,59 +115,103 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
     
 }
 
-Variational_Quantum_Eigensolver_Base::~Variational_Quantum_Eigensolver_Base(){}
+
+
+
+
+Variational_Quantum_Eigensolver_Base::~Variational_Quantum_Eigensolver_Base(){
+
+}
+
+
+
+
 
 void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
 
     initialize_zero_state();
+
     int num_of_parameters =  optimized_parameters_mtx.size();
     if (gates.size() == 0 ) {
             return;
     }
+
     Matrix_real solution_guess = optimized_parameters_mtx.copy();
+
+
     solve_layer_optimization_problem(num_of_parameters,solution_guess);
+
     double f0=optimization_problem(optimized_parameters_mtx);
-    std::cout<<"Ground state found, energy: "<<current_minimum<<std::endl;
+
+    std::cout << "Ground state found, energy: "<< current_minimum << std::endl;
+
     prepare_gates_to_export();
+
     return;
 }
 
-double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix& State){
-	Matrix tmp = mult(Hamiltonian, State);
-	double Energy= 0.0;
-	for (int idx=0; idx<State.rows; idx++){
+
+
+
+
+
+double Variational_Quantum_Eigensolver_Base::Expected_energy(Matrix& State) {
+
+    Matrix tmp = mult(Hamiltonian, State);
+    double Energy= 0.0;
+
+    for (int idx=0; idx<State.rows; idx++){
 	Energy += State[idx].real*tmp[idx].real + State[idx].imag*tmp[idx].imag;
-	} 
-	tmp.release_data();
-	number_of_iters++;
-	return Energy;
+    }
+ 
+    tmp.release_data();
+    number_of_iters++;
+
+    return Energy;
 }
+
+
+
 
 
 double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Matrix_real parameters, void* void_instance){
-	double Energy=0.;
-    Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
-	Matrix State = instance->Zero_state.copy();
-	instance->apply_to(parameters, State);
-	Energy = instance->Expected_energy(State);
 
-	return Energy;
+    double Energy=0.;
+
+    Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
+
+    Matrix State = instance->Zero_state.copy();
+
+    instance->apply_to(parameters, State);
+    Energy = instance->Expected_energy(State);
+
+    return Energy;
 }
 
 double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& parameters)  {
-	double Energy;
-	initialize_zero_state();
-	Matrix State = Zero_state.copy();
-	apply_to(parameters, State);
-	//State.print_matrix();
-	Energy = Expected_energy(State);
-	number_of_iters++;
-	return Energy;
+
+    double Energy;
+    initialize_zero_state();
+	
+    Matrix State = Zero_state.copy();
+	
+    apply_to(parameters, State);
+	
+    //State.print_matrix();
+	
+    Energy = Expected_energy(State);
+    number_of_iters++;
+	
+    return Energy;
 }
 
 
+
+
 void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
+
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
+
     // the number of free parameters
     int parameter_num_loc = parameters.size();
 
@@ -186,8 +236,16 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
             grad[idx] = instance->Expected_energy(State_deriv[idx]);
         }
     });
+
+
     return;
 }
+
+
+
+
+
+
 
 void Variational_Quantum_Eigensolver_Base::optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad )  {
 
@@ -195,12 +253,22 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined( Matrix
     return;
 }
 
+
+
+
+
 void Variational_Quantum_Eigensolver_Base::optimization_problem_grad_vqe( Matrix_real parameters, void* void_instance, Matrix_real& grad ) {
+
     double f0;
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
     instance->optimization_problem_combined_non_static(parameters, void_instance, &f0, grad);
     return;
+
 }
+
+
+
+
 
 double Variational_Quantum_Eigensolver_Base::optimization_problem( double* parameters ) {
 
@@ -212,13 +280,23 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem( double* param
 
 }
 
+
+
+
+
 void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
 
-	Zero_state[0].real = 1.0;
-	Zero_state[0].imag = 0.0;
+    Zero_state[0].real = 1.0;
+    Zero_state[0].imag = 0.0;
     memset(Zero_state.get_data()+2, 0.0, (Zero_state.size()*2-2)*sizeof(double) );      
-	return;
+
+    return;
 }
+
+
+
+
+
 
 void Variational_Quantum_Eigensolver_Base::set_ansatz(ansatz_type ansatz_in){
 
@@ -226,6 +304,11 @@ void Variational_Quantum_Eigensolver_Base::set_ansatz(ansatz_type ansatz_in){
     
     return;
 }
+
+
+
+
+
 
 void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers, int blocks, int rot_layers ) {
 
@@ -241,7 +324,8 @@ void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers,
                         gate_structure_tmp->add_u3(0, true, true, true);
                 }
                 for (int bidx=0; bidx<blocks; bidx++){
-                    gate_structure_tmp->add_adaptive(1,0);
+                    //gate_structure_tmp->add_adaptive(1,0);
+                    gate_structure_tmp->add_cnot(1,0);
                 }
                 if (layer_idx==layers-1){
                     gate_structure_tmp->add_u3(0, true, true, true);
@@ -253,7 +337,8 @@ void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers,
                             gate_structure_tmp->add_u3(control_qbit+2, true, true, true);
                         }
                         for (int bidx=0; bidx<blocks; bidx++){
-                            gate_structure_tmp->add_adaptive(control_qbit+2,control_qbit+1);
+                            //gate_structure_tmp->add_adaptive(control_qbit+2,control_qbit+1);
+                            gate_structure_tmp->add_cnot(control_qbit+2,control_qbit+1);
                         }
                     }
                     for (int ridx=0; ridx<rot_layers; ridx++){
@@ -261,7 +346,8 @@ void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers,
                         gate_structure_tmp->add_u3(control_qbit, true, true, true);
                     }
                     for (int bidx=0; bidx<blocks; bidx++){
-                        gate_structure_tmp->add_adaptive(control_qbit+1,control_qbit);
+                        //gate_structure_tmp->add_adaptive(control_qbit+1,control_qbit);
+                        gate_structure_tmp->add_cnot(control_qbit+1,control_qbit);
                     }
                     if (layer_idx==layers-1){
                         gate_structure_tmp->add_u3(control_qbit, true, true, true);

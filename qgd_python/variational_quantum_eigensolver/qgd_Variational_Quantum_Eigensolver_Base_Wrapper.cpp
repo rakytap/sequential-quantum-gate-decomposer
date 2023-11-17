@@ -276,6 +276,35 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Ground_State(qgd_Variationa
 
 
 /**
+@brief Call to retrieve the number of qubits in the circuit
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Qbit_Num(qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self ) {
+
+    int qbit_num = 0;
+
+    try {
+        qbit_num = self->vqe->get_qbit_num();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("i", qbit_num );
+    
+}
+
+
+
+/**
 @brief Extract the optimized parameters
 @param start_index The index of the first inverse gate
 */
@@ -840,6 +869,101 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Ansatz( qgd_Variational_Qua
 
 }
 
+
+/**
+@brief Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set.
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Second_Renyi_Entropy( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args)
+{
+
+
+    PyObject * parameters_arr = NULL;
+    PyObject * input_state_arg = NULL;
+    PyObject * qubit_list_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|OOO", &parameters_arr, &input_state_arg, &qubit_list_arg )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
+    // convert python object array to numpy C API array
+    if ( input_state_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+    PyObject* input_state = PyArray_FROM_OTF(input_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(input_state) ) {
+        PyErr_SetString(PyExc_Exception, "input mtrix is not memory contiguous");
+        return NULL;
+    }
+
+
+    // create QGD version of the input matrix
+    Matrix input_state_mtx = numpy2matrix(input_state);
+
+
+    // check input argument qbit_list
+    if ( qubit_list_arg == NULL or (!PyList_Check( qubit_list_arg )) ) {
+        PyErr_SetString(PyExc_Exception, "qubit_list should be a list");
+        return NULL;
+    }
+
+    Py_ssize_t reduced_qbit_num = PyList_Size( qubit_list_arg );
+
+    matrix_base<int> qbit_list_mtx( (int)reduced_qbit_num, 1);
+    for ( int idx=0; idx<reduced_qbit_num; idx++ ) {
+
+        PyObject* item = PyList_GET_ITEM( qubit_list_arg, idx );
+        qbit_list_mtx[idx] = (int) PyLong_AsLong( item );
+
+    }
+
+
+    double entropy = -1;
+
+
+    try {
+        entropy = self->vqe->get_second_Renyi_entropy( parameters_mtx, input_state_mtx, qbit_list_mtx );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    Py_DECREF(parameters_arr);
+    Py_DECREF(input_state);
+
+
+
+    PyObject* p = Py_BuildValue("d", entropy);
+
+    return p;
+}
+
+
 static PyObject *
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_initial_circuit( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
 
@@ -1019,6 +1143,12 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"Optimization_Problem", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem, METH_VARARGS,
      "Method to get the expected energy of the circuit at parameters."
+    },
+    {"get_Second_Renyi_Entropy", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Second_Renyi_Entropy, METH_VARARGS,
+     "Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set."
+    },
+    {"get_Qbit_Num", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Qbit_Num, METH_NOARGS,
+     "Call to get the number of qubits in the circuit"
     },
     {NULL}  /* Sentinel */
 };
