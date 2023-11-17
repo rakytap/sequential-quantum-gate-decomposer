@@ -310,7 +310,7 @@ void Variational_Quantum_Eigensolver_Base::set_ansatz(ansatz_type ansatz_in){
 
 
 
-void Variational_Quantum_Eigensolver_Base::generate_initial_circuit( int layers, int blocks, int rot_layers ) {
+void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int blocks, int rot_layers ) {
 
 
     switch (ansatz){

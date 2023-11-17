@@ -965,7 +965,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Second_Renyi_Entropy( qgd_V
 
 
 static PyObject *
-qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_initial_circuit( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
 
     // initiate variables for input arguments
     int layers;
@@ -975,7 +975,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_initial_circuit( qgd_V
     // parsing input arguments
     if (!PyArg_ParseTuple(args, "|iii", &layers, &blocks, &rot_layers )) return Py_BuildValue("i", -1);
  try {
-        self->vqe->generate_initial_circuit(layers, blocks, rot_layers);
+        self->vqe->generate_circuit(layers, blocks, rot_layers);
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1045,6 +1045,19 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem( qgd_Varia
 
     return Py_BuildValue("d", f0);
 }
+
+
+/**
+@brief Get the number of free parameters in the gate structure used for the decomposition
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Parameter_Num( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self ) {
+
+    int parameter_num = self->vqe->get_parameter_num();
+
+    return Py_BuildValue("i", parameter_num);
+}
+
 
 static PyObject *
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self ) {
@@ -1138,8 +1151,11 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     {"set_Ansatz", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Ansatz, METH_VARARGS | METH_KEYWORDS,
      "Method to set ansatz type."
     },
-    {"Generate_initial_circuit", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_initial_circuit, METH_VARARGS,
-     "Method to set the initial circuit based on the ansatz type."
+    {"get_Parameter_Num", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Parameter_Num, METH_NOARGS,
+     "Call to get the number of free parameters in the gate structure used for the decomposition"
+    },
+    {"Generate_Circuit", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit, METH_VARARGS,
+     "Method to set the circuit based on the ansatz type."
     },
     {"Optimization_Problem", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem, METH_VARARGS,
      "Method to get the expected energy of the circuit at parameters."

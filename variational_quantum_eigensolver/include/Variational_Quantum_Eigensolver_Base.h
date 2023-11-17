@@ -96,7 +96,7 @@ void Get_ground_state();
 
 void set_ansatz(ansatz_type ansatz_in);
 
-void generate_initial_circuit( int layers, int blocks, int rot_layers );
+void generate_circuit( int layers, int blocks, int rot_layers );
 
 void set_adaptive_gate_structure( std::string filename );
 

@@ -86,9 +86,9 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
         
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Ansatz(ansatz_new)
         
-    def Generate_initial_circuit(self, layers, blocks, rot_layers):
+    def Generate_Circuit(self, layers, blocks, rot_layers):
     
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_initial_circuit(layers, blocks, rot_layers)
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_Circuit(layers, blocks, rot_layers)
         
     def Optimization_Problem(self, parameters):
     
@@ -145,6 +145,13 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
     def get_Qbit_Num(self):
     
         return super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Qbit_Num()
+
+
+##
+# @brief Call to get the number of free parameters in the gate structure used for the decomposition
+    def get_Parameter_Num( self ):
+
+        return super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Parameter_Num()
 
         
     def get_Quantum_Circuit(self):
