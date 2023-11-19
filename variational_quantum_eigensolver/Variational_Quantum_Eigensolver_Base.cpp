@@ -363,73 +363,63 @@ void Variational_Quantum_Eigensolver_Base::set_ansatz(ansatz_type ansatz_in){
 /**
 @brief Call to generate the circuit ansatz
 @param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT-U3)
-@param blocks TODO: delete
-@param rot_layers TODO: delete
 */
-void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int blocks, int rot_layers ) {
+void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers ) {
 
 
     switch (ansatz){
     
         case HEA:
         {
-            Gates_block* gate_structure_tmp = new Gates_block(qbit_num);
+
+            release_gates();
+
+            if ( qbit_num < 2 ) {
+                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should be at least 2");
+                throw error;
+            }
+
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
-                for (int ridx=0; ridx<rot_layers; ridx++){
-                        gate_structure_tmp->add_u3(1, true, true, true);
-                        gate_structure_tmp->add_u3(0, true, true, true);
-                }
-                for (int bidx=0; bidx<blocks; bidx++){
-                    //gate_structure_tmp->add_adaptive(1,0);
-                    gate_structure_tmp->add_cnot(1,0);
-                }
+
+                add_u3(1, true, true, true);
+                add_u3(0, true, true, true);
+                
+
+                //add_adaptive(1,0);
+                add_cnot(1,0);
+
                 if (layer_idx==layers-1){
-                    gate_structure_tmp->add_u3(0, true, true, true);
+                    add_u3(0, true, true, true);
                 }
                 for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
                     if (control_qbit+2<qbit_num){
-                        for (int ridx=0; ridx<rot_layers; ridx++){
-                            gate_structure_tmp->add_u3(control_qbit+1, true, true, true);
-                            gate_structure_tmp->add_u3(control_qbit+2, true, true, true);
-                        }
-                        for (int bidx=0; bidx<blocks; bidx++){
-                            //gate_structure_tmp->add_adaptive(control_qbit+2,control_qbit+1);
-                            gate_structure_tmp->add_cnot(control_qbit+2,control_qbit+1);
-                        }
+
+                        add_u3(control_qbit+1, true, true, true);
+                        add_u3(control_qbit+2, true, true, true);
+
+                        //add_adaptive(control_qbit+2,control_qbit+1);
+                        add_cnot(control_qbit+2,control_qbit+1);
+
                     }
-                    for (int ridx=0; ridx<rot_layers; ridx++){
-                        gate_structure_tmp->add_u3(control_qbit+1, true, true, true);
-                        gate_structure_tmp->add_u3(control_qbit, true, true, true);
-                    }
-                    for (int bidx=0; bidx<blocks; bidx++){
-                        //gate_structure_tmp->add_adaptive(control_qbit+1,control_qbit);
-                        gate_structure_tmp->add_cnot(control_qbit+1,control_qbit);
-                    }
+
+                    add_u3(control_qbit+1, true, true, true);
+                    add_u3(control_qbit, true, true, true);
+
+                    //add_adaptive(control_qbit+1,control_qbit);
+                    add_cnot(control_qbit+1,control_qbit);
+
                     if (layer_idx==layers-1){
-                        gate_structure_tmp->add_u3(control_qbit, true, true, true);
-                        gate_structure_tmp->add_u3(control_qbit+1, true, true, true);
+                        add_u3(control_qbit, true, true, true);
+                        add_u3(control_qbit+1, true, true, true);
                     }
                 }
             }
+
             if (qbit_num%2==0){
-                gate_structure_tmp->add_u3(qbit_num-1, true, true, true);
+                add_u3(qbit_num-1, true, true, true);
             }
-            gate_structure_tmp->combine( static_cast<Gates_block*>(this) );
-            release_gates();
-            combine( gate_structure_tmp );
-            Matrix_real optimized_parameters_mtx_tmp( 1, get_parameter_num() );
-            if (alg == AGENTS){
-	        memset( optimized_parameters_mtx_tmp.get_data(), 0.0, optimized_parameters_mtx_tmp.size()*sizeof(double) ); 
-            }
-            else{
-            std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI); 
-	        for(int idx = 0; idx < get_parameter_num(); idx++) {
-                    optimized_parameters_mtx_tmp[idx] = distrib_real(gen);
-                }
-            }
-            optimized_parameters_mtx = optimized_parameters_mtx_tmp;
-            //max_fusion = (qbit_num>4)? 4:qbit_num-1;
-            //fragment_circuit();
+
+
             return;
         }
         default:
@@ -439,11 +429,6 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int blo
 
 }
 
-
-/**
-@brief Call to set custom layers to the gate structure that are intended to be used in the VQE process.
-@param filename The path to the binary file
-*/
 void 
 Variational_Quantum_Eigensolver_Base::set_adaptive_gate_structure( std::string filename ) {
 

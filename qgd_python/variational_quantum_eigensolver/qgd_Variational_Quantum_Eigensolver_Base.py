@@ -113,9 +113,9 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 # @param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT-U3)
 # @param blocks TODO: delete
 # @param rot_layers TODO: delete
-    def Generate_Circuit(self, layers, blocks, rot_layers):
+    def Generate_Circuit(self, layers):
     
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_Circuit(layers, blocks, rot_layers)
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_Circuit( layers )
         
 ## 
 # @brief Call to evaluate the VQE energy.
