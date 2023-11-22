@@ -404,8 +404,8 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers ) {
                     if (control_qbit+2<qbit_num){
 
                         add_u3(control_qbit+1, true, true, true);
-                        add_u3(control_qbit+2, true, true, true);             
-
+                        add_u3(control_qbit+2, true, true, true); 
+                        
                         add_cnot(control_qbit+2,control_qbit+1);
 
                     }
@@ -417,7 +417,7 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers ) {
 
                     if (layer_idx==layers-1){
                         add_u3(control_qbit, true, true, true);
-                        add_u3(control_qbit+1, true, true, true);                        
+                        add_u3(control_qbit+1, true, true, true);       
                     }
                 }
             }
@@ -510,11 +510,6 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers ) {
 
 }
 
-
-/**
-@brief Call to set custom layers to the gate structure that are intended to be used in the VQE process.
-@param filename The path to the binary file
-*/
 void 
 Variational_Quantum_Eigensolver_Base::set_adaptive_gate_structure( std::string filename ) {
 
