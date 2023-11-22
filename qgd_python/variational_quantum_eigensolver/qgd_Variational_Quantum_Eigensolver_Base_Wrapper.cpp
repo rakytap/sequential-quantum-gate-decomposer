@@ -845,10 +845,15 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Ansatz( qgd_Variational_Qua
     if ( strcmp("hea", ansatz_C) == 0 || strcmp("HEA", ansatz_C) == 0) {
         qgd_ansatz = HEA;        
     }
+    else if ( strcmp("hea_zyz", ansatz_C) == 0 || strcmp("HEA_ZYZ", ansatz_C) == 0) {
+        qgd_ansatz = HEA_ZYZ;        
+    }
     else {
         std::cout << "Wrong ansatz. Using default: HEA" << std::endl; 
         qgd_ansatz = HEA;     
     }
+    
+    
     try {
         self->vqe->set_ansatz(qgd_ansatz);
     }
