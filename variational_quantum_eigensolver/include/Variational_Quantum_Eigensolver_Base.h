@@ -27,7 +27,7 @@ limitations under the License.
 #include "N_Qubit_Decomposition_Base.h"
 
 /// @brief Type definition of the fifferent types of ansatz
-typedef enum ansatz_type {HEA} ansatz_type;
+typedef enum ansatz_type {HEA, HEA_ZYZ} ansatz_type;
     
 #ifdef __cplusplus
 extern "C" 
@@ -183,10 +183,8 @@ void set_ansatz(ansatz_type ansatz_in);
 /**
 @brief Call to generate the circuit ansatz
 @param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT-U3)
-@param blocks TODO: delete
-@param rot_layers TODO: delete
 */
-void generate_circuit( int layers, int blocks, int rot_layers );
+void generate_circuit( int layers );
 
 
 /**

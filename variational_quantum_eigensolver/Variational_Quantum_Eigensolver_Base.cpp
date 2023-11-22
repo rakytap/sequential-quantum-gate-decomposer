@@ -142,21 +142,33 @@ void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
 
     initialize_zero_state();
 
-    int num_of_parameters =  optimized_parameters_mtx.size();
+
     if (gates.size() == 0 ) {
-            return;
+        std::string error("Variational_Quantum_Eigensolver_Base::Get_ground_state: for VQE process the circuit needs to be initialized");
+        throw error;
     }
 
+    int num_of_parameters =  optimized_parameters_mtx.size();
+    if ( num_of_parameters == 0 ) {
+        std::string error("Variational_Quantum_Eigensolver_Base::Get_ground_state: No intial parameters were given");
+        throw error;
+    }
+
+
+    if ( num_of_parameters != get_parameter_num() ) {
+        std::string error("Variational_Quantum_Eigensolver_Base::Get_ground_state: The number of initial parameters does not match with the number of parameters in the circuit");
+        throw error;
+    }    
+
+
+    // start the VQE process
     Matrix_real solution_guess = optimized_parameters_mtx.copy();
+    solve_layer_optimization_problem(num_of_parameters, solution_guess);
 
 
-    solve_layer_optimization_problem(num_of_parameters,solution_guess);
-
-    double f0=optimization_problem(optimized_parameters_mtx);
-
-    std::cout << "Ground state found, energy: "<< current_minimum << std::endl;
-
+    // prepare to export the quantum circuit (QISKIT, Cirq formats are supported)
     prepare_gates_to_export();
+
 
     return;
 }
@@ -363,75 +375,134 @@ void Variational_Quantum_Eigensolver_Base::set_ansatz(ansatz_type ansatz_in){
 /**
 @brief Call to generate the circuit ansatz
 @param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT-U3)
-@param blocks TODO: delete
-@param rot_layers TODO: delete
 */
-void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int blocks, int rot_layers ) {
+void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers ) {
 
 
     switch (ansatz){
     
         case HEA:
         {
-            Gates_block* gate_structure_tmp = new Gates_block(qbit_num);
+
+            release_gates();
+
+            if ( qbit_num < 2 ) {
+                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should be at least 2");
+                throw error;
+            }
+
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
-                for (int ridx=0; ridx<rot_layers; ridx++){
-                        gate_structure_tmp->add_u3(1, true, true, true);
-                        gate_structure_tmp->add_u3(0, true, true, true);
-                }
-                for (int bidx=0; bidx<blocks; bidx++){
-                    //gate_structure_tmp->add_adaptive(1,0);
-                    gate_structure_tmp->add_cnot(1,0);
-                }
+
+                add_u3(1, true, true, true);                          
+                add_u3(0, true, true, true);
+                add_cnot(1,0);
+
                 if (layer_idx==layers-1){
-                    gate_structure_tmp->add_u3(0, true, true, true);
+                    add_u3(0, true, true, true);                      
                 }
                 for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
                     if (control_qbit+2<qbit_num){
-                        for (int ridx=0; ridx<rot_layers; ridx++){
-                            gate_structure_tmp->add_u3(control_qbit+1, true, true, true);
-                            gate_structure_tmp->add_u3(control_qbit+2, true, true, true);
-                        }
-                        for (int bidx=0; bidx<blocks; bidx++){
-                            //gate_structure_tmp->add_adaptive(control_qbit+2,control_qbit+1);
-                            gate_structure_tmp->add_cnot(control_qbit+2,control_qbit+1);
-                        }
+
+                        add_u3(control_qbit+1, true, true, true);
+                        add_u3(control_qbit+2, true, true, true);             
+
+                        add_cnot(control_qbit+2,control_qbit+1);
+
                     }
-                    for (int ridx=0; ridx<rot_layers; ridx++){
-                        gate_structure_tmp->add_u3(control_qbit+1, true, true, true);
-                        gate_structure_tmp->add_u3(control_qbit, true, true, true);
-                    }
-                    for (int bidx=0; bidx<blocks; bidx++){
-                        //gate_structure_tmp->add_adaptive(control_qbit+1,control_qbit);
-                        gate_structure_tmp->add_cnot(control_qbit+1,control_qbit);
-                    }
+
+                    add_u3(control_qbit+1, true, true, true);  
+                    add_u3(control_qbit, true, true, true);  
+
+                    add_cnot(control_qbit+1,control_qbit);
+
                     if (layer_idx==layers-1){
-                        gate_structure_tmp->add_u3(control_qbit, true, true, true);
-                        gate_structure_tmp->add_u3(control_qbit+1, true, true, true);
+                        add_u3(control_qbit, true, true, true);
+                        add_u3(control_qbit+1, true, true, true);                        
                     }
                 }
             }
+
             if (qbit_num%2==0){
-                gate_structure_tmp->add_u3(qbit_num-1, true, true, true);
+                add_u3(qbit_num-1, true, true, true);
             }
-            gate_structure_tmp->combine( static_cast<Gates_block*>(this) );
-            release_gates();
-            combine( gate_structure_tmp );
-            Matrix_real optimized_parameters_mtx_tmp( 1, get_parameter_num() );
-            if (alg == AGENTS){
-	        memset( optimized_parameters_mtx_tmp.get_data(), 0.0, optimized_parameters_mtx_tmp.size()*sizeof(double) ); 
-            }
-            else{
-            std::uniform_real_distribution<> distrib_real(0.0, 2*M_PI); 
-	        for(int idx = 0; idx < get_parameter_num(); idx++) {
-                    optimized_parameters_mtx_tmp[idx] = distrib_real(gen);
-                }
-            }
-            optimized_parameters_mtx = optimized_parameters_mtx_tmp;
-            //max_fusion = (qbit_num>4)? 4:qbit_num-1;
-            //fragment_circuit();
+
+
             return;
         }
+        case HEA_ZYZ:
+        {
+
+            release_gates();
+
+            if ( qbit_num < 2 ) {
+                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should be at least 2");
+                throw error;
+            }
+
+            for (int layer_idx=0; layer_idx<layers ;layer_idx++){
+
+
+                add_rz(1);
+                add_ry(1);
+                add_rz(1);                                
+
+                add_rz(0);
+                add_ry(0);
+                add_rz(0);                    
+                
+                add_cnot(1,0);
+
+                if (layer_idx==layers-1){
+                    add_rz(0);
+                    add_ry(0);
+                    add_rz(0);                        
+                }
+                for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
+                    if (control_qbit+2<qbit_num){
+
+                        add_rz(control_qbit+1);
+                        add_ry(control_qbit+1);
+                        add_rz(control_qbit+1);                            
+
+                        add_rz(control_qbit+2);
+                        add_ry(control_qbit+2);
+                        add_rz(control_qbit+2);                               
+
+                        add_cnot(control_qbit+2,control_qbit+1);
+
+                    }
+
+                    add_rz(control_qbit+1);
+                    add_ry(control_qbit+1);
+                    add_rz(control_qbit+1);                    
+
+                    add_rz(control_qbit);
+                    add_ry(control_qbit);
+                    add_rz(control_qbit);                    
+
+                    add_cnot(control_qbit+1,control_qbit);
+
+                    if (layer_idx==layers-1){
+                        add_rz(control_qbit);
+                        add_ry(control_qbit);
+                        add_rz(control_qbit);                          
+
+                        add_rz(control_qbit+1);
+                        add_ry(control_qbit+1);
+                        add_rz(control_qbit+1);                          
+                    }
+                }
+            }
+
+            if (qbit_num%2==0){
+                add_rz(qbit_num-1);
+                add_ry(qbit_num-1);
+                add_rz(qbit_num-1);                  
+            }
+
+
+            return;
+        }        
         default:
             std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: ansatz not implemented");
             throw error;

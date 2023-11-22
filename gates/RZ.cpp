@@ -139,21 +139,29 @@ RZ::apply_to( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in RZ gate apply" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
+        std::string err("Wrong matrix size in RZ gate apply");
+        throw err;
     }
 
-    double Theta, Phi, Lambda;
 
-    //Theta = theta0;
-    Phi = parameters[0];
-    //Lambda = lambda0;
+
+    double Phi_over_2 = parameters[0];
+
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
+    Matrix u3_1qbit(2, 2);
+    double cos_phi = cos(Phi_over_2);
+    double sin_phi = sin(Phi_over_2);
+    
+    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
+    u3_1qbit[0].real = cos_phi;
+    u3_1qbit[0].imag = -sin_phi;    
+
+    u3_1qbit[3].real = cos_phi;
+    u3_1qbit[3].imag = sin_phi;    
+
 
 
     apply_kernel_to( u3_1qbit, input );
@@ -173,19 +181,26 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
+        std::string err("Wrong matrix size in U3 apply_from_right");
+        throw err;    
     }
 
-    double Theta, Phi, Lambda;
+    double Phi_over_2 = parameters[0];
 
-    Phi = parameters[0];
-    parameters_for_calc_one_qubit(Theta, Phi, Lambda);
+    
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
+    Matrix u3_1qbit(2, 2);
+    double cos_phi = cos(Phi_over_2);
+    double sin_phi = sin(Phi_over_2);
+    
+    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
+    u3_1qbit[0].real = cos_phi;
+    u3_1qbit[0].imag = -sin_phi;    
+
+    u3_1qbit[3].real = cos_phi;
+    u3_1qbit[3].imag = sin_phi; 
 
 
     apply_kernel_from_right(u3_1qbit, input);
@@ -203,26 +218,28 @@ std::vector<Matrix>
 RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in RZ apply_derivate_to" << std::endl;
-        print(sstream, 0);	 
-        exit(-1);
+        std::string err("Wrong matrix size in RZ apply_derivate_to");
+        throw err;
     }
 
-    double Theta, Phi, Lambda;
+    double Phi_over_2 = parameters[0] + M_PI/2;
 
-    Theta = theta0;
-    Phi = parameters_mtx[0] + M_PI/2;
-    Lambda = lambda0;
-
-    Matrix&& res_mtx = input.copy();
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
-    memset(u3_1qbit.get_data(), 0.0, 2*sizeof(QGD_Complex16));
+    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
+    Matrix u3_1qbit(2, 2);
+    double cos_phi = cos(Phi_over_2);
+    double sin_phi = sin(Phi_over_2);
+    
+    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
+    u3_1qbit[0].real = cos_phi;
+    u3_1qbit[0].imag = -sin_phi;    
 
+    u3_1qbit[3].real = cos_phi;
+    u3_1qbit[3].imag = sin_phi; 
 
+    Matrix&& res_mtx = input.copy();
     apply_kernel_to( u3_1qbit, res_mtx );
 
     std::vector<Matrix> ret;

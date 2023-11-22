@@ -40,9 +40,9 @@ limitations under the License.
 
 static double adam_time = 0;
 static double bfgs_time = 0;
-static double pure_DFE_time = 0;
 
-static double DFE_time = 0.0;
+
+static double circuit_simulation_time = 0.0;
 static double CPU_time = 0.0;
 
 
@@ -843,7 +843,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
 
         tbb::tick_count optimization_end = tbb::tick_count::now();
         optimization_time  = optimization_time + (optimization_end-optimization_start).seconds();
-        sstream << "COS time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << current_minimum << std::endl;
+        sstream << "COS time: " << adam_time << " " << current_minimum << std::endl;
         
         print(sstream, 0); 
 
@@ -911,7 +911,6 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int nu
 
         tbb::tick_count optimization_start = tbb::tick_count::now();
         double optimization_time = 0.0;
-pure_DFE_time = 0.0;
 
 
 
@@ -1019,6 +1018,18 @@ pure_DFE_time = 0.0;
              config["convergence_length"].get_property( value );
              convergence_length = (int) value;
         }
+
+        int linesearch_points = 3;
+        if ( config.count("linesearch_points_agent") > 0 ) {
+             long long value;                   
+             config["linesearch_points_agent"].get_property( value );
+             linesearch_points = (int) value;
+        }
+        else if ( config.count("linesearch_points") > 0 ) {
+             long long value;                   
+             config["linesearch_points"].get_property( value );
+             linesearch_points = (int) value;
+        }
         
         sstream.str("");
         sstream << "AGENTS: number of agents " << agent_num << std::endl;
@@ -1114,6 +1125,9 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
         Matrix_real f0_shifted_3pi2_agents;           
        
 
+        bool three_point_line_search =    cost_fnc == FROBENIUS_NORM || ( cost_fnc == VQE && linesearch_points == 3 );
+        bool five_point_line_search  =    cost_fnc == HILBERT_SCHMIDT_TEST || ( cost_fnc == VQE && linesearch_points == 5 );
+
 
    
         // CPU time
@@ -1158,14 +1172,14 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 #endif        
                       
                  
-            if ( cost_fnc == FROBENIUS_NORM ) {
+            if ( three_point_line_search ) {
                                       
                 // calsulate the cist functions at shifted parameter values
                 for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
                     Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ]; 
-                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;                
+                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half/2;                
                 }   
-            
+
                 // CPU time              
                 CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();  
             
@@ -1178,7 +1192,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
 
                 for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
                     Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];             
-                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half;
+                    solution_guess_mtx_agent[param_idx_agents[agent_idx]] += M_PI_half/2;
                 }  
             
                 // CPU time             
@@ -1208,9 +1222,9 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     double phi0 = atan2( A_times_sin, A_times_cos);
 
 
-                    double parameter_shift = phi0 > 0 ? M_PI-phi0 : -phi0-M_PI;
+                    double parameter_shift = phi0 > 0 ? M_PI/2-phi0/2 : -phi0/2-M_PI/2;
                     double amplitude = sqrt(A_times_sin*A_times_sin + A_times_cos*A_times_cos);
-		
+		//std::cout << amplitude << " " << offset << std::endl;
 
 
                     //update  the parameter vector
@@ -1220,9 +1234,42 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     current_minimum_agents[agent_idx] = offset - amplitude;
                     
                 }
-                
+/*
+double max = -DBL_MAX;
+double min = DBL_MAX;
+
+double delta = 2*M_PI/1000;
+for ( int idx =0; idx<1000; idx++ ) {
+
+Matrix_real& solution_guess_mtx_agent                    = solution_guess_mtx_agents[ 0 ];  
+solution_guess_mtx_agent[param_idx_agents[ 0 ]] += delta;
+double rr = optimization_problem( solution_guess_mtx_agent );
+//std::cout << rr << std::endl;
+
+if ( rr < min ) {
+    min = rr;
+}
+
+
+if ( rr > max ) {
+    max = rr;
+}
+
+}
+
+double amplitude = (max-min)/2;
+double offset = (max+min)/2;
+std::cout <<"kkk " << amplitude << " " << offset << " " << param_idx_agents[ 0 ] << " " << parameter_value_save_agents[ 0 ] <<  std::endl;
+
+
+Matrix_real tmp = optimization_problem_batched( solution_guess_mtx_agents );  
+tmp.print_matrix();
+    
+      current_minimum_agents.print_matrix();
+exit(-1);        
+*/
             }  
-            else if ( cost_fnc == HILBERT_SCHMIDT_TEST || cost_fnc == VQE){
+            else if ( five_point_line_search ){
            
                 
                 // calsulate the cist functions at shifted parameter values
@@ -1544,7 +1591,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                     std::stringstream sstream;
                     sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
                     sstream << ", current minimum of agent 0: " << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time;
-                    sstream << " DFE_time: " << DFE_time << " pure DFE time: " << pure_DFE_time << std::endl;
+                    sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                     print(sstream, 0); 
                 }
 
@@ -1571,7 +1618,7 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
         tbb::tick_count optimization_end = tbb::tick_count::now();
         optimization_time  = optimization_time + (optimization_end-optimization_start).seconds();
         sstream.str("");
-        sstream << "AGENTS time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << current_minimum << std::endl;
+        sstream << "AGENTS time: " << adam_time << " " << current_minimum << std::endl;
 
         print(sstream, 0); 
 }
@@ -1753,7 +1800,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( 
 
         tbb::tick_count adam_start = tbb::tick_count::now();
         adam_time = 0.0;
-pure_DFE_time = 0.0;
+
         Adam optimizer;
         optimizer.initialize_moment_and_variance( num_of_parameters );
 
@@ -1961,7 +2008,7 @@ pure_DFE_time = 0.0;
 
         tbb::tick_count adam_end = tbb::tick_count::now();
         adam_time  = adam_time + (adam_end-adam_start).seconds();
-        sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
+        sstream << "adam time: " << adam_time  << " " << f0 << std::endl;
         
         print(sstream, 0); 
         
@@ -2006,7 +2053,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
 
         tbb::tick_count adam_start = tbb::tick_count::now();
         adam_time = 0.0;
-pure_DFE_time = 0.0;
+
         Adam optimizer;
         optimizer.initialize_moment_and_variance( num_of_parameters );
 
@@ -2222,7 +2269,7 @@ pure_DFE_time = 0.0;
 
         tbb::tick_count adam_end = tbb::tick_count::now();
         adam_time  = adam_time + (adam_end-adam_start).seconds();
-        sstream << "adam time: " << adam_time << ", pure DFE time:  " << pure_DFE_time << " " << f0 << std::endl;
+        sstream << "adam time: " << adam_time << " " << f0 << std::endl;
 
         print(sstream, 0); 
 
@@ -2797,7 +2844,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
             
         Matrix_real trace_DFE_mtx(gateSetNum, 3);
         
-tbb::tick_count t0_DFE_pure = tbb::tick_count::now();         
+   
 #ifdef __MPI__
         // the number of decomposing layers are divided between the MPI processes
 
@@ -2819,7 +2866,7 @@ tbb::tick_count t0_DFE_pure = tbb::tick_count::now();
         unlock_lib();    
                                                                       
 #endif  
-pure_DFE_time += (tbb::tick_count::now() - t0_DFE_pure).seconds();       
+      
 
         // calculate the cost function
         if ( cost_fnc == FROBENIUS_NORM ) {
@@ -2864,7 +2911,7 @@ pure_DFE_time += (tbb::tick_count::now() - t0_DFE_pure).seconds();
     }
 #endif
 
-DFE_time += (tbb::tick_count::now() - t0_DFE).seconds();       
+circuit_simulation_time += (tbb::tick_count::now() - t0_DFE).seconds();       
     return cost_fnc_mtx;
         
 }

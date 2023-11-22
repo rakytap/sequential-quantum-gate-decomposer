@@ -2703,7 +2703,7 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
 
                 DFEgate_kernel_type& DFEGate = DFEgates[gate_set_index*gatesNum + gate_idx];
                 DFEGate.Phi                  = DFEGate.Phi + parameter_shift;
-                DFEGate.metadata             = 3 + (1<<7); // The 0th and 1st element in kernel matrix should be zero for derivates and 3 = 0011, plus the leading bit indicates that derivate is processed
+                DFEGate.metadata             = 6 + (1<<7); // The 1st and 2nd element in kernel matrix should be zero for derivates and 6 = 0110, plus the leading bit indicates that derivate is processed
                 gate_set_index               = gate_set_index - 1;
 
                 parameter_idx = parameter_idx - 1;

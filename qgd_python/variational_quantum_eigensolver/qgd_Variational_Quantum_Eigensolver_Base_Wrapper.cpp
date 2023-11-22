@@ -967,13 +967,13 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit( qgd_Variation
 
     // initiate variables for input arguments
     int layers;
-    int blocks;
-    int rot_layers;
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|iii", &layers, &blocks, &rot_layers )) return Py_BuildValue("i", -1);
- try {
-        self->vqe->generate_circuit(layers, blocks, rot_layers);
+    if (!PyArg_ParseTuple(args, "|i", &layers )) return Py_BuildValue("i", -1);
+
+
+    try {
+        self->vqe->generate_circuit( layers );
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
