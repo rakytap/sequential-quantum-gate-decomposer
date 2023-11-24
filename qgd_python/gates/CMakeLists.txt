@@ -171,21 +171,21 @@ install(TARGETS qgd_CH LIBRARY
 
 
 
-add_library( qgd_Gates_Block_Wrapper MODULE
-    ${EXT_DIR}/qgd_Gates_Block_Wrapper.cpp
+add_library( qgd_Circuit MODULE
+    ${EXT_DIR}/qgd_Circuit.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_Gates_Block_Wrapper qgd)
+ADD_DEPENDENCIES (qgd_Circuit qgd)
 
-target_link_libraries (qgd_Gates_Block_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_Circuit qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
 
-python_extension_module(qgd_Gates_Block_Wrapper)
+python_extension_module(qgd_Circuit)
 
 # adding compile options
-target_compile_options(qgd_Gates_Block_Wrapper PRIVATE
+target_compile_options(qgd_Circuit PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -193,7 +193,7 @@ target_compile_options(qgd_Gates_Block_Wrapper PRIVATE
 )
 
 
-target_include_directories(qgd_Gates_Block_Wrapper PRIVATE
+target_include_directories(qgd_Circuit PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
@@ -201,13 +201,13 @@ target_include_directories(qgd_Gates_Block_Wrapper PRIVATE
                             ${EXTRA_INCLUDES})
 
 
-set_target_properties( qgd_Gates_Block_Wrapper PROPERTIES
+set_target_properties( qgd_Circuit PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
 
-install(TARGETS qgd_Gates_Block_Wrapper LIBRARY 
+install(TARGETS qgd_Circuit LIBRARY 
          DESTINATION qgd_python/gates)
 
 

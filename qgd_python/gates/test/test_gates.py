@@ -249,14 +249,14 @@ class Test_operations:
 
         """
 
-        from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper        
+        from qgd_python.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper        
 
         # number of qubits
         qbit_num = 3
      
 
         # creating an instance of the C++ class
-        cGates_Block = qgd_Gates_Block_Wrapper( qbit_num )
+        cCircuit = qgd_Circuit_Wrapper( qbit_num )
 
 
 
@@ -267,14 +267,14 @@ class Test_operations:
 
         """
 
-        from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper        
+        from qgd_python.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper        
 
         # number of qubits
         qbit_num = 3
      
 
         # creating an instance of the C++ class
-        cGates_Block = qgd_Gates_Block_Wrapper( qbit_num )
+        cCircuit = qgd_Circuit_Wrapper( qbit_num )
 
 
 
@@ -288,7 +288,7 @@ class Test_operations:
 
 
         # add U3 gate to the block
-        cGates_Block.add_U3( target_qbit, Theta, Phi, Lambda )
+        cCircuit.add_U3( target_qbit, Theta, Phi, Lambda )
 
 
         # target qbit
@@ -298,7 +298,7 @@ class Test_operations:
         control_qbit = 1  
 
         # add CNOT gate to the block
-        cGates_Block.add_CNOT( target_qbit, control_qbit )
+        cCircuit.add_CNOT( target_qbit, control_qbit )
 
 
 
@@ -311,14 +311,14 @@ class Test_operations:
 
         """
 
-        from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper        
+        from qgd_python.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper        
 
         # number of qubits
         qbit_num = 3
      
 
         # creating an instance of the C++ class
-        layer = qgd_Gates_Block_Wrapper( qbit_num )
+        layer = qgd_Circuit_Wrapper( qbit_num )
 
         # target qbit
         target_qbit = 0
@@ -348,10 +348,10 @@ class Test_operations:
         layer.add_RX( target_qbit )
 
         # creating an instance of the C++ class
-        cGates_Block = qgd_Gates_Block_Wrapper( qbit_num )   
+        cCircuit = qgd_Circuit_Wrapper( qbit_num )   
 
         # add inner operation block to the outher operation block
-        cGates_Block.add_Gates_Block( layer )
+        cCircuit.add_Circuit( layer )
 
 
 
