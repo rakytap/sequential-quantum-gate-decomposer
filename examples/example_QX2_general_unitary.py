@@ -35,11 +35,11 @@ def create_custom_gate_structure_QX2(qbit_num):
 
     """
 ## [import gates block]
-    from squander import Gates_Block
+    from squander import Circuit
 
 
-    # creating an instance of the wrapper class Gates_Block
-    Gates_Block_ret = Gates_Block( qbit_num )
+    # creating an instance of the wrapper class Circuit
+    Circuit_ret = Circuit( qbit_num )
 ## [import gates block]
 
 ## [disentangle_qbit]
@@ -51,8 +51,8 @@ def create_custom_gate_structure_QX2(qbit_num):
     for qbit in range(0, disentangle_qbit ):
 
 ## [create layer]
-        # creating an instance of the wrapper class Gates_Block
-        Layer = Gates_Block( qbit_num )
+        # creating an instance of the wrapper class Circuit
+        Layer = Circuit( qbit_num )
 ## [create layer]
 
         if qbit == 0:
@@ -96,11 +96,11 @@ def create_custom_gate_structure_QX2(qbit_num):
 
          
 ## [add layer]
-        Gates_Block_ret.add_Gates_Block( Layer )
+        Circuit_ret.add_Circuit( Layer )
 ## [add layer]
 
 
-    return Gates_Block_ret
+    return Circuit_ret
 
 
 

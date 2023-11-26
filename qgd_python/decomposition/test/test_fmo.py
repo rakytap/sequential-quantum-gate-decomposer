@@ -49,18 +49,18 @@ class Test_Decomposition:
 
         """
 
-        from squander import Gates_Block
+        from squander import Circuit
 
         qbit_num = 3
 
-        # creating an instance of the wrapper class Gates_Block
-        Gates_Block_ret = Gates_Block( qbit_num )
+        # creating an instance of the wrapper class Circuit
+        Circuit_ret = Circuit( qbit_num )
 
 
         for idx in range(0,layer_num,2):
 
-            # creating an instance of the wrapper class Gates_Block
-            Layer = Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Circuit
+            Layer = Circuit( qbit_num )
 
 #Rz Ry Rz = Rz Sx Rz Sx^+ Rz
 
@@ -81,11 +81,11 @@ class Test_Decomposition:
             # add CNOT gate to the block
             Layer.add_CNOT( 1, 2)
 
-            Gates_Block_ret.add_Gates_Block( Layer )
+            Circuit_ret.add_Circuit( Layer )
 
 
-            # creating an instance of the wrapper class Gates_Block
-            Layer = Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Circuit
+            Layer = Circuit( qbit_num )
 
             Layer.add_RZ( 1 ) 
             #Layer.add_RY( 1 ) 
@@ -104,35 +104,35 @@ class Test_Decomposition:
             # add CNOT gate to the block
             Layer.add_CNOT( 0, 1)
 
-            Gates_Block_ret.add_Gates_Block( Layer )
+            Circuit_ret.add_Circuit( Layer )
 
 
 
-        return Gates_Block_ret
+        return Circuit_ret
 
 
 
-    def create_custom_gate_structure_lin_2qubit(self, layer_num=1, Gates_Block_ret=None):
+    def create_custom_gate_structure_lin_2qubit(self, layer_num=1, Circuit_ret=None):
         """
         Add layers to disentangle the final 2 qubits
         linear chain with IBM native operations
 
         """
 
-        from squander import Gates_Block
+        from squander import Circuit
 
 
         qbit_num = 2
 
-        if Gates_Block_ret == None:
-            # creating an instance of the wrapper class Gates_Block
-            Gates_Block_ret = Gates_Block( qbit_num )
+        if Circuit_ret == None:
+            # creating an instance of the wrapper class Circuit
+            Circuit_ret = Circuit( qbit_num )
 
 
         for idx in range(layer_num):
 
-            # creating an instance of the wrapper class Gates_Block
-            Layer = Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Circuit
+            Layer = Circuit( qbit_num )
 
             Layer.add_RZ( 1 ) 
             #Layer.add_RY( 1 ) 
@@ -151,32 +151,32 @@ class Test_Decomposition:
             # add CNOT gate to the block
             Layer.add_CNOT( 0, 1)
 
-            Gates_Block_ret.add_Gates_Block( Layer )
+            Circuit_ret.add_Circuit( Layer )
 
 
 
-        return Gates_Block_ret
+        return Circuit_ret
 
 
-    def create_custom_gate_structure_finalyzing(self, qbit_num, Gates_Block_ret=None):
+    def create_custom_gate_structure_finalyzing(self, qbit_num, Circuit_ret=None):
         """
         Rotating qubits into state |0>
 
         """
 
-        from squander import Gates_Block
+        from squander import Circuit
 
 
 
-        if Gates_Block_ret == None:
-            # creating an instance of the wrapper class Gates_Block
-            Gates_Block_ret = Gates_Block( qbit_num )
+        if Circuit_ret == None:
+            # creating an instance of the wrapper class Circuit
+            Circuit_ret = Circuit( qbit_num )
 
 
         for idx in range(qbit_num):
 
-            # creating an instance of the wrapper class Gates_Block
-            Layer = Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Circuit
+            Layer = Circuit( qbit_num )
 
             Layer.add_RZ( idx ) 
             #Layer.add_RY( idx ) 
@@ -185,11 +185,11 @@ class Test_Decomposition:
             Layer.add_X( idx )  
             Layer.add_SX( idx )
 
-            Gates_Block_ret.add_Gates_Block( Layer )
+            Circuit_ret.add_Circuit( Layer )
 
 
 
-        return Gates_Block_ret
+        return Circuit_ret
 
 
 

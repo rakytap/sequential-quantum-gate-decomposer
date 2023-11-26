@@ -21,7 +21,7 @@ limitations under the License.
 ## \brief Example to use controlled Hadamard gates in the decomposition
 
 from squander import N_Qubit_Decomposition 
-from squander import Gates_Block
+from squander import Circuit
 
 # cerate unitary q-bit matrix
 from scipy.stats import unitary_group
@@ -32,15 +32,15 @@ import numpy as np
 
 
 def create_custom_gate_structure(qbit_num):
-    # creating an instance of the wrapper class Gates_Block
-    Gates_Block_ret = Gates_Block( qbit_num )
+    # creating an instance of the wrapper class Circuit
+    Circuit_ret = Circuit( qbit_num )
 
     disentangle_qbit = qbit_num - 1 
 
     for qbit in range(0, disentangle_qbit ):
 
-        # creating an instance of the wrapper class Gates_Block
-        layer = Gates_Block( qbit_num )
+        # creating an instance of the wrapper class Circuit
+        layer = Circuit( qbit_num )
 
 
         # add U3 fate to the block
@@ -61,9 +61,9 @@ def create_custom_gate_structure(qbit_num):
 
 
 
-        Gates_Block_ret.add_Gates_Block( layer )
+        Circuit_ret.add_Circuit( layer )
 
-    return Gates_Block_ret
+    return Circuit_ret
 
 
 
