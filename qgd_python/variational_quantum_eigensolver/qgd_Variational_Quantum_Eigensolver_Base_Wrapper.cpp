@@ -250,12 +250,12 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Optimized_Parameters( qgd_V
 
 
 static PyObject *
-qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Ground_State(qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self)
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Start_Optimization(qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self)
 {
 
     // starting the decomposition
     try {
-        self->vqe->Get_ground_state();
+        self->vqe->start_optimization();
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -360,7 +360,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure_From_Binary(
 
 
     try {
-        self->vqe->set_adaptive_gate_structure( filename_str );
+        self->vqe->set_gate_structure( filename_str );
     }
     catch (std::string err ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -972,13 +972,14 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit( qgd_Variation
 
     // initiate variables for input arguments
     int layers;
+    int inner_blocks;
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|i", &layers )) return Py_BuildValue("i", -1);
+    if (!PyArg_ParseTuple(args, "|ii", &layers )) return Py_BuildValue("i", -1);
 
 
     try {
-        self->vqe->generate_circuit( layers );
+        self->vqe->generate_circuit( layers, inner_blocks );
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1121,7 +1122,7 @@ static PyMemberDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_members[] = 
 @brief Structure containing metadata about the methods of class qgd_N_Qubit_Decomposition_Wrapper.
 */
 static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = {
-    {"get_Ground_State", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Ground_State, METH_NOARGS,
+    {"Start_Optimization", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Start_Optimization, METH_NOARGS,
      "Method to start the decomposition."
     },
     {"get_Optimized_Parameters", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Optimized_Parameters, METH_NOARGS,
@@ -1133,10 +1134,10 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     {"set_Optimization_Tolerance", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimization_Tolerance, METH_VARARGS,
     "Method to set optimization tolerance"
     },
-    {"get_gate", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gate, METH_VARARGS,
+    {"get_Gate", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gate, METH_VARARGS,
      "Method to get nth gate."
     },
-    {"get_gates", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates, METH_NOARGS,
+    {"get_Gates", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates, METH_NOARGS,
      "Method to get gates."
     },
     {"set_Project_Name", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Project_Name, METH_VARARGS,

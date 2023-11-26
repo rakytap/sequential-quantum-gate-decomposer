@@ -170,7 +170,7 @@ void initialize_zero_state();
 /**
 @brief Call to start solving the VQE problem to get the approximation for the ground state  
 */ 
-void Get_ground_state();
+void start_optimization();
 
 
 /**
@@ -182,16 +182,17 @@ void set_ansatz(ansatz_type ansatz_in);
 
 /**
 @brief Call to generate the circuit ansatz
-@param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT-U3)
+@param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT)
+@param inner_blocks The number of U3-CNOT repetition within a single layer
 */
-void generate_circuit( int layers );
+void generate_circuit( int layers, int inner_blocks );
 
 
 /**
 @brief Call to set custom layers to the gate structure that are intended to be used in the VQE process.
 @param filename The path to the binary file
 */
-void set_adaptive_gate_structure( std::string filename );
+void set_gate_structure( std::string filename );
 
 
 };

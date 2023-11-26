@@ -58,10 +58,10 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 
 ## 
 # @brief Call to start solving the VQE problem to get the approximation for the ground state   
-    def get_Ground_State(self):
+    def Start_Optimization(self):
 
 	# call the C wrapper function
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Ground_State()
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).Start_Optimization()
 
 ## 
 # @brief Call to get the optimized parameters set in numpy array
@@ -110,12 +110,11 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
         
 ##
 # @brief Call to generate the circuit ansatz
-# @param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT-U3)
-# @param blocks TODO: delete
-# @param rot_layers TODO: delete
-    def Generate_Circuit(self, layers):
+# @param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT)
+# @param inner_blocks The number of U3-CNOT repetition within a single layer
+    def Generate_Circuit(self, layers, inner_blocks=1):
     
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_Circuit( layers )
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_Circuit( layers, inner_blocks )
         
 ## 
 # @brief Call to evaluate the VQE energy.
@@ -193,7 +192,7 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 
         circuit = QuantumCircuit(self.qbit_num)
 
-        gates = self.get_gates()
+        gates = self.get_Gates()
 
         for idx in range(len(gates)-1, -1, -1):
 

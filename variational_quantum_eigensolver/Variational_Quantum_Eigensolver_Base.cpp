@@ -138,7 +138,7 @@ Variational_Quantum_Eigensolver_Base::~Variational_Quantum_Eigensolver_Base(){
 /**
 @brief Call to start solving the VQE problem to get the approximation for the ground state  
 */ 
-void Variational_Quantum_Eigensolver_Base::Get_ground_state(){
+void Variational_Quantum_Eigensolver_Base::start_optimization(){
 
     initialize_zero_state();
 
@@ -374,9 +374,10 @@ void Variational_Quantum_Eigensolver_Base::set_ansatz(ansatz_type ansatz_in){
 
 /**
 @brief Call to generate the circuit ansatz
-@param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT-U3)
+@param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT)
+@param inner_blocks The number of U3-CNOT repetition within a single layer
 */
-void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers ) {
+void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inner_blocks ) {
 
 
     switch (ansatz){
@@ -393,37 +394,34 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers ) {
 
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
 
-                add_u3(1, true, true, true);                          
-                add_u3(0, true, true, true);
-                add_cnot(1,0);
-
-                if (layer_idx==layers-1){
-                    add_u3(0, true, true, true);                      
+                for( int idx=0; idx<inner_blocks; idx++) {
+                    add_u3(1, true, true, true);                          
+                    add_u3(0, true, true, true);
+                    add_cnot(1,0);
                 }
+
+
                 for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
                     if (control_qbit+2<qbit_num){
 
-                        add_u3(control_qbit+1, true, true, true);
-                        add_u3(control_qbit+2, true, true, true); 
+                        for( int idx=0; idx<inner_blocks; idx++) {
+                            add_u3(control_qbit+1, true, true, true);
+                            add_u3(control_qbit+2, true, true, true); 
                         
-                        add_cnot(control_qbit+2,control_qbit+1);
+                            add_cnot(control_qbit+2,control_qbit+1);
+                        }
 
                     }
 
-                    add_u3(control_qbit+1, true, true, true);  
-                    add_u3(control_qbit, true, true, true);  
+                    for( int idx=0; idx<inner_blocks; idx++) {
+                        add_u3(control_qbit+1, true, true, true);  
+                        add_u3(control_qbit, true, true, true);  
 
-                    add_cnot(control_qbit+1,control_qbit);
+                        add_cnot(control_qbit+1,control_qbit);
 
-                    if (layer_idx==layers-1){
-                        add_u3(control_qbit, true, true, true);
-                        add_u3(control_qbit+1, true, true, true);       
                     }
+
                 }
-            }
-
-            if (qbit_num%2==0){
-                add_u3(qbit_num-1, true, true, true);
             }
 
 
@@ -441,65 +439,49 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers ) {
 
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
 
+                for( int idx=0; idx<inner_blocks; idx++) {
+                    add_rz(1);
+                    add_ry(1);
+                    add_rz(1);                                
 
-                add_rz(1);
-                add_ry(1);
-                add_rz(1);                                
-
-                add_rz(0);
-                add_ry(0);
-                add_rz(0);                    
-                
-                add_cnot(1,0);
-
-                if (layer_idx==layers-1){
                     add_rz(0);
                     add_ry(0);
-                    add_rz(0);                        
+                    add_rz(0);                    
+                
+                    add_cnot(1,0);
                 }
+
                 for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
                     if (control_qbit+2<qbit_num){
 
-                        add_rz(control_qbit+1);
-                        add_ry(control_qbit+1);
-                        add_rz(control_qbit+1);                            
+                        for( int idx=0; idx<inner_blocks; idx++) {
+                            add_rz(control_qbit+1);
+                            add_ry(control_qbit+1);
+                            add_rz(control_qbit+1);                            
 
-                        add_rz(control_qbit+2);
-                        add_ry(control_qbit+2);
-                        add_rz(control_qbit+2);                               
+                            add_rz(control_qbit+2);
+                            add_ry(control_qbit+2);
+                            add_rz(control_qbit+2);                               
 
-                        add_cnot(control_qbit+2,control_qbit+1);
+                            add_cnot(control_qbit+2,control_qbit+1);
+                        }
 
                     }
 
-                    add_rz(control_qbit+1);
-                    add_ry(control_qbit+1);
-                    add_rz(control_qbit+1);                    
+                    for( int idx=0; idx<inner_blocks; idx++) {
+                        add_rz(control_qbit+1);
+                        add_ry(control_qbit+1);
+                        add_rz(control_qbit+1);                    
 
-                    add_rz(control_qbit);
-                    add_ry(control_qbit);
-                    add_rz(control_qbit);                    
-
-                    add_cnot(control_qbit+1,control_qbit);
-
-                    if (layer_idx==layers-1){
                         add_rz(control_qbit);
                         add_ry(control_qbit);
-                        add_rz(control_qbit);                          
+                        add_rz(control_qbit);                    
 
-                        add_rz(control_qbit+1);
-                        add_ry(control_qbit+1);
-                        add_rz(control_qbit+1);                          
+                        add_cnot(control_qbit+1,control_qbit);
                     }
+
                 }
             }
-
-            if (qbit_num%2==0){
-                add_rz(qbit_num-1);
-                add_ry(qbit_num-1);
-                add_rz(qbit_num-1);                  
-            }
-
 
             return;
         }        
@@ -511,7 +493,7 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers ) {
 }
 
 void 
-Variational_Quantum_Eigensolver_Base::set_adaptive_gate_structure( std::string filename ) {
+Variational_Quantum_Eigensolver_Base::set_gate_structure( std::string filename ) {
 
     release_gates();
     Matrix_real optimized_parameters_mtx_tmp;
