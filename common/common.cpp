@@ -287,7 +287,7 @@ QGD_Complex16 mult( double a, QGD_Complex16 b ) {
 /**
 @brief Multiply the elements of matrix b by a scalar a.
 @param a A complex scalar.
-@param b A square shaped matrix.
+@param b A complex matrix.
 */
 void mult( QGD_Complex16 a, Matrix& b ) {
 
