@@ -975,7 +975,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit( qgd_Variation
     int inner_blocks;
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|ii", &layers )) return Py_BuildValue("i", -1);
+    if (!PyArg_ParseTuple(args, "|ii", &layers, &inner_blocks )) return Py_BuildValue("i", -1);
 
 
     try {
