@@ -474,11 +474,18 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export) {
 
 
     sstream.str("");
-    sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+    sstream << "cost function value before replacing trivial CRY gates: " << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
     print(sstream, 3);	
     	
     Gates_block* gate_structure_tmp = replace_trivial_CRY_gates( gate_structure_loc, optimized_parameters_mtx );
     Matrix_real optimized_parameters_save = optimized_parameters_mtx;
+
+    release_gates();
+    combine( gate_structure_tmp );
+
+    sstream.str("");
+    sstream << "cost function value before final optimization: " << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+    print(sstream, 3);	
 
     release_gates();
     optimized_parameters_mtx = optimized_parameters_save;
@@ -546,9 +553,11 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export) {
     delete( gate_structure_loc );
 
     sstream.str("");
-    sstream << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+    sstream << "cost function value after final optimization: " << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
     print(sstream, 3);	
-    
+   
+
+
     long long export_circuit_2_binary_loc;
     if ( config.count("export_circuit_2_binary") > 0 ) {
         config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
@@ -1309,6 +1318,7 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
 
 //std::cout << param[0] << " " << (gate_tmp->get_type() == ADAPTIVE_OPERATION) << " "  << std::abs(std::sin(param[0])) << " "  << 1+std::cos(param[0]) << std::endl;
 
+
                     if ( gate_tmp->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) > 0.999 && std::abs(std::cos(parameter)) < 1e-3 ) {
 
                         // convert to CZ gate
@@ -1332,16 +1342,31 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
                         Matrix_real parameters_new(1, optimized_parameters.size()+2);
                         memcpy(parameters_new.get_data(), optimized_parameters.get_data(), parameter_idx*sizeof(double));
                         memcpy(parameters_new.get_data()+parameter_idx+3, optimized_parameters.get_data()+parameter_idx+1, (optimized_parameters.size()-parameter_idx-1)*sizeof(double));
-                        optimized_parameters = parameters_new;
+
+
+                        QGD_Complex16 global_phase_factor_new;
                         if ( std::sin(parameter) < 0 ) {
-                            optimized_parameters[parameter_idx] = -M_PI/2; // rz parameter
+                            parameters_new[parameter_idx] = -M_PI/4; // rz parameter (varphi/2)
+
+                            global_phase_factor_new.real = std::cos( -M_PI/4 );
+                            global_phase_factor_new.imag = std::sin( -M_PI/4 );
+                            apply_global_phase_factor(global_phase_factor_new, Umtx);
                         }
                         else{
-                            optimized_parameters[parameter_idx] = M_PI/2; // rz parameter
+                            parameters_new[parameter_idx] = M_PI/4; // rz parameter (varphi/2)
+
+                            global_phase_factor_new.real = std::cos( M_PI/4 );
+                            global_phase_factor_new.imag = std::sin( M_PI/4 );
+                            apply_global_phase_factor(global_phase_factor_new, Umtx);
                         }
-                        optimized_parameters[parameter_idx+1] = M_PI/4; // rx_2 parameter
-                        optimized_parameters[parameter_idx+2] = -M_PI/4; // rx_1 parameter
+                        parameters_new[parameter_idx+1] = M_PI/4; // rx_2 parameter
+                        parameters_new[parameter_idx+2] = -M_PI/4; // rx_1 parameter
+
+
+                        optimized_parameters = parameters_new;
                         parameter_idx += 3;
+
+
 
                     }
                     else if ( gate_tmp->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3  ) {
@@ -1357,8 +1382,8 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
 
                     }
                     else if ( gate_tmp->get_type() == ADAPTIVE_OPERATION ) {
-                        // controlled Y rotation decomposed into 2 CNOT gates
 
+                        // controlled Y rotation decomposed into 2 CNOT gates
                         int target_qbit = gate_tmp->get_target_qbit();
                         int control_qbit = gate_tmp->get_control_qbit();
                         layer->release_gate( jdx );
@@ -1382,8 +1407,8 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
                         optimized_parameters = parameters_new;
                         optimized_parameters[parameter_idx] = -parameter/2; // ry_2 parameter
                         optimized_parameters[parameter_idx+1] = parameter/2; // ry_1 parameter
-                        parameter_idx += 2;
 
+                        parameter_idx += 2;
 
                     }
                     else {
@@ -1397,11 +1422,12 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
 
                 gate_structure_ret->add_gate_to_end((Gate*)layer);
 
-                            
 
         }
 
     }
+
+                        
 
     return gate_structure_ret;
 
@@ -1535,11 +1561,11 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
                 // test for the product U3 matrix
 		if (std::sqrt((U3_new[3].real-U3_prod[3].real)*(U3_new[3].real-U3_prod[3].real)) + std::sqrt((U3_new[3].imag-U3_prod[3].imag)*(U3_new[3].imag-U3_prod[3].imag)) < 1e-8 && (stheta3_over2*stheta3_over2+ctheta3_over2*ctheta3_over2) > 0.99) {
 
-            // setting the resulting parameters if test passed
-		    param2[0] = theta3_over2;
-		    param2[1] = phi3;
-		    param2[2] = lambda3;
-    		apply_global_phase_factor(global_phase_factor_new, Umtx);
+                    // setting the resulting parameters if test passed
+                    param2[0] = theta3_over2;
+                    param2[1] = phi3;
+                    param2[2] = lambda3;
+                    apply_global_phase_factor(global_phase_factor_new, Umtx);
 		}
 /*
 	        N_Qubit_Decomposition_custom cDecomp_custom_( Umtx.copy(), qbit_num, false, initial_guess);
