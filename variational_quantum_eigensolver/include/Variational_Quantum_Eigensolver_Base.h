@@ -70,8 +70,8 @@ private:
     /// The Hamiltonian of the system
     Matrix_sparse Hamiltonian;
     
-    /// Quantum state where all of the quabits are in state zero
-    Matrix Zero_state;
+    /// Quantum state used as an initial state in the VQE iterations
+    Matrix initial_state;
     
     /// Ansatz type (HEA stands for hardware efficient ansatz)
     ansatz_type ansatz;

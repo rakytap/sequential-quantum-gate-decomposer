@@ -108,7 +108,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
     
     qbit_num = qbit_num_in;
 	
-    Zero_state = Matrix( Power_of_2(qbit_num) , 1);
+
 	
     std::random_device rd;  
     
@@ -140,7 +140,10 @@ Variational_Quantum_Eigensolver_Base::~Variational_Quantum_Eigensolver_Base(){
 */ 
 void Variational_Quantum_Eigensolver_Base::start_optimization(){
 
-    initialize_zero_state();
+    // initialize the initial state if it was not given
+    if ( initial_state.size() == 0 ) {
+        initialize_zero_state();
+    }
 
 
     if (gates.size() == 0 ) {
@@ -212,7 +215,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Mat
 
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
 
-    Matrix State = instance->Zero_state.copy();
+    Matrix State = instance->initial_state.copy();
 
     instance->apply_to(parameters, State);
     Energy = instance->Expectation_value_of_energy(State);
@@ -228,16 +231,18 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Mat
 */
 double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& parameters)  {
 
-    double Energy;
-    initialize_zero_state();
+    // initialize the initial state if it was not given
+    if ( initial_state.size() == 0 ) {
+        initialize_zero_state();
+    }
 	
-    Matrix State = Zero_state.copy();
+    Matrix State = initial_state.copy();
 	
     apply_to(parameters, State);
 	
     //State.print_matrix();
 	
-    Energy = Expectation_value_of_energy(State);
+    double Energy = Expectation_value_of_energy(State);
     number_of_iters++;
 	
     return Energy;
@@ -270,7 +275,9 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
         },
         [&]{
 	    instance->initialize_zero_state();
-            Matrix State_loc = instance->Zero_state.copy();
+
+            Matrix State_loc = instance->initial_state.copy();
+
             State_deriv = instance->apply_derivate_to( parameters, State_loc );
             State_loc.release_data();
     });
@@ -346,9 +353,12 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem( double* param
 */
 void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
 
-    Zero_state[0].real = 1.0;
-    Zero_state[0].imag = 0.0;
-    memset(Zero_state.get_data()+2, 0.0, (Zero_state.size()*2-2)*sizeof(double) );      
+    initial_state = Matrix( 1 << qbit_num , 1);
+
+
+    initial_state[0].real = 1.0;
+    initial_state[0].imag = 0.0;
+    memset(initial_state.get_data()+2, 0.0, (initial_state.size()*2-2)*sizeof(double) );      
 
     return;
 }
