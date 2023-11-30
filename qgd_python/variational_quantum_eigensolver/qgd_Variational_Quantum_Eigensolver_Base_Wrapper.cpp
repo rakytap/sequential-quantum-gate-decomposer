@@ -305,8 +305,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Qbit_Num(qgd_Variational_Qu
 
 
 /**
-@brief Extract the optimized parameters
-@param start_index The index of the first inverse gate
+@brief Set parameters for the solver
 */
 static PyObject *
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimized_Parameters( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
@@ -337,6 +336,56 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimized_Parameters( qgd_V
 
     return Py_BuildValue("i", 0);
 }
+
+
+
+/**
+@brief Set the initial state used in the VQE process
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Initial_State( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
+
+    PyObject * initial_state_arg = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &initial_state_arg )) {
+        PyErr_SetString(PyExc_Exception, "error occured during input parsing");
+        return NULL;
+    }
+    
+    if ( PyArray_IS_C_CONTIGUOUS(initial_state_arg) ) {
+        Py_INCREF(initial_state_arg);
+    }
+    else {
+        initial_state_arg = PyArray_FROM_OTF(initial_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    }
+
+
+    Matrix initial_state_mtx = numpy2matrix( initial_state_arg );
+
+
+
+    try {
+        self->vqe->set_initial_state( initial_state_mtx );
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    
+
+
+    Py_DECREF(initial_state_arg);
+
+    return Py_BuildValue("i", 0);
+}
+
 
 /**
 @brief Wrapper function to set custom layers to the gate structure that are intended to be used in the decomposition.
@@ -1169,6 +1218,9 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"get_Qbit_Num", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Qbit_Num, METH_NOARGS,
      "Call to get the number of qubits in the circuit"
+    },
+    {"set_Initial_State", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Initial_State, METH_VARARGS,
+     "Call to set the initial state used in the VQE process."
     },
     {NULL}  /* Sentinel */
 };

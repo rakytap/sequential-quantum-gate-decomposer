@@ -195,6 +195,14 @@ void generate_circuit( int layers, int inner_blocks );
 void set_gate_structure( std::string filename );
 
 
+/**
+@brief Call to set the initial quantum state in the VQE iterations
+@param initial_state_in A vector containing the amplitudes of the initial state.
+*/
+void set_initial_state( Matrix initial_state_in );
+
+
+
 };
 
 #endif

@@ -256,6 +256,13 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 
 
 
+##
+# @brief Call to get the number of free parameters in the gate structure used for the decomposition
+    def set_Initial_State( self, initial_state ):
+
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Initial_State( initial_state )
+
+
         
         
             

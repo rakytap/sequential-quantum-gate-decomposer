@@ -546,3 +546,25 @@ Variational_Quantum_Eigensolver_Base::set_gate_structure( std::string filename )
 
 
 
+/**
+@brief Call to set the initial quantum state in the VQE iterations
+@param initial_state_in A vector containing the amplitudes of the initial state.
+*/
+void Variational_Quantum_Eigensolver_Base::set_initial_state( Matrix initial_state_in ) {
+
+
+
+    // check the size of the input state
+    if ( initial_state_in.size() != 1 << qbit_num ) {
+        std::string error("Variational_Quantum_Eigensolver_Base::set_initial_state: teh number of elements in the input state does not match with the number of qubits.");
+        throw error;   
+    }
+
+    initial_state = Matrix( 1 << qbit_num, 1 );
+    memcpy( initial_state.get_data(), initial_state_in.get_data(), initial_state_in.size()*sizeof( QGD_Complex16 ) );
+
+}
+
+
+
+
