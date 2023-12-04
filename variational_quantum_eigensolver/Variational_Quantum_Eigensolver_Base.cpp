@@ -193,24 +193,6 @@ double Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy(Matrix&
     
     tbb::combinable<double> priv_partial_energy{[](){return 0.0;}};
 
-/*
-    //sequential version
-    functor_cost_fnc tmp = functor_cost_fnc( matrix, matrix_size, partial_cost_functions, matrix_size );
-    #pragma omp parallel for
-    for (int idx=0; idx<matrix_size; idx++) {
-        tmp(idx);
-    }
-*/
-/*
-    // calculate the final cost function
-    double cost_function = 0;
-    priv_partial_cost_functions.combine_each([&cost_function](double a) {
-        cost_function = cost_function + a;
-    });
-*/
-
-
-
     tbb::parallel_for( tbb::blocked_range<int>(0, State.rows, 1024), [&](tbb::blocked_range<int> r) { 
 
         double& energy_local = priv_partial_energy.local();
