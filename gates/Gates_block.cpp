@@ -196,33 +196,45 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
     std::vector<int> involved_qubits = get_involved_qubits();
     
     if(max_fusion !=-1 && ((qbit_num>max_fusion && input.cols == 1) && involved_qubits.size()>1)){
+
         if (fragmented==false){
             fragment_circuit();
         };  
+
         int outer_idx = gates.size()-1;
         for (int block_idx=0; block_idx<involved_qbits.size(); block_idx++){
+
             if (block_type[block_idx]!=1){
+
                 Gates_block gates_block_mini = Gates_block(block_type[block_idx]);
                 std::vector<int> qbits = involved_qbits[block_idx];
                 int indices[qbit_num];
+
                 for (int jdx=0; jdx<(int)qbits.size(); jdx++){
                     indices[qbits[jdx]]=jdx;
                 }
-                for (int idx=outer_idx;idx>=block_end[block_idx];idx--){
+
+                for (int idx=outer_idx; idx>=block_end[block_idx]; idx--){
+
                     Gate* gate = gates[idx]->clone();
                     int trgt_qbit = gate->get_target_qbit();
                     int ctrl_qbit = gate->get_control_qbit();
                     int target_qubit_new = indices[trgt_qbit];
                     gate->set_target_qbit(target_qubit_new);
-                	int control_qubit_new = (ctrl_qbit==-1) ? -1:indices[ctrl_qbit];
+
+                    int control_qubit_new = (ctrl_qbit==-1) ? -1:indices[ctrl_qbit];
                     gate->set_control_qbit(control_qubit_new);
                     gates_block_mini.add_gate(gate);
                 }
+
                 Matrix Umtx_mini = create_identity(Power_of_2(block_type[block_idx]));
-                parameters = parameters - gates_block_mini.get_parameter_num();
+                parameters       = parameters - gates_block_mini.get_parameter_num();
+
                 Matrix_real parameters_mtx(parameters, 1, gates_block_mini.get_parameter_num());
                 gates_block_mini.apply_to(parameters_mtx, Umtx_mini);
-                outer_idx = block_end[block_idx]-1;
+
+                outer_idx        = block_end[block_idx]-1;
+
                 apply_large_kernel_to_state_vector_input(Umtx_mini,input,qbits,input.size());
        
 
@@ -338,31 +350,42 @@ bool Gates_block::is_qbit_present(std::vector<int> involved_qubits, int new_qbit
 }
 
 void Gates_block::fragment_circuit(){
+
     std::vector<int> qbits;
     int num_of_qbits=0;
     int max_fusion_temp = (fragmentation_type==-1) ? max_fusion:fragmentation_type;
-    for (int idx = gates.size()-1; idx>=0; idx--){            
+
+    for (int idx = gates.size()-1; idx>=0; idx--){      
+      
         Gate* gate = gates[idx];
         int target_new = gate -> get_target_qbit();
         int control_new = gate->get_control_qbit();
+
         if (num_of_qbits == 0) {
             qbits.push_back(target_new);
             num_of_qbits++;
+
         }
+
         bool target_contained=is_qbit_present(qbits,target_new,num_of_qbits);
         bool control_contained= (control_new==-1) ? true : is_qbit_present(qbits,control_new,num_of_qbits);
+
         if (num_of_qbits==max_fusion_temp && (target_contained==false || control_contained==false)){
             int vidx = 1;
+
             while(vidx<num_of_qbits){
                 int jdx=vidx;
+
                 while(jdx>0 && qbits[jdx-1]>qbits[jdx]){
                     int qbit_temp = qbits[jdx];
                     qbits[jdx] = qbits[jdx-1];
                     qbits[jdx-1] =  qbit_temp;
                     jdx--;
                 }
-            vidx++;
+
+                vidx++;
             }
+
             involved_qbits.push_back(qbits);
             block_end.push_back(idx+1);
             block_type.push_back(num_of_qbits);
@@ -372,36 +395,46 @@ void Gates_block::fragment_circuit(){
             num_of_qbits=0;
             continue;
         }
+
         if (num_of_qbits<max_fusion_temp && target_contained==false){
             qbits.push_back(target_new);
             num_of_qbits++;
         }
+
         if (num_of_qbits<max_fusion_temp && control_contained==false){
             qbits.push_back(control_new);
             num_of_qbits++;
         }
 
+
     }
+
     if (num_of_qbits == 1){
         involved_qbits.push_back(qbits);
         block_type.push_back(1);
     }
+
     else{
         int vidx = 1;
+
         while(vidx<num_of_qbits){
             int jdx=vidx;
+
             while(jdx>0 && qbits[jdx-1]>qbits[jdx]){
                 int qbit_temp = qbits[jdx];
                 qbits[jdx] = qbits[jdx-1];
                 qbits[jdx-1] =  qbit_temp;
                 jdx--;
             }
-        vidx++;
+
+            vidx++;
         }
+
         involved_qbits.push_back(qbits);
         block_type.push_back(num_of_qbits);
         block_end.push_back(0);
     }
+
     block_end.push_back(0);
     fragmented = true;
 

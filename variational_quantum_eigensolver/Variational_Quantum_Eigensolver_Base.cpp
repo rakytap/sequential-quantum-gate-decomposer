@@ -188,13 +188,47 @@ void Variational_Quantum_Eigensolver_Base::start_optimization(){
 double Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy(Matrix& State) {
 
     Matrix tmp = mult(Hamiltonian, State);
-    double Energy= 0.0;
+    double Energy = 0.0;
 
-    for (int idx=0; idx<State.rows; idx++){
-	Energy += State[idx].real*tmp[idx].real + State[idx].imag*tmp[idx].imag;
+    
+    tbb::combinable<double> priv_partial_energy{[](){return 0.0;}};
+
+/*
+    //sequential version
+    functor_cost_fnc tmp = functor_cost_fnc( matrix, matrix_size, partial_cost_functions, matrix_size );
+    #pragma omp parallel for
+    for (int idx=0; idx<matrix_size; idx++) {
+        tmp(idx);
     }
+*/
+/*
+    // calculate the final cost function
+    double cost_function = 0;
+    priv_partial_cost_functions.combine_each([&cost_function](double a) {
+        cost_function = cost_function + a;
+    });
+*/
+
+
+
+    tbb::parallel_for( tbb::blocked_range<int>(0, State.rows, 1024), [&](tbb::blocked_range<int> r) { 
+
+        double& energy_local = priv_partial_energy.local();
+
+        for (int idx=r.begin(); idx<r.end(); idx++){
+	    energy_local += State[idx].real*tmp[idx].real + State[idx].imag*tmp[idx].imag;
+        }
+
+    });
+
+    // calculate the final cost function
+    priv_partial_energy.combine_each([&Energy](double a) {
+        Energy = Energy + a;
+    });
  
-    tmp.release_data();
+
+    tmp.release_data(); // TODO: this is not necessary, beacause it is called with the destructor of the class Matrix
+
     number_of_iters++;
 
     return Energy;
@@ -261,6 +295,11 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
 
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
 
+    // initialize the initial state if it was not given
+    if ( instance->initial_state.size() == 0 ) {
+        instance->initialize_zero_state();
+    }
+
     // the number of free parameters
     int parameter_num_loc = parameters.size();
 
@@ -274,8 +313,6 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
             *f0 = instance->optimization_problem_non_static(parameters, reinterpret_cast<void*>(instance));
         },
         [&]{
-	    instance->initialize_zero_state();
-
             Matrix State_loc = instance->initial_state.copy();
 
             State_deriv = instance->apply_derivate_to( parameters, State_loc );

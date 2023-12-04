@@ -390,6 +390,9 @@ void Bayes_Opt::optimization_problem_combined(Matrix_real x_bfgs, void* void_ins
 Bayes_Opt::~Bayes_Opt()  {
 
 }
+
+
+
 Bayes_Opt_Beam::Bayes_Opt_Beam(double (* f_pointer) (Matrix_real, void *), void* meta_data_in, int start_in, Matrix_real parameters_original_in) {
 
     maximal_iterations = 101;
@@ -412,12 +415,18 @@ Bayes_Opt_Beam::Bayes_Opt_Beam(double (* f_pointer) (Matrix_real, void *), void*
     
     
 }
+
+
+
 double Bayes_Opt_Beam::optimization_problem(Matrix_real x_Beam, void* void_instance){
     Bayes_Opt_Beam* instance = reinterpret_cast<Bayes_Opt_Beam*>(void_instance);
     Matrix_real x = instance->parameters.copy();
     memcpy(x.get_data() + instance->start,x_Beam.get_data(),sizeof(double)*x_Beam.size());
     return instance->costfnc(x,instance->meta_data);
 }
+
+
+
 double Bayes_Opt_Beam::Start_Optimization(Matrix_real& x, int max_iterations_in){
 
     variable_num = x.size();

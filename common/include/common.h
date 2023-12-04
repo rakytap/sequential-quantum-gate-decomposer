@@ -160,13 +160,21 @@ QGD_Complex16 mult( double a, QGD_Complex16 b );
 */
 void mult( QGD_Complex16 a, Matrix& b );
 
+
+/**
+@brief Multiply the elements of a sparse matrix a and a dense vector b.
+@param a A complex sparse matrix in CSR format.
+@param b A complex dense vector.
+*/
 Matrix mult(Matrix_sparse a, Matrix& b);
 
 /**
-@brief ???????????????????
+@brief Call to retrieve the phase of a complex number
 @param a A complex numberr.
 */
 double arg( const QGD_Complex16& a );
+
+
 
 void conjugate_gradient(Matrix_real A, Matrix_real b, Matrix_real& x0, double tol);
 
