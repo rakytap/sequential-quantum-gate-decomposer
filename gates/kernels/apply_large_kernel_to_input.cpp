@@ -22,7 +22,6 @@ limitations under the License.
 
 
 #include "apply_large_kernel_to_input.h"
-#include <immintrin.h>
 #include "tbb/tbb.h"
 
 __m256d get_AVX_vector(double* element_outer, double* element_inner){
