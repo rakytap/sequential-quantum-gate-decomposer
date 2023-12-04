@@ -70,7 +70,7 @@ Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
     
     fragmented = false;
     fragmentation_type = -1;
-    max_fusion = 4;
+    max_fusion = -1;
     
 }
 
