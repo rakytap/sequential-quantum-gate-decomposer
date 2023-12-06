@@ -50,7 +50,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         # initiate variables for input arguments
         #int  qbit_num = -1; 
         # call the constructor of the wrapper class
-        super(qgd_python.gate.qgd_Circuit, self).__init__()
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).__init__()
 
 
 #@brief Call to add a U3 gate to the front of the gate structure.
@@ -60,7 +60,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_U3( self, target_qbit, Theta, Phi, Lambda):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_U3(target_qbit, Theta, Phi, Lambda)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_U3(target_qbit, Theta, Phi, Lambda)
 
 
 #@brief Call to add a RX gate to the front of the gate structure.
@@ -70,7 +70,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_RX( self, target_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_RX(target_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_RX(target_qbit)
 
 
 #@brief Call to add a RY gate to the front of the gate structure.
@@ -80,7 +80,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_RY( self, target_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_RY(target_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_RY(target_qbit)
 
 #@brief Call to add a RZ gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -89,7 +89,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_RZ( self, target_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_RZ(target_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_RZ(target_qbit)
 
 #@brief Call to add a CNOT gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -98,7 +98,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_CNOT( self, target_qbit, control_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_CNOT(target_qbit, control_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_CNOT(target_qbit, control_qbit)
 
 #@brief Call to add a CZ gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -107,7 +107,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_CZ( self, target_qbit, control_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_CZ(target_qbit, control_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_CZ(target_qbit, control_qbit)
 
 #@brief Call to add a CH gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -116,7 +116,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_CH( self, target_qbit, control_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_CH(target_qbit, control_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_CH(target_qbit, control_qbit)
 
 #@brief Call to add a SYC gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -125,7 +125,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_SYC( self, target_qbit, control_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_SYC(target_qbit, control_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_SYC(target_qbit, control_qbit)
 
 #@brief Call to add a X gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -134,7 +134,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_X( self, target_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_X(target_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_X(target_qbit)
 
 #@brief Call to add a Y gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -143,7 +143,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_Y( self, target_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_Y(target_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_Y(target_qbit)
 
 #@brief Call to add a Z gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -152,7 +152,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_Z( self, target_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_Z(target_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_Z(target_qbit)
 
 #@brief Call to add a SX gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -161,7 +161,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_SX( self, target_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_SX(target_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_SX(target_qbit)
 
 #@brief Call to add adaptive gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -170,7 +170,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def add_adaptive( self, target_qbit, control_qbit):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).add_adaptive(target_qbit, control_qbit)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).add_adaptive(target_qbit, control_qbit)
 
 #@brief Call to add adaptive gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -188,7 +188,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def get_Matrix( self, parameters_mtx):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).get_Matrix(parameters_mtx)
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).get_Matrix(parameters_mtx)
 
 
 #@brief Call to get the parameters of the matrices. 
@@ -197,7 +197,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def get_Parameter_Num( self):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).get_Parameter_Num()
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).get_Parameter_Num()
 
 #@brief Call to apply the gate operation on the input matrix
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -206,5 +206,5 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def apply_to( self, parameters_mtx, unitary_mtx):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Circuit, self).apply_to( parameters_mtx, unitary_mtx )
+        super(qgd_python.gate.qgd_Circuit_Wrapper, self).apply_to( parameters_mtx, unitary_mtx )
 

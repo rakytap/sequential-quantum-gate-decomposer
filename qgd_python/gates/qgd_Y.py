@@ -28,13 +28,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import numpy as np
 from os import path
-from qgd_python.gate.qgd_Y import qgd_Y
+from qgd_python.gate.qgd_Y_Wrapper import qgd_Y_Wrapper
 
 
 
 ##
 # @brief A QGD Python interface class for the Gates_Block.
-class qgd_Y(qgd_Y):
+class qgd_Y(qgd_Y_Wrapper):
     
     
 ## 
@@ -50,7 +50,7 @@ class qgd_Y(qgd_Y):
         # initiate variables for input arguments
         #int  qbit_num = -1; 
         # call the constructor of the wrapper class
-        super(qgd_python.gate.qgd_Y, self).__init__()
+        super(qgd_python.gate.qgd_Y_Wrapper, self).__init__()
 
 #@brief Call to add a U3 gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -59,7 +59,7 @@ class qgd_Y(qgd_Y):
     def get_Matrix( self ):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Y, self).get_Matrix( )
+        super(qgd_python.gate.qgd_Y_Wrapper, self).get_Matrix( )
 
 #@brief Call to get the parameters of the matrices. 
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -67,7 +67,7 @@ class qgd_Y(qgd_Y):
     def get_Gate_Kernel( self):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Y, self).calc_one_qubit_u3()
+        super(qgd_python.gate.qgd_Y_Wrapper, self).calc_one_qubit_u3()
 
 #@brief Call to apply the gate operation on the input matrix
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -76,5 +76,5 @@ class qgd_Y(qgd_Y):
     def apply_to( self, unitary_mtx):
 
 	# call the C wrapper function
-        super(qgd_python.gate.qgd_Y self).apply_to( unitary_mtx )
+        super(qgd_python.gate.qgd_Y_Wrapper self).apply_to( unitary_mtx )
 

@@ -2,20 +2,20 @@
 set(EXT_DIR ${PROJECT_SOURCE_DIR}/qgd_python/gates)
 
 
-add_library( qgd_U3 MODULE
-    ${EXT_DIR}/qgd_U3.cpp
+add_library( qgd_U3_Wrapper MODULE
+    ${EXT_DIR}/qgd_U3_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_U3 qgd)
+ADD_DEPENDENCIES (qgd_U3_Wrapper qgd)
 
-target_link_libraries (qgd_U3 qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_U3_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
-python_extension_module(qgd_U3)
+python_extension_module(qgd_U3_Wrapper)
 
 # adding compile options
-target_compile_options(qgd_U3 PRIVATE
+target_compile_options(qgd_U3_Wrapper PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -23,7 +23,7 @@ target_compile_options(qgd_U3 PRIVATE
 )
 
 
-target_include_directories(qgd_U3 PRIVATE
+target_include_directories(qgd_U3_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
@@ -31,33 +31,33 @@ target_include_directories(qgd_U3 PRIVATE
                             ${EXTRA_INCLUDES})
 
 
-set_target_properties( qgd_U3 PROPERTIES
+set_target_properties( qgd_U3_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
-install(TARGETS qgd_U3 LIBRARY 
+install(TARGETS qgd_U3_Wrapper LIBRARY 
          DESTINATION qgd_python/gates)
 
 ###################################################################
 
 
 
-add_library( qgd_CNOT MODULE
-    ${EXT_DIR}/qgd_CNOT.cpp
+add_library( qgd_CNOT_Wrapper MODULE
+    ${EXT_DIR}/qgd_CNOT_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_CNOT qgd)
+ADD_DEPENDENCIES (qgd_CNOT_Wrapper qgd)
 
-target_link_libraries (qgd_CNOT qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_CNOT_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
-python_extension_module(qgd_CNOT)
+python_extension_module(qgd_CNOT_Wrapper)
 
 
 # adding compile options
-target_compile_options(qgd_CNOT PRIVATE
+target_compile_options(qgd_CNOT_Wrapper PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -65,19 +65,19 @@ target_compile_options(qgd_CNOT PRIVATE
 )
 
 
-target_include_directories(qgd_CNOT PRIVATE
+target_include_directories(qgd_CNOT_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
-set_target_properties( qgd_CNOT PROPERTIES
+set_target_properties( qgd_CNOT_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
-install(TARGETS qgd_CNOT LIBRARY 
+install(TARGETS qgd_CNOT_Wrapper LIBRARY 
          DESTINATION qgd_python/gates)
 
 ###################################################################
@@ -85,21 +85,21 @@ install(TARGETS qgd_CNOT LIBRARY
 
 
 
-add_library( qgd_CZ MODULE
-    ${EXT_DIR}/qgd_CZ.cpp
+add_library( qgd_CZ_Wrapper MODULE
+    ${EXT_DIR}/qgd_CZ_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_CZ qgd)
+ADD_DEPENDENCIES (qgd_CZ_Wrapper qgd)
 
-target_link_libraries (qgd_CZ qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_CZ_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
-python_extension_module(qgd_CZ)
+python_extension_module(qgd_CZ_Wrapper)
 
 
 # adding compile options
-target_compile_options(qgd_CZ PRIVATE
+target_compile_options(qgd_CZ_Wrapper PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -107,19 +107,19 @@ target_compile_options(qgd_CZ PRIVATE
 )
 
 
-target_include_directories(qgd_CZ PRIVATE
+target_include_directories(qgd_CZ_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
-set_target_properties( qgd_CZ PROPERTIES
+set_target_properties( qgd_CZ_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
-install(TARGETS qgd_CZ LIBRARY 
+install(TARGETS qgd_CZ_Wrapper LIBRARY 
          DESTINATION qgd_python/gates)
 
 
@@ -129,21 +129,21 @@ install(TARGETS qgd_CZ LIBRARY
 
 
 
-add_library( qgd_CH MODULE
-    ${EXT_DIR}/qgd_CH.cpp
+add_library( qgd_CH_Wrapper MODULE
+    ${EXT_DIR}/qgd_CH_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_CH qgd)
+ADD_DEPENDENCIES (qgd_CH_Wrapper qgd)
 
-target_link_libraries (qgd_CH qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_CH_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
-python_extension_module(qgd_CH)
+python_extension_module(qgd_CH_Wrapper)
 
 
 # adding compile options
-target_compile_options(qgd_CH PRIVATE
+target_compile_options(qgd_CH_Wrapper PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -151,19 +151,19 @@ target_compile_options(qgd_CH PRIVATE
 )
 
 
-target_include_directories(qgd_CH PRIVATE
+target_include_directories(qgd_CH_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
                             ${PROJECT_SOURCE_DIR}/common/include
                             ${EXTRA_INCLUDES})
 
-set_target_properties( qgd_CH PROPERTIES
+set_target_properties( qgd_CH_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
-install(TARGETS qgd_CH LIBRARY 
+install(TARGETS qgd_CH_Wrapper LIBRARY 
          DESTINATION qgd_python/gates)
 
 
@@ -263,21 +263,21 @@ install(TARGETS qgd_SYC LIBRARY
 
 
 
-add_library( qgd_RY MODULE
-    ${EXT_DIR}/qgd_RY.cpp
+add_library( qgd_RY_Wrapper MODULE
+    ${EXT_DIR}/qgd_RY_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_RY qgd)
+ADD_DEPENDENCIES (qgd_RY_Wrapper qgd)
 
-target_link_libraries (qgd_RY qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_RY_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
 
-python_extension_module(qgd_RY)
+python_extension_module(qgd_RY_Wrapper)
 
 # adding compile options
-target_compile_options(qgd_RY PRIVATE
+target_compile_options(qgd_RY_Wrapper PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -285,7 +285,7 @@ target_compile_options(qgd_RY PRIVATE
 )
 
 
-target_include_directories(qgd_RY PRIVATE
+target_include_directories(qgd_RY_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
@@ -293,13 +293,13 @@ target_include_directories(qgd_RY PRIVATE
                             ${EXTRA_INCLUDES})
 
 
-set_target_properties( qgd_RY PROPERTIES
+set_target_properties( qgd_RY_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
 
-install(TARGETS qgd_RY LIBRARY 
+install(TARGETS qgd_RY_Wrapper LIBRARY 
          DESTINATION qgd_python/gates)
 
 
@@ -310,21 +310,21 @@ install(TARGETS qgd_RY LIBRARY
 
 
 
-add_library( qgd_RZ MODULE
-    ${EXT_DIR}/qgd_RZ.cpp
+add_library( qgd_RZ_Wrapper MODULE
+    ${EXT_DIR}/qgd_RZ_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_RZ qgd)
+ADD_DEPENDENCIES (qgd_RZ_Wrapper qgd)
 
-target_link_libraries (qgd_RZ qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_RZ_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
 
-python_extension_module(qgd_RZ)
+python_extension_module(qgd_RZ_Wrapper)
 
 # adding compile options
-target_compile_options(qgd_RZ PRIVATE
+target_compile_options(qgd_RZ_Wrapper PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -332,7 +332,7 @@ target_compile_options(qgd_RZ PRIVATE
 )
 
 
-target_include_directories(qgd_RZ PRIVATE
+target_include_directories(qgd_RZ_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
@@ -340,13 +340,13 @@ target_include_directories(qgd_RZ PRIVATE
                             ${EXTRA_INCLUDES})
 
 
-set_target_properties( qgd_RZ PROPERTIES
+set_target_properties( qgd_RZ_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
 
-install(TARGETS qgd_RZ LIBRARY 
+install(TARGETS qgd_RZ_Wrapper LIBRARY 
          DESTINATION qgd_python/gates)
 
 
@@ -357,21 +357,21 @@ install(TARGETS qgd_RZ LIBRARY
 
 
 
-add_library( qgd_RX MODULE
-    ${EXT_DIR}/qgd_RX.cpp
+add_library( qgd_RX_Wrapper MODULE
+    ${EXT_DIR}/qgd_RX_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_RX qgd)
+ADD_DEPENDENCIES (qgd_RX_Wrapper qgd)
 
-target_link_libraries (qgd_RX qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_RX_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
 
-python_extension_module(qgd_RX)
+python_extension_module(qgd_RX_Wrapper)
 
 # adding compile options
-target_compile_options(qgd_RX PRIVATE
+target_compile_options(qgd_RX_Wrapper PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -379,7 +379,7 @@ target_compile_options(qgd_RX PRIVATE
 )
 
 
-target_include_directories(qgd_RX PRIVATE
+target_include_directories(qgd_RX_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
@@ -387,13 +387,13 @@ target_include_directories(qgd_RX PRIVATE
                             ${EXTRA_INCLUDES})
 
 
-set_target_properties( qgd_RX PROPERTIES
+set_target_properties( qgd_RX_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
 
-install(TARGETS qgd_RX LIBRARY 
+install(TARGETS qgd_RX_Wrapper LIBRARY 
          DESTINATION qgd_python/gates)
 
 
@@ -404,21 +404,21 @@ install(TARGETS qgd_RX LIBRARY
 
 
 
-add_library( qgd_X MODULE
-    ${EXT_DIR}/qgd_X.cpp
+add_library( qgd_X_Wrapper MODULE
+    ${EXT_DIR}/qgd_X_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_X qgd)
+ADD_DEPENDENCIES (qgd_X_Wrapper qgd)
 
-target_link_libraries (qgd_X qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_X_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
 
-python_extension_module(qgd_X)
+python_extension_module(qgd_X_Wrapper)
 
 # adding compile options
-target_compile_options(qgd_X PRIVATE
+target_compile_options(qgd_X_Wrapper PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -426,7 +426,7 @@ target_compile_options(qgd_X PRIVATE
 )
 
 
-target_include_directories(qgd_X PRIVATE
+target_include_directories(qgd_X_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
@@ -434,13 +434,13 @@ target_include_directories(qgd_X PRIVATE
                             ${EXTRA_INCLUDES})
 
 
-set_target_properties( qgd_X PROPERTIES
+set_target_properties( qgd_X_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
 
-install(TARGETS qgd_X LIBRARY 
+install(TARGETS qgd_X_Wrapper LIBRARY 
          DESTINATION qgd_python/gates)
 
 
@@ -451,21 +451,21 @@ install(TARGETS qgd_X LIBRARY
 
 
 
-add_library( qgd_Y MODULE
-    ${EXT_DIR}/qgd_Y.cpp
+add_library( qgd_Y_Wrapper MODULE
+    ${EXT_DIR}/qgd_Y_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_Y qgd)
+ADD_DEPENDENCIES (qgd_Y_Wrapper qgd)
 
-target_link_libraries (qgd_Y qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_Y_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
 
-python_extension_module(qgd_Y)
+python_extension_module(qgd_Y_Wrapper)
 
 # adding compile options
-target_compile_options(qgd_Y PRIVATE
+target_compile_options(qgd_Y_Wrapper PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -473,7 +473,7 @@ target_compile_options(qgd_Y PRIVATE
 )
 
 
-target_include_directories(qgd_Y PRIVATE
+target_include_directories(qgd_Y_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
@@ -481,13 +481,13 @@ target_include_directories(qgd_Y PRIVATE
                             ${EXTRA_INCLUDES})
 
 
-set_target_properties( qgd_Y PROPERTIES
+set_target_properties( qgd_Y_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
 
-install(TARGETS qgd_Y LIBRARY 
+install(TARGETS qgd_Y_Wrapper LIBRARY 
          DESTINATION qgd_python/gates)
 
 
@@ -497,21 +497,21 @@ install(TARGETS qgd_Y LIBRARY
 
 
 
-add_library( qgd_Z MODULE
-    ${EXT_DIR}/qgd_Z.cpp
+add_library( qgd_Z_Wrapper MODULE
+    ${EXT_DIR}/qgd_Z_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_Z qgd)
+ADD_DEPENDENCIES (qgd_Z_Wrapper qgd)
 
-target_link_libraries (qgd_Z qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_Z_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
 
-python_extension_module(qgd_Z)
+python_extension_module(qgd_Z_Wrapper)
 
 # adding compile options
-target_compile_options(qgd_Z PRIVATE
+target_compile_options(qgd_Z_Wrapper PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -519,7 +519,7 @@ target_compile_options(qgd_Z PRIVATE
 )
 
 
-target_include_directories(qgd_Z PRIVATE
+target_include_directories(qgd_Z_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
@@ -527,13 +527,13 @@ target_include_directories(qgd_Z PRIVATE
                             ${EXTRA_INCLUDES})
 
 
-set_target_properties( qgd_Z PROPERTIES
+set_target_properties( qgd_Z_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
 
-install(TARGETS qgd_Z LIBRARY 
+install(TARGETS qgd_Z_Wrapper LIBRARY 
          DESTINATION qgd_python/gates)
 
 
@@ -544,21 +544,21 @@ install(TARGETS qgd_Z LIBRARY
 
 
 
-add_library( qgd_SX MODULE
-    ${EXT_DIR}/qgd_SX.cpp
+add_library( qgd_SX_Wrapper MODULE
+    ${EXT_DIR}/qgd_SX_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/common/numpy_interface.cpp
 )
 
 
-ADD_DEPENDENCIES (qgd_SX qgd)
+ADD_DEPENDENCIES (qgd_SX_Wrapper qgd)
 
-target_link_libraries (qgd_SX qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+target_link_libraries (qgd_SX_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
 
 
-python_extension_module(qgd_SX)
+python_extension_module(qgd_SX_Wrapper)
 
 # adding compile options
-target_compile_options(qgd_SX PRIVATE
+target_compile_options(qgd_SX_Wrapper PRIVATE
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
@@ -566,7 +566,7 @@ target_compile_options(qgd_SX PRIVATE
 )
 
 
-target_include_directories(qgd_SX PRIVATE
+target_include_directories(qgd_SX_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
                             ${PROJECT_SOURCE_DIR}/gates/include
@@ -574,13 +574,13 @@ target_include_directories(qgd_SX PRIVATE
                             ${EXTRA_INCLUDES})
 
 
-set_target_properties( qgd_SX PROPERTIES
+set_target_properties( qgd_SX_Wrapper PROPERTIES
                         INSTALL_RPATH "$ORIGIN/.."
                         LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
 )
 
 
-install(TARGETS qgd_SX LIBRARY 
+install(TARGETS qgd_SX_Wrapper LIBRARY 
          DESTINATION qgd_python/gates)
 
 
