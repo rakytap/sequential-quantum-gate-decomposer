@@ -871,7 +871,6 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int nu
 #endif
 
 
-
         if (gates.size() == 0 ) {
             return;
         }
@@ -891,10 +890,10 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int nu
         }
 
 
-
 #ifdef __MPI__        
         MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
+
 
 
 
@@ -917,6 +916,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int nu
 
         
         current_minimum =   optimization_problem( optimized_parameters_mtx );  
+
 
         int max_inner_iterations_loc;
         if ( config.count("max_inner_iterations_agent") > 0 ) {
@@ -1105,15 +1105,15 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
             solution_guess_mtx_agents[ agent_idx ] = solution_guess_mtx_agent;
 
         }
+
         
         
 
         // array storing the current minimum of th eindividual agents
         Matrix_real current_minimum_agents;
-
+               
         // intitial cost function for each of the agents
         current_minimum_agents = optimization_problem_batched( solution_guess_mtx_agents );
-
 
         // arrays to store some parameter values needed to be restored later
         Matrix_real parameter_value_save_agents( agent_num, 1 );    
@@ -1174,7 +1174,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();
                       
 
             if ( three_point_line_search ) {
-                                      
+                    
                 // calsulate the cist functions at shifted parameter values
                 for(int agent_idx=0; agent_idx<agent_num; agent_idx++) { 
                     Matrix_real solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ]; 
@@ -2803,7 +2803,7 @@ void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, Matri
     int changed_parameters = 0;
     for ( int jdx=0; jdx<num_of_parameters; jdx++) {
         if ( distrib_prob(gen) <= randomization_rate ) {
-            output[jdx] = (cost_fnc!=VQE) ? input[jdx] + distrib_real(gen)*std::sqrt(f0)*radius_loc : input[jdx] + distrib_real(gen)*radius_loc*std::sqrt((qbit_num-f0)/qbit_num);
+            output[jdx] = (cost_fnc!=VQE) ? input[jdx] + distrib_real(gen)*std::sqrt(f0)*radius_loc : input[jdx] + distrib_real(gen)*radius_loc;
             changed_parameters++;
         }
         else {
@@ -2930,7 +2930,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
         calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates, gatesNum, gateSetNum, trace_offset, trace_DFE_mtx.get_data() );
         unlock_lib();    
                                                                       
-#endif  
+#endif  // __MPI__
       
 
         // calculate the cost function
@@ -2963,13 +2963,45 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
     }
     else{
 
-#endif
+#endif // __DFE__
+
+
+#ifdef __MPI__
+
+
+        // the number of decomposing layers are divided between the MPI processes
+
+        int batch_element_num           = parameters_vec.size();
+        int mpi_batch_element_num       = batch_element_num / world_size;
+        int mpi_batch_element_remainder = batch_element_num % world_size;
+
+        if ( mpi_batch_element_remainder > 0 ) {
+            std::string err("N_Qubit_Decomposition_Base::optimization_problem_batched: The size of the batch should be divisible with the number of processes.");
+            throw err;
+        }
+
+        int mpi_starting_batchIdx = mpi_batch_element_num * current_rank;
+
+
+        Matrix_real cost_fnc_mtx_loc(mpi_batch_element_num, 1);
+
+        tbb::parallel_for( 0, mpi_batch_element_num, 1, [&]( int idx) {
+            cost_fnc_mtx_loc[idx] = optimization_problem( parameters_vec[idx + mpi_starting_batchIdx] );
+        });
+
+
+
+        int bytes = cost_fnc_mtx_loc.size()*sizeof(double);
+        MPI_Allgather(cost_fnc_mtx_loc.get_data(), bytes, MPI_BYTE, cost_fnc_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
+
+
+#else
         tbb::parallel_for( 0, (int)parameters_vec.size(), 1, [&]( int idx) {
             cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
         });
-       
 
-   
+#endif  // __MPI__
+       
 
 
 #ifdef __DFE__  
