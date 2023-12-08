@@ -424,7 +424,7 @@ apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, con
 
     int inner_grain_size = 64;
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,parallel_outer_cycles,outer_grain_size), [&](tbb::blocked_range<int> r) { 
+    tbb::parallel_for( tbb::blocked_range<int>(0, parallel_outer_cycles, outer_grain_size), [&](tbb::blocked_range<int> r) { 
 
         int current_idx      = r.begin()*(index_step_target << 1);
         int current_idx_pair = index_step_target + r.begin()*(index_step_target << 1);

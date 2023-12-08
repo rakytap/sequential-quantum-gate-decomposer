@@ -41,7 +41,7 @@ limitations under the License.
 #include "apply_large_kernel_to_input.h"
 
 
-
+#include "apply_kernel_to_state_vector_input.h"
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -204,7 +204,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
         int outer_idx = gates.size()-1;
         for (int block_idx=0; block_idx<involved_qbits.size(); block_idx++){
 
-            if (block_type[block_idx]!=1){
+            if (block_type[block_idx] != 1){
 
                 Gates_block gates_block_mini = Gates_block(block_type[block_idx]);
                 std::vector<int> qbits = involved_qbits[block_idx];
@@ -235,7 +235,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
                 outer_idx        = block_end[block_idx]-1;
 
-                apply_large_kernel_to_state_vector_input(Umtx_mini,input,qbits,input.size());
+                apply_large_kernel_to_state_vector_input(Umtx_mini, input, qbits, input.size() );
        
 
 
@@ -252,6 +252,29 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
                 gates_block_mini.apply_to(parameters_mtx, input);
             }
         }
+    }
+    else if  ( involved_qubits.size() == 1 && gates.size() > 1 && qbit_num > 1 ) {
+    // merge successive single qubit gates
+
+                Gates_block gates_block_mini = Gates_block(1);
+  
+                for (int idx=gates.size()-1; idx>=0; idx--){
+
+                    Gate* gate = gates[idx]->clone();
+                    gate->set_target_qbit(0);
+                    gate->set_qbit_num(1);
+
+                    gates_block_mini.add_gate(gate);
+                }
+                    // TODO check gates block
+                Matrix Umtx_mini = create_identity(2);
+                parameters       = parameters - gates_block_mini.get_parameter_num();
+
+                Matrix_real parameters_mtx_loc(parameters, 1, gates_block_mini.get_parameter_num());
+                gates_block_mini.apply_to(parameters_mtx_loc, Umtx_mini);
+
+                apply_kernel_to_state_vector_input_parallel_AVX(Umtx_mini, input, false, involved_qubits[0], -1, matrix_size);
+
     }
     else {
 
@@ -367,10 +390,10 @@ void Gates_block::fragment_circuit(){
 
         }
 
-        bool target_contained=is_qbit_present(qbits,target_new,num_of_qbits);
-        bool control_contained= (control_new==-1) ? true : is_qbit_present(qbits,control_new,num_of_qbits);
+        bool target_contained  = is_qbit_present(qbits,target_new,num_of_qbits);
+        bool control_contained = (control_new==-1) ? true : is_qbit_present(qbits, control_new, num_of_qbits);
 
-        if (num_of_qbits==max_fusion_temp && (target_contained==false || control_contained==false)){
+        if (num_of_qbits == max_fusion_temp && (target_contained == false || control_contained == false)){
             int vidx = 1;
 
             while(vidx<num_of_qbits){
@@ -378,8 +401,8 @@ void Gates_block::fragment_circuit(){
 
                 while(jdx>0 && qbits[jdx-1]>qbits[jdx]){
                     int qbit_temp = qbits[jdx];
-                    qbits[jdx] = qbits[jdx-1];
-                    qbits[jdx-1] =  qbit_temp;
+                    qbits[jdx]    = qbits[jdx-1];
+                    qbits[jdx-1]  =  qbit_temp;
                     jdx--;
                 }
 

@@ -21,8 +21,8 @@ limitations under the License.
 */
 
 
-#ifndef apply_kerel_to_state_vector_input_H
-#define apply_kerel_to_state_vector_input_H
+#ifndef apply_large_kerel_to_input_H
+#define apply_large_kerel_to_input_H
 
 #include <immintrin.h>
 #include "matrix.h"
