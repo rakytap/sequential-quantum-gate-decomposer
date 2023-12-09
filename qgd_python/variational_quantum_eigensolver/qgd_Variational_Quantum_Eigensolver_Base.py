@@ -181,8 +181,16 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
     def get_Parameter_Num( self ):
 
         return super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Parameter_Num()
+        
+        
 
+#@brief Call to apply the gate operation on the input state
+#@param parameters_mtx Python array ontaining the parameter set
+#@param state_to_be_transformed Numpy array storing the state on which the transformation should be applied
+    def apply_to( self, parameters_mtx, state_to_be_transformed):
 
+	# call the C wrapper function
+        super().apply_to( parameters_mtx, state_to_be_transformed )
 
 ##
 # @brief Export the unitary decomposition into Qiskit format.

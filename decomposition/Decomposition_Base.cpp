@@ -450,10 +450,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
         }
         else {
-	     std::stringstream sstream;
-	     sstream << "bad value for initial guess" << std::endl;
-	     print(sstream, 0);  	
-	     exit(-1);
+            std::string err("bad value for initial guess");
         }
 
         if ( solution_guess_num > 0) {
@@ -843,6 +840,10 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
             RZ* rz_gate = static_cast<RZ*>( gate );
             rz_gate->apply_to( parameters_mtx, ret_matrix);            
         }
+        else if (gate->get_type() == RZ_P_OPERATION ) {
+            RZ_P* rz_gate = static_cast<RZ_P*>( gate );
+            rz_gate->apply_to( parameters_mtx, ret_matrix);            
+        }
         else if (gate->get_type() == X_OPERATION ) {
             X* x_gate = static_cast<X*>( gate );
             x_gate->apply_to( ret_matrix );            
@@ -974,6 +975,10 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         }
         else if (gate->get_type() == RZ_OPERATION ) {
             RZ* rz_gate = static_cast<RZ*>(gate);
+            rz_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else if (gate->get_type() == RZ_P_OPERATION ) {
+            RZ_P* rz_gate = static_cast<RZ_P*>(gate);
             rz_gate->apply_from_right(parameters_loc_mtx, mtx);
         }
         else if (gate->get_type() == X_OPERATION ) {
@@ -1215,11 +1220,6 @@ void Decomposition_Base::prepare_gates_to_export() {
 */
 std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate*> ops, double* parameters ) {
 
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
-
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
 
     std::vector<Gate*> ops_ret;
     int parameter_idx = 0;
@@ -1308,10 +1308,8 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
                 parameter_idx = parameter_idx + 3;
             }
             else {
-		verbose_level=1;
-		sstream << "wrong parameters in U3 class" << std::endl;
-		print(sstream,verbose_level);	    	
-                exit(-1);
+                std::string err("bad value for initial guess");
+                throw err;        
             }
 
             u3_gate->set_optimized_parameters( vartheta, varphi, varlambda );
@@ -1376,17 +1374,35 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         else if (gate->get_type() == RZ_OPERATION) {
 
             // definig the parameter of the rotational angle
-            double varphi_over_2;
+            double varphi;
 
             // get the inverse parameters of the RZ rotation
 
             RZ* rz_gate = static_cast<RZ*>(gate);
 
-            varphi_over_2 = std::fmod( 2*parameters[parameter_idx], 2*M_PI);
+            varphi = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
             parameter_idx = parameter_idx + 1;
 
 
-            rz_gate->set_optimized_parameters( varphi_over_2 );
+            rz_gate->set_optimized_parameters( varphi );
+            ops_ret.push_back( static_cast<Gate*>(rz_gate) );
+
+
+        }
+        else if (gate->get_type() == RZ_P_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double varphi;
+
+            // get the inverse parameters of the RZ rotation
+
+            RZ_P* rz_gate = static_cast<RZ_P*>(gate);
+
+            varphi = std::fmod( parameters[parameter_idx], 2*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            rz_gate->set_optimized_parameters( varphi );
             ops_ret.push_back( static_cast<Gate*>(rz_gate) );
 
 

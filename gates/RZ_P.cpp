@@ -16,11 +16,11 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file RZ.cpp
-    \brief Class representing a RZ gate.
+/*! \file RZ_P.cpp
+    \brief Class representing a RZ_P gate.
 */
 
-#include "RZ.h"
+#include "RZ_P.h"
 
 
 
@@ -28,14 +28,14 @@ limitations under the License.
 /**
 @brief Nullary constructor of the class.
 */
-RZ::RZ() {
+RZ_P::RZ_P() {
 
         // number of qubits spanning the matrix of the gate
         qbit_num = -1;
         // the size of the matrix
         matrix_size = -1;
         // A string describing the type of the gate
-        type = RZ_OPERATION;
+        type = RZ_P_OPERATION;
 
         // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = -1;
@@ -70,7 +70,7 @@ RZ::RZ() {
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-RZ::RZ(int qbit_num_in, int target_qbit_in) {
+RZ_P::RZ_P(int qbit_num_in, int target_qbit_in) {
 
 	//The stringstream input to store the output messages.
 	std::stringstream sstream;
@@ -83,7 +83,7 @@ RZ::RZ(int qbit_num_in, int target_qbit_in) {
         // the size of the matrix
         matrix_size = Power_of_2(qbit_num);
         // A string describing the type of the gate
-        type = RZ_OPERATION;
+        type = RZ_P_OPERATION;
 
 
         if (target_qbit_in >= qbit_num) {
@@ -112,7 +112,7 @@ RZ::RZ(int qbit_num_in, int target_qbit_in) {
 
         parameter_num = 1;
 
-        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitaRZ is done
+        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitay is done
         parameters = Matrix_real(1, parameter_num);
 
 }
@@ -121,7 +121,7 @@ RZ::RZ(int qbit_num_in, int target_qbit_in) {
 /**
 @brief Destructor of the class
 */
-RZ::~RZ() {
+RZ_P::~RZ_P() {
 
 
 }
@@ -135,34 +135,21 @@ RZ::~RZ() {
 @param input The input array on which the gate is applied
 */
 void 
-RZ::apply_to( Matrix_real& parameters, Matrix& input ) {
+RZ_P::apply_to( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.rows != matrix_size ) {
-        std::string err("Wrong matrix size in RZ gate apply");
+        std::string err("Wrong matrix size in RZ_P gate apply");
         throw err;
     }
 
 
-
-    double Phi_over_2 = parameters[0];
+    double Phi = parameters[0];
 
     
 
     // get the U3 gate of one qubit
-    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
-    Matrix u3_1qbit(2, 2);
-    double cos_phi = cos(Phi_over_2);
-    double sin_phi = sin(Phi_over_2);
-    
-    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
-    u3_1qbit[0].real = cos_phi;
-    u3_1qbit[0].imag = -sin_phi;    
-
-    u3_1qbit[3].real = cos_phi;
-    u3_1qbit[3].imag = sin_phi;    
-
-
+    Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
 
     apply_kernel_to( u3_1qbit, input );
 
@@ -177,30 +164,20 @@ RZ::apply_to( Matrix_real& parameters, Matrix& input ) {
 @param input The input array on which the gate is applied
 */
 void 
-RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
+RZ_P::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::string err("Wrong matrix size in U3 apply_from_right");
+        std::string err("Wrong matrix size in RZ_P apply_from_right");
         throw err;    
     }
 
-    double Phi_over_2 = parameters[0];
+    double Phi = parameters[0];
 
     
 
     // get the U3 gate of one qubit
-    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
-    Matrix u3_1qbit(2, 2);
-    double cos_phi = cos(Phi_over_2);
-    double sin_phi = sin(Phi_over_2);
-    
-    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
-    u3_1qbit[0].real = cos_phi;
-    u3_1qbit[0].imag = -sin_phi;    
-
-    u3_1qbit[3].real = cos_phi;
-    u3_1qbit[3].imag = sin_phi; 
+    Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
 
 
     apply_kernel_from_right(u3_1qbit, input);
@@ -215,29 +192,21 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 @brief ???????????????
 */
 std::vector<Matrix> 
-RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+RZ_P::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::string err("Wrong matrix size in RZ apply_derivate_to");
+        std::string err("Wrong matrix size in RZ_P apply_derivate_to");
         throw err;
     }
 
-    double Phi_over_2 = parameters[0] + M_PI/2;
+    double Phi = parameters[0] + M_PI/2;
 
     
 
     // get the U3 gate of one qubit
-    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
-    Matrix u3_1qbit(2, 2);
-    double cos_phi = cos(Phi_over_2);
-    double sin_phi = sin(Phi_over_2);
-    
-    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
-    u3_1qbit[0].real = cos_phi;
-    u3_1qbit[0].imag = -sin_phi;    
-
-    u3_1qbit[3].real = cos_phi;
-    u3_1qbit[3].imag = sin_phi; 
+    Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 ); 
+    u3_1qbit[0].real = 0.0;
+    u3_1qbit[0].imag = 0.0;
 
     Matrix&& res_mtx = input.copy();
     apply_kernel_to( u3_1qbit, res_mtx );
@@ -260,7 +229,7 @@ RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 @param Phi Real parameter standing for the parameter phi.
 @param Lambda Real parameter standing for the parameter lambda.
 */
-void RZ::set_optimized_parameters(double PhiOver2 ) {
+void RZ_P::set_optimized_parameters(double PhiOver2 ) {
 
     parameters = Matrix_real(1, parameter_num);
 
@@ -273,7 +242,7 @@ void RZ::set_optimized_parameters(double PhiOver2 ) {
 @brief Call to get the final optimized parameters of the gate.
 @param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
 */
-Matrix_real RZ::get_optimized_parameters() {
+Matrix_real RZ_P::get_optimized_parameters() {
 
     return parameters.copy();
 
@@ -287,7 +256,7 @@ Matrix_real RZ::get_optimized_parameters() {
 @return Returns with the matrix of the one-qubit matrix.
 */
 void 
-RZ::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda){
+RZ_P::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda){
 
     ThetaOver2 = 0;
     Lambda = 0;
@@ -297,9 +266,9 @@ RZ::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lamb
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-RZ* RZ::clone() {
+RZ_P* RZ_P::clone() {
 
-    RZ* ret = new RZ(qbit_num, target_qbit);
+    RZ_P* ret = new RZ_P(qbit_num, target_qbit);
 
     if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters(parameters[0]);

@@ -16,12 +16,12 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file RZ.h
+/*! \file RZ_P.h
     \brief Header file for a class representing a rotation gate around the Z axis.
 */
 
-#ifndef RZ_H
-#define RZ_H
+#ifndef RZ_P_H
+#define RZ_P_H
 
 #include "U3.h"
 #include "matrix.h"
@@ -31,9 +31,9 @@ limitations under the License.
 
 
 /**
-@brief A class representing a RZ gate.  The matrix of the gate is [exp(i*varphi/2),0;0,exp(i*varphi/2) ]. The input rotation angle is varphi/2.
+@brief A class representing a RZ + global phase gate. The matrix of the gate is [1,0;0,exp(i*varphi) ]
 */
-class RZ: public U3 {
+class RZ_P: public U3 {
 
 
 public:
@@ -41,7 +41,7 @@ public:
 /**
 @brief NullaRZ constructor of the class.
 */
-RZ();
+RZ_P();
 
 
 /**
@@ -52,12 +52,12 @@ RZ();
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-RZ(int qbit_num_in, int target_qbit_in);
+RZ_P(int qbit_num_in, int target_qbit_in);
 
 /**
 @brief Destructor of the class
 */
-~RZ();
+~RZ_P();
 
 
 /**
@@ -105,7 +105,7 @@ void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lam
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-RZ* clone();
+RZ_P* clone();
 
 
 };

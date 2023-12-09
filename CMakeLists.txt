@@ -342,6 +342,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/gates/Adaptive.cpp
     ${PROJECT_SOURCE_DIR}/gates/RX.cpp
     ${PROJECT_SOURCE_DIR}/gates/RZ.cpp
+    ${PROJECT_SOURCE_DIR}/gates/RZ_P.cpp
     ${PROJECT_SOURCE_DIR}/gates/Composite.cpp
     ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input_AVX.cpp
     ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_state_vector_input.cpp

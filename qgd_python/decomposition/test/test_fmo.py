@@ -63,20 +63,21 @@ class Test_Decomposition:
             Layer = Gates_Block( qbit_num )
 
 #Rz Ry Rz = Rz Sx Rz Sx^+ Rz
-
-            Layer.add_RZ( 2 ) 
+            Layer.add_U3(2, True, True, True)
+            #Layer.add_RZ( 2 ) 
             #Layer.add_RY( 2 ) 
-            Layer.add_SX( 2 ) 
-            Layer.add_RZ( 2 )
-            Layer.add_X( 2 )
-            Layer.add_SX( 2 ) 
+            ##Layer.add_SX( 2 ) 
+            #Layer.add_RZ( 2 )
+            ##Layer.add_X( 2 )
+            ##Layer.add_SX( 2 ) 
 
-            Layer.add_RZ( 1 ) 
+            Layer.add_U3(1, True, True, True)
+            #Layer.add_RZ( 1 ) 
             #Layer.add_RY( 1 ) 
-            Layer.add_SX( 1 ) 
-            Layer.add_RZ( 1 )
-            Layer.add_X( 1 )  
-            Layer.add_SX( 1 )
+            ##Layer.add_SX( 1 ) 
+            #Layer.add_RZ( 1 )
+            ##Layer.add_X( 1 )  
+            ##Layer.add_SX( 1 )
 
             # add CNOT gate to the block
             Layer.add_CNOT( 1, 2)
@@ -87,19 +88,21 @@ class Test_Decomposition:
             # creating an instance of the wrapper class Gates_Block
             Layer = Gates_Block( qbit_num )
 
-            Layer.add_RZ( 1 ) 
+            Layer.add_U3(1, True, True, True)
+            #Layer.add_RZ( 1 ) 
             #Layer.add_RY( 1 ) 
-            Layer.add_SX( 1 ) 
-            Layer.add_RZ( 1 )
-            Layer.add_X( 1 )  
-            Layer.add_SX( 1 )
+            ##Layer.add_SX( 1 ) 
+            #Layer.add_RZ( 1 )
+            ##Layer.add_X( 1 )  
+            ##Layer.add_SX( 1 )
 
-            Layer.add_RZ( 0 ) 
+            Layer.add_U3(0, True, True, True)
+            #Layer.add_RZ( 0 ) 
             #Layer.add_RY( 0 ) 
-            Layer.add_SX( 0 ) 
-            Layer.add_RZ( 0 )
-            Layer.add_X( 0 )   
-            Layer.add_SX( 0 )
+            ##Layer.add_SX( 0 ) 
+            #Layer.add_RZ( 0 )
+            ##Layer.add_X( 0 )   
+            ##Layer.add_SX( 0 )
 
             # add CNOT gate to the block
             Layer.add_CNOT( 0, 1)
@@ -134,19 +137,21 @@ class Test_Decomposition:
             # creating an instance of the wrapper class Gates_Block
             Layer = Gates_Block( qbit_num )
 
-            Layer.add_RZ( 1 ) 
+            Layer.add_U3(1, True, True, True)
+            #Layer.add_RZ( 1 ) 
             #Layer.add_RY( 1 ) 
-            Layer.add_SX( 1 ) 
-            Layer.add_RZ( 1 )
-            Layer.add_X( 1 )  
-            Layer.add_SX( 1 )
+            ##Layer.add_SX( 1 ) 
+            #Layer.add_RZ( 1 )
+            ##Layer.add_X( 1 )  
+            ##Layer.add_SX( 1 )
 
-            Layer.add_RZ( 0 ) 
+            Layer.add_U3(0, True, True, True)
+            #Layer.add_RZ( 0 ) 
             #Layer.add_RY( 0 ) 
-            Layer.add_SX( 0 ) 
-            Layer.add_RZ( 0 )
-            Layer.add_X( 0 )   
-            Layer.add_SX( 0 )
+            ##Layer.add_SX( 0 ) 
+            #Layer.add_RZ( 0 )
+            ##Layer.add_X( 0 )   
+            ##Layer.add_SX( 0 )
 
             # add CNOT gate to the block
             Layer.add_CNOT( 0, 1)
@@ -178,12 +183,13 @@ class Test_Decomposition:
             # creating an instance of the wrapper class Gates_Block
             Layer = Gates_Block( qbit_num )
 
-            Layer.add_RZ( idx ) 
+            Layer.add_U3(idx, True, True, True)
+            #Layer.add_RZ( idx ) 
             #Layer.add_RY( idx ) 
-            Layer.add_SX( idx ) 
-            Layer.add_RZ( idx )
-            Layer.add_X( idx )  
-            Layer.add_SX( idx )
+            ##Layer.add_SX( idx ) 
+            #Layer.add_RZ_P( idx )
+            ##Layer.add_X( idx )  
+            ##Layer.add_SX( idx )
 
             Gates_Block_ret.add_Gates_Block( Layer )
 
@@ -233,8 +239,17 @@ class Test_Decomposition:
         gate_structure = self.create_custom_gate_structure_finalyzing(qbit_num, gate_structure)
 
 
+
+        #Python map containing hyper-parameters
+        config = { 'max_outer_iterations': 1,  
+                'max_inner_iterations' : 500,	
+                'optimization_tolerance': 1e-8,
+                'agent_num': 20}
+
+
+
         # creating an instance of the C++ class
-        decomp = N_Qubit_Decomposition_custom( Umtx.conj().T, initial_guess="random" )
+        decomp = N_Qubit_Decomposition_custom( Umtx.conj().T, initial_guess="zeros", config=config )
 
         # adding custom gate structure to the decomposition
         decomp.set_Gate_Structure( gate_structure )
@@ -246,17 +261,23 @@ class Test_Decomposition:
         # set the number of block to be optimized in one shot
         decomp.set_Optimization_Blocks( 50 )
 
+        decomp.set_Cost_Function_Variant( 3 )
+
+        decomp.set_Optimizer("BFGS")
+
         # starting the decomposition
-        decomp.Start_Decomposition()
+        decomp.Start_Decomposition(prepare_export=True)
+
+
 
 
         # list the decomposing operations
-        decomp.List_Gates()
+        #decomp.List_Gates()
 	
 	
         # get the decomposing operations
         quantum_circuit = decomp.get_Quantum_Circuit()
-        print(quantum_circuit )
+        #print(quantum_circuit )
 	
         # test the decomposition of the matrix
         # the unitary matrix from the result object

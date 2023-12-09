@@ -273,8 +273,20 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_Start_Decomposition(qgd_N_Qubit_Decompo
         return Py_BuildValue("i", -1);
 
 
-    // starting the decomposition
-    self->decomp->start_decomposition(prepare_export);
+    // start the decomposition
+    try {
+        self->decomp->start_decomposition(prepare_export);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
 
 
     return Py_BuildValue("i", 0);
@@ -468,6 +480,29 @@ get_gate( N_Qubit_Decomposition_custom* decomp, int &idx ) {
 
         // create gate parameters
         PyObject* type = Py_BuildValue("s",  "RZ" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* Phi = Py_BuildValue("f",  parameters[0] );
+
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "Phi", Phi );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(Phi);
+
+
+    }
+    else if (gate->get_type() == RZ_P_OPERATION) {
+
+        // get U3 parameters
+        RZ_P* rz_gate = static_cast<RZ_P*>(gate);
+        Matrix_real&& parameters = rz_gate->get_optimized_parameters();
+ 
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "RZ_P" );
         PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
         PyObject* Phi = Py_BuildValue("f",  parameters[0] );
 
@@ -1054,6 +1089,56 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer( qgd_N_Qubit_Decompositio
 }
 
 
+
+/**
+@brief Wrapper function to set a variant for the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for FROBENIUS_NORM_CORRECTION2_EXACT_DERIVATE
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+@return Returns with zero on success.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_custom_Wrapper_set_Cost_Function_Variant( qgd_N_Qubit_Decomposition_custom_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"costfnc", NULL};
+
+    int costfnc_arg = 0;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &costfnc_arg)) {
+
+        std::string err( "Unsuccessful argument parsing");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;       
+ 
+    }
+   
+    cost_function_type qgd_costfnc = (cost_function_type)costfnc_arg;
+
+
+    try {
+        self->decomp->set_cost_function_variant(qgd_costfnc);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+
 /**
 @brief Call to upload the unitary to the DFE. (Has no effect for non-DFE builds)
 */
@@ -1148,6 +1233,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_custom_Wrapper_methods[] = {
     },
     {"Upload_Umtx_to_DFE", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_Upload_Umtx_to_DFE, METH_NOARGS,
      "Call to upload the unitary to the DFE. (Has no effect for non-DFE builds)"
+    },
+    {"set_Cost_Function_Variant", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_set_Cost_Function_Variant, METH_VARARGS | METH_KEYWORDS,
+     "Wrapper method to to set the variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for HILBERT_SCHMIDT_TEST, 4 for HILBERT_SCHMIDT_TEST_CORRECTION1, 5 for HILBERT_SCHMIDT_TEST_CORRECTION2."
     },
     {NULL}  /* Sentinel */
 };

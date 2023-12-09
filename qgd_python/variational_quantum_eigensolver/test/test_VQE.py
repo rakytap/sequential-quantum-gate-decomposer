@@ -7,13 +7,18 @@ import sys
 from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper as Gates_Block
 import scipy as sp
 import pytest
+
+
 sigmax = sp.sparse.csr_matrix(np.array([[0,1],
                    [1,0]])+0.j)
 sigmay = sp.sparse.csr_matrix(np.array([[0,0+-1j],
                    [0+1j,0]])+0.j)
 sigmaz = sp.sparse.csr_matrix(np.array([[1,0],
                    [0,-1]])+0.j)
+
+
 def generate_hamiltonian(topology, n):
+
     Hamiltonian = sp.sparse.coo_matrix((2**n, 2**n), dtype=np.complex128)
     for i in topology:
         if i[0]==0:
@@ -62,68 +67,120 @@ def generate_hamiltonian(topology, n):
 
     return Hamiltonian.tocsr()
 
+
+
+
+
+
 class Test_VQE:
 
     def ctest_VQE_Identity(self):
         layers = 1
         blocks = 1
-        rot_layers = 1
-        n = 7
-        Hamiltonian = sp.sparse.eye(2**n,format="csr")
+
+        qbit_num = 7
+        Hamiltonian = sp.sparse.eye(2**qbit_num,format="csr")
+
         config = {"agent_lifetime":500,
-        "optimization_tolerance": -7.1,
-        "max_inner_iterations":10,
-        "max_iterations":50,
-        "learning_rate": 2e-1,
-        "agent_num":64,
-        "agent_exploration_rate":0.3,
-        "max_inner_iterations_adam":50000}
+                  "optimization_tolerance": -7.1,
+                  "max_inner_iterations":10,
+                  "max_iterations":50,
+                  "learning_rate": 2e-1,
+                  "agent_num":64,
+                  "agent_exploration_rate":0.3,
+                  "max_inner_iterations_adam":50000}
         
-        VQE_eye = Variational_Quantum_Eigensolver_Base(Hamiltonian, n, config)
+        # initiate the VQE object with the Hamiltonian
+        VQE_eye = Variational_Quantum_Eigensolver_Base(Hamiltonian, qbit_num, config)
+
+        # set the optimization engine
         VQE_eye.set_Optimizer("GRAD_DESCEND")
+
+        # set the ansatz variant (U3 rotations and CNOT gates)
         VQE_eye.set_Ansatz("HEA")
-        VQE_eye.Generate_initial_circuit(layers, blocks, rot_layers)
-        VQE_eye.get_Ground_State()
+
+        # generate the circuit ansatz for the optimization
+        VQE_eye.Generate_Circuit(layers, blocks)
+
+        # create initial parameters 
+        param_num  = VQE_eye.get_Parameter_Num()
+        parameters = np.zeros( (param_num,) )
+
+        VQE_eye.set_Optimized_Parameters(parameters)
+
+        # start an etap of the optimization (max_inner_iterations iterations)
+        VQE_eye.Start_Optimization()
         
+        # retrieve QISKIT format of the optimized circuit
         quantum_circuit = VQE_eye.get_Quantum_Circuit()
-        # print the quantum circuit
-        print(quantum_circuit)
-        Energy = VQE_eye.Optimization_Problem(VQE_eye.get_Optimized_Parameters())
+
+        # retrieve the optimized parameter
+        parameters = VQE_eye.get_Optimized_Parameters()
+
+        # evaluate the VQE energy at the optimized parameters
+        Energy = VQE_eye.Optimization_Problem( parameters )
+
+
         assert (abs(Energy-1)<1e-4)
     
     def test_Heisenberg_XX(self):
     
         layers = 1
         blocks = 1
-        rot_layers = 1
-        n = 9
+
+        qbit_num = 9
         topology = []
-        for idx in range(n-1):
+        for idx in range(qbit_num-1):
             topology.append( (idx, idx+1) )
             
-        Hamiltonian = generate_hamiltonian(topology,n)
+        Hamiltonian = generate_hamiltonian(topology, qbit_num)
         
         config = {"agent_lifetime":10,
-        "max_inner_iterations":1000,
-        "max_iterations":1000,
-        "learning_rate": 2e-3,
-        "agent_num":3,
-        "agent_exploration_rate":0.5,
-        "max_inner_iterations_adam":500,
-        "convergence_length": 300}
+                  "max_inner_iterations":1000,
+                  "max_iterations":1000,
+                  "agent_num":3,
+                  "agent_exploration_rate":0.5,
+                  "max_inner_iterations_adam":500,
+                  "convergence_length": 300}
         
-        VQE_Heisenberg = Variational_Quantum_Eigensolver_Base(Hamiltonian, n, config)
+        # initiate the VQE object with the Hamiltonian
+        VQE_Heisenberg = Variational_Quantum_Eigensolver_Base(Hamiltonian, qbit_num, config)
+
+        # set the optimization engine
         VQE_Heisenberg.set_Optimizer("AGENTS")
-        VQE_Heisenberg.set_Ansatz("HEA")
-        VQE_Heisenberg.set_Optimization_Tolerance(-8.5)
-        VQE_Heisenberg.Generate_initial_circuit(layers, blocks, rot_layers)
-        VQE_Heisenberg.get_Ground_State()
+
+        # set the ansatz variant (U3 rotations and CNOT gates)
+        VQE_Heisenberg.set_Ansatz("HEA_ZYZ")
+
+        # generate the circuit ansatz for the optimization        
+        VQE_Heisenberg.Generate_Circuit(layers, blocks)
+
+        # create initial parameters 
+        param_num  = VQE_Heisenberg.get_Parameter_Num()
+        parameters = np.zeros( (param_num,) )
+
+        VQE_Heisenberg.set_Optimized_Parameters(parameters)
+
+        # start an etap of the optimization (max_inner_iterations iterations)
+        VQE_Heisenberg.Start_Optimization()
+
+        # retrieve QISKIT format of the optimized circuit
         quantum_circuit = VQE_Heisenberg.get_Quantum_Circuit()
         
         # print the quantum circuit
-        print(quantum_circuit)
         lambdas, vecs = sp.sparse.linalg.eigs(Hamiltonian)
-        Energy = VQE_Heisenberg.Optimization_Problem(VQE_Heisenberg.get_Optimized_Parameters())
+
+        # retrieve the optimized parameter
+        parameters = VQE_Heisenberg.get_Optimized_Parameters()
+
+        # evaluate the VQE energy at the optimized parameters
+        Energy = VQE_Heisenberg.Optimization_Problem( parameters )
         
         print(lambdas[0])
         assert ((Energy - np.real(lambdas[0]))<1e-2)
+
+
+
+
+
+

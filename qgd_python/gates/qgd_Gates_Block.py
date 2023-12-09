@@ -79,7 +79,7 @@ class qgd_Gates_Block(qgd_Gates_Block_Wrapper):
 	# call the C wrapper function
         super(qgd_Gates_Block, self).add_RY(target_qbit)
 
-#@brief Call to add a RZ gate to the front of the gate structure.
+#@brief Call to add a RZ gate to the front of the gate structure.  The matrix of the gate is [exp(-i*varphi/2),0;0,exp(i*varphi/2) ].
 #@param self A pointer pointing to an instance of the class qgd_Gates_Block.
 #@param Input arguments: target_qbit (int).
 
@@ -87,6 +87,15 @@ class qgd_Gates_Block(qgd_Gates_Block_Wrapper):
     
 	# call the C wrapper function
         super(qgd_Gates_Block, self).add_RZ(target_qbit)
+
+#@brief Call to add a RZ_P gate to the front of the gate structure. The matrix of the gate is [1,0;0,exp(i*varphi) ].
+#@param self A pointer pointing to an instance of the class qgd_Gates_Block.
+#@param Input arguments: target_qbit (int).
+
+    def add_RZ_P( self, target_qbit):
+    
+	# call the C wrapper function
+        super(qgd_Gates_Block, self).add_RZ_P(target_qbit)
 
 #@brief Call to add a CNOT gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Gates_Block.
@@ -197,13 +206,12 @@ class qgd_Gates_Block(qgd_Gates_Block_Wrapper):
         return super(qgd_Gates_Block, self).get_Parameter_Num()
     
 #@brief Call to apply the gate operation on the input matrix
-#@param self A pointer pointing to an instance of the class qgd_Gates_Block.
-#@param Input arguments: parameters_mtx, unitary_mtx.
-
-    def apply_to( self, parameters_mtx, unitary_mtx):
+#@param parameters_mtx Python array ontaining the parameter set
+#@param state_to_be_transformed Numpy array storing the state on which the transformation should be applied
+    def apply_to( self, parameters_mtx, state_to_be_transformed):
 
 	# call the C wrapper function
-        super(qgd_Gates_Block, self).apply_to( parameters_mtx, unitary_mtx )
+        super(qgd_Gates_Block, self).apply_to( parameters_mtx, state_to_be_transformed )
 
 ##
 # @brief Call to get the second Rényi entropy

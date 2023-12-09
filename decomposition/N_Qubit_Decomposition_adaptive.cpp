@@ -1329,7 +1329,7 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
                         RX*   rx_gate_1   = new RX(qbit_num, target_qbit);
                         CZ*   cz_gate     = new CZ(qbit_num, target_qbit, control_qbit);
                         RX*   rx_gate_2   = new RX(qbit_num, target_qbit);
-                        RZ*   rz_gate     = new RZ(qbit_num, control_qbit);
+                        RZ_P* rz_gate     = new RZ_P(qbit_num, control_qbit);
 
                         Gates_block* czr_gate = new Gates_block(qbit_num);
                         czr_gate->add_gate(rx_gate_1);
@@ -1344,20 +1344,22 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
                         memcpy(parameters_new.get_data()+parameter_idx+3, optimized_parameters.get_data()+parameter_idx+1, (optimized_parameters.size()-parameter_idx-1)*sizeof(double));
 
 
-                        QGD_Complex16 global_phase_factor_new;
+                        //QGD_Complex16 global_phase_factor_new;
                         if ( std::sin(parameter) < 0 ) {
-                            parameters_new[parameter_idx] = -M_PI/4; // rz parameter (varphi/2)
-
+                            parameters_new[parameter_idx] = -M_PI/2; // rz parameter
+/*
                             global_phase_factor_new.real = std::cos( -M_PI/4 );
                             global_phase_factor_new.imag = std::sin( -M_PI/4 );
                             apply_global_phase_factor(global_phase_factor_new, Umtx);
+*/
                         }
                         else{
-                            parameters_new[parameter_idx] = M_PI/4; // rz parameter (varphi/2)
-
+                            parameters_new[parameter_idx] = M_PI/2; // rz parameter
+/*
                             global_phase_factor_new.real = std::cos( M_PI/4 );
                             global_phase_factor_new.imag = std::sin( M_PI/4 );
                             apply_global_phase_factor(global_phase_factor_new, Umtx);
+*/
                         }
                         parameters_new[parameter_idx+1] = M_PI/4; // rx_2 parameter
                         parameters_new[parameter_idx+2] = -M_PI/4; // rx_1 parameter

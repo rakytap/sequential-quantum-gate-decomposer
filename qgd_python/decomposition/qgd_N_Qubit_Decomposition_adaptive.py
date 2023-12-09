@@ -173,9 +173,9 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                 # RY gate
                 circuit.ry(gate.get("Theta"), gate.get("target_qbit"))
 
-            elif gate.get("type") == "RZ":
+            elif gate.get("type") == "RZ" or gate.get("type") == "RZ_P":
                 # RZ gate
-                circuit.rz(gate.get("Phi")*2, gate.get("target_qbit"))
+                circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
 
             elif gate.get("type") == "X":
                 # X gate

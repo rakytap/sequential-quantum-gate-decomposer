@@ -145,7 +145,7 @@ std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
     gates_num gates_num = get_gate_nums();
 
     sstream.str("");
-    sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
+    sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " layers with:" << std::endl;
 
       
     if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 opeartions," << std::endl;
@@ -156,8 +156,8 @@ std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
     if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ opeartions," << std::endl;
     if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH opeartions," << std::endl;
     if ( gates_num.x>0 ) sstream << gates_num.x << " X opeartions," << std::endl;
-    if ( gates_num.x>0 ) sstream << gates_num.y << " Y opeartions," << std::endl;
-    if ( gates_num.x>0 ) sstream << gates_num.z << " Z opeartions," << std::endl;
+    if ( gates_num.y>0 ) sstream << gates_num.y << " Y opeartions," << std::endl;
+    if ( gates_num.z>0 ) sstream << gates_num.z << " Z opeartions," << std::endl;
     if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX opeartions," << std::endl;
     if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore opeartions," << std::endl;
     if ( gates_num.un>0 ) sstream << gates_num.un << " UN opeartions," << std::endl;

@@ -272,6 +272,39 @@ qgd_Gates_Block_Wrapper_add_RZ(qgd_Gates_Block_Wrapper *self, PyObject *args, Py
 }
 
 
+
+
+/**
+@brief Wrapper function to add a RZ_P gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Gates_Block_Wrapper_add_RZ_P(qgd_Gates_Block_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->gate->add_rz_p(target_qbit);
+    }
+    
+    return Py_BuildValue("i", 0);
+
+}
+
+
 /**
 @brief Wrapper function to add a CNOT gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Gates_Block_Wrapper.
@@ -951,6 +984,9 @@ static PyMethodDef qgd_Gates_Block_Wrapper_Methods[] = {
     },
     {"add_RZ", (PyCFunction) qgd_Gates_Block_Wrapper_add_RZ, METH_VARARGS | METH_KEYWORDS,
      "Call to add a RZ gate to the front of the gate structure"
+    },
+    {"add_RZ_P", (PyCFunction) qgd_Gates_Block_Wrapper_add_RZ_P, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a RZ gate to the front of the gate structure. The matrix of the gate is [1,0;0,exp(i*varphi) ]."
     },
     {"add_CNOT", (PyCFunction) qgd_Gates_Block_Wrapper_add_CNOT, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CNOT gate to the front of the gate structure"

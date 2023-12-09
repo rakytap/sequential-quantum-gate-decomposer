@@ -135,7 +135,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                 # RY gate
                 circuit.ry(gate.get("Theta"), gate.get("target_qbit"))
 
-            elif gate.get("type") == "RZ":
+            elif gate.get("type") == "RZ" or gate.get("type") == "RZ_P":
                 # RZ gate
                 circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
 
@@ -389,5 +389,15 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
             raise Exception("Input parameter Gate_structure should be a an instance of Gates_Block")
                
                           
-        super(qgd_N_Qubit_Decomposition_custom, self).set_Gate_Structure( Gate_structure )          
+        super(qgd_N_Qubit_Decomposition_custom, self).set_Gate_Structure( Gate_structure )   
+
+
+
+## 
+# @brief Call to set the optimizer used in the gate synthesis process
+# @param costfnc Variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2
+    def set_Cost_Function_Variant( self, costfnc=0 ):
+
+        # Set the optimizer
+        super(qgd_N_Qubit_Decomposition_custom, self).set_Cost_Function_Variant(costfnc=costfnc)         
 

@@ -430,6 +430,13 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
                 Gate* op_cloned = static_cast<Gate*>( rz_op_cloned );
                 add_gate( op_cloned );
             }
+            else if (op->get_type() == RZ_P_OPERATION) {
+                RZ_P* rz_op = static_cast<RZ_P*>( op );
+                RZ_P* rz_op_cloned = rz_op->clone();
+                rz_op_cloned->set_qbit_num( qbit_num );
+                Gate* op_cloned = static_cast<Gate*>( rz_op_cloned );
+                add_gate( op_cloned );
+            }
             else if (op->get_type() == X_OPERATION) {
                 X* x_op = static_cast<X*>( op );
                 X* x_op_cloned = x_op->clone();
