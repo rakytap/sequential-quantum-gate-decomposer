@@ -107,6 +107,13 @@ void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lam
 */
 RZ* clone();
 
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param PhiOver2 Real parameter standing for the parameter phi/2.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+Matrix calc_one_qubit_u3(double PhiOver2 );
+
 
 };
 

@@ -151,16 +151,7 @@ RZ::apply_to( Matrix_real& parameters, Matrix& input ) {
 
     // get the U3 gate of one qubit
     //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
-    Matrix u3_1qbit(2, 2);
-    double cos_phi = cos(Phi_over_2);
-    double sin_phi = sin(Phi_over_2);
-    
-    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
-    u3_1qbit[0].real = cos_phi;
-    u3_1qbit[0].imag = -sin_phi;    
-
-    u3_1qbit[3].real = cos_phi;
-    u3_1qbit[3].imag = sin_phi;    
+    Matrix u3_1qbit = calc_one_qubit_u3( Phi_over_2 );
 
 
 
@@ -191,16 +182,7 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
     // get the U3 gate of one qubit
     //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
-    Matrix u3_1qbit(2, 2);
-    double cos_phi = cos(Phi_over_2);
-    double sin_phi = sin(Phi_over_2);
-    
-    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
-    u3_1qbit[0].real = cos_phi;
-    u3_1qbit[0].imag = -sin_phi;    
-
-    u3_1qbit[3].real = cos_phi;
-    u3_1qbit[3].imag = sin_phi; 
+    Matrix u3_1qbit = calc_one_qubit_u3( Phi_over_2 );
 
 
     apply_kernel_from_right(u3_1qbit, input);
@@ -228,16 +210,7 @@ RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     // get the U3 gate of one qubit
     //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
-    Matrix u3_1qbit(2, 2);
-    double cos_phi = cos(Phi_over_2);
-    double sin_phi = sin(Phi_over_2);
-    
-    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
-    u3_1qbit[0].real = cos_phi;
-    u3_1qbit[0].imag = -sin_phi;    
-
-    u3_1qbit[3].real = cos_phi;
-    u3_1qbit[3].imag = sin_phi; 
+    Matrix u3_1qbit = calc_one_qubit_u3( Phi_over_2 );
 
     Matrix&& res_mtx = input.copy();
     apply_kernel_to( u3_1qbit, res_mtx );
@@ -307,6 +280,32 @@ RZ* RZ::clone() {
 
 
     return ret;
+
+}
+
+
+
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param PhiOver2 Real parameter standing for the parameter phi/2.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+Matrix RZ::calc_one_qubit_u3(double PhiOver2 ) {
+
+
+    Matrix u3_1qbit(2, 2);
+    double cos_phi = cos(PhiOver2);
+    double sin_phi = sin(PhiOver2);
+    
+    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
+    u3_1qbit[0].real = cos_phi;
+    u3_1qbit[0].imag = -sin_phi;    
+
+    u3_1qbit[3].real = cos_phi;
+    u3_1qbit[3].imag = sin_phi; 
+
+
+    return u3_1qbit;
 
 }
 

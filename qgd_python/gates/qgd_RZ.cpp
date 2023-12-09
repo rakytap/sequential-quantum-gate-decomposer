@@ -236,18 +236,16 @@ qgd_RZ_apply_to( qgd_RZ *self, PyObject *args ) {
 static PyObject *
 qgd_RZ_get_Gate_Kernel( qgd_RZ *self, PyObject *args ) {
 
-    double ThetaOver2;
-    double Phi; 
-    double Lambda; 
+    double PhiOver2; 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|ddd", &ThetaOver2, &Phi, &Lambda )) 
+    if (!PyArg_ParseTuple(args, "|d", &PhiOver2 )) 
         return Py_BuildValue("i", -1);
 
 
     // create QGD version of the input matrix
 
-    Matrix RZ_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix RZ_1qbit_ = self->gate->calc_one_qubit_u3(PhiOver2 );
     
     PyObject *RZ_1qbit = matrix_to_numpy( RZ_1qbit_ );
 

@@ -40,10 +40,10 @@ limitations under the License.
 #include "Composite.h"
 #include "Gates_block.h"
 
+#include "custom_kernel_1qubit_gate.h"
+
 
 #include "apply_large_kernel_to_input.h"
-#include "apply_kernel_to_state_vector_input.h"
-#include "apply_kernel_to_input_AVX.h"
 
 //static tbb::spin_mutex my_mutex;
 /**
@@ -275,98 +275,85 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
                 Matrix_real parameters_mtx_loc(parameters, 1, gates_block_mini.get_parameter_num());
                 gates_block_mini.apply_to(parameters_mtx_loc, Umtx_mini);
 
-                if ( input.cols == 1 && qbit_num<10 ) {
-                    apply_kernel_to_state_vector_input_AVX(Umtx_mini, input, false, involved_qubits[0], -1, matrix_size);
-                }
-                else if ( input.cols == 1 ) {
-                    apply_kernel_to_state_vector_input_parallel_AVX(Umtx_mini, input, false, involved_qubits[0], -1, matrix_size);
-                }
-                else if ( qbit_num < 4 ) {
-                    apply_kernel_to_input_AVX_small(Umtx_mini, input, false, involved_qubits[0], -1, matrix_size);
-                }
-                else if ( qbit_num < 10) {
-                    apply_kernel_to_input_AVX(Umtx_mini, input, false, involved_qubits[0], -1, matrix_size);
-                }
-                else {
-                    apply_kernel_to_input_AVX_parallel(Umtx_mini, input, false, involved_qubits[0], -1, matrix_size);
-                }
 
+                custom_kernel_1qubit_gate merged_gate( qbit_num, involved_qubits[0], Umtx_mini );
+                merged_gate.apply_to( input );
     }
     else {
+        // No gate fusion
+        for( int idx=gates.size()-1; idx>=0; idx--) {
 
-    for( int idx=gates.size()-1; idx>=0; idx--) {
+            Gate* operation = gates[idx];
+            parameters = parameters - operation->get_parameter_num();
+            Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
 
-        Gate* operation = gates[idx];
-        parameters = parameters - operation->get_parameter_num();
-        Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
-
-        switch (operation->get_type()) {
-        case CNOT_OPERATION: case CZ_OPERATION:
-        case CH_OPERATION: case SYC_OPERATION:
-        case X_OPERATION: case Y_OPERATION:
-        case Z_OPERATION: case SX_OPERATION:
-        case GENERAL_OPERATION:
-            operation->apply_to(input);
-            break;
-        case U3_OPERATION: {
-            U3* u3_operation = static_cast<U3*>(operation);
-            u3_operation->apply_to( parameters_mtx, input );
-            break;    
-        }
-        case RX_OPERATION: {
-            RX* rx_operation = static_cast<RX*>(operation);
-            rx_operation->apply_to( parameters_mtx, input );
-            break; 
-        }
-        case RY_OPERATION: {
-            RY* ry_operation = static_cast<RY*>(operation);
-            ry_operation->apply_to( parameters_mtx, input );
-            break; 
-        }
-        case CRY_OPERATION: {
-            CRY* cry_operation = static_cast<CRY*>(operation);
-            cry_operation->apply_to( parameters_mtx, input ); 
-            break;
-        }
-        case RZ_OPERATION: {
-            RZ* rz_operation = static_cast<RZ*>(operation);
-            rz_operation->apply_to( parameters_mtx, input ); 
-            break;
-        }  
-        case RZ_P_OPERATION: {
-            RZ_P* rz_p_operation = static_cast<RZ_P*>(operation);
-            rz_p_operation->apply_to( parameters_mtx, input ); 
-            break;
-        }        
-        case UN_OPERATION: {
-            UN* un_operation = static_cast<UN*>(operation);
-            un_operation->apply_to(parameters_mtx, input);
-            break;
-        }
-        case ON_OPERATION: {
-            ON* on_operation = static_cast<ON*>(operation);
-            on_operation->apply_to(parameters_mtx, input);
-            break;
-        }
-        case BLOCK_OPERATION: {
-            Gates_block* block_operation = static_cast<Gates_block*>(operation);
-            block_operation->apply_to(parameters_mtx, input);
-            break;
-        }
-        case COMPOSITE_OPERATION: {
-            Composite* com_operation = static_cast<Composite*>(operation);
-            com_operation->apply_to(parameters_mtx, input);
-            break;
-        }
-        case ADAPTIVE_OPERATION: {
-            Adaptive* ad_operation = static_cast<Adaptive*>(operation);
-            ad_operation->apply_to( parameters_mtx, input );
-            break; 
-        }
-        default:
-            std::string err("Gates_block::apply_to: unimplemented gate"); 
-            throw err;
-        }
+            switch (operation->get_type()) {
+            case CNOT_OPERATION: case CZ_OPERATION:
+            case CH_OPERATION: case SYC_OPERATION:
+            case X_OPERATION: case Y_OPERATION:
+            case Z_OPERATION: case SX_OPERATION:
+            case GENERAL_OPERATION:
+                operation->apply_to(input);
+                break;
+            case U3_OPERATION: {
+                U3* u3_operation = static_cast<U3*>(operation);
+                u3_operation->apply_to( parameters_mtx, input );
+                break;    
+            }
+            case RX_OPERATION: {
+                RX* rx_operation = static_cast<RX*>(operation);
+                rx_operation->apply_to( parameters_mtx, input );
+                break; 
+            }
+            case RY_OPERATION: {
+                RY* ry_operation = static_cast<RY*>(operation);
+                ry_operation->apply_to( parameters_mtx, input );
+                break; 
+            }
+            case CRY_OPERATION: {
+                CRY* cry_operation = static_cast<CRY*>(operation);
+                cry_operation->apply_to( parameters_mtx, input ); 
+                break;
+            }
+            case RZ_OPERATION: {
+                RZ* rz_operation = static_cast<RZ*>(operation);
+                rz_operation->apply_to( parameters_mtx, input ); 
+                break;
+            }  
+            case RZ_P_OPERATION: {
+                RZ_P* rz_p_operation = static_cast<RZ_P*>(operation);
+                rz_p_operation->apply_to( parameters_mtx, input ); 
+                break;
+            }        
+            case UN_OPERATION: {
+                UN* un_operation = static_cast<UN*>(operation);
+                un_operation->apply_to(parameters_mtx, input);
+                break;
+            }
+            case ON_OPERATION: {
+                ON* on_operation = static_cast<ON*>(operation);
+                on_operation->apply_to(parameters_mtx, input);
+                break;
+            }
+            case BLOCK_OPERATION: {
+                Gates_block* block_operation = static_cast<Gates_block*>(operation);
+                block_operation->apply_to(parameters_mtx, input);
+                break;
+            }
+            case COMPOSITE_OPERATION: {
+                Composite* com_operation = static_cast<Composite*>(operation);
+                com_operation->apply_to(parameters_mtx, input);
+                break;
+            }    
+            case ADAPTIVE_OPERATION: {
+                Adaptive* ad_operation = static_cast<Adaptive*>(operation);
+                ad_operation->apply_to( parameters_mtx, input );
+                break; 
+            }
+            default:
+                std::string err("Gates_block::apply_to: unimplemented gate"); 
+                throw err;
+            }
 
 #ifdef DEBUG
         if (input.isnan()) {
@@ -377,7 +364,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
 #endif
 
 
-    }
+       }
 
    }
 
