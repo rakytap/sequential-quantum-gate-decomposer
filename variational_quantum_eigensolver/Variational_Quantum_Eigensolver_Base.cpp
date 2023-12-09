@@ -170,7 +170,7 @@ void Variational_Quantum_Eigensolver_Base::start_optimization(){
 
 
     // prepare to export the quantum circuit (QISKIT, Cirq formats are supported)
-    prepare_gates_to_export();
+    //prepare_gates_to_export();
 
 
     return;

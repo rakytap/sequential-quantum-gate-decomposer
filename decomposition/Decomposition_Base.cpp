@@ -1382,7 +1382,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
             RZ* rz_gate = static_cast<RZ*>(gate);
 
-            varphi_over_2 = std::fmod( parameters[parameter_idx], 2*M_PI);
+            varphi_over_2 = std::fmod( 2*parameters[parameter_idx], 2*M_PI);
             parameter_idx = parameter_idx + 1;
 
 

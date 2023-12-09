@@ -116,9 +116,8 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     number_of_iters = 0;
  
 
-
+    // variables to calculate the cost function with first and second corrections    
     prev_cost_fnv_val = 1.0;
-    //
     correction1_scale = 1/1.7;
     correction2_scale = 1/2.0;  
 
@@ -177,9 +176,10 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 
     // The chosen variant of the cost function
     cost_fnc = FROBENIUS_NORM;
-    
+
+
+    // variables to calculate the cost function with first and second corrections    
     prev_cost_fnv_val = 1.0;
-    //
     correction1_scale = 1/1.7;
     correction2_scale = 1/2.0; 
 

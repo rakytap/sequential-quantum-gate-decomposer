@@ -260,11 +260,11 @@ RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 @param Phi Real parameter standing for the parameter phi.
 @param Lambda Real parameter standing for the parameter lambda.
 */
-void RZ::set_optimized_parameters(double Phi ) {
+void RZ::set_optimized_parameters(double PhiOver2 ) {
 
     parameters = Matrix_real(1, parameter_num);
 
-    parameters[0] = Phi;
+    parameters[0] = PhiOver2;
 
 }
 

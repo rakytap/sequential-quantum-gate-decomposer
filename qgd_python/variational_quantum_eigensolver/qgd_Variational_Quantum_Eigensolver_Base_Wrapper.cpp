@@ -1115,6 +1115,8 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Parameter_Num( qgd_Variatio
 static PyObject *
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self ) {
 
+    // convert the inner gate structure in the VQE optimization for qiskit exportú
+    self->vqe->prepare_gates_to_export();
 
     // get the number of gates
     int op_num = self->vqe->get_gate_num();
@@ -1140,6 +1142,16 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates( qgd_Variational_Quan
 
 }
 
+
+
+
+
+
+
+
+/**
+@brief ????????????,
+*/
 static PyObject *
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Project_Name( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
     // initiate variables for input arguments
