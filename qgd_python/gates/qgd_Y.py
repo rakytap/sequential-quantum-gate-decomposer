@@ -52,9 +52,8 @@ class qgd_Y(qgd_Y_Wrapper):
         # call the constructor of the wrapper class
         super(qgd_python.gate.qgd_Y_Wrapper, self).__init__()
 
-#@brief Call to add a U3 gate to the front of the gate structure.
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
-#@param Input arguments: target_qbit (int), Theta (bool), Phi (bool), Lambda (bool).
+#@brief  Call to retrieve the gate matrix
+#@param self A pointer pointing to an instance of the class qgd_Y. 
 
     def get_Matrix( self ):
 
