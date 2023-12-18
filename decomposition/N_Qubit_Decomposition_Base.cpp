@@ -114,6 +114,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     cost_fnc = FROBENIUS_NORM;
     
     number_of_iters = 0;
+    
+    // mutual exclusion to support counters in parallel regions
+    counter_mutex = new tbb::spin_mutex();    
  
 
     // variables to calculate the cost function with first and second corrections    
@@ -156,6 +159,9 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
     global_target_minimum = 0;
     
     number_of_iters = 0;
+    
+    // mutual exclusion to support counters in parallel regions
+    counter_mutex = new tbb::spin_mutex();        
 
     // number of iteratrion loops in the optimization
     iteration_loops[2] = 3;
@@ -215,7 +221,13 @@ N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
     if ( qbit_num >= 2 && get_accelerator_num() > 0 ) {
         unload_dfe_lib();//releive_DFE();
     }
-#endif      
+#endif
+
+
+    if ( counter_mutex != nullptr ) {
+        delete counter_mutex;
+        counter_mutex = nullptr;
+    }
 
 
 }
@@ -254,7 +266,7 @@ void N_Qubit_Decomposition_Base::export_current_cost_fnc(double current_minimum)
 
     double renyi_entropy = get_second_Renyi_entropy(optimized_parameters_mtx,input_state,qbit_sublist);
 
-    fprintf(pFile,"%i\t%f\t%f\n",number_of_iters,current_minimum,renyi_entropy);
+    fprintf(pFile,"%i\t%f\t%f\n", (int)number_of_iters, current_minimum, renyi_entropy);
     fclose(pFile);
 
     return;
@@ -2195,8 +2207,6 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
 
         for ( long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++ ) {
 
-            number_of_iters++;
-
 
             optimization_problem_combined( solution_guess_tmp, &f0, grad_mtx );
 
@@ -2585,7 +2595,7 @@ bfgs_time = 0.0;
 
                 sub_iter_idx++;
                 iter_idx++;
-                number_of_iters++;
+                
 
         
 
@@ -2820,14 +2830,15 @@ void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, Matri
 
 
 /**
-// @brief The optimization problem of the final optimization
-// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-// @return Returns with the cost function. (zero if the qubits are desintangled.)
+@brief The cost function of the optimization
+@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+@return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
 
     // get the transformed matrix with the gates in the list
     Matrix_real parameters_mtx(parameters, 1, parameter_num );
+      
     
     return optimization_problem( parameters_mtx );
 
@@ -2836,9 +2847,9 @@ double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
 
 
 /**
-// @brief The optimization problem of the final optimization
-// @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-// @return Returns with the cost function. (zero if the qubits are desintangled.)
+@brief The cost function of the optimization
+@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
+@return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters ) {
 
@@ -2850,7 +2861,12 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
         exit(-1);
     }
 
-
+    {
+        tbb::spin_mutex::scoped_lock my_lock{*counter_mutex};    
+        number_of_iters++;    
+    } 
+    
+    
     Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
 //matrix_new.print_matrix();
 
@@ -2890,14 +2906,15 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
 
 
 /**
-@brief The optimization problem of the final optimization with batched input (implemented only for the Frobenius norm cost function)
+@brief The cost function of the optimization with batched input (implemented only for the Frobenius norm cost function)
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 Matrix_real 
 N_Qubit_Decomposition_Base::optimization_problem_batched( std::vector<Matrix_real>& parameters_vec) {
 
-tbb::tick_count t0_DFE = tbb::tick_count::now();        
+tbb::tick_count t0_DFE = tbb::tick_count::now();    
+
 
 
         Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
@@ -2909,6 +2926,14 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
             
         Matrix_real trace_DFE_mtx(gateSetNum, 3);
         
+        
+
+        {
+            tbb::spin_mutex::scoped_lock my_lock{*counter_mutex};    
+            number_of_iters = number_of_iters + parameters_vec.size();    
+        }     
+        
+        
    
 #ifdef __MPI__
         // the number of decomposing layers are divided between the MPI processes
@@ -2917,6 +2942,13 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
         int mpi_starting_gateSetIdx = gateSetNum/world_size * current_rank;
 
         Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
+        
+
+        {
+            tbb::spin_mutex::scoped_lock my_lock{*counter_mutex};    
+            number_of_iters = number_of_iters + mpi_gateSetNum;    
+        }     
+        
 
         lock_lib();
         calcqgdKernelDFE( Umtx.rows, Umtx.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset, mpi_trace_DFE_mtx.get_data() );
@@ -3018,7 +3050,7 @@ circuit_simulation_time += (tbb::tick_count::now() - t0_DFE).seconds();
 
 
 /**
-// @brief The optimization problem of the final optimization
+@brief The static cost function of the optimization
 @param parameters Array containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @param ret_temp A matrix to store trace in for gradient for HS test 
@@ -3028,6 +3060,11 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters,
 
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
+    
+    {
+        tbb::spin_mutex::scoped_lock my_lock{*(instance->counter_mutex)};    
+        instance->number_of_iters++;    
+    }     
 
     // get the transformed matrix with the gates in the list
     Matrix Umtx_loc = instance->get_Umtx();
@@ -3086,7 +3123,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters,
 
 
 /**
-// @brief The optimization problem of the final optimization
+@brief The cost function of the optimization
 @param parameters Array containing the parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
@@ -3099,6 +3136,15 @@ double N_Qubit_Decomposition_Base::optimization_problem_non_static( Matrix_real 
     return cost_func;
 }
 
+
+
+
+/**
+@brief The cost function of the optimization
+@param parameters Array containing the parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@return Returns with the cost function. (zero if the qubits are desintangled.)
+*/
 double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters, void* void_instance){
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
     return instance->optimization_problem_non_static(parameters, void_instance);
@@ -3111,7 +3157,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters,
 
 
 /**
-@brief Calculate the approximate derivative (f-f0)/(x-x0) of the cost function with respect to the free parameters.
+@brief Calculate the derivative of the cost function with respect to the free parameters.
 @param parameters Array containing the free parameters to be optimized.
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad Array containing the calculated gradient components.
@@ -3176,6 +3222,11 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
     int mpi_starting_gateSetIdx = gateSetNum/instance->world_size * instance->current_rank;
 
     Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
+    
+    {
+        tbb::spin_mutex::scoped_lock my_lock{*(instance->counter_mutex)};    
+        instance->number_of_iters = instance->number_of_iters + mpi_gateSetNum;    
+    }    
 
     lock_lib();
     calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset_loc, mpi_trace_DFE_mtx.get_data() );
@@ -3185,6 +3236,11 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
     MPI_Allgather(mpi_trace_DFE_mtx.get_data(), bytes, MPI_BYTE, trace_DFE_mtx.get_data(), bytes, MPI_BYTE, MPI_COMM_WORLD);
 
 #else
+
+    {
+        tbb::spin_mutex::scoped_lock my_lock{*(instance->counter_mutex)};    
+        instance->number_of_iters = instance->number_of_iters + gateSetNum;    
+    }
 
     lock_lib();
     calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_offset_loc, trace_DFE_mtx.get_data() );
@@ -3256,6 +3312,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     // vector containing gradients of the transformed matrix
     std::vector<Matrix> Umtx_deriv;
     Matrix trace_tmp(1,3);
+    
+   
 
     tbb::parallel_invoke(
         [&]{
@@ -3264,9 +3322,15 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
         [&]{
             Matrix&& Umtx_loc = instance->get_Umtx();   
             Umtx_deriv = instance->apply_derivate_to( parameters, Umtx_loc );
-        });
+        }
+    );
 
 
+
+    {
+        tbb::spin_mutex::scoped_lock my_lock{*(instance->counter_mutex)};    
+        instance->number_of_iters = instance->number_of_iters + parameter_num_loc;    
+    } 
 
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
@@ -3325,6 +3389,15 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
 }
 
+
+
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters Array containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param f0 The value of the cost function at x0.
+@param grad Array containing the calculated gradient components.
+*/
 void N_Qubit_Decomposition_Base::optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ){
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
     instance->optimization_problem_combined_non_static(parameters, void_instance, f0, grad );
