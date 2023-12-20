@@ -1640,8 +1640,8 @@ void Decomposition_Base::apply_global_phase_factor(){
 
 
 /**
-@brief ???????????
-@param ???????????
+@brief Call to export the unitary (with possible phase shift) into a binary file
+@param filename The path to the file where the unitary is expored
 */
 void Decomposition_Base::export_unitary(std::string& filename){
 	FILE* pFile;
@@ -1666,8 +1666,8 @@ void Decomposition_Base::export_unitary(std::string& filename){
 
 
 /**
-@brief ???????????
-@param ???????????
+@brief Call to import the unitary (with possible phase shift) into a binary file
+@param filename The path to the file from which the unitary is imported.
 */
 Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
 	FILE* pFile;

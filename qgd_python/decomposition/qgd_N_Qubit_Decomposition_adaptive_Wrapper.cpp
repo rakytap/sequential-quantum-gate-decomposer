@@ -1929,29 +1929,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure(
 
 
 
-/**
-@brief Wrapper function to set the radius in which randomized parameters are generated around the current minimum duting the optimization process
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
-@return Returns with zero on success.
-*/
-static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
-
-    // initiate variables for input arguments
-    double radius = 1.0; 
-
-    // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|d", &radius )) return Py_BuildValue("i", -1);
-
-
-    self->decomp->set_randomized_radius( radius );
-    
-
-    return Py_BuildValue("i", 0);
-
-
-}
-
-
 
 
 /**
@@ -2138,49 +2115,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Cost_Function_Variant( qgd_N_Qubi
 
 
 
-/**
-@brief Wrapper function to set the threshold value for the count of interations, above which the parameters are randomized if the cost function does not decreases fast enough.
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
-@return Returns with zero on success.
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Iteration_Threshold_of_Randomization( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args, PyObject *kwds)
-{
-
-    // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"threshold", NULL};
-
-    unsigned long long threshold_arg = 0;
-
-
-    // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|K", kwlist, &threshold_arg)) {
-
-        std::string err( "Unsuccessful argument parsing");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;       
- 
-    }
-   
-
-    try {
-        self->decomp->set_iteration_threshold_of_randomization(threshold_arg);
-    }
-    catch (std::string err) {
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        std::cout << err << std::endl;
-        return NULL;
-    }
-    catch(...) {
-        std::string err( "Invalid pointer to decomposition class");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;
-    }
-
-
-    return Py_BuildValue("i", 0);
-
-}
 
 
 
@@ -2562,9 +2496,6 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     {"apply_Imported_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Imported_Gate_Structure, METH_NOARGS,
      "Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released."
     },
-    {"set_Randomized_Radius", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius, METH_VARARGS,
-     "Call to set the radius in which randomized parameters are generated around the current minimum duting the optimization process."
-    },
     {"set_Optimizer", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimizer, METH_VARARGS | METH_KEYWORDS,
      "Wrapper method to to set the optimizer method for the gate synthesis."
     },
@@ -2576,9 +2507,6 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Cost_Function_Variant", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Cost_Function_Variant, METH_VARARGS | METH_KEYWORDS,
      "Wrapper method to to set the variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for HILBERT_SCHMIDT_TEST, 4 for HILBERT_SCHMIDT_TEST_CORRECTION1, 5 for HILBERT_SCHMIDT_TEST_CORRECTION2."
-    },
-    {"set_Iteration_Threshold_of_Randomization", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Iteration_Threshold_of_Randomization, METH_VARARGS | METH_KEYWORDS,
-     "Wrapper function to set the threshold value for the count of interations, above which the parameters are randomized if the cost function does not decreases fast enough."
     },
     {"Optimization_Problem", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem, METH_VARARGS,
      "Wrapper function to evaluate the cost function."

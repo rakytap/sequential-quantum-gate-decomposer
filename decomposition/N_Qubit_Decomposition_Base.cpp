@@ -16,9 +16,8 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file N_Qubit_Decomposition.cpp
-    \brief Base class to determine the decomposition of a unitary into a sequence of two-qubit and one-qubit gate gates.
-    This class contains the non-template implementation of the decomposition class
+/*! \file N_Qubit_Decomposition_Base.cpp
+    \brief Class implementing optimization engines
 */
 
 #include "N_Qubit_Decomposition_Base.h"
@@ -149,7 +148,6 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
     correction1_scale = 1/1.7;
     correction2_scale = 1/2.0; 
 
-    iteration_threshold_of_randomization = 2500000;
 
     // set the trace offset
     trace_offset = 0;
@@ -1870,7 +1868,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( 
             config["randomization_threshold"].get_property( iteration_threshold_of_randomization_loc );  
         }
         else {
-            iteration_threshold_of_randomization_loc = iteration_threshold_of_randomization;
+            iteration_threshold_of_randomization_loc = 2500000;
         }
 
         
@@ -1896,6 +1894,22 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( 
         }
         else {
             optimization_tolerance_loc = optimization_tolerance;
+        }
+
+
+        bool adaptive_eta_loc;
+        if ( config.count("adaptive_eta_adam_batched") > 0 ) {
+             long long tmp;
+             config["max_inner_iterations_adam_batched"].get_property( tmp );  
+             adaptive_eta_loc = (bool)tmp;
+        }
+        if ( config.count("adaptive_eta") > 0 ) {
+             long long tmp;
+             config["max_inner_iterations"].get_property( tmp );  
+             adaptive_eta_loc = (bool)tmp;
+        }
+        else {
+            adaptive_eta_loc = adaptive_eta;
         }
 
         double f0 = DBL_MAX;
@@ -1940,7 +1954,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( 
                 if (sub_iter_idx == 1 ) {
                     current_minimum_hold = f0;   
                
-                    if ( adaptive_eta )  { 
+                    if ( adaptive_eta_loc )  { 
                         optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3; 
                         //std::cout << "reset learning rate to " << optimizer.eta << std::endl;
                     }                 
@@ -1959,7 +1973,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( 
                     memcpy( optimized_parameters_mtx.get_data(),  solution_guess.get_data(), num_of_parameters*sizeof(double) );
                     //double new_eta = 1e-3 * f0 * f0;
                 
-                    if ( adaptive_eta )  {
+                    if ( adaptive_eta_loc )  {
                         double new_eta = 1e-3 * f0;
                         optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;
                         optimizer.eta = new_eta < 1e-1 ? new_eta : 1e-1;
@@ -2158,10 +2172,26 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
         }       
  
 
+        bool adaptive_eta_loc;
+        if ( config.count("adaptive_eta_adam_batched") > 0 ) {
+             long long tmp;
+             config["max_inner_iterations_adam_batched"].get_property( tmp );  
+             adaptive_eta_loc = (bool)tmp;
+        }
+        if ( config.count("adaptive_eta") > 0 ) {
+             long long tmp;
+             config["max_inner_iterations"].get_property( tmp );  
+             adaptive_eta_loc = (bool)tmp;
+        }
+        else {
+            adaptive_eta_loc = adaptive_eta;
+        }
+
+
 
         double f0 = DBL_MAX;
         std::stringstream sstream;
-        sstream << "max_inner_iterations: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization_loc << ", randomization radius: " << radius << std::endl;
+        sstream << "max_inner_iterations: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization_loc  << std::endl;
         print(sstream, 2); 
         
 
@@ -2175,7 +2205,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
             if (sub_iter_idx == 1 ) {
                 current_minimum_hold = f0;   
                
-                if ( adaptive_eta )  { 
+                if ( adaptive_eta_loc )  { 
                     optimizer.eta = optimizer.eta > 1e-3 ? optimizer.eta : 1e-3; 
                     //std::cout << "reset learning rate to " << optimizer.eta << std::endl;
                 }                 
@@ -2193,7 +2223,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp.get_data(), num_of_parameters*sizeof(double) );
                 //double new_eta = 1e-3 * f0 * f0;
                 
-                if ( adaptive_eta )  {
+                if ( adaptive_eta_loc )  {
                     double new_eta = 1e-3 * f0;
                     optimizer.eta = new_eta > 1e-6 ? new_eta : 1e-6;
                     optimizer.eta = new_eta < 1e-1 ? new_eta : 1e-1;
@@ -2493,19 +2523,20 @@ bfgs_time = 0.0;
         }    
         
 
-        long long iteration_threshold_of_randomization_loc;
-        if ( config.count("randomization_threshold_bfgs2") > 0 ) {
-            config["randomization_threshold_bfgs2"].get_property( iteration_threshold_of_randomization_loc );  
+
+        double optimization_tolerance_loc;
+        if ( config.count("optimization_tolerance_adam") > 0 ) {
+             config["optimization_tolerance_adam"].get_property( optimization_tolerance_loc );  
         }
-        else if ( config.count("randomization_threshold") > 0 ) {
-            config["randomization_threshold"].get_property( iteration_threshold_of_randomization_loc );  
+        else if ( config.count("optimization_tolerance") > 0 ) {
+             config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
         }
         else {
-            iteration_threshold_of_randomization_loc = iteration_threshold_of_randomization;
-        }
+            optimization_tolerance_loc = optimization_tolerance;
+        }       
 
         std::stringstream sstream;
-        sstream << "max_inner_iterations: " << max_inner_iterations_loc << ", randomization threshold: " << iteration_threshold_of_randomization_loc << std::endl;
+        sstream << "max_inner_iterations: " << max_inner_iterations_loc  << std::endl;
         print(sstream, 2); 
 
         // do the optimization loops
@@ -2548,7 +2579,7 @@ bfgs_time = 0.0;
                 }
 
 
-                if (f < optimization_tolerance || random_shift_count > random_shift_count_max ) {
+                if (f < optimization_tolerance_loc || random_shift_count > random_shift_count_max ) {
                     break;
                 }
 
@@ -2578,7 +2609,7 @@ bfgs_time = 0.0;
 #endif
             
             
-            if (current_minimum < optimization_tolerance ) {
+            if (current_minimum < optimization_tolerance_loc ) {
                 break;
             }
 
@@ -3359,7 +3390,11 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( Matrix_real para
 
 
 /**
-@brief ?????????????
+@brief Call to calculate both the effect of the circuit on th eunitary and it's gradient componets.
+@param parameters Array containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param Umtx The unitary on which the circuit is applied in place.
+@param Umtx_deriv Array containing the calculated gradient components.
 */
 void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( Matrix_real parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv ) {
     // vector containing gradients of the transformed matrix
@@ -3378,7 +3413,10 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( Matrix_r
 
 
 /**
-@brief ?????????????
+@brief Call to calculate both the effect of the circuit on th eunitary and it's gradient componets.
+@param parameters Array containing the free parameters to be optimized.
+@param Umtx The unitary on which the circuit is applied in place.
+@param Umtx_deriv Array containing the calculated gradient components.
 */
 void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( Matrix_real parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv ) {
 
@@ -3418,7 +3456,8 @@ N_Qubit_Decomposition_Base::set_cost_function_variant( cost_function_type varian
 
 
 /**
-@brief ?????????????
+@brief Call to set the number of iterations for which an optimization engine tries to solve the optimization problem
+@param max_inner_iterations_in The number of iterations for which an optimization engine tries to solve the optimization problem 
 */
 void N_Qubit_Decomposition_Base::set_max_inner_iterations( int max_inner_iterations_in  ) {
 
@@ -3429,7 +3468,8 @@ void N_Qubit_Decomposition_Base::set_max_inner_iterations( int max_inner_iterati
 
 
 /**
-@brief ?????????????
+@brief Call to set the maximal number of parameter randomization tries to escape a local minimum.
+@param random_shift_count_max_in The number of maximal number of parameter randomization tries to escape a local minimum.
 */
 void N_Qubit_Decomposition_Base::set_random_shift_count_max( int random_shift_count_max_in  ) {
 
@@ -3439,7 +3479,8 @@ void N_Qubit_Decomposition_Base::set_random_shift_count_max( int random_shift_co
 
 
 /**
-@brief ?????????????
+@brief Call to set the optimizer engine to be used in solving the optimization problem.
+@param alg_in The chosen algorithm
 */
 void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in ) {
 
@@ -3449,20 +3490,17 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
         case ADAM:
             max_inner_iterations = 1e5; 
             random_shift_count_max = 100;
-            gradient_threshold = 1e-8;
             max_outer_iterations = 1;
             return;
 
         case ADAM_BATCHED:
             max_inner_iterations = 2.5e3;
             random_shift_count_max = 3;
-            gradient_threshold = 1e-8;
             max_outer_iterations = 1;
             return;
 
         case GRAD_DESCEND:
             max_inner_iterations = 10000;
-            gradient_threshold = 1e-8;
             random_shift_count_max = 1;  
             max_outer_iterations = 1e8; 
             return;
@@ -3470,27 +3508,23 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
         case COSINE:
             max_inner_iterations = 2.5e3;
             random_shift_count_max = 3;
-            gradient_threshold = 1e-8;
             max_outer_iterations = 1;
             return;
 
         case AGENTS:
             max_inner_iterations = 2.5e3;
             random_shift_count_max = 3;
-            gradient_threshold = 1e-8;
             max_outer_iterations = 1;
             return;
 
         case AGENTS_COMBINED:
             max_inner_iterations = 2.5e3;
             random_shift_count_max = 3;
-            gradient_threshold = 1e-8;
             max_outer_iterations = 1;
             return;
 
         case BFGS:
             max_inner_iterations = 10000;
-            gradient_threshold = 1e-8;
             random_shift_count_max = 1;  
             max_outer_iterations = 1e8; 
             return;
@@ -3498,20 +3532,17 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
         case BFGS2:
             max_inner_iterations = 1e5;
             random_shift_count_max = 100;
-            gradient_threshold = 1e-8;
             max_outer_iterations = 1;
             return;
         
         case BAYES_OPT:
             max_inner_iterations = 100;
             random_shift_count_max = 100;
-            gradient_threshold = 1e-8;
             max_outer_iterations = 1;
             return;
         case BAYES_AGENTS:
             max_inner_iterations = 100;
             random_shift_count_max = 100;
-            gradient_threshold = 1e-8;
             max_outer_iterations = 1;
             return;
 
@@ -3526,31 +3557,9 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
 
 
 
-/**
-@brief ?????????????
-*/
-void 
-N_Qubit_Decomposition_Base::set_adaptive_eta( bool adaptive_eta_in  ) {
-
-    adaptive_eta = adaptive_eta_in;
-
-}
-
-
 
 /**
-@brief ?????????????
-*/
-void 
-N_Qubit_Decomposition_Base::set_randomized_radius( double radius_in  ) {
-
-    radius = radius_in;
-
-}
-
-
-/**
-@brief ???????????
+@brief Call to retrieve the previous value of the cost funtion to be used to evaluate bitflip errors in the cost funtion (see Eq. (21) in arXiv:2210.09191)
 */
 double 
 N_Qubit_Decomposition_Base::get_previous_cost_function_value() {
@@ -3562,7 +3571,8 @@ N_Qubit_Decomposition_Base::get_previous_cost_function_value() {
 
 
 /**
-@brief ???????????
+@brief Call to get the pre factor of the single-bitflip errors in the cost function. (see Eq. (21) in arXiv:2210.09191)
+@return Returns with the prefactor of the single-bitflip errors in the cost function. 
 */
 double 
 N_Qubit_Decomposition_Base::get_correction1_scale() {
@@ -3572,23 +3582,10 @@ N_Qubit_Decomposition_Base::get_correction1_scale() {
 }
 
 
-/**
-@brief ??????????????
-@param ?????????
-*/
-void 
-N_Qubit_Decomposition_Base::get_correction1_scale( const double& scale ) {
-
-
-    correction1_scale = scale;
-
-}
-
-
-
 
 /**
-@brief ???????????
+@brief Call to get the pre factor of the two-bitflip errors in the cost function. (see Eq. (21) in arXiv:2210.09191)
+@return Returns with the prefactor of the two-bitflip errors in the cost function. 
 */
 double 
 N_Qubit_Decomposition_Base::get_correction2_scale() {
@@ -3598,43 +3595,10 @@ N_Qubit_Decomposition_Base::get_correction2_scale() {
 }
 
 
-/**
-@brief ??????????????
-@param ?????????
-*/
-void 
-N_Qubit_Decomposition_Base::get_correction2_scale( const double& scale ) {
-
-
-    correction2_scale = scale;
-
-}
 
 
 
 
-/**
-@brief ???????????
-*/
-long 
-N_Qubit_Decomposition_Base::get_iteration_threshold_of_randomization() {
-
-    return iteration_threshold_of_randomization;
-
-}
-
-
-/**
-@brief ??????????????
-@param ?????????
-*/
-void 
-N_Qubit_Decomposition_Base::set_iteration_threshold_of_randomization( const unsigned long long& threshold ) {
-
-
-    iteration_threshold_of_randomization = threshold;
-
-}
 /**
 @brief Get the number of iterations.
 */

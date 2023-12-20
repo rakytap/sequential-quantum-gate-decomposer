@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file N_Qubit_Decomposition.h
-    \brief Header file for a class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
+    \brief Header file for a class implementing optimization engines
 */
 
 #ifndef N_Qubit_Decomposition_Base_H
@@ -75,14 +75,10 @@ class N_Qubit_Decomposition_Base : public Decomposition_Base {
 
 public:
 
-    ///
+    /// the maximal number of iterations for which an optimization engine tries to solve the optimization problem
     int max_inner_iterations;
-    ///
-    int gradient_threshold;
-    /// 
+    /// the maximal number of parameter randomization tries to escape a local minimum.
     int random_shift_count_max;
-    ///    
-    double eta;
     /// unique id indentifying the instance of the class
     int id;
 protected:
@@ -93,15 +89,15 @@ protected:
 
     /// A map of <int n: int num> indicating that how many identical successive blocks should be used in the disentanglement of the nth qubit from the others
     std::map<int,int> identical_blocks;
-    ///
+    /// The optimization algorithm to be used in the optimization
     optimization_aglorithms alg;
     /// The chosen variant of the cost function
     cost_function_type cost_fnc;
-    ///
+    /// the previous value of the cost funtion to be used to evaluate bitflip errors in the cost funtion (see Eq. (21) in arXiv:2210.09191)
     double prev_cost_fnv_val;
-    ///
+    /// prefactor of the single-bitflip errors in the cost function. (see Eq. (21) in arXiv:2210.09191)
     double correction1_scale;
-    ///
+    /// prefactor of the double-bitflip errors in the cost function. (see Eq. (21) in arXiv:2210.09191)
     double correction2_scale;    
     
 
@@ -188,24 +184,24 @@ void solve_layer_optimization_problem( int num_of_parameters, Matrix_real soluti
 /**
 @brief Call to solve layer by layer the optimization problem via the COSINE algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess A matrix containing the solution guess.
 */
-void solve_layer_optimization_problem_COSINE( int num_of_parameters, Matrix_real& solution_guess_gsl);
+void solve_layer_optimization_problem_COSINE( int num_of_parameters, Matrix_real& solution_guess);
 
 /**
 @brief Call to solve layer by layer the optimization problem via the GRAD_DESCEND (line search in the direction determined by the gradient) algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess A matrix containing the solution guess.
 */
-void solve_layer_optimization_problem_GRAD_DESCEND( int num_of_parameters, Matrix_real& solution_guess_gsl);
+void solve_layer_optimization_problem_GRAD_DESCEND( int num_of_parameters, Matrix_real& solution_guess);
 
 
 /**
 @brief Call to solve layer by layer the optimization problem via the AGENT algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess A matrix containing the solution guess.
 */
-void solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real& solution_guess_gsl);
+void solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real& solution_guess);
 
 
 /**
@@ -218,46 +214,62 @@ void export_current_cost_fnc(double current_minimum);
 /**
 @brief Call to solve layer by layer the optimization problem via the AGENT COMBINED algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess A matrix containing the solution guess.
 */
-void solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, Matrix_real& solution_guess_gsl);
+void solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, Matrix_real& solution_guess);
 
 
 /**
 @brief Call to solve layer by layer the optimization problem via BBFG algorithm. (optimal for smaller problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess A matrix containing the solution guess.
 */
-void solve_layer_optimization_problem_BFGS( int num_of_parameters, Matrix_real& solution_guess_gsl);
+void solve_layer_optimization_problem_BFGS( int num_of_parameters, Matrix_real& solution_guess);
 
 
 /**
 @brief Call to solve layer by layer the optimization problem via BBFG algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess A matrix containing the solution guess.
 */
 void solve_layer_optimization_problem_BFGS2( int num_of_parameters, Matrix_real solution_guess);
 
+/**
+@brief Call to solve layer by layer the optimization problem via Bayes algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess A matrix containing the solution guess.
+*/
+void solve_layer_optimization_problem_BAYES_OPT( int num_of_parameters, Matrix_real& solution_guess);
 
-void solve_layer_optimization_problem_BAYES_OPT( int num_of_parameters, Matrix_real& solution_guess_gsl);
 
-void solve_layer_optimization_problem_BAYES_AGENTS( int num_of_parameters, Matrix_real& solution_guess_gsl);
+/**
+@brief Call to solve layer by layer the optimization problem via Bayes & Agents algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@param num_of_parameters Number of parameters to be optimized
+@param solution_guess A matrix containing the solution guess.
+*/
+void solve_layer_optimization_problem_BAYES_AGENTS( int num_of_parameters, Matrix_real& solution_guess);
+
+
+
 /**
 @brief Call to solve layer by layer the optimization problem via batched ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess A matrix containing the solution guess.
 */
-void solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, Matrix_real& solution_guess_gsl);
+void solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, Matrix_real& solution_guess_);
 
 /**
 @brief Call to solve layer by layer the optimization problem via ADAM algorithm. (optimal for larger problems) The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
-@param solution_guess_gsl A GNU Scientific Library vector containing the solution guess.
+@param solution_guess A matrix containing the solution guess.
 */
-void solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& solution_guess_gsl);
+void solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& solution_guess);
 
 /**
-@brief ?????????????
+@brief Call to randomize the parameter.
+@param input The parameters are randomized around the values stores in this array
+@param output The randomized parameters are stored within this array
+@param f0 weight in the randomiztaion (output = input + rand()*sqrt(f0) ).
 */
 void randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0 );
 
@@ -323,15 +335,6 @@ static void optimization_problem_grad( Matrix_real parameters, void* void_instan
 
 
 
-/**
-@brief Call to calculate both the cost function and the its gradient components.
-@param parameters A GNU Scientific Library vector containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param f0 The value of the cost function at x0.
-@param grad A GNU Scientific Library vector containing the calculated gradient components.
-*/
-//static void optimization_problem_combined( const gsl_vector* parameters, void* void_instance, double* f0, gsl_vector* grad );
-
 
 /**
 @brief Call to calculate both the cost function and the its gradient components.
@@ -363,9 +366,21 @@ virtual void optimization_problem_combined_non_static( Matrix_real parameters, v
 virtual void optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad );
 
 
-
+/**
+@brief Call to calculate both the effect of the circuit on th eunitary and it's gradient componets.
+@param parameters Array containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param Umtx The unitary on which the circuit is applied in place.
+@param Umtx_deriv Array containing the calculated gradient components.
+*/
 static void optimization_problem_combined_unitary( Matrix_real parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
+/**
+@brief Call to calculate both the effect of the circuit on th eunitary and it's gradient componets.
+@param parameters Array containing the free parameters to be optimized.
+@param Umtx The unitary on which the circuit is applied in place.
+@param Umtx_deriv Array containing the calculated gradient components.
+*/
 void optimization_problem_combined_unitary( Matrix_real parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv );
 
 
@@ -385,7 +400,7 @@ cost_function_type get_cost_function_variant();
 
 
 /**
-@brief ???????????
+@brief Call to retrieve the previous value of the cost funtion to be used to evaluate bitflip errors in the cost funtion (see Eq. (21) in arXiv:2210.09191)
 */
 double get_previous_cost_function_value();
 
@@ -398,74 +413,45 @@ void set_cost_function_variant( cost_function_type variant  );
 
 
 /**
-@brief ???????????
+@brief Call to get the prefactor of the single-bitflip errors in the cost function. (see Eq. (21) in arXiv:2210.09191)
+@return Returns with the prefactor of the single-bitflip errors in the cost function. 
 */
 double get_correction1_scale();
 
 
-/**
-@brief ??????????????
-@param ?????????
-*/
-void get_correction1_scale( const double& scale  );
 
 
 
 /**
-@brief ???????????
+@brief Call to get the prefactor of the two-bitflip errors in the cost function. (see Eq. (21) in arXiv:2210.09191)
+@return Returns with the prefactor of the two-bitflip errors in the cost function. 
 */
 double get_correction2_scale();
 
 
-/**
-@brief ??????????????
-@param ?????????
-*/
-void get_correction2_scale( const double& scale  );
 
-
-/**
-@brief ???????????
-*/
-long get_iteration_threshold_of_randomization();
-
-
-/**
-@brief ??????????????
-@param ?????????
-*/
-void set_iteration_threshold_of_randomization( const unsigned long long& threshold  );
 
 
 
 /**
-@brief ?????????????
+@brief Call to set the maximal number of iterations for which an optimization engine tries to solve the optimization problem
+@param max_inner_iterations_in The number of iterations for which an optimization engine tries to solve the optimization problem 
 */
 void set_max_inner_iterations( int max_inner_iterations_in  );
 
 
 /**
-@brief ?????????????
+@brief Call to set the maximal number of parameter randomization tries to escape a local minimum.
+@param random_shift_count_max_in The number of maximal number of parameter randomization tries to escape a local minimum.
 */
 void set_random_shift_count_max( int random_shift_count_max_in  );
 
 
 /**
-@brief ?????????????
+@brief Call to set the optimizer engine to be used in solving the optimization problem.
+@param alg_in The chosen algorithm
 */
 void set_optimizer( optimization_aglorithms alg_in );
-
-
-/**
-@brief ?????????????
-*/
-void set_adaptive_eta( bool adaptive_eta_in  );
-
-
-/**
-@brief ?????????????
-*/
-void set_randomized_radius( double radius_in  );
 
 
 /**
@@ -494,7 +480,7 @@ void set_custom_gate_structure( Gates_block* gate_structure_in );
 #ifdef __DFE__
 
 /**
-@brief ?????????????
+@brief Call to upload the unitary up to the DFE
 */
 void upload_Umtx_to_DFE();
 
