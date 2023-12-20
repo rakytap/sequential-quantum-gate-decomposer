@@ -107,9 +107,6 @@ protected:
 
     /// number of iterations
     int number_of_iters;
-    
-    /// mutual exclusion to support counters in parallel regions
-    tbb::spin_mutex* counter_mutex;
 
     /// logical variable indicating whether adaptive learning reate is used in the ADAM algorithm
     bool adaptive_eta;

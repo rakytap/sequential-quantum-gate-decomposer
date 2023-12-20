@@ -24,6 +24,48 @@ limitations under the License.
 #include "tbb/tbb.h"
 
 extern "C" int LAPACKE_dposv(int matrix_layout, char uplo, int n, int nrhs, double* A, int LDA, double* B, int LDB); 	
+
+
+/**
+@brief ???????????????
+@return ???????????
+*/
+double HS_partial_optimization_problem( Matrix_real parameters, void* void_params) {
+
+    double* params = (double*)void_params;
+
+    return params[0]*sin(2*parameters[0] + params[1]) + params[2]*sin(parameters[0] + params[3] ) + params[4];
+}
+
+
+/**
+@brief ???????????????
+@return ???????????
+*/
+void HS_partial_optimization_problem_grad( Matrix_real parameters, void* void_params, Matrix_real& grad) {
+
+
+    double* params = (double*)void_params;
+    grad[0] = 2*params[0]*cos(2*parameters[0] + params[1]) + params[2]*cos(parameters[0] + params[3] );
+
+}
+
+
+/**
+@brief ???????????????
+@return ???????????
+*/
+void HS_partial_optimization_problem_combined( Matrix_real parameters, void* void_params, double* f0, Matrix_real& grad) {
+
+    *f0 = HS_partial_optimization_problem( parameters, void_params );
+    HS_partial_optimization_problem_grad( parameters, void_params, grad);
+
+
+}
+
+
+
+
 /**
 @brief Constructor of the class.
 @param f_pointer A function pointer (x, meta_data, f, grad) to evaluate the cost function and its gradients. The cost function and the gradient vector are returned via reference by the two last arguments.

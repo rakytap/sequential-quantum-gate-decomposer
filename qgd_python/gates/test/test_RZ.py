@@ -63,7 +63,7 @@ class Test_operations_squander:
             circuit = QuantumCircuit(qbit_num)
 
             # Add the RX gate on qubit pi, pi,
-            circuit.rz(parameters[0], target_qbit)
+            circuit.rz(parameters[0]*2, target_qbit)
 
             # the unitary matrix from the result object
             RZ_qiskit = get_unitary_from_qiskit_circuit( circuit )
@@ -107,7 +107,7 @@ class Test_operations_squander:
             circuit = QuantumCircuit(qbit_num)
 
             # Add the RX gate on qubit pi, pi,
-            circuit.rz(parameters[0], target_qbit)
+            circuit.rz(parameters[0]*2, target_qbit)
 
             # the unitary matrix from the result object
             RZ_qiskit = get_unitary_from_qiskit_circuit( circuit )
@@ -137,6 +137,9 @@ class Test_operations_squander:
 
             #print("Apply_to: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 ) 
+
+
+
 
 
 

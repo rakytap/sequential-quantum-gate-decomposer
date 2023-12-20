@@ -50,42 +50,6 @@ extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, i
 
 
 
-/**
-@brief ???????????????
-@return ???????????
-*/
-double HS_partial_optimization_problem( Matrix_real parameters, void* void_params) {
-
-    double* params = (double*)void_params;
-
-    return params[0]*sin(2*parameters[0] + params[1]) + params[2]*sin(parameters[0] + params[3] ) + params[4];
-}
-
-
-/**
-@brief ???????????????
-@return ???????????
-*/
-void HS_partial_optimization_problem_grad( Matrix_real parameters, void* void_params, Matrix_real& grad) {
-
-
-    double* params = (double*)void_params;
-    grad[0] = 2*params[0]*cos(2*parameters[0] + params[1]) + params[2]*cos(parameters[0] + params[3] );
-
-}
-
-
-/**
-@brief ???????????????
-@return ???????????
-*/
-void HS_partial_optimization_problem_combined( Matrix_real parameters, void* void_params, double* f0, Matrix_real& grad) {
-
-    *f0 = HS_partial_optimization_problem( parameters, void_params );
-    HS_partial_optimization_problem_grad( parameters, void_params, grad);
-
-
-}
 
 
 /**
@@ -98,7 +62,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     optimize_layer_num  = false;
 
     // A string describing the type of the class
-    type = N_QUBIT_DECOMPOSITION_CLASS;
+    type = N_QUBIT_DECOMPOSITION_CLASS_BASE;
 
     // The global minimum of the optimization problem
     global_target_minimum = 0;
@@ -114,9 +78,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     cost_fnc = FROBENIUS_NORM;
     
     number_of_iters = 0;
-    
-    // mutual exclusion to support counters in parallel regions
-    counter_mutex = new tbb::spin_mutex();    
+     
  
 
     // variables to calculate the cost function with first and second corrections    
@@ -153,15 +115,13 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
     optimize_layer_num  = optimize_layer_num_in;
 
     // A string describing the type of the class
-    type = N_QUBIT_DECOMPOSITION_CLASS;
+    type = N_QUBIT_DECOMPOSITION_CLASS_BASE;
 
     // The global minimum of the optimization problem
     global_target_minimum = 0;
     
     number_of_iters = 0;
-    
-    // mutual exclusion to support counters in parallel regions
-    counter_mutex = new tbb::spin_mutex();        
+         
 
     // number of iteratrion loops in the optimization
     iteration_loops[2] = 3;
@@ -223,11 +183,6 @@ N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
     }
 #endif
 
-
-    if ( counter_mutex != nullptr ) {
-        delete counter_mutex;
-        counter_mutex = nullptr;
-    }
 
 
 }
@@ -529,7 +484,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
 
         // the result of the most successful agent:
         current_minimum = optimization_problem( optimized_parameters_mtx );
-
+        number_of_iters = number_of_iters + 1; 
         
 
         // the array storing the optimized parameters
@@ -741,6 +696,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
 
             });
 
+            number_of_iters = number_of_iters + 3*num_of_parameters; 
+
 
             // perform line search over the deriction determined previously
             int line_points = 100;
@@ -765,6 +722,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
                 }
 
             });
+
+            number_of_iters = number_of_iters + line_points; 
 
 
 #endif
@@ -928,7 +887,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int nu
 
         
         current_minimum =   optimization_problem( optimized_parameters_mtx );  
-
+        number_of_iters = number_of_iters + 1; 
 
         int max_inner_iterations_loc;
         if ( config.count("max_inner_iterations_agent") > 0 ) {
@@ -1619,7 +1578,8 @@ exit(-1);
                             
                                 if ( random_num < agent_randomization_rate ) {
                                     randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );  
-                                    current_minimum_agents[agent_idx] = optimization_problem( solution_guess_mtx_agent );                             
+                                    current_minimum_agents[agent_idx] = optimization_problem( solution_guess_mtx_agent );     
+                                    number_of_iters = number_of_iters + 1;                         
                                 }     
 
                        
@@ -2859,13 +2819,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
 	sstream << "N_Qubit_Decomposition_Base::optimization_problem: Number of free paramaters should be " << parameter_num << ", but got " << parameters.size() << std::endl;
         print(sstream, 0);	  
         exit(-1);
-    }
-
-    {
-        tbb::spin_mutex::scoped_lock my_lock{*counter_mutex};    
-        number_of_iters++;    
-    } 
-    
+    }  
     
     Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
 //matrix_new.print_matrix();
@@ -2928,11 +2882,8 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
         
         
 
-        {
-            tbb::spin_mutex::scoped_lock my_lock{*counter_mutex};    
-            number_of_iters = number_of_iters + parameters_vec.size();    
-        }     
-        
+        number_of_iters = number_of_iters + parameters_vec.size();  
+       
         
    
 #ifdef __MPI__
@@ -2944,10 +2895,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
         Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
         
 
-        {
-            tbb::spin_mutex::scoped_lock my_lock{*counter_mutex};    
-            number_of_iters = number_of_iters + mpi_gateSetNum;    
-        }     
+        number_of_iters = number_of_iters + mpi_gateSetNum;   
         
 
         lock_lib();
@@ -3021,6 +2969,8 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
             cost_fnc_mtx_loc[idx] = optimization_problem( parameters_vec[idx + mpi_starting_batchIdx] );
         });
 
+        number_of_iters = number_of_iters + mpi_batch_element_num; 
+
 
 
         int bytes = cost_fnc_mtx_loc.size()*sizeof(double);
@@ -3031,6 +2981,8 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
         tbb::parallel_for( 0, (int)parameters_vec.size(), 1, [&]( int idx) {
             cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
         });
+
+        number_of_iters = number_of_iters + parameters_vec.size(); 
 
 #endif  // __MPI__
        
@@ -3060,11 +3012,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters,
 
     N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
-    
-    {
-        tbb::spin_mutex::scoped_lock my_lock{*(instance->counter_mutex)};    
-        instance->number_of_iters++;    
-    }     
+
 
     // get the transformed matrix with the gates in the list
     Matrix Umtx_loc = instance->get_Umtx();
@@ -3223,10 +3171,7 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
 
     Matrix_real mpi_trace_DFE_mtx(mpi_gateSetNum, 3);
     
-    {
-        tbb::spin_mutex::scoped_lock my_lock{*(instance->counter_mutex)};    
-        instance->number_of_iters = instance->number_of_iters + mpi_gateSetNum;    
-    }    
+    instance->number_of_iters = instance->number_of_iters + mpi_gateSetNum;    
 
     lock_lib();
     calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates+mpi_starting_gateSetIdx*gatesNum, gatesNum, mpi_gateSetNum, trace_offset_loc, mpi_trace_DFE_mtx.get_data() );
@@ -3237,10 +3182,7 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
 
 #else
 
-    {
-        tbb::spin_mutex::scoped_lock my_lock{*(instance->counter_mutex)};    
-        instance->number_of_iters = instance->number_of_iters + gateSetNum;    
-    }
+    instance->number_of_iters = instance->number_of_iters + gateSetNum;    
 
     lock_lib();
     calcqgdKernelDFE( Umtx_loc.rows, Umtx_loc.cols, DFEgates, gatesNum, gateSetNum, trace_offset_loc, trace_DFE_mtx.get_data() );
@@ -3327,12 +3269,6 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
 
 
-    {
-        tbb::spin_mutex::scoped_lock my_lock{*(instance->counter_mutex)};    
-        instance->number_of_iters = instance->number_of_iters + parameter_num_loc;    
-    } 
-
-
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
 
@@ -3377,6 +3313,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
         }
     });
+
+    instance->number_of_iters = instance->number_of_iters + parameter_num_loc + 1;  
 
     std::stringstream sstream;
     sstream << *f0 << std::endl;

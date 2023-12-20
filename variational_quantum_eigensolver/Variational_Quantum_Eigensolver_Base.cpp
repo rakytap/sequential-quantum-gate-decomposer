@@ -259,13 +259,6 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
     //State.print_matrix();
 	
     double Energy = Expectation_value_of_energy(State);
-    
-    {
-
-        tbb::spin_mutex::scoped_lock my_lock{*counter_mutex};    
-        number_of_iters++;
-    
-    }
 	
     return Energy;
 }
