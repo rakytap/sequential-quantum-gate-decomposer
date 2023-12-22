@@ -85,7 +85,6 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     correction1_scale = 1/1.7;
     correction2_scale = 1/2.0;  
 
-    iteration_threshold_of_randomization = 2500000;
 
     // number of utilized accelerators
     accelerator_num = 0;
@@ -2145,7 +2144,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM( int num_
             config["randomization_threshold"].get_property( iteration_threshold_of_randomization_loc );  
         }
         else {
-            iteration_threshold_of_randomization_loc = iteration_threshold_of_randomization;
+            iteration_threshold_of_randomization_loc = 2500000;
         }
         
         long long export_circuit_2_binary_loc;

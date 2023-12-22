@@ -99,8 +99,9 @@ void apply_to_list( std::vector<Matrix>& input );
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-virtual void apply_to( Matrix& input );
+virtual void apply_to( Matrix& input, bool parallel=false );
 
 
 /**
@@ -116,8 +117,17 @@ virtual void apply_from_right( Matrix& input );
 */
 void set_matrix( Matrix input );
 
+
+/**
+@brief Call to set the control qubit for the gate operation
+@param control_qbit_in The control qubit. Should be: 0 <= control_qbit_in < qbit_num
+*/
 void set_control_qbit(int control_qbit_in);
 
+/**
+@brief Call to set the target qubit for the gate operation
+@param target_qbit_in The target qubit on which the gate is applied. Should be: 0 <= target_qbit_in < qbit_num
+*/
 void set_target_qbit(int target_qbit_in);
 
 /**
@@ -203,12 +213,21 @@ virtual void parameters_for_calc_one_qubit(double& ThetaOver2, double& Phi, doub
 
 protected:
 /**
-@brief ???????????
+@brief Call to apply the gate kernel on the input state or unitary with optional AVX support
+@param u3_1qbit The 2x2 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param deriv Set true to apply derivate transformation, false otherwise (optional)
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-void apply_kernel_to( Matrix& u3_1qbit, Matrix& input, bool deriv=false );
+void apply_kernel_to( Matrix& u3_1qbit, Matrix& input, bool deriv=false, bool parallel=false );
+
+
 
 /**
-@brief ???????????
+@brief Call to apply the gate kernel on the input state or unitary from right (no AVX support)
+@param u3_1qbit The 2x2 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param deriv Set true to apply derivate transformation, false otherwise
 */
 void apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input );
 

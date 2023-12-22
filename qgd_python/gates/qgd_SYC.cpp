@@ -130,18 +130,20 @@ static int
     return 0;
 }
 
+
 /**
 @brief Extract the optimized parameters
 @param start_index The index of the first inverse gate
 */
-
 static PyObject *
 qgd_SYC_get_Matrix( qgd_SYC *self ) {
 
-    Matrix SYC_mtx = self->gate->get_matrix(  );
+    bool parallel = true;
+    Matrix SYC_mtx = self->gate->get_matrix( parallel  );
     
     // convert to numpy array
     SYC_mtx.set_owner(false);
+
     PyObject *SYC_py = matrix_to_numpy( SYC_mtx );
 
     return SYC_py;
@@ -183,7 +185,8 @@ qgd_SYC_apply_to( qgd_SYC *self, PyObject *args ) {
     // create QGD version of the input matrix
     Matrix unitary_mtx = numpy2matrix(unitary_arg);
 
-    self->gate->apply_to( unitary_mtx );
+    bool parallel = true;
+    self->gate->apply_to( unitary_mtx, parallel );
     
     if (unitary_mtx.data != PyArray_DATA(unitary_arg)) {
         memcpy(PyArray_DATA(unitary_arg), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));

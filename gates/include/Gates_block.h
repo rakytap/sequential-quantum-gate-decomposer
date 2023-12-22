@@ -83,9 +83,10 @@ void release_gate( int idx);
 /**
 @brief Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate block)
 @param parameters An array pointing to the parameters of the gates
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 @return Returns with the gate matrix
 */
-Matrix get_matrix( Matrix_real& parameters );
+Matrix get_matrix( Matrix_real& parameters, bool parallel=false );
 
 
 /**
@@ -99,8 +100,12 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix> input );
 @brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input );
+virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, bool parallel=false );
+
+
+
 
 bool is_qbit_present(std::vector<int> involved_qbits, int new_qbit, int num_of_qbits);
 

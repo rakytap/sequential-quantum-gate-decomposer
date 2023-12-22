@@ -144,14 +144,14 @@ Gates_block::release_gate( int idx) {
 @return Returns with the operation matrix
 */
 Matrix
-Gates_block::get_matrix( Matrix_real& parameters ) {
+Gates_block::get_matrix( Matrix_real& parameters, bool parallel ) {
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
 
     // create matrix representation of the gate operations
     Matrix block_mtx = create_identity(matrix_size);
-    apply_to(parameters, block_mtx);
+    apply_to(parameters, block_mtx, parallel);
 
 #ifdef DEBUG
     if (block_mtx.isnan()) {
@@ -188,9 +188,10 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix> inp
 @brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
+Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, bool parallel ) {
 
     double* parameters = parameters_mtx.get_data();
 
@@ -293,61 +294,61 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
             case X_OPERATION: case Y_OPERATION:
             case Z_OPERATION: case SX_OPERATION:
             case GENERAL_OPERATION:
-                operation->apply_to(input);
+                operation->apply_to(input, parallel);
                 break;
             case U3_OPERATION: {
                 U3* u3_operation = static_cast<U3*>(operation);
-                u3_operation->apply_to( parameters_mtx, input );
+                u3_operation->apply_to( parameters_mtx, input, parallel );
                 break;    
             }
             case RX_OPERATION: {
                 RX* rx_operation = static_cast<RX*>(operation);
-                rx_operation->apply_to( parameters_mtx, input );
+                rx_operation->apply_to( parameters_mtx, input, parallel);
                 break; 
             }
             case RY_OPERATION: {
                 RY* ry_operation = static_cast<RY*>(operation);
-                ry_operation->apply_to( parameters_mtx, input );
+                ry_operation->apply_to( parameters_mtx, input, parallel );
                 break; 
             }
             case CRY_OPERATION: {
                 CRY* cry_operation = static_cast<CRY*>(operation);
-                cry_operation->apply_to( parameters_mtx, input ); 
+                cry_operation->apply_to( parameters_mtx, input, parallel ); 
                 break;
             }
             case RZ_OPERATION: {
                 RZ* rz_operation = static_cast<RZ*>(operation);
-                rz_operation->apply_to( parameters_mtx, input ); 
+                rz_operation->apply_to( parameters_mtx, input, parallel ); 
                 break;
             }  
             case RZ_P_OPERATION: {
                 RZ_P* rz_p_operation = static_cast<RZ_P*>(operation);
-                rz_p_operation->apply_to( parameters_mtx, input ); 
+                rz_p_operation->apply_to( parameters_mtx, input, parallel ); 
                 break;
             }        
             case UN_OPERATION: {
                 UN* un_operation = static_cast<UN*>(operation);
-                un_operation->apply_to(parameters_mtx, input);
+                un_operation->apply_to(parameters_mtx, input, parallel);
                 break;
             }
             case ON_OPERATION: {
                 ON* on_operation = static_cast<ON*>(operation);
-                on_operation->apply_to(parameters_mtx, input);
+                on_operation->apply_to(parameters_mtx, input, parallel);
                 break;
             }
             case BLOCK_OPERATION: {
                 Gates_block* block_operation = static_cast<Gates_block*>(operation);
-                block_operation->apply_to(parameters_mtx, input);
+                block_operation->apply_to(parameters_mtx, input, parallel);
                 break;
             }
             case COMPOSITE_OPERATION: {
                 Composite* com_operation = static_cast<Composite*>(operation);
-                com_operation->apply_to(parameters_mtx, input);
+                com_operation->apply_to(parameters_mtx, input, parallel);
                 break;
             }    
             case ADAPTIVE_OPERATION: {
                 Adaptive* ad_operation = static_cast<Adaptive*>(operation);
-                ad_operation->apply_to( parameters_mtx, input );
+                ad_operation->apply_to( parameters_mtx, input, parallel );
                 break; 
             }
             default:
@@ -2356,7 +2357,8 @@ Gates_block::get_reduced_density_matrix( Matrix_real& parameters_mtx, Matrix& in
     // determine the transformed state
     Matrix transformed_state = input_state.copy();  
     if ( parameters_mtx.size() > 0 ) {
-        apply_to( parameters_mtx, transformed_state );
+        bool parallel = true;
+        apply_to( parameters_mtx, transformed_state, parallel );
     }
 
 

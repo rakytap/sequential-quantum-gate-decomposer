@@ -110,8 +110,6 @@ protected:
     double radius;
     /// randomization rate
     double randomization_rate;
-    /// threashold of count of iterations after what the parameters are randomized if the cost function does not deacrese fast enough
-    unsigned long long iteration_threshold_of_randomization;
     /// number of utilized accelerators
     int accelerator_num;
 

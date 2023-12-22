@@ -151,10 +151,10 @@ U3::~U3() {
 @return Returns with a matrix of the gate
 */
 Matrix
-U3::get_matrix( Matrix_real& parameters ) {
+U3::get_matrix( Matrix_real& parameters, bool parallel ) {
 
         Matrix U3_matrix = create_identity(matrix_size);
-        apply_to(parameters, U3_matrix);
+        apply_to(parameters, U3_matrix, parallel);
 
 #ifdef DEBUG
         if (U3_matrix.isnan()) {
@@ -190,9 +190,10 @@ U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input ) {
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-U3::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
+U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, bool parallel ) {
 
 
     if (input.rows != matrix_size ) {
@@ -258,7 +259,7 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input ) {
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
-    apply_kernel_to( u3_1qbit, input );
+    apply_kernel_to( u3_1qbit, input, false, parallel );
 
 
 }

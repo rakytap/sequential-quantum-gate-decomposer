@@ -80,9 +80,10 @@ virtual ~U3();
 /**
 @brief Call to retrieve the gate matrix
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( Matrix_real& parameters );
+Matrix get_matrix( Matrix_real& parameters, bool parallel=false  );
 
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
@@ -96,8 +97,9 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& input );
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-virtual void apply_to( Matrix_real& parameters, Matrix& input );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
 
 
 /**

@@ -53,7 +53,6 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
     
     alg = AGENTS;
     
-    iteration_threshold_of_randomization = 2500000;
 
     random_shift_count_max = 100;
     
@@ -99,8 +98,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matr
     optimization_tolerance = -DBL_MAX;
     convergence_threshold  = -DBL_MAX;
     
-    
-    iteration_threshold_of_randomization = 2500000;
+   
 
     random_shift_count_max = 100;
     

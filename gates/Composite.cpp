@@ -101,7 +101,7 @@ void Composite::set_qbit_num( int qbit_num_in ) {
 @return Returns with a matrix of the operation
 */
 Matrix
-Composite::get_matrix( Matrix_real& parameters ) {
+Composite::get_matrix( Matrix_real& parameters, bool parallel ) {
 
 
     // create array of random parameters to construct random unitary
@@ -127,9 +127,10 @@ Composite::get_matrix( Matrix_real& parameters ) {
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-Composite::apply_to( Matrix_real& parameters, Matrix& input ) {
+Composite::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
 
 
     if (input.rows != matrix_size ) {

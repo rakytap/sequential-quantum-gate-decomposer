@@ -128,7 +128,7 @@ RY::~RY() {
 */
 
 void 
-RY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
+RY::apply_to( Matrix_real& parameters, Matrix& input, bool parallel  ) {
 
 
     if (input.rows != matrix_size ) {
@@ -148,7 +148,7 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, const double scale ) {
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
-    apply_kernel_to( u3_1qbit, input );
+    apply_kernel_to( u3_1qbit, input, false, parallel );
 
 
 }

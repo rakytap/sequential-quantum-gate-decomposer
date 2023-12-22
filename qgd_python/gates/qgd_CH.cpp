@@ -138,7 +138,8 @@ static int
 static PyObject *
 qgd_CH_get_Matrix( qgd_CH *self ) {
 
-    Matrix CH_mtx = self->gate->get_matrix(  );
+    bool parallel = true;
+    Matrix CH_mtx = self->gate->get_matrix( parallel  );
     
     // convert to numpy array
     CH_mtx.set_owner(false);
@@ -190,7 +191,8 @@ qgd_CH_apply_to( qgd_CH *self, PyObject *args ) {
     // create QGD version of the input matrix
     Matrix unitary_mtx = numpy2matrix(unitary);
 
-    self->gate->apply_to( unitary_mtx );
+    bool parallel = true;
+    self->gate->apply_to( unitary_mtx, parallel );
     
     if (unitary_mtx.data != PyArray_DATA(unitary)) {
         memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));

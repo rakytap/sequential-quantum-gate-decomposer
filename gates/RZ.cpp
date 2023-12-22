@@ -133,9 +133,10 @@ RZ::~RZ() {
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-RZ::apply_to( Matrix_real& parameters, Matrix& input ) {
+RZ::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
 
 
     if (input.rows != matrix_size ) {
@@ -155,7 +156,7 @@ RZ::apply_to( Matrix_real& parameters, Matrix& input ) {
 
 
 
-    apply_kernel_to( u3_1qbit, input );
+    apply_kernel_to( u3_1qbit, input, false, parallel );
 
 
 }

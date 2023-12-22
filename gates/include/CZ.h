@@ -61,15 +61,17 @@ CZ(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 
 /**
 @brief Call to retrieve the operation matrix
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 @return Returns with the matrix of the operation
 */
-Matrix get_matrix();
+Matrix get_matrix(bool parallel=false);
 
 /**
 @brief Call to apply the gate on the input array/matrix CZ*input
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-void apply_to( Matrix& input );
+void apply_to( Matrix& input, bool parallel=false  );
 
 /**
 @brief Call to apply the gate on the input array/matrix by input*CZ

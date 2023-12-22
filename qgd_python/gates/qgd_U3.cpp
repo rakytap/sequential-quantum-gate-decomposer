@@ -167,8 +167,8 @@ qgd_U3_get_Matrix( qgd_U3 *self, PyObject *args ) {
     // get the C++ wrapper around the data
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
-
-    Matrix U3_mtx = self->gate->get_matrix( parameters_mtx );
+    bool parallel = true;
+    Matrix U3_mtx = self->gate->get_matrix( parameters_mtx, parallel );
     
     // convert to numpy array
     U3_mtx.set_owner(false);
@@ -227,8 +227,8 @@ qgd_U3_apply_to( qgd_U3 *self, PyObject *args ) {
     // create QGD version of the input matrix
     Matrix unitary_mtx = numpy2matrix(unitary);
 
-
-    self->gate->apply_to( parameters_mtx, unitary_mtx );
+    bool parallel = true;
+    self->gate->apply_to( parameters_mtx, unitary_mtx, parallel );
     
     if (unitary_mtx.data != PyArray_DATA(unitary)) {
         memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
