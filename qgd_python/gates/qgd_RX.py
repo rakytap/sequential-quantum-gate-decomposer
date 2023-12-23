@@ -33,13 +33,13 @@ from qgd_python.gate.qgd_RX_Wrapper import qgd_RX_Wrapper
 
 
 ##
-# @brief A QGD Python interface class for the Gates_Block.
+# @brief A QGD Python interface class for the qgd_RX.
 class qgd_RX(qgd_RX_Wrapper):
     
     
 ## 
 # @brief Constructor of the class.
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param self A pointer pointing to an instance of the class qgd_RX.
 #@param args A tuple of the input arguments: qbit_num (integer)
 #qbit_num: the number of qubits spanning the operations
 #@param kwds A tuple of keywords
@@ -52,9 +52,9 @@ class qgd_RX(qgd_RX_Wrapper):
         # call the constructor of the wrapper class
         super(qgd_python.gate.qgd_RX_Wrapper, self).__init__()
 
-#@brief Call to add a U3 gate to the front of the gate structure.
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
-#@param Input arguments: target_qbit (int), Theta (bool), Phi (bool), Lambda (bool).
+#@brief  Call to retrieve the gate matrix
+#@param self A pointer pointing to an instance of the class qgd_RX. 
+#@param parameters_mtx An array of parameters to calculate the matrix.
 
     def get_Matrix( self, parameters_mtx ):
 
@@ -62,7 +62,7 @@ class qgd_RX(qgd_RX_Wrapper):
         super(qgd_python.gate.qgd_RX_Wrapper, self).get_Matrix( parameters_mtx )
 
 #@brief Call to get the parameters of the matrices. 
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param self A pointer pointing to an instance of the class qgd_RX.
 
     def get_Gate_Kernel( self, Theta, Phi, Lambda):
 
@@ -70,7 +70,7 @@ class qgd_RX(qgd_RX_Wrapper):
         super(qgd_python.gate.qgd_RX_Wrapper, self).calc_one_qubit_u3(ThetaOver2, Phi, Lambda)
 
 #@brief Call to apply the gate operation on the input matrix
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param self A pointer pointing to an instance of the class qgd_RX.
 #@param Input arguments: parameters_mtx, unitary_mtx.
 
     def apply_to( self, parameters_mtx, unitary_mtx):

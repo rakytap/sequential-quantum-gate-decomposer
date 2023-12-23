@@ -33,13 +33,13 @@ from qgd_python.gate.qgd_CZ_Wrapper import qgd_CZ_Wrapper
 
 
 ##
-# @brief A QGD Python interface class for the Gates_Block.
+# @brief A QGD Python interface class for the qgd_CZ.
 class qgd_CZ(qgd_CZ_Wrapper):
     
     
 ## 
 # @brief Constructor of the class.
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param self A pointer pointing to an instance of the class qgd_CZ.
 #@param args A tuple of the input arguments: qbit_num (integer)
 #qbit_num: the number of qubits spanning the operations
 #@param kwds A tuple of keywords
@@ -61,7 +61,7 @@ class qgd_CZ(qgd_CZ_Wrapper):
         super(qgd_python.gate.qgd_CZ_Wrapper, self).get_Matrix( )
 
 #@brief Call to get the parameters of the matrices. 
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param self A pointer pointing to an instance of the class qgd_CZ.
 
     def get_Gate_Kernel( self):
 
@@ -69,7 +69,7 @@ class qgd_CZ(qgd_CZ_Wrapper):
         super(qgd_python.gate.qgd_CZ_Wrapper, self).calc_one_qubit_u3()
 
 #@brief Call to apply the gate operation on the input matrix
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param self A pointer pointing to an instance of the class qgd_CZ.
 #@param Input arguments: parameters_mtx, unitary_mtx.
 
     def apply_to( self, unitary_mtx):

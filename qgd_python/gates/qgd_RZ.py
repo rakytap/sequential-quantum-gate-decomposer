@@ -33,13 +33,13 @@ from qgd_python.gate.qgd_RZ_Wrapper import qgd_RZ_Wrapper
 
 
 ##
-# @brief A QGD Python interface class for the Gates_Block.
+# @brief A QGD Python interface class for the qgd_RZ.
 class qgd_RZ(qgd_RZ_Wrapper):
     
     
 ## 
 # @brief Constructor of the class.
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param self A pointer pointing to an instance of the class qgd_RZ.
 #@param args A tuple of the input arguments: qbit_num (integer)
 #qbit_num: the number of qubits spanning the operations
 #@param kwds A tuple of keywords
@@ -52,9 +52,9 @@ class qgd_RZ(qgd_RZ_Wrapper):
         # call the constructor of the wrapper class
         super(qgd_python.gate.qgd_RZ_Wrapper, self).__init__()
 
-#@brief Call to retrieve the gate matrix. 
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
-#@param Input arguments: parameters_mtx. An array of parameters to calculate the matrix of the RZ gate.
+#@brief  Call to retrieve the gate matrix
+#@param self A pointer pointing to an instance of the class qgd_RZ. 
+#@param parameters_mtx An array of parameters to calculate the matrix.
 
     def get_Matrix( self, parameters_mtx ):
 
@@ -62,7 +62,7 @@ class qgd_RZ(qgd_RZ_Wrapper):
         super(qgd_python.gate.qgd_RZ_Wrapper, self).get_Matrix( parameters_mtx )
 
 #@brief Call to get the parameters of the matrices. 
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param self A pointer pointing to an instance of the class qgd_RZ.
 
     def get_Gate_Kernel( self, ThetaOver2, Phi, Lambda):
 
@@ -70,7 +70,7 @@ class qgd_RZ(qgd_RZ_Wrapper):
         super(qgd_python.gate.qgd_RZ_Wrapper, self).calc_one_qubit_u3(ThetaOver2, Phi, Lambda)
 
 #@brief Call to apply the gate operation on the input matrix
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param self A pointer pointing to an instance of the class qgd_RZ.
 #@param Input arguments: parameters_mtx, unitary_mtx.
 
     def apply_to( self, parameters_mtx, unitary_mtx):
