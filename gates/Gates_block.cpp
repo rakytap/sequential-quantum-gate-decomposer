@@ -371,16 +371,35 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, bool parallel
 
 }
 
-bool Gates_block::is_qbit_present(std::vector<int> involved_qubits, int new_qbit, int num_of_qbits){
+
+
+//////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
+
+/**
+@brief Call to check whether the given qubit is involved in the sub-circuit or not.
+@param involved_qubits A list of qubits
+@param new_qbit The qubit to be checked
+@param num_of_qbits The number of qubits.
+*/
+bool is_qbit_present(std::vector<int> involved_qubits, int new_qbit, int num_of_qbits){
+
     bool contained=false;
-    for (int idx=0; idx<num_of_qbits; idx++){
-        if(involved_qubits[idx] == new_qbit){
-        contained=true;
+    
+    for (int idx=0; idx<num_of_qbits; idx++) {
+    
+        if(involved_qubits[idx] == new_qbit) {
+            contained=true;
         }
     }
+    
     return contained;
+    
 }
 
+
+
+    
+    
 void Gates_block::fragment_circuit(){
 
     std::vector<int> qbits;
@@ -471,6 +490,67 @@ void Gates_block::fragment_circuit(){
     fragmented = true;
 
 }
+
+
+
+void Gates_block::get_parameter_max(Matrix_real &range_max) {
+    int parameter_idx = parameter_num;
+	double *data = range_max.get_data();
+        for(int op_idx = gates.size()-1; op_idx>=0; op_idx--) {
+
+            Gate* gate = gates[op_idx];
+            switch (gate->get_type()) {
+            case U3_OPERATION: {
+                U3* u3_gate = static_cast<U3*>(gate);
+
+                if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
+		            data[parameter_idx-1] = 4 * M_PI;
+                    parameter_idx = parameter_idx - 1;
+
+                }
+                else if ((u3_gate->get_parameter_num() == 1) && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 1;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
+                    data[parameter_idx-2] = 4 * M_PI;
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
+                    data[parameter_idx-2] = 2 * M_PI;
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 2;
+                }
+                else if ((u3_gate->get_parameter_num() == 3)) {
+                    data[parameter_idx-3] = 4 * M_PI;
+                    data[parameter_idx-2] = 2 * M_PI;
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 3;
+                }
+                break; }
+            case RX_OPERATION:
+            case RY_OPERATION:
+            case CRY_OPERATION:
+            case ADAPTIVE_OPERATION:
+                data[parameter_idx-1] = 4 * M_PI;
+                parameter_idx = parameter_idx - 1;
+                break;
+            case BLOCK_OPERATION: {
+                Gates_block* block_gate = static_cast<Gates_block*>(gate);
+                Matrix_real parameters_layer(range_max.get_data() + parameter_idx - gate->get_parameter_num(), 1, gate->get_parameter_num() );
+                block_gate->get_parameter_max( parameters_layer );
+                parameter_idx = parameter_idx - block_gate->get_parameter_num();
+                break; }
+            default:
+                for (int i = 0; i < gate->get_parameter_num(); i++)
+                    data[parameter_idx-1-i] = 2 * M_PI;    
+                parameter_idx = parameter_idx - gate->get_parameter_num();
+            }
+        }
+}
+
+//////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
 
 
 /**
@@ -1478,8 +1558,9 @@ void Gates_block::add_gate_to_end( Gate* gate ) {
 
 
 /**
-@brief ??????
-@param gate A pointer to a class Gate describing an gate.
+@brief Call to insert a gate at a given position 
+@param gate A pointer to a class Gate describing a gate.
+@param idx The position where to insert the gate.
 */
 void 
 Gates_block::insert_gate( Gate* gate, int idx ) {
@@ -1650,62 +1731,7 @@ int Gates_block::get_parameter_num() {
     return parameter_num;
 }
 
-void Gates_block::get_parameter_max(Matrix_real &range_max) {
-    int parameter_idx = parameter_num;
-	double *data = range_max.get_data();
-        for(int op_idx = gates.size()-1; op_idx>=0; op_idx--) {
 
-            Gate* gate = gates[op_idx];
-            switch (gate->get_type()) {
-            case U3_OPERATION: {
-                U3* u3_gate = static_cast<U3*>(gate);
-
-                if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
-		            data[parameter_idx-1] = 4 * M_PI;
-                    parameter_idx = parameter_idx - 1;
-
-                }
-                else if ((u3_gate->get_parameter_num() == 1) && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
-                    data[parameter_idx-1] = 2 * M_PI;
-                    parameter_idx = parameter_idx - 1;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
-                    data[parameter_idx-2] = 4 * M_PI;
-                    data[parameter_idx-1] = 2 * M_PI;
-                    parameter_idx = parameter_idx - 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
-                    data[parameter_idx-2] = 2 * M_PI;
-                    data[parameter_idx-1] = 2 * M_PI;
-                    parameter_idx = parameter_idx - 2;
-                }
-                else if ((u3_gate->get_parameter_num() == 3)) {
-                    data[parameter_idx-3] = 4 * M_PI;
-                    data[parameter_idx-2] = 2 * M_PI;
-                    data[parameter_idx-1] = 2 * M_PI;
-                    parameter_idx = parameter_idx - 3;
-                }
-                break; }
-            case RX_OPERATION:
-            case RY_OPERATION:
-            case CRY_OPERATION:
-            case ADAPTIVE_OPERATION:
-                data[parameter_idx-1] = 4 * M_PI;
-                parameter_idx = parameter_idx - 1;
-                break;
-            case BLOCK_OPERATION: {
-                Gates_block* block_gate = static_cast<Gates_block*>(gate);
-                Matrix_real parameters_layer(range_max.get_data() + parameter_idx - gate->get_parameter_num(), 1, gate->get_parameter_num() );
-                block_gate->get_parameter_max( parameters_layer );
-                parameter_idx = parameter_idx - block_gate->get_parameter_num();
-                break; }
-            default:
-                for (int i = 0; i < gate->get_parameter_num(); i++)
-                    data[parameter_idx-1-i] = 2 * M_PI;    
-                parameter_idx = parameter_idx - gate->get_parameter_num();
-            }
-        }
-}
 
 
 /**
@@ -2286,8 +2312,8 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
 
 
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Call to determine, whether the circuit contains daptive gate or not.
+@return Return with true if the circuit contains an adaptive gate.
 */
 bool Gates_block::contains_adaptive_gate() {
 
@@ -2312,8 +2338,9 @@ bool Gates_block::contains_adaptive_gate() {
 
 
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Call to determine, whether the sub-circuit at a given position in the circuit contains daptive gate or not.
+@param idx The position of the gate to be checked.
+@return Return with true if the circuit contains an adaptive gate.
 */
 bool Gates_block::contains_adaptive_gate(int idx) {
 

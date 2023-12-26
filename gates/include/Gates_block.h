@@ -114,10 +114,6 @@ virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, bool parallel
 
 
 
-bool is_qbit_present(std::vector<int> involved_qbits, int new_qbit, int num_of_qbits);
-
-void fragment_circuit();
-
 /**
 @brief Call to apply the gate on the input array/matrix by input*CNOT
 @param input The input array on which the gate is applied
@@ -418,8 +414,9 @@ void add_gate( Gate* gate );
 
 
 /**
-@brief ??????
-@param gate A pointer to a class Gate describing an gate.
+@brief Call to insert a gate at a given position 
+@param gate A pointer to a class Gate describing a gate.
+@param idx The position where to insert the gate.
 */
 void insert_gate( Gate* gate, int idx );
 
@@ -438,7 +435,7 @@ gates_num get_gate_nums();
 */
 int get_parameter_num();
 
-void get_parameter_max(Matrix_real &range_max);
+
 
 /**
 @brief Call to get the number of gates grouped in the class
@@ -511,14 +508,15 @@ int extract_gates( Gates_block* op_block );
 
 
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Call to determine, whether the circuit contains daptive gate or not.
+@return Return with true if the circuit contains an adaptive gate.
 */
 bool contains_adaptive_gate();
 
 /**
-@brief ?????????
-@return Return with ?????????
+@brief Call to determine, whether the sub-circuit at a given position in the circuit contains daptive gate or not.
+@param idx The position of the gate to be checked.
+@return Return with true if the circuit contains an adaptive gate.
 */
 bool contains_adaptive_gate(int idx);
 
@@ -546,6 +544,14 @@ double get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matrix& input_stat
 
 
 
+
+
+//////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
+
+void fragment_circuit();
+void get_parameter_max(Matrix_real &range_max);
+
+//////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
 
 #ifdef __DFE__
 
@@ -611,5 +617,11 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, const std::st
 */
 Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, int verbosity=3);
 
-#endif //GATES_BLOCK
+//////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
+bool is_qbit_present(std::vector<int> involved_qbits, int new_qbit, int num_of_qbits);
+//////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
+
+
+
+#endif //GATES_BLOCK,
 
