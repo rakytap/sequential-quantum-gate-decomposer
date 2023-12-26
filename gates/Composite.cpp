@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file Composite.cpp
-    \brief Class for the representation of general unitary operation on the first qbit_num-1 qubits.
+    \brief Class for the representation of composite gate operation.
 */
 
 

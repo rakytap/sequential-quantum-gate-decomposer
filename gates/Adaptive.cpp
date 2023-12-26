@@ -163,11 +163,10 @@ Phi_transformed[0] = Phi - M_PI;
 
 
 /**
-@brief Call to apply the gate on the input array/matrix by U3*input
+@brief Call to apply the gate on the input array/matrix.
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-
 std::vector<Matrix>
 Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input ) {
 

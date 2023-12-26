@@ -217,7 +217,6 @@ void Z::set_qbit_num(int qbit_num_in) {
 /**
 @brief Set static values for matrix of the gates.
 @param u3_1qbit Matrix parameter for the gate.
-
 */
 Matrix 
 Z::calc_one_qubit_u3( ){

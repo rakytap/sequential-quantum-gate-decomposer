@@ -16,8 +16,8 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file RY.h
-    \brief Header file for a class representing a rotation gate around the Y axis.
+/*! \file CRY.h
+    \brief Header file for a class representing a controlled rotation gate around the Y axis.
 */
 
 #ifndef CRZ_H
@@ -63,7 +63,7 @@ virtual ~CRY();
 
 /**
 @brief Call to apply the gate on the input array/matrix by CRY*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
 @param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
@@ -78,7 +78,9 @@ virtual void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=fal
 virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
 
 /**
-@brief ???????????????
+@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@param parameters An array of the input parameters.
+@param input The input array on which the gate is applied
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
 

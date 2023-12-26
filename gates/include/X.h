@@ -16,8 +16,8 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file RX.h
-    \brief Header file for a class representing a rotation gate around the X axis.
+/*! \file X.h
+    \brief Header file for a class representing the X gate.
 */
 
 #ifndef X_H

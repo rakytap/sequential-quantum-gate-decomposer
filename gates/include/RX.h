@@ -39,7 +39,7 @@ class RX: public U3 {
 public:
 
 /**
-@brief NullaRX constructor of the class.
+@brief Nullary constructor of the class.
 */
 RX();
 
@@ -77,7 +77,9 @@ void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
 void apply_from_right( Matrix_real& parameters, Matrix& input );
 
 /**
-@brief ???????????????
+@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@param parameters An array of the input parameters.
+@param input The input array on which the gate is applied
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
 

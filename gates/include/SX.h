@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file SX.h
-    \brief Header file for a class representing a rotation gate around the X axis.
+    \brief Header file for a class representing the SX axis.
 */
 
 #ifndef SX_H
@@ -118,5 +118,5 @@ Matrix calc_one_qubit_u3( );
 };
 
 
-#endif //U3
+#endif //SX
 

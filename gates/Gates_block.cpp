@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file Gates_block.cpp
-    \brief Class responsible for grouping two-qubit (CNOT,CZ,CH) and one-qubit gates into layers
+    \brief Class responsible for grouping gates into subcircuits. (Subcircuits can be nested)
 */
 
 #include "CZ.h"
@@ -578,7 +578,9 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
 
 /**
-@brief ???????????????
+@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@param parameters An array of the input parameters.
+@param input The input array on which the gate is applied
 */
 std::vector<Matrix> 
 Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) {

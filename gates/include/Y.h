@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file Y.h
-    \brief Header file for a class representing a rotation gate around the Y axis.
+    \brief Header file for a class representing the Y gate.
 */
 
 #ifndef Y_H

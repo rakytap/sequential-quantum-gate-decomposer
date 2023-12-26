@@ -37,7 +37,7 @@ class ON : public Gate {
 
 protected:
 
-   /// Parameters theta, phi, lambda of the U3 gate after the decomposition of the ONitary is done
+   /// Parameters after the decomposition of the ONitary is done
    Matrix_real parameters;
 
 public:
@@ -78,7 +78,7 @@ void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
 
 
 /**
-@brief ?????
+@brief Call to retrieve the qbut_num-1 kernel of the operation.
 */
 Matrix get_submatrix( Matrix_real& parameters );
 

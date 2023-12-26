@@ -172,7 +172,6 @@ void CNOT::reorder_qubits( vector<int> qbit_list) {
 /**
 @brief Set static values for matrix of the gates.
 @param u3_1qbit Matrix parameter for the gate.
-
 */
 Matrix
 CNOT::calc_one_qubit_u3( ){

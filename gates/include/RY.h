@@ -16,7 +16,7 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file U3.h
+/*! \file RY.h
     \brief Header file for a class representing a rotation gate around the Y axis.
 */
 
@@ -84,7 +84,9 @@ virtual void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=fal
 virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
 
 /**
-@brief ???????????????
+@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@param parameters An array of the input parameters.
+@param input The input array on which the gate is applied
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
 

@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file Gates_block.h
-    \brief Header file for a class responsible for grouping two-qubit (CNOT,CZ,CH) and one-qubit gates into layers
+    \brief Header file for a class responsible for grouping gates into subcircuits. (Subcircuits can be nested)
 */
 
 #ifndef GATES_BLOCK_H
@@ -44,12 +44,19 @@ protected:
     std::vector<Gate*> gates;
     /// number of gate layers
     int layer_num;
+    
+    
+    //////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
+    
+    /// boolean variable indicating whether the circuit was already partitioned or not
     bool fragmented;
     int fragmentation_type;
+    /// maximal number of qubits in partitions
     int max_fusion;
     std::vector< std::vector<int>> involved_qbits;
     std::vector<int> block_end;
     std::vector<int> block_type;
+    //////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////    
 
 public:
 
@@ -98,7 +105,7 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix> input );
 
 /**
 @brief Call to apply the gate on the input array/matrix Gates_block*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
 @param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
@@ -119,7 +126,9 @@ virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
 
 
 /**
-@brief ???????????????
+@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@param parameters An array of the input parameters.
+@param input The input array on which the gate is applied
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input );
 

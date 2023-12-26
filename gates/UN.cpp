@@ -202,7 +202,7 @@ UN::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
 /**
-@brief ?????
+@brief Call to retrieve the qbit_num-1 kernel of the UN operation.
 */
 Matrix
 UN::get_submatrix( Matrix_real& parameters ) {

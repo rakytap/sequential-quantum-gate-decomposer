@@ -78,7 +78,7 @@ void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
 
 
 /**
-@brief ?????
+@brief Call to retrieve the qbit_num-1 kernel of the UN gate.
 */
 Matrix get_submatrix( Matrix_real& parameters );
 

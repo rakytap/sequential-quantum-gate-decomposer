@@ -16,7 +16,7 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file Operation.cpp
+/*! \file Gate.cpp
     \brief Class for the representation of general gate operations.
 */
 

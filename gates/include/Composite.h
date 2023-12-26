@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file Composite.h
-    \brief Header file for a class for the representation of general gate operations on the first qbit_num-1 qubits.
+    \brief Header file for a class for a composite gate operation.
 */
 
 #ifndef COM_H
