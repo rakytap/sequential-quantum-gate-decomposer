@@ -948,7 +948,16 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int nu
         sstream << "agent_lifetime_loc: " << agent_lifetime_loc << std::endl;
         print(sstream, 2); 
 
-        double agent_randomization_rate = 0.2;
+        double agent_randomization_rate_loc = 0.2;
+        if ( config.count("aagent_randomization_rate_agent") > 0 ) {
+        
+             config["agent_randomization_rate_agent"].get_property( agent_randomization_rate_loc );
+        }
+        else if ( config.count("agent_randomization_rate") > 0 ) {
+             config["agent_randomization_rate"].get_property( agent_randomization_rate_loc );
+        }
+        
+        
         
         int agent_num;
         if ( config.count("agent_num_agent") > 0 ) { 
@@ -1573,7 +1582,7 @@ exit(-1);
                             
                                 random_num = random_numbers[ agent_idx*random_numbers.stride + 1 ];
                             
-                                if ( random_num < agent_randomization_rate ) {
+                                if ( random_num < agent_randomization_rate_loc ) {
                                     randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );  
                                     current_minimum_agents[agent_idx] = optimization_problem( solution_guess_mtx_agent );     
                                     number_of_iters = number_of_iters + 1;                         
