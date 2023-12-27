@@ -4,7 +4,7 @@ from qgd_python.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensol
 from qgd_python import utils as utils
 import time
 import sys
-from qgd_python.gates.qgd_Gates_Block_Wrapper import qgd_Gates_Block_Wrapper as Gates_Block
+from qgd_python.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper as Circuit
 import scipy as sp
 import pytest
 
