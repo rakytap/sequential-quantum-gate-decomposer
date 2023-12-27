@@ -35,10 +35,10 @@ def create_custom_gate_structure_heavy_hex_3(qbit_num):
 
     """
 
-    from squander import Gates_Block
+    from squander import Circuit
 
-    # creating an instance of the wrapper class Gates_Block
-    Gates_Block_ret = Gates_Block( qbit_num )
+    # creating an instance of the wrapper class Circuit
+    Circuit_ret = Circuit( qbit_num )
 
     disentangle_qubit = qbit_num - 1 
 
@@ -46,8 +46,8 @@ def create_custom_gate_structure_heavy_hex_3(qbit_num):
 
     for qbit in range(0, disentangle_qubit ):
 
-        # creating an instance of the wrapper class Gates_Block
-        Layer = Gates_Block( qbit_num )
+        # creating an instance of the wrapper class Circuit
+        Layer = Circuit( qbit_num )
 
 
         if qbit == 0:
@@ -90,9 +90,9 @@ def create_custom_gate_structure_heavy_hex_3(qbit_num):
 
          
 
-        Gates_Block_ret.add_Gates_Block( Layer )
+        Circuit_ret.add_Circuit( Layer )
 
-    return Gates_Block_ret
+    return Circuit_ret
 
 
 
@@ -104,10 +104,10 @@ def create_custom_gate_structure_heavy_hex_4(qbit_num):
 
     """
 
-    from squander import Gates_Block
+    from squander import Circuit
 
-    # creating an instance of the wrapper class Gates_Block
-    Gates_Block_ret = Gates_Block( qbit_num )
+    # creating an instance of the wrapper class Circuit
+    Circuit_ret = Circuit( qbit_num )
 
     disentangle_qubit = qbit_num - 1 
 
@@ -115,8 +115,8 @@ def create_custom_gate_structure_heavy_hex_4(qbit_num):
 
     for qbit in range(0, disentangle_qubit ):
 
-        # creating an instance of the wrapper class Gates_Block
-        Layer = Gates_Block( qbit_num )
+        # creating an instance of the wrapper class Circuit
+        Layer = Circuit( qbit_num )
 
 
         if qbit == 0:
@@ -159,9 +159,9 @@ def create_custom_gate_structure_heavy_hex_4(qbit_num):
 
          
 
-        Gates_Block_ret.add_Gates_Block( Layer )
+        Circuit_ret.add_Circuit( Layer )
 
-    return Gates_Block_ret
+    return Circuit_ret
     
 
 

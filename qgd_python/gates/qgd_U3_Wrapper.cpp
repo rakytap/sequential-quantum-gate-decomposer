@@ -20,40 +20,45 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*
-\file qgd_SX.cpp
-\brief Python interface for the SX gate class
+\file qgd_U3_Wrapper.cpp
+\brief Python interface for the U3 gate class
 */
 
 #define PY_SSIZE_T_CLEAN
 
 
 #include <Python.h>
+#include <numpy/arrayobject.h>
 #include "structmember.h"
-#include "SX.h"
+#include "U3.h"
 #include "numpy_interface.h"
 
 
 
 
+
 /**
-@brief Type definition of the qgd_SX Python class of the qgd_SX module
+@brief Type definition of the qgd_U3_Wrapper Python class of the qgd_U3_Wrapper module
 */
 typedef struct {
     PyObject_HEAD
-    /// Pointer to the C++ class of the SX gate
-    SX* gate;
-} qgd_SX;
+    /// Pointer to the C++ class of the U3 gate
+    U3* gate;
+} qgd_U3_Wrapper;
 
 
 /**
 @brief Creates an instance of class N_Qubit_Decomposition and return with a pointer pointing to the class instance (C++ linking is needed)
 @param qbit_num The number of qubits spanning the operation.
 @param target_qbit The 0<=ID<qbit_num of the target qubit.
+@param Theta logical value indicating whether the matrix creation takes an argument theta.
+@param Phi logical value indicating whether the matrix creation takes an argument phi
+@param Lambda logical value indicating whether the matrix creation takes an argument lambda
 */
-SX* 
-create_SX( int qbit_num, int target_qbit ) {
+U3* 
+create_U3( int qbit_num, int target_qbit, bool Theta, bool Phi, bool Lambda ) {
 
-    return new SX( qbit_num, target_qbit );
+    return new U3( qbit_num, target_qbit, Theta, Phi, Lambda );
 }
 
 
@@ -62,12 +67,10 @@ create_SX( int qbit_num, int target_qbit ) {
 @param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 void
-release_SX( SX*  instance ) {
+release_U3( U3*  instance ) {
     delete instance;
     return;
 }
-
-
 
 
 
@@ -76,78 +79,107 @@ extern "C"
 
 
 /**
-@brief Method called when a python instance of the class qgd_SX is destroyed
-@param self A pointer pointing to an instance of class qgd_SX.
+@brief Method called when a python instance of the class qgd_U3_Wrapper is destroyed
+@param self A pointer pointing to an instance of class qgd_U3_Wrapper.
 */
 static void
-qgd_SX_dealloc(qgd_SX *self)
+qgd_U3_Wrapper_dealloc(qgd_U3_Wrapper *self)
 {
 
-    // release the SX gate
-    release_SX( self->gate );
+    // release the U3 gate
+    release_U3( self->gate );
 
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 
 /**
-@brief Method called when a python instance of the class qgd_SX is allocated
-@param type A pointer pointing to a structure describing the type of the class qgd_SX.
+@brief Method called when a python instance of the class qgd_U3_Wrapper is allocated
+@param type A pointer pointing to a structure describing the type of the class qgd_U3_Wrapper.
 */
 static PyObject *
-qgd_SX_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+qgd_U3_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    qgd_SX *self;
-    self = (qgd_SX *) type->tp_alloc(type, 0);
+    qgd_U3_Wrapper *self;
+    self = (qgd_U3_Wrapper *) type->tp_alloc(type, 0);
     if (self != NULL) {}
     return (PyObject *) self;
 }
 
 
 /**
-@brief Method called when a python instance of the class qgd_SX is initialized
-@param self A pointer pointing to an instance of the class qgd_SX.
+@brief Method called when a python instance of the class qgd_U3_Wrapper is initialized
+@param self A pointer pointing to an instance of the class qgd_U3_Wrapper.
 @param args A tuple of the input arguments: qbit_num (int), target_qbit (int), Theta (bool) , Phi (bool), Lambda (bool)
 @param kwds A tuple of keywords
 */
 static int
-qgd_SX_init(qgd_SX *self, PyObject *args, PyObject *kwds)
+qgd_U3_Wrapper_init(qgd_U3_Wrapper *self, PyObject *args, PyObject *kwds)
 {
-    static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", NULL};
+    static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", (char*)"Theta", (char*)"Phi", (char*)"Lambda", NULL};
     int  qbit_num = -1; 
     int target_qbit = -1;
+    bool Theta = false;
+    bool Phi = false;
+    bool Lambda = false;
 
     if (PyArray_API == NULL) {
         import_array();
     }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
-                                     &qbit_num, &target_qbit))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iibbb", kwlist,
+                                     &qbit_num, &target_qbit, &Theta, &Phi, &Lambda))
         return -1;
 
     if (qbit_num != -1 && target_qbit != -1) {
-        self->gate = create_SX( qbit_num, target_qbit );
+        self->gate = create_U3( qbit_num, target_qbit, Theta, Phi, Lambda );
     }
     return 0;
 }
+
+
+
+
 
 /**
 @brief Extract the optimized parameters
 @param start_index The index of the first inverse gate
 */
-
 static PyObject *
-qgd_SX_get_Matrix( qgd_SX *self ) {
+qgd_U3_Wrapper_get_Matrix( qgd_U3_Wrapper *self, PyObject *args ) {
+
+    PyObject * parameters_arr = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
     bool parallel = true;
-    Matrix SX_mtx = self->gate->get_matrix( parallel );
+    Matrix U3_mtx = self->gate->get_matrix( parameters_mtx, parallel );
     
     // convert to numpy array
-    SX_mtx.set_owner(false);
-    PyObject *SX_py = matrix_to_numpy( SX_mtx );
+    U3_mtx.set_owner(false);
+    PyObject *U3_py = matrix_to_numpy( U3_mtx );
 
-    return SX_py;
+
+    Py_DECREF(parameters_arr);
+
+    return U3_py;
 }
+
 
 
 
@@ -155,15 +187,27 @@ qgd_SX_get_Matrix( qgd_SX *self ) {
 @brief Call to apply the gate operation on the inut matrix
 */
 static PyObject *
-qgd_SX_apply_to( qgd_SX *self, PyObject *args ) {
+qgd_U3_Wrapper_apply_to( qgd_U3_Wrapper *self, PyObject *args ) {
 
+    PyObject * parameters_arr = NULL;
     PyObject * unitary_arg = NULL;
 
 
-
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &unitary_arg )) 
+    if (!PyArg_ParseTuple(args, "|OO", &parameters_arr, &unitary_arg )) 
         return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
 
     // convert python object array to numpy C API array
     if ( unitary_arg == NULL ) {
@@ -171,15 +215,7 @@ qgd_SX_apply_to( qgd_SX *self, PyObject *args ) {
         return NULL;
     }
 
-
-    if ( PyArray_Check(unitary_arg) && PyArray_IS_C_CONTIGUOUS(unitary_arg) ) {
-        Py_INCREF(unitary_arg);
-    }
-    else {
-        unitary_arg = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
-    }
-
-   PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
@@ -192,12 +228,13 @@ qgd_SX_apply_to( qgd_SX *self, PyObject *args ) {
     Matrix unitary_mtx = numpy2matrix(unitary);
 
     bool parallel = true;
-    self->gate->apply_to( unitary_mtx, parallel );
+    self->gate->apply_to( parameters_mtx, unitary_mtx, parallel );
     
     if (unitary_mtx.data != PyArray_DATA(unitary)) {
         memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
     }
 
+    Py_DECREF(parameters_arr);
     Py_DECREF(unitary);
 
     return Py_BuildValue("i", 0);
@@ -213,57 +250,62 @@ qgd_SX_apply_to( qgd_SX *self, PyObject *args ) {
 */
 
 static PyObject *
-qgd_SX_get_Gate_Kernel( qgd_SX *self ) {
+qgd_U3_Wrapper_get_Gate_Kernel( qgd_U3_Wrapper *self, PyObject *args ) {
 
+    double ThetaOver2;
+    double Phi; 
+    double Lambda; 
 
-
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|ddd", &ThetaOver2, &Phi, &Lambda )) 
+        return Py_BuildValue("i", -1);
 
     // create QGD version of the input matrix
 
-    Matrix SX_1qbit_ = self->gate->calc_one_qubit_u3( );
-    
-    PyObject *SX_1qbit = matrix_to_numpy( SX_1qbit_ );
+    Matrix U3_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    PyObject *U3_1qbit = matrix_to_numpy( U3_1qbit_ );
 
-    return SX_1qbit;
+    return U3_1qbit;
 
 }
 
 
 
 /**
-@brief Structure containing metadata about the members of class qgd_SX.
+@brief Structure containing metadata about the members of class qgd_U3_Wrapper.
 */
-static PyMemberDef qgd_SX_members[] = {
-   {NULL}  /* Sentinel */
+static PyMemberDef qgd_U3_Wrapper_members[] = {
+    {NULL}  /* Sentinel */
 };
 
 
 /**
-@brief Structure containing metadata about the methods of class qgd_SX.
+@brief Structure containing metadata about the methods of class qgd_U3_Wrapper.
 */
-static PyMethodDef qgd_SX_methods[] = {
-    {"get_Matrix", (PyCFunction) qgd_SX_get_Matrix, METH_NOARGS,
+static PyMethodDef qgd_U3_Wrapper_methods[] = {
+    {"get_Matrix", (PyCFunction) qgd_U3_Wrapper_get_Matrix, METH_VARARGS,
      "Method to get the matrix of the operation."
-    },   
-    {"apply_to", (PyCFunction) qgd_SX_apply_to, METH_VARARGS,
+    },
+    {"apply_to", (PyCFunction) qgd_U3_Wrapper_apply_to, METH_VARARGS,
      "Call to apply the gate on the input matrix."
     },
-    {"get_Gate_Kernel", (PyCFunction) qgd_SX_get_Gate_Kernel, METH_NOARGS,
+    {"get_Gate_Kernel", (PyCFunction) qgd_U3_Wrapper_get_Gate_Kernel, METH_VARARGS,
      "Call to calculate the gate matrix acting on a single qbit space."
     },
-  {NULL}  /* Sentinel */
+
+    {NULL}  /* Sentinel */
 };
 
 
 /**
-@brief A structure describing the type of the class qgd_SX.
+@brief A structure describing the type of the class qgd_U3_Wrapper.
 */
-static PyTypeObject  qgd_SX_Type = {
+static PyTypeObject  qgd_U3_Wrapper_Type = {
   PyVarObject_HEAD_INIT(NULL, 0)
-  "qgd_SX.qgd_SX", /*tp_name*/
-  sizeof(qgd_SX), /*tp_basicsize*/
+  "qgd_U3_Wrapper.qgd_U3_Wrapper", /*tp_name*/
+  sizeof(qgd_U3_Wrapper), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  (destructor) qgd_SX_dealloc, /*tp_dealloc*/
+  (destructor) qgd_U3_Wrapper_dealloc, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -289,24 +331,24 @@ static PyTypeObject  qgd_SX_Type = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-  "Object to represent a SX gate of the QGD package.", /*tp_doc*/
+  "Object to represent a U3 gate of the QGD package.", /*tp_doc*/
   0, /*tp_traverse*/
   0, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  qgd_SX_methods, /*tp_methods*/
-  qgd_SX_members, /*tp_members*/
+  qgd_U3_Wrapper_methods, /*tp_methods*/
+  qgd_U3_Wrapper_members, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
   0, /*tp_dictoffset*/
-  (initproc) qgd_SX_init, /*tp_init*/
+  (initproc) qgd_U3_Wrapper_init, /*tp_init*/
   0, /*tp_alloc*/
-  qgd_SX_new, /*tp_new*/
+  qgd_U3_Wrapper_new, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -331,10 +373,10 @@ static PyTypeObject  qgd_SX_Type = {
 /**
 @brief Structure containing metadata about the module.
 */
-static PyModuleDef  qgd_SX_Module = {
+static PyModuleDef  qgd_U3_Wrapper_Module = {
     PyModuleDef_HEAD_INIT,
-    "qgd_SX",
-    "Python binding for QGD SX gate",
+    "qgd_U3_Wrapper",
+    "Python binding for QGD U3 gate",
     -1,
 };
 
@@ -343,22 +385,22 @@ static PyModuleDef  qgd_SX_Module = {
 @brief Method called when the Python module is initialized
 */
 PyMODINIT_FUNC
-PyInit_qgd_SX(void)
+PyInit_qgd_U3_Wrapper(void)
 {
     // initialize Numpy API
     import_array();
 
     PyObject *m;
-    if (PyType_Ready(& qgd_SX_Type) < 0)
+    if (PyType_Ready(& qgd_U3_Wrapper_Type) < 0)
         return NULL;
 
-    m = PyModule_Create(& qgd_SX_Module);
+    m = PyModule_Create(& qgd_U3_Wrapper_Module);
     if (m == NULL)
         return NULL;
 
-    Py_INCREF(& qgd_SX_Type);
-    if (PyModule_AddObject(m, "qgd_SX", (PyObject *) & qgd_SX_Type) < 0) {
-        Py_DECREF(& qgd_SX_Type);
+    Py_INCREF(& qgd_U3_Wrapper_Type);
+    if (PyModule_AddObject(m, "qgd_U3_Wrapper", (PyObject *) & qgd_U3_Wrapper_Type) < 0) {
+        Py_DECREF(& qgd_U3_Wrapper_Type);
         Py_DECREF(m);
         return NULL;
     }

@@ -113,10 +113,10 @@ class Test_Decomposition:
 
         """
 
-        from squander import Gates_Block
+        from squander import Circuit
 
-        # creating an instance of the wrapper class Gates_Block
-        Gates_Block_ret = Gates_Block( qbit_num )
+        # creating an instance of the wrapper class Circuit
+        Circuit_ret = Circuit( qbit_num )
 
         disentangle_qubit = qbit_num - 1 
 
@@ -124,8 +124,8 @@ class Test_Decomposition:
 
         for qbit in range(0, disentangle_qubit ):
 
-            # creating an instance of the wrapper class Gates_Block
-            Layer = Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Circuit
+            Layer = Circuit( qbit_num )
 
 
             if qbit == 0:
@@ -168,9 +168,9 @@ class Test_Decomposition:
 
          
 
-            Gates_Block_ret.add_Gates_Block( Layer )
+            Circuit_ret.add_Circuit( Layer )
 
-        return Gates_Block_ret
+        return Circuit_ret
 
 
 
@@ -182,10 +182,10 @@ class Test_Decomposition:
 
         """
 
-        from squander import Gates_Block
+        from squander import Circuit
 
-        # creating an instance of the wrapper class Gates_Block
-        Gates_Block_ret = Gates_Block( qbit_num )
+        # creating an instance of the wrapper class Circuit
+        Circuit_ret = Circuit( qbit_num )
 
         disentangle_qubit = qbit_num - 1 
 
@@ -193,8 +193,8 @@ class Test_Decomposition:
 
         for qbit in range(0, disentangle_qubit ):
 
-            # creating an instance of the wrapper class Gates_Block
-            Layer = Gates_Block( qbit_num )
+            # creating an instance of the wrapper class Circuit
+            Layer = Circuit( qbit_num )
 
 
             if qbit == 0:
@@ -237,7 +237,7 @@ class Test_Decomposition:
 
          
 
-            Gates_Block_ret.add_Gates_Block( Layer )
+            Circuit_ret.add_Circuit( Layer )
 
-        return Gates_Block_ret
+        return Circuit_ret
     

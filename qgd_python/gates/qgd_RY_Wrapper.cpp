@@ -20,8 +20,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*
-\file qgd_RX.cpp
-\brief Python interface for the RX gate class
+\file qgd_RY_Wrapper.cpp
+\brief Python interface for the RY gate class
 */
 
 #define PY_SSIZE_T_CLEAN
@@ -29,20 +29,20 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include <Python.h>
 #include "structmember.h"
-#include "RX.h"
+#include "RY.h"
 #include "numpy_interface.h"
 
 
 
 
 /**
-@brief Type definition of the qgd_RX Python class of the qgd_RX module
+@brief Type definition of the qgd_RY_Wrapper Python class of the qgd_RY_Wrapper module
 */
 typedef struct {
     PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    RX* gate;
-} qgd_RX;
+    /// Pointer to the C++ class of the RY gate
+    RY* gate;
+} qgd_RY_Wrapper;
 
 
 /**
@@ -50,10 +50,10 @@ typedef struct {
 @param qbit_num The number of qubits spanning the operation.
 @param target_qbit The 0<=ID<qbit_num of the target qubit.
 */
-RX* 
-create_RX( int qbit_num, int target_qbit ) {
+RY* 
+create_RY( int qbit_num, int target_qbit ) {
 
-    return new RX( qbit_num, target_qbit );
+    return new RY( qbit_num, target_qbit );
 }
 
 
@@ -62,7 +62,7 @@ create_RX( int qbit_num, int target_qbit ) {
 @param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 void
-release_RX( RX*  instance ) {
+release_RY( RY*  instance ) {
     delete instance;
     return;
 }
@@ -76,42 +76,42 @@ extern "C"
 
 
 /**
-@brief Method called when a python instance of the class qgd_RX is destroyed
-@param self A pointer pointing to an instance of class qgd_RX.
+@brief Method called when a python instance of the class qgd_RY_Wrapper is destroyed
+@param self A pointer pointing to an instance of class qgd_RY_Wrapper.
 */
 static void
-qgd_RX_dealloc(qgd_RX *self)
+qgd_RY_Wrapper_dealloc(qgd_RY_Wrapper *self)
 {
 
-    // release the RX gate
-    release_RX( self->gate );
+    // release the RY gate
+    release_RY( self->gate );
 
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 
 /**
-@brief Method called when a python instance of the class qgd_RX is allocated
-@param type A pointer pointing to a structure describing the type of the class qgd_RX.
+@brief Method called when a python instance of the class qgd_RY_Wrapper is allocated
+@param type A pointer pointing to a structure describing the type of the class qgd_RY_Wrapper.
 */
 static PyObject *
-qgd_RX_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+qgd_RY_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    qgd_RX *self;
-    self = (qgd_RX *) type->tp_alloc(type, 0);
+    qgd_RY_Wrapper *self;
+    self = (qgd_RY_Wrapper *) type->tp_alloc(type, 0);
     if (self != NULL) {}
     return (PyObject *) self;
 }
 
 
 /**
-@brief Method called when a python instance of the class qgd_RX is initialized
-@param self A pointer pointing to an instance of the class qgd_RX.
+@brief Method called when a python instance of the class qgd_RY_Wrapper is initialized
+@param self A pointer pointing to an instance of the class qgd_RY_Wrapper.
 @param args A tuple of the input arguments: qbit_num (int), target_qbit (int), Theta (bool) , Phi (bool), Lambda (bool)
 @param kwds A tuple of keywords
 */
 static int
-qgd_RX_init(qgd_RX *self, PyObject *args, PyObject *kwds)
+qgd_RY_Wrapper_init(qgd_RY_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", NULL};
     int  qbit_num = -1; 
@@ -126,7 +126,7 @@ qgd_RX_init(qgd_RX *self, PyObject *args, PyObject *kwds)
         return -1;
 
     if (qbit_num != -1 && target_qbit != -1) {
-        self->gate = create_RX( qbit_num, target_qbit );
+        self->gate = create_RY( qbit_num, target_qbit );
     }
     return 0;
 }
@@ -136,7 +136,7 @@ qgd_RX_init(qgd_RX *self, PyObject *args, PyObject *kwds)
 @param start_index The index of the first inverse gate
 */
 static PyObject *
-qgd_RX_get_Matrix( qgd_RX *self, PyObject *args ) {
+qgd_RY_Wrapper_get_Matrix( qgd_RY_Wrapper *self, PyObject *args ) {
 
     PyObject * parameters_arr = NULL;
 
@@ -158,16 +158,16 @@ qgd_RX_get_Matrix( qgd_RX *self, PyObject *args ) {
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
     bool parallel = true;
-    Matrix RX_mtx = self->gate->get_matrix( parameters_mtx, parallel );
+    Matrix RY_mtx = self->gate->get_matrix( parameters_mtx, parallel );
     
     // convert to numpy array
-    RX_mtx.set_owner(false);
-    PyObject *RX_py = matrix_to_numpy( RX_mtx );
+    RY_mtx.set_owner(false);
+    PyObject *RY_py = matrix_to_numpy( RY_mtx );
 
 
     Py_DECREF(parameters_arr);
 
-    return RX_py;
+    return RY_py;
 }
 
 
@@ -176,7 +176,7 @@ qgd_RX_get_Matrix( qgd_RX *self, PyObject *args ) {
 @brief Call to apply the gate operation on the inut matrix
 */
 static PyObject *
-qgd_RX_apply_to( qgd_RX *self, PyObject *args ) {
+qgd_RY_Wrapper_apply_to( qgd_RY_Wrapper *self, PyObject *args ) {
 
     PyObject * parameters_arr = NULL;
     PyObject * unitary_arg = NULL;
@@ -236,7 +236,7 @@ qgd_RX_apply_to( qgd_RX *self, PyObject *args ) {
 */
 
 static PyObject *
-qgd_RX_get_Gate_Kernel( qgd_RX *self, PyObject *args ) {
+qgd_RY_Wrapper_get_Gate_Kernel( qgd_RY_Wrapper *self, PyObject *args ) {
 
     double ThetaOver2;
     double Phi; 
@@ -249,35 +249,35 @@ qgd_RX_get_Gate_Kernel( qgd_RX *self, PyObject *args ) {
 
     // create QGD version of the input matrix
 
-    Matrix RX_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix RY_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
     
-    PyObject *RX_1qbit = matrix_to_numpy( RX_1qbit_ );
+    PyObject *RY_1qbit = matrix_to_numpy( RY_1qbit_ );
 
-    return RX_1qbit;
+    return RY_1qbit;
+
 
 }
 
 
-
 /**
-@brief Structure containing metadata about the members of class qgd_RX.
+@brief Structure containing metadata about the members of class qgd_RY_Wrapper.
 */
-static PyMemberDef qgd_RX_members[] = {
+static PyMemberDef qgd_RY_Wrapper_members[] = {
     {NULL}  /* Sentinel */
 };
 
 
 /**
-@brief Structure containing metadata about the methods of class qgd_RX.
+@brief Structure containing metadata about the methods of class qgd_RY_Wrapper.
 */
-static PyMethodDef qgd_RX_methods[] = {
-    {"get_Matrix", (PyCFunction) qgd_RX_get_Matrix, METH_VARARGS,
+static PyMethodDef qgd_RY_Wrapper_methods[] = {
+    {"get_Matrix", (PyCFunction) qgd_RY_Wrapper_get_Matrix, METH_VARARGS,
      "Method to get the matrix of the operation."
     },
-    {"apply_to", (PyCFunction) qgd_RX_apply_to, METH_VARARGS,
+    {"apply_to", (PyCFunction) qgd_RY_Wrapper_apply_to, METH_VARARGS,
      "Call to apply the gate on the input matrix."
     },
-    {"get_Gate_Kernel", (PyCFunction) qgd_RX_get_Gate_Kernel, METH_VARARGS,
+    {"get_Gate_Kernel", (PyCFunction) qgd_RY_Wrapper_get_Gate_Kernel, METH_VARARGS,
      "Call to calculate the gate matrix acting on a single qbit space."
     },
     {NULL}  /* Sentinel */
@@ -285,14 +285,14 @@ static PyMethodDef qgd_RX_methods[] = {
 
 
 /**
-@brief A structure describing the type of the class qgd_RX.
+@brief A structure describing the type of the class qgd_RY_Wrapper.
 */
-static PyTypeObject  qgd_RX_Type = {
+static PyTypeObject  qgd_RY_Wrapper_Type = {
   PyVarObject_HEAD_INIT(NULL, 0)
-  "qgd_RX.qgd_RX", /*tp_name*/
-  sizeof(qgd_RX), /*tp_basicsize*/
+  "qgd_RY_Wrapper.qgd_RY_Wrapper", /*tp_name*/
+  sizeof(qgd_RY_Wrapper), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  (destructor) qgd_RX_dealloc, /*tp_dealloc*/
+  (destructor) qgd_RY_Wrapper_dealloc, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -318,24 +318,24 @@ static PyTypeObject  qgd_RX_Type = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-  "Object to represent a RX gate of the QGD package.", /*tp_doc*/
+  "Object to represent a RY gate of the QGD package.", /*tp_doc*/
   0, /*tp_traverse*/
   0, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  qgd_RX_methods, /*tp_methods*/
-  qgd_RX_members, /*tp_members*/
+  qgd_RY_Wrapper_methods, /*tp_methods*/
+  qgd_RY_Wrapper_members, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
   0, /*tp_dictoffset*/
-  (initproc) qgd_RX_init, /*tp_init*/
+  (initproc) qgd_RY_Wrapper_init, /*tp_init*/
   0, /*tp_alloc*/
-  qgd_RX_new, /*tp_new*/
+  qgd_RY_Wrapper_new, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -360,10 +360,10 @@ static PyTypeObject  qgd_RX_Type = {
 /**
 @brief Structure containing metadata about the module.
 */
-static PyModuleDef  qgd_RX_Module = {
+static PyModuleDef  qgd_RY_Wrapper_Module = {
     PyModuleDef_HEAD_INIT,
-    "qgd_RX",
-    "Python binding for QGD RX gate",
+    "qgd_RY_Wrapper",
+    "Python binding for QGD RY gate",
     -1,
 };
 
@@ -372,23 +372,22 @@ static PyModuleDef  qgd_RX_Module = {
 @brief Method called when the Python module is initialized
 */
 PyMODINIT_FUNC
-PyInit_qgd_RX(void)
+PyInit_qgd_RY_Wrapper(void)
 {
-
     // initialize Numpy API
     import_array();
 
     PyObject *m;
-    if (PyType_Ready(& qgd_RX_Type) < 0)
+    if (PyType_Ready(& qgd_RY_Wrapper_Type) < 0)
         return NULL;
 
-    m = PyModule_Create(& qgd_RX_Module);
+    m = PyModule_Create(& qgd_RY_Wrapper_Module);
     if (m == NULL)
         return NULL;
 
-    Py_INCREF(& qgd_RX_Type);
-    if (PyModule_AddObject(m, "qgd_RX", (PyObject *) & qgd_RX_Type) < 0) {
-        Py_DECREF(& qgd_RX_Type);
+    Py_INCREF(& qgd_RY_Wrapper_Type);
+    if (PyModule_AddObject(m, "qgd_RY_Wrapper", (PyObject *) & qgd_RY_Wrapper_Type) < 0) {
+        Py_DECREF(& qgd_RY_Wrapper_Type);
         Py_DECREF(m);
         return NULL;
     }

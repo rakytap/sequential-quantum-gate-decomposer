@@ -37,18 +37,18 @@ class Test_Renyi_entropy:
 
         """
 
-        from squander import Gates_Block
+        from squander import Circuit
 
 
-        # creating an instance of the wrapper class Gates_Block
-        Gates_Block_ret = Gates_Block( qbit_num )  
+        # creating an instance of the wrapper class Circuit
+        Circuit_ret = Circuit( qbit_num )  
 
 
-        Layer = Gates_Block( qbit_num )
+        Layer = Circuit( qbit_num )
         for target_qbit in range(qbit_num):
             Layer.add_U3(target_qbit, True, True, True )
 
-        Gates_Block_ret.add_Gates_Block( Layer )
+        Circuit_ret.add_Circuit( Layer )
 			   
 
 
@@ -56,32 +56,32 @@ class Test_Renyi_entropy:
 
             for target_qbit in range(1, qbit_num-1, 2):
 
-                    # creating an instance of the wrapper class Gates_Block
-                    Layer = Gates_Block( qbit_num )
+                    # creating an instance of the wrapper class Circuit
+                    Layer = Circuit( qbit_num )
 
                     Layer.add_CNOT( target_qbit=target_qbit, control_qbit=target_qbit+1 )
                     Layer.add_U3( target_qbit, True, True, True )
                     Layer.add_U3( target_qbit+1, True, True, True )
 
-                    Gates_Block_ret.add_Gates_Block( Layer )
+                    Circuit_ret.add_Circuit( Layer )
 
 
             for target_qbit in range(0, qbit_num-1, 2):
 
-                    # creating an instance of the wrapper class Gates_Block
-                    Layer = Gates_Block( qbit_num )
+                    # creating an instance of the wrapper class Circuit
+                    Layer = Circuit( qbit_num )
         
                     Layer.add_CNOT( target_qbit=target_qbit, control_qbit=target_qbit+1 )
                     Layer.add_U3( target_qbit, True, True, True )
                     Layer.add_U3( target_qbit+1, True, True, True )
 
-                    Gates_Block_ret.add_Gates_Block( Layer )
+                    Circuit_ret.add_Circuit( Layer )
 
 
 
 
           
-        return Gates_Block_ret
+        return Circuit_ret
 
 
     def test_Renyi_entropy(self):

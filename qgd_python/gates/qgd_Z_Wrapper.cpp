@@ -20,8 +20,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*
-\file qgd_RZ.cpp
-\brief Python interface for the RZ gate class
+\file qgd_Z_Wrapper.cpp
+\brief Python interface for the Z gate class
 */
 
 #define PY_SSIZE_T_CLEAN
@@ -29,20 +29,20 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include <Python.h>
 #include "structmember.h"
-#include "RZ.h"
+#include "Z.h"
 #include "numpy_interface.h"
 
 
 
 
 /**
-@brief Type definition of the qgd_RZ Python class of the qgd_RZ module
+@brief Type definition of the qgd_Z_Wrapper Python class of the qgd_Z_Wrapper module
 */
 typedef struct {
     PyObject_HEAD
-    /// Pointer to the C++ class of the RZ gate
-    RZ* gate;
-} qgd_RZ;
+    /// Pointer to the C++ class of the X gate
+    Z* gate;
+} qgd_Z_Wrapper;
 
 
 /**
@@ -50,10 +50,10 @@ typedef struct {
 @param qbit_num The number of qubits spanning the operation.
 @param target_qbit The 0<=ID<qbit_num of the target qubit.
 */
-RZ* 
-create_RZ( int qbit_num, int target_qbit ) {
+Z* 
+create_Z( int qbit_num, int target_qbit ) {
 
-    return new RZ( qbit_num, target_qbit );
+    return new Z( qbit_num, target_qbit );
 }
 
 
@@ -62,7 +62,7 @@ create_RZ( int qbit_num, int target_qbit ) {
 @param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 void
-release_RZ( RZ*  instance ) {
+release_Z( Z*  instance ) {
     delete instance;
     return;
 }
@@ -76,42 +76,42 @@ extern "C"
 
 
 /**
-@brief Method called when a python instance of the class qgd_RZ is destroyed
-@param self A pointer pointing to an instance of class qgd_RZ.
+@brief Method called when a python instance of the class qgd_Z_Wrapper is destroyed
+@param self A pointer pointing to an instance of class qgd_Z_Wrapper.
 */
 static void
-qgd_RZ_dealloc(qgd_RZ *self)
+qgd_Z_Wrapper_dealloc(qgd_Z_Wrapper *self)
 {
 
-    // release the RZ gate
-    release_RZ( self->gate );
+    // release the X gate
+    release_Z( self->gate );
 
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
 
 
 /**
-@brief Method called when a python instance of the class qgd_RZ is allocated
-@param type A pointer pointing to a structure describing the type of the class qgd_RZ.
+@brief Method called when a python instance of the class qgd_Z_Wrapper is allocated
+@param type A pointer pointing to a structure describing the type of the class qgd_Z_Wrapper.
 */
 static PyObject *
-qgd_RZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+qgd_Z_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    qgd_RZ *self;
-    self = (qgd_RZ *) type->tp_alloc(type, 0);
+    qgd_Z_Wrapper *self;
+    self = (qgd_Z_Wrapper *) type->tp_alloc(type, 0);
     if (self != NULL) {}
     return (PyObject *) self;
 }
 
 
 /**
-@brief Method called when a python instance of the class qgd_RZ is initialized
-@param self A pointer pointing to an instance of the class qgd_RZ.
+@brief Method called when a python instance of the class qgd_Z_Wrapper is initialized
+@param self A pointer pointing to an instance of the class qgd_Z_Wrapper.
 @param args A tuple of the input arguments: qbit_num (int), target_qbit (int), Theta (bool) , Phi (bool), Lambda (bool)
 @param kwds A tuple of keywords
 */
 static int
-qgd_RZ_init(qgd_RZ *self, PyObject *args, PyObject *kwds)
+qgd_Z_Wrapper_init(qgd_Z_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", NULL};
     int  qbit_num = -1; 
@@ -126,7 +126,7 @@ qgd_RZ_init(qgd_RZ *self, PyObject *args, PyObject *kwds)
         return -1;
 
     if (qbit_num != -1 && target_qbit != -1) {
-        self->gate = create_RZ( qbit_num, target_qbit );
+        self->gate = create_Z( qbit_num, target_qbit );
     }
     return 0;
 }
@@ -135,8 +135,9 @@ qgd_RZ_init(qgd_RZ *self, PyObject *args, PyObject *kwds)
 @brief Extract the optimized parameters
 @param start_index The index of the first inverse gate
 */
+/**
 static PyObject *
-qgd_RZ_get_Matrix( qgd_RZ *self, PyObject *args ) {
+qgd_Z_Wrapper_get_Matrix( qgd_Z_Wrapper *self, PyObject *args ) {
 
     PyObject * parameters_arr = NULL;
 
@@ -157,44 +158,51 @@ qgd_RZ_get_Matrix( qgd_RZ *self, PyObject *args ) {
     // get the C++ wrapper around the data
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
-    bool parallel = true;
-    Matrix RZ_mtx = self->gate->get_matrix( parameters_mtx, parallel );
+
+    Matrix Z_mtx = self->gate->get_matrix(  );
     
     // convert to numpy array
-    RZ_mtx.set_owner(false);
-    PyObject *RZ_py = matrix_to_numpy( RZ_mtx );
+    Z_mtx.set_owner(false);
+    PyObject *Z_py = matrix_to_numpy( Z_mtx );
 
 
     Py_DECREF(parameters_arr);
 
-    return RZ_py;
+    return Z_py;
 }
 
+*/
+/**
+@brief Extract the optimized parameters
+@param start_index The index of the first inverse gate
+*/
+static PyObject *
+qgd_Z_Wrapper_get_Matrix( qgd_Z_Wrapper *self ) {
 
+    bool parallel = true;   
+    Matrix Z_mtx = self->gate->get_matrix( parallel  );
+    
+    // convert to numpy array
+    Z_mtx.set_owner(false);
+    PyObject *Z_py = matrix_to_numpy( Z_mtx );
+
+
+    return Z_py;
+}
 
 /**
 @brief Call to apply the gate operation on the inut matrix
 */
 static PyObject *
-qgd_RZ_apply_to( qgd_RZ *self, PyObject *args ) {
+qgd_Z_Wrapper_apply_to( qgd_Z_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
     PyObject * unitary_arg = NULL;
 
+
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|OO", &parameters_arr, &unitary_arg )) 
+    if (!PyArg_ParseTuple(args, "|O", &unitary_arg )) 
         return Py_BuildValue("i", -1);
-    
-    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
-        Py_INCREF(parameters_arr);
-    }
 
-    else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
-    }
-
-    // get the C++ wrapper around the data
-    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
     // convert python object array to numpy C API array
     if ( unitary_arg == NULL ) {
@@ -210,17 +218,17 @@ qgd_RZ_apply_to( qgd_RZ *self, PyObject *args ) {
         return NULL;
     }
 
+
     // create QGD version of the input matrix
     Matrix unitary_mtx = numpy2matrix(unitary);
 
     bool parallel = true;
-    self->gate->apply_to( parameters_mtx, unitary_mtx, parallel );
+    self->gate->apply_to( unitary_mtx, parallel );
     
     if (unitary_mtx.data != PyArray_DATA(unitary)) {
         memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
     }
 
-    Py_DECREF(parameters_arr);
     Py_DECREF(unitary);
 
     return Py_BuildValue("i", 0);
@@ -235,44 +243,40 @@ qgd_RZ_apply_to( qgd_RZ *self, PyObject *args ) {
 */
 
 static PyObject *
-qgd_RZ_get_Gate_Kernel( qgd_RZ *self, PyObject *args ) {
+qgd_Z_Wrapper_get_Gate_Kernel( qgd_Z_Wrapper *self ) {
 
-    double PhiOver2; 
 
-    // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|d", &PhiOver2 )) 
-        return Py_BuildValue("i", -1);
 
 
     // create QGD version of the input matrix
 
-    Matrix RZ_1qbit_ = self->gate->calc_one_qubit_u3(PhiOver2 );
+    Matrix Z_1qbit_ = self->gate->calc_one_qubit_u3( );
     
-    PyObject *RZ_1qbit = matrix_to_numpy( RZ_1qbit_ );
+    PyObject *Z_1qbit = matrix_to_numpy( Z_1qbit_ );
 
-    return RZ_1qbit;
+    return Z_1qbit;
 
 }
 
 /**
-@brief Structure containing metadata about the members of class qgd_RZ.
+@brief Structure containing metadata about the members of class qgd_Z_Wrapper.
 */
-static PyMemberDef qgd_RZ_members[] = {
+static PyMemberDef qgd_Z_Wrapper_members[] = {
     {NULL}  /* Sentinel */
 };
 
 
 /**
-@brief Structure containing metadata about the methods of class qgd_RZ.
+@brief Structure containing metadata about the methods of class qgd_Z_Wrapper.
 */
-static PyMethodDef qgd_RZ_methods[] = {
-    {"get_Matrix", (PyCFunction) qgd_RZ_get_Matrix, METH_VARARGS,
+static PyMethodDef qgd_Z_Wrapper_methods[] = {
+    {"get_Matrix", (PyCFunction) qgd_Z_Wrapper_get_Matrix, METH_VARARGS,
      "Method to get the matrix of the operation."
     },
-    {"apply_to", (PyCFunction) qgd_RZ_apply_to, METH_VARARGS,
+    {"apply_to", (PyCFunction) qgd_Z_Wrapper_apply_to, METH_VARARGS,
      "Call to apply the gate on the input matrix."
     },
-    {"get_Gate_Kernel", (PyCFunction) qgd_RZ_get_Gate_Kernel, METH_VARARGS,
+    {"get_Gate_Kernel", (PyCFunction) qgd_Z_Wrapper_get_Gate_Kernel, METH_NOARGS,
      "Call to calculate the gate matrix acting on a single qbit space."
     },
     {NULL}  /* Sentinel */
@@ -280,14 +284,14 @@ static PyMethodDef qgd_RZ_methods[] = {
 
 
 /**
-@brief A structure describing the type of the class qgd_RZ.
+@brief A structure describing the type of the class qgd_Z_Wrapper.
 */
-static PyTypeObject  qgd_RZ_Type = {
+static PyTypeObject  qgd_Z_Wrapper_Type = {
   PyVarObject_HEAD_INIT(NULL, 0)
-  "qgd_RZ.qgd_RZ", /*tp_name*/
-  sizeof(qgd_RZ), /*tp_basicsize*/
+  "qgd_Z_Wrapper.qgd_Z_Wrapper", /*tp_name*/
+  sizeof(qgd_Z_Wrapper), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  (destructor) qgd_RZ_dealloc, /*tp_dealloc*/
+  (destructor) qgd_Z_Wrapper_dealloc, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -313,24 +317,24 @@ static PyTypeObject  qgd_RZ_Type = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-  "Object to represent a RZ gate of the QGD package.", /*tp_doc*/
+  "Object to represent a X gate of the QGD package.", /*tp_doc*/
   0, /*tp_traverse*/
   0, /*tp_clear*/
   0, /*tp_richcompare*/
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-  qgd_RZ_methods, /*tp_methods*/
-  qgd_RZ_members, /*tp_members*/
+  qgd_Z_Wrapper_methods, /*tp_methods*/
+  qgd_Z_Wrapper_members, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
   0, /*tp_dictoffset*/
-  (initproc) qgd_RZ_init, /*tp_init*/
+  (initproc) qgd_Z_Wrapper_init, /*tp_init*/
   0, /*tp_alloc*/
-  qgd_RZ_new, /*tp_new*/
+  qgd_Z_Wrapper_new, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -355,10 +359,10 @@ static PyTypeObject  qgd_RZ_Type = {
 /**
 @brief Structure containing metadata about the module.
 */
-static PyModuleDef  qgd_RZ_Module = {
+static PyModuleDef  qgd_Z_Wrapper_Module = {
     PyModuleDef_HEAD_INIT,
-    "qgd_RZ",
-    "Python binding for QGD RZ gate",
+    "qgd_Z_Wrapper",
+    "Python binding for QGD X gate",
     -1,
 };
 
@@ -367,22 +371,22 @@ static PyModuleDef  qgd_RZ_Module = {
 @brief Method called when the Python module is initialized
 */
 PyMODINIT_FUNC
-PyInit_qgd_RZ(void)
+PyInit_qgd_Z_Wrapper(void)
 {
     // initialize Numpy API
     import_array();
 
     PyObject *m;
-    if (PyType_Ready(& qgd_RZ_Type) < 0)
+    if (PyType_Ready(& qgd_Z_Wrapper_Type) < 0)
         return NULL;
 
-    m = PyModule_Create(& qgd_RZ_Module);
+    m = PyModule_Create(& qgd_Z_Wrapper_Module);
     if (m == NULL)
         return NULL;
 
-    Py_INCREF(& qgd_RZ_Type);
-    if (PyModule_AddObject(m, "qgd_RZ", (PyObject *) & qgd_RZ_Type) < 0) {
-        Py_DECREF(& qgd_RZ_Type);
+    Py_INCREF(& qgd_Z_Wrapper_Type);
+    if (PyModule_AddObject(m, "qgd_Z_Wrapper", (PyObject *) & qgd_Z_Wrapper_Type) < 0) {
+        Py_DECREF(& qgd_Z_Wrapper_Type);
         Py_DECREF(m);
         return NULL;
     }

@@ -20,7 +20,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 */
 /*
-\file qgd_CZ.cpp
+\file qgd_CZ_Wrapper.cpp
 \brief Python interface for the CZ gate class
 */
 
@@ -35,13 +35,13 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /**
-@brief Type definition of the  qgd_CZ Python class of the  qgd_CZ module
+@brief Type definition of the  qgd_CZ_Wrapper Python class of the  qgd_CZ_Wrapper module
 */
 typedef struct {
     PyObject_HEAD
     /// Pointer to the C++ class of the CZ gate
     CZ* gate;
-} qgd_CZ;
+} qgd_CZ_Wrapper;
 
 
 /**
@@ -76,11 +76,11 @@ extern "C"
 
 
 /**
-@brief Method called when a python instance of the class  qgd_CZ is destroyed
-@param self A pointer pointing to an instance of class  qgd_CZ.
+@brief Method called when a python instance of the class  qgd_CZ_Wrapper is destroyed
+@param self A pointer pointing to an instance of class  qgd_CZ_Wrapper.
 */
 static void
- qgd_CZ_dealloc(qgd_CZ *self)
+ qgd_CZ_Wrapper_dealloc(qgd_CZ_Wrapper *self)
 {
     release_CZ( self->gate );
 
@@ -89,27 +89,27 @@ static void
 
 
 /**
-@brief Method called when a python instance of the class  qgd_CZ is allocated
-@param type A pointer pointing to a structure describing the type of the class  qgd_CZ.
+@brief Method called when a python instance of the class  qgd_CZ_Wrapper is allocated
+@param type A pointer pointing to a structure describing the type of the class  qgd_CZ_Wrapper.
 */
 static PyObject *
- qgd_CZ_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+ qgd_CZ_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
-    qgd_CZ *self;
-    self = (qgd_CZ *) type->tp_alloc(type, 0);
+    qgd_CZ_Wrapper *self;
+    self = (qgd_CZ_Wrapper *) type->tp_alloc(type, 0);
     if (self != NULL) {}
     return (PyObject *) self;
 }
 
 
 /**
-@brief Method called when a python instance of the class  qgd_CZ is initialized
-@param self A pointer pointing to an instance of the class  qgd_CZ.
+@brief Method called when a python instance of the class  qgd_CZ_Wrapper is initialized
+@param self A pointer pointing to an instance of the class  qgd_CZ_Wrapper.
 @param args A tuple of the input arguments: qbit_num (int), target_qbit (int), control_qbit (int)
 @param kwds A tuple of keywords
 */
 static int
- qgd_CZ_init(qgd_CZ *self, PyObject *args, PyObject *kwds)
+ qgd_CZ_Wrapper_init(qgd_CZ_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", (char*)"control_qbit", NULL};
     int  qbit_num = -1; 
@@ -136,7 +136,7 @@ static int
 */
 
 static PyObject *
-qgd_CZ_get_Matrix( qgd_CZ *self ) {
+qgd_CZ_Wrapper_get_Matrix( qgd_CZ_Wrapper *self ) {
 
     bool parallel = true;
     Matrix CZ_mtx = self->gate->get_matrix( parallel  );
@@ -154,7 +154,7 @@ qgd_CZ_get_Matrix( qgd_CZ *self ) {
 @brief Call to apply the gate operation on the inut matrix
 */
 static PyObject *
-qgd_CZ_apply_to( qgd_CZ *self, PyObject *args ) {
+qgd_CZ_Wrapper_apply_to( qgd_CZ_Wrapper *self, PyObject *args ) {
 
     PyObject * unitary_arg = NULL;
 
@@ -211,7 +211,7 @@ qgd_CZ_apply_to( qgd_CZ *self, PyObject *args ) {
 */
 
 static PyObject *
-qgd_CZ_get_Gate_Kernel( qgd_CZ *self ) {
+qgd_CZ_Wrapper_get_Gate_Kernel( qgd_CZ_Wrapper *self ) {
 
 
 
@@ -228,24 +228,24 @@ qgd_CZ_get_Gate_Kernel( qgd_CZ *self ) {
 
 
 /**
-@brief Structure containing metadata about the members of class  qgd_CZ.
+@brief Structure containing metadata about the members of class  qgd_CZ_Wrapper.
 */
-static PyMemberDef  qgd_CZ_members[] = {
+static PyMemberDef  qgd_CZ_Wrapper_members[] = {
     {NULL}  /* Sentinel */
 };
 
 
 /**
-@brief Structure containing metadata about the methods of class  qgd_CZ.
+@brief Structure containing metadata about the methods of class  qgd_CZ_Wrapper.
 */
-static PyMethodDef  qgd_CZ_methods[] = {
-    {"get_Matrix", (PyCFunction) qgd_CZ_get_Matrix, METH_NOARGS,
+static PyMethodDef  qgd_CZ_Wrapper_methods[] = {
+    {"get_Matrix", (PyCFunction) qgd_CZ_Wrapper_get_Matrix, METH_NOARGS,
      "Method to get the matrix of the operation."
     },
-    {"apply_to", (PyCFunction) qgd_CZ_apply_to, METH_VARARGS,
+    {"apply_to", (PyCFunction) qgd_CZ_Wrapper_apply_to, METH_VARARGS,
      "Call to apply the gate on the input matrix."
     },
-    {"get_Gate_Kernel", (PyCFunction) qgd_CZ_get_Gate_Kernel, METH_NOARGS,
+    {"get_Gate_Kernel", (PyCFunction) qgd_CZ_Wrapper_get_Gate_Kernel, METH_NOARGS,
      "Call to calculate the gate matrix acting on a single qbit space."
     },
     {NULL}  /* Sentinel */
@@ -253,14 +253,14 @@ static PyMethodDef  qgd_CZ_methods[] = {
 
 
 /**
-@brief A structure describing the type of the class  qgd_CZ.
+@brief A structure describing the type of the class  qgd_CZ_Wrapper.
 */
-static PyTypeObject  qgd_CZ_Type = {
+static PyTypeObject  qgd_CZ_Wrapper_Type = {
   PyVarObject_HEAD_INIT(NULL, 0)
-  "qgd_CZ.qgd_CZ", /*tp_name*/
-  sizeof(qgd_CZ), /*tp_basicsize*/
+  "qgd_CZ_Wrapper.qgd_CZ_Wrapper", /*tp_name*/
+  sizeof(qgd_CZ_Wrapper), /*tp_basicsize*/
   0, /*tp_itemsize*/
-  (destructor)  qgd_CZ_dealloc, /*tp_dealloc*/
+  (destructor)  qgd_CZ_Wrapper_dealloc, /*tp_dealloc*/
   #if PY_VERSION_HEX < 0x030800b4
   0, /*tp_print*/
   #endif
@@ -293,17 +293,17 @@ static PyTypeObject  qgd_CZ_Type = {
   0, /*tp_weaklistoffset*/
   0, /*tp_iter*/
   0, /*tp_iternext*/
-   qgd_CZ_methods, /*tp_methods*/
-   qgd_CZ_members, /*tp_members*/
+   qgd_CZ_Wrapper_methods, /*tp_methods*/
+   qgd_CZ_Wrapper_members, /*tp_members*/
   0, /*tp_getset*/
   0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
   0, /*tp_dictoffset*/
-  (initproc)  qgd_CZ_init, /*tp_init*/
+  (initproc)  qgd_CZ_Wrapper_init, /*tp_init*/
   0, /*tp_alloc*/
-   qgd_CZ_new, /*tp_new*/
+   qgd_CZ_Wrapper_new, /*tp_new*/
   0, /*tp_free*/
   0, /*tp_is_gc*/
   0, /*tp_bases*/
@@ -328,9 +328,9 @@ static PyTypeObject  qgd_CZ_Type = {
 /**
 @brief Structure containing metadata about the module.
 */
-static PyModuleDef  qgd_CZ_Module = {
+static PyModuleDef  qgd_CZ_Wrapper_Module = {
     PyModuleDef_HEAD_INIT,
-    "qgd_CZ",
+    "qgd_CZ_Wrapper",
     "Python binding for QGD CZ gate",
     -1,
 };
@@ -340,22 +340,22 @@ static PyModuleDef  qgd_CZ_Module = {
 @brief Method called when the Python module is initialized
 */
 PyMODINIT_FUNC
-PyInit_qgd_CZ(void)
+PyInit_qgd_CZ_Wrapper(void)
 {
     // initialize Numpy API
     import_array();
 
     PyObject *m;
-    if (PyType_Ready(& qgd_CZ_Type) < 0)
+    if (PyType_Ready(& qgd_CZ_Wrapper_Type) < 0)
         return NULL;
 
-    m = PyModule_Create(& qgd_CZ_Module);
+    m = PyModule_Create(& qgd_CZ_Wrapper_Module);
     if (m == NULL)
         return NULL;
 
-    Py_INCREF(& qgd_CZ_Type);
-    if (PyModule_AddObject(m, "qgd_CZ", (PyObject *) & qgd_CZ_Type) < 0) {
-        Py_DECREF(& qgd_CZ_Type);
+    Py_INCREF(& qgd_CZ_Wrapper_Type);
+    if (PyModule_AddObject(m, "qgd_CZ_Wrapper", (PyObject *) & qgd_CZ_Wrapper_Type) < 0) {
+        Py_DECREF(& qgd_CZ_Wrapper_Type);
         Py_DECREF(m);
         return NULL;
     }

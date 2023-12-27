@@ -39,12 +39,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /**
-@brief Type definition of the qgd_Gates_Block_Wrapper Python class of the qgd_Gates_Block_Wrapper module
+@brief Type definition of the qgd_Circuit_Wrapper Python class of the qgd_Circuit_Wrapper module
 */
-typedef struct qgd_Gates_Block_Wrapper {
+typedef struct qgd_Circuit_Wrapper {
     PyObject_HEAD
     Gates_block* gate;
-} qgd_Gates_Block_Wrapper;
+} qgd_Circuit_Wrapper;
 
 
 /**
@@ -932,10 +932,9 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decompo
     // parsing input arguments
     if (!PyArg_ParseTuple(args, "|O", &gate_structure_py )) return Py_BuildValue("i", -1);
 
+    // convert gate structure from PyObject to qgd_Circuit_Wrapper
+    qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*) gate_structure_py;
 
-    // convert gate structure from PyObject to qgd_Gates_Block_Wrapper
-    qgd_Gates_Block_Wrapper* qgd_op_block = (qgd_Gates_Block_Wrapper*) gate_structure_py;
-    
     self->decomp->set_custom_gate_structure( qgd_op_block->gate );
 
     return Py_BuildValue("i", 0);
@@ -1274,7 +1273,7 @@ static PyTypeObject qgd_N_Qubit_Decomposition_custom_Wrapper_Type = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-  "Object to represent a Gates_block class of the QGD package.", /*tp_doc*/
+  "Object to represent a Circuit class of the QGD package.", /*tp_doc*/
   0, /*tp_traverse*/
   0, /*tp_clear*/
   0, /*tp_richcompare*/
