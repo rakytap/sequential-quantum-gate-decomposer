@@ -45,12 +45,10 @@ class qgd_RZ(qgd_RZ_Wrapper):
 #@param kwds A tuple of keywords
 # @return An instance of the class
 
-    def __init__( self ):
+    def __init__( self, qbit_num, target_qbit ):
 
-        # initiate variables for input arguments
-        #int  qbit_num = -1; 
         # call the constructor of the wrapper class
-        super(qgd_RZ_Wrapper, self).__init__()
+        super().__init__(qbit_num, target_qbit)
 
 #@brief Call to add a U3 gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -59,7 +57,7 @@ class qgd_RZ(qgd_RZ_Wrapper):
     def get_Matrix( self, parameters_mtx ):
 
 	# call the C wrapper function
-        super(qgd_RZ_Wrapper, self).get_Matrix( parameters_mtx )
+        return super().get_Matrix( parameters_mtx )
 
 #@brief Call to get the parameters of the matrices. 
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -67,7 +65,7 @@ class qgd_RZ(qgd_RZ_Wrapper):
     def get_Gate_Kernel( self, ThetaOver2, Phi, Lambda):
 
 	# call the C wrapper function
-        super(qgd_RZ_Wrapper, self).calc_one_qubit_u3(ThetaOver2, Phi, Lambda)
+        return super().calc_one_qubit_u3(ThetaOver2, Phi, Lambda)
 
 #@brief Call to apply the gate operation on the input matrix
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -76,5 +74,5 @@ class qgd_RZ(qgd_RZ_Wrapper):
     def apply_to( self, parameters_mtx, unitary_mtx):
 
 	# call the C wrapper function
-        super(qgd_RZ_Wrapper, self).apply_to( parameters_mtx, unitary_mtx)
+        super().apply_to( parameters_mtx, unitary_mtx)
 
