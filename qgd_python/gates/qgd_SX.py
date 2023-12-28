@@ -33,7 +33,7 @@ from .qgd_SX_Wrapper import qgd_SX_Wrapper
 
 
 ##
-# @brief A QGD Python interface class for the Gates_Block.
+# @brief A QGD Python interface class for the qgd_SX.
 class qgd_SX(qgd_SX_Wrapper):
     
     
@@ -50,9 +50,8 @@ class qgd_SX(qgd_SX_Wrapper):
         # call the constructor of the wrapper class
         super().__init__(qbit_num, target_qbit)
 
-#@brief Call to add a U3 gate to the front of the gate structure.
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
-#@param Input arguments: target_qbit (int), Theta (bool), Phi (bool), Lambda (bool).
+#@brief  Call to retrieve the gate matrix
+#@param self A pointer pointing to an instance of the class qgd_SX. 
 
     def get_Matrix( self ):
 
@@ -60,7 +59,7 @@ class qgd_SX(qgd_SX_Wrapper):
         return super().get_Matrix( )
 
 #@brief Call to get the parameters of the matrices. 
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param self A pointer pointing to an instance of the class qgd_SX.
 
     def get_Gate_Kernel( self):
 
@@ -68,7 +67,7 @@ class qgd_SX(qgd_SX_Wrapper):
         return super().calc_one_qubit_u3()
 
 #@brief Call to apply the gate operation on the input matrix
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param self A pointer pointing to an instance of the class qgd_SX.
 #@param Input arguments: parameters_mtx, unitary_mtx.
 
     def apply_to( self, unitary_mtx):
