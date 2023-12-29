@@ -433,8 +433,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int num_of_parameters, Matrix_real& solution_guess) {
 
 
-        if ( cost_fnc != FROBENIUS_NORM ) {
-            std::string err("N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE: Only cost function 0 is implemented");
+        if ( cost_fnc != FROBENIUS_NORM && cost_fnc != VQE ) {
+            std::string err("N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE: Only cost functions FROBENIUS_NORM and VQE are implemented for this strategy");
             throw err;
         }
 
@@ -445,15 +445,16 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
         }
 #endif
 
-
+        tbb::tick_count t0_CPU = tbb::tick_count::now();
 
         if (gates.size() == 0 ) {
             return;
         }
 
 
-        double M_PI_half = M_PI/2;
-        double M_PI_double = M_PI*2;
+        double M_PI_quarter = M_PI/4;
+        double M_PI_half    = M_PI/2;
+        double M_PI_double  = M_PI*2;
 
         if (solution_guess.size() == 0 ) {
             solution_guess = Matrix_real(num_of_parameters,1);
@@ -479,7 +480,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
         tbb::tick_count optimization_start = tbb::tick_count::now();
 
 
-        // the result of the most successful agent:
+        // the current result
         current_minimum = optimization_problem( optimized_parameters_mtx );
         number_of_iters = number_of_iters + 1; 
         
@@ -488,19 +489,19 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
         Matrix_real solution_guess_tmp_mtx = Matrix_real( num_of_parameters, 1 );
         memcpy(solution_guess_tmp_mtx.get_data(), optimized_parameters_mtx.get_data(), num_of_parameters*sizeof(double) );
 
-        int agent_num;
-        if ( config.count("agent_num_cosine") > 0 ) { 
+        int batch_size;
+        if ( config.count("batch_size_cosine") > 0 ) { 
              long long value;                   
-             config["agent_num_cosine"].get_property( value );  
-             agent_num = (int) value;
+             config["batch_size_cosine"].get_property( value );  
+             batch_size = (int) value;
         }
-        else if ( config.count("agent_num") > 0 ) { 
+        else if ( config.count("batch_size") > 0 ) { 
              long long value;                   
-             config["agent_num"].get_property( value );  
-             agent_num = (int) value;
+             config["batch_size"].get_property( value );  
+             batch_size = (int) value;
         }
         else {
-            agent_num = 64;
+            batch_size = 64;
         }
 
 
@@ -546,184 +547,163 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
         Matrix_real f0_vec(1, 100); 
         memset( f0_vec.get_data(), 0.0, f0_vec.size()*sizeof(double) );
         double f0_mean = 0.0;
-        int f0_idx = 0;   
-
-
-        Matrix_real param_update_mtx( num_of_parameters, 1 );
-
-
-#ifdef __DFE__
-
-        std::vector<Matrix_real> parameters_mtx_vec(num_of_parameters);
-        parameters_mtx_vec.reserve(num_of_parameters); 
+        int f0_idx = 0; 
 
 
 
-        // parameters for line search
-        int line_points = 100;
-        Matrix_real line_values;
+        Matrix_real param_update_mtx( batch_size, 1 );
+        matrix_base<int> param_idx_agents( batch_size, 1 );
 
-        std::vector<Matrix_real> parameters_line_search_mtx_vec(line_points);
-        parameters_line_search_mtx_vec.reserve(line_points); 
-        
-        Matrix_real f0_shifted_pi2_agents( agent_num, 1 );
-        Matrix_real f0_shifted_pi_agents( agent_num, 1 );          
+        // random generator of integers   
+        std::uniform_int_distribution<> distrib_int(0, num_of_parameters-1);
+
+        std::vector<Matrix_real> parameters_mtx_vec(batch_size);
+        parameters_mtx_vec.reserve(batch_size); 
+
+                 
              
+
+        bool three_point_line_search               =    cost_fnc == FROBENIUS_NORM;
+        bool three_point_line_search_double_period =    cost_fnc == VQE;
 
 
         for (unsigned long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++) {
 
-            for( int idx=0; idx<num_of_parameters; idx++ ) {
+            for( int idx=0; idx<batch_size; idx++ ) {
                 parameters_mtx_vec[idx] = solution_guess_tmp_mtx.copy();
+
+                // The index array of the chosen parameters
+                param_idx_agents[ idx ] = distrib_int(gen);
             }
 
 
-
-
-            for(int idx=0; idx<num_of_parameters; idx++) { 
-                Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ]; 
-                solution_guess_mtx_idx[idx] += M_PI_half;                
-            }                 
-      
-            f0_shifted_pi2_agents = optimization_problem_batched( parameters_mtx_vec );  
-
-
-            for(int idx=0; idx<num_of_parameters; idx++) { 
-                Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ];             
-                solution_guess_mtx_idx[idx] += M_PI_half;
-            }   
-             
-            f0_shifted_pi_agents = optimization_problem_batched( parameters_mtx_vec );
+#ifdef __MPI__             
+            MPI_Bcast( (void*)param_idx_agents.get_data(), batch_size, MPI_INT, 0, MPI_COMM_WORLD);
+#endif     
 
 
           
-                      
-            for( int idx=0; idx<num_of_parameters; idx++ ) {
+            if ( three_point_line_search ) {
+
+                for(int idx=0; idx<batch_size; idx++) { 
+                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ]; 
+                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_half;                
+                }                 
+      
+                Matrix_real f0_shifted_pi2_agents = optimization_problem_batched( parameters_mtx_vec );  
+
+
+                for(int idx=0; idx<batch_size; idx++) { 
+                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ];             
+                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_half;
+                }   
+             
+                Matrix_real f0_shifted_pi_agents = optimization_problem_batched( parameters_mtx_vec );
+
+                for( int idx=0; idx<batch_size; idx++ ) {
      
-                double f0_shifted_pi         = f0_shifted_pi_agents[idx];
-                double f0_shifted_pi2        = f0_shifted_pi2_agents[idx];     
+                    double f0_shifted_pi         = f0_shifted_pi_agents[idx];
+                    double f0_shifted_pi2        = f0_shifted_pi2_agents[idx];     
             
 
-                double A_times_cos = (current_minimum-f0_shifted_pi)/2;
-                double offset      = (current_minimum+f0_shifted_pi)/2;
+                    double A_times_cos = (current_minimum-f0_shifted_pi)/2;
+                    double offset      = (current_minimum+f0_shifted_pi)/2;
 
-                double A_times_sin = offset - f0_shifted_pi2;
+                    double A_times_sin = offset - f0_shifted_pi2;
 
-                double phi0 = atan2( A_times_sin, A_times_cos);
+                    double phi0 = atan2( A_times_sin, A_times_cos);
 
 
-                double parameter_shift = phi0 > 0 ? M_PI-phi0 : -phi0-M_PI;
+                    double parameter_shift = phi0 > 0 ? M_PI-phi0 : -phi0-M_PI;
 
-                    
-                param_update_mtx[ idx ] = parameter_shift;	
-		
-		
-                //revert the changed parameters
-                Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[idx];  
-                solution_guess_mtx_idx[ idx ]       = solution_guess_tmp_mtx[ idx ];  
+                                   
+                    param_update_mtx[ idx ] = parameter_shift;
+
+                    //revert the changed parameters
+                    Matrix_real& solution_guess_mtx_idx             = parameters_mtx_vec[idx];  
+                    solution_guess_mtx_idx[ param_idx_agents[idx] ] = solution_guess_tmp_mtx[ param_idx_agents[idx] ];  	
+
+                }
 
             }
+            else if ( three_point_line_search_double_period ) {
+
+                for(int idx=0; idx<batch_size; idx++) { 
+                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ]; 
+                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_quarter;                
+                }                 
+      
+                Matrix_real f0_shifted_pi4_agents = optimization_problem_batched( parameters_mtx_vec );  
+
+
+                for(int idx=0; idx<batch_size; idx++) { 
+                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ];             
+                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_quarter;
+                }   
+             
+                Matrix_real f0_shifted_pi2_agents = optimization_problem_batched( parameters_mtx_vec );
+
+                for( int idx=0; idx<batch_size; idx++ ) {
+     
+                    double f0_shifted_pi         = f0_shifted_pi2_agents[idx];
+                    double f0_shifted_pi2        = f0_shifted_pi4_agents[idx];     
+            
+
+                    double A_times_cos = (current_minimum-f0_shifted_pi)/2;
+                    double offset      = (current_minimum+f0_shifted_pi)/2;
+
+                    double A_times_sin = offset - f0_shifted_pi2;
+
+                    double phi0 = atan2( A_times_sin, A_times_cos);
+
+
+                    double parameter_shift = phi0 > 0 ? M_PI_half-phi0/2 : -phi0/2-M_PI_half;
+
+                                   
+                    param_update_mtx[ idx ] = parameter_shift;
+
+                    //revert the changed parameters
+                    Matrix_real& solution_guess_mtx_idx             = parameters_mtx_vec[idx];  
+                    solution_guess_mtx_idx[ param_idx_agents[idx] ] = solution_guess_tmp_mtx[ param_idx_agents[idx] ];  	
+
+                }
+
+
+
+            }
+            else {
+                std::string err("solve_layer_optimization_problem_COSINE: Not implemented method.");
+                throw err;
+            }
+		
+		
+            number_of_iters = number_of_iters + 2*batch_size; 
+            
+
+            // parameters for line search
+            int line_points = 128;  
+
+            std::vector<Matrix_real> parameters_line_search_mtx_vec(line_points);
+            parameters_line_search_mtx_vec.reserve(line_points);         
                     
             // perform line search over the deriction determined previously  
             for( int line_idx=0; line_idx<line_points; line_idx++ ) {
 
                 Matrix_real parameters_line_idx = solution_guess_tmp_mtx.copy();
 
-                for( int idx=0; idx<num_of_parameters; idx++ ) {
-                    parameters_line_idx[idx] = std::fmod( parameters_line_idx[idx] + param_update_mtx[ idx ]*line_idx/line_points, M_PI_double);                    
+                for( int idx=0; idx<batch_size; idx++ ) {
+                    parameters_line_idx[ param_idx_agents[idx] ] += param_update_mtx[ idx ]*(double)line_idx/line_points;                    
                 }
 
-                parameters_line_search_mtx_vec[line_idx] = parameters_line_idx;
+                parameters_line_search_mtx_vec[ line_idx] = parameters_line_idx;
 
             }
-                     
-            line_values = optimization_problem_batched( parameters_line_search_mtx_vec ); 
-//line_values.print_matrix(); 
+           
+
+            Matrix_real line_values = optimization_problem_batched( parameters_line_search_mtx_vec ); 
                    
-
-#else
-
-
-        for (unsigned long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++) {
-
-
-
-            tbb::parallel_for( tbb::blocked_range<int>(0, num_of_parameters, 10 ), [&](const tbb::blocked_range<int>& r) {
-
-                Matrix_real solution_guess_tmp_mtx_loc = solution_guess_tmp_mtx.copy();
-
-
-                for( int param_idx=r.begin(); param_idx<r.end(); param_idx++ ) {
-
-                    double parameter_value_save = solution_guess_tmp_mtx_loc[param_idx];
-
-                    solution_guess_tmp_mtx_loc[param_idx] += M_PI_half;
-                    double f0_shifted_pi2 = optimization_problem( solution_guess_tmp_mtx_loc );
-
-                    solution_guess_tmp_mtx_loc[param_idx] += M_PI_half;
-                    double f0_shifted_pi = optimization_problem( solution_guess_tmp_mtx_loc );
-
-                    solution_guess_tmp_mtx_loc[param_idx] += M_PI_half;
-                    double f0_shifted_3pi2 = optimization_problem( solution_guess_tmp_mtx_loc );
-
-
-                    double A_times_cos = (current_minimum-f0_shifted_pi)/2;
-                    double A_times_sin = (f0_shifted_3pi2 - f0_shifted_pi2)/2;
-
-                    //double amplitude = np.sqrt( A_times_cos**2 + A_times_sin**2 )
-                    //print( "Amplitude: ", amplitude )
-
-                    double phi0 = atan2( A_times_sin, A_times_cos);
-                    //print( "phase: ", phi0 )
-
-                    //offset = (f0+f0_shifted_pi)/2
-                    //print( "offset: ", offset )
-
-
-                    double parameter_shift = phi0 > 0 ? M_PI-phi0 : -phi0-M_PI;
-		
-                    //print( "minimal_parameter: ", minimal_parameter )
-		
-                    param_update_mtx[ param_idx ] = parameter_shift;	
-		
-                    //revert the parameter vector
-                    solution_guess_tmp_mtx_loc[param_idx] = parameter_value_save;
-
-                }
-
-            });
-
-            number_of_iters = number_of_iters + 3*num_of_parameters; 
-
-
-            // perform line search over the deriction determined previously
-            int line_points = 100;
-            int grain_size = 10;
-            Matrix_real line_values( line_points, 1);
-             
-
-            tbb::parallel_for( tbb::blocked_range<int>(0, line_points, grain_size ), [&](const tbb::blocked_range<int>& r) {
-
-                Matrix_real solution_guess_tmp_mtx_loc = solution_guess_tmp_mtx.copy();
-
-                for( int line_idx=r.begin(); line_idx<r.end(); line_idx++ ) {
-
-                    // update parameters
-                    for (int param_idx=0; param_idx<num_of_parameters; param_idx++) {
-                        solution_guess_tmp_mtx_loc[param_idx] = std::fmod( solution_guess_tmp_mtx[param_idx] + param_update_mtx[ param_idx ]*line_idx/line_points, M_PI_double);
-                    } 
-
-                    line_values[line_idx] = optimization_problem( solution_guess_tmp_mtx_loc );
-
-
-                }
-
-            });
-
             number_of_iters = number_of_iters + line_points; 
 
-
-#endif
 
 
             // find the smallest value
@@ -739,19 +719,22 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
             current_minimum = f0_min;
 
             // update parameters
-            for (int param_idx=0; param_idx<num_of_parameters; param_idx++) {
-                solution_guess_tmp_mtx[param_idx] = std::fmod( solution_guess_tmp_mtx[param_idx] + param_update_mtx[ param_idx ]*idx_min/line_points, M_PI_double);
+            for (int param_idx=0; param_idx<batch_size; param_idx++) {
+                solution_guess_tmp_mtx[ param_idx_agents[param_idx] ] += param_update_mtx[ param_idx ]*(double)idx_min/line_points;
             } 
 
-
+#ifdef __MPI__   
+            MPI_Bcast( solution_guess_tmp_mtx.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
+#endif
 
 
             // update the current cost function
             //current_minimum = optimization_problem( solution_guess_tmp_mtx );
 
-            if ( iter_idx % 1000 == 0 ) {
+            if ( iter_idx % 50 == 0 ) {
                 std::stringstream sstream;
-                sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << std::endl;
+                sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
+                sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                 print(sstream, 0);   
                 if ( export_circuit_2_binary_loc > 0 ) {
                     std::string filename("initial_circuit_iteration.binary");
@@ -760,6 +743,10 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
                     }
                     export_gate_list_to_binary(solution_guess_tmp_mtx, this, filename, verbose);
                 }
+
+                memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp_mtx.get_data(), num_of_parameters*sizeof(double) );
+
+                export_current_cost_fnc(current_minimum);
 
 
             }
@@ -784,7 +771,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
      
             if ( std::abs( f0_mean - current_minimum) < 1e-7  && var_f0/f0_mean < 1e-7 ) {
                 std::stringstream sstream;
-                sstream << "COSINE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << std::endl;
+                sstream << "COSINE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
+                sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                 print(sstream, 0);   
                 if ( export_circuit_2_binary_loc > 0 ) {
                     std::string filename("initial_circuit_iteration.binary");
@@ -804,14 +792,16 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
 
         memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp_mtx.get_data(), num_of_parameters*sizeof(double) );
         
-
+        // CPU time
+        CPU_time += (tbb::tick_count::now() - t0_CPU).seconds(); 
+        
         sstream.str("");
         sstream << "obtained minimum: " << current_minimum << std::endl;
 
 
         tbb::tick_count optimization_end = tbb::tick_count::now();
         optimization_time  = optimization_time + (optimization_end-optimization_start).seconds();
-        sstream << "COS time: " << adam_time << " " << current_minimum << std::endl;
+        sstream << "COSINE time: " << CPU_time << " seconds, obtained minimum: " << current_minimum << std::endl;
         
         print(sstream, 0); 
 
