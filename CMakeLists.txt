@@ -324,6 +324,15 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/common/Powells_method.cpp
     ${PROJECT_SOURCE_DIR}/common/Bayes_Opt.cpp
     ${PROJECT_SOURCE_DIR}/optimization_engines/RL_experience.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/ADAM_BATCHED.cpp    
+    ${PROJECT_SOURCE_DIR}/optimization_engines/ADAM.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/AGENTS.cpp    
+    ${PROJECT_SOURCE_DIR}/optimization_engines/BAYES_OPT.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/BAYES_AGENTS.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/BFGS.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/BFGS2.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/COSINE.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/GRAD_DESCEND.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
