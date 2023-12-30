@@ -37,12 +37,7 @@ limitations under the License.
 #endif
 
 
-static double adam_time = 0;
-static double bfgs_time = 0;
-
-
 static double circuit_simulation_time = 0.0;
-static double CPU_time = 0.0;
 
 
 extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, int lda, int *ipiv, double *b, int ldb); 	
@@ -400,6 +395,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
         case COSINE:
             solve_layer_optimization_problem_COSINE( num_of_parameters, solution_guess);
             return;
+        case GRAD_DESCEND_PHASE_SHIFT_RULE:
+            solve_layer_optimization_problem_GRAD_DESCEND_PHASE_SHIFT_RULE( num_of_parameters, solution_guess);
+            return;           
         case AGENTS_COMBINED:
             solve_layer_optimization_problem_AGENTS_COMBINED( num_of_parameters, solution_guess);
             return;
@@ -1155,6 +1153,12 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
             random_shift_count_max = 3;
             max_outer_iterations = 1;
             return;
+            
+        case GRAD_DESCEND_PHASE_SHIFT_RULE:
+            max_inner_iterations = 2.5e3;
+            random_shift_count_max = 3;
+            max_outer_iterations = 1;
+            return;                       
 
         case AGENTS:
             max_inner_iterations = 2.5e3;

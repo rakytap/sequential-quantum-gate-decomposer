@@ -333,6 +333,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/optimization_engines/BFGS2.cpp
     ${PROJECT_SOURCE_DIR}/optimization_engines/COSINE.cpp
     ${PROJECT_SOURCE_DIR}/optimization_engines/GRAD_DESCEND.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/GRAD_DESCEND_PHASE_SHIFT_RULE.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
