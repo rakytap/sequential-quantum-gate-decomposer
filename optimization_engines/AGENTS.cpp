@@ -20,7 +20,7 @@ limitations under the License.
     \brief Implementation of the AGENTS optimization srategy
 */
 
-#include "N_Qubit_Decomposition_Base.h"
+#include "Optimization_Interface.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
 #include "RL_experience.h"
@@ -39,12 +39,12 @@ limitations under the License.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real& solution_guess) {
+void Optimization_Interface::solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real& solution_guess) {
 
 
 
         if ( ((cost_fnc != FROBENIUS_NORM) && (cost_fnc != HILBERT_SCHMIDT_TEST)) && cost_fnc != VQE  ) {
-            std::string err("N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS: Only cost functions 0 and 3 are implemented");
+            std::string err("Optimization_Interface::solve_layer_optimization_problem_AGENTS: Only cost functions 0 and 3 are implemented");
             throw err;
         }
 
@@ -889,7 +889,7 @@ CPU_time += (tbb::tick_count::now() - t0_CPU).seconds();
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, Matrix_real& solution_guess)  {
+void Optimization_Interface::solve_layer_optimization_problem_AGENTS_COMBINED( int num_of_parameters, Matrix_real& solution_guess)  {
 
 
 

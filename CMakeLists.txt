@@ -360,7 +360,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/gates/kernels/apply_large_kernel_to_input.cpp
     ${PROJECT_SOURCE_DIR}/nn/NN.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Base.cpp
-    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Base.cpp
+    ${PROJECT_SOURCE_DIR}/decomposition/Optimization_Interface.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_custom.cpp
@@ -459,7 +459,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Composite.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/nn/include/NN.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Decomposition_Base.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_Base.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Optimization_Interface.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_adaptive.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_adaptive_general.h

@@ -21,7 +21,7 @@ limitations under the License.
 */
 
 
-#include "N_Qubit_Decomposition_Base.h"
+#include "Optimization_Interface.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "Bayes_Opt.h"
 
@@ -37,7 +37,7 @@ limitations under the License.
 
 
 
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BAYES_AGENTS( int num_of_parameters, Matrix_real& solution_guess) {
+void Optimization_Interface::solve_layer_optimization_problem_BAYES_AGENTS( int num_of_parameters, Matrix_real& solution_guess) {
         if (gates.size() == 0 ) {
             return;
         }

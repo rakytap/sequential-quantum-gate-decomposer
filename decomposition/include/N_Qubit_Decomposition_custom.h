@@ -23,14 +23,14 @@ limitations under the License.
 #ifndef N_Qubit_Decomposition_custom_H
 #define N_Qubit_Decomposition_H
 
-#include "N_Qubit_Decomposition_Base.h"
+#include "Optimization_Interface.h"
 
 
 /**
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 This class contains the non-template implementation of the decomposition class.
 */
-class N_Qubit_Decomposition_custom : public N_Qubit_Decomposition_Base {
+class N_Qubit_Decomposition_custom : public Optimization_Interface {
 
 
 public:

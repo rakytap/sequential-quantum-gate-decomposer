@@ -21,7 +21,7 @@ limitations under the License.
 */
 
 
-#include "N_Qubit_Decomposition_Base.h"
+#include "Optimization_Interface.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
 
@@ -38,11 +38,11 @@ limitations under the License.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND_PHASE_SHIFT_RULE( int num_of_parameters, Matrix_real& solution_guess) {
+void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PHASE_SHIFT_RULE( int num_of_parameters, Matrix_real& solution_guess) {
 
 
         if ( cost_fnc != FROBENIUS_NORM && cost_fnc != VQE ) {
-            std::string err("N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE: Only cost functions FROBENIUS_NORM and VQE are implemented for this strategy");
+            std::string err("Optimization_Interface::solve_layer_optimization_problem_COSINE: Only cost functions FROBENIUS_NORM and VQE are implemented for this strategy");
             throw err;
         }
 

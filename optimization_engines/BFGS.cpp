@@ -21,7 +21,7 @@ limitations under the License.
 */
 
 
-#include "N_Qubit_Decomposition_Base.h"
+#include "Optimization_Interface.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "BFGS_Powell.h"
 
@@ -39,7 +39,7 @@ limitations under the License.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BFGS( int num_of_parameters, Matrix_real& solution_guess) {
+void Optimization_Interface::solve_layer_optimization_problem_BFGS( int num_of_parameters, Matrix_real& solution_guess) {
 
 
 #ifdef __DFE__

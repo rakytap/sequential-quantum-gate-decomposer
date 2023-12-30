@@ -20,8 +20,8 @@ limitations under the License.
     \brief Header file for a class implementing optimization engines
 */
 
-#ifndef N_Qubit_Decomposition_Base_H
-#define N_Qubit_Decomposition_Base_H
+#ifndef Optimization_Interface_H
+#define Optimization_Interface_H
 
 #include "Decomposition_Base.h"
 #include "BFGS_Powell.h"
@@ -73,7 +73,7 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 This class contains the non-template implementation of the decomposition class.
 */
-class N_Qubit_Decomposition_Base : public Decomposition_Base {
+class Optimization_Interface : public Decomposition_Base {
 
 
 public:
@@ -134,7 +134,7 @@ public:
 @brief Nullary constructor of the class.
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base();
+Optimization_Interface();
 
 
 
@@ -147,14 +147,14 @@ N_Qubit_Decomposition_Base();
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in, int accelerator_num_in=0 );
+Optimization_Interface( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in, int accelerator_num_in=0 );
 
 
 
 /**
 @brief Destructor of the class
 */
-virtual ~N_Qubit_Decomposition_Base();
+virtual ~Optimization_Interface();
 
 /**
 @brief Calculate the error of the decomposition according to the spectral norm of \f$ U-U_{approx} \f$, where \f$ U_{approx} \f$ is the unitary produced by the decomposing quantum cirquit. The calculated error is stored in the attribute decomposition_error.

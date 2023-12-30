@@ -16,11 +16,11 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file N_Qubit_Decomposition_Base.cpp
+/*! \file Optimization_Interface.cpp
     \brief Class implementing optimization engines
 */
 
-#include "N_Qubit_Decomposition_Base.h"
+#include "Optimization_Interface.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "Adam.h"
 
@@ -41,7 +41,7 @@ limitations under the License.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, Matrix_real& solution_guess) {
+void Optimization_Interface::solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, Matrix_real& solution_guess) {
 
 
 #ifdef __DFE__

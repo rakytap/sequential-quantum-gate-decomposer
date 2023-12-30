@@ -16,11 +16,11 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file N_Qubit_Decomposition_Base.cpp
+/*! \file Optimization_Interface.cpp
     \brief Class implementing optimization engines
 */
 
-#include "N_Qubit_Decomposition_Base.h"
+#include "Optimization_Interface.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "Adam.h"
 #include "grad_descend.h"
@@ -49,7 +49,7 @@ extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, i
 @brief Nullary constructor of the class.
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
+Optimization_Interface::Optimization_Interface() {
 
     // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
     optimize_layer_num  = false;
@@ -106,7 +106,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num_in ) : Decomposition_Base(Umtx_in, qbit_num_in, config, initial_guess_in) {
+Optimization_Interface::Optimization_Interface( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num_in ) : Decomposition_Base(Umtx_in, qbit_num_in, config, initial_guess_in) {
 
     // logical value. Set true if finding the minimum number of gate layers is required (default), or false when the maximal number of two-qubit gates is used (ideal for general unitaries).
     optimize_layer_num  = optimize_layer_num_in;
@@ -176,7 +176,7 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
 /**
 @brief Destructor of the class
 */
-N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
+Optimization_Interface::~Optimization_Interface() {
 
 
 #ifdef __DFE__
@@ -194,7 +194,7 @@ N_Qubit_Decomposition_Base::~N_Qubit_Decomposition_Base() {
 @brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1.
 @param current_minimum The current minimum (to avoid calculating it again
 */
-void N_Qubit_Decomposition_Base::export_current_cost_fnc(double current_minimum){
+void Optimization_Interface::export_current_cost_fnc(double current_minimum){
 
     FILE* pFile;
     std::string filename("costfuncs_and_entropy.txt");
@@ -234,7 +234,7 @@ void N_Qubit_Decomposition_Base::export_current_cost_fnc(double current_minimum)
 @brief Call to add further layer to the gate structure used in the subdecomposition.
 */
 void 
-N_Qubit_Decomposition_Base::add_finalyzing_layer() {
+Optimization_Interface::add_finalyzing_layer() {
 
 
     // creating block of gates
@@ -263,7 +263,7 @@ N_Qubit_Decomposition_Base::add_finalyzing_layer() {
 @return Returns with the calculated spectral norm.
 */
 void
-N_Qubit_Decomposition_Base::calc_decomposition_error(Matrix& decomposed_matrix ) {
+Optimization_Interface::calc_decomposition_error(Matrix& decomposed_matrix ) {
 
 	// (U-U_{approx}) (U-U_{approx})^\dagger = 2*I - U*U_{approx}^\dagger - U_{approx}*U^\dagger
 	// U*U_{approx}^\dagger = decomposed_matrix_copy
@@ -341,7 +341,7 @@ N_Qubit_Decomposition_Base::calc_decomposition_error(Matrix& decomposed_matrix )
         decomposition_error = get_cost_function_sum_of_squares(decomposed_matrix);
     }
     else {
-        std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
+        std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
     }
 
@@ -352,7 +352,7 @@ N_Qubit_Decomposition_Base::calc_decomposition_error(Matrix& decomposed_matrix )
 /**
 @brief final optimization procedure improving the accuracy of the decompositin when all the qubits were already disentangled.
 */
-void  N_Qubit_Decomposition_Base::final_optimization() {
+void  Optimization_Interface::final_optimization() {
 
 	//The stringstream input to store the output messages.
 	std::stringstream sstream;
@@ -386,7 +386,7 @@ void  N_Qubit_Decomposition_Base::final_optimization() {
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess Array containing the solution guess.
 */
-void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_parameters, Matrix_real solution_guess) {
+void Optimization_Interface::solve_layer_optimization_problem( int num_of_parameters, Matrix_real solution_guess) {
 
 
     switch ( alg ) {
@@ -424,7 +424,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
             solve_layer_optimization_problem_BFGS2( num_of_parameters, solution_guess);
             return;
         default:
-            std::string error("N_Qubit_Decomposition_Base::solve_layer_optimization_problem: unimplemented optimization algorithm");
+            std::string error("Optimization_Interface::solve_layer_optimization_problem: unimplemented optimization algorithm");
             throw error;
     }
 
@@ -437,7 +437,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem( int num_of_pa
 @param output The randomized parameters are stored within this array
 @param f0 weight in the randomiztaion (output = input + rand()*sqrt(f0) ).
 */
-void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0  ) {
+void Optimization_Interface::randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0  ) {
 
     // random generator of real numbers   
     std::uniform_real_distribution<> distrib_prob(0.0, 1.0);
@@ -478,7 +478,7 @@ void N_Qubit_Decomposition_Base::randomize_parameters( Matrix_real& input, Matri
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
+double Optimization_Interface::optimization_problem( double* parameters ) {
 
     // get the transformed matrix with the gates in the list
     Matrix_real parameters_mtx(parameters, 1, parameter_num );
@@ -495,12 +495,12 @@ double N_Qubit_Decomposition_Base::optimization_problem( double* parameters ) {
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters ) {
+double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
 
     // get the transformed matrix with the gates in the list
     if ( parameters.size() != parameter_num ) {
         std::stringstream sstream;
-	sstream << "N_Qubit_Decomposition_Base::optimization_problem: Number of free paramaters should be " << parameter_num << ", but got " << parameters.size() << std::endl;
+	sstream << "Optimization_Interface::optimization_problem: Number of free paramaters should be " << parameter_num << ", but got " << parameters.size() << std::endl;
         print(sstream, 0);	  
         exit(-1);
     }  
@@ -536,7 +536,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
         return get_cost_function_sum_of_squares(matrix_new);
     }
     else {
-        std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
+        std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
     }
 
@@ -549,7 +549,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real& parameters
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 Matrix_real 
-N_Qubit_Decomposition_Base::optimization_problem_batched( std::vector<Matrix_real>& parameters_vec) {
+Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& parameters_vec) {
 
 tbb::tick_count t0_DFE = tbb::tick_count::now();    
 
@@ -614,7 +614,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
             }
         }
         else {
-            std::string err("N_Qubit_Decomposition_Base::optimization_problem_batched: Cost function variant not implmented for DFE.");
+            std::string err("Optimization_Interface::optimization_problem_batched: Cost function variant not implmented for DFE.");
             throw err;
         }
 
@@ -640,7 +640,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
         int mpi_batch_element_remainder = batch_element_num % world_size;
 
         if ( mpi_batch_element_remainder > 0 ) {
-            std::string err("N_Qubit_Decomposition_Base::optimization_problem_batched: The size of the batch should be divisible with the number of processes.");
+            std::string err("Optimization_Interface::optimization_problem_batched: The size of the batch should be divisible with the number of processes.");
             throw err;
         }
 
@@ -692,9 +692,9 @@ circuit_simulation_time += (tbb::tick_count::now() - t0_DFE).seconds();
 @param ret_temp A matrix to store trace in for gradient for HS test 
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters, void* void_instance, Matrix ret_temp) {
+double Optimization_Interface::optimization_problem( Matrix_real parameters, void* void_instance, Matrix ret_temp) {
 
-    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+    Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
 
 
@@ -745,7 +745,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters,
         return get_cost_function_sum_of_squares(matrix_new);
     }
     else {
-        std::string err("N_Qubit_Decomposition_Base::optimization_problem: Cost function variant not implmented.");
+        std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
     }
 
@@ -760,9 +760,9 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters,
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double N_Qubit_Decomposition_Base::optimization_problem_non_static( Matrix_real parameters, void* void_instance) {
+double Optimization_Interface::optimization_problem_non_static( Matrix_real parameters, void* void_instance) {
 
-    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+    Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
     Matrix ret(1,3);
     double cost_func = instance->optimization_problem(parameters, void_instance, ret);
     return cost_func;
@@ -777,8 +777,8 @@ double N_Qubit_Decomposition_Base::optimization_problem_non_static( Matrix_real 
 @param void_instance A void pointer pointing to the instance of the current class.
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
-double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters, void* void_instance){
-    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+double Optimization_Interface::optimization_problem( Matrix_real parameters, void* void_instance){
+    Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
     return instance->optimization_problem_non_static(parameters, void_instance);
 }
 
@@ -794,7 +794,7 @@ double N_Qubit_Decomposition_Base::optimization_problem( Matrix_real parameters,
 @param void_instance A void pointer pointing to the instance of the current class.
 @param grad Array containing the calculated gradient components.
 */
-void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad ) {
+void Optimization_Interface::optimization_problem_grad( Matrix_real parameters, void* void_instance, Matrix_real& grad ) {
 
     // The function value at x0
     double f0;
@@ -815,9 +815,9 @@ void N_Qubit_Decomposition_Base::optimization_problem_grad( Matrix_real paramete
 @param f0 The value of the cost function at x0.
 @param grad Array containing the calculated gradient components.
 */
-void N_Qubit_Decomposition_Base::optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
+void Optimization_Interface::optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
 
-    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+    Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
 
     // the number of free parameters
     int parameter_num_loc = instance->get_parameter_num();
@@ -889,7 +889,7 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
         *f0 = 1 - (trace_DFE_mtx[0] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[1]*correction1_scale + trace_DFE_mtx[2]*correction2_scale))/Umtx_loc.cols;
     }
     else {
-        std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
+        std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");
         throw err;
     }
 
@@ -908,7 +908,7 @@ if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
             grad[idx] = -(trace_DFE_mtx[3*(idx+1)] + std::sqrt(prev_cost_fnv_val)*(trace_DFE_mtx[3*(idx+1)+1]*correction1_scale + trace_DFE_mtx[3*(idx+1)+2]*correction2_scale))/Umtx_loc.cols;
         }
         else {
-            std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
+            std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");
             throw err;
         }
 
@@ -987,7 +987,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
                 grad_comp = get_cost_function_sum_of_squares(Umtx_deriv[idx]);
             }
             else {
-                std::string err("N_Qubit_Decomposition_Base::optimization_problem_combined: Cost function variant not implmented.");
+                std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");
                 throw err;
             }
             
@@ -1020,8 +1020,8 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 @param f0 The value of the cost function at x0.
 @param grad Array containing the calculated gradient components.
 */
-void N_Qubit_Decomposition_Base::optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ){
-    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+void Optimization_Interface::optimization_problem_combined( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ){
+    Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
     instance->optimization_problem_combined_non_static(parameters, void_instance, f0, grad );
     return;
 }
@@ -1034,7 +1034,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( Matrix_real para
 @param f0 The value of the cost function at x0.
 @param grad Array containing the calculated gradient components.
 */
-void N_Qubit_Decomposition_Base::optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad ) {
+void Optimization_Interface::optimization_problem_combined( Matrix_real parameters, double* f0, Matrix_real grad ) {
 
     optimization_problem_combined( parameters, this, f0, grad );
     return;
@@ -1049,9 +1049,9 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined( Matrix_real para
 @param Umtx The unitary on which the circuit is applied in place.
 @param Umtx_deriv Array containing the calculated gradient components.
 */
-void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( Matrix_real parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv ) {
+void Optimization_Interface::optimization_problem_combined_unitary( Matrix_real parameters, void* void_instance, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv ) {
     // vector containing gradients of the transformed matrix
-    N_Qubit_Decomposition_Base* instance = reinterpret_cast<N_Qubit_Decomposition_Base*>(void_instance);
+    Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
 
     tbb::parallel_invoke(
         [&]{
@@ -1071,7 +1071,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( Matrix_r
 @param Umtx The unitary on which the circuit is applied in place.
 @param Umtx_deriv Array containing the calculated gradient components.
 */
-void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( Matrix_real parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv ) {
+void Optimization_Interface::optimization_problem_combined_unitary( Matrix_real parameters, Matrix& Umtx, std::vector<Matrix>& Umtx_deriv ) {
 
     optimization_problem_combined_unitary( parameters, this, Umtx, Umtx_deriv);
     return;
@@ -1083,7 +1083,7 @@ void N_Qubit_Decomposition_Base::optimization_problem_combined_unitary( Matrix_r
 @brief Call to get the variant of the cost function used in the calculations
 */
 cost_function_type 
-N_Qubit_Decomposition_Base::get_cost_function_variant() {
+Optimization_Interface::get_cost_function_variant() {
 
     return cost_fnc;
 
@@ -1095,12 +1095,12 @@ N_Qubit_Decomposition_Base::get_cost_function_variant() {
 @param variant The variant of the cost function from the enumaration cost_function_type
 */
 void 
-N_Qubit_Decomposition_Base::set_cost_function_variant( cost_function_type variant  ) {
+Optimization_Interface::set_cost_function_variant( cost_function_type variant  ) {
 
     cost_fnc = variant;
 
     std::stringstream sstream;
-    sstream << "N_Qubit_Decomposition_Base::set_cost_function_variant: Cost function variant set to " << cost_fnc << std::endl;
+    sstream << "Optimization_Interface::set_cost_function_variant: Cost function variant set to " << cost_fnc << std::endl;
     print(sstream, 2);	
 
 
@@ -1112,7 +1112,7 @@ N_Qubit_Decomposition_Base::set_cost_function_variant( cost_function_type varian
 @brief Call to set the number of iterations for which an optimization engine tries to solve the optimization problem
 @param max_inner_iterations_in The number of iterations for which an optimization engine tries to solve the optimization problem 
 */
-void N_Qubit_Decomposition_Base::set_max_inner_iterations( int max_inner_iterations_in  ) {
+void Optimization_Interface::set_max_inner_iterations( int max_inner_iterations_in  ) {
 
     max_inner_iterations = max_inner_iterations_in;
     
@@ -1124,7 +1124,7 @@ void N_Qubit_Decomposition_Base::set_max_inner_iterations( int max_inner_iterati
 @brief Call to set the maximal number of parameter randomization tries to escape a local minimum.
 @param random_shift_count_max_in The number of maximal number of parameter randomization tries to escape a local minimum.
 */
-void N_Qubit_Decomposition_Base::set_random_shift_count_max( int random_shift_count_max_in  ) {
+void Optimization_Interface::set_random_shift_count_max( int random_shift_count_max_in  ) {
 
     random_shift_count_max = random_shift_count_max_in;
 
@@ -1135,7 +1135,7 @@ void N_Qubit_Decomposition_Base::set_random_shift_count_max( int random_shift_co
 @brief Call to set the optimizer engine to be used in solving the optimization problem.
 @param alg_in The chosen algorithm
 */
-void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in ) {
+void Optimization_Interface::set_optimizer( optimization_aglorithms alg_in ) {
 
     alg = alg_in;
 
@@ -1206,7 +1206,7 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
             return;
 
         default:
-            std::string error("N_Qubit_Decomposition_Base::set_optimizer: unimplemented optimization algorithm");
+            std::string error("Optimization_Interface::set_optimizer: unimplemented optimization algorithm");
             throw error;
     }
 
@@ -1221,7 +1221,7 @@ void N_Qubit_Decomposition_Base::set_optimizer( optimization_aglorithms alg_in )
 @brief Call to retrieve the previous value of the cost funtion to be used to evaluate bitflip errors in the cost funtion (see Eq. (21) in arXiv:2210.09191)
 */
 double 
-N_Qubit_Decomposition_Base::get_previous_cost_function_value() {
+Optimization_Interface::get_previous_cost_function_value() {
 
     return prev_cost_fnv_val;
 
@@ -1234,7 +1234,7 @@ N_Qubit_Decomposition_Base::get_previous_cost_function_value() {
 @return Returns with the prefactor of the single-bitflip errors in the cost function. 
 */
 double 
-N_Qubit_Decomposition_Base::get_correction1_scale() {
+Optimization_Interface::get_correction1_scale() {
 
     return correction1_scale;
 
@@ -1247,7 +1247,7 @@ N_Qubit_Decomposition_Base::get_correction1_scale() {
 @return Returns with the prefactor of the two-bitflip errors in the cost function. 
 */
 double 
-N_Qubit_Decomposition_Base::get_correction2_scale() {
+Optimization_Interface::get_correction2_scale() {
 
     return correction2_scale;
 
@@ -1262,7 +1262,7 @@ N_Qubit_Decomposition_Base::get_correction2_scale() {
 @brief Get the number of iterations.
 */
 int 
-N_Qubit_Decomposition_Base::get_num_iters() {
+Optimization_Interface::get_num_iters() {
 
     return number_of_iters;
 
@@ -1274,7 +1274,7 @@ N_Qubit_Decomposition_Base::get_num_iters() {
 @param gate_structure An <int, Gates_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
 */
 void 
-N_Qubit_Decomposition_Base::set_custom_gate_structure( Gates_block* gate_structure_in ) {
+Optimization_Interface::set_custom_gate_structure( Gates_block* gate_structure_in ) {
 
     release_gates();
 
@@ -1289,7 +1289,7 @@ N_Qubit_Decomposition_Base::set_custom_gate_structure( Gates_block* gate_structu
 @brief Get the trace offset used in the evaluation of the cost function
 */
 int 
-N_Qubit_Decomposition_Base::get_trace_offset() {
+Optimization_Interface::get_trace_offset() {
 
     return trace_offset;
 
@@ -1300,11 +1300,11 @@ N_Qubit_Decomposition_Base::get_trace_offset() {
 @brief Set the trace offset used in the evaluation of the cost function
 */
 void 
-N_Qubit_Decomposition_Base::set_trace_offset(int trace_offset_in) {
+Optimization_Interface::set_trace_offset(int trace_offset_in) {
 
 
     if ( (trace_offset_in + Umtx.cols) > Umtx.rows ) {
-        std::string error("N_Qubit_Decomposition_Base::set_trace_offset: trace offset must be smaller or equal to the difference of the rows and columns in the input unitary.");
+        std::string error("Optimization_Interface::set_trace_offset: trace offset must be smaller or equal to the difference of the rows and columns in the input unitary.");
         throw error;
 
     }
@@ -1314,7 +1314,7 @@ N_Qubit_Decomposition_Base::set_trace_offset(int trace_offset_in) {
 
 
     std::stringstream sstream;
-    sstream << "N_Qubit_Decomposition_Base::set_trace_offset: trace offset set to " << trace_offset << std::endl;
+    sstream << "Optimization_Interface::set_trace_offset: trace offset set to " << trace_offset << std::endl;
     print(sstream, 2);	
 
 }
@@ -1323,7 +1323,7 @@ N_Qubit_Decomposition_Base::set_trace_offset(int trace_offset_in) {
 #ifdef __DFE__
 
 void 
-N_Qubit_Decomposition_Base::upload_Umtx_to_DFE() {
+Optimization_Interface::upload_Umtx_to_DFE() {
 
     lock_lib();
 
@@ -1344,7 +1344,7 @@ N_Qubit_Decomposition_Base::upload_Umtx_to_DFE() {
 @brief Get the number of accelerators to be reserved on DFEs on users demand. 
 */
 int 
-N_Qubit_Decomposition_Base::get_accelerator_num() {
+Optimization_Interface::get_accelerator_num() {
 
     return accelerator_num;
 

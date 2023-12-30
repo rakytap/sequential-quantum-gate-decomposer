@@ -24,7 +24,7 @@ limitations under the License.
 #ifndef VARIATIONAL_QUANTUM_EIGENSOLVER_BASE_H
 #define  VARIATIONAL_QUANTUM_EIGENSOLVER_BASE_H
 
-#include "N_Qubit_Decomposition_Base.h"
+#include "Optimization_Interface.h"
 
 /// @brief Type definition of the fifferent types of ansatz
 typedef enum ansatz_type {HEA, HEA_ZYZ} ansatz_type;
@@ -61,7 +61,7 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 @brief A base class to solve VQE problems
 This class can be used to approximate the ground state of the input Hamiltonian (sparse format) via a quantum circuit
 */
-class Variational_Quantum_Eigensolver_Base : public N_Qubit_Decomposition_Base {
+class Variational_Quantum_Eigensolver_Base : public Optimization_Interface {
 public:
 
 
