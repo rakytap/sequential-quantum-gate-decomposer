@@ -145,12 +145,12 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_ADAM_BATCHED( 
         bool adaptive_eta_loc;
         if ( config.count("adaptive_eta_adam_batched") > 0 ) {
              long long tmp;
-             config["max_inner_iterations_adam_batched"].get_property( tmp );  
+             config["adaptive_eta_adam_batched"].get_property( tmp );  
              adaptive_eta_loc = (bool)tmp;
         }
         if ( config.count("adaptive_eta") > 0 ) {
              long long tmp;
-             config["max_inner_iterations"].get_property( tmp );  
+             config["adaptive_eta"].get_property( tmp );  
              adaptive_eta_loc = (bool)tmp;
         }
         else {

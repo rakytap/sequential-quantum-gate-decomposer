@@ -40,7 +40,7 @@ static double CPU_time = 0.0;
 
 
 /**
-@brief Call to solve layer by layer the optimization problem via the COSINE algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@brief Call to solve layer by layer the optimization problem via the GRAD_DESCEND_PHASE_SHIFT_RULE algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess Array containing the solution guess.
 */
@@ -66,9 +66,10 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND_P
         }
 
 
-        double M_PI_quarter = M_PI/4;
+
         double M_PI_half    = M_PI/2;
-        double M_PI_double  = M_PI*2;
+        double M_PI_double  = M_PI*2.0;
+
 
         if (solution_guess.size() == 0 ) {
             solution_guess = Matrix_real(num_of_parameters,1);
@@ -104,9 +105,9 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND_P
         memcpy(solution_guess_tmp_mtx.get_data(), optimized_parameters_mtx.get_data(), num_of_parameters*sizeof(double) );
 
         int batch_size;
-        if ( config.count("batch_size_cosine") > 0 ) { 
+        if ( config.count("batch_size_grad_descend_shift_rule") > 0 ) { 
              long long value;                   
-             config["batch_size_cosine"].get_property( value );  
+             config["batch_size_grad_descend_shift_rule"].get_property( value );  
              batch_size = (int) value;
         }
         else if ( config.count("batch_size") > 0 ) { 
@@ -120,8 +121,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND_P
 
 
         long long max_inner_iterations_loc;
-        if ( config.count("max_inner_iterations_cosine") > 0 ) {
-             config["max_inner_iterations_cosine"].get_property( max_inner_iterations_loc );  
+        if ( config.count("max_inner_iterations_grad_descend_shift_rule") > 0 ) {
+             config["max_inner_iterations_grad_descend_shift_rule"].get_property( max_inner_iterations_loc );  
         }
         else if ( config.count("max_inner_iterations") > 0 ) {
              config["max_inner_iterations"].get_property( max_inner_iterations_loc );  
@@ -132,8 +133,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND_P
         
         
         long long export_circuit_2_binary_loc;
-        if ( config.count("export_circuit_2_binary_cosine") > 0 ) {
-             config["export_circuit_2_binary_cosine"].get_property( export_circuit_2_binary_loc );  
+        if ( config.count("export_circuit_2_binary_grad_descend_shift_rule") > 0 ) {
+             config["export_circuit_2_binary_grad_descend_shift_rule"].get_property( export_circuit_2_binary_loc );  
         }
         else if ( config.count("export_circuit_2_binary") > 0 ) {
              config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
@@ -144,8 +145,8 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND_P
 
 
         double optimization_tolerance_loc;
-        if ( config.count("optimization_tolerance_cosine") > 0 ) {
-             config["optimization_tolerance_cosine"].get_property( optimization_tolerance_loc );  
+        if ( config.count("optimization_tolerance_grad_descend_shift_rule") > 0 ) {
+             config["optimization_tolerance_grad_descend_shift_rule"].get_property( optimization_tolerance_loc );  
         }
         else if ( config.count("optimization_tolerance") > 0 ) {
              double value;
@@ -155,6 +156,19 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND_P
             optimization_tolerance_loc = optimization_tolerance;
         }
 
+
+        // the learning rate
+        double eta_loc;
+        if ( config.count("eta_grad_descend_shift_rule") > 0 ) {
+             config["eta_grad_descend_shift_rule"].get_property( eta_loc ); 
+        }
+        if ( config.count("eta") > 0 ) {
+             long long tmp;
+             config["eta"].get_property( eta_loc );  
+        }
+        else {
+            eta_loc = 1e-3;
+        }
 
 
         // vector stroing the lates values of current minimums to identify convergence
@@ -197,99 +211,40 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND_P
 
 
           
-            if ( three_point_line_search ) {
-
-                for(int idx=0; idx<batch_size; idx++) { 
-                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ]; 
-                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_half;                
-                }                 
+            for(int idx=0; idx<batch_size; idx++) { 
+                Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ]; 
+                solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_half;                
+            }                 
       
-                Matrix_real f0_shifted_pi2_agents = optimization_problem_batched( parameters_mtx_vec );  
+            Matrix_real f0_shifted_pi2_agents = optimization_problem_batched( parameters_mtx_vec );  
 
 
-                for(int idx=0; idx<batch_size; idx++) { 
-                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ];             
-                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_half;
-                }   
+            for(int idx=0; idx<batch_size; idx++) { 
+                Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ];             
+                solution_guess_mtx_idx[ param_idx_agents[idx] ] -= M_PI;
+            }   
              
-                Matrix_real f0_shifted_pi_agents = optimization_problem_batched( parameters_mtx_vec );
+            Matrix_real f0_shifted_pi_agents = optimization_problem_batched( parameters_mtx_vec );
 
-                for( int idx=0; idx<batch_size; idx++ ) {
+            for( int idx=0; idx<batch_size; idx++ ) {
      
-                    double f0_shifted_pi         = f0_shifted_pi_agents[idx];
-                    double f0_shifted_pi2        = f0_shifted_pi2_agents[idx];     
+                double f0_shifted_pi         = f0_shifted_pi_agents[idx];
+                double f0_shifted_pi2        = f0_shifted_pi2_agents[idx];     
             
 
-                    double A_times_cos = (current_minimum-f0_shifted_pi)/2;
-                    double offset      = (current_minimum+f0_shifted_pi)/2;
-
-                    double A_times_sin = offset - f0_shifted_pi2;
-
-                    double phi0 = atan2( A_times_sin, A_times_cos);
 
 
-                    double parameter_shift = phi0 > 0 ? M_PI-phi0 : -phi0-M_PI;
+                double grad_component = 0.5*(f0_shifted_pi2 - f0_shifted_pi);
 
                                    
-                    param_update_mtx[ idx ] = parameter_shift;
+                param_update_mtx[ idx ] = grad_component * eta_loc;
 
-                    //revert the changed parameters
-                    Matrix_real& solution_guess_mtx_idx             = parameters_mtx_vec[idx];  
-                    solution_guess_mtx_idx[ param_idx_agents[idx] ] = solution_guess_tmp_mtx[ param_idx_agents[idx] ];  	
-
-                }
+                //revert the changed parameters
+                Matrix_real& solution_guess_mtx_idx             = parameters_mtx_vec[idx];  
+                solution_guess_mtx_idx[ param_idx_agents[idx] ] = solution_guess_tmp_mtx[ param_idx_agents[idx] ];  	
 
             }
-            else if ( three_point_line_search_double_period ) {
 
-                for(int idx=0; idx<batch_size; idx++) { 
-                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ]; 
-                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_quarter;                
-                }                 
-      
-                Matrix_real f0_shifted_pi4_agents = optimization_problem_batched( parameters_mtx_vec );  
-
-
-                for(int idx=0; idx<batch_size; idx++) { 
-                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ];             
-                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_quarter;
-                }   
-             
-                Matrix_real f0_shifted_pi2_agents = optimization_problem_batched( parameters_mtx_vec );
-
-                for( int idx=0; idx<batch_size; idx++ ) {
-     
-                    double f0_shifted_pi         = f0_shifted_pi2_agents[idx];
-                    double f0_shifted_pi2        = f0_shifted_pi4_agents[idx];     
-            
-
-                    double A_times_cos = (current_minimum-f0_shifted_pi)/2;
-                    double offset      = (current_minimum+f0_shifted_pi)/2;
-
-                    double A_times_sin = offset - f0_shifted_pi2;
-
-                    double phi0 = atan2( A_times_sin, A_times_cos);
-
-
-                    double parameter_shift = phi0 > 0 ? M_PI_half-phi0/2 : -phi0/2-M_PI_half;
-
-                                   
-                    param_update_mtx[ idx ] = parameter_shift;
-
-                    //revert the changed parameters
-                    Matrix_real& solution_guess_mtx_idx             = parameters_mtx_vec[idx];  
-                    solution_guess_mtx_idx[ param_idx_agents[idx] ] = solution_guess_tmp_mtx[ param_idx_agents[idx] ];  	
-
-                }
-
-
-
-            }
-            else {
-                std::string err("solve_layer_optimization_problem_COSINE: Not implemented method.");
-                throw err;
-            }
-		
             
 
             // parameters for line search
@@ -342,7 +297,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND_P
 
             if ( iter_idx % 50 == 0 ) {
                 std::stringstream sstream;
-                sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
+                sstream << "GRAD_DESCEND_SHIFT_RULE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                 print(sstream, 0);   
                 if ( export_circuit_2_binary_loc > 0 ) {
@@ -380,7 +335,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND_P
      
             if ( std::abs( f0_mean - current_minimum) < 1e-7  && var_f0/f0_mean < 1e-7 ) {
                 std::stringstream sstream;
-                sstream << "COSINE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
+                sstream << "GRAD_DESCEND_SHIFT_RULE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                 print(sstream, 0);   
                 if ( export_circuit_2_binary_loc > 0 ) {
@@ -410,7 +365,7 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_GRAD_DESCEND_P
 
         tbb::tick_count optimization_end = tbb::tick_count::now();
         optimization_time  = optimization_time + (optimization_end-optimization_start).seconds();
-        sstream << "COSINE time: " << CPU_time << " seconds, obtained minimum: " << current_minimum << std::endl;
+        sstream << "GRAD_DESCEND_SHIFT_RULE time: " << CPU_time << " seconds, obtained minimum: " << current_minimum << std::endl;
         
         print(sstream, 0); 
 
