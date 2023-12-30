@@ -819,8 +819,8 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer( qgd_Variational_
     else if ( strcmp("cosined", optimizer_C)==0 || strcmp("COSINE", optimizer_C)==0) {
         qgd_optimizer = COSINE;        
     }
-    else if ( strcmp("grad_descend_phase_shift_rule", optimizer_C)==0 || strcmp("GRAD_DESCEND_PHASE_SHIFT_RULE", optimizer_C)==0) {
-        qgd_optimizer = GRAD_DESCEND_PHASE_SHIFT_RULE;        
+    else if ( strcmp("grad_descend_phase_shift_rule", optimizer_C)==0 || strcmp("GRAD_DESCEND_PARAMETER_SHIFT_RULE", optimizer_C)==0) {
+        qgd_optimizer = GRAD_DESCEND_PARAMETER_SHIFT_RULE;        
     }    
     else if ( strcmp("bfgs", optimizer_C)==0 || strcmp("BFGS", optimizer_C)==0) {
         qgd_optimizer = BFGS;        

@@ -16,8 +16,8 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file GRAD_DESCEND_PHASE_SHIFT_RULE
-    \brief Implementation of the GRAD_DESCEND_PHASE_SHIFT_RULE optimization srategy
+/*! \file GRAD_DESCEND_PARAMETER_SHIFT_RULE
+    \brief Implementation of the GRAD_DESCEND_PARAMETER_SHIFT_RULE optimization srategy
 */
 
 
@@ -34,11 +34,11 @@ limitations under the License.
 
 
 /**
-@brief Call to solve layer by layer the optimization problem via the GRAD_DESCEND_PHASE_SHIFT_RULE algorithm. The optimalized parameters are stored in attribute optimized_parameters.
+@brief Call to solve layer by layer the optimization problem via the GRAD_DESCEND_PARAMETER_SHIFT_RULE algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized
 @param solution_guess Array containing the solution guess.
 */
-void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PHASE_SHIFT_RULE( int num_of_parameters, Matrix_real& solution_guess) {
+void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAMETER_SHIFT_RULE( int num_of_parameters, Matrix_real& solution_guess) {
 
 
         if ( cost_fnc != FROBENIUS_NORM && cost_fnc != VQE ) {
