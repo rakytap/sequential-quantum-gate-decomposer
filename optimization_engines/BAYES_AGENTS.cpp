@@ -36,10 +36,6 @@ limitations under the License.
 
 
 
-static double circuit_simulation_time = 0.0;
-static double CPU_time = 0.0;
-
-
 
 void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_BAYES_AGENTS( int num_of_parameters, Matrix_real& solution_guess) {
         if (gates.size() == 0 ) {

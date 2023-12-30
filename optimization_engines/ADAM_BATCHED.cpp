@@ -34,12 +34,6 @@ limitations under the License.
 #endif
 
 
-static double circuit_simulation_time = 0.0;
-static double CPU_time = 0.0;
-
-
-
-
 
 
 /**

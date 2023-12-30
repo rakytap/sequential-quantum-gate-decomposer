@@ -37,7 +37,6 @@ limitations under the License.
 #endif
 
 
-static double circuit_simulation_time = 0.0;
 
 
 extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, int lda, int *ipiv, double *b, int ldb); 	
@@ -91,6 +90,11 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base() {
     std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
     int id = distrib_int(gen);
 
+
+    // Time spent on circuit simulation/cost function evaluation
+    circuit_simulation_time = 0.0;
+    // time spent on optimization
+    CPU_time = 0.0;
 
 }
 
@@ -150,6 +154,12 @@ N_Qubit_Decomposition_Base::N_Qubit_Decomposition_Base( Matrix Umtx_in, int qbit
     std::uniform_int_distribution<> distrib_int(0, INT_MAX);  
     id = distrib_int(gen);
 
+
+
+    // Time spent on circuit simulation/cost function evaluation
+    circuit_simulation_time = 0.0;
+    // time spent on optimization
+    CPU_time = 0.0;
 
 #ifdef __DFE__
 

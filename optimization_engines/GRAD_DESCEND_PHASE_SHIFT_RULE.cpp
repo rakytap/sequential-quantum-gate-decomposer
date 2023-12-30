@@ -33,12 +33,6 @@ limitations under the License.
 #endif
 
 
-
-
-static double circuit_simulation_time = 0.0;
-static double CPU_time = 0.0;
-
-
 /**
 @brief Call to solve layer by layer the optimization problem via the GRAD_DESCEND_PHASE_SHIFT_RULE algorithm. The optimalized parameters are stored in attribute optimized_parameters.
 @param num_of_parameters Number of parameters to be optimized

@@ -35,6 +35,10 @@ typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FRO
 
 
 
+/// implemented optimization strategies
+enum optimization_aglorithms{ ADAM, BFGS, BFGS2, ADAM_BATCHED, AGENTS, COSINE, AGENTS_COMBINED, GRAD_DESCEND, BAYES_OPT, BAYES_AGENTS, GRAD_DESCEND_PHASE_SHIFT_RULE};
+
+
 #ifdef __cplusplus
 extern "C" 
 {
@@ -62,8 +66,7 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 #endif
 
 
-/// implemented optimization algorithms
-enum optimization_aglorithms{ ADAM, BFGS, BFGS2, ADAM_BATCHED, AGENTS, COSINE, AGENTS_COMBINED, GRAD_DESCEND, BAYES_OPT, BAYES_AGENTS, GRAD_DESCEND_PHASE_SHIFT_RULE};
+
 
 
 /**
@@ -117,7 +120,10 @@ protected:
     int trace_offset;
 
 
-    
+    /// Time spent on circuit simulation/cost function evaluation
+    double circuit_simulation_time;
+    /// time spent on optimization
+    double CPU_time;    
 
 
 
