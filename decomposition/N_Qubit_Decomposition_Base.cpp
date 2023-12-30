@@ -676,8 +676,6 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
                 throw err;
             }
 		
-		
-            number_of_iters = number_of_iters + 2*batch_size; 
             
 
             // parameters for line search
@@ -702,9 +700,6 @@ void N_Qubit_Decomposition_Base::solve_layer_optimization_problem_COSINE( int nu
 
             Matrix_real line_values = optimization_problem_batched( parameters_line_search_mtx_vec ); 
                    
-            number_of_iters = number_of_iters + line_points; 
-
-
 
             // find the smallest value
             double f0_min = line_values[0];
