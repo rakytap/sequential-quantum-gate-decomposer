@@ -144,6 +144,17 @@ U3::~U3() {
 }
 
 
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@return Returns with a matrix of the gate
+*/
+Matrix
+U3::get_matrix( Matrix_real& parameters ) {
+
+        return get_matrix( parameters, false );
+}
+
 
 /**
 @brief Call to retrieve the gate matrix

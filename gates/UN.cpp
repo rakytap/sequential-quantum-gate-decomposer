@@ -99,6 +99,21 @@ void UN::set_qbit_num( int qbit_num_in ) {
 
 /**
 @brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the UN gate.
+@return Returns with a matrix of the operation
+*/
+Matrix
+UN::get_matrix( Matrix_real& parameters ) {
+
+
+        return get_matrix( parameters, false );
+}
+
+
+/**
+@brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the UN gate.
+@param parallel Set true to apply parallel kernels, false otherwise
 @return Returns with a matrix of the operation
 */
 Matrix

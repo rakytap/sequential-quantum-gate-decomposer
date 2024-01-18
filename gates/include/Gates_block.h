@@ -90,10 +90,17 @@ void release_gate( int idx);
 /**
 @brief Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate block)
 @param parameters An array pointing to the parameters of the gates
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
 @return Returns with the gate matrix
 */
-Matrix get_matrix( Matrix_real& parameters, bool parallel=false );
+Matrix get_matrix( Matrix_real& parameters );
+
+/**
+@brief Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate block)
+@param parameters An array pointing to the parameters of the gates
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with the gate matrix
+*/
+Matrix get_matrix( Matrix_real& parameters, bool parallel );
 
 
 /**

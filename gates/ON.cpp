@@ -96,8 +96,26 @@ void ON::set_qbit_num( int qbit_num_in ) {
 }
 
 
+
 /**
 @brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the ON gate.
+@return Returns with a matrix of the operation
+*/
+Matrix
+ON::get_matrix( Matrix_real& parameters ) {
+
+
+
+        return get_matrix( parameters, false );
+}
+
+
+
+/**
+@brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the ON gate.
+@param parallel Set true to apply parallel kernels, false otherwise
 @return Returns with a matrix of the operation
 */
 Matrix

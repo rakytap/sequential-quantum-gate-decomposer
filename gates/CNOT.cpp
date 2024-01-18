@@ -96,9 +96,22 @@ CNOT::CNOT(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
 CNOT::~CNOT() {
 }
 
+/**
+@brief Call to retrieve the gate matrix
+@return Returns with the matrix of the gate
+*/
+Matrix
+CNOT::get_matrix() {
+
+    return get_matrix( false );
+
+}
+
+
 
 /**
 @brief Call to retrieve the gate matrix
+@param parallel Set true to apply parallel kernels, false otherwise
 @return Returns with the matrix of the gate
 */
 Matrix

@@ -61,7 +61,14 @@ SYC(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 
 /**
 @brief Call to retrieve the operation matrix
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@return Returns with the matrix of the operation
+*/
+Matrix get_matrix();
+
+
+/**
+@brief Call to retrieve the operation matrix
+@param parallel Set true to apply parallel kernels, false otherwise
 @return Returns with the matrix of the operation
 */
 Matrix get_matrix(bool parallel=false);

@@ -61,9 +61,18 @@ SX(int qbit_num_in, int target_qbit_in);
 */
 ~SX();
 
+
 /**
 @brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parameters An array of parameters to calculate the matrix of the SX gate.
+@return Returns with a matrix of the gate
+*/
+Matrix get_matrix();
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the SX gate.
 @return Returns with a matrix of the gate
 */
 Matrix get_matrix( bool parallel=false );

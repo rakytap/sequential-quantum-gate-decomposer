@@ -73,12 +73,22 @@ virtual ~Composite();
 */
 Composite(int qbit_num_in);
 
+
+/**
+@brief Call to retrieve the operation matrix
+@param parallel Set true to apply parallel kernels, false otherwise 
+@return Returns with a matrix of the operation
+*/
+Matrix get_matrix(Matrix_real& parameters);
+
+
+
 /**
 @brief Call to retrieve the operation matrix
 @param parallel Set true to apply parallel kernels, false otherwise (optional)
 @return Returns with a matrix of the operation
 */
-Matrix get_matrix(Matrix_real& parameters, bool parallel=false);
+Matrix get_matrix(Matrix_real& parameters, bool parallel);
 
 
 /**

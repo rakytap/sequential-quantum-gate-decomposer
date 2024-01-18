@@ -144,6 +144,22 @@ Gates_block::release_gate( int idx) {
 @return Returns with the operation matrix
 */
 Matrix
+Gates_block::get_matrix( Matrix_real& parameters ) {
+
+    return get_matrix( parameters, false );
+
+
+}
+
+
+
+/**
+@brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)
+@param parameters An array pointing to the parameters of the gates
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with the operation matrix
+*/
+Matrix
 Gates_block::get_matrix( Matrix_real& parameters, bool parallel ) {
 
     //The stringstream input to store the output messages.

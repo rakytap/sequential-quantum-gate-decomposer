@@ -59,10 +59,16 @@ Z(int qbit_num_in, int target_qbit_in);
 */
 ~Z();
 
+
 /**
 @brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the gate.
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@return Returns with a matrix of the gate
+*/
+Matrix get_matrix();
+
+/**
+@brief Call to retrieve the gate matrix
+@param parallel Set true to apply parallel kernels, false otherwise
 @return Returns with a matrix of the gate
 */
 Matrix get_matrix( bool parallel=false );

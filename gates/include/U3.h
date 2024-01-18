@@ -76,14 +76,21 @@ U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lambda_
 @brief Destructor of the class
 */
 virtual ~U3();
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@return Returns with a matrix of the gate
+*/
+Matrix get_matrix( Matrix_real& parameters  );
+
 
 /**
 @brief Call to retrieve the gate matrix
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set true to apply parallel kernels, false otherwise
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( Matrix_real& parameters, bool parallel=false  );
+Matrix get_matrix( Matrix_real& parameters, bool parallel  );
 
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
