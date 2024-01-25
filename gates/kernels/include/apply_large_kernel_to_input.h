@@ -16,7 +16,7 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file apply_kerel_to_input_AVX.cpp
+/*! \file apply_kerel_to_input_AVX.h
     \brief ????????????????
 */
 
@@ -28,9 +28,6 @@ limitations under the License.
 #include "matrix.h"
 #include "common.h"
 
-__m256d get_AVX_vector(double* element_outer, double* element_inner);
-
-__m256d complex_mult_AVX(__m256d input_vec, __m256d unitary_row_vec, __m256d neg);
 
 int get_grain_size(int index_step);
 
@@ -38,14 +35,6 @@ void apply_large_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
 
 void apply_2qbit_kernel_to_state_vector_input(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
 
-void apply_2qbit_kernel_to_state_vector_input_AVX(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
-
-void apply_2qbit_kernel_to_state_vector_input_parallel_AVX(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
-
 void apply_3qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
-
-void apply_3qbit_kernel_to_state_vector_input_parallel_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
-
-void apply_4qbit_kernel_to_state_vector_input_parallel_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
 #endif

@@ -355,7 +355,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/gates/RZ_P.cpp
     ${PROJECT_SOURCE_DIR}/gates/custom_kernel_1qubit_gate.cpp
     ${PROJECT_SOURCE_DIR}/gates/Composite.cpp
-    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input.cpp
     ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_state_vector_input.cpp
     ${PROJECT_SOURCE_DIR}/gates/kernels/apply_large_kernel_to_input.cpp
     ${PROJECT_SOURCE_DIR}/nn/NN.cpp
@@ -371,6 +371,28 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Unitary.cpp
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Orthogonal.cpp
 )
+
+
+if (${HAVE_AVX512F_EXTENSIONS})
+  list(APPEND qgd_files 
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp    
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_large_kernel_to_input_AVX.cpp    
+  )
+elseif (${HAVE_AVX2_EXTENSIONS})
+  list(APPEND qgd_files 
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp        
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_large_kernel_to_input_AVX.cpp        
+  )
+elseif (${HAVE_AVX_EXTENSIONS})
+  list(APPEND qgd_files 
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp        
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_large_kernel_to_input_AVX.cpp        
+  )
+endif()
+
 
 
 if(DEFINED ENV{QGD_MPI})
@@ -472,6 +494,8 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Unitary.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Orthogonal.h
 )
+
+
 
 
 

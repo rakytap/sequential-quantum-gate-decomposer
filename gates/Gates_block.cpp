@@ -45,6 +45,12 @@ limitations under the License.
 
 #include "apply_large_kernel_to_input.h"
 
+#ifdef USE_AVX 
+#include "apply_large_kernel_to_input_AVX.h"
+#endif
+
+
+
 //static tbb::spin_mutex my_mutex;
 /**
 @brief Default constructor of the class.
@@ -254,7 +260,11 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, bool parallel
 
                 outer_idx        = block_end[block_idx]-1;
 
+#ifdef USE_AVX
+                apply_large_kernel_to_state_vector_input_AVX(Umtx_mini, input, qbits, input.size() );
+#else
                 apply_large_kernel_to_state_vector_input(Umtx_mini, input, qbits, input.size() );
+#endif                
        
 
 

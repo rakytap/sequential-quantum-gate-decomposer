@@ -26,8 +26,10 @@ limitations under the License.
 
 #ifdef USE_AVX 
 #include "apply_kernel_to_input_AVX.h"
+#include "apply_kernel_to_state_vector_input_AVX.h"
 #endif
 
+#include "apply_kernel_to_input.h"
 #include "apply_kernel_to_state_vector_input.h"
 
 /**
@@ -287,7 +289,7 @@ Gate* Gate::clone() {
 @param deriv Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, bool parallel=false) {
+Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, bool parallel) {
 
 #ifdef USE_AVX
 

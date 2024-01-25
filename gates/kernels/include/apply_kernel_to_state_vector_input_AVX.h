@@ -21,14 +21,14 @@ limitations under the License.
 */
 
 
-#ifndef apply_kerel_to_state_vector_input_H
-#define apply_kerel_to_state_vector_input_H
+#ifndef apply_kerel_to_state_vector_input_AVX_H
+#define apply_kerel_to_state_vector_input_AVX_H
 
 #include "matrix.h"
 #include "common.h"
 
 /**
-@brief Call to apply a gate kernel on a state vector
+@brief AVX kernel on a state vector
 @param u3_1qbit The 2x2 kernel of the gate operation
 @param input The input matrix on which the transformation is applied
 @param deriv Set true to apply derivate transformation, false otherwise
@@ -36,12 +36,12 @@ limitations under the License.
 @param control_qbit The contron qubit (-1 if the is no control qubit)
 @param matrix_size The size of the input
 */
-void apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+void apply_kernel_to_state_vector_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 
 
 /**
-@brief Call to apply a gate kernel on a state vector. Parallel version
+@brief Parallel AVX kernel on a state vector
 @param u3_1qbit The 2x2 kernel of the gate operation
 @param input The input matrix on which the transformation is applied
 @param deriv Set true to apply derivate transformation, false otherwise
@@ -49,8 +49,7 @@ void apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const b
 @param control_qbit The contron qubit (-1 if the is no control qubit)
 @param matrix_size The size of the input
 */
-void apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
-
+void apply_kernel_to_state_vector_input_parallel_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 
 #endif
