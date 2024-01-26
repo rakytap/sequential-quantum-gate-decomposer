@@ -288,7 +288,7 @@ If you have found our work useful for your research project, please cite us by
 
 [1] Péter Rakyta, Zoltán Zimborás, Approaching the theoretical limit in quantum gate decomposition, Quantum 6, 710 (2022). <br>
 [2] Péter Rakyta, Zoltán Zimborás, Efficient quantum gate decomposition via adaptive circuit compression, arXiv:2203.04426. <br>
-[3] Peter Rakyta, Gregory Morse, Jakab Nádori, Zita Majnay-Takács, Oskar Mencer, Zoltán Zimborás, Highly optimized quantum circuits synthesized via data-flow engines, arXiv:2211.07685
+[3] Peter Rakyta, Gregory Morse, Jakab Nádori, Zita Majnay-Takács, Oskar Mencer, Zoltán Zimborás, Highly optimized quantum circuits synthesized via data-flow engines, Journal of Computational Physics 500, 112756 (2024).
 
 
 
