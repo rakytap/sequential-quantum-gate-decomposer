@@ -680,7 +680,18 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimized_Parameters( qgd_N_Qubit_D
     Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
 
 
-    self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
+    try {
+        self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
 
 
     Py_DECREF(parameters_arr);

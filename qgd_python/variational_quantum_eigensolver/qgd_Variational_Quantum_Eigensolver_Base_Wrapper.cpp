@@ -36,12 +36,12 @@ limitations under the License.
 
 
 /**
-@brief Type definition of the qgd_gates_Block Python class of the qgd_Gates_Block module
+@brief Type definition of the qgd_Circuit_Wrapper Python class of the qgd_Circuit_Wrapper module
 */
-typedef struct qgd_Gates_Block {
+typedef struct qgd_Circuit_Wrapper {
     PyObject_HEAD
     Gates_block* gate;
-} qgd_Gates_Block;
+} qgd_Circuit_Wrapper;
 
 
 /**
@@ -329,8 +329,19 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimized_Parameters( qgd_V
     Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
 
 
-    self->vqe->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
-
+    
+    try {
+        self->vqe->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
 
     Py_DECREF(parameters_arr);
 
@@ -1178,6 +1189,44 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Project_Name( qgd_Variation
    return Py_BuildValue("i", 0);
 }
 
+
+/**
+@brief Wrapper function to set custom gate structure for the decomposition.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+@return Returns with zero on success.
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    PyObject* gate_structure_py; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &gate_structure_py )) return Py_BuildValue("i", -1);
+
+
+    // convert gate structure from PyObject to qgd_Circuit_Wrapper
+    qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*) gate_structure_py;
+
+    try {
+        self->vqe->set_custom_gate_structure( qgd_op_block->gate );
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    
+
+    return Py_BuildValue("i", 0);
+
+
+}
+
 /**
 @brief Structure containing metadata about the members of class qgd_N_Qubit_Decomposition_Wrapper.
 */
@@ -1239,6 +1288,9 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"set_Initial_State", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Initial_State, METH_VARARGS,
      "Call to set the initial state used in the VQE process."
+    },
+    {"set_Gate_Structure", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure, METH_VARARGS,
+     "Call to set custom gate structure for VQE experiments."
     },
     {NULL}  /* Sentinel */
 };

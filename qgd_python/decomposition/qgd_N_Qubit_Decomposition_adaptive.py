@@ -29,7 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from os import path
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive_Wrapper import qgd_N_Qubit_Decomposition_adaptive_Wrapper
-from qgd_python.gates.qgd_Circuit import qgd_Circuit as Circuit
+from qgd_python.gates.qgd_Circuit import qgd_Circuit
 
 
 

@@ -907,8 +907,19 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimized_Parameters( qgd_N_Qubit
 
     Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
 
-
-    self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
+    try {
+        self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    
 
 
     Py_DECREF(parameters_arr);
@@ -1172,8 +1183,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Blocks(qgd_N_Qubit_D
 /**
 @brief Wrapper function to set custom gate structure for the decomposition.
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
-@param args A tuple of the input arguments: gate_structure_dict (PyDict)
-gate_structure_dict: ?????????????????????????????
 @return Returns with zero on success.
 */
 static PyObject *

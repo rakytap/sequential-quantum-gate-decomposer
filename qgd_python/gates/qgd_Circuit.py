@@ -243,7 +243,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
         if input_state is None:
             matrix_size = 1 << qbit_num
-            input_state = np.zeros( (matrix_size,1) )
+            input_state = np.zeros( (matrix_size,1), dtype=np.complex128 )
             input_state[0] = 1
 
         # evaluate the entropy

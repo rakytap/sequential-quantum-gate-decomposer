@@ -28,6 +28,7 @@ limitations under the License.
 import numpy as np
 from os import path
 from qgd_python.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolver_Base_Wrapper import qgd_Variational_Quantum_Eigensolver_Base_Wrapper
+from qgd_python.gates.qgd_Circuit import qgd_Circuit
 
 
 
@@ -271,7 +272,16 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
         super(qgd_Variational_Quantum_Eigensolver_Base, self).set_Initial_State( initial_state )
 
 
-        
+##
+# @brief Call to set custom gate structure to used in the decomposition
+# @param Gate_structure An instance of SQUANDER Circuit
+    def set_Gate_Structure( self, Gate_structure ):  
+
+        if not isinstance(Gate_structure, qgd_Circuit) :
+            raise Exception("Input parameter Gate_structure should be a an instance of Circuit")
+                    
+                    
+        return super().set_Gate_Structure( Gate_structure )        
         
             
 
