@@ -744,6 +744,11 @@ void Decomposition_Base::get_optimized_parameters( double* ret ) {
 */
 void Decomposition_Base::set_optimized_parameters( double* parameters, int num_of_parameters ) {
 
+    if ( num_of_parameters == 0 ) {
+        optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+        return;
+    }
+
     if ( parameter_num != num_of_parameters ) {
         std::string err("Decomposition_Base::set_optimized_parameters: The number of parameters does not match with the free parameters of the circuit.");
         throw err;
