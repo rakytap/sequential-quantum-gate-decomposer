@@ -97,14 +97,14 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 	t0 = time.time()
 	circuit_squander.apply_to( parameters, initial_state )
 	t_SQUANDER = time.time() - t0
-	print( "Time elapsed SQUANDER: ", t_SQUANDER, " at qbit_num = ", qbit_num )
+	print( "Time elapsed SQUANDER: ", t_SQUANDER, " seconds at qbit_num = ", qbit_num )
 
 	execution_times_squander[ qbit_num ] = t_SQUANDER
 	transformed_states_squander[ qbit_num ] = np.reshape(initial_state, (initial_state.size,) )
 	parameters_squander[ qbit_num ] = parameters
 
 
-print("SQUANDER:")
+print("SQUANDER execution times [s]:")
 print( execution_times_squander )
 
 
@@ -169,7 +169,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 	execution_times_qiskit[ qbit_num ] = t_qiskit
 	transformed_states_qiskit[ qbit_num ] = np.array(transformed_state)
 
-print("QISKIT:")
+print("QISKIT execution times [s]:")
 print( execution_times_qiskit )
 
 
@@ -235,10 +235,12 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 	execution_times_qulacs[ qbit_num ] = t_qulacs
 	transformed_states_qulacs[ qbit_num ] = np.array(transformed_state)
 
-print("Qulacs:")
+print("Qulacs execution times [s]:")
 print( execution_times_qulacs )
 # check errors
 
+print(' ')
+print("Difference between the transformed state vectors:")
 # SQUANDER-QISKIT-Qulacs comparision
 keys = transformed_states_qiskit.keys()
 for qbit_num in keys:
