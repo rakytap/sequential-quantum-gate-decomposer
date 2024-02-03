@@ -46,7 +46,7 @@ The dependencies necessary to compile and build the SQUANDER package are the fol
 * [LAPACKE](https://www.netlib.org/lapack/lapacke.html)
 * [Doxygen](https://www.doxygen.nl/index.html) (optional)
 
-The Python interface of SQUANDER was developed and tested with Python 3.6-3.9.
+The Python interface of SQUANDER was developed and tested with Python 3.6-3.10.
 The SQUANDER Python interface needs the following packages to be installed on the system:
 
 * [Qiskit](https://qiskit.org/documentation/install.html)
@@ -186,99 +186,17 @@ $ python -m pytest
 
 ### How to use
 
-The algorithm implemented in the SQUANDER package intends to transform the given unitary into an identity matrix via a sequence of two-qubit and one-qubit gate operations applied on the unitary. 
-Thus, in order to get the decomposition of a unitary, one should rather provide the complex transpose of this unitary as the input for the SQUANDER decomposing process, as can be seen in the examples.
+he Squander package provides high perfromance computational library to
 
+* decompose unitaries into a quantum circuti composed from single- and two-qubit gates.
+* simulate the evolution of state vectors under the effect of quantum circuits
+* generate quantum circuit for the pusrpose of state preparation 
+* run variational quantum algorithms with the incorporated quantum computer simulator.
 
 ## Python Interface
 
 The SQUANDER package contains a Python interface allowing the access of the functionalities of the SQUANDER package from Python. 
 The usage of the SQUANDER Python interface is demonstrated in the example files in the directory **examples** located in the directory **path/to/SQUANDER/package**, or in test files located in sub-directories of **path/to/SQUANDER/package/qgd_python/*/test**. 
-
-### Example code snippet
-
-Here we provide an example to use the SQUANDER package. The following python interface is accessible from version 1.8.0. 
-In this example we use two optimization engines for the decomposition:
-1. An evolutionary engine called AGENTS
-2. Second order gradient descend algorithm (BFGS)
-
-Firstly we construct a Python map to set hyper-parameters during the gate synthesis.
-
-        #Python map containing hyper-parameters
-        config = { 'max_outer_iterations': 1, 
-                    'max_inner_iterations_agent': 25000, 
-                    'max_inner_iterations_compression': 10000,
-                    'max_inner_iterations' : 500,
-                    'max_inner_iterations_final': 5000, 		
-                    'Randomized_Radius': 0.3, 
-                    'randomized_adaptive_layers': 1,
-                    'optimization_tolerance_agent': 1e-2,
-                    'optimization_tolerance': 1e-8,
-                    'agent_num': 10}
- 
-Next we initialize the decomposition class with the unitary Umtx to be decomposed. 
-
-        # creating a class to decompose the unitary
-        from squander import N_Qubit_Decomposition_adaptive
-        cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, config=config )
-
-The verbosity of the execution output can be controlled by the function call 
-
-        # setting the verbosity of the decomposition
-        cDecompose.set_Verbose( 3 )
-
-
-We construct the initial trial gate structure for the optimization consisting of 2 levels of adaptive layer. 
-(1 level is made of qubit_num*(qubit_num-1) two-qubit building blocks if all-to-all connectivity is assumed)
-
-
-        # adding decomposing layers to the gate structure
-        levels = 2
-        for idx in range(levels):
-            cDecompose.add_Adaptive_Layers()
-
-        cDecompose.add_Finalyzing_Layer_To_Gate_Structure()
-        
-We can construct an initial parameters set for the optimization by retrieving the number of free parameters. If the initial parameter set is not set, random parameters are used by default.
-
-        # setting intial parameter set
-        parameter_num = cDecompose.get_Parameter_Num()
-        parameters = np.zeros( (parameter_num,1), dtype=np.float64 )
-        cDecompose.set_Optimized_Parameters( parameters )
-
-We can choose between several engines to solve the optimization problem. Here we use an evolutionary based algorithm named 'AGENTS'
-
-        # setting optimizer
-        cDecompose.set_Optimizer("AGENTS")
-	
-The optimization process is started by the function call	
-
-        # starting the decomposition
-        cDecompose.get_Initial_Circuit()
-	
-The optimization process terminates by either reaching the tolerance 'optimization_tolerance_agent' or by reaching the maximal iteration number 'max_inner_iterations_agent', or if the engines identifies a convergence to a local minimum. The SQUANDER framework enables one to continue the optimization using a different engine. In particular we set a second order gradient descend method 'BFGS' 
-In order to achieve the best performance one can play around with the hyper-parameters in the map 'config'. (Optimization strategy AGENTS is good in avoiding local minima or get through flat areas of the optimization landscape. Then a gradient descend method can be used for faster convergence toward a solution.)
-
-        # setting optimizer
-        cDecompose.set_Optimizer("BFGS")
-
-        # continue the decomposition with a second optimizer method
-        cDecompose.get_Initial_Circuit()
-	
-After solving the optimization problem for the initial gate structure, we can initiate gate compression iterations. (This step can be omited.)	
-
-        # starting compression iterations
-        cDecompose.Compress_Circuit()
-	
-By finalizing the gate structure we replace the CRY gates with CNOT gates. (CRY gates with small rotation angle are approximately expressed with a single CNOT gate, so further optimization process needs to be initiated.)
-
-        # finalize the gate structure (replace CRY gates with CNOT gates)
-        cDecompose.Finalize_Circuit()
-
-Finally, we can retrieve the decomposed quantum circuit in QISKIT format.
-
-        # get the decomposing operations
-        quantum_circuit = cDecompose.get_Quantum_Circuit()
 
 
 

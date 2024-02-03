@@ -20,27 +20,16 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 """
-## \file test_optimization_problem_combined.py
-## \brief Simple example python code demonstrating the basic usage of the Python interface of the Quantum Gate Decomposer package
+## \file QC_sim_benchmark.py
+## \brief Simple example python code demonstrating how to use state vector simulation with the SQUANDER package and compare the perfromance to QISKIT and Qulacs
 
-from squander import Gates_Block       
+from squander import Circuit       
 
-
-#from squander import nn
 
 import numpy as np
 import random
 import scipy.linalg
 import time
-from scipy.fft import fft
-
-import time
-
-try:
-    from mpi4py import MPI
-    MPI_imported = True
-except ModuleNotFoundError:
-    MPI_imported = False
 
 
 np.set_printoptions(linewidth=200) 
@@ -81,7 +70,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 
 	# prepare circuit
 
-	circuit_squander = Gates_Block( qbit_num )
+	circuit_squander = Circuit( qbit_num )
 
 	for level in range(levels):
 
@@ -250,22 +239,14 @@ print("Qulacs:")
 print( execution_times_qulacs )
 # check errors
 
-# SQUANDER-QISKIT
+# SQUANDER-QISKIT-Qulacs comparision
 keys = transformed_states_qiskit.keys()
 for qbit_num in keys:
 	state_squander = transformed_states_squander[ qbit_num ]
 	state_qiskit   = transformed_states_qiskit[ qbit_num ]
 	state_qulacs   = transformed_states_qulacs[ qbit_num ]
-	'''
-	print(' ' )
-	print(state_squander)
-	print(' ' )
-	print(state_qulacs)
-	print(' ' )
-	'''
 
 	print( "Squander vs QISKIT: ", np.linalg.norm( state_squander-state_qiskit ) )
 	print( "Squander vs Qulacs: ", np.linalg.norm( state_squander-state_qulacs ) )
-	#print( state_squander.conj().T @ state_qiskit )
-	#print( state_squander.conj().T @ state_qulacs )
+	
 
