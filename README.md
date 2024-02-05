@@ -5,10 +5,8 @@
 
 # Sequential Quantum Gate Decomposer (SQUANDER)
 
+The Sequential Quantum Gate Decomposer (SQUANDER) package introduces innovative techniques for training parametric quantum circuits based on qubits. SQUANDER offers Python interfaces to facilitate a variety of numerical experiments, encompassing quantum gate synthesis, variational quantum eigensolver, and state preparation. Leveraging two gate synthesis methods, as outlined in References [1], [2], and [3], SQUANDER excels in decomposing n-qubit unitaries into sequences of one-qubit rotations and two-qubit controlled gates. The computational backbone involves a parallel C/C++ framework and vectorized AVX gate kernels, enhancing the efficiency of underlying numerical simulations. Beyond conventional first (gradient descent and ADAM) and second-order (BFGS) gradient-based optimizers, SQUANDER integrates an innovative gradient-free optimization technique detailed in Reference [4]. This technique exhibits robust numerical behavior, particularly effective in circumventing barren plateaus. The handcrafted optimization strategies within SQUANDER are designed to accommodate the periodicity inherent in the optimization landscape, ensuring resilient numerical efficiency.
 
-The Sequential Quantum Gate Decomposer (SQUANDER) package provides a novel solution to decompose any n-qubit unitaries into a sequence of one-qubit rotations and two-qubit controlled gates (such as controlled NOT or controlled phase gate). SQUANDER utilizes two novel gate synthesis techniques reported in Refereces [1] and [2].
-(i) To synthesize general unitaries SQUANDER applies periodic layers of two-qubit and parametric one-qubit gates to an n-qubit unitary such that the resulting unitary is 1-qubit decoupled, i.e., is a tensor product of an (n-1)-qubit and a 1-qubit unitary. Continuing the decoupling procedure sequentially one arrives at the end to a full decomposition of the original unitary into 1- and 2-qubit gates. SQUANDER provides lower CNOT counts for generic n-qubit unitaries (up to n=6)  than the previously provided lower bounds.
-(ii) An adaptive circuit compression is used to optimize quantum circuit by the application of parametric two-qubit gates in the synthesis process. The utilization of these parametric two-qubit gates in the circuit design allows one to transform the discrete combinatorial problem of circuit synthesis into an optimization problem over continuous variables. The circuit is then compressed by a sequential removal of two-qubit gates from the design, while the remaining building blocks are continuously adapted to the reduced gate structure by iterated learning cycles.
 
 
 The SQUANDER library is written in C/C++ providing a Python interface via [C++ extensions](https://docs.python.org/3/library/ctypes.html).
@@ -20,6 +18,7 @@ In the following we briefly summarize the steps to build, install and use the SQ
 
 The project was supported by grant OTKA PD123927 and by the Ministry of Innovation and Technology and the National Research, Development and Innovation
 Office within the Quantum Information National Laboratory of Hungary.
+
 
 Find the documantation of the SQUANDER package at [CodeDocs[xyz]](https://codedocs.xyz/rakytap/sequential-quantum-gate-decomposer/)
 
