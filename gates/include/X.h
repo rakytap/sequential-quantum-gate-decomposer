@@ -16,8 +16,8 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file RX.h
-    \brief Header file for a class representing a rotation gate around the X axis.
+/*! \file X.h
+    \brief Header file for a class representing the X gate.
 */
 
 #ifndef X_H
@@ -59,20 +59,29 @@ X(int qbit_num_in, int target_qbit_in);
 */
 ~X();
 
+
 /**
 @brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( );
+Matrix get_matrix();
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the X gate.
+@return Returns with a matrix of the gate
+*/
+Matrix get_matrix( bool parallel=false );
 
 
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-void apply_to( Matrix& input );
+void apply_to( Matrix& input, bool parallel=false );
 
 
 /**

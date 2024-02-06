@@ -450,10 +450,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
         }
         else {
-	     std::stringstream sstream;
-	     sstream << "bad value for initial guess" << std::endl;
-	     print(sstream, 0);  	
-	     exit(-1);
+            std::string err("bad value for initial guess");
         }
 
         if ( solution_guess_num > 0) {
@@ -747,6 +744,16 @@ void Decomposition_Base::get_optimized_parameters( double* ret ) {
 */
 void Decomposition_Base::set_optimized_parameters( double* parameters, int num_of_parameters ) {
 
+    if ( num_of_parameters == 0 ) {
+        optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
+        return;
+    }
+
+    if ( parameter_num != num_of_parameters ) {
+        std::string err("Decomposition_Base::set_optimized_parameters: The number of parameters does not match with the free parameters of the circuit.");
+        throw err;
+    }
+
     optimized_parameters_mtx = Matrix_real(1, num_of_parameters);
     memcpy( optimized_parameters_mtx.get_data(), parameters, num_of_parameters*sizeof(double) );
 
@@ -841,6 +848,10 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
         }
         else if (gate->get_type() == RZ_OPERATION ) {
             RZ* rz_gate = static_cast<RZ*>( gate );
+            rz_gate->apply_to( parameters_mtx, ret_matrix);            
+        }
+        else if (gate->get_type() == RZ_P_OPERATION ) {
+            RZ_P* rz_gate = static_cast<RZ_P*>( gate );
             rz_gate->apply_to( parameters_mtx, ret_matrix);            
         }
         else if (gate->get_type() == X_OPERATION ) {
@@ -974,6 +985,10 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         }
         else if (gate->get_type() == RZ_OPERATION ) {
             RZ* rz_gate = static_cast<RZ*>(gate);
+            rz_gate->apply_from_right(parameters_loc_mtx, mtx);
+        }
+        else if (gate->get_type() == RZ_P_OPERATION ) {
+            RZ_P* rz_gate = static_cast<RZ_P*>(gate);
             rz_gate->apply_from_right(parameters_loc_mtx, mtx);
         }
         else if (gate->get_type() == X_OPERATION ) {
@@ -1215,11 +1230,6 @@ void Decomposition_Base::prepare_gates_to_export() {
 */
 std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate*> ops, double* parameters ) {
 
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
-
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
 
     std::vector<Gate*> ops_ret;
     int parameter_idx = 0;
@@ -1308,10 +1318,8 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
                 parameter_idx = parameter_idx + 3;
             }
             else {
-		verbose_level=1;
-		sstream << "wrong parameters in U3 class" << std::endl;
-		print(sstream,verbose_level);	    	
-                exit(-1);
+                std::string err("bad value for initial guess");
+                throw err;        
             }
 
             u3_gate->set_optimized_parameters( vartheta, varphi, varlambda );
@@ -1381,6 +1389,24 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             // get the inverse parameters of the RZ rotation
 
             RZ* rz_gate = static_cast<RZ*>(gate);
+
+            varphi = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
+            parameter_idx = parameter_idx + 1;
+
+
+            rz_gate->set_optimized_parameters( varphi );
+            ops_ret.push_back( static_cast<Gate*>(rz_gate) );
+
+
+        }
+        else if (gate->get_type() == RZ_P_OPERATION) {
+
+            // definig the parameter of the rotational angle
+            double varphi;
+
+            // get the inverse parameters of the RZ rotation
+
+            RZ_P* rz_gate = static_cast<RZ_P*>(gate);
 
             varphi = std::fmod( parameters[parameter_idx], 2*M_PI);
             parameter_idx = parameter_idx + 1;
@@ -1624,8 +1650,8 @@ void Decomposition_Base::apply_global_phase_factor(){
 
 
 /**
-@brief ???????????
-@param ???????????
+@brief Call to export the unitary (with possible phase shift) into a binary file
+@param filename The path to the file where the unitary is expored
 */
 void Decomposition_Base::export_unitary(std::string& filename){
 	FILE* pFile;
@@ -1650,8 +1676,8 @@ void Decomposition_Base::export_unitary(std::string& filename){
 
 
 /**
-@brief ???????????
-@param ???????????
+@brief Call to import the unitary (with possible phase shift) into a binary file
+@param filename The path to the file from which the unitary is imported.
 */
 Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
 	FILE* pFile;
@@ -1678,4 +1704,25 @@ Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
 	fread_status = fread(Umtx_.get_data(), sizeof(QGD_Complex16), rows*cols, pFile);
     	fclose(pFile);
 	return Umtx_;
+}
+
+
+
+/**
+@brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.
+@param qbit_num_in The number of qubits spanning the matrices.
+*/
+void Decomposition_Base::set_qbit_num( int qbit_num_in ) {
+
+    // check the size of the unitary
+    int matrix_size_loc = 1 << qbit_num_in;
+    if ( matrix_size_loc != matrix_size ) {
+        std::string err("Decomposition_Base::set_qbit_num: The new number of qubits is not in line with the input unitary to be decomposed");
+        throw err;
+    }
+
+    // setting the number of qubits
+    Gates_block::set_qbit_num(qbit_num_in);
+
+    
 }

@@ -76,13 +76,21 @@ U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lambda_
 @brief Destructor of the class
 */
 virtual ~U3();
-
 /**
 @brief Call to retrieve the gate matrix
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( Matrix_real& parameters );
+Matrix get_matrix( Matrix_real& parameters  );
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with a matrix of the gate
+*/
+Matrix get_matrix( Matrix_real& parameters, bool parallel  );
 
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
@@ -96,12 +104,15 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& input );
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-virtual void apply_to( Matrix_real& parameters, Matrix& input );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
 
 
 /**
-@brief ???????????????
+@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@param parameters An array of the input parameters.
+@param input The input array on which the gate is applied
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
 

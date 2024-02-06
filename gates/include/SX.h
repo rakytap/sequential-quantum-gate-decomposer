@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file SX.h
-    \brief Header file for a class representing a rotation gate around the X axis.
+    \brief Header file for a class representing the SX axis.
 */
 
 #ifndef SX_H
@@ -61,20 +61,30 @@ SX(int qbit_num_in, int target_qbit_in);
 */
 ~SX();
 
+
 /**
 @brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parameters An array of parameters to calculate the matrix of the SX gate.
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( );
+Matrix get_matrix();
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the SX gate.
+@return Returns with a matrix of the gate
+*/
+Matrix get_matrix( bool parallel=false );
 
 
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-void apply_to( Matrix& input );
+void apply_to( Matrix& input, bool parallel=false );
 
 
 /**
@@ -117,5 +127,5 @@ Matrix calc_one_qubit_u3( );
 };
 
 
-#endif //U3
+#endif //SX
 

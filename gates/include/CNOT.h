@@ -27,7 +27,6 @@ limitations under the License.
 #include "Gate.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include <U3.h>
 
 
 /**
@@ -61,15 +60,24 @@ virtual ~CNOT();
 
 /**
 @brief Call to retrieve the operation matrix
+@param parallel Set true to apply parallel kernels, false otherwise
 @return Returns with the matrix of the operation
 */
 Matrix get_matrix();
 
 /**
+@brief Call to retrieve the operation matrix
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@return Returns with the matrix of the operation
+*/
+Matrix get_matrix(bool parallel);
+
+/**
 @brief Call to apply the gate on the input array/matrix by CNOT*input
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-virtual void apply_to( Matrix& input );
+virtual void apply_to( Matrix& input, bool parallel=false );
 
 
 /**

@@ -97,7 +97,6 @@ CZ::CZ(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
 CZ::~CZ() {
 }
 
-
 /**
 @brief Call to retrieve the gate matrix
 @return Returns with the matrix of the gate
@@ -105,8 +104,20 @@ CZ::~CZ() {
 Matrix
 CZ::get_matrix() {
 
+    return get_matrix( false );
+}
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with the matrix of the gate
+*/
+Matrix
+CZ::get_matrix( bool parallel) {
+
     Matrix CZ_matrix = create_identity(matrix_size);
-    apply_to(CZ_matrix);
+    apply_to(CZ_matrix, parallel);
 
     return CZ_matrix;
 }
@@ -117,12 +128,13 @@ CZ::get_matrix() {
 /**
 @brief Call to apply the gate on the input array/matrix CZ*input
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-CZ::apply_to( Matrix& input ) {
+CZ::apply_to( Matrix& input, bool parallel ) {
 
     Matrix u3_1qbit = calc_one_qubit_u3();
-    apply_kernel_to(u3_1qbit, input);
+    apply_kernel_to(u3_1qbit, input, false, parallel);
 
 }
 
@@ -167,7 +179,6 @@ void CZ::reorder_qubits( vector<int> qbit_list) {
 /**
 @brief Set static values for matrix of the gates.
 @param u3_1qbit Matrix parameter for the gate.
-
 */
 Matrix 
 CZ::calc_one_qubit_u3( ){

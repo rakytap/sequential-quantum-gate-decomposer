@@ -30,7 +30,7 @@ limitations under the License.
 @brief Nullary constructor of the class.
 @return An instance of the class
 */
-N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
+N_Qubit_Decomposition::N_Qubit_Decomposition() : Optimization_Interface() {
 
     set_optimizer( BFGS );
 
@@ -50,7 +50,7 @@ N_Qubit_Decomposition::N_Qubit_Decomposition() : N_Qubit_Decomposition_Base() {
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, optimize_layer_num_in, config_in, initial_guess_in) {
+N_Qubit_Decomposition::N_Qubit_Decomposition( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Optimization_Interface(Umtx_in, qbit_num_in, optimize_layer_num_in, config_in, initial_guess_in) {
 
     set_optimizer( BFGS );
 
@@ -426,6 +426,13 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
             else if (op->get_type() == RZ_OPERATION) {
                 RZ* rz_op = static_cast<RZ*>( op );
                 RZ* rz_op_cloned = rz_op->clone();
+                rz_op_cloned->set_qbit_num( qbit_num );
+                Gate* op_cloned = static_cast<Gate*>( rz_op_cloned );
+                add_gate( op_cloned );
+            }
+            else if (op->get_type() == RZ_P_OPERATION) {
+                RZ_P* rz_op = static_cast<RZ_P*>( op );
+                RZ_P* rz_op_cloned = rz_op->clone();
                 rz_op_cloned->set_qbit_num( qbit_num );
                 Gate* op_cloned = static_cast<Gate*>( rz_op_cloned );
                 add_gate( op_cloned );

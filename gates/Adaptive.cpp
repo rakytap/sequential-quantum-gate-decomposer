@@ -84,13 +84,14 @@ Adaptive::~Adaptive() {
 
 
 /**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@brief Call to apply the gate on the input array/matrix
+@param parameters An array of parameters to calculate the matrix of the gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 
 void 
-Adaptive::apply_to( Matrix_real& parameters, Matrix& input ) {
+Adaptive::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
 
 
     if (input.rows != matrix_size ) {
@@ -117,7 +118,7 @@ Phi_transformed[0] = Phi - M_PI;
 
 
 
-    CRY::apply_to( Phi_transformed, input );
+    CRY::apply_to( Phi_transformed, input, parallel );
 
 
 
@@ -162,11 +163,10 @@ Phi_transformed[0] = Phi - M_PI;
 
 
 /**
-@brief Call to apply the gate on the input array/matrix by U3*input
+@brief Call to apply the gate on the input array/matrix.
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-
 std::vector<Matrix>
 Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input ) {
 

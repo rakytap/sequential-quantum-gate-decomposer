@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file Composite.cpp
-    \brief Class for the representation of general unitary operation on the first qbit_num-1 qubits.
+    \brief Class for the representation of composite gate operation.
 */
 
 
@@ -95,13 +95,27 @@ void Composite::set_qbit_num( int qbit_num_in ) {
 
 }
 
-
 /**
 @brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the composite gate.
 @return Returns with a matrix of the operation
 */
 Matrix
 Composite::get_matrix( Matrix_real& parameters ) {
+
+        return get_matrix( parameters, false );
+}
+
+
+
+/**
+@brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the composite gate.
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with a matrix of the operation
+*/
+Matrix
+Composite::get_matrix( Matrix_real& parameters, bool parallel ) {
 
 
     // create array of random parameters to construct random unitary
@@ -127,9 +141,10 @@ Composite::get_matrix( Matrix_real& parameters ) {
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-Composite::apply_to( Matrix_real& parameters, Matrix& input ) {
+Composite::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
 
 
     if (input.rows != matrix_size ) {

@@ -287,7 +287,7 @@ QGD_Complex16 mult( double a, QGD_Complex16 b ) {
 /**
 @brief Multiply the elements of matrix b by a scalar a.
 @param a A complex scalar.
-@param b A square shaped matrix.
+@param b A complex matrix.
 */
 void mult( QGD_Complex16 a, Matrix& b ) {
 
@@ -306,7 +306,49 @@ void mult( QGD_Complex16 a, Matrix& b ) {
 
 
 /**
-@brief ???????????????????
+@brief Multiply the elements of a sparse matrix a and a dense vector b.
+@param a A complex sparse matrix in CSR format.
+@param b A complex dense vector.
+*/
+Matrix mult(Matrix_sparse a, Matrix& b){
+
+    if ( b.cols != 1 ) {
+        std::string error("mult: The input argument b should be a single-column vector.");
+        throw error;
+    }
+    
+    int n_rows = a.rows;
+    Matrix ret = Matrix(n_rows,1);
+
+    tbb::parallel_for( tbb::blocked_range<int>(0, n_rows, 32), [&](tbb::blocked_range<int> r) { 
+
+        for (int idx=r.begin(); idx<r.end(); ++idx){
+
+            ret[idx].imag = 0.0;
+            ret[idx].real = 0.0;
+            int nz_start  = a.indptr[idx];
+            int nz_end    = a.indptr[idx+1];
+ 
+                for (int nz_idx=nz_start; nz_idx<nz_end; nz_idx++){
+
+                    int jdx              = a.indices[nz_idx];
+                    QGD_Complex16& state = b[jdx];
+                    QGD_Complex16 result = mult(a.data[nz_idx], state);
+
+                    ret[idx].real += result.real;
+                    ret[idx].imag += result.imag;
+
+                }
+            }
+    });
+
+    return ret;
+}
+
+
+
+/**
+@brief Call to retrieve the phase of a complex number
 @param a A complex numberr.
 */
 double arg( const QGD_Complex16& a ) {
@@ -341,6 +383,66 @@ double arg( const QGD_Complex16& a ) {
 
 
 
+}
+
+
+
+
+void conjugate_gradient(Matrix_real A, Matrix_real b, Matrix_real& x0, double tol){
+
+    int samples = b.cols;
+    Matrix_real d(1,samples);
+    Matrix_real g(1,samples);
+    double sk =0.0;
+
+    for (int rdx=0; rdx<samples; rdx++){
+        d[rdx] = b[rdx];
+
+        for(int cdx=0; cdx<samples; cdx++){
+            d[rdx] = d[rdx] - A[rdx*samples+cdx]*x0[cdx];
+        }
+
+        g[rdx] = -1.*d[rdx];
+        sk = sk + d[rdx]*d[rdx];
+    }
+
+    int iter=0.0;
+    while (std::sqrt(sk/b.cols) > tol && iter<1000){
+    
+    double dAd=0.0;
+    Matrix_real Ad(1,b.cols);
+    for (int rdx=0; rdx<samples; rdx++){
+
+        Ad[rdx] = 0.;
+
+        for(int cdx=0; cdx<samples; cdx++){
+            Ad[rdx] = Ad[rdx] + A[rdx*samples+cdx]*d[cdx];
+        }
+        
+        dAd = dAd + d[rdx]*Ad[rdx];
+    }
+
+    double mu_k = sk / dAd;
+    double sk_new = 0.;
+
+    for(int idx=0; idx<samples; idx++){
+
+        x0[idx] = x0[idx] + mu_k*d[idx];
+        g[idx] = g[idx] + mu_k*Ad[idx];
+        sk_new = sk_new + g[idx]*g[idx];
+
+    }
+
+    for (int idx=0; idx<samples;idx++){
+        d[idx] = (sk_new/sk)*d[idx] - g[idx];
+    }
+
+    sk = sk_new;
+
+    iter++;
+    }
+    return;
+    
 }
 
 

@@ -97,7 +97,6 @@ SYC::SYC(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
 SYC::~SYC() {
 }
 
-
 /**
 @brief Call to retrieve the gate matrix
 @return Returns with the matrix of the gate
@@ -105,8 +104,22 @@ SYC::~SYC() {
 Matrix
 SYC::get_matrix() {
 
+
+    return get_matrix( false );
+
+}
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with the matrix of the gate
+*/
+Matrix
+SYC::get_matrix( bool parallel) {
+
     Matrix SYC_matrix = create_identity(matrix_size);
-    apply_to(SYC_matrix);
+    apply_to(SYC_matrix, parallel);
 
     return SYC_matrix;
 
@@ -116,9 +129,10 @@ SYC::get_matrix() {
 /**
 @brief Call to apply the gate on the input array/matrix SYC*input
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-SYC::apply_to( Matrix& input ) {
+SYC::apply_to( Matrix& input, bool parallel ) {
 
     int index_step_target = Power_of_2(target_qbit);
     int index_step_control = Power_of_2(control_qbit);

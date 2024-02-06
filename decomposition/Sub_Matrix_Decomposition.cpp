@@ -299,6 +299,10 @@ void Sub_Matrix_Decomposition::add_gate_layers() {
                 RZ* rz_gate = static_cast<RZ*>( gate );
                 add_gate_to_end( (Gate*)rz_gate->clone() );
             }
+            else if (gate->get_type() == RZ_P_OPERATION ) {
+                RZ_P* rz_gate = static_cast<RZ_P*>( gate );
+                add_gate_to_end( (Gate*)rz_gate->clone() );
+            }
             else if (gate->get_type() == X_OPERATION ) {
                 X* x_gate = static_cast<X*>( gate );
                 add_gate_to_end( (Gate*)x_gate->clone() );

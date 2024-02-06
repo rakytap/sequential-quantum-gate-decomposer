@@ -16,7 +16,7 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file U3.cpp
+/*! \file RX.cpp
     \brief Class representing a RX gate.
 */
 
@@ -121,12 +121,13 @@ RX::~RX() {
 
 
 /**
-@brief Call to apply the gate on the input array/matrix by U3*input
+@brief Call to apply the gate on the input array/matrix by RX*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-RX::apply_to( Matrix_real& parameters, Matrix& input ) {
+RX::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;
@@ -145,7 +146,7 @@ RX::apply_to( Matrix_real& parameters, Matrix& input ) {
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
-    apply_kernel_to( u3_1qbit, input );
+    apply_kernel_to( u3_1qbit, input, false, parallel );
 
 
 }
@@ -184,7 +185,9 @@ RX::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
 /**
-@brief ???????????????
+@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@param parameters An array of the input parameters.
+@param input The input array on which the gate is applied
 */
 std::vector<Matrix> 
 RX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {

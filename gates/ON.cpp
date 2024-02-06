@@ -96,16 +96,34 @@ void ON::set_qbit_num( int qbit_num_in ) {
 }
 
 
+
 /**
 @brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the ON gate.
 @return Returns with a matrix of the operation
 */
 Matrix
 ON::get_matrix( Matrix_real& parameters ) {
 
 
+
+        return get_matrix( parameters, false );
+}
+
+
+
+/**
+@brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the ON gate.
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with a matrix of the operation
+*/
+Matrix
+ON::get_matrix( Matrix_real& parameters, bool parallel ) {
+
+
         Matrix ON_matrix = create_identity(matrix_size);
-        apply_to(parameters, ON_matrix);
+        apply_to(parameters, ON_matrix, parallel);
 
 #ifdef DEBUG
         if (ON_matrix.isnan()) {
@@ -122,9 +140,10 @@ ON::get_matrix( Matrix_real& parameters ) {
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-ON::apply_to( Matrix_real& parameters, Matrix& input ) {
+ON::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;

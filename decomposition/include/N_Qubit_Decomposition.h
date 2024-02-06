@@ -23,7 +23,7 @@ limitations under the License.
 #ifndef N_Qubit_Decomposition_H
 #define N_Qubit_Decomposition_H
 
-#include "N_Qubit_Decomposition_Base.h"
+#include "Optimization_Interface.h"
 #include "Sub_Matrix_Decomposition.h"
 
 #ifdef __cplusplus
@@ -57,7 +57,7 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 This class contains the non-template implementation of the decomposition class.
 */
-class N_Qubit_Decomposition : public N_Qubit_Decomposition_Base {
+class N_Qubit_Decomposition : public Optimization_Interface {
 
 
 public:

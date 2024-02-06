@@ -30,11 +30,7 @@ limitations under the License.
 @brief Nullary constructor of the class.
 @return An instance of the class
 */
-N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom() : N_Qubit_Decomposition_Base() {
-
-    // initialize custom gate structure
-    gate_structure = NULL;
-
+N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom() : Optimization_Interface() {
 
     // BFGS is better for smaller problems, while ADAM for larger ones
     if ( qbit_num <= 5 ) {
@@ -60,10 +56,7 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom() : N_Qubit_Decomposi
 @param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
 @return An instance of the class
 */
-N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num ) : N_Qubit_Decomposition_Base(Umtx_in, qbit_num_in, optimize_layer_num_in, config, initial_guess_in, accelerator_num) {
-
-    // initialize custom gate structure
-    gate_structure = NULL;
+N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int qbit_num_in, bool optimize_layer_num_in, std::map<std::string, Config_Element>& config, guess_type initial_guess_in= CLOSE_TO_ZERO, int accelerator_num ) : Optimization_Interface(Umtx_in, qbit_num_in, optimize_layer_num_in, config, initial_guess_in, accelerator_num) {
 
 
     // BFGS is better for smaller problems, while ADAM for larger ones
@@ -88,11 +81,6 @@ N_Qubit_Decomposition_custom::N_Qubit_Decomposition_custom( Matrix Umtx_in, int 
 @brief Destructor of the class
 */
 N_Qubit_Decomposition_custom::~N_Qubit_Decomposition_custom() {
-
-    if ( gate_structure != NULL ) {
-        // release custom gate structure
-        delete gate_structure;
-    }
 
 }
 
@@ -130,8 +118,7 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
     //measure the time for the decompositin
     tbb::tick_count start_time = tbb::tick_count::now();
-    // setting the gate structure for optimization
-    add_gate_layers();
+
 
 
 /*
@@ -158,7 +145,7 @@ std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
     gates_num gates_num = get_gate_nums();
 
     sstream.str("");
-    sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
+    sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " layers with:" << std::endl;
 
       
     if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 opeartions," << std::endl;
@@ -169,8 +156,8 @@ std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
     if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ opeartions," << std::endl;
     if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH opeartions," << std::endl;
     if ( gates_num.x>0 ) sstream << gates_num.x << " X opeartions," << std::endl;
-    if ( gates_num.x>0 ) sstream << gates_num.y << " Y opeartions," << std::endl;
-    if ( gates_num.x>0 ) sstream << gates_num.z << " Z opeartions," << std::endl;
+    if ( gates_num.y>0 ) sstream << gates_num.y << " Y opeartions," << std::endl;
+    if ( gates_num.z>0 ) sstream << gates_num.z << " Z opeartions," << std::endl;
     if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX opeartions," << std::endl;
     if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore opeartions," << std::endl;
     if ( gates_num.un>0 ) sstream << gates_num.un << " UN opeartions," << std::endl;
@@ -196,141 +183,8 @@ std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
 }
 
 
-/**
-@brief Call to add further layer to the gate structure used in the subdecomposition.
-*/
-void 
-N_Qubit_Decomposition_custom::add_gate_layers() {
-
-    release_gates();
-
-    //////////////////////////////////////
-    // add custom gate structure
-
-    // the  number of succeeding identical layers in the subdecomposition
-    int identical_blocks_loc;
-    try {
-        identical_blocks_loc = identical_blocks[qbit_num];
-        if (identical_blocks_loc==0) {
-            identical_blocks_loc = 1;
-        }
-    }
-    catch (...) {
-        identical_blocks_loc=1;
-    }
-
-    // get the list of sub-blocks in the custom gate structure
-    std::vector<Gate*> gates = gate_structure->get_gates();
-
-    for (std::vector<Gate*>::iterator gates_it = gates.begin(); gates_it != gates.end(); gates_it++ ) {
-
-        // The current gate
-        Gate* gate = *gates_it;
-
-        for (int idx=0;  idx<identical_blocks_loc; idx++) {
-            if (gate->get_type() == CNOT_OPERATION ) {
-                CNOT* cnot_gate = static_cast<CNOT*>( gate );
-                add_gate_to_end( (Gate*)cnot_gate->clone() );
-            }
-            else if (gate->get_type() == CZ_OPERATION ) {
-                CZ* cz_gate = static_cast<CZ*>( gate );
-                add_gate_to_end( (Gate*)cz_gate->clone() );
-            }
-            else if (gate->get_type() == CH_OPERATION ) {
-                CH* ch_gate = static_cast<CH*>( gate );
-                add_gate_to_end( (Gate*)ch_gate->clone() );
-            }
-            else if (gate->get_type() == SYC_OPERATION ) {
-                SYC* syc_gate = static_cast<SYC*>( gate );
-                add_gate_to_end( (Gate*)syc_gate->clone() );
-            }
-            else if (gate->get_type() == GENERAL_OPERATION ) {
-                add_gate_to_end( gate->clone() );
-            }
-            else if (gate->get_type() == U3_OPERATION ) {
-                U3* u3_gate = static_cast<U3*>( gate );
-                add_gate_to_end( (Gate*)u3_gate->clone() );
-            }
-            else if (gate->get_type() == RX_OPERATION ) {
-                RX* rx_gate = static_cast<RX*>( gate );
-                add_gate_to_end( (Gate*)rx_gate->clone() );
-            }
-            else if (gate->get_type() == RY_OPERATION ) {
-                RY* ry_gate = static_cast<RY*>( gate );
-                add_gate_to_end( (Gate*)ry_gate->clone() );
-            }
-            else if (gate->get_type() == CRY_OPERATION ) {
-                CRY* cry_gate = static_cast<CRY*>( gate );
-                add_gate_to_end( (Gate*)cry_gate->clone() );
-            }
-            else if (gate->get_type() == RZ_OPERATION ) {
-                RZ* rz_gate = static_cast<RZ*>( gate );
-                add_gate_to_end( (Gate*)rz_gate->clone() );
-            }
-            else if (gate->get_type() == X_OPERATION ) {
-                X* x_gate = static_cast<X*>( gate );
-                add_gate_to_end( (Gate*)x_gate->clone() );
-            }
-            else if (gate->get_type() == Y_OPERATION ) {
-                Y* y_gate = static_cast<Y*>( gate );
-                add_gate_to_end( (Gate*)y_gate->clone() );
-            }
-            else if (gate->get_type() == Z_OPERATION ) {
-                Z* z_gate = static_cast<Z*>( gate );
-                add_gate_to_end( (Gate*)z_gate->clone() );
-            }
-            else if (gate->get_type() == Y_OPERATION ) {
-                Y* y_gate = static_cast<Y*>( gate );
-                add_gate_to_end( (Gate*)y_gate->clone() );
-            }
-            else if (gate->get_type() == SX_OPERATION ) {
-                SX* sx_gate = static_cast<SX*>( gate );
-                add_gate_to_end( (Gate*)sx_gate->clone() );
-            }
-            else if (gate->get_type() == UN_OPERATION ) {
-                UN* un_gate = static_cast<UN*>( gate );
-                add_gate_to_end( (Gate*)un_gate->clone() );
-            }
-            else if (gate->get_type() == ON_OPERATION ) {
-                ON* on_gate = static_cast<ON*>( gate );
-                add_gate_to_end( (Gate*)on_gate->clone() );
-            }
-            else if (gate->get_type() == COMPOSITE_OPERATION ) {
-                Composite* com_gate = static_cast<Composite*>( gate );
-                add_gate_to_end( (Gate*)com_gate->clone() );
-            }
-            else if (gate->get_type() == ADAPTIVE_OPERATION ) {
-                Adaptive* ad_gate = static_cast<Adaptive*>( gate );
-                add_gate_to_end( (Gate*)ad_gate->clone() );
-            }
-            else if (gate->get_type() == BLOCK_OPERATION ) {
-                Gates_block* block_gate = static_cast<Gates_block*>( gate );
-                add_gate_to_end( (Gate*)block_gate->clone() );
-            }
-            else {
-                std::string err("N_Qubit_Decomposition_custom::add_gate_layers: Unimplemented gate");
-                throw err;
-            }
-
-        }
-    }
 
 
-}
-
-
-
-
-
-/**
-@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
-@param gate_structure An <int, Gates_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
-*/
-void N_Qubit_Decomposition_custom::set_custom_gate_structure( Gates_block* gate_structure_in ) {
-
-    gate_structure = gate_structure_in->clone();
-
-}
 
 
 

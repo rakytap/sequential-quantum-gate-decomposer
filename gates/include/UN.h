@@ -61,6 +61,7 @@ virtual ~UN();
 */
 UN(int qbit_num_in);
 
+
 /**
 @brief Call to retrieve the operation matrix
 @return Returns with a matrix of the operation
@@ -69,14 +70,23 @@ Matrix get_matrix(Matrix_real& parameters);
 
 
 /**
-@brief Call to apply the gate on the input array/matrix
-@param input The input array on which the gate is applied
+@brief Call to retrieve the operation matrix
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with a matrix of the operation
 */
-void apply_to( Matrix_real& parameters, Matrix& input );
+Matrix get_matrix(Matrix_real& parameters, bool parallel=false);
 
 
 /**
-@brief ?????
+@brief Call to apply the gate on the input array/matrix
+@param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
+*/
+void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
+
+
+/**
+@brief Call to retrieve the qbit_num-1 kernel of the UN gate.
 */
 Matrix get_submatrix( Matrix_real& parameters );
 

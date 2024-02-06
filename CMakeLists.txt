@@ -316,11 +316,24 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/common/dot.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix.cpp
     ${PROJECT_SOURCE_DIR}/common/matrix_real.cpp
+    ${PROJECT_SOURCE_DIR}/common/matrix_sparse.cpp
     ${PROJECT_SOURCE_DIR}/common/logging.cpp
     ${PROJECT_SOURCE_DIR}/common/Adam.cpp
     ${PROJECT_SOURCE_DIR}/common/grad_descend.cpp
     ${PROJECT_SOURCE_DIR}/common/BFGS_Powell.cpp
+    ${PROJECT_SOURCE_DIR}/common/Powells_method.cpp
+    ${PROJECT_SOURCE_DIR}/common/Bayes_Opt.cpp
     ${PROJECT_SOURCE_DIR}/optimization_engines/RL_experience.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/ADAM_BATCHED.cpp    
+    ${PROJECT_SOURCE_DIR}/optimization_engines/ADAM.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/AGENTS.cpp    
+    ${PROJECT_SOURCE_DIR}/optimization_engines/BAYES_OPT.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/BAYES_AGENTS.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/BFGS.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/BFGS2.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/COSINE.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/GRAD_DESCEND.cpp
+    ${PROJECT_SOURCE_DIR}/optimization_engines/GRAD_DESCEND_PARAMETER_SHIFT_RULE.cpp
     ${PROJECT_SOURCE_DIR}/gates/CNOT.cpp
     ${PROJECT_SOURCE_DIR}/gates/SYC.cpp
     ${PROJECT_SOURCE_DIR}/gates/CZ.cpp
@@ -339,21 +352,47 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/gates/Adaptive.cpp
     ${PROJECT_SOURCE_DIR}/gates/RX.cpp
     ${PROJECT_SOURCE_DIR}/gates/RZ.cpp
+    ${PROJECT_SOURCE_DIR}/gates/RZ_P.cpp
+    ${PROJECT_SOURCE_DIR}/gates/custom_kernel_1qubit_gate.cpp
     ${PROJECT_SOURCE_DIR}/gates/Composite.cpp
-    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input.cpp
     ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_state_vector_input.cpp
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_large_kernel_to_input.cpp
     ${PROJECT_SOURCE_DIR}/nn/NN.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Decomposition_Base.cpp
-    ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Base.cpp
+    ${PROJECT_SOURCE_DIR}/decomposition/Optimization_Interface.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_adaptive.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_custom.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
-    ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition.cpp  
+    ${PROJECT_SOURCE_DIR}/decomposition/Sub_Matrix_Decomposition.cpp
+    ${PROJECT_SOURCE_DIR}/variational_quantum_eigensolver/Variational_Quantum_Eigensolver_Base.cpp  
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Unitary.cpp
     ${PROJECT_SOURCE_DIR}/random_unitary/Random_Orthogonal.cpp
 )
+
+
+if (${HAVE_AVX512F_EXTENSIONS})
+  list(APPEND qgd_files 
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp    
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_large_kernel_to_input_AVX.cpp    
+  )
+elseif (${HAVE_AVX2_EXTENSIONS})
+  list(APPEND qgd_files 
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp        
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_large_kernel_to_input_AVX.cpp        
+  )
+elseif (${HAVE_AVX_EXTENSIONS})
+  list(APPEND qgd_files 
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp        
+    ${PROJECT_SOURCE_DIR}/gates/kernels/apply_large_kernel_to_input_AVX.cpp        
+  )
+endif()
+
 
 
 if(DEFINED ENV{QGD_MPI})
@@ -408,6 +447,7 @@ target_include_directories(qgd PRIVATE
                             ./optimization_engines/include
                             ./nn/include
                             ./gates/kernels/include
+                            ./variational_quantum_eigensolver/include
                             ${EXTRA_INCLUDES})
 
 
@@ -420,6 +460,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix_base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix_real.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/matrix_sparse.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/common/include/QGDTypes.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/CNOT.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/SYC.h
@@ -440,7 +481,7 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/gates/include/Composite.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/nn/include/NN.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Decomposition_Base.h
-    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_Base.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Optimization_Interface.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_adaptive.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition_adaptive_general.h
@@ -449,9 +490,12 @@ set_target_properties(qgd PROPERTIES
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/N_Qubit_Decomposition.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Sub_Matrix_Decomposition_Cost_Function.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/decomposition/include/Sub_Matrix_Decomposition.h
+    PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/variational_quantum_eigensolver/include/Variational_Quantum_Eigensolver_Base.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Unitary.h
     PUBLIC_HEADER ${PROJECT_SOURCE_DIR}/random_unitary/include/Random_Orthogonal.h
 )
+
+
 
 
 
@@ -471,7 +515,7 @@ set_target_properties(
 add_subdirectory (qgd_python/decomposition)
 add_subdirectory (qgd_python/gates)
 add_subdirectory (qgd_python/nn)
-
+add_subdirectory (qgd_python/variational_quantum_eigensolver)
 
 if(DEFINED ENV{QGD_CTEST})
     # adding CMAKE files for executables

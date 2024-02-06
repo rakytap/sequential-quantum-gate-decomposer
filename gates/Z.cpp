@@ -95,17 +95,29 @@ Z::~Z() {
 }
 
 
-
 /**
 @brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
 @return Returns with a matrix of the gate
 */
 Matrix
-Z::get_matrix( ) {
+Z::get_matrix() {
+
+        return get_matrix( false );
+
+}
+
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with a matrix of the gate
+*/
+Matrix
+Z::get_matrix( bool parallel) {
 
         Matrix Z_matrix = create_identity(matrix_size);
-        apply_to(Z_matrix);
+        apply_to(Z_matrix, parallel);
 
 #ifdef DEBUG
         if (Z_matrix.isnan()) {
@@ -125,9 +137,10 @@ Z::get_matrix( ) {
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-Z::apply_to( Matrix& input ) {
+Z::apply_to( Matrix& input, bool parallel ) {
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;
@@ -140,7 +153,7 @@ Z::apply_to( Matrix& input ) {
     Matrix u3_1qbit = calc_one_qubit_u3();
 
     //apply_kernel_to function to Z gate 
-    apply_kernel_to( u3_1qbit, input );
+    apply_kernel_to( u3_1qbit, input, false, parallel );
    
 
 
@@ -216,7 +229,6 @@ void Z::set_qbit_num(int qbit_num_in) {
 /**
 @brief Set static values for matrix of the gates.
 @param u3_1qbit Matrix parameter for the gate.
-
 */
 Matrix 
 Z::calc_one_qubit_u3( ){

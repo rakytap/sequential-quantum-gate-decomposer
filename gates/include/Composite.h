@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file Composite.h
-    \brief Header file for a class for the representation of general gate operations on the first qbit_num-1 qubits.
+    \brief Header file for a class for a composite gate operation.
 */
 
 #ifndef COM_H
@@ -73,18 +73,30 @@ virtual ~Composite();
 */
 Composite(int qbit_num_in);
 
+
 /**
 @brief Call to retrieve the operation matrix
+@param parallel Set true to apply parallel kernels, false otherwise 
 @return Returns with a matrix of the operation
 */
 Matrix get_matrix(Matrix_real& parameters);
 
 
+
+/**
+@brief Call to retrieve the operation matrix
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@return Returns with a matrix of the operation
+*/
+Matrix get_matrix(Matrix_real& parameters, bool parallel);
+
+
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-void apply_to( Matrix_real& parameters, Matrix& input );
+void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
 
 
 /**

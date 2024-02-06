@@ -19,14 +19,14 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file N_Qubit_Decomposition.h
-    \brief Header file for a class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
+/*! \file N_Qubit_Decomposition_adaptive.h
+    \brief Header file for a class implementing the adaptive gate decomposition algorithm of arXiv:2203.04426
 */
 
 #ifndef N_Qubit_Decomposition_adaptive_H
 #define N_Qubit_Decomposition_adaptive_H
 
-#include "N_Qubit_Decomposition_Base.h"
+#include "Optimization_Interface.h"
 
 #ifdef __cplusplus
 extern "C" 
@@ -59,7 +59,7 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 This class contains the non-template implementation of the decomposition class.
 */
-class N_Qubit_Decomposition_adaptive : public N_Qubit_Decomposition_Base {
+class N_Qubit_Decomposition_adaptive : public Optimization_Interface {
 
 
 public:
@@ -142,46 +142,64 @@ virtual void compress_circuit();
 virtual void finalize_circuit(bool prepare_export=true);
 
 /**
-@brief ??????????????
+@brief Call to optimize an imported gate structure
+@param optimized_parameters_mtx_loc A matrix containing the initial parameters
 */
 Gates_block* optimize_imported_gate_structure(Matrix_real& optimized_parameters_mtx_loc);
 
 
 /**
-@brief ??????????????
+@brief Call determine the gate structrue of the decomposing circuit. (quantum circuit with CRY gates)
+@param optimized_parameters_mtx_loc A matrix containing the initial parameters
 */
 Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_mtx);
 
 
 
 /**
-@brief ???????????????
+@brief Call to run compression iterations on the circuit. (Trying to remove a CRY block in each iteration)
+@param gate_structure The gate structure to be optimized
 */
 Gates_block* compress_gate_structure( Gates_block* gate_structure );
 
 /**
-@brief ???????????????
+@brief Call to run compression iterations on the circuit. (Trying to remove a CRY block in each iteration)
+@param gate_structure The gate structure to be optimized
+@param layer_idx The layer to be removed from the circuit
+@param optimized_parameters A matrix containing the initial parameters
+@param current_minimum_loc (out) The current minimum that has been achieved.
+@param iteration_num (out) The number of iterations that have been carried out during the optimization
 */
 Gates_block* compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& currnt_minimum_loc, int& iteration_num );
 
 /**
-@brief ???????????????
+@brief Call to replace CRY gates in the circuit that are close to either an identity or to a CNOT gate.
+@param gate_structure The gate structure to be optimized
+@param optimized_parameters A matrix containing the initial parameters
 */
 Gates_block* replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 /**
-@brief ???????????????
+@brief Call to get the panelty derived from the number of CRY and CNOT gates in the circuit
+@param gate_structure The gate structure to be optimized
+@param optimized_parameters A matrix containing the initial parameters
 */
 virtual unsigned int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 
 /**
-@brief ???????????????
+@brief Call to remove those blocks from the circuit that contain a trivial CRY gate (i.e. CRY gate close to be an identity.) The U3 gates are merged with subsequent gates.
+@param gate_structure The gate structure to be optimized
+@param optimized_parameters A matrix containing the initial parameters
+@param current_minimum_loc (out) The current minimum that has been achieved.
 */
 virtual Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& currnt_minimum_loc );
 
 /**
-@brief ???????????????
+@brief Call to remove those parameters from the array, which correspond to gates that are about to be removed from the circuit.
+@param gate_structure The gate structure to be optimized
+@param optimized_parameters A matrix containing the parameters
+@param layer_idx The layer to be removed from the circuit
 */
 Matrix_real create_reduced_parameters( Gates_block* gate_structure, Matrix_real& optimized_parameters, int layer_idx );
 
@@ -213,13 +231,6 @@ void add_finalyzing_layer();
 */
 void add_finalyzing_layer( Gates_block* gate_structure );
 
-
-
-/**
-@brief Call to set custom layers to the gate structure that are intended to be used in the decomposition.
-@param gate_structure_in
-*/
-void set_adaptive_gate_structure( Gates_block* gate_structure_in );
 
 
 /**

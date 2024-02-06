@@ -37,7 +37,7 @@ class ON : public Gate {
 
 protected:
 
-   /// Parameters theta, phi, lambda of the U3 gate after the decomposition of the ONitary is done
+   /// Parameters after the decomposition of the ONitary is done
    Matrix_real parameters;
 
 public:
@@ -61,22 +61,32 @@ virtual ~ON();
 */
 ON(int qbit_num_in);
 
+
 /**
 @brief Call to retrieve the operation matrix
+@param parallel Set true to apply parallel kernels, false otherwise
 @return Returns with a matrix of the operation
 */
 Matrix get_matrix(Matrix_real& parameters);
+
+/**
+@brief Call to retrieve the operation matrix
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@return Returns with a matrix of the operation
+*/
+Matrix get_matrix(Matrix_real& parameters, bool parallel=false);
 
 
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-void apply_to( Matrix_real& parameters, Matrix& input );
+void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
 
 
 /**
-@brief ?????
+@brief Call to retrieve the qbut_num-1 kernel of the operation.
 */
 Matrix get_submatrix( Matrix_real& parameters );
 

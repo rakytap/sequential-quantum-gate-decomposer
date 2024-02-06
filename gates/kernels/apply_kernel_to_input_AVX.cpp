@@ -26,9 +26,13 @@ limitations under the License.
 #include "tbb/tbb.h"
 
 /**
-@brief AVX kernel to apply single qubit gate kernel on an input matrix
-@param A matrix on which the householder transformation is applied. (The output is returned via this matrix)
-@param v A matrix instance of the reflection vector
+@brief AVX kernel to apply single qubit gate kernel on an input matrix (efficient for small inputs)
+@param u3_1qbit The 2x2 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param deriv Set true to apply derivate transformation, false otherwise
+@param target_qbit The targer qubit on which the transformation should be applied
+@param control_qbit The contron qubit (-1 if the is no control qubit)
+@param matrix_size The size of the input
 */
 void
 apply_kernel_to_input_AVX_small(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
@@ -210,8 +214,13 @@ apply_kernel_to_input_AVX_small(Matrix& u3_1qbit, Matrix& input, const bool& der
 
 
 /**
-@brief AVX kernel to apply single qubit gate kernel on an input matrix
-@param ???????????????????
+@brief AVX kernel to apply single qubit gate kernel on an input matrix (single threaded)
+@param u3_1qbit The 2x2 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param deriv Set true to apply derivate transformation, false otherwise
+@param target_qbit The targer qubit on which the transformation should be applied
+@param control_qbit The contron qubit (-1 if the is no control qubit)
+@param matrix_size The size of the input
 */
 void
 apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
@@ -357,8 +366,13 @@ apply_kernel_to_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, co
 
 
 /**
-@brief parallel AVX kernel to apply single qubit gate kernel on an input matrix
-@param ???????????????????
+@brief Parallel AVX kernel to apply single qubit gate kernel on an input matrix
+@param u3_1qbit The 2x2 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param deriv Set true to apply derivate transformation, false otherwise
+@param target_qbit The targer qubit on which the transformation should be applied
+@param control_qbit The contron qubit (-1 if the is no control qubit)
+@param matrix_size The size of the input
 */
 void
 apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size) {
@@ -528,3 +542,7 @@ apply_kernel_to_input_AVX_parallel(Matrix& u3_1qbit, Matrix& input, const bool& 
     
 
 }
+
+
+
+

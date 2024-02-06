@@ -16,7 +16,7 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file Operation.cpp
+/*! \file Gate.cpp
     \brief Class for the representation of general gate operations.
 */
 
@@ -26,8 +26,10 @@ limitations under the License.
 
 #ifdef USE_AVX 
 #include "apply_kernel_to_input_AVX.h"
+#include "apply_kernel_to_state_vector_input_AVX.h"
 #endif
 
+#include "apply_kernel_to_input.h"
 #include "apply_kernel_to_state_vector_input.h"
 
 /**
@@ -59,6 +61,11 @@ Gate::Gate() {
 */
 Gate::Gate(int qbit_num_in) {
 
+    if (qbit_num_in > 30) {
+        std::string err("Gate::Gate: Number of qubits supported up to 30"); 
+        throw err;        
+    }
+
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix
@@ -85,6 +92,13 @@ Gate::~Gate() {
 @param qbit_num_in The number of qubits spanning the matrix
 */
 void Gate::set_qbit_num( int qbit_num_in ) {
+
+    if (qbit_num_in > 30) {
+        std::string err("Gate::set_qbit_num: Number of qubits supported up to 30"); 
+        throw err;        
+    }
+
+
     // setting the number of qubits
     qbit_num = qbit_num_in;
 
@@ -123,9 +137,10 @@ Gate::apply_to_list( std::vector<Matrix>& input ) {
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-Gate::apply_to( Matrix& input ) {
+Gate::apply_to( Matrix& input, bool parallel ) {
 
     Matrix ret = dot(matrix_alloc, input);
     memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
@@ -156,6 +171,23 @@ Gate::set_matrix( Matrix input ) {
     matrix_alloc = input;
 }
 
+
+/**
+@brief Call to set the control qubit for the gate operation
+@param control_qbit_in The control qubit. Should be: 0 <= control_qbit_in < qbit_num
+*/
+void Gate::set_control_qbit(int control_qbit_in){
+    control_qbit = control_qbit_in;
+}
+
+
+/**
+@brief Call to set the target qubit for the gate operation
+@param target_qbit_in The target qubit on which the gate is applied. Should be: 0 <= target_qbit_in < qbit_num
+*/
+void Gate::set_target_qbit(int target_qbit_in){
+    target_qbit = target_qbit_in;
+}
 
 /**
 @brief Call to reorder the qubits in the matrix of the operation
@@ -250,13 +282,19 @@ Gate* Gate::clone() {
 
 
 /**
-@brief ???????????
+@brief Call to apply the gate kernel on the input state or unitary with optional AVX support
+@param u3_1qbit The 2x2 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param deriv Set true to apply derivate transformation, false otherwise (optional)
+@param deriv Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
+Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, bool parallel) {
 
+#ifdef USE_AVX
 
-    if ( input.cols == 1 && qbit_num<10 ) {
+    // apply kernel on state vector
+    if ( input.cols == 1 && (qbit_num<10 || !parallel) ) {
         apply_kernel_to_state_vector_input_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
         return;
     }
@@ -266,13 +304,13 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
     }
 
 
-#ifdef USE_AVX
+
 
     if ( qbit_num < 4 ) {
         apply_kernel_to_input_AVX_small(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
         return;
     }
-    else if ( qbit_num < 10) {
+    else if ( qbit_num < 10 || !parallel) {
         apply_kernel_to_input_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
         return;
      }
@@ -283,68 +321,23 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
 
 
 #else
-   
-    int index_step_target = 1 << target_qbit;
-    int current_idx = 0;
 
-
-    for ( int current_idx_pair=current_idx + index_step_target; current_idx_pair<matrix_size; current_idx_pair=current_idx_pair+(index_step_target << 1) ) {
-
-        for(int idx=0; idx<index_step_target; idx++) {  
-        //tbb::parallel_for(0, index_step_target, 1, [&](int idx) {  
-
-            int current_idx_loc = current_idx + idx;
-            int current_idx_pair_loc = current_idx_pair + idx;
-
-            int row_offset = current_idx_loc*input.stride;
-            int row_offset_pair = current_idx_pair_loc*input.stride;
-
-           if ( control_qbit<0 || ((current_idx_loc >> control_qbit) & 1) ) {
-
-                for ( int col_idx=0; col_idx<input.cols; col_idx++) {
-   			
-                    int index      = row_offset+col_idx;
-                    int index_pair = row_offset_pair+col_idx;                
-
-                    QGD_Complex16 element      = input[index];
-                    QGD_Complex16 element_pair = input[index_pair];              
-
-                    QGD_Complex16 tmp1 = mult(u3_1qbit[0], element);
-                    QGD_Complex16 tmp2 = mult(u3_1qbit[1], element_pair);
- 
-                    input[index].real = tmp1.real + tmp2.real;
-                    input[index].imag = tmp1.imag + tmp2.imag;
-
-                    tmp1 = mult(u3_1qbit[2], element);
-                    tmp2 = mult(u3_1qbit[3], element_pair);
-
-                    input[index_pair].real = tmp1.real + tmp2.real;
-                    input[index_pair].imag = tmp1.imag + tmp2.imag;
-
-                }
-
-
-            }
-            else if (deriv) {
-                // when calculating derivatives, the constant element should be zeros
-                memset( input.get_data()+row_offset, 0.0, input.cols*sizeof(QGD_Complex16));
-                memset( input.get_data()+row_offset_pair, 0.0, input.cols*sizeof(QGD_Complex16));
-            }
-            else {
-                // leave the state as it is
-                continue; 
-            }
-
-
-        
-        //});
-        }
-
-
-        current_idx = current_idx + (index_step_target << 1);
-
-
+    // apply kernel on state vector
+    if ( input.cols == 1 && (qbit_num<10 || !parallel) ) {
+        apply_kernel_to_state_vector_input(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
     }
+    else if ( input.cols == 1 ) {
+        apply_kernel_to_state_vector_input_parallel(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        return;
+    }
+
+
+    // apply kernel on unitary
+    apply_kernel_to_input(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size); 
+
+
+   
 
 
 #endif // USE_AVX
@@ -357,8 +350,10 @@ Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv) {
 
 
 /**
-@brief Call to apply the gate on the input array/matrix by input*CNOT
-@param input The input array on which the gate is applied
+@brief Call to apply the gate kernel on the input state or unitary from right (no AVX support)
+@param u3_1qbit The 2x2 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param deriv Set true to apply derivate transformation, false otherwise
 */
 void 
 Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {

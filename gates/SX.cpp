@@ -95,17 +95,30 @@ SX::~SX() {
 }
 
 
-
 /**
 @brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
 @return Returns with a matrix of the gate
 */
 Matrix
-SX::get_matrix( ) {
+SX::get_matrix() {
+
+
+        return get_matrix(false);
+
+}
+
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with a matrix of the gate
+*/
+Matrix
+SX::get_matrix( bool parallel) {
 
         Matrix SX_matrix = create_identity(matrix_size);
-        apply_to(SX_matrix);
+        apply_to(SX_matrix, parallel);
 
 #ifdef DEBUG
         if (SX_matrix.isnan()) {
@@ -125,9 +138,10 @@ SX::get_matrix( ) {
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-SX::apply_to( Matrix& input ) {
+SX::apply_to( Matrix& input, bool parallel ) {
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;
@@ -140,55 +154,8 @@ SX::apply_to( Matrix& input ) {
     Matrix u3_1qbit = calc_one_qubit_u3();
 
     //apply_kernel_to function to SX gate 
-    apply_kernel_to( u3_1qbit, input );
+    apply_kernel_to( u3_1qbit, input, parallel );
    
-  /*  int index_step = Power_of_2(target_qbit);
-    int current_idx = 0;
-    int current_idx_pair = current_idx+index_step;
-
-//std::cout << "target qbit: " << target_qbit << std::endl;
-
-    while ( current_idx_pair < matrix_size ) {
-
-
-        tbb::parallel_for(0, index_step, 1, [&](int idx) {  
-
-            int current_idx_loc = current_idx + idx;
-            int current_idx_pair_loc = current_idx_pair + idx;
-
-            int row_offset = current_idx_loc*input.stride;
-            int row_offset_pair = current_idx_pair_loc*input.stride;
-
-            for ( int col_idx=0; col_idx<matrix_size; col_idx++) {
-                int index      = row_offset+col_idx;
-                int index_pair = row_offset_pair+col_idx;
-
-                QGD_Complex16 element      = input[index];
-                QGD_Complex16 element_pair = input[index_pair];
-
-                QGD_Complex16 tmp1 = mult(sx_1qbit[0], element);
-                QGD_Complex16 tmp2 = mult(sx_1qbit[1], element_pair);
-                input[index].real = tmp1.real + tmp2.real;
-                input[index].imag = tmp1.imag + tmp2.imag;
-
-                tmp1 = mult(sx_1qbit[2], element);
-                tmp2 = mult(sx_1qbit[3], element_pair);
-                input[index_pair].real = tmp1.real + tmp2.real;
-                input[index_pair].imag = tmp1.imag + tmp2.imag;
-
-            };         
-
-//std::cout << current_idx << " " << current_idx_pair << std::endl;
-
-        });
-
-
-        current_idx = current_idx + 2*index_step;
-        current_idx_pair = current_idx_pair + 2*index_step;
-
-
-    }
-*/
 
 }
 

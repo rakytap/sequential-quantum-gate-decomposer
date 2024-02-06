@@ -29,6 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from os import path
 from qgd_python.decomposition.qgd_N_Qubit_Decomposition_adaptive_Wrapper import qgd_N_Qubit_Decomposition_adaptive_Wrapper
+from qgd_python.gates.qgd_Circuit import qgd_Circuit
 
 
 
@@ -172,7 +173,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                 # RY gate
                 circuit.ry(gate.get("Theta"), gate.get("target_qbit"))
 
-            elif gate.get("type") == "RZ":
+            elif gate.get("type") == "RZ" or gate.get("type") == "RZ_P":
                 # RZ gate
                 circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
 
@@ -284,7 +285,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         from qiskit import QuantumCircuit, transpile
         from qiskit.circuit import ParameterExpression
-        from qgd_python.gates.qgd_Gates_Block import qgd_Gates_Block
+        from qgd_python.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
 
         qc = transpile(qc_in, optimization_level=0, basis_gates=['cz', 'u3'], layout_method='sabre')
         #print('Depth of imported Qiskit transpiled quantum circuit:', qc.depth())
@@ -307,7 +308,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         two_qubit_gates = list()
 
         # construct the qgd gate structure            
-        Gates_Block_ret = qgd_Gates_Block(register_size)
+        Circuit_ret = qgd_Circuit_Wrapper(register_size)
         optimized_parameters = list()
 
         for gate in qc.data:
@@ -332,8 +333,8 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 
 
-                # creating an instance of the wrapper class qgd_Gates_Block
-                Layer = qgd_Gates_Block( register_size )
+                # creating an instance of the wrapper class qgd_Circuit_Wrapper
+                Layer = qgd_Circuit_Wrapper( register_size )
 
                 # retrive the corresponding single qubit gates and create layer from them
                 if len(single_qubit_gates[qubit0])>0:
@@ -372,13 +373,13 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                 optimized_parameters = optimized_parameters + [np.pi/4, np.pi/2, -np.pi/2, -np.pi/4]
                 #optimized_parameters = optimized_parameters + [np.pi]
 
-                Gates_Block_ret.add_Gates_Block( Layer )
+                Circuit_ret.add_Circuit( Layer )
    
        
 
         # add remaining single qubit gates
-        # creating an instance of the wrapper class qgd_Gates_Block
-        Layer = qgd_Gates_Block( register_size )
+        # creating an instance of the wrapper class qgd_Circuit
+        Layer = qgd_Circuit( register_size )
 
         for qubit in range(register_size):
 
@@ -393,15 +394,30 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
                         optimized_parameters = optimized_parameters + [float(param)]
                     optimized_parameters[-1] = optimized_parameters[-1]/2                        
 
-        Gates_Block_ret.add_Gates_Block( Layer )
+        Circuit_ret.add_Circuit( Layer )
 
         optimized_parameters = np.asarray(optimized_parameters, dtype=np.float64)
 
         # setting gate structure and optimized initial parameters
-        self.set_Gate_Structure(Gates_Block_ret)
+        self.set_Gate_Structure(Circuit_ret)
+
         self.set_Optimized_Parameters( np.flip(optimized_parameters,0) )
         #self.set_Optimized_Parameters( optimized_parameters )
-          
+
+
+##
+# @brief Call to set custom gate structure to used in the decomposition
+# @param Gate_structure An instance of SQUANDER Circuit
+    def set_Gate_Structure( self, Gate_structure ):  
+
+        if not isinstance(Gate_structure, qgd_Circuit) :
+            raise Exception("Input parameter Gate_structure should be a an instance of Circuit")
+                    
+                    
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Gate_Structure( Gate_structure )
+        
+        
+                  
 ##
 # @brief Call to set custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
 # @param filename String containing the filename
@@ -570,8 +586,24 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 
 ## 
+# @brief Call to get the optimized parameters set in numpy array
+# @return Returns with the optimized parameters
+    def get_Optimized_Parameters(self):
+    
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Optimized_Parameters()
+
+
+## 
+# @brief Call to set the parameters which are used as a starting point in the optimization
+# @param A numpy array containing the parameters. The number of parameters can be  retrieved with method get_Parameter_Num
+    def set_Optimized_Parameters(self, new_params):
+        
+        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Optimized_Parameters(new_params)
+
+
+## 
 # @brief Call to evaluate the cost function.
-# @param parameters A float64 numpy array
+# @param parameters A float64 numpy array. The number of parameters can be  retrieved with method get_Parameter_Num 
     def Optimization_Problem( self, parameters=None ):
 
         if parameters is None:
@@ -652,3 +684,57 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def get_Decomposition_Error(self):
     
         return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Decomposition_Error()
+
+
+
+##
+# @brief Call to get the second Rényi entropy
+# @param parameters A float64 numpy array
+# @param input_state A complex array storing the input state. If None |0> is created.
+# @param qubit_list A subset of qubits for which the Rényi entropy should be calculated.
+# @Return Returns with the calculated entropy
+    def get_Second_Renyi_Entropy(self, parameters=None, input_state=None, qubit_list=None ):
+
+        qbit_num = self.get_Qbit_Num()
+
+        qubit_list_validated = list()
+        if isinstance(qubit_list, list) or isinstance(qubit_list, tuple):
+            for item in qubit_list:
+                if isinstance(item, int):
+                    qubit_list_validated.append(item)
+                    qubit_list_validated = list(set(qubit_list_validated))
+                else:
+                    print("Elements of qbit_list should be integers")
+                    return
+        elif qubit_list == None:
+            qubit_list_validated = [ x for x in range(qbit_num) ]
+
+        else:
+            print("Elements of qbit_list should be integers")
+            return
+        
+
+        if parameters is None:
+            print( "get_Second_Renyi_entropy: array of input parameters is None")
+            return None
+
+
+        if input_state is None:
+            matrix_size = 1 << qbit_num
+            input_state = np.zeros( (matrix_size,1) )
+            input_state[0] = 1
+
+        # evaluate the entropy
+        entropy = super(qgd_N_Qubit_Decomposition_adaptive, self).get_Second_Renyi_Entropy( parameters, input_state, qubit_list_validated)  
+
+
+        return entropy
+
+
+
+##
+# @brief Call to get the number of qubits in the circuit
+# @return Returns with the number of qubits
+    def get_Qbit_Num(self):
+    
+        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Qbit_Num()

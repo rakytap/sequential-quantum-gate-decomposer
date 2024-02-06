@@ -65,11 +65,20 @@ SYC(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
 */
 Matrix get_matrix();
 
+
+/**
+@brief Call to retrieve the operation matrix
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with the matrix of the operation
+*/
+Matrix get_matrix(bool parallel=false);
+
 /**
 @brief Call to apply the gate on the input array/matrix by SYC*input
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-void apply_to( Matrix& input );
+void apply_to( Matrix& input, bool parallel=false );
 
 
 /**

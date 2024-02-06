@@ -39,12 +39,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /**
-@brief Type definition of the qgd_Gates_Block_Wrapper Python class of the qgd_Gates_Block_Wrapper module
+@brief Type definition of the qgd_Circuit_Wrapper Python class of the qgd_Circuit_Wrapper module
 */
-typedef struct qgd_Gates_Block_Wrapper {
+typedef struct qgd_Circuit_Wrapper {
     PyObject_HEAD
     Gates_block* gate;
-} qgd_Gates_Block_Wrapper;
+} qgd_Circuit_Wrapper;
 
 
 /**
@@ -273,8 +273,20 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_Start_Decomposition(qgd_N_Qubit_Decompo
         return Py_BuildValue("i", -1);
 
 
-    // starting the decomposition
-    self->decomp->start_decomposition(prepare_export);
+    // start the decomposition
+    try {
+        self->decomp->start_decomposition(prepare_export);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
 
 
     return Py_BuildValue("i", 0);
@@ -482,6 +494,29 @@ get_gate( N_Qubit_Decomposition_custom* decomp, int &idx ) {
 
 
     }
+    else if (gate->get_type() == RZ_P_OPERATION) {
+
+        // get U3 parameters
+        RZ_P* rz_gate = static_cast<RZ_P*>(gate);
+        Matrix_real&& parameters = rz_gate->get_optimized_parameters();
+ 
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "RZ_P" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* Phi = Py_BuildValue("f",  parameters[0] );
+
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "Phi", Phi );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(Phi);
+
+
+    }
     else if (gate->get_type() == X_OPERATION) {
 
         // create gate parameters
@@ -645,7 +680,18 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimized_Parameters( qgd_N_Qubit_D
     Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
 
 
-    self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
+    try {
+        self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
 
 
     Py_DECREF(parameters_arr);
@@ -897,9 +943,9 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decompo
     // parsing input arguments
     if (!PyArg_ParseTuple(args, "|O", &gate_structure_py )) return Py_BuildValue("i", -1);
 
+    // convert gate structure from PyObject to qgd_Circuit_Wrapper
+    qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*) gate_structure_py;
 
-    // convert gate structure from PyObject to qgd_Gates_Block_Wrapper
-    qgd_Gates_Block_Wrapper* qgd_op_block = (qgd_Gates_Block_Wrapper*) gate_structure_py;
     self->decomp->set_custom_gate_structure( qgd_op_block->gate );
 
     return Py_BuildValue("i", 0);
@@ -1024,6 +1070,9 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer( qgd_N_Qubit_Decompositio
     else if ( strcmp("cosine", optimizer_C)==0 || strcmp("COSINE", optimizer_C)==0) {
         qgd_optimizer = COSINE;        
     }
+    else if ( strcmp("grad_descend_phase_shift_rule", optimizer_C)==0 || strcmp("GRAD_DESCEND_PARAMETER_SHIFT_RULE", optimizer_C)==0) {
+        qgd_optimizer = GRAD_DESCEND_PARAMETER_SHIFT_RULE;        
+    }  
     else if ( strcmp("agents_combined", optimizer_C)==0 || strcmp("AGENTS_COMBINED", optimizer_C)==0) {
         qgd_optimizer = AGENTS_COMBINED;        
     }
@@ -1051,6 +1100,56 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimizer( qgd_N_Qubit_Decompositio
     return Py_BuildValue("i", 0);
 
 }
+
+
+
+/**
+@brief Wrapper function to set a variant for the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for FROBENIUS_NORM_CORRECTION2_EXACT_DERIVATE
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
+@return Returns with zero on success.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_custom_Wrapper_set_Cost_Function_Variant( qgd_N_Qubit_Decomposition_custom_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"costfnc", NULL};
+
+    int costfnc_arg = 0;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &costfnc_arg)) {
+
+        std::string err( "Unsuccessful argument parsing");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;       
+ 
+    }
+   
+    cost_function_type qgd_costfnc = (cost_function_type)costfnc_arg;
+
+
+    try {
+        self->decomp->set_cost_function_variant(qgd_costfnc);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
 
 
 /**
@@ -1148,6 +1247,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_custom_Wrapper_methods[] = {
     {"Upload_Umtx_to_DFE", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_Upload_Umtx_to_DFE, METH_NOARGS,
      "Call to upload the unitary to the DFE. (Has no effect for non-DFE builds)"
     },
+    {"set_Cost_Function_Variant", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_set_Cost_Function_Variant, METH_VARARGS | METH_KEYWORDS,
+     "Wrapper method to to set the variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for HILBERT_SCHMIDT_TEST, 4 for HILBERT_SCHMIDT_TEST_CORRECTION1, 5 for HILBERT_SCHMIDT_TEST_CORRECTION2."
+    },
     {NULL}  /* Sentinel */
 };
 
@@ -1185,7 +1287,7 @@ static PyTypeObject qgd_N_Qubit_Decomposition_custom_Wrapper_Type = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-  "Object to represent a Gates_block class of the QGD package.", /*tp_doc*/
+  "Object to represent a Circuit class of the QGD package.", /*tp_doc*/
   0, /*tp_traverse*/
   0, /*tp_clear*/
   0, /*tp_richcompare*/

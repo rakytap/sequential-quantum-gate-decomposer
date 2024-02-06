@@ -31,7 +31,7 @@ limitations under the License.
 
 
 /**
-@brief A class representing a RZ gate.
+@brief A class representing a RZ gate.  The matrix of the gate is [exp(i*varphi/2),0;0,exp(i*varphi/2) ]. The input rotation angle is varphi/2.
 */
 class RZ: public U3 {
 
@@ -64,8 +64,9 @@ RZ(int qbit_num_in, int target_qbit_in);
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-void apply_to( Matrix_real& parameters, Matrix& input );
+void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
 
 
 /**
@@ -76,7 +77,9 @@ void apply_to( Matrix_real& parameters, Matrix& input );
 void apply_from_right( Matrix_real& parameters, Matrix& input );
 
 /**
-@brief ???????????????
+@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@param parameters An array of the input parameters.
+@param input The input array on which the gate is applied
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
 
@@ -106,6 +109,13 @@ void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lam
 @return Return with a pointer pointing to the cloned object
 */
 RZ* clone();
+
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param PhiOver2 Real parameter standing for the parameter phi/2.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+Matrix calc_one_qubit_u3(double PhiOver2 );
 
 
 };

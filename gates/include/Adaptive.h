@@ -77,26 +77,23 @@ Adaptive(int qbit_num_in, int target_qbit_in, int control_qbit_in, int limit_in)
 */
 ~Adaptive();
 
-/**
-@brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@return Returns with a matrix of the gate
-*/
-//Matrix get_matrix( const double* parameters );
 
 /**
-@brief ???????????????
+@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@param parameters An array of the input parameters.
+@param input The input array on which the gate is applied
 */
 std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
 
 
 
 /**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@brief Call to apply the gate on the input array/matrix.
+@param parameters An array of parameters to calculate the matrix of the gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
-virtual void apply_to( Matrix_real& parameters, Matrix& input );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
 
 
 /**

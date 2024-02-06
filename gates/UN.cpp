@@ -99,13 +99,28 @@ void UN::set_qbit_num( int qbit_num_in ) {
 
 /**
 @brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the UN gate.
 @return Returns with a matrix of the operation
 */
 Matrix
 UN::get_matrix( Matrix_real& parameters ) {
 
+
+        return get_matrix( parameters, false );
+}
+
+
+/**
+@brief Call to retrieve the operation matrix
+@param parameters An array of parameters to calculate the matrix of the UN gate.
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with a matrix of the operation
+*/
+Matrix
+UN::get_matrix( Matrix_real& parameters, bool parallel ) {
+
         Matrix UN_matrix = create_identity(matrix_size);
-        apply_to(parameters, UN_matrix);
+        apply_to(parameters, UN_matrix, parallel);
 
 #ifdef DEBUG
         if (UN_matrix.isnan()) {
@@ -122,9 +137,10 @@ UN::get_matrix( Matrix_real& parameters ) {
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-UN::apply_to( Matrix_real& parameters, Matrix& input ) {
+UN::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;
@@ -201,7 +217,7 @@ UN::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
 /**
-@brief ?????
+@brief Call to retrieve the qbit_num-1 kernel of the UN operation.
 */
 Matrix
 UN::get_submatrix( Matrix_real& parameters ) {

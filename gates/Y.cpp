@@ -95,17 +95,28 @@ Y::~Y() {
 }
 
 
-
 /**
 @brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
 @return Returns with a matrix of the gate
 */
 Matrix
-Y::get_matrix( ) {
+Y::get_matrix() {
+
+        return get_matrix( false );
+
+}
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with a matrix of the gate
+*/
+Matrix
+Y::get_matrix( bool parallel) {
 
         Matrix Y_matrix = create_identity(matrix_size);
-        apply_to(Y_matrix);
+        apply_to(Y_matrix, parallel);
 
 #ifdef DEBUG
         if (Y_matrix.isnan()) {
@@ -125,9 +136,10 @@ Y::get_matrix( ) {
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-Y::apply_to( Matrix& input ) {
+Y::apply_to( Matrix& input, bool parallel ) {
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;
@@ -138,8 +150,8 @@ Y::apply_to( Matrix& input ) {
 
     Matrix u3_1qbit = calc_one_qubit_u3();
 
-    //apply_kernel_to function to X gate 
-    apply_kernel_to( u3_1qbit, input );
+    //apply_kernel_to function to Y gate 
+    apply_kernel_to( u3_1qbit, input, false, parallel );
    
 
 

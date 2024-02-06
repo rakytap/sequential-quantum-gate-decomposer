@@ -26,7 +26,7 @@ limitations under the License.
 
 //static tbb::spin_mutex my_mutex;
 /**
-@brief NullaRZ constructor of the class.
+@brief Nullary constructor of the class.
 */
 RZ::RZ() {
 
@@ -133,30 +133,30 @@ RZ::~RZ() {
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-RZ::apply_to( Matrix_real& parameters, Matrix& input ) {
+RZ::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
 
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in RZ gate apply" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
+        std::string err("Wrong matrix size in RZ gate apply");
+        throw err;
     }
 
-    double Theta, Phi, Lambda;
 
-    //Theta = theta0;
-    Phi = parameters[0];
-    //Lambda = lambda0;
+
+    double Phi_over_2 = parameters[0];
+
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
+    Matrix u3_1qbit = calc_one_qubit_u3( Phi_over_2 );
 
 
-    apply_kernel_to( u3_1qbit, input );
+
+    apply_kernel_to( u3_1qbit, input, false, parallel );
 
 
 }
@@ -173,19 +173,17 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
     if (input.cols != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
+        std::string err("Wrong matrix size in U3 apply_from_right");
+        throw err;    
     }
 
-    double Theta, Phi, Lambda;
+    double Phi_over_2 = parameters[0];
 
-    Phi = parameters[0];
-    parameters_for_calc_one_qubit(Theta, Phi, Lambda);
+    
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
+    Matrix u3_1qbit = calc_one_qubit_u3( Phi_over_2 );
 
 
     apply_kernel_from_right(u3_1qbit, input);
@@ -197,32 +195,27 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
 /**
-@brief ???????????????
+@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@param parameters An array of the input parameters.
+@param input The input array on which the gate is applied
 */
 std::vector<Matrix> 
 RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in RZ apply_derivate_to" << std::endl;
-        print(sstream, 0);	 
-        exit(-1);
+        std::string err("Wrong matrix size in RZ apply_derivate_to");
+        throw err;
     }
 
-    double Theta, Phi, Lambda;
+    double Phi_over_2 = parameters[0] + M_PI/2;
 
-    Theta = theta0;
-    Phi = parameters_mtx[0] + M_PI/2;
-    Lambda = lambda0;
-
-    Matrix&& res_mtx = input.copy();
     
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
-    memset(u3_1qbit.get_data(), 0.0, 2*sizeof(QGD_Complex16));
+    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
+    Matrix u3_1qbit = calc_one_qubit_u3( Phi_over_2 );
 
-
+    Matrix&& res_mtx = input.copy();
     apply_kernel_to( u3_1qbit, res_mtx );
 
     std::vector<Matrix> ret;
@@ -243,11 +236,11 @@ RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 @param Phi Real parameter standing for the parameter phi.
 @param Lambda Real parameter standing for the parameter lambda.
 */
-void RZ::set_optimized_parameters(double Phi ) {
+void RZ::set_optimized_parameters(double PhiOver2 ) {
 
     parameters = Matrix_real(1, parameter_num);
 
-    parameters[0] = Phi;
+    parameters[0] = PhiOver2;
 
 }
 
@@ -290,6 +283,32 @@ RZ* RZ::clone() {
 
 
     return ret;
+
+}
+
+
+
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param PhiOver2 Real parameter standing for the parameter phi/2.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+Matrix RZ::calc_one_qubit_u3(double PhiOver2 ) {
+
+
+    Matrix u3_1qbit(2, 2);
+    double cos_phi = cos(PhiOver2);
+    double sin_phi = sin(PhiOver2);
+    
+    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
+    u3_1qbit[0].real = cos_phi;
+    u3_1qbit[0].imag = -sin_phi;    
+
+    u3_1qbit[3].real = cos_phi;
+    u3_1qbit[3].imag = sin_phi; 
+
+
+    return u3_1qbit;
 
 }
 

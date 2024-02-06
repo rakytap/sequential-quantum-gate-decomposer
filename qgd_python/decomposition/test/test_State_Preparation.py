@@ -79,7 +79,7 @@ class Test_State_Preparation:
         State = Umtx[:, 0].reshape(16, 1)
 
         config = { 'max_outer_iterations': 1, 
-		'max_inner_iterations': 1000000, 
+		'max_inner_iterations': 10000, 
 		'max_inner_iterations_compression': 10000, 
 		'max_inner_iterations_final': 1000, 
 		'randomization_threshold': int(1e4),  			

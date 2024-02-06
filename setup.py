@@ -41,6 +41,9 @@ setup(
     maintainer="Peter Rakyta",
     maintainer_email="peter.rakyta@ttk.elte.hu",
     include_package_data=True,
+    package_data = {
+        '': ['README.md', 'MANIFEST.in', 'pyproject.toml']
+    },  
     install_requires=[
         "setuptools>=40.8.0",
         "wheel",

@@ -23,22 +23,18 @@ limitations under the License.
 #ifndef N_Qubit_Decomposition_custom_H
 #define N_Qubit_Decomposition_H
 
-#include "N_Qubit_Decomposition_Base.h"
+#include "Optimization_Interface.h"
 
 
 /**
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 This class contains the non-template implementation of the decomposition class.
 */
-class N_Qubit_Decomposition_custom : public N_Qubit_Decomposition_Base {
+class N_Qubit_Decomposition_custom : public Optimization_Interface {
 
 
 public:
 
-protected:
-
-    /// A gate structure describing custom gate structure to be used in the decomposition.
-    Gates_block* gate_structure;
 
 
 public:
@@ -77,18 +73,6 @@ virtual ~N_Qubit_Decomposition_custom();
 virtual void start_decomposition(bool prepare_export=true);
 
 
-
-/**
-@brief Call to add further layer to the gate structure used in the subdecomposition.
-*/
-virtual void add_gate_layers();
-
-
-/**
-@brief Call to set custom layers to the gate structure that are intended to be used in the subdecomposition.
-@param gate_structure An <int, Gates_block*> map containing the gate structure used in the individual subdecomposition (default is used, if a gate structure for specific subdecomposition is missing).
-*/
-void set_custom_gate_structure( Gates_block* gate_structure_in );
 
 
 

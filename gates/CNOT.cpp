@@ -96,7 +96,6 @@ CNOT::CNOT(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
 CNOT::~CNOT() {
 }
 
-
 /**
 @brief Call to retrieve the gate matrix
 @return Returns with the matrix of the gate
@@ -104,8 +103,22 @@ CNOT::~CNOT() {
 Matrix
 CNOT::get_matrix() {
 
+    return get_matrix( false );
+
+}
+
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parallel Set true to apply parallel kernels, false otherwise
+@return Returns with the matrix of the gate
+*/
+Matrix
+CNOT::get_matrix( bool parallel) {
+
     Matrix CNOT_matrix = create_identity(matrix_size);
-    apply_to(CNOT_matrix);
+    apply_to(CNOT_matrix, parallel);
 
     return CNOT_matrix;
 
@@ -116,13 +129,14 @@ CNOT::get_matrix() {
 /**
 @brief Call to apply the gate on the input array/matrix CNOT*input
 @param input The input array on which the gate is applied
+@param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-CNOT::apply_to( Matrix& input ) {
+CNOT::apply_to( Matrix& input, bool parallel ) {
  
 
     Matrix u3_1qbit = calc_one_qubit_u3();
-    apply_kernel_to(u3_1qbit, input);
+    apply_kernel_to(u3_1qbit, input, false, parallel);
 
 
 }
@@ -171,7 +185,6 @@ void CNOT::reorder_qubits( vector<int> qbit_list) {
 /**
 @brief Set static values for matrix of the gates.
 @param u3_1qbit Matrix parameter for the gate.
-
 */
 Matrix
 CNOT::calc_one_qubit_u3( ){

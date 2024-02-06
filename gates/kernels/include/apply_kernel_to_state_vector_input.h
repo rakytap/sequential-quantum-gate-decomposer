@@ -16,8 +16,8 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file apply_kerel_to_input_AVX.cpp
-    \brief ????????????????
+/*! \file apply_kerel_to_state_vector_input.cpp
+    \brief Collection of single- and multi-threaded implementation to apply a gate kernel on state vectors
 */
 
 
@@ -28,37 +28,29 @@ limitations under the License.
 #include "common.h"
 
 /**
-@brief kernel to apply single qubit gate kernel on a state vector
-@param ????????
-@param ?????????
+@brief Call to apply a gate kernel on a state vector
+@param u3_1qbit The 2x2 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param deriv Set true to apply derivate transformation, false otherwise
+@param target_qbit The targer qubit on which the transformation should be applied
+@param control_qbit The contron qubit (-1 if the is no control qubit)
+@param matrix_size The size of the input
 */
 void apply_kernel_to_state_vector_input(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 
-/**
-@brief AVX kernel to apply single qubit gate kernel on a state vector
-@param ????????
-@param ?????????
-*/
-void apply_kernel_to_state_vector_input_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
-
-
 
 /**
-@brief kernel to apply single qubit gate kernel on a state vector. Parallel version
-@param ????????
-@param ?????????
+@brief Call to apply a gate kernel on a state vector. Parallel version
+@param u3_1qbit The 2x2 kernel of the gate operation
+@param input The input matrix on which the transformation is applied
+@param deriv Set true to apply derivate transformation, false otherwise
+@param target_qbit The targer qubit on which the transformation should be applied
+@param control_qbit The contron qubit (-1 if the is no control qubit)
+@param matrix_size The size of the input
 */
 void apply_kernel_to_state_vector_input_parallel(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
-
-
-/**
-@brief AVX kernel to apply single qubit gate kernel on a state vector. Parallel version
-@param ????????
-@param ?????????
-*/
-void apply_kernel_to_state_vector_input_parallel_AVX(Matrix& u3_1qbit, Matrix& input, const bool& deriv, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 
 #endif

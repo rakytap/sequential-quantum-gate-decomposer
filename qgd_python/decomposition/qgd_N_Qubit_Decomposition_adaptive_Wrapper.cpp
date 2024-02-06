@@ -40,12 +40,12 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 /**
-@brief Type definition of the qgd_Gates_Block_Wrapper Python class of the qgd_Gates_Block_Wrapper module
+@brief Type definition of the qgd_Circuit_Wrapper Python class of the qgd_Circuit_Wrapper module
 */
-typedef struct qgd_Gates_Block_Wrapper {
+typedef struct qgd_Circuit_Wrapper {
     PyObject_HEAD
     Gates_block* gate;
-} qgd_Gates_Block_Wrapper;
+} qgd_Circuit_Wrapper;
 
 
 /**
@@ -587,13 +587,36 @@ get_gate( N_Qubit_Decomposition_adaptive* decomp, int &idx ) {
     }
     else if (gate->get_type() == RZ_OPERATION) {
 
-        // get U3 parameters
+        // get RZ parameters
         RZ* rz_gate = static_cast<RZ*>(gate);
         Matrix_real&& parameters = rz_gate->get_optimized_parameters();
  
 
         // create gate parameters
         PyObject* type = Py_BuildValue("s",  "RZ" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* Phi = Py_BuildValue("f",  parameters[0] );
+
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+        PyDict_SetItemString(py_gate, "Phi", Phi );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(Phi);
+
+
+    }
+    else if (gate->get_type() == RZ_P_OPERATION) {
+
+        // get RZ_P parameters
+        RZ_P* rz_gate = static_cast<RZ_P*>(gate);
+        Matrix_real&& parameters = rz_gate->get_optimized_parameters();
+ 
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "RZ_P" );
         PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
         PyObject* Phi = Py_BuildValue("f",  parameters[0] );
 
@@ -884,8 +907,19 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimized_Parameters( qgd_N_Qubit
 
     Matrix_real parameters_mtx = numpy2matrix_real( parameters_arr );
 
-
-    self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
+    try {
+        self->decomp->set_optimized_parameters(parameters_mtx.get_data(), parameters_mtx.size());
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    
 
 
     Py_DECREF(parameters_arr);
@@ -1149,8 +1183,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimization_Blocks(qgd_N_Qubit_D
 /**
 @brief Wrapper function to set custom gate structure for the decomposition.
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
-@param args A tuple of the input arguments: gate_structure_dict (PyDict)
-gate_structure_dict: ?????????????????????????????
 @return Returns with zero on success.
 */
 static PyObject *
@@ -1163,11 +1195,11 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decom
     if (!PyArg_ParseTuple(args, "|O", &gate_structure_py )) return Py_BuildValue("i", -1);
 
 
-    // convert gate structure from PyObject to qgd_Gates_Block_Wrapper
-    qgd_Gates_Block_Wrapper* qgd_op_block = (qgd_Gates_Block_Wrapper*) gate_structure_py;
+    // convert gate structure from PyObject to qgd_Circuit_Wrapper
+    qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*) gate_structure_py;
 
     try {
-        self->decomp->set_adaptive_gate_structure( qgd_op_block->gate );
+        self->decomp->set_custom_gate_structure( qgd_op_block->gate );
     }
     catch (std::string err ) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1906,29 +1938,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure(
 
 
 
-/**
-@brief Wrapper function to set the radius in which randomized parameters are generated around the current minimum duting the optimization process
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
-@return Returns with zero on success.
-*/
-static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
-
-    // initiate variables for input arguments
-    double radius = 1.0; 
-
-    // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|d", &radius )) return Py_BuildValue("i", -1);
-
-
-    self->decomp->set_randomized_radius( radius );
-    
-
-    return Py_BuildValue("i", 0);
-
-
-}
-
-
 
 
 /**
@@ -2034,8 +2043,14 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimizer( qgd_N_Qubit_Decomposit
     else if ( strcmp("cosine", optimizer_C)==0 || strcmp("COSINE", optimizer_C)==0) {
         qgd_optimizer = COSINE;        
     }
+    else if ( strcmp("grad_descend_phase_shift_rule", optimizer_C)==0 || strcmp("GRAD_DESCEND_PARAMETER_SHIFT_RULE", optimizer_C)==0) {
+        qgd_optimizer = GRAD_DESCEND_PARAMETER_SHIFT_RULE;        
+    }      
     else if ( strcmp("agents_combined", optimizer_C)==0 || strcmp("AGENTS_COMBINED", optimizer_C)==0) {
         qgd_optimizer = AGENTS_COMBINED;        
+    }
+    else if ( strcmp("bayes_opt", optimizer_C)==0 || strcmp("BAYES_OPT", optimizer_C)==0) {
+        qgd_optimizer = BAYES_OPT;        
     }
     else {
         std::cout << "Wrong optimizer: " << optimizer_C << ". Using default: BFGS" << std::endl; 
@@ -2112,49 +2127,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Cost_Function_Variant( qgd_N_Qubi
 
 
 
-/**
-@brief Wrapper function to set the threshold value for the count of interations, above which the parameters are randomized if the cost function does not decreases fast enough.
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
-@return Returns with zero on success.
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Iteration_Threshold_of_Randomization( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args, PyObject *kwds)
-{
-
-    // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"threshold", NULL};
-
-    unsigned long long threshold_arg = 0;
-
-
-    // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|K", kwlist, &threshold_arg)) {
-
-        std::string err( "Unsuccessful argument parsing");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;       
- 
-    }
-   
-
-    try {
-        self->decomp->set_iteration_threshold_of_randomization(threshold_arg);
-    }
-    catch (std::string err) {
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        std::cout << err << std::endl;
-        return NULL;
-    }
-    catch(...) {
-        std::string err( "Invalid pointer to decomposition class");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;
-    }
-
-
-    return Py_BuildValue("i", 0);
-
-}
 
 
 
@@ -2291,6 +2263,132 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Prepare_Gates_To_Export(qgd_N_Qubit_D
 }
 
 
+
+
+
+/**
+@brief Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Second_Renyi_Entropy( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args)
+{
+
+
+    PyObject * parameters_arr = NULL;
+    PyObject * input_state_arg = NULL;
+    PyObject * qubit_list_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|OOO", &parameters_arr, &input_state_arg, &qubit_list_arg )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
+    // convert python object array to numpy C API array
+    if ( input_state_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+    PyObject* input_state = PyArray_FROM_OTF(input_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(input_state) ) {
+        PyErr_SetString(PyExc_Exception, "input mtrix is not memory contiguous");
+        return NULL;
+    }
+
+
+    // create QGD version of the input matrix
+    Matrix input_state_mtx = numpy2matrix(input_state);
+
+
+    // check input argument qbit_list
+    if ( qubit_list_arg == NULL or (!PyList_Check( qubit_list_arg )) ) {
+        PyErr_SetString(PyExc_Exception, "qubit_list should be a list");
+        return NULL;
+    }
+
+    Py_ssize_t reduced_qbit_num = PyList_Size( qubit_list_arg );
+
+    matrix_base<int> qbit_list_mtx( (int)reduced_qbit_num, 1);
+    for ( int idx=0; idx<reduced_qbit_num; idx++ ) {
+
+        PyObject* item = PyList_GET_ITEM( qubit_list_arg, idx );
+        qbit_list_mtx[idx] = (int) PyLong_AsLong( item );
+
+    }
+
+
+    double entropy = -1;
+
+
+    try {
+        entropy = self->decomp->get_second_Renyi_entropy( parameters_mtx, input_state_mtx, qbit_list_mtx );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    Py_DECREF(parameters_arr);
+    Py_DECREF(input_state);
+
+
+
+    PyObject* p = Py_BuildValue("d", entropy);
+
+    return p;
+}
+
+
+/**
+@brief Call to retrieve the number of qubits in the circuit
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Qbit_Num(qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+    int qbit_num = 0;
+
+    try {
+        qbit_num = self->decomp->get_qbit_num();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("i", qbit_num );
+    
+}
+
+
+
 /**
 @brief Structure containing metadata about the members of class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
 */
@@ -2410,9 +2508,6 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     {"apply_Imported_Gate_Structure", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Imported_Gate_Structure, METH_NOARGS,
      "Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released."
     },
-    {"set_Randomized_Radius", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Randomized_Radius, METH_VARARGS,
-     "Call to set the radius in which randomized parameters are generated around the current minimum duting the optimization process."
-    },
     {"set_Optimizer", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimizer, METH_VARARGS | METH_KEYWORDS,
      "Wrapper method to to set the optimizer method for the gate synthesis."
     },
@@ -2424,9 +2519,6 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"set_Cost_Function_Variant", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Cost_Function_Variant, METH_VARARGS | METH_KEYWORDS,
      "Wrapper method to to set the variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for HILBERT_SCHMIDT_TEST, 4 for HILBERT_SCHMIDT_TEST_CORRECTION1, 5 for HILBERT_SCHMIDT_TEST_CORRECTION2."
-    },
-    {"set_Iteration_Threshold_of_Randomization", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Iteration_Threshold_of_Randomization, METH_VARARGS | METH_KEYWORDS,
-     "Wrapper function to set the threshold value for the count of interations, above which the parameters are randomized if the cost function does not decreases fast enough."
     },
     {"Optimization_Problem", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem, METH_VARARGS,
      "Wrapper function to evaluate the cost function."
@@ -2457,6 +2549,12 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"get_Decomposition_Error", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Decomposition_Error, METH_NOARGS,
      "Call to get the error of the decomposition. (i.e. the final value of the cost function)"
+    },
+    {"get_Second_Renyi_Entropy", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Second_Renyi_Entropy, METH_VARARGS,
+     "Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set."
+    },
+    {"get_Qbit_Num", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Qbit_Num, METH_NOARGS,
+     "Call to get the number of qubits in the circuit"
     },
     {NULL}  /* Sentinel */
 };
@@ -2495,7 +2593,7 @@ static PyTypeObject qgd_N_Qubit_Decomposition_adaptive_Wrapper_Type = {
   0, /*tp_setattro*/
   0, /*tp_as_buffer*/
   Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE, /*tp_flags*/
-  "Object to represent a Gates_block class of the QGD package.", /*tp_doc*/
+  "Object to represent a Circuit class of the QGD package.", /*tp_doc*/
   0, /*tp_traverse*/
   0, /*tp_clear*/
   0, /*tp_richcompare*/

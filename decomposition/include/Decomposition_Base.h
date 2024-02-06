@@ -37,6 +37,7 @@ limitations under the License.
 #include "RY.h"
 #include "CRY.h"
 #include "RZ.h"
+#include "RZ_P.h"
 #include "SYC.h"
 #include "UN.h"
 #include "ON.h"
@@ -479,5 +480,15 @@ void export_unitary(std::string& filename);
 @param filename  .binary file to read
 */
 Matrix import_unitary_from_binary(std::string& filename);
+
+
+/**
+@brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.
+@param qbit_num_in The number of qubits spanning the matrices.
+*/
+void set_qbit_num( int qbit_num_in );
+
+
+
 };
 #endif //DECOMPOSITION_BASE
