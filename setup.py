@@ -36,7 +36,7 @@ setup(
             "test_standalone", "test_standalone.*",
         )
     ),
-    version='1.8.6',
+    version='1.8.7',
     url="https://github.com/rakytap/sequential-quantum-gate-decomposer", 
     maintainer="Peter Rakyta",
     maintainer_email="peter.rakyta@ttk.elte.hu",
@@ -52,7 +52,7 @@ setup(
         "scipy",
     ],
     tests_require=["pytest"],
-    description='Package to decompose unitaries into a quantum circuit and for quantum state preparation.',
+    description='C++ library with Python interface to train quantum circuits, quantum gate synthesis and state preparation.',
     long_description=open("./README.md", 'r').read(),
     long_description_content_type="text/markdown",
     keywords="test, cmake, extension",
