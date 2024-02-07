@@ -1,1 +1,7 @@
+graft squander
+
+global-include CMakeLists.txt  *.cmake *.h.in
+
+global-exclude *.so
 prune _skbuild
+prune test_standalone

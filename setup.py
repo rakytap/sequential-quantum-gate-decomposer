@@ -31,12 +31,8 @@ from setuptools import find_packages
 from skbuild.cmaker import get_cmake_version
 setup(
     name="squander",
-    packages=find_packages(
-        exclude=(
-            "test_standalone", "test_standalone.*",
-        )
-    ),
-    version='1.8.7',
+    packages= [ 'squander' ],
+    version='1.8.8',
     url="https://github.com/rakytap/sequential-quantum-gate-decomposer", 
     maintainer="Peter Rakyta",
     maintainer_email="peter.rakyta@ttk.elte.hu",
