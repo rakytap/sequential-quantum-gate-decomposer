@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 from skbuild import setup
 from setuptools import find_packages
 
-
+from skbuild.cmaker import get_cmake_version
 setup(
     name="squander",
     packages=find_packages(
@@ -44,13 +44,6 @@ setup(
     package_data = {
         '': ['README.md', 'MANIFEST.in', 'pyproject.toml']
     },  
-    install_requires=[
-        "setuptools>=40.8.0",
-        "wheel",
-        "scikit-build",          
-        "ninja",
-        "scipy",
-    ],
     tests_require=["pytest"],
     description='C++ library with Python interface to train quantum circuits, quantum gate synthesis and state preparation.',
     long_description=open("./README.md", 'r').read(),

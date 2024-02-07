@@ -5,7 +5,7 @@ from squander import utils as utils
 import time
 import sys
 import scipy as sp
-import pytest
+
 from networkx.generators.random_graphs import random_regular_graph
 from qiskit.quantum_info import SparsePauliOp
 np.random.seed(31415)

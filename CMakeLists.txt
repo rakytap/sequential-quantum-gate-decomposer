@@ -31,23 +31,16 @@ set(PYTHON_PLAT_LIB)
 enable_testing()
 
 
+if(SKBUILD)
+    message(STATUS "The project is built using scikit-build")
+endif()
+
+
 # find out python packages
 find_package(PythonInterp)
 find_package(PythonLibs)
 find_package(NumPy REQUIRED)
 
-
-exec_program(${PYTHON_EXECUTABLE}
-             ARGS "-c \"from sysconfig import get_paths; info = get_paths(); platlib=info.get('platlib',' '); print(platlib)\""
-             OUTPUT_VARIABLE PYTHON_PLAT_LIB
-             RETURN_VALUE PLATLIB_NOT_FOUND
-            )
-if(PLATLIB_NOT_FOUND)
-    message(FATAL_ERROR "Python platlib not found")
-endif()
-
-set(ENV{PYTHONPATH} "$ENV{PYTHONPATH};${PYTHON_PLAT_LIB}")
-message("PYTHONPATH is set to $ENV{PYTHONPATH}")
 
 # contruct library directories
 exec_program(${PYTHON_EXECUTABLE}
@@ -75,7 +68,6 @@ if(SYSPATH_NOT_FOUND)
 endif()
 
 message("Include paths: " ${CMAKE_REQUIRED_INCLUDES})
-
 
 set(NUMPY_INC_DIR ${NumPy_INCLUDE_DIR})
 
