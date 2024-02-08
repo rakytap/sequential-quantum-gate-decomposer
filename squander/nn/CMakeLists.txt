@@ -1,10 +1,10 @@
 
-set(EXT_DIR ${PROJECT_SOURCE_DIR}/squander/nn)
+set(EXT_DIR ${PROJECT_SOURCE_DIR}/nn)
 
 
 add_library( qgd_nn_Wrapper MODULE
     ${EXT_DIR}/qgd_nn_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp        
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp        
 )
 
 
@@ -27,10 +27,10 @@ target_compile_options(qgd_nn_Wrapper PRIVATE
 target_include_directories(qgd_nn_Wrapper PRIVATE    
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/nn/include
-                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/include
-                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/src-cpp/nn/include
+                            ${PROJECT_SOURCE_DIR}/src-cpp/decomposition/include
+                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -43,6 +43,6 @@ set_target_properties( qgd_nn_Wrapper PROPERTIES
 
 
 install(TARGETS qgd_nn_Wrapper LIBRARY 
-         DESTINATION squander/nn)
+         DESTINATION nn)
 
 

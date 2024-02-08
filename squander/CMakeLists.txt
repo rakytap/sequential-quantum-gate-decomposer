@@ -31,9 +31,7 @@ set(PYTHON_PLAT_LIB)
 enable_testing()
 
 
-if(SKBUILD)
-    message(STATUS "The project is built using scikit-build")
-endif()
+
 
 
 # find out python packages
@@ -181,7 +179,7 @@ elseif (CMAKE_CXX_COMPILER_ID STREQUAL "GNU")
     list(APPEND CXX_FLAGS_RELEASE "-mavx512f" "-mfma" "-DUSE_AVX")
   elseif (${HAVE_AVX2_EXTENSIONS})
     list(APPEND CXX_FLAGS_RELEASE "-mavx2" "-mfma" "-DUSE_AVX")
-    list(APPEND EXTRA_INCLUDES "./squander/src-cpp/gates/kernels/include/")
+    list(APPEND EXTRA_INCLUDES "./src-cpp/gates/kernels/include/")
   elseif (${HAVE_AVX_EXTENSIONS})
     list(APPEND CXX_FLAGS_RELEASE "-mavx" "-mfma" "-DUSE_AVX")
   endif()
@@ -303,85 +301,85 @@ endif()
 
 
 list(APPEND qgd_files 
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp//common/common.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/config_element.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/dot.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_real.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/matrix_sparse.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/logging.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/Adam.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/grad_descend.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/BFGS_Powell.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/Powells_method.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/Bayes_Opt.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/RL_experience.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/ADAM_BATCHED.cpp    
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/ADAM.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/AGENTS.cpp    
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/BAYES_OPT.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/BAYES_AGENTS.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/BFGS.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/BFGS2.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/COSINE.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/GRAD_DESCEND.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/GRAD_DESCEND_PARAMETER_SHIFT_RULE.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CNOT.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SYC.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CZ.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CH.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Gate.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/UN.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/ON.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Gates_block.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/X.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Y.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Z.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SX.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U3.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RY.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRY.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Adaptive.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RX.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ_P.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/custom_kernel_1qubit_gate.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Composite.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_state_vector_input.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_input.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/nn/NN.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Decomposition_Base.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Optimization_Interface.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_adaptive.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_custom.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/variational_quantum_eigensolver/Variational_Quantum_Eigensolver_Base.cpp  
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Unitary.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Orthogonal.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp//common/common.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/config_element.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/dot.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/matrix.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/matrix_real.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/matrix_sparse.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/logging.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/Adam.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/grad_descend.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/BFGS_Powell.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/Powells_method.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/Bayes_Opt.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/optimization_engines/RL_experience.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/optimization_engines/ADAM_BATCHED.cpp    
+    ${PROJECT_SOURCE_DIR}/src-cpp/optimization_engines/ADAM.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/optimization_engines/AGENTS.cpp    
+    ${PROJECT_SOURCE_DIR}/src-cpp/optimization_engines/BAYES_OPT.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/optimization_engines/BAYES_AGENTS.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/optimization_engines/BFGS.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/optimization_engines/BFGS2.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/optimization_engines/COSINE.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/optimization_engines/GRAD_DESCEND.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/optimization_engines/GRAD_DESCEND_PARAMETER_SHIFT_RULE.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/CNOT.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/SYC.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/CZ.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/CH.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/Gate.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/UN.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/ON.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/Gates_block.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/X.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/Y.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/Z.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/SX.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/U3.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/RY.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/CRY.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/Adaptive.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/RX.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/RZ.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/RZ_P.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/custom_kernel_1qubit_gate.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/Composite.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_kernel_to_input.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_kernel_to_state_vector_input.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_large_kernel_to_input.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/nn/NN.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/decomposition/Decomposition_Base.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/decomposition/Optimization_Interface.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/decomposition/N_Qubit_Decomposition.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/decomposition/N_Qubit_Decomposition_adaptive.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/decomposition/N_Qubit_Decomposition_custom.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/decomposition/Sub_Matrix_Decomposition.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/variational_quantum_eigensolver/Variational_Quantum_Eigensolver_Base.cpp  
+    ${PROJECT_SOURCE_DIR}/src-cpp/random_unitary/Random_Unitary.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/random_unitary/Random_Orthogonal.cpp
 )
 
 
 if (${HAVE_AVX512F_EXTENSIONS})
   list(APPEND qgd_files 
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input_AVX.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp    
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_input_AVX.cpp    
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp    
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_large_kernel_to_input_AVX.cpp    
   )
 elseif (${HAVE_AVX2_EXTENSIONS})
   list(APPEND qgd_files 
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input_AVX.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp        
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_input_AVX.cpp        
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp        
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_large_kernel_to_input_AVX.cpp        
   )
 elseif (${HAVE_AVX_EXTENSIONS})
   list(APPEND qgd_files 
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input_AVX.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp        
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_large_kernel_to_input_AVX.cpp        
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_kernel_to_input_AVX.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_kernel_to_state_vector_input_AVX.cpp        
+    ${PROJECT_SOURCE_DIR}/src-cpp/gates/kernels/apply_large_kernel_to_input_AVX.cpp        
   )
 endif()
 
@@ -390,7 +388,7 @@ endif()
 if(DEFINED ENV{QGD_MPI})
 
     list(APPEND qgd_files 
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/mpi_base.cpp
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/mpi_base.cpp
     )
 
 endif()
@@ -398,7 +396,7 @@ endif()
 
 if (DEFINED ENV{QGD_DFE})
   list(APPEND qgd_files 
-      ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/common_DFE.cpp
+      ${PROJECT_SOURCE_DIR}/src-cpp/common/common_DFE.cpp
   )
 
   list(APPEND CXX_FLAGS_DEBUG "-D__DFE__=1")
@@ -432,14 +430,14 @@ target_link_libraries( qgd PRIVATE
 
 target_include_directories(qgd PRIVATE
                             .
-                            ./squander/src-cpp/common/include
-                            ./squander/src-cpp/gates/include
-                            ./squander/src-cpp/decomposition/include
-                            ./squander/src-cpp/random_unitary/include
-                            ./squander/src-cpp/optimization_engines/include
-                            ./squander/src-cpp/nn/include
-                            ./squander/src-cpp/gates/kernels/include
-                            ./squander/src-cpp/variational_quantum_eigensolver/include
+                            ./src-cpp/common/include
+                            ./src-cpp/gates/include
+                            ./src-cpp/decomposition/include
+                            ./src-cpp/random_unitary/include
+                            ./src-cpp/optimization_engines/include
+                            ./src-cpp/nn/include
+                            ./src-cpp/gates/kernels/include
+                            ./src-cpp/variational_quantum_eigensolver/include
                             ${EXTRA_INCLUDES})
 
 
@@ -447,8 +445,8 @@ target_include_directories(qgd PRIVATE
 
 
 
-configure_file(${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include/Config.h.in
-               ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include/Config.h)
+configure_file(${PROJECT_SOURCE_DIR}/src-cpp/common/include/Config.h.in
+               ${PROJECT_SOURCE_DIR}/src-cpp/common/include/Config.h)
 
 
 set_target_properties(
@@ -457,13 +455,19 @@ set_target_properties(
         LIBRARY_OUTPUT_DIRECTORY ${PROJECT_SOURCE_DIR}/squander
     )
 
+if(SKBUILD)
+    message(STATUS "TBuilding python extensions using scikit-build")
 
 
-# adding CMAKE files for Python extensions
-add_subdirectory (squander/decomposition)
-add_subdirectory (squander/gates)
-add_subdirectory (squander/nn)
-add_subdirectory (squander/variational_quantum_eigensolver)
+    # adding CMAKE files for Python extensions
+    add_subdirectory (decomposition)
+    add_subdirectory (gates)
+    add_subdirectory (nn)
+    add_subdirectory (variational_quantum_eigensolver)
+
+endif()
+
+
 
 if(DEFINED ENV{QGD_CTEST})
     # adding CMAKE files for executables
@@ -471,7 +475,7 @@ if(DEFINED ENV{QGD_CTEST})
 endif()
 
 
-install(TARGETS qgd LIBRARY DESTINATION squander)
+install(TARGETS qgd LIBRARY DESTINATION .)
 
 
 

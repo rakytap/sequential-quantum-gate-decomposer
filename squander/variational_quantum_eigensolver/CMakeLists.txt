@@ -1,10 +1,10 @@
 
-set(EXT_DIR ${PROJECT_SOURCE_DIR}/squander/variational_quantum_eigensolver)
+set(EXT_DIR ${PROJECT_SOURCE_DIR}/variational_quantum_eigensolver)
 
 
 add_library( qgd_Variational_Quantum_Eigensolver_Base_Wrapper MODULE
     ${EXT_DIR}/qgd_Variational_Quantum_Eigensolver_Base_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp        
+    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp        
 )
 
 
@@ -27,10 +27,10 @@ target_compile_options(qgd_Variational_Quantum_Eigensolver_Base_Wrapper PRIVATE
 target_include_directories(qgd_Variational_Quantum_Eigensolver_Base_Wrapper PRIVATE   
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/include
-                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/variational_quantum_eigensolver/include
-                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/src-cpp/decomposition/include
+                            ${PROJECT_SOURCE_DIR}/src-cpp/variational_quantum_eigensolver/include
+                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -43,4 +43,4 @@ set_target_properties( qgd_Variational_Quantum_Eigensolver_Base_Wrapper PROPERTI
 
 
 install(TARGETS qgd_Variational_Quantum_Eigensolver_Base_Wrapper LIBRARY 
-         DESTINATION squander/variational_quantum_eigensolver)
+         DESTINATION variational_quantum_eigensolver)
