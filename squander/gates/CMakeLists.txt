@@ -1,10 +1,10 @@
 
-set(EXT_DIR ${PROJECT_SOURCE_DIR}/gates)
+set(EXT_DIR ${PROJECT_SOURCE_DIR}/squander/gates)
 
 
 add_library( qgd_U3_Wrapper MODULE
     ${EXT_DIR}/qgd_U3_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -26,8 +26,8 @@ target_compile_options(qgd_U3_Wrapper PRIVATE
 target_include_directories(qgd_U3_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -37,7 +37,7 @@ set_target_properties( qgd_U3_Wrapper PROPERTIES
 )
 
 install(TARGETS qgd_U3_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 ###################################################################
 
@@ -45,7 +45,7 @@ install(TARGETS qgd_U3_Wrapper LIBRARY
 
 add_library( qgd_CNOT_Wrapper MODULE
     ${EXT_DIR}/qgd_CNOT_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -68,8 +68,8 @@ target_compile_options(qgd_CNOT_Wrapper PRIVATE
 target_include_directories(qgd_CNOT_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 set_target_properties( qgd_CNOT_Wrapper PROPERTIES
@@ -78,7 +78,7 @@ set_target_properties( qgd_CNOT_Wrapper PROPERTIES
 )
 
 install(TARGETS qgd_CNOT_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 ###################################################################
 
@@ -87,7 +87,7 @@ install(TARGETS qgd_CNOT_Wrapper LIBRARY
 
 add_library( qgd_CZ_Wrapper MODULE
     ${EXT_DIR}/qgd_CZ_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -110,8 +110,8 @@ target_compile_options(qgd_CZ_Wrapper PRIVATE
 target_include_directories(qgd_CZ_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 set_target_properties( qgd_CZ_Wrapper PROPERTIES
@@ -120,7 +120,7 @@ set_target_properties( qgd_CZ_Wrapper PROPERTIES
 )
 
 install(TARGETS qgd_CZ_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 
 
@@ -131,7 +131,7 @@ install(TARGETS qgd_CZ_Wrapper LIBRARY
 
 add_library( qgd_CH_Wrapper MODULE
     ${EXT_DIR}/qgd_CH_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -154,8 +154,8 @@ target_compile_options(qgd_CH_Wrapper PRIVATE
 target_include_directories(qgd_CH_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 set_target_properties( qgd_CH_Wrapper PROPERTIES
@@ -164,7 +164,7 @@ set_target_properties( qgd_CH_Wrapper PROPERTIES
 )
 
 install(TARGETS qgd_CH_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 
 ###################################################################
@@ -173,7 +173,7 @@ install(TARGETS qgd_CH_Wrapper LIBRARY
 
 add_library( qgd_Circuit_Wrapper MODULE
     ${EXT_DIR}/qgd_Circuit_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -196,8 +196,8 @@ target_compile_options(qgd_Circuit_Wrapper PRIVATE
 target_include_directories(qgd_Circuit_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -208,7 +208,7 @@ set_target_properties( qgd_Circuit_Wrapper PROPERTIES
 
 
 install(TARGETS qgd_Circuit_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 
 
@@ -219,7 +219,7 @@ install(TARGETS qgd_Circuit_Wrapper LIBRARY
 
 add_library( qgd_SYC MODULE
     ${EXT_DIR}/qgd_SYC.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -242,8 +242,8 @@ target_compile_options(qgd_SYC PRIVATE
 target_include_directories(qgd_SYC PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -254,7 +254,7 @@ set_target_properties( qgd_SYC PROPERTIES
 
 
 install(TARGETS qgd_SYC LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 
 
@@ -265,7 +265,7 @@ install(TARGETS qgd_SYC LIBRARY
 
 add_library( qgd_RY_Wrapper MODULE
     ${EXT_DIR}/qgd_RY_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -288,8 +288,8 @@ target_compile_options(qgd_RY_Wrapper PRIVATE
 target_include_directories(qgd_RY_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -300,7 +300,7 @@ set_target_properties( qgd_RY_Wrapper PROPERTIES
 
 
 install(TARGETS qgd_RY_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 
 
@@ -312,7 +312,7 @@ install(TARGETS qgd_RY_Wrapper LIBRARY
 
 add_library( qgd_RZ_Wrapper MODULE
     ${EXT_DIR}/qgd_RZ_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -335,8 +335,8 @@ target_compile_options(qgd_RZ_Wrapper PRIVATE
 target_include_directories(qgd_RZ_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -347,7 +347,7 @@ set_target_properties( qgd_RZ_Wrapper PROPERTIES
 
 
 install(TARGETS qgd_RZ_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 
 
@@ -359,7 +359,7 @@ install(TARGETS qgd_RZ_Wrapper LIBRARY
 
 add_library( qgd_RX_Wrapper MODULE
     ${EXT_DIR}/qgd_RX_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -382,8 +382,8 @@ target_compile_options(qgd_RX_Wrapper PRIVATE
 target_include_directories(qgd_RX_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -394,7 +394,7 @@ set_target_properties( qgd_RX_Wrapper PROPERTIES
 
 
 install(TARGETS qgd_RX_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 
 
@@ -406,7 +406,7 @@ install(TARGETS qgd_RX_Wrapper LIBRARY
 
 add_library( qgd_X_Wrapper MODULE
     ${EXT_DIR}/qgd_X_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -429,8 +429,8 @@ target_compile_options(qgd_X_Wrapper PRIVATE
 target_include_directories(qgd_X_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -441,7 +441,7 @@ set_target_properties( qgd_X_Wrapper PROPERTIES
 
 
 install(TARGETS qgd_X_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 
 
@@ -453,7 +453,7 @@ install(TARGETS qgd_X_Wrapper LIBRARY
 
 add_library( qgd_Y_Wrapper MODULE
     ${EXT_DIR}/qgd_Y_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -476,8 +476,8 @@ target_compile_options(qgd_Y_Wrapper PRIVATE
 target_include_directories(qgd_Y_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -488,7 +488,7 @@ set_target_properties( qgd_Y_Wrapper PROPERTIES
 
 
 install(TARGETS qgd_Y_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 
 
@@ -499,7 +499,7 @@ install(TARGETS qgd_Y_Wrapper LIBRARY
 
 add_library( qgd_Z_Wrapper MODULE
     ${EXT_DIR}/qgd_Z_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -522,8 +522,8 @@ target_compile_options(qgd_Z_Wrapper PRIVATE
 target_include_directories(qgd_Z_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -534,7 +534,7 @@ set_target_properties( qgd_Z_Wrapper PROPERTIES
 
 
 install(TARGETS qgd_Z_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 
 
@@ -546,7 +546,7 @@ install(TARGETS qgd_Z_Wrapper LIBRARY
 
 add_library( qgd_SX_Wrapper MODULE
     ${EXT_DIR}/qgd_SX_Wrapper.cpp
-    ${PROJECT_SOURCE_DIR}/src-cpp/common/numpy_interface.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
 )
 
 
@@ -569,8 +569,8 @@ target_compile_options(qgd_SX_Wrapper PRIVATE
 target_include_directories(qgd_SX_Wrapper PRIVATE
                             ${PYTHON_INCLUDE_DIR}
                             ${NUMPY_INC_DIR}
-                            ${PROJECT_SOURCE_DIR}/src-cpp/gates/include
-                            ${PROJECT_SOURCE_DIR}/src-cpp/common/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
                             ${EXTRA_INCLUDES})
 
 
@@ -581,6 +581,6 @@ set_target_properties( qgd_SX_Wrapper PROPERTIES
 
 
 install(TARGETS qgd_SX_Wrapper LIBRARY 
-         DESTINATION gates)
+         DESTINATION squander/gates)
 
 

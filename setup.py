@@ -52,8 +52,6 @@ setup(
         "Programming Language :: C++"
     ],
     license='Apache-2.0 license',
-    cmake_source_dir = 'squander',
-    cmake_install_dir = 'squander'
 )
 
 
