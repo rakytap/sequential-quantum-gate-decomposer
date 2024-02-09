@@ -60,7 +60,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
         }
 
 
-
+        double M_PI_quarter = M_PI/4;
         double M_PI_half    = M_PI/2;
         double M_PI_double  = M_PI*2.0;
 
@@ -203,11 +203,10 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
             MPI_Bcast( (void*)param_idx_agents.get_data(), batch_size, MPI_INT, 0, MPI_COMM_WORLD);
 #endif     
 
-
           
             for(int idx=0; idx<batch_size; idx++) { 
                 Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ]; 
-                solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_half;                
+                solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_quarter;                
             }                 
       
             Matrix_real f0_shifted_pi2_agents = optimization_problem_batched( parameters_mtx_vec );  
@@ -215,7 +214,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
 
             for(int idx=0; idx<batch_size; idx++) { 
                 Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ];             
-                solution_guess_mtx_idx[ param_idx_agents[idx] ] -= M_PI;
+                solution_guess_mtx_idx[ param_idx_agents[idx] ] -= M_PI_half;
             }   
              
             Matrix_real f0_shifted_pi_agents = optimization_problem_batched( parameters_mtx_vec );
@@ -228,7 +227,8 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
 
 
 
-                double grad_component = 0.5*(f0_shifted_pi2 - f0_shifted_pi);
+                double grad_component = (f0_shifted_pi2 - f0_shifted_pi);
+//std::cout << grad_component << std::endl;
 
                                    
                 param_update_mtx[ idx ] = grad_component * eta_loc;
@@ -238,8 +238,6 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
                 solution_guess_mtx_idx[ param_idx_agents[idx] ] = solution_guess_tmp_mtx[ param_idx_agents[idx] ];  	
 
             }
-
-            
 
             // parameters for line search
             int line_points = 128;  
@@ -253,7 +251,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
                 Matrix_real parameters_line_idx = solution_guess_tmp_mtx.copy();
 
                 for( int idx=0; idx<batch_size; idx++ ) {
-                    parameters_line_idx[ param_idx_agents[idx] ] += param_update_mtx[ idx ]*(double)line_idx/line_points;                    
+                    parameters_line_idx[ param_idx_agents[idx] ] -= param_update_mtx[ idx ]*(double)line_idx/line_points;                    
                 }
 
                 parameters_line_search_mtx_vec[ line_idx] = parameters_line_idx;
@@ -278,7 +276,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
 
             // update parameters
             for (int param_idx=0; param_idx<batch_size; param_idx++) {
-                solution_guess_tmp_mtx[ param_idx_agents[param_idx] ] += param_update_mtx[ param_idx ]*(double)idx_min/line_points;
+                solution_guess_tmp_mtx[ param_idx_agents[param_idx] ] -= param_update_mtx[ param_idx ]*(double)idx_min/line_points;
             } 
 
 #ifdef __MPI__   
