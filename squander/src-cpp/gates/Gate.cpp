@@ -463,7 +463,7 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 
 		if (ThetaOver2!=0.0) sincos(ThetaOver2, &sin_theta, &cos_theta);
 		if (Phi!=0.0) sincos(Phi, &sin_phi, &cos_phi);
-		if (Lambda!=0.0) sincos(Lambda, &sin_phi, &cos_phi);
+		if (Lambda!=0.0) sincos(Lambda, &sin_lambda, &cos_lambda);
 
         // the 1,1 element
         u3_1qbit[0].real = cos_theta;
