@@ -3,4 +3,11 @@ __pycache__
 *.pyc
 *.pyd
 *.manifest
+*.binary
+*.egg
+*.dll
+*.so
+*.bat
 _skbuild/*
+squander.egg-info/*
+costfuncs_and_entropy.txt
