@@ -422,6 +422,13 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
 
 }
 
+#ifdef _WIN32
+void sincos(double x, double *s, double *c)
+{
+	*s = sin(x), *c = cos(x);
+}
+#endif
+
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
 @param ThetaOver2 Real parameter standing for the parameter theta.
