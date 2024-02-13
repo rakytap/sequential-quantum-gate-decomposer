@@ -172,11 +172,11 @@ $ python setup.py build_ext -DTBB_HEADER=<TBB_Location>\Library\include\
 
 Installation merely requires copying DLL files (if they are not in the path):
 
-$ copy _skbuild\win-amd64-3.9\cmake-install\bin .\qgd_python\decomposition
+$ copy _skbuild\win-amd64-3.9\cmake-install\bin .\squander\decomposition
 
-$ copy "%TBB_LOCATION%\Library\bin\tbb12.dll" .\qgd_python\decomposition
+$ copy "%TBB_LOCATION%\Library\bin\tbb12.dll" .\squander\decomposition
 
-$ copy "%TBB_LOCATION%\Library\bin\tbbmalloc.dll" .\qgd_python\decomposition
+$ copy "%TBB_LOCATION%\Library\bin\tbbmalloc.dll" .\squander\decomposition
 
 Verify the installation:
 
