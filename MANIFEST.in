@@ -1,3 +1,7 @@
-include pyproject.toml
-global-include *.h *h.in *.c *.cpp *.hpp CMakeLists.txt README.md setup.py cmake/*
+graft squander
+
+global-include CMakeLists.txt  *.cmake *.h.in
+
+global-exclude *.so
 prune _skbuild
+prune test_standalone
