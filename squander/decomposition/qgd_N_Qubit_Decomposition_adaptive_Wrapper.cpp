@@ -2315,7 +2315,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Second_Renyi_Entropy( qgd_N_Qubit
 
 
     // check input argument qbit_list
-    if ( qubit_list_arg == NULL or (!PyList_Check( qubit_list_arg )) ) {
+    if ( qubit_list_arg == NULL || (!PyList_Check( qubit_list_arg )) ) {
         PyErr_SetString(PyExc_Exception, "qubit_list should be a list");
         return NULL;
     }

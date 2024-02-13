@@ -1,3 +1,6 @@
-__pychache__
+__pycache__
 *.so
 *.pyc
+*.pyd
+*.manifest
+_skbuild/*

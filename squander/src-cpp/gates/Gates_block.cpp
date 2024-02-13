@@ -50,7 +50,6 @@ limitations under the License.
 #endif
 
 
-
 //static tbb::spin_mutex my_mutex;
 /**
 @brief Default constructor of the class.
@@ -233,7 +232,11 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, bool parallel
 
                 Gates_block gates_block_mini = Gates_block(block_type[block_idx]);
                 std::vector<int> qbits = involved_qbits[block_idx];
+#ifdef _WIN32
+				int* indices = (int*)_malloca(qbit_num*sizeof(int));
+#else
                 int indices[qbit_num];
+#endif
 
                 for (int jdx=0; jdx<(int)qbits.size(); jdx++){
                     indices[qbits[jdx]]=jdx;

@@ -3,7 +3,7 @@ set(EXT_DIR ${PROJECT_SOURCE_DIR}/squander/variational_quantum_eigensolver)
 
 
 add_library( qgd_Variational_Quantum_Eigensolver_Base_Wrapper MODULE
-    ${EXT_DIR}/qgd_Variational_Quantum_Eigensolver_Base_Wrapper.cpp
+    ${EXT_DIR}/qgd_VQE_Base_Wrapper.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp        
 )
 

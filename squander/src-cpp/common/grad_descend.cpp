@@ -16,6 +16,7 @@ limitations under the License.
 
 #include <stdio.h>
 #include <stdlib.h>
+#define _USE_MATH_DEFINES
 #include <math.h>
 #include <cfloat>
 #include <grad_descend.h>
