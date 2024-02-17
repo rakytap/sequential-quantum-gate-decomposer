@@ -741,8 +741,16 @@ exit(-1);
                    
            
                 
-                if (current_minimum_agents[agent_idx] < optimization_tolerance_loc ) {
+                if (current_minimum_agent < optimization_tolerance_loc ) {
                     terminate_optimization = true;    
+                    current_minimum = current_minimum_agent;      
+
+                    most_successfull_agent = agent_idx;
+
+                   Matrix_real& solution_guess_mtx_agent = solution_guess_mtx_agents[ agent_idx ];                     
+                    
+                    // export the parameters of the current, most successful agent
+                    memcpy(optimized_parameters_mtx.get_data(), solution_guess_mtx_agent.get_data(), num_of_parameters*sizeof(double) );
                 }  
                 
                
@@ -759,7 +767,7 @@ exit(-1);
 
                         most_successfull_agent = agent_idx;
                     
-                        // export the parameters of the curremt, most successful agent
+                        // export the parameters of the current, most successful agent
                         memcpy(optimized_parameters_mtx.get_data(), solution_guess_mtx_agent.get_data(), num_of_parameters*sizeof(double) );
 
                         if ( export_circuit_2_binary_loc > 0 ) {
