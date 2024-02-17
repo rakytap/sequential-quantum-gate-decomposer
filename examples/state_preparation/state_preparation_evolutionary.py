@@ -67,7 +67,7 @@ State = np.ascontiguousarray( Umtx[:,0].copy() )
 # Python map containing hyper-parameters
 config = {      'agent_lifetime':1000,
                 'agent_num': 64,
-                'max_inner_iterations_agent': 10000,
+                'max_inner_iterations_agent': 100000,
                 'max_inner_iterations_compression': 1000,
                 'max_inner_iterations' : 100,
                 'max_inner_iterations_final': 100, 		
@@ -75,7 +75,7 @@ config = {      'agent_lifetime':1000,
                 'randomized_adaptive_layers': 1,
                 'optimization_tolerance_agent': 1e-8,
                 'optimization_tolerance': 1e-16,
-		'convergence_length': 50}
+		'convergence_length': 10}
                 
 
 # Next we initialize the decomposition class with the unitary Umtx to be decomposed.
@@ -92,7 +92,7 @@ cStatePrep.set_Verbose( 3 )
 # We construct the initial trial gate structure for the optimization consisting of 2 levels of adaptive layer. (a level is made of qubit_num*(qubit_num-1) two-qubit building blocks if all-to-all connectivity is assumed)
 
 # add initial decomposing layers to the gate structure
-levels = 2
+levels = 1
 for idx in range(levels):
     cStatePrep.add_Adaptive_Layers()
 
@@ -132,10 +132,10 @@ for new_layer in range(4):
 	params_AGENTS = cStatePrep.get_Optimized_Parameters()
 
 	# setting optimizer
-	cStatePrep.set_Optimizer("BFGS")
+	#cStatePrep.set_Optimizer("BFGS")
 
 	# continue the decomposition with a second optimizer method
-	cStatePrep.get_Initial_Circuit()   
+	#cStatePrep.get_Initial_Circuit()   
 
 	params_BFGS  = cStatePrep.get_Optimized_Parameters()
 	decomp_error = cStatePrep.Optimization_Problem( params_BFGS )		
@@ -153,8 +153,9 @@ for new_layer in range(4):
 
 #After solving the optimization problem for the initial gate structure, we can initiate gate compression iterations. (This step can be omited.)
 
+
 # starting compression iterations
-cStatePrep.Compress_Circuit()
+#cStatePrep.Compress_Circuit()
 
 #By finalizing the gate structure we replace the CRY gates with CNOT gates. (CRY gates with small rotation angle are approximately expressed with a single CNOT gate, so further optimization process needs to be initiated.)
 
