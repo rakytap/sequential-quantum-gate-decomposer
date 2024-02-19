@@ -422,6 +422,13 @@ Gate::apply_kernel_from_right( Matrix& u3_1qbit, Matrix& input ) {
 
 }
 
+#ifdef _WIN32
+void sincos(double x, double *s, double *c)
+{
+	*s = sin(x), *c = cos(x);
+}
+#endif
+
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
 @param ThetaOver2 Real parameter standing for the parameter theta.
@@ -449,14 +456,14 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
             print(sstream, 1);	   
         }
 #endif // DEBUG
+		
+		double cos_theta = 1.0, sin_theta = 0.0;
+		double cos_phi = 1.0, sin_phi = 0.0;
+		double cos_lambda = 1.0, sin_lambda = 0.0;
 
-
-        double cos_theta = cos(ThetaOver2);
-        double sin_theta = sin(ThetaOver2);
-        double cos_phi = cos(Phi);
-        double sin_phi = sin(Phi);
-        double cos_lambda = cos(Lambda);
-        double sin_lambda = sin(Lambda);
+		if (ThetaOver2!=0.0) sincos(ThetaOver2, &sin_theta, &cos_theta);
+		if (Phi!=0.0) sincos(Phi, &sin_phi, &cos_phi);
+		if (Lambda!=0.0) sincos(Lambda, &sin_lambda, &cos_lambda);
 
         // the 1,1 element
         u3_1qbit[0].real = cos_theta;
