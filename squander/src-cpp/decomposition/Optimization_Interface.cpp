@@ -407,7 +407,9 @@ void  Optimization_Interface::final_optimization() {
         }
 }
 
-
+void Optimization_Interface::get_derivative_components(Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad, std::vector<Matrix>& State_deriv, Matrix& State_loc){
+    return;
+}
 
 
 /**
@@ -451,6 +453,9 @@ void Optimization_Interface::solve_layer_optimization_problem( int num_of_parame
             return;
         case BFGS2:
             solve_layer_optimization_problem_BFGS2( num_of_parameters, solution_guess);
+            return;
+        case NATURAL_GRADIENT:
+            solve_layer_optimization_problem_NATURAL_GRADIENT( num_of_parameters, solution_guess);
             return;
         default:
             std::string error("Optimization_Interface::solve_layer_optimization_problem: unimplemented optimization algorithm");
@@ -1235,7 +1240,11 @@ void Optimization_Interface::set_optimizer( optimization_aglorithms alg_in ) {
             random_shift_count_max = 100;
             max_outer_iterations = 1;
             return;
-
+        case NATURAL_GRADIENT:
+            max_inner_iterations = 100;
+            random_shift_count_max = 100;
+            max_outer_iterations = 1;
+            return;
         default:
             std::string error("Optimization_Interface::set_optimizer: unimplemented optimization algorithm");
             throw error;

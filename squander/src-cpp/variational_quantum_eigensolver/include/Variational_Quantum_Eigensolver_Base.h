@@ -171,6 +171,7 @@ virtual void optimization_problem_combined( Matrix_real parameters, double* f0, 
 */
 static void optimization_problem_grad_vqe( Matrix_real parameters, void* void_instance, Matrix_real& grad );
 
+virtual void get_derivative_components(Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad, std::vector<Matrix>& State_deriv, Matrix& State_loc) override;
 
 /**
 @brief Initialize the state used in the quantun circuit. All qubits are initialized to state 0

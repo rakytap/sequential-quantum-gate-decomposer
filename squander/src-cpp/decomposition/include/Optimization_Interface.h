@@ -40,7 +40,7 @@ typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FRO
 
 
 /// implemented optimization strategies
-enum optimization_aglorithms{ ADAM, BFGS, BFGS2, ADAM_BATCHED, AGENTS, COSINE, AGENTS_COMBINED, GRAD_DESCEND, BAYES_OPT, BAYES_AGENTS, GRAD_DESCEND_PARAMETER_SHIFT_RULE};
+enum optimization_aglorithms{ ADAM, BFGS, BFGS2, ADAM_BATCHED, AGENTS, COSINE, AGENTS_COMBINED, GRAD_DESCEND, BAYES_OPT, BAYES_AGENTS, GRAD_DESCEND_PARAMETER_SHIFT_RULE, NATURAL_GRADIENT};
 
 
 #ifdef __cplusplus
@@ -173,6 +173,7 @@ void calc_decomposition_error(Matrix& decomposed_matrix );
 */
 virtual void add_finalyzing_layer();
 
+virtual void get_derivative_components(Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad, std::vector<Matrix>& State_deriv, Matrix& State_loc);
 
 /**
 @brief final optimization procedure improving the accuracy of the decompositin when all the qubits were already disentangled.
@@ -299,6 +300,8 @@ void solve_layer_optimization_problem_ADAM_BATCHED( int num_of_parameters, Matri
 @param solution_guess A matrix containing the solution guess.
 */
 void solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& solution_guess);
+
+void solve_layer_optimization_problem_NATURAL_GRADIENT( int num_of_parameters, Matrix_real& solution_guess);
 
 /**
 @brief Call to randomize the parameter.
