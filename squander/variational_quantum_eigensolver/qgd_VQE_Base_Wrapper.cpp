@@ -848,6 +848,9 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimizer( qgd_Variational_
     else if ( strcmp("bayes_agents", optimizer_C)==0 || strcmp("BAYES_AGENTS", optimizer_C)==0) {
         qgd_optimizer = BAYES_AGENTS;        
     }
+    else if ( strcmp("natural_gradient", optimizer_C)==0 || strcmp("NATURAL_GRADIENT", optimizer_C)==0) {
+        qgd_optimizer = NATURAL_GRADIENT;        
+    }
     else {
         std::cout << "Wrong optimizer. Using default: AGENTS" << std::endl; 
         qgd_optimizer = AGENTS;     
