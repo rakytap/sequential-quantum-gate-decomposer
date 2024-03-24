@@ -116,6 +116,13 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
     def Generate_Circuit(self, layers, inner_blocks=1):
     
         super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_Circuit( layers, inner_blocks )
+##
+# @brief Call to generate the circuit ansatz
+# @param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT)
+# @param inner_blocks The number of U3-CNOT repetition within a single layer
+    def Generate_Circuit_Custom(self, inner_blocks, topology):
+    
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_Circuit_Custom (inner_blocks,topology )
         
 ## 
 # @brief Call to evaluate the VQE energy.

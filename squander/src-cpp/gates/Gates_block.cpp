@@ -36,6 +36,8 @@ limitations under the License.
 #include "SYC.h"
 #include "UN.h"
 #include "ON.h"
+#include "RXX.h"
+#include "RYY.h"
 #include "Adaptive.h"
 #include "Composite.h"
 #include "Gates_block.h"
@@ -112,6 +114,7 @@ Gates_block::release_gates() {
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: case RZ_P_OPERATION:
+        case RXX_OPERATION: case RYY_OPERATION:
             delete operation;
             break;
         default:
@@ -378,6 +381,16 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
             case ADAPTIVE_OPERATION: {
                 Adaptive* ad_operation = static_cast<Adaptive*>(operation);
                 ad_operation->apply_to( parameters_mtx, input, parallel );
+                break; 
+            }
+            case RYY_OPERATION: {
+                RYY* ryy_operation = static_cast<RYY*>(operation);
+                ryy_operation->apply_to( parameters_mtx, input, parallel );
+                break; 
+            }
+            case RXX_OPERATION: {
+                RXX* rxx_operation = static_cast<RXX*>(operation);
+                rxx_operation->apply_to( parameters_mtx, input, parallel );
                 break; 
             }
             default:
@@ -1023,7 +1036,33 @@ void Gates_block::add_rx(int target_qbit ) {
 
 }
 
+/**
+@brief Add a RX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_ryy(int target_qbit, int control_qbit) {
 
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new RYY( qbit_num, target_qbit,control_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
+/**
+@brief Add a RX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_rxx(int target_qbit, int control_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new RXX( qbit_num, target_qbit ,control_qbit));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
 
 /**
 @brief Append a RY gate to the list of gates
