@@ -622,6 +622,44 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
             }
 
             return;
+        }
+        case TQR:
+        {
+            release_gates();
+
+            if ( qbit_num < 2 ) {
+                std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should be at least 2");
+                throw error;
+            }
+
+            for (int layer_idx=0; layer_idx<layers ;layer_idx++){
+
+                for( int idx=0; idx<inner_blocks; idx++) {
+                    add_rxx(1,0);
+                    add_ryy(1,0);
+                }
+
+
+                for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
+                    if (control_qbit+2<qbit_num){
+
+                        for( int idx=0; idx<inner_blocks; idx++) {
+                            add_rxx(control_qbit+2,control_qbit+1);
+                            add_ryy(control_qbit+2,control_qbit+1);
+                        }
+
+                    }
+
+                    for( int idx=0; idx<inner_blocks; idx++) {
+                        add_rxx(control_qbit+1,control_qbit);
+                        add_ryy(control_qbit+1,control_qbit);
+                    }
+
+                }
+            }
+
+
+            return;
         }        
         default:
             std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: ansatz not implemented");
@@ -629,7 +667,42 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
     }
 
 }
+//dokumentacio ide
+void Variational_Quantum_Eigensolver_Base::generate_circuit_custom(int inner_blocks, std::vector<matrix_base<int>> topology ) {
+    switch (ansatz){
+        case TQR:
+        {
+        release_gates();
+        for ( std::vector<matrix_base<int>>::iterator it=topology.begin(); it!=topology.end(); it++) {
 
+            if ( it->size() != 2 ) {
+                std::stringstream sstream;
+	        sstream << "The connectivity data should contains two qubits" << std::endl;
+	        print(sstream, 0);	
+                it->print_matrix();
+                exit(-1);
+            }
+
+            int control_qbit_loc = (*it)[0];
+            int target_qbit_loc = (*it)[1];
+
+            if ( control_qbit_loc >= qbit_num || target_qbit_loc >= qbit_num ) {
+                std::stringstream sstream;
+	        sstream << "Label of control/target qubit should be less than the number of qubits in the register." << std::endl;	        
+                print(sstream, 0);
+                exit(-1);            
+            }
+
+            for( int idx=0; idx<inner_blocks; idx++) {
+                add_rxx(target_qbit_loc,control_qbit_loc);
+                add_ryy(target_qbit_loc,control_qbit_loc);
+            }
+
+        }
+        return;
+        }
+    }
+}
 void 
 Variational_Quantum_Eigensolver_Base::set_gate_structure( std::string filename ) {
 

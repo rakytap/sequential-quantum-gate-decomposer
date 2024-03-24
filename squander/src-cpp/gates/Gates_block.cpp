@@ -36,6 +36,8 @@ limitations under the License.
 #include "SYC.h"
 #include "UN.h"
 #include "ON.h"
+#include "RXX.h"
+#include "RYY.h"
 #include "Adaptive.h"
 #include "Composite.h"
 #include "Gates_block.h"
@@ -786,7 +788,33 @@ void Gates_block::add_rx_to_front(int target_qbit ) {
 
 }
 
+/**
+@brief Add a RX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_ryy(int target_qbit, int control_qbit) {
 
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new RYY( qbit_num, target_qbit,control_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
+/**
+@brief Add a RX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_rxx(int target_qbit, int control_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new RXX( qbit_num, target_qbit ,control_qbit));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
 
 /**
 @brief Append a RY gate to the list of gates

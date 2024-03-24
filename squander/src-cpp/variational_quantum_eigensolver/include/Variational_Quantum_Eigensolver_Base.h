@@ -27,7 +27,7 @@ limitations under the License.
 #include "Optimization_Interface.h"
 
 /// @brief Type definition of the fifferent types of ansatz
-typedef enum ansatz_type {HEA, HEA_ZYZ} ansatz_type;
+typedef enum ansatz_type {HEA, HEA_ZYZ,TQR} ansatz_type;
     
 #ifdef __cplusplus
 extern "C" 
@@ -191,7 +191,7 @@ void start_optimization();
 */ 
 void set_ansatz(ansatz_type ansatz_in);
 
-
+void generate_circuit_custom(int inner_blocks, std::vector<matrix_base<int>> topology );
 /**
 @brief Call to generate the circuit ansatz
 @param layers The number of layers. The depth of the generated circuit is 2*layers+1 (U3-CNOT-U3-CNOT...CNOT)

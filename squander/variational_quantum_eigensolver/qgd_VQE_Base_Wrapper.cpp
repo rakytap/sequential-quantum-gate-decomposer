@@ -917,6 +917,9 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Ansatz( qgd_Variational_Qua
     else if ( strcmp("hea_zyz", ansatz_C) == 0 || strcmp("HEA_ZYZ", ansatz_C) == 0) {
         qgd_ansatz = HEA_ZYZ;        
     }
+    else if ( strcmp("tqr", ansatz_C) == 0 || strcmp("TQR", ansatz_C) == 0) {
+        qgd_ansatz = TQR;        
+    }
     else {
         std::cout << "Wrong ansatz. Using default: HEA" << std::endl; 
         qgd_ansatz = HEA;     
@@ -1049,6 +1052,70 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit( qgd_Variation
 
     try {
         self->vqe->generate_circuit( layers, inner_blocks );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    return Py_BuildValue("i", 0);
+
+
+}
+
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit_Custom( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    PyObject *topology = NULL;
+    int inner_blocks;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|io", &inner_blocks, &topology )) return Py_BuildValue("i", -1);
+    
+     // elaborate connectivity topology
+    bool is_None = topology == Py_None;
+    bool is_list = PyList_Check(topology);
+
+    // Check whether input is a list
+    if (!is_list && !is_None) {
+        printf("Input topology must be a list!\n");
+        return -1;
+    }
+
+    // create C++ variant of the list
+    std::vector<matrix_base<int>> topology_Cpp;
+
+    if ( !is_None ) {
+
+        // get the number of qbubits
+        Py_ssize_t element_num = PyList_GET_SIZE(topology);
+
+        for ( Py_ssize_t idx=0; idx<element_num; idx++ ) {
+            PyObject *item = PyList_GetItem(topology, idx );
+
+            // Check whether input is a list
+            if (!PyTuple_Check(item)) {
+                printf("Elements of topology must be a tuple!\n");
+                return -1;
+            }
+
+            matrix_base<int> item_Cpp(1,2);  
+            item_Cpp[0] = (int) PyLong_AsLong( PyTuple_GetItem(item, 0 ) );
+            item_Cpp[1] = (int) PyLong_AsLong( PyTuple_GetItem(item, 1 ) );
+
+            topology_Cpp.push_back( item_Cpp );        
+        }
+    }
+
+    try {
+        self->vqe->generate_circuit_custom(inner_blocks,topology_Cpp );
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1325,6 +1392,9 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"Generate_Circuit", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit, METH_VARARGS,
      "Method to set the circuit based on the ansatz type."
+    },
+    {"Generate_Circuit_Custom", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit_Custom, METH_VARARGS,
+     "Method to set the circuit based on the ansatz type and topology."
     },
     {"Optimization_Problem", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem, METH_VARARGS,
      "Method to get the expected energy of the circuit at parameters."
