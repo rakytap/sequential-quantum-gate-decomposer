@@ -817,6 +817,20 @@ void Gates_block::add_rxx(int target_qbit, int control_qbit ) {
 }
 
 /**
+@brief Add a RX gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_rxx(int target_qbit, int control_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new RXX( qbit_num, target_qbit ,control_qbit));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
+/**
 @brief Append a RY gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */

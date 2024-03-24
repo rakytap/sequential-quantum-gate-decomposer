@@ -701,49 +701,6 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit_custom(int inner_blo
         }
         return;
         }
-        case HEA_ZYZ:
-        {
-        release_gates();
-        for ( std::vector<matrix_base<int>>::iterator it=topology.begin(); it!=topology.end(); it++) {
-
-            if ( it->size() != 2 ) {
-                std::stringstream sstream;
-	        sstream << "The connectivity data should contains two qubits" << std::endl;
-	        print(sstream, 0);	
-                it->print_matrix();
-                exit(-1);
-            }
-
-            int control_qbit_loc = (*it)[0];
-            int target_qbit_loc = (*it)[1];
-
-            if ( control_qbit_loc >= qbit_num || target_qbit_loc >= qbit_num ) {
-                std::stringstream sstream;
-	        sstream << "Label of control/target qubit should be less than the number of qubits in the register." << std::endl;	        
-                print(sstream, 0);
-                exit(-1);            
-            }
-
-            for( int idx=0; idx<inner_blocks; idx++) {
-                Gates_block* block_1 = new Gates_block( qbit_num );
-                Gates_block* block_2 = new Gates_block( qbit_num );
-
-                block_1->add_rz(control_qbit_loc);
-                block_1->add_ry(control_qbit_loc);
-                block_1->add_rz(control_qbit_loc); 
-                add_gate( block_1 );                      
-
-                block_2->add_rz(target_qbit_loc);
-                block_2->add_ry(target_qbit_loc);
-                block_2->add_rz(target_qbit_loc);     
-                add_gate( block_2 );                  
-
-                add_cnot(target_qbit_loc,control_qbit_loc);
-            }
-
-        }
-        return;
-        }
     }
 }
 void 
