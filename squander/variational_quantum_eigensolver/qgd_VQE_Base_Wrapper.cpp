@@ -34,7 +34,6 @@ limitations under the License.
 
 
 
-
 /**
 @brief Type definition of the qgd_Circuit_Wrapper Python class of the qgd_Circuit_Wrapper module
 */
@@ -1077,13 +1076,14 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit_Custom( qgd_Va
     int inner_blocks;
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|io", &inner_blocks, &topology )) return Py_BuildValue("i", -1);
+
+    if (!PyArg_ParseTuple(args, "|iO", &inner_blocks, &topology )) return Py_BuildValue("i", -1);
     
      // elaborate connectivity topology
     bool is_None = topology == Py_None;
     bool is_list = PyList_Check(topology);
 
-    // Check whether input is a list
+   // Check whether input is a list
     if (!is_list && !is_None) {
         printf("Input topology must be a list!\n");
         return -1;
@@ -1101,10 +1101,10 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit_Custom( qgd_Va
             PyObject *item = PyList_GetItem(topology, idx );
 
             // Check whether input is a list
-            if (!PyTuple_Check(item)) {
+            /*if (!PyTuple_Check(item)) {
                 printf("Elements of topology must be a tuple!\n");
                 return -1;
-            }
+            }*/
 
             matrix_base<int> item_Cpp(1,2);  
             item_Cpp[0] = (int) PyLong_AsLong( PyTuple_GetItem(item, 0 ) );
@@ -1115,7 +1115,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit_Custom( qgd_Va
     }
 
     try {
-        self->vqe->generate_circuit_custom(inner_blocks,topology_Cpp );
+        self->vqe->generate_circuit_custom(inner_blocks, topology_Cpp );
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
