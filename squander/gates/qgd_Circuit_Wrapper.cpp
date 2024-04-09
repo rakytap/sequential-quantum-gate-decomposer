@@ -991,10 +991,10 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"add_X", (PyCFunction) qgd_Circuit_Wrapper_add_X, METH_VARARGS | METH_KEYWORDS,
      "Call to add a X gate to the front of the gate structure"
     },
-    {"add_Y", (PyCFunction) qgd_Circuit_Wrapper_add_X, METH_VARARGS | METH_KEYWORDS,
+    {"add_Y", (PyCFunction) qgd_Circuit_Wrapper_add_Y, METH_VARARGS | METH_KEYWORDS,
      "Call to add a Y gate to the front of the gate structure"
     },
-    {"add_Z", (PyCFunction) qgd_Circuit_Wrapper_add_X, METH_VARARGS | METH_KEYWORDS,
+    {"add_Z", (PyCFunction) qgd_Circuit_Wrapper_add_Z, METH_VARARGS | METH_KEYWORDS,
      "Call to add a Z gate to the front of the gate structure"
     },
     {"add_SX", (PyCFunction) qgd_Circuit_Wrapper_add_SX, METH_VARARGS | METH_KEYWORDS,
