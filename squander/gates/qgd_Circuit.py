@@ -52,7 +52,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: target_qbit (int), Theta (bool), Phi (bool), Lambda (bool).
 
-    def add_U3( self, target_qbit, Theta, Phi, Lambda):
+    def add_U3( self, target_qbit, Theta=True, Phi=True, Lambda=True):
 
 	# call the C wrapper function
         super(qgd_Circuit, self).add_U3(target_qbit, Theta, Phi, Lambda)
