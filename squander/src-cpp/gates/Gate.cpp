@@ -137,10 +137,10 @@ Gate::apply_to_list( std::vector<Matrix>& input ) {
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-Gate::apply_to( Matrix& input, bool parallel ) {
+Gate::apply_to( Matrix& input, int parallel ) {
 
     Matrix ret = dot(matrix_alloc, input);
     memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
