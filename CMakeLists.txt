@@ -125,6 +125,9 @@ set(ENV{LD_LIBRARY_PATH} "${BLAS_DIR}:$ENV{LD_LIBRARY_PATH}")
 
 find_package(BLAS REQUIRED)
 find_package(LAPACK REQUIRED)
+find_package(OpenMP REQUIRED)
+
+list(APPEND EXTRA_INCLUDES "${OpenMP_CXX_INCLUDE_DIRS}") 
 
 # make difference between MKL and OPENBLAS by checking specific functions
 set(CMAKE_REQUIRED_LIBRARIES "${BLAS_LIBRARIES}" "-lm")
@@ -160,7 +163,7 @@ endif()
 
 # setting basic compile flags
 list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
-list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive" "-fopenmp")
+list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
 
 
 # checking for AVX/AVX2 support
@@ -416,18 +419,19 @@ target_compile_options(qgd PUBLIC
     ${CXX_FLAGS}
     "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
     "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    ${OpenMP_CXX_FLAGS}
 )
 
 # adding linking options
 target_link_libraries( qgd PRIVATE
-    "${BLAS_LIBRARIES}"
-    "${LAPACK_LIBRARIES}"
-    "${LAPACKE_LIBRARIES}"
+    ${BLAS_LIBRARIES}
+    ${LAPACK_LIBRARIES}
+    ${LAPACKE_LIBRARIES}
     ${TBBMALLOC_LIB}
     ${TBBMALLOC_PROXY_LIB}
     ${TBB_LIB}
     ${MPI_C_LIBRARIES}
-    "-lomp"
+    ${OpenMP_CXX_LIBRARIES}
     )
 
 
