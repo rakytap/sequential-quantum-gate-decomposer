@@ -823,7 +823,7 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
     // create QGD version of the input matrix
     Matrix unitary_mtx = numpy2matrix(unitary);
 
-    bool parallel = true;
+    int parallel = 1;
     self->gate->apply_to( parameters_mtx, unitary_mtx, parallel );
     
     if (unitary_mtx.data != PyArray_DATA(unitary)) {

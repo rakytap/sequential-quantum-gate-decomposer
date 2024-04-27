@@ -68,19 +68,19 @@ Matrix get_matrix();
 
 /**
 @brief Call to retrieve the gate matrix
-@param parallel Set true to apply parallel kernels, false otherwise
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( bool parallel=false );
+Matrix get_matrix( int parallel=0 );
 
 
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_to( Matrix& input, bool parallel=false );
+void apply_to( Matrix& input, int parallel=0 );
 
 
 /**

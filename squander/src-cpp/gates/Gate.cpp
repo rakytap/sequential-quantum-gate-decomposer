@@ -137,10 +137,10 @@ Gate::apply_to_list( std::vector<Matrix>& input ) {
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-Gate::apply_to( Matrix& input, bool parallel ) {
+Gate::apply_to( Matrix& input, int parallel ) {
 
     Matrix ret = dot(matrix_alloc, input);
     memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
@@ -287,25 +287,35 @@ Gate* Gate::clone() {
 @param input The input matrix on which the transformation is applied
 @param deriv Set true to apply derivate transformation, false otherwise (optional)
 @param deriv Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, bool parallel) {
+Gate::apply_kernel_to(Matrix& u3_1qbit, Matrix& input, bool deriv, int parallel) {
 
 #ifdef USE_AVX
 
     // apply kernel on state vector
-    if ( input.cols == 1 && (qbit_num<10 || !parallel) ) {
+    if ( input.cols == 1 && (qbit_num<14 || !parallel) ) {
         apply_kernel_to_state_vector_input_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
         return;
     }
     else if ( input.cols == 1 ) {
-        apply_kernel_to_state_vector_input_parallel_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        if ( parallel == 1 ) {
+            apply_kernel_to_state_vector_input_parallel_OpenMP_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        }
+        else if ( parallel == 2 ) {
+            apply_kernel_to_state_vector_input_parallel_AVX(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
+        }
+        else {
+            std::string err("Gate::apply_kernel_to: the argument parallel should be either 0,1 or 2. Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB"); 
+            throw err;
+        }
         return;
     }
 
 
 
-
+    // unitary transform kernels
     if ( qbit_num < 4 ) {
         apply_kernel_to_input_AVX_small(u3_1qbit, input, deriv, target_qbit, control_qbit, matrix_size);
         return;

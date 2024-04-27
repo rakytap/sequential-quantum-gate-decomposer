@@ -36,7 +36,7 @@ np.set_printoptions(linewidth=200)
 
 
 # number of qubits
-qbit_num_min = 2
+qbit_num_min = 4
 qbit_num_max = 23
 
 # number of levels
@@ -72,6 +72,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 
 	circuit_squander = Circuit( qbit_num )
 
+	gates_num = 0
 	for level in range(levels):
 
 		# preparing circuit
@@ -82,10 +83,13 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 				circuit_squander.add_U3(control_qbit, True, True, True )
 				#circuit_squander.add_CNOT( target_qbit=target_qbit, control_qbit=control_qbit )
 				circuit_squander.add_adaptive( target_qbit=target_qbit, control_qbit=control_qbit )
+				gates_num = gates_num + 3
 
 	for target_qbit in range(qbit_num):
 		circuit_squander.add_U3(target_qbit, True, True, True )
+		gates_num = gates_num + 1
 		break		
+
 
 
 	num_of_parameters = circuit_squander.get_Parameter_Num()
@@ -97,7 +101,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 	t0 = time.time()
 	circuit_squander.apply_to( parameters, initial_state )
 	t_SQUANDER = time.time() - t0
-	print( "Time elapsed SQUANDER: ", t_SQUANDER, " seconds at qbit_num = ", qbit_num )
+	print( "Time elapsed SQUANDER: ", t_SQUANDER, " seconds at qbit_num = ", qbit_num, ' number of gates: ', gates_num )
 
 	execution_times_squander[ qbit_num ] = t_SQUANDER
 	transformed_states_squander[ qbit_num ] = np.reshape(initial_state, (initial_state.size,) )

@@ -71,18 +71,18 @@ Matrix get_matrix(Matrix_real& parameters);
 
 /**
 @brief Call to retrieve the operation matrix
-@param parallel Set true to apply parallel kernels, false otherwise
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with a matrix of the operation
 */
-Matrix get_matrix(Matrix_real& parameters, bool parallel=false);
+Matrix get_matrix(Matrix_real& parameters, int parallel=0);
 
 
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
+void apply_to( Matrix_real& parameters, Matrix& input, int parallel=0 );
 
 
 /**

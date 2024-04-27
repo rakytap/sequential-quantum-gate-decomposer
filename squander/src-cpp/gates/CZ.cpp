@@ -110,11 +110,11 @@ CZ::get_matrix() {
 
 /**
 @brief Call to retrieve the gate matrix
-@param parallel Set true to apply parallel kernels, false otherwise
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with the matrix of the gate
 */
 Matrix
-CZ::get_matrix( bool parallel) {
+CZ::get_matrix( int parallel) {
 
     Matrix CZ_matrix = create_identity(matrix_size);
     apply_to(CZ_matrix, parallel);
@@ -128,10 +128,10 @@ CZ::get_matrix( bool parallel) {
 /**
 @brief Call to apply the gate on the input array/matrix CZ*input
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-CZ::apply_to( Matrix& input, bool parallel ) {
+CZ::apply_to( Matrix& input, int parallel ) {
 
     Matrix u3_1qbit = calc_one_qubit_u3();
     apply_kernel_to(u3_1qbit, input, false, parallel);
