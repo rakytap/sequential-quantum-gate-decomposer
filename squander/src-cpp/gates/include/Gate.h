@@ -218,8 +218,9 @@ protected:
 @param input The input matrix on which the transformation is applied
 @param deriv Set true to apply derivate transformation, false otherwise (optional)
 @param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_kernel_to( Matrix& u3_1qbit, Matrix& input, bool deriv=false, bool parallel=false );
+void apply_kernel_to( Matrix& u3_1qbit, Matrix& input, bool deriv=false, int parallel=0 );
 
 
 

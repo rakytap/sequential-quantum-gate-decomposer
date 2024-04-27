@@ -71,9 +71,9 @@ virtual ~RY();
 @brief Call to apply the gate on the input array/matrix by RY*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to( Matrix_real& parameters, Matrix& input, bool parallel=false );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel=0 );
 
 
 /**

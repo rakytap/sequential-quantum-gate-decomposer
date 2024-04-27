@@ -160,7 +160,7 @@ endif()
 
 # setting basic compile flags
 list(APPEND CXX_FLAGS_DEBUG "-Wall" "-Wpedantic" "-Wextra" "-fexceptions" "-DDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
-list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive")
+list(APPEND CXX_FLAGS_RELEASE "-Wall" "-O3" "-m64" "-DNDEBUG" "-fno-builtin-malloc" "-fno-builtin-calloc" "-fno-builtin-realloc" "-fno-builtin-free" "-fpermissive" "-fopenmp")
 
 
 # checking for AVX/AVX2 support
@@ -427,6 +427,7 @@ target_link_libraries( qgd PRIVATE
     ${TBBMALLOC_PROXY_LIB}
     ${TBB_LIB}
     ${MPI_C_LIBRARIES}
+    "-lomp"
     )
 
 

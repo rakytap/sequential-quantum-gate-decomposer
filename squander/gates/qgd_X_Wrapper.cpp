@@ -142,7 +142,7 @@ qgd_X_Wrapper_init(qgd_X_Wrapper *self, PyObject *args, PyObject *kwds)
 static PyObject *
 qgd_X_Wrapper_get_Matrix( qgd_X_Wrapper *self ) {
 
-    bool parallel = true;   
+    int parallel = 1;   
     Matrix X_mtx = self->gate->get_matrix( parallel  );
     
     // convert to numpy array
@@ -188,7 +188,7 @@ qgd_X_Wrapper_apply_to( qgd_X_Wrapper *self, PyObject *args ) {
     // create QGD version of the input matrix
     Matrix unitary_mtx = numpy2matrix(unitary);
 
-    bool parallel = true;
+    int parallel = 1;
     self->gate->apply_to( unitary_mtx, parallel );
     
     if (unitary_mtx.data != PyArray_DATA(unitary)) {

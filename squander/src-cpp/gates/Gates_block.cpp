@@ -161,11 +161,11 @@ Gates_block::get_matrix( Matrix_real& parameters ) {
 /**
 @brief Call to retrieve the operation matrix (Which is the product of all the operation matrices stored in the operation block)
 @param parameters An array pointing to the parameters of the gates
-@param parallel Set true to apply parallel kernels, false otherwise
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with the operation matrix
 */
 Matrix
-Gates_block::get_matrix( Matrix_real& parameters, bool parallel ) {
+Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
@@ -209,10 +209,10 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix> inp
 @brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, bool parallel ) {
+Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
     double* parameters = parameters_mtx.get_data();
 

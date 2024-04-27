@@ -159,10 +159,11 @@ U3::get_matrix( Matrix_real& parameters ) {
 /**
 @brief Call to retrieve the gate matrix
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with a matrix of the gate
 */
 Matrix
-U3::get_matrix( Matrix_real& parameters, bool parallel ) {
+U3::get_matrix( Matrix_real& parameters, int parallel ) {
 
         Matrix U3_matrix = create_identity(matrix_size);
         apply_to(parameters, U3_matrix, parallel);
@@ -201,10 +202,10 @@ U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input ) {
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, bool parallel ) {
+U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
 
     if (input.rows != matrix_size ) {

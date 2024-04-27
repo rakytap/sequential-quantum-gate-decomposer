@@ -112,11 +112,11 @@ SYC::get_matrix() {
 
 /**
 @brief Call to retrieve the gate matrix
-@param parallel Set true to apply parallel kernels, false otherwise
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with the matrix of the gate
 */
 Matrix
-SYC::get_matrix( bool parallel) {
+SYC::get_matrix( int parallel) {
 
     Matrix SYC_matrix = create_identity(matrix_size);
     apply_to(SYC_matrix, parallel);
@@ -129,10 +129,10 @@ SYC::get_matrix( bool parallel) {
 /**
 @brief Call to apply the gate on the input array/matrix SYC*input
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-SYC::apply_to( Matrix& input, bool parallel ) {
+SYC::apply_to( Matrix& input, int parallel ) {
 
     int index_step_target = Power_of_2(target_qbit);
     int index_step_control = Power_of_2(control_qbit);

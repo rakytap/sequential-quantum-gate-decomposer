@@ -137,7 +137,7 @@ static int
 static PyObject *
 qgd_CNOT_Wrapper_get_Matrix( qgd_CNOT_Wrapper *self ) {
 
-    bool parallel = true;
+    int parallel = 1;
     Matrix CNOT_mtx = self->gate->get_matrix( parallel );
     
     // convert to numpy array
@@ -189,7 +189,7 @@ qgd_CNOT_Wrapper_apply_to( qgd_CNOT_Wrapper *self, PyObject *args ) {
     // create QGD version of the input matrix
     Matrix unitary_mtx = numpy2matrix(unitary);
 
-    bool parallel = true;
+    int parallel = 1;
     self->gate->apply_to( unitary_mtx, parallel );
 
     if (unitary_mtx.data != PyArray_DATA(unitary)) {

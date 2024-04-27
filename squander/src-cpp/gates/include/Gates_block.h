@@ -97,10 +97,10 @@ Matrix get_matrix( Matrix_real& parameters );
 /**
 @brief Call to retrieve the gate matrix (Which is the product of all the gate matrices stored in the gate block)
 @param parameters An array pointing to the parameters of the gates
-@param parallel Set true to apply parallel kernels, false otherwise
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with the gate matrix
 */
-Matrix get_matrix( Matrix_real& parameters, bool parallel );
+Matrix get_matrix( Matrix_real& parameters, int parallel );
 
 
 /**
@@ -114,9 +114,9 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix> input );
 @brief Call to apply the gate on the input array/matrix Gates_block*input
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, bool parallel=false );
+virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 );
 
 
 

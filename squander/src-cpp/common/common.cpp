@@ -256,7 +256,7 @@ void subtract_diag( Matrix& mtx, QGD_Complex16 scalar ) {
 @param b The second scalar
 @return Returns with the calculated product.
 */
-QGD_Complex16 mult( QGD_Complex16 a, QGD_Complex16 b ) {
+QGD_Complex16 mult( QGD_Complex16& a, QGD_Complex16& b ) {
 
     QGD_Complex16 ret;
     ret.real = a.real*b.real - a.imag*b.imag;

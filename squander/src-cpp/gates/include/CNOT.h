@@ -67,17 +67,17 @@ Matrix get_matrix();
 
 /**
 @brief Call to retrieve the operation matrix
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with the matrix of the operation
 */
-Matrix get_matrix(bool parallel);
+Matrix get_matrix(int parallel);
 
 /**
 @brief Call to apply the gate on the input array/matrix by CNOT*input
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to( Matrix& input, bool parallel=false );
+virtual void apply_to( Matrix& input, int parallel=0 );
 
 
 /**

@@ -113,11 +113,11 @@ UN::get_matrix( Matrix_real& parameters ) {
 /**
 @brief Call to retrieve the operation matrix
 @param parameters An array of parameters to calculate the matrix of the UN gate.
-@param parallel Set true to apply parallel kernels, false otherwise
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with a matrix of the operation
 */
 Matrix
-UN::get_matrix( Matrix_real& parameters, bool parallel ) {
+UN::get_matrix( Matrix_real& parameters, int parallel ) {
 
         Matrix UN_matrix = create_identity(matrix_size);
         apply_to(parameters, UN_matrix, parallel);
@@ -137,10 +137,10 @@ UN::get_matrix( Matrix_real& parameters, bool parallel ) {
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-UN::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
+UN::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;

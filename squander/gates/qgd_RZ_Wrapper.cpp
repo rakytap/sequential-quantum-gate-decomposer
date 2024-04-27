@@ -157,7 +157,7 @@ qgd_RZ_Wrapper_get_Matrix( qgd_RZ_Wrapper *self, PyObject *args ) {
     // get the C++ wrapper around the data
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
-    bool parallel = true;
+    int parallel = 1;
     Matrix RZ_mtx = self->gate->get_matrix( parameters_mtx, parallel );
     
     // convert to numpy array
@@ -213,7 +213,7 @@ qgd_RZ_Wrapper_apply_to( qgd_RZ_Wrapper *self, PyObject *args ) {
     // create QGD version of the input matrix
     Matrix unitary_mtx = numpy2matrix(unitary);
 
-    bool parallel = true;
+    int parallel = 1;
     self->gate->apply_to( parameters_mtx, unitary_mtx, parallel );
     
     if (unitary_mtx.data != PyArray_DATA(unitary)) {

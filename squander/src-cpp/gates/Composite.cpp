@@ -111,11 +111,11 @@ Composite::get_matrix( Matrix_real& parameters ) {
 /**
 @brief Call to retrieve the operation matrix
 @param parameters An array of parameters to calculate the matrix of the composite gate.
-@param parallel Set true to apply parallel kernels, false otherwise
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with a matrix of the operation
 */
 Matrix
-Composite::get_matrix( Matrix_real& parameters, bool parallel ) {
+Composite::get_matrix( Matrix_real& parameters, int parallel ) {
 
 
     // create array of random parameters to construct random unitary
@@ -141,10 +141,10 @@ Composite::get_matrix( Matrix_real& parameters, bool parallel ) {
 /**
 @brief Call to apply the gate on the input array/matrix
 @param input The input array on which the gate is applied
-@param parallel Set true to apply parallel kernels, false otherwise (optional)
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-Composite::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
+Composite::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
 
     if (input.rows != matrix_size ) {
