@@ -5,7 +5,13 @@ requires = [
     "scikit-build",
     "ninja",
     "scipy", 
+    "tbb-devel",
+    "cmake>=3.10.2",
+    "networkx",
+    "qiskit"
 ]
+build-backend = "setuptools.build_meta"
+
 
 
 
