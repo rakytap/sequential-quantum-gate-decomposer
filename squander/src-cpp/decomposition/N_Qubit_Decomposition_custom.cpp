@@ -131,7 +131,6 @@ N_Qubit_Decomposition_custom::start_decomposition() {
     // final tuning of the decomposition parameters
     final_optimization();
 
-
     // calculating the final error of the decomposition
     Matrix matrix_decomposed = Umtx.copy();
     apply_to(optimized_parameters_mtx, matrix_decomposed );

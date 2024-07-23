@@ -175,10 +175,9 @@ N_Qubit_Decomposition_non_unitary_adaptive::~N_Qubit_Decomposition_non_unitary_a
 /**
 @brief Start the disentanglig process of the unitary
 @param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
-@param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
 */
 void
-N_Qubit_Decomposition_non_unitary_adaptive::start_decomposition(bool prepare_export) {
+N_Qubit_Decomposition_non_unitary_adaptive::start_decomposition() {
 
 
     //The stringstream input to store the output messages.
@@ -190,13 +189,14 @@ N_Qubit_Decomposition_non_unitary_adaptive::start_decomposition(bool prepare_exp
     print(sstream, 1);   
 
 
-
     // get the initial circuit including redundand 2-qbit blocks.
     get_initial_circuit();
+    
+
      
     // finalyzing the gate structure by turning CRY gates inti CNOT gates and do optimization cycles to correct approximation in this transformation 
     // (CRY gates with small rotation angles are expressed with a single CNOT gate
-    finalize_circuit(prepare_export);
+    finalize_circuit();
 
 }
 
@@ -292,7 +292,7 @@ void N_Qubit_Decomposition_non_unitary_adaptive::get_initial_circuit() {
 /**
 @brief ???????????????????
 */
-void N_Qubit_Decomposition_non_unitary_adaptive::finalize_circuit(bool prepare_export) {
+void N_Qubit_Decomposition_non_unitary_adaptive::finalize_circuit() {
 
 
 // temporarily turn off OpenMP parallelism
@@ -406,7 +406,7 @@ void N_Qubit_Decomposition_non_unitary_adaptive::finalize_circuit(bool prepare_e
         int max_inner_iterations_loc = 10000;
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
     }
-    cDecomp_custom.start_decomposition(true);
+    cDecomp_custom.start_decomposition();
     number_of_iters += cDecomp_custom.get_num_iters();
 
     current_minimum = cDecomp_custom.get_current_minimum();
@@ -441,11 +441,6 @@ void N_Qubit_Decomposition_non_unitary_adaptive::finalize_circuit(bool prepare_e
 
         export_gate_list_to_binary(optimized_parameters_mtx, this, filename2, verbose);  
     
-    }
-
-    // prepare gates to export
-    if (prepare_export) {
-        prepare_gates_to_export();
     }
 
     decomposition_error = optimization_problem(optimized_parameters_mtx);
@@ -542,7 +537,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::optimize_imported_gate_structure(Mat
         int max_inner_iterations_loc = 10000;
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
     }
-    cDecomp_custom.start_decomposition(true);
+    cDecomp_custom.start_decomposition();
     number_of_iters += cDecomp_custom.get_num_iters();
     //cDecomp_custom.list_gates(0);
 
@@ -581,7 +576,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::optimize_imported_gate_structure(Mat
 }
 
 /**
-@brief Call determine the gate structrue of the decomposing circuit. (quantum circuit with CRY gates)
+@brief Call determine the gate structure of the decomposing circuit. (quantum circuit with CRY gates)
 @param optimized_parameters_mtx_loc A matrix containing the initial parameters
 */
 Gates_block* 
@@ -599,12 +594,11 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
     else {
         optimization_tolerance_loc = optimization_tolerance;
     }         
-        
-    
+           
 
 
     int level = level_limit_min;
-    while ( current_minimum > optimization_tolerance_loc && level <= level_limit) {
+    while ( current_minimum > optimization_tolerance_loc && level <= 2 ) {//level_limit) {
 
         // create gate structure to be optimized
         Gates_block* gate_structure_loc = new Gates_block(qbit_num);  
@@ -613,16 +607,15 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
                    
         for (int idx=0; idx<level; idx++) {
 
-            // create the new decomposing layer and add to the gate staructure
+            // create the new decomposing layer and add to the gate structure
             add_adaptive_layers( gate_structure_loc );
 
         }
            
-        // add finalyzing layer to the top of the gate structure
+        // add finalizing layer to the top of the gate structure
         add_finalyzing_layer( gate_structure_loc );
-            
 
-        //measure the time for the decompositin
+        //measure the time for the decomposition
         tbb::tick_count start_time_loc = tbb::tick_count::now();
 
 
@@ -667,11 +660,11 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
                 }
                 
             
-                cDecomp_custom_random.start_decomposition(true);
-                
+                cDecomp_custom_random.start_decomposition();
+        
 
                 
-                number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization
+                number_of_iters += cDecomp_custom_random.get_num_iters(); // retrieve the number of iterations spent on optimization
 
 
          tbb::tick_count end_time_loc = tbb::tick_count::now();
@@ -704,7 +697,6 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
         level++;
     }
 
-//exit(-1);
 
     // find the best decomposition
     int idx_min = 0;
@@ -897,7 +889,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::replace_trivial_CRY_gates( Gates_blo
 
                 }
 
-                gate_structure_ret->add_gate_to_end((Gate*)layer);
+                gate_structure_ret->add_gate((Gate*)layer);
 
 
         }
@@ -949,7 +941,7 @@ Gates_block*
 N_Qubit_Decomposition_non_unitary_adaptive::construct_adaptive_gate_layers() {
 
 
-    //The stringstream input to store the output messages.
+    //The string stream input to store the output messages.
     std::stringstream sstream;
 
     // creating block of gates
@@ -986,7 +978,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::construct_adaptive_gate_layers() {
             bool Lambda = true;
             layer->add_u3(target_qbit_loc, Theta, Phi, Lambda);
             layer->add_u3(control_qbit_loc, Theta, Phi, Lambda); 
-            layer->add_adaptive(target_qbit_loc, control_qbit_loc);
+            layer->add_cz_nu(target_qbit_loc, control_qbit_loc);
 
             layers.push_back(layer);
 
@@ -1006,7 +998,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::construct_adaptive_gate_layers() {
                 bool Lambda = true;
                 layer->add_u3(target_qbit_loc, Theta, Phi, Lambda);
                 layer->add_u3(control_qbit_loc, Theta, Phi, Lambda); 
-                layer->add_adaptive(target_qbit_loc, control_qbit_loc);
+                layer->add_cz_nu(target_qbit_loc, control_qbit_loc);
 
                 layers.push_back(layer);
             }
@@ -1198,18 +1190,22 @@ N_Qubit_Decomposition_non_unitary_adaptive::add_adaptive_gate_structure( std::st
 void 
 N_Qubit_Decomposition_non_unitary_adaptive::apply_imported_gate_structure() {
 
-    if ( gates.size() == 0 ) return;
+    if ( gates.size() == 0 ) {
+        return;
+    }
 
-    std::vector<Gate*> gates_loc = get_gates();
-    Matrix Umtx_new = get_transformed_matrix( optimized_parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx );
-
+    
     std::stringstream sstream;
-    sstream << "The cost function after applying the imported gate structure is:" << get_cost_function(Umtx_new) << std::endl;
-    print(sstream, 3);	
-
-    Umtx = Umtx_new;
+    sstream << "The cost function before applying the imported gate structure is:" << optimization_problem( optimized_parameters_mtx )  << std::endl;   
+    
+    apply_to(  optimized_parameters_mtx, Umtx );
     release_gates();
     optimized_parameters_mtx = Matrix_real(0,0);
+    
+
+    sstream << "The cost function after applying the imported gate structure is:" << optimization_problem( optimized_parameters_mtx )  << std::endl;
+    print(sstream, 3);	
+
 
 
 }

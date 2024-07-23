@@ -280,7 +280,7 @@ CZ_NU::calc_one_qubit_u3( double& param ){
     u3_1qbit[0].real = 1.0;         u3_1qbit[0].imag = 0.0; 
     u3_1qbit[1].real = 0.0;         u3_1qbit[1].imag = 0.0;
     u3_1qbit[2].real = 0.0;         u3_1qbit[2].imag = 0.0;
-    u3_1qbit[3].real = sin( param); u3_1qbit[3].imag = 0.0;
+    u3_1qbit[3].real = cos( param); u3_1qbit[3].imag = 0.0;
     return u3_1qbit;
 
 }

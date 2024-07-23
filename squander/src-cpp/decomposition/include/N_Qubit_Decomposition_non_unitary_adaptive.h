@@ -123,7 +123,7 @@ virtual ~N_Qubit_Decomposition_non_unitary_adaptive();
 @param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
 @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
 */
-virtual void start_decomposition(bool prepare_export=true);
+virtual void start_decomposition();
 
 /**
 @brief get initial circuit
@@ -135,7 +135,7 @@ virtual void get_initial_circuit();
 @brief Finalize the circuit
 @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
 */
-virtual void finalize_circuit(bool prepare_export=true);
+virtual void finalize_circuit();
 
 /**
 @brief Call to optimize an imported gate structure

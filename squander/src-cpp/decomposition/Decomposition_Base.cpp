@@ -837,8 +837,6 @@ void Decomposition_Base::Init_max_layer_num() {
 
 
 
-
-
 /**
 @brief Call to set the tolerance of the optimization processes.
 @param tolerance_in The value of the tolerance. The error of the decomposition would scale with the square root of this value.
