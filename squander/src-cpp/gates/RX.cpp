@@ -104,7 +104,7 @@ RX::RX(int qbit_num_in, int target_qbit_in) {
 
         parameter_num = 1;
 
-        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitaRX is done
+        // Parameter theta of the RX gate after the decomposition of the unitary is done
         parameters = Matrix_real(1, parameter_num);
 
 }

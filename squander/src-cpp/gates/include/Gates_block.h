@@ -199,6 +199,23 @@ void add_cry(int target_qbit, int control_qbit);
 */
 void add_cry_to_front(int target_qbit, int control_qbit);
 
+/**
+@brief Append a CZ_NU gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cz_nu(int target_qbit, int control_qbit);
+
+
+
+/**
+@brief Add a CZ_NU gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cz_nu_to_front(int target_qbit, int control_qbit );
+
+
 
 /**
 @brief Append a RZ gate to the list of gates

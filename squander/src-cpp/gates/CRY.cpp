@@ -134,7 +134,7 @@ CRY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 	std::stringstream sstream;
 	sstream << "Wrong matrix size in CRY apply_from_right" << std::endl;
         print(sstream, 0);	
-        exit(-1);
+        throw "Wrong matrix size in CRY apply_from_right";
     }
 
     double ThetaOver2, Phi, Lambda;
@@ -165,7 +165,7 @@ Phi = Phi - M_PI;
 
 
 /**
-@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@brief Call to evaluate the derivate of the circuit on an input with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
 */
@@ -176,7 +176,7 @@ CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 	std::stringstream sstream;
 	sstream << "Wrong matrix size in CRY gate apply" << std::endl;
         print(sstream, 0);	   
-        exit(-1);
+        throw "Wrong matrix size in CRY gate apply";
     }
 
     std::vector<Matrix> ret;
@@ -210,8 +210,6 @@ CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 /**
 @brief Call to set the final optimized parameters of the gate.
 @param ThetaOver2 Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
 */
 void CRY::set_optimized_parameters(double ThetaOver2 ) {
 
@@ -224,7 +222,7 @@ void CRY::set_optimized_parameters(double ThetaOver2 ) {
 
 /**
 @brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters ThetaOver2, Phi and Lambda of the U3 gate.
+@return Returns with an array containing the optimized parameter
 */
 Matrix_real CRY::get_optimized_parameters() {
 
