@@ -130,10 +130,6 @@ virtual void start_decomposition(bool prepare_export=true);
 */
 virtual void get_initial_circuit();
 
-/**
-@brief Compress the circuit
-*/
-virtual void compress_circuit();
 
 /**
 @brief Finalize the circuit
@@ -155,53 +151,12 @@ Gates_block* optimize_imported_gate_structure(Matrix_real& optimized_parameters_
 Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_mtx);
 
 
-
-/**
-@brief Call to run compression iterations on the circuit. (Trying to remove a CRY block in each iteration)
-@param gate_structure The gate structure to be optimized
-*/
-Gates_block* compress_gate_structure( Gates_block* gate_structure );
-
-/**
-@brief Call to run compression iterations on the circuit. (Trying to remove a CRY block in each iteration)
-@param gate_structure The gate structure to be optimized
-@param layer_idx The layer to be removed from the circuit
-@param optimized_parameters A matrix containing the initial parameters
-@param current_minimum_loc (out) The current minimum that has been achieved.
-@param iteration_num (out) The number of iterations that have been carried out during the optimization
-*/
-Gates_block* compress_gate_structure( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters, double& currnt_minimum_loc, int& iteration_num );
-
 /**
 @brief Call to replace CRY gates in the circuit that are close to either an identity or to a CNOT gate.
 @param gate_structure The gate structure to be optimized
 @param optimized_parameters A matrix containing the initial parameters
 */
 Gates_block* replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
-
-/**
-@brief Call to get the panelty derived from the number of CRY and CNOT gates in the circuit
-@param gate_structure The gate structure to be optimized
-@param optimized_parameters A matrix containing the initial parameters
-*/
-virtual unsigned int get_panelty( Gates_block* gate_structure, Matrix_real& optimized_parameters );
-
-
-/**
-@brief Call to remove those blocks from the circuit that contain a trivial CRY gate (i.e. CRY gate close to be an identity.) The U3 gates are merged with subsequent gates.
-@param gate_structure The gate structure to be optimized
-@param optimized_parameters A matrix containing the initial parameters
-@param current_minimum_loc (out) The current minimum that has been achieved.
-*/
-virtual Gates_block* remove_trivial_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters, double& currnt_minimum_loc );
-
-/**
-@brief Call to remove those parameters from the array, which correspond to gates that are about to be removed from the circuit.
-@param gate_structure The gate structure to be optimized
-@param optimized_parameters A matrix containing the parameters
-@param layer_idx The layer to be removed from the circuit
-*/
-Matrix_real create_reduced_parameters( Gates_block* gate_structure, Matrix_real& optimized_parameters, int layer_idx );
 
 
 /**
