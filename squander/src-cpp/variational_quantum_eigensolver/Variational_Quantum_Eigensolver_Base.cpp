@@ -660,7 +660,8 @@ Variational_Quantum_Eigensolver_Base::set_gate_structure( std::string filename )
         if ( gates_num.syc>0 )  std::cout << gates_num.syc << " Sycamore gates," << std::endl;   
         if ( gates_num.un>0 )  std::cout << gates_num.un << " UN gates," << std::endl;
         if ( gates_num.cry>0 )  std::cout << gates_num.cry << " CRY gates," << std::endl;  
-        if ( gates_num.adap>0 )  std::cout << gates_num.adap << " Adaptive gates," << std::endl;    	
+        if ( gates_num.adap>0 )  std::cout << gates_num.adap << " Adaptive gates," << std::endl;
+        if ( gates_num.cz_nu>0 )  std::cout << gates_num.cz_nu << " CZ_NU gates," << std::endl; 
     }
 
 }
