@@ -668,7 +668,6 @@ Matrix Decomposition_Base::get_decomposed_matrix() {
 
 
 
-
 /**
 @brief Apply an gates on the input matrix
 @param gate_mtx The matrix of the gate.
@@ -830,8 +829,6 @@ void Decomposition_Base::Init_max_layer_num() {
     max_layer_num_def[7] = 7000;//6180;
 
 }
-
-
 
 
 

@@ -595,6 +595,7 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit() {
         if ( gates_num.un>0 ) sstream << gates_num.un << " UN gates," << std::endl;
         if ( gates_num.cry>0 ) sstream << gates_num.cry << " CRY gates," << std::endl;  
         if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive gates," << std::endl;
+        if ( gates_num.cz_nu>0 ) sstream << gates_num.cz_nu << " CZ_NU gates," << std::endl;
     
         sstream << std::endl;
     	print(sstream, 1);	    	
