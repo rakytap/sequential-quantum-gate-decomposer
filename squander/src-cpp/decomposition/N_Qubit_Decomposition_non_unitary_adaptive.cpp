@@ -180,7 +180,7 @@ void
 N_Qubit_Decomposition_non_unitary_adaptive::start_decomposition() {
 
 
-    //The stringstream input to store the output messages.
+    //The string stream input to store the output messages.
     std::stringstream sstream;
     sstream << "***************************************************************" << std::endl;
     sstream << "Starting to disentangle " << qbit_num << "-qubit matrix" << std::endl;
@@ -189,11 +189,10 @@ N_Qubit_Decomposition_non_unitary_adaptive::start_decomposition() {
     print(sstream, 1);   
 
 
-    // get the initial circuit including redundand 2-qbit blocks.
+    // get the initial circuit including redundant 2-qbit blocks.
     get_initial_circuit();
     
 
-     
     // finalyzing the gate structure by turning CRY gates inti CNOT gates and do optimization cycles to correct approximation in this transformation 
     // (CRY gates with small rotation angles are expressed with a single CNOT gate
     finalize_circuit();
@@ -318,7 +317,7 @@ void N_Qubit_Decomposition_non_unitary_adaptive::finalize_circuit() {
     }
     else {
         std::stringstream sstream;
-        sstream << "No circuit initalised." << std::endl;
+        sstream << "No circuit initialized." << std::endl;
         print(sstream, 1);
         return;
     }
@@ -331,7 +330,7 @@ void N_Qubit_Decomposition_non_unitary_adaptive::finalize_circuit() {
     sstream << "**************************************************************" << std::endl;
     print(sstream, 1);	    	
     
-	// maximal number of inner iterations overriden by config
+	// maximal number of inner iterations overwritten by config
     if ( config.count("optimization_tolerance") > 0 ) {
         long long value;
         config["optimization_tolerance"].get_property( value );
@@ -345,10 +344,10 @@ void N_Qubit_Decomposition_non_unitary_adaptive::finalize_circuit() {
 
 
     sstream.str("");
-    sstream << "cost function value before replacing trivial CRY gates: " << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
+    sstream << "cost function value before replacing trivial CZ_UN gates: " << optimization_problem(optimized_parameters_mtx.get_data()) << std::endl;
     print(sstream, 3);	
     	
-    Gates_block* gate_structure_tmp = replace_trivial_CRY_gates( gate_structure_loc, optimized_parameters_mtx );
+    Gates_block* gate_structure_tmp = replace_trivial_CZ_NU_gates( gate_structure_loc, optimized_parameters_mtx );
     Matrix_real optimized_parameters_save = optimized_parameters_mtx;
 
     release_gates();
@@ -743,12 +742,12 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
 
 
 /**
-@brief Call to replace CRY gates in the circuit that are close to either an identity or to a CNOT gate.
+@brief Call to replace CZ_NU gates in the circuit that are close to either an identity or to a CNOT gate.
 @param gate_structure The gate structure to be optimized
-@param optimized_parameters A matrix containing the  parameters
+@param optimized_parameters A matrix containing the initial parameters
 */
 Gates_block* 
-N_Qubit_Decomposition_non_unitary_adaptive::replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters ) {
+N_Qubit_Decomposition_non_unitary_adaptive::replace_trivial_CZ_NU_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters ) {
 
     Gates_block* gate_structure_ret = new Gates_block(qbit_num);
 
@@ -760,143 +759,78 @@ N_Qubit_Decomposition_non_unitary_adaptive::replace_trivial_CRY_gates( Gates_blo
         Gate* gate = gate_structure->get_gate(idx);
 
         if ( gate->get_type() != BLOCK_OPERATION ) {
+           std::string err = "N_Qubit_Decomposition_non_unitary_adaptive::replace_trivial_CZ_NU_gates: Only block gates are accepted in this conversion.";
            std::stringstream sstream;
-	   sstream << "N_Qubit_Decomposition_non_unitary_adaptive::replace_trivial_adaptive_gates: Only block gates are accepted in this conversion." << std::endl;
+	   sstream << err << std::endl;
            print(sstream, 1);	
-           exit(-1);
+           throw(err);
         }
 
         Gates_block* block_op = static_cast<Gates_block*>(gate);
         //int param_num = gate->get_parameter_num();
 
 
-        if (  true ) {//gate_structure->contains_adaptive_gate(idx) ) {
+        Gates_block* layer = block_op->clone();
 
-                Gates_block* layer = block_op->clone();
+        for ( int jdx=0; jdx<layer->get_gate_num(); jdx++ ) {
 
-                for ( int jdx=0; jdx<layer->get_gate_num(); jdx++ ) {
+            Gate* gate_tmp = layer->get_gate(jdx);
+            int param_num = gate_tmp->get_parameter_num();
+                    
+            double parameter = optimized_parameters[parameter_idx];
 
-                    Gate* gate_tmp = layer->get_gate(jdx);
-                    int param_num = gate_tmp->get_parameter_num();
+            if ( gate_tmp->get_type() == CZ_NU_OPERATION &&  std::cos(parameter) < -0.95 ) {
 
+                // convert to CZ gate
+                int target_qbit = gate_tmp->get_target_qbit();
+                int control_qbit = gate_tmp->get_control_qbit();
+                layer->release_gate( jdx );
 
-                    double parameter = optimized_parameters[parameter_idx];
-                    parameter = activation_function(parameter, 1);//limit_max);
+                CZ*   cz_gate     = new CZ(qbit_num, target_qbit, control_qbit);
 
-//std::cout << param[0] << " " << (gate_tmp->get_type() == ADAPTIVE_OPERATION) << " "  << std::abs(std::sin(param[0])) << " "  << 1+std::cos(param[0]) << std::endl;
+                layer->insert_gate( (Gate*)cz_gate, jdx);
 
+                Matrix_real parameters_new(1, optimized_parameters.size()-1);
+                memcpy(parameters_new.get_data(), optimized_parameters.get_data(), parameter_idx*sizeof(double));
+                memcpy(parameters_new.get_data()+parameter_idx, optimized_parameters.get_data()+parameter_idx+1, (optimized_parameters.size()-parameter_idx-1)*sizeof(double));
 
-                    if ( gate_tmp->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) > 0.999 && std::abs(std::cos(parameter)) < 1e-3 ) {
+                parameter_idx += 0;
+                optimized_parameters = parameters_new;
 
-                        // convert to CZ gate
-                        int target_qbit = gate_tmp->get_target_qbit();
-                        int control_qbit = gate_tmp->get_control_qbit();
-                        layer->release_gate( jdx );
+            }            
+            else if ( gate_tmp->get_type() == CZ_NU_OPERATION &&  std::cos(parameter) > 0.95 ) {
+                // release trivial gate  
 
-                        RX*   rx_gate_1   = new RX(qbit_num, target_qbit);
-                        CZ*   cz_gate     = new CZ(qbit_num, target_qbit, control_qbit);
-                        RX*   rx_gate_2   = new RX(qbit_num, target_qbit);
-                        RZ_P* rz_gate     = new RZ_P(qbit_num, control_qbit);
-
-                        Gates_block* czr_gate = new Gates_block(qbit_num);
-                        czr_gate->add_gate(rx_gate_1);
-                        czr_gate->add_gate(cz_gate);
-                        czr_gate->add_gate(rx_gate_2);
-                        czr_gate->add_gate(rz_gate);
-
-                        layer->insert_gate( (Gate*)czr_gate, jdx);
-
-                        Matrix_real parameters_new(1, optimized_parameters.size()+2);
-                        memcpy(parameters_new.get_data(), optimized_parameters.get_data(), parameter_idx*sizeof(double));
-                        memcpy(parameters_new.get_data()+parameter_idx+3, optimized_parameters.get_data()+parameter_idx+1, (optimized_parameters.size()-parameter_idx-1)*sizeof(double));
-
-
-                        //QGD_Complex16 global_phase_factor_new;
-                        if ( std::sin(parameter) < 0 ) {
-                            parameters_new[parameter_idx] = -M_PI/2; // rz parameter
-/*
-                            global_phase_factor_new.real = std::cos( -M_PI/4 );
-                            global_phase_factor_new.imag = std::sin( -M_PI/4 );
-                            apply_global_phase_factor(global_phase_factor_new, Umtx);
-*/
-                        }
-                        else{
-                            parameters_new[parameter_idx] = M_PI/2; // rz parameter
-/*
-                            global_phase_factor_new.real = std::cos( M_PI/4 );
-                            global_phase_factor_new.imag = std::sin( M_PI/4 );
-                            apply_global_phase_factor(global_phase_factor_new, Umtx);
-*/
-                        }
-                        parameters_new[parameter_idx+1] = M_PI/4; // rx_2 parameter
-                        parameters_new[parameter_idx+2] = -M_PI/4; // rx_1 parameter
-
-
-                        optimized_parameters = parameters_new;
-                        parameter_idx += 3;
-
-
-
-                    }
-                    else if ( gate_tmp->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3  ) {
-                        // release trivial gate  
-
-                        layer->release_gate( jdx );
-                        jdx--;
-                        Matrix_real parameters_new(1, optimized_parameters.size()-1);
-                        memcpy(parameters_new.get_data(), optimized_parameters.get_data(), parameter_idx*sizeof(double));
-                        memcpy(parameters_new.get_data()+parameter_idx, optimized_parameters.get_data()+parameter_idx+1, (optimized_parameters.size()-parameter_idx-1)*sizeof(double));
-                        optimized_parameters = parameters_new;
-
-
-                    }
-                    else if ( gate_tmp->get_type() == ADAPTIVE_OPERATION ) {
+                layer->release_gate( jdx );
+                jdx--;
+                Matrix_real parameters_new(1, optimized_parameters.size()-1);
+                memcpy(parameters_new.get_data(), optimized_parameters.get_data(), parameter_idx*sizeof(double));
+                memcpy(parameters_new.get_data()+parameter_idx, optimized_parameters.get_data()+parameter_idx+1, (optimized_parameters.size()-parameter_idx-1)*sizeof(double));
+                        
+                parameter_idx += 0;
+                optimized_parameters = parameters_new;
+            }          
+            else if ( gate_tmp->get_type() == CZ_NU_OPERATION ) {
 
                         // controlled Y rotation decomposed into 2 CNOT gates
-                        int target_qbit = gate_tmp->get_target_qbit();
-                        int control_qbit = gate_tmp->get_control_qbit();
-                        layer->release_gate( jdx );
+                        std::cout << "iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiopooooooooooooooooo " << sin(parameter) << std::endl;
 
-                        RY*   ry_gate_1   = new RY(qbit_num, target_qbit);
-                        CNOT* cnot_gate_1 = new CNOT(qbit_num, target_qbit, control_qbit);
-                        RY*   ry_gate_2   = new RY(qbit_num, target_qbit);
-                        CNOT* cnot_gate_2 = new CNOT(qbit_num, target_qbit, control_qbit);
+                        parameter_idx += 1;
 
-                        Gates_block* czr_gate = new Gates_block(qbit_num);
-                        czr_gate->add_gate(ry_gate_1);
-                        czr_gate->add_gate(cnot_gate_1);
-                        czr_gate->add_gate(ry_gate_2);
-                        czr_gate->add_gate(cnot_gate_2);
+            }
+            else {
+                parameter_idx  += param_num;
 
-                        layer->insert_gate( (Gate*)czr_gate, jdx);
-
-                        Matrix_real parameters_new(1, optimized_parameters.size()+1);
-                        memcpy(parameters_new.get_data(), optimized_parameters.get_data(), parameter_idx*sizeof(double));
-                        memcpy(parameters_new.get_data()+parameter_idx+2, optimized_parameters.get_data()+parameter_idx+1, (optimized_parameters.size()-parameter_idx-1)*sizeof(double));
-                        optimized_parameters = parameters_new;
-                        optimized_parameters[parameter_idx] = -parameter/2; // ry_2 parameter
-                        optimized_parameters[parameter_idx+1] = parameter/2; // ry_1 parameter
-
-                        parameter_idx += 2;
-
-                    }
-                    else {
-                        parameter_idx  += param_num;
-
-                    }
-
-
-
-                }
-
-                gate_structure_ret->add_gate((Gate*)layer);
-
+            }
 
         }
 
+        gate_structure_ret->add_gate((Gate*)layer);
+
+
     }
 
-                        
+                           
 
     return gate_structure_ret;
 

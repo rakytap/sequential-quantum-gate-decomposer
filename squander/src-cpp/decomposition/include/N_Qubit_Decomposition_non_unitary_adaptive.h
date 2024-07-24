@@ -152,11 +152,11 @@ Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_
 
 
 /**
-@brief Call to replace CRY gates in the circuit that are close to either an identity or to a CNOT gate.
+@brief Call to replace CZ_NU gates in the circuit that are close to either an identity or to a CNOT gate.
 @param gate_structure The gate structure to be optimized
 @param optimized_parameters A matrix containing the initial parameters
 */
-Gates_block* replace_trivial_CRY_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
+Gates_block* replace_trivial_CZ_NU_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
 
 
 /**
