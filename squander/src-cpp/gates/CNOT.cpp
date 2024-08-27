@@ -22,7 +22,7 @@ limitations under the License.
 
 #include "CNOT.h"
 
-
+#include "apply_cnot_to_input.h"
 using namespace std;
 
 
@@ -136,7 +136,8 @@ CNOT::apply_to( Matrix& input, int parallel ) {
  
 
     Matrix u3_1qbit = calc_one_qubit_u3();
-    apply_kernel_to(u3_1qbit, input, false, parallel);
+    apply_cnot_kernel_to_state_vector_input(input, control_qbit, target_qbit);
+    //apply_kernel_to(u3_1qbit, input, false, parallel);
 
 
 }

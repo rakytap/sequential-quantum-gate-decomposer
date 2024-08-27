@@ -280,7 +280,7 @@ outer_grain_size = 6000000;
         	
 			        int current_idx_outer_loc = current_idx + current_idx_inner + idx;
 			        int current_idx_inner_loc = current_idx + current_idx_inner + idx + index_step_inner;
-	                        int current_idx_outer_pair_loc = current_idx_pair_outer + idx + current_idx_inner;
+                    int current_idx_outer_pair_loc = current_idx_pair_outer + idx + current_idx_inner;
 			        int current_idx_inner_pair_loc = current_idx_pair_outer + idx + current_idx_inner + index_step_inner;
 			        double results[8] = {0.,0.,0.,0.,0.,0.,0.,0.};
 			                
@@ -333,7 +333,7 @@ outer_grain_size = 6000000;
                         for (int alt_idx=0; alt_idx<index_step_inner/2; ++alt_idx){
 
                             int idx = alt_idx*2;
-    			    int current_idx_outer_loc = current_idx + current_idx_inner + idx;
+    			            int current_idx_outer_loc = current_idx + current_idx_inner + idx;
 		            
                             double* element_outer = (double*)input.get_data() + 2 * current_idx_outer_loc;
                             double* element_inner = element_outer + 2 * index_step_inner;
