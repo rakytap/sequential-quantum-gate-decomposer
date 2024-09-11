@@ -1106,10 +1106,10 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Generate_Circuit_Custom( qgd_Va
                 return -1;
             }*/
 
-            matrix_base<int> item_Cpp(1,2);  
+            matrix_base<int> item_Cpp(1,3);  
             item_Cpp[0] = (int) PyLong_AsLong( PyTuple_GetItem(item, 0 ) );
             item_Cpp[1] = (int) PyLong_AsLong( PyTuple_GetItem(item, 1 ) );
-
+            item_Cpp[2] = (int) PyLong_AsLong( PyTuple_GetItem(item, 2 ) );
             topology_Cpp.push_back( item_Cpp );        
         }
     }
