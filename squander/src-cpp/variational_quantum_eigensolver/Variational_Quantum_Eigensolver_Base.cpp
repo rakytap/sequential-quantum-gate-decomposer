@@ -695,11 +695,15 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit_custom(int inner_blo
             }
 
             for( int idx=0; idx<inner_blocks; idx++) {
-                add_cnot(target_qbit_loc,target_qbit_loc2);
-                add_cnot(target_qbit_loc2,control_qbit_loc);
-                add_rz(control_qbit_loc); 
-                add_cnot(target_qbit_loc2,control_qbit_loc);
-                add_cnot(target_qbit_loc,target_qbit_loc2);
+                Gates_block* block_1 = new Gates_block( qbit_num );
+                block_1->add_cnot(target_qbit_loc2,target_qbit_loc);
+                block_1->add_cnot(control_qbit_loc,target_qbit_loc2);
+                block_1->add_rz(control_qbit_loc);
+                block_1->add_ry(control_qbit_loc); 
+                block_1->add_rz(control_qbit_loc); 
+                block_1->add_cnot(control_qbit_loc,target_qbit_loc2);
+                block_1->add_cnot(target_qbit_loc2,target_qbit_loc);
+                add_gate( block_1 );                      
             }
 
         }
