@@ -1340,6 +1340,13 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure( qgd_Variati
 
 }
 
+static PyObject * qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Cost_Function_Call_Count (qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self){
+    int costfunctcalls;
+    costfunctcalls = self->vqe->get_num_iters();
+    return Py_BuildValue("i",costfunctcalls);
+    
+}
+
 /**
 @brief Structure containing metadata about the members of class qgd_N_Qubit_Decomposition_Wrapper.
 */
@@ -1411,6 +1418,8 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     {"set_Gate_Structure", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure, METH_VARARGS,
      "Call to set custom gate structure for VQE experiments."
     },
+    {"get_Cost_Function_Call_Count",(PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Cost_Function_Call_Count, METH_NOARGS,
+    "get cost function call counts"},
     {NULL}  /* Sentinel */
 };
 

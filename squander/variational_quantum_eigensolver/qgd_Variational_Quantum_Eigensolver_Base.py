@@ -242,5 +242,9 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 # @param inner_blocks The number of U3-CNOT repetition within a single layer
     def Generate_Circuit_Custom(self, inner_blocks, topology):
 
-        super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_Circuit_Custom( inner_blocks, topology )    
+        super(qgd_Variational_Quantum_Eigensolver_Base, self).Generate_Circuit_Custom( inner_blocks, topology )
+    
+    def get_Cost_Function_Call_Count(self):
+    
+        return  super(qgd_Variational_Quantum_Eigensolver_Base, self).get_Cost_Function_Call_Count()
 
