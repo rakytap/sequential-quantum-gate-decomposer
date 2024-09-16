@@ -1,7 +1,7 @@
 #include "apply_cnot_to_input.h"
 #include "tbb/tbb.h"
 
-
+/*
 void apply_cnot_kernel_to_state_vector_input(Matrix& input,const int& ctrl_qbit, const int& trgt_qbit){
     int matrix_size = input.size();
     int index_step_ctrl = 1 << ctrl_qbit;
@@ -41,5 +41,46 @@ void apply_cnot_kernel_to_state_vector_input(Matrix& input,const int& ctrl_qbit,
                     }
                 }
              }
+        }
+}*/
+
+void apply_cnot_kernel_to_state_vector_input(Matrix& input,const int& ctrl_qbit, const int& trgt_qbit){
+    int matrix_size = input.size();
+    int index_step_ctrl = 1 << ctrl_qbit;
+    int index_step_trgt = 1 << trgt_qbit;
+    if (trgt_qbit>ctrl_qbit){
+        int placeholder_size = (ctrl_qbit > 18) ? 1<<16 : index_step_ctrl;
+        int current_idx = 0;
+        int steps = (int) matrix_size/placeholder_size/4;
+        int ratio1 = (int) index_step_ctrl/placeholder_size;
+        int ratio2 = (int) index_step_trgt/(index_step_ctrl<<1);
+#pragma omp parallel for
+        for (int idx=0; idx<steps; idx++){
+            
+            Matrix placeholder( 1, placeholder_size);
+            current_idx = (int) (index_step_trgt<<1)*(idx/(ratio1*ratio2)) + (int) ((index_step_ctrl<<1)*((idx%(ratio1*ratio2))/ratio1)) + (int) ((placeholder_size)*(idx%(ratio1))) ; 
+            int current_idx_trgt_loc = current_idx + index_step_ctrl ;
+            int current_idx_ctrl_loc = current_idx + index_step_ctrl + index_step_trgt ;
+            memcpy( placeholder.get_data(), input.get_data()+current_idx_trgt_loc, placeholder_size*sizeof(QGD_Complex16) );
+            memcpy( input.get_data()+current_idx_trgt_loc, input.get_data()+current_idx_ctrl_loc, placeholder_size*sizeof(QGD_Complex16) );
+            memcpy(input.get_data()+current_idx_ctrl_loc, placeholder.get_data(), placeholder_size*sizeof(QGD_Complex16) );
+        }
+        }
+        else{
+            int placeholder_size = (trgt_qbit > 18) ? 1<<16 : index_step_trgt;
+            Matrix placeholder( 1, placeholder_size);
+            int current_idx = 0;
+            int steps = (int) matrix_size/placeholder_size/4;
+            int ratio1 = (int) index_step_trgt/placeholder_size;
+            int ratio2 = (int) index_step_ctrl/(index_step_trgt<<1);
+#pragma omp parallel for
+            for (int idx=0; idx<steps; idx++){
+            current_idx = (int) (index_step_ctrl<<1)*(idx/(ratio1*ratio2)) + (int) ((index_step_trgt<<1)*((idx%(ratio1*ratio2))/ratio1)) + (int) ((placeholder_size)*(idx%(ratio1))) ; 
+                int current_idx_trgt_loc = current_idx + index_step_ctrl + index_step_trgt;
+                int current_idx_ctrl_loc = current_idx + index_step_ctrl;
+                memcpy( placeholder.get_data(), input.get_data()+current_idx_trgt_loc, placeholder_size*sizeof(QGD_Complex16) );
+                memcpy( input.get_data()+current_idx_trgt_loc, input.get_data()+current_idx_ctrl_loc, placeholder_size*sizeof(QGD_Complex16) );
+                memcpy(input.get_data()+current_idx_ctrl_loc, placeholder.get_data(), placeholder_size*sizeof(QGD_Complex16) );
+            }
         }
 }
