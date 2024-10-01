@@ -137,7 +137,7 @@ CNOT::apply_to( Matrix& input, int parallel ) {
 
     //Matrix u3_1qbit = calc_one_qubit_u3();
     //if (std::abs(control_qbit-target_qbit)>15){
-        apply_cnot_kernel_to_state_vector_input(input, control_qbit, target_qbit);
+    apply_cnot_kernel_to_state_vector_input_OpenMP(input, control_qbit, target_qbit);
     //}
     //else{
     //apply_kernel_to(u3_1qbit, input, false, parallel);

@@ -63,7 +63,7 @@ void apply_2qbit_kernel_to_state_vector_input(Matrix& two_qbit_unitary, Matrix& 
 
 			int current_idx_outer_loc = current_idx + current_idx_inner + idx;
 			int current_idx_inner_loc = current_idx + current_idx_inner + idx + index_step_inner;
-	                int current_idx_outer_pair_loc = current_idx_pair_outer + idx + current_idx_inner;
+	        int current_idx_outer_pair_loc = current_idx_pair_outer + idx + current_idx_inner;
 			int current_idx_inner_pair_loc = current_idx_pair_outer + idx + current_idx_inner + index_step_inner;
 			int indexes[4] = {current_idx_outer_loc,current_idx_inner_loc,current_idx_outer_pair_loc,current_idx_inner_pair_loc};
 			//input.print_matrix();
