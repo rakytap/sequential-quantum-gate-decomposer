@@ -254,7 +254,7 @@ bool check_optimization_solution();
 @param num_of_gates The number of gates involved in the calculations
 @return Returns with a vector of the product matrices.
 */
-std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> get_gate_products(double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates);
+std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> get_gate_products(const Matrix_real& parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates);
 
 
 /**

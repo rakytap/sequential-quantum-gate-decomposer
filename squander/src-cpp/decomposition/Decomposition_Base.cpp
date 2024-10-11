@@ -457,6 +457,13 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             memcpy(optimized_parameters.get_data() + parameter_num-solution_guess_num, solution_guess, solution_guess_num*sizeof(double));
         }
 
+
+////////////////////////////////////////
+
+        Matrix_real optimized_parameters_rev     = reverse_parameters( optimized_parameters, gates_loc.begin(), gates_loc.size() );
+
+////////////////////////////////////
+
         // starting number of gate block applied prior to the optimalized gate blocks
         int pre_gate_parameter_num = 0;
 
@@ -472,7 +479,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         Matrix Identity =  create_identity( matrix_size );
 
 
-        Matrix_real solution_guess_tmp;
+
 
 
         // maximal number of outer iterations overriden by config
@@ -510,7 +517,6 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // ***** get applied the fixed gates applied before the optimized gates *****
             if (block_idx_start < (int)gates_loc.size() ) {
                 std::vector<Gate*>::iterator fixed_gates_pre_it = gates.begin() + 1;
-                //Matrix_real optimized_parameters_mtx(optimized_parameters, 1, parameter_num );
                 Umtx = get_transformed_matrix(optimized_parameters_mtx, fixed_gates_pre_it, gates.size()-1, Umtx);
             }
             else {
@@ -521,8 +527,6 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             gates.clear();
 
             if (optimized_parameters_mtx.size() > 0 ) {
-//                qgd_free( optimized_parameters );
-//                optimized_parameters = NULL;
                   optimized_parameters_mtx = Matrix_real(0,0);
             }
 
@@ -531,10 +535,17 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // create a list of post gates matrices
             if (block_idx_start == (int)gates_loc.size() ) {
                 // matrix of the fixed gates aplied after the gates to be varied
-                double* fixed_parameters_post = optimized_parameters.get_data();
                 std::vector<Gate*>::iterator fixed_gates_post_it = gates_loc.begin();
-
-                gates_mtxs_post = get_gate_products(fixed_parameters_post, fixed_gates_post_it, block_idx_end);
+                ////////////////////////////////
+                int parameter_idx = optimized_parameters_rev.size();
+                for (int gate_idx=0; gate_idx<block_idx_end; gate_idx++) {
+                    Gate* gate = gates_loc[gate_idx];
+                    parameter_idx = parameter_idx -  gate->get_parameter_num();   
+                }
+                Matrix_real optimized_parameters_rev_partial = Matrix_real( optimized_parameters_rev.get_data()+parameter_idx, 1, optimized_parameters_rev.size()-parameter_idx );
+                gates_mtxs_post = get_gate_products(optimized_parameters_rev_partial, fixed_gates_post_it, block_idx_end);
+                /////////////////////////////////
+                //gates_mtxs_post = get_gate_products(optimized_parameters, fixed_gates_post_it, block_idx_end);
             }
 
             // Create a general gate describing the cumulative effect of gates following the optimized gates
@@ -556,13 +567,12 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
             // constructing solution guess for the optimization
             parameter_num = block_parameter_num;
-            if ( solution_guess_tmp.size() == 0 ) {
-                solution_guess_tmp = Matrix_real(1, parameter_num);
-            }
-            else if ( parameter_num != (int)solution_guess_tmp.size() ) {
-                solution_guess_tmp = Matrix_real(1, parameter_num);
-            }
-            memcpy( solution_guess_tmp.get_data(), optimized_parameters.get_data()+parameter_num_loc - pre_gate_parameter_num - block_parameter_num, parameter_num*sizeof(double) );
+            Matrix_real solution_guess_tmp = Matrix_real(1, parameter_num);
+            //////////////////////////////////////  
+            memcpy( solution_guess_tmp.get_data(), optimized_parameters_rev.get_data() + pre_gate_parameter_num, parameter_num*sizeof(double) );
+            solution_guess_tmp                     = inverse_reverse_parameters( solution_guess_tmp, gates.begin(), gates.size() );
+            /////////////////////////////////////
+            //memcpy( solution_guess_tmp.get_data(), optimized_parameters.get_data()+parameter_num_loc - pre_gate_parameter_num - block_parameter_num, parameter_num*sizeof(double) );
 
             // solve the optimization problem of the block
             solve_layer_optimization_problem( parameter_num, solution_guess_tmp );
@@ -578,7 +588,11 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             minvec_mean = minvec_mean/min_vec_num;
 
             // store the obtained optimalized parameters for the block
-            memcpy( optimized_parameters.get_data()+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );
+            //////////////////////////////////////
+            Matrix_real optimized_parameters_mtx_rev = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
+            memcpy( optimized_parameters_rev.get_data()+ pre_gate_parameter_num, optimized_parameters_mtx_rev.get_data(), parameter_num*sizeof(double) );            
+            /////////////////////////////////////
+            //memcpy( optimized_parameters.get_data()+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );
 
             if (block_idx_end == 0) {
                 block_idx_start = gates_loc.size();
@@ -643,7 +657,12 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 
         optimized_parameters_mtx = Matrix_real( 1, parameter_num );
-        memcpy( optimized_parameters_mtx.get_data(), optimized_parameters.get_data(), parameter_num*sizeof(double) );
+
+	///////////////////////
+        memcpy( optimized_parameters_mtx.get_data(), optimized_parameters_rev.get_data(), parameter_num*sizeof(double) );
+        optimized_parameters_mtx = inverse_reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
+	//////////////////////
+        //memcpy( optimized_parameters_mtx.get_data(), optimized_parameters.get_data(), parameter_num*sizeof(double) );
 
 
 
@@ -936,7 +955,7 @@ Matrix Decomposition_Base::get_decomposed_matrix() {
 @return Returns with a vector of the product matrices.
 */
 std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> 
-Decomposition_Base::get_gate_products(double* parameters_in, std::vector<Gate*>::iterator gates_it, int num_of_gates) {
+Decomposition_Base::get_gate_products(const Matrix_real& parameters_mtx, std::vector<Gate*>::iterator gates_it, int num_of_gates) {
 
 
     // construct the vector of matrix representation of the gates
@@ -962,8 +981,8 @@ Decomposition_Base::get_gate_products(double* parameters_in, std::vector<Gate*>:
 
     }
 
-    Matrix_real parameters_in_mtx = Matrix_real( parameters_in, 1, parameters_num_total);
-    Matrix_real parameters_mtx = reverse_parameters( parameters_in_mtx, gates_it, num_of_gates );
+    //Matrix_real parameters_in_mtx = parameters_in;
+    //Matrix_real parameters_mtx = reverse_parameters( parameters_in_mtx, gates_it, num_of_gates );
 
     double* parameters = parameters_mtx.get_data() + parameters_num_total;
 

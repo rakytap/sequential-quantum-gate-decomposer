@@ -638,5 +638,14 @@ bool is_qbit_present(std::vector<int> involved_qbits, int new_qbit, int num_of_q
 */
 Matrix_real reverse_parameters( const Matrix_real& v_in, std::vector<Gate*>::iterator gates_it, int num_of_gates );
 
+
+/**
+@brief Call to inverse-reverse the order of the parameters in an array
+@param v_in The real input vector.
+@param gates The associated list of gates. (does not get reversed)
+@return Return with the reversed array
+*/
+Matrix_real inverse_reverse_parameters( const Matrix_real& v_in, std::vector<Gate*>::iterator gates_it, int num_of_gates );
+
 #endif //GATES_BLOCK,
 
