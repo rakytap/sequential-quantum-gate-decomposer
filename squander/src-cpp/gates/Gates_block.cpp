@@ -219,6 +219,9 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
     parameters = parameters + parameter_num;
     std::vector<int> involved_qubits = get_involved_qubits();
     
+	// REVERSE PARAMETERS
+    //Matrix_real parameters = reverse_parameters( parameters_orig, gates_it, num_of_gates );    
+    
     if(max_fusion !=-1 && ((qbit_num>max_fusion && input.cols == 1) && involved_qubits.size()>1)){
 
         if (fragmented==false){
@@ -3881,6 +3884,103 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
     }
 
     return gate_block;
+
+}
+
+
+
+/**
+@brief Call to reverse the order of the parameters in an array
+@param parameters_in The real input vector.
+@param gates_it Iterator over the gates. (does not get reversed)
+@return Return with the reversed array
+*/
+Matrix_real reverse_parameters( const Matrix_real& parameters_in, std::vector<Gate*>::iterator gates_it, int num_of_gates ) {
+
+	if ( parameters_in.cols > 1 && parameters_in.rows > 1 ) {
+		std::string error("reverse_parameters: Input array should have a single column or a single row.");
+		throw error;
+	}
+	
+	
+    // determine the number of parameters
+    int parameters_num_total = 0;
+    for (int idx=0; idx<num_of_gates; idx++) {
+
+        // The current gate
+        Gate* gate = *(gates_it++);
+        parameters_num_total = parameters_num_total + gate->get_parameter_num();
+
+    }
+    
+    
+	if ( parameters_num_total  == 0) {
+		std::string error("reverse_parameters: The input vector has no elements");
+		throw error;
+	}	    
+	
+	//std::cout << "uu" << std::endl;
+	//parameters_in.print_matrix();
+    
+
+	Matrix_real parameters_ret(1, parameters_num_total);
+	int parameter_num_copied = 0;
+
+    // apply the gate operations on the inital matrix
+    for (int idx=num_of_gates-0; idx>0; idx--) {
+
+        // The current gate
+        Gate* gate = *(--gates_it);
+        
+        int parameter_num_gate = gate->get_parameter_num();
+        
+        if ( parameter_num_gate == 0 ) {
+        	continue;
+        }     
+        /*   
+        else if (gate->get_type() == BLOCK_OPERATION ) {
+        
+	        //std::cout << "block: " << parameter_num_gate << " " << parameters_num_total << std::endl;
+       	    parameters_num_total = parameters_num_total - gate->get_parameter_num();
+	                
+        	Matrix_real parameters_of_block( parameters_in.get_data()+parameters_num_total, 1, parameter_num_gate );
+        	//parameters_of_block.print_matrix();
+        	
+            Gates_block* block_gate = static_cast<Gates_block*>( gate );
+            
+            std::vector<Gate*> gates_loc = block_gate->get_gates();
+            
+            Matrix_real parameters_of_block_reversed = reverse_parameters( parameters_of_block, gates_loc.begin(), gates_loc.size() );
+            
+            //parameters_of_block_reversed.print_matrix();
+            
+			memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_of_block_reversed.get_data(), parameters_of_block_reversed.size()*sizeof(double) );
+			parameter_num_copied = parameter_num_copied + parameters_of_block_reversed.size();
+			
+			//parameters_ret.print_matrix();
+			
+        }
+        */
+        else {
+        
+	        //std::cout << parameter_num_gate << std::endl;
+        
+    	    parameters_num_total = parameters_num_total - gate->get_parameter_num();
+			memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_in.get_data()+parameters_num_total, gate->get_parameter_num()*sizeof(double) );
+			parameter_num_copied = parameter_num_copied + gate->get_parameter_num();
+			
+		}
+
+
+    }
+
+
+
+	
+	return parameters_ret;
+	
+	
+
 
 }
 

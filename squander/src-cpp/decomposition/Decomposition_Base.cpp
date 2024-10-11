@@ -783,7 +783,7 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
 @return Returns with the transformed matrix.
 */
 Matrix
-Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix ) {
+Decomposition_Base::get_transformed_matrix( Matrix_real &parameters_orig, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix ) {
 
     // The matrix to be returned
     Matrix ret_matrix = initial_matrix.copy();
@@ -792,8 +792,12 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
     }
 
 
+    // REVERSE PARAMETERS
+    Matrix_real parameters = reverse_parameters( parameters_orig, gates_it, num_of_gates );
+    
+
     // determine the number of parameters
-    int parameters_num_total = 0;
+    int parameters_num_total = 0;  //TODO NO NEED FOR THIS
     for (int idx=0; idx<num_of_gates; idx++) {
 
         // The current gate
@@ -801,15 +805,21 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
         parameters_num_total = parameters_num_total + gate->get_parameter_num();
 
     }
+    
 
+    int parameter_idx = 0;
 
     // apply the gate operations on the inital matrix
     for (int idx=num_of_gates-0; idx>0; idx--) {
 
         // The current gate
         Gate* gate = *(--gates_it);
-        parameters_num_total = parameters_num_total - gate->get_parameter_num();
-        Matrix_real parameters_mtx( parameters.get_data()+parameters_num_total, 1, gate->get_parameter_num() );
+        //parameters_num_total = parameters_num_total - gate->get_parameter_num();
+        //Matrix_real parameters_mtx( parameters_orig.get_data()+parameters_num_total, 1, gate->get_parameter_num() );
+        
+        Matrix_real parameters_mtx( parameters.get_data()+parameter_idx, 1, gate->get_parameter_num() );
+        parameter_idx = parameter_idx + gate->get_parameter_num();
+              
 
         if (gate->get_type() == CNOT_OPERATION ) {
             CNOT* cnot_gate = static_cast<CNOT*>( gate );
@@ -898,6 +908,7 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
 
     }
 
+
     return ret_matrix;
 
 
@@ -925,7 +936,7 @@ Matrix Decomposition_Base::get_decomposed_matrix() {
 @return Returns with a vector of the product matrices.
 */
 std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> 
-Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates) {
+Decomposition_Base::get_gate_products(double* parameters_in, std::vector<Gate*>::iterator gates_it, int num_of_gates) {
 
 
     // construct the vector of matrix representation of the gates
@@ -937,6 +948,27 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
         return gate_mtxs;
     }
 
+//#######################################x
+    // REVERSE PARAMETERS
+
+    // determine the number of parameters
+    int parameters_num_total = 0;  
+    std::vector<Gate*>::iterator gates_it_tmp = gates_it;
+    for (int idx=0; idx<num_of_gates; idx++) {
+
+        // The current gate
+        Gate* gate = *(gates_it_tmp++);
+        parameters_num_total = parameters_num_total + gate->get_parameter_num();
+
+    }
+
+    Matrix_real parameters_in_mtx = Matrix_real( parameters_in, 1, parameters_num_total);
+    Matrix_real parameters_mtx = reverse_parameters( parameters_in_mtx, gates_it, num_of_gates );
+
+    double* parameters = parameters_mtx.get_data() + parameters_num_total;
+
+
+//#######################################x
 
     double* parameters_loc = parameters;
     Matrix mtx = create_identity(matrix_size);
@@ -945,8 +977,8 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
        
 
         // get the matrix representation of the gate
-        Gate* gate = *gates_it;        
-        Matrix_real parameters_loc_mtx( parameters_loc, 1, gate->get_parameter_num() );
+        Gate* gate = *gates_it;
+        Matrix_real parameters_loc_mtx( parameters_loc-gate->get_parameter_num(), 1, gate->get_parameter_num() );
 
         if (gate->get_type() == CNOT_OPERATION ) {
             CNOT* cnot_gate = static_cast<CNOT*>(gate);
@@ -1032,7 +1064,7 @@ Decomposition_Base::get_gate_products(double* parameters, std::vector<Gate*>::it
             throw err;
         }
 
-        parameters_loc = parameters_loc + gate->get_parameter_num();
+        parameters_loc = parameters_loc - gate->get_parameter_num();
 
         gate_mtxs[idx] = mtx.copy();     
         gates_it++;   
@@ -1212,7 +1244,7 @@ void Decomposition_Base::Init_max_layer_num() {
 */
 void Decomposition_Base::prepare_gates_to_export() {
 
-    std::vector<Gate*> gates_tmp = prepare_gates_to_export( gates, optimized_parameters_mtx.get_data() );
+    std::vector<Gate*> gates_tmp = prepare_gates_to_export( gates, optimized_parameters_mtx );
 
     // release the gates and replace them with the ones prepared to export
     gates.clear();
@@ -1228,11 +1260,33 @@ void Decomposition_Base::prepare_gates_to_export() {
 @param parameters The parameters of the gates
 @return Returns with a list of gate gates.
 */
-std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate*> ops, double* parameters ) {
+std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate*> ops, const Matrix_real& parameters_in ) {
+
+
+//#######################################x
+    // REVERSE PARAMETERS
+
+    // determine the number of parameters
+    int parameters_num_total = 0; 
+    int num_of_gates = ops.size();
+    for (int idx=0; idx<num_of_gates; idx++) {
+
+        // The current gate
+        Gate* gate = ops[idx];
+        parameters_num_total = parameters_num_total + gate->get_parameter_num();
+
+    }
+
+    Matrix_real parameters_in_mtx = Matrix_real( parameters_in.get_data(), 1, parameters_num_total);
+    Matrix_real parameters = reverse_parameters( parameters_in_mtx, ops.begin(), num_of_gates );
+
+    int parameter_idx = parameters_num_total;
+
+//#######################################x
 
 
     std::vector<Gate*> ops_ret;
-    int parameter_idx = 0;
+    //int parameter_idx = 0;
 
 
     for(std::vector<Gate*>::iterator it = ops.begin(); it != ops.end(); it++) {
@@ -1275,47 +1329,54 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             U3* u3_gate = static_cast<U3*>(gate);
 
             if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
+                parameter_idx = parameter_idx - 1;
                 vartheta = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
                 varphi = 0;
                 varlambda =0;
-                parameter_idx = parameter_idx + 1;
+                //parameter_idx = parameter_idx + 1;
 
             }
             else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_phi_parameter()) {
+                parameter_idx = parameter_idx - 1;
                 vartheta = 0;
                 varphi = std::fmod( parameters[ parameter_idx ], 2*M_PI);
                 varlambda =0;
-                parameter_idx = parameter_idx + 1;
+                //parameter_idx = parameter_idx + 1;
             }
             else if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_lambda_parameter()) {
+                parameter_idx = parameter_idx - 1;
                 vartheta = 0;
                 varphi =  0;
                 varlambda = std::fmod( parameters[ parameter_idx ], 2*M_PI);
-                parameter_idx = parameter_idx + 1;
+                //parameter_idx = parameter_idx + 1;
             }
             else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_phi_parameter() ) {
+                parameter_idx = parameter_idx - 2;
                 vartheta = std::fmod( 2*parameters[ parameter_idx ], 4*M_PI);
                 varphi = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);
                 varlambda = 0;
-                parameter_idx = parameter_idx + 2;
+//                parameter_idx = parameter_idx + 2;
             }
             else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && u3_gate->is_lambda_parameter() ) {
+                parameter_idx = parameter_idx - 2;
                 vartheta = std::fmod( 2*parameters[ parameter_idx ], 4*M_PI);
                 varphi = 0;
                 varlambda = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);
-                parameter_idx = parameter_idx + 2;
+//                parameter_idx = parameter_idx + 2;
             }
             else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
+                parameter_idx = parameter_idx - 2;
                 vartheta = 0;
                 varphi = std::fmod( parameters[ parameter_idx], 2*M_PI);
                 varlambda = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);
-                parameter_idx = parameter_idx + 2;
+//                parameter_idx = parameter_idx + 2;
             }
             else if ((u3_gate->get_parameter_num() == 3)) {
+                parameter_idx = parameter_idx - 3;
                 vartheta = std::fmod( 2*parameters[ parameter_idx ], 4*M_PI);
                 varphi = std::fmod( parameters[ parameter_idx+1 ], 2*M_PI);
                 varlambda = std::fmod( parameters[ parameter_idx+2 ], 2*M_PI);
-                parameter_idx = parameter_idx + 3;
+//                parameter_idx = parameter_idx + 3;
             }
             else {
                 std::string err("bad value for initial guess");
@@ -1335,9 +1396,9 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             // get the inverse parameters of the RX rotation
 
             RX* rx_gate = static_cast<RX*>(gate);
-
+            parameter_idx = parameter_idx - 1;
             vartheta = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
-            parameter_idx = parameter_idx + 1;
+//            parameter_idx = parameter_idx + 1;
 
 
             rx_gate->set_optimized_parameters( vartheta );
@@ -1353,9 +1414,9 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             // get the inverse parameters of the RY rotation
 
             RY* ry_gate = static_cast<RY*>(gate);
-
+            parameter_idx = parameter_idx - 1;
             vartheta = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
-            parameter_idx = parameter_idx + 1;
+//             parameter_idx = parameter_idx + 1;
 
 
             ry_gate->set_optimized_parameters( vartheta );
@@ -1371,9 +1432,9 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             // get the inverse parameters of the RZ rotation
 
             CRY* cry_gate = static_cast<CRY*>(gate);
-
+            parameter_idx = parameter_idx - 1;
             Theta = std::fmod( 2.0*parameters[parameter_idx], 4*M_PI);
-            parameter_idx = parameter_idx + 1;
+//            parameter_idx = parameter_idx + 1;
 
 
             cry_gate->set_optimized_parameters( Theta );
@@ -1389,9 +1450,9 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             // get the inverse parameters of the RZ rotation
 
             RZ* rz_gate = static_cast<RZ*>(gate);
-
+            parameter_idx = parameter_idx - 1;
             varphi = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
-            parameter_idx = parameter_idx + 1;
+//            parameter_idx = parameter_idx + 1;
 
 
             rz_gate->set_optimized_parameters( varphi );
@@ -1407,9 +1468,9 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             // get the inverse parameters of the RZ rotation
 
             RZ_P* rz_gate = static_cast<RZ_P*>(gate);
-
+            parameter_idx = parameter_idx - 1;
             varphi = std::fmod( parameters[parameter_idx], 2*M_PI);
-            parameter_idx = parameter_idx + 1;
+//            parameter_idx = parameter_idx + 1;
 
 
             rz_gate->set_optimized_parameters( varphi );
@@ -1419,11 +1480,12 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         }
         else if (gate->get_type() == UN_OPERATION) {
 
-             // get the inverse parameters of the RZ rotation
+            // get the inverse parameters of the RZ rotation
             UN* un_gate = static_cast<UN*>(gate);
 
-            Matrix_real optimized_parameters( parameters+parameter_idx, 1, (int)un_gate->get_parameter_num());
-            parameter_idx = parameter_idx + un_gate->get_parameter_num();
+            parameter_idx = parameter_idx - un_gate->get_parameter_num();
+            Matrix_real optimized_parameters = Matrix_real( parameters.get_data()+parameter_idx, 1, (int)un_gate->get_parameter_num());
+//            parameter_idx = parameter_idx + un_gate->get_parameter_num();
 
 
             un_gate->set_optimized_parameters( optimized_parameters );
@@ -1435,9 +1497,9 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
             // get the inverse parameters of the RZ rotation
             ON* on_gate = static_cast<ON*>(gate);
-
-            Matrix_real optimized_parameters( parameters+parameter_idx, 1, (int)on_gate->get_parameter_num());
-            parameter_idx = parameter_idx + on_gate->get_parameter_num();
+            parameter_idx = parameter_idx - on_gate->get_parameter_num();
+            Matrix_real optimized_parameters = Matrix_real( parameters.get_data()+parameter_idx, 1, (int)on_gate->get_parameter_num());
+//            parameter_idx = parameter_idx + on_gate->get_parameter_num();
 
 
             on_gate->set_optimized_parameters( optimized_parameters );
@@ -1450,9 +1512,9 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             // get the inverse parameters of the RZ rotation
             Composite* com_gate = static_cast<Composite*>(gate);
 
-            Matrix_real optimized_parameters( parameters+parameter_idx, 1, (int)com_gate->get_parameter_num());
-            parameter_idx = parameter_idx + com_gate->get_parameter_num();
-
+            parameter_idx = parameter_idx - com_gate->get_parameter_num();
+            Matrix_real optimized_parameters = Matrix_real( parameters.get_data()+parameter_idx, 1, (int)com_gate->get_parameter_num());
+//            parameter_idx = parameter_idx + com_gate->get_parameter_num();
 
             com_gate->set_optimized_parameters( optimized_parameters );
             ops_ret.push_back( static_cast<Gate*>(com_gate) );
@@ -1467,22 +1529,24 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             // get the inverse parameters of the RZ rotation
 
             Adaptive* ad_gate = static_cast<Adaptive*>(gate);
-
+            parameter_idx = parameter_idx - 1;
             Theta = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
-            parameter_idx = parameter_idx + 1;
+//            parameter_idx = parameter_idx + 1;
 
 
             ad_gate->set_optimized_parameters( Theta );
             ops_ret.push_back( static_cast<Gate*>(ad_gate) );
 
-
         }
         else if (gate->get_type() == BLOCK_OPERATION) {
             Gates_block* block_gate = static_cast<Gates_block*>(gate);
-            double* parameters_layer = parameters + parameter_idx;
+           
+            int layer_parameter_num = block_gate->get_parameter_num();
+            parameter_idx = parameter_idx - layer_parameter_num;
+            Matrix_real parameters_layer = Matrix_real(parameters.get_data() + parameter_idx, 1, layer_parameter_num );
 
             std::vector<Gate*> ops_loc = prepare_gates_to_export(block_gate, parameters_layer);
-            parameter_idx = parameter_idx + block_gate->get_parameter_num();
+    //        parameter_idx = parameter_idx + layer_parameter_num;
 
             ops_ret.insert( ops_ret.end(), ops_loc.begin(), ops_loc.end() );
         }
@@ -1506,7 +1570,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 @param parameters The parameters of the gates
 @return Returns with a list of gate gates.
 */
-std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( Gates_block* block_op, double* parameters ) {
+std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( Gates_block* block_op, const Matrix_real& parameters ) {
 
     std::vector<Gate*> ops_tmp = block_op->get_gates();
     std::vector<Gate*> ops_ret = prepare_gates_to_export( ops_tmp, parameters );

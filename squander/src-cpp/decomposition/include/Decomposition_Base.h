@@ -380,7 +380,7 @@ void prepare_gates_to_export();
 @param parameters The parameters of the gates
 @return Returns with a list of gate gates.
 */
-std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, double* parameters );
+std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, const Matrix_real& parameters );
 
 
 
@@ -390,7 +390,7 @@ std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, double* para
 @param parameters The parameters of the gates
 @return Returns with a list of gate gates.
 */
-std::vector<Gate*> prepare_gates_to_export( Gates_block* block_op, double* parameters );
+std::vector<Gate*> prepare_gates_to_export( Gates_block* block_op, const Matrix_real& parameters );
 
 /**
 @brief Call to prepare the optimized gates to export
