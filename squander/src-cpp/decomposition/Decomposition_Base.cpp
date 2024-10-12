@@ -233,32 +233,33 @@ void Decomposition_Base::finalize_decomposition() {
 
         // get the transformed matrix resulted by the gates in the list
         // REVERSE PARAMETERS
-        Matrix_real parameters_tmp = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() ); 
-        Matrix transformed_matrix = get_transformed_matrix( parameters_tmp, gates.begin(), gates.size(), Umtx );
+        Matrix_real optimized_parameters_mtx_rev = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() ); 
+        Matrix transformed_matrix = get_transformed_matrix( optimized_parameters_mtx_rev, gates.begin(), gates.size(), Umtx );
         //Matrix transformed_matrix = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 
         // preallocate the storage for the finalizing parameters
         finalizing_parameter_num = 3*qbit_num;
-        double* finalizing_parameters = (double*)qgd_calloc(finalizing_parameter_num,sizeof(double), 64);
+        Matrix_real finalizing_parameters = Matrix_real(1,finalizing_parameter_num);
 
         // obtaining the final gates of the decomposition
-        Gates_block* finalizing_gates = new Gates_block( qbit_num );;
+        Gates_block* finalizing_gates = new Gates_block( qbit_num );
         Matrix final_matrix = get_finalizing_gates( transformed_matrix, finalizing_gates, finalizing_parameters );
 
         // adding the finalizing gates to the list of gates
         // adding the opeartion block to the gates
         add_gate( finalizing_gates );
-// TODO: use memcpy
+
+        // TODO: use memcpy
         Matrix_real optimized_parameters_tmp(1, parameter_num);
-        for (int idx=0; idx < finalizing_parameter_num; idx++) {
-            optimized_parameters_tmp[idx] = finalizing_parameters[idx];
+        for (int idx=0; idx < optimized_parameters_mtx.size(); idx++) {
+            optimized_parameters_tmp[idx] = optimized_parameters_mtx_rev[idx];
         }
-        for (int idx=0; idx < parameter_num-finalizing_parameter_num; idx++) {
-            optimized_parameters_tmp[idx+finalizing_parameter_num] = optimized_parameters_mtx[idx];
+        for (int idx=0; idx < parameter_num-optimized_parameters_mtx.size(); idx++) {
+            optimized_parameters_tmp[idx+optimized_parameters_mtx.size()] = finalizing_parameters[idx];
         }
-        qgd_free( finalizing_parameters);
-        finalizing_parameters = NULL;
-        optimized_parameters_mtx = optimized_parameters_tmp;
+
+        optimized_parameters_mtx = inverse_reverse_parameters( optimized_parameters_tmp, gates.begin(), gates.size() ); 
+        //optimized_parameters_mtx = optimized_parameters_tmp;
 
         finalizing_gates_num = finalizing_gates->get_gate_num();
 
@@ -304,7 +305,7 @@ void Decomposition_Base::list_gates( int start_index ) {
 @param finalizing_parameters Parameters corresponding to the finalizing gates.
 @return Returns with the finalized matrix
 */
-Matrix Decomposition_Base::get_finalizing_gates( Matrix& mtx, Gates_block* finalizing_gates, double* finalizing_parameters  ) {
+Matrix Decomposition_Base::get_finalizing_gates( Matrix& mtx, Gates_block* finalizing_gates, Matrix_real& finalizing_parameters  ) {
 
 
         int parameter_idx = finalizing_parameter_num-1;

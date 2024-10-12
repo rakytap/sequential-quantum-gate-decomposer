@@ -214,7 +214,7 @@ void list_gates( int start_index );
 @param finalizing_parameters Parameters corresponding to the finalizing gates.
 @return Returns with the finalized matrix
 */
-Matrix get_finalizing_gates( Matrix& mtx, Gates_block* finalizing_gates, double* finalizing_parameters);
+Matrix get_finalizing_gates( Matrix& mtx, Gates_block* finalizing_gates, Matrix_real& finalizing_parameters);
 
 
 /**
