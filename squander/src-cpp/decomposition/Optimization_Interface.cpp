@@ -505,7 +505,10 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
         exit(-1);
     }  
     
-    Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
+    // REVERSE PARAMETERS
+    Matrix_real parameters_tmp = reverse_parameters( parameters, gates.begin(), gates.size() );
+    Matrix matrix_new = get_transformed_matrix( parameters_tmp, gates.begin(), gates.size(), Umtx );
+    //Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
 //matrix_new.print_matrix();
 
     if ( cost_fnc == FROBENIUS_NORM ) {
@@ -700,7 +703,10 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
 
     // get the transformed matrix with the gates in the list
     Matrix Umtx_loc = instance->get_Umtx();
-    Matrix matrix_new = instance->get_transformed_matrix( parameters, gates_loc.begin(), gates_loc.size(), Umtx_loc );
+    // REVERSE PARAMETERS
+    Matrix_real parameters_tmp = reverse_parameters( parameters, gates_loc.begin(), gates_loc.size() );
+    Matrix matrix_new = instance->get_transformed_matrix( parameters_tmp, gates_loc.begin(), gates_loc.size(), Umtx_loc );
+    //Matrix matrix_new = instance->get_transformed_matrix( parameters, gates_loc.begin(), gates_loc.size(), Umtx_loc );
 
   
     cost_function_type cost_fnc = instance->get_cost_function_variant();
@@ -1056,7 +1062,10 @@ void Optimization_Interface::optimization_problem_combined_unitary( Matrix_real 
     tbb::parallel_invoke(
         [&]{
             Matrix Umtx_loc = instance->get_Umtx();
-            Umtx = instance->get_transformed_matrix( parameters, instance->gates.begin(), instance->gates.size(), Umtx_loc );
+            // REVERSE PARAMETERS
+            Matrix_real parameters_tmp = reverse_parameters( parameters, instance->gates.begin(), instance->gates.size() );
+            Umtx = instance->get_transformed_matrix( parameters_tmp, instance->gates.begin(), instance->gates.size(), Umtx_loc );
+            //Umtx = instance->get_transformed_matrix( parameters, instance->gates.begin(), instance->gates.size(), Umtx_loc );
         },
         [&]{
             Matrix Umtx_loc = instance->get_Umtx();

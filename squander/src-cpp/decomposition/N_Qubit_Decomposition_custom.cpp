@@ -138,7 +138,10 @@ std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
     }
 
     // calculating the final error of the decomposition
-    Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+    // REVERSE PARAMETERS
+    Matrix_real parameters_tmp = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
+    Matrix matrix_decomposed = get_transformed_matrix(parameters_tmp, gates.begin(), gates.size(), Umtx );
+    //Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
     calc_decomposition_error( matrix_decomposed );
 
     // get the number of gates used in the decomposition

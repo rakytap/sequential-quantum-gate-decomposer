@@ -222,8 +222,11 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM_BATCHED( int 
     
 
                 if ( iter_idx % 5000 == 0 ) {
-
+                    
+                    // REVERSE PARAMETERS
+                    Matrix_real parameters_tmp = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
                     Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+                    //Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 
                     std::stringstream sstream;
                     sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100;

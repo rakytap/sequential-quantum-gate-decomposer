@@ -232,7 +232,10 @@ void Decomposition_Base::set_max_iteration( int max_outer_iterations_in) {
 void Decomposition_Base::finalize_decomposition() {
 
         // get the transformed matrix resulted by the gates in the list
-        Matrix transformed_matrix = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+        // REVERSE PARAMETERS
+        Matrix_real parameters_tmp = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() ); 
+        Matrix transformed_matrix = get_transformed_matrix( parameters_tmp, gates.begin(), gates.size(), Umtx );
+        //Matrix transformed_matrix = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 
         // preallocate the storage for the finalizing parameters
         finalizing_parameter_num = 3*qbit_num;
@@ -517,7 +520,10 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             // ***** get applied the fixed gates applied before the optimized gates *****
             if (block_idx_start < (int)gates_loc.size() ) {
                 std::vector<Gate*>::iterator fixed_gates_pre_it = gates.begin() + 1;
-                Umtx = get_transformed_matrix(optimized_parameters_mtx, fixed_gates_pre_it, gates.size()-1, Umtx);
+                // REVERSE PARAMETERS
+                Matrix_real parameters_tmp = reverse_parameters( optimized_parameters_mtx, fixed_gates_pre_it, gates.size()-1 ); 
+                Umtx = get_transformed_matrix(parameters_tmp, fixed_gates_pre_it, gates.size()-1, Umtx);      
+                //Umtx = get_transformed_matrix(optimized_parameters_mtx, fixed_gates_pre_it, gates.size()-1, Umtx);
             }
             else {
                 Umtx = Umtx_loc.copy();
@@ -802,7 +808,7 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
 @return Returns with the transformed matrix.
 */
 Matrix
-Decomposition_Base::get_transformed_matrix( Matrix_real &parameters_orig, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix ) {
+Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix ) {
 
     // The matrix to be returned
     Matrix ret_matrix = initial_matrix.copy();
@@ -812,7 +818,7 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters_orig, std::v
 
 
     // REVERSE PARAMETERS
-    Matrix_real parameters = reverse_parameters( parameters_orig, gates_it, num_of_gates );
+    //Matrix_real parameters = reverse_parameters( parameters_orig, gates_it, num_of_gates );
     
 
     // determine the number of parameters
@@ -942,7 +948,10 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters_orig, std::v
 */
 Matrix Decomposition_Base::get_decomposed_matrix() {
         
-        return get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+        // REVERSE PARAMETERS
+        Matrix_real parameters_tmp = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
+        return get_transformed_matrix( parameters_tmp, gates.begin(), gates.size(), Umtx ); 
+        //return get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 }
 
 

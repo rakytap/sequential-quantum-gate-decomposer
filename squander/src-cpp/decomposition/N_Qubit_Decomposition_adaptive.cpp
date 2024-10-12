@@ -1919,7 +1919,10 @@ N_Qubit_Decomposition_adaptive::apply_imported_gate_structure() {
     if ( gates.size() == 0 ) return;
 
     std::vector<Gate*> gates_loc = get_gates();
-    Matrix Umtx_new = get_transformed_matrix( optimized_parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx );
+    // REVERSE PARAMETERS
+    Matrix_real parameters_tmp = reverse_parameters( optimized_parameters_mtx, gates_loc.begin(), gates_loc.size() );
+    Matrix Umtx_new = get_transformed_matrix( parameters_tmp, gates_loc.begin(), gates_loc.size(), Umtx );
+    //Matrix Umtx_new = get_transformed_matrix( optimized_parameters_mtx, gates_loc.begin(), gates_loc.size(), Umtx );
 
     std::stringstream sstream;
     sstream << "The cost function after applying the imported gate structure is:" << get_cost_function(Umtx_new) << std::endl;
