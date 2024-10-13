@@ -292,7 +292,7 @@ class Test_Decomposition:
 	   
         print('The error of the decomposition is ' + str(decomposition_error))
 	
-
+        assert( decomposition_error < 1e-3 )  
 
 
 

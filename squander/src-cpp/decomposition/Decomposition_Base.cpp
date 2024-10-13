@@ -464,7 +464,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 ////////////////////////////////////////
 
-        Matrix_real optimized_parameters_rev     = reverse_parameters( optimized_parameters, gates_loc.begin(), gates_loc.size() );
+        Matrix_real optimized_parameters_rev     = optimized_parameters;//reverse_parameters( optimized_parameters, gates_loc.begin(), gates_loc.size() );
 
 ////////////////////////////////////
 
@@ -577,7 +577,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             Matrix_real solution_guess_tmp = Matrix_real(1, parameter_num);
             //////////////////////////////////////  
             memcpy( solution_guess_tmp.get_data(), optimized_parameters_rev.get_data() + pre_gate_parameter_num, parameter_num*sizeof(double) );
-            solution_guess_tmp                     = inverse_reverse_parameters( solution_guess_tmp, gates.begin(), gates.size() );
+            //solution_guess_tmp                     = inverse_reverse_parameters( solution_guess_tmp, gates.begin(), gates.size() );
             /////////////////////////////////////
             //memcpy( solution_guess_tmp.get_data(), optimized_parameters.get_data()+parameter_num_loc - pre_gate_parameter_num - block_parameter_num, parameter_num*sizeof(double) );
 
@@ -596,7 +596,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
             // store the obtained optimalized parameters for the block
             //////////////////////////////////////
-            Matrix_real optimized_parameters_mtx_rev = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
+            Matrix_real optimized_parameters_mtx_rev = optimized_parameters_mtx;//reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
             memcpy( optimized_parameters_rev.get_data()+ pre_gate_parameter_num, optimized_parameters_mtx_rev.get_data(), parameter_num*sizeof(double) );            
             /////////////////////////////////////
             //memcpy( optimized_parameters.get_data()+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );
@@ -667,7 +667,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
 	///////////////////////
         memcpy( optimized_parameters_mtx.get_data(), optimized_parameters_rev.get_data(), parameter_num*sizeof(double) );
-        optimized_parameters_mtx = inverse_reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
+        //optimized_parameters_mtx = inverse_reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
 	//////////////////////
         //memcpy( optimized_parameters_mtx.get_data(), optimized_parameters.get_data(), parameter_num*sizeof(double) );
 
@@ -920,7 +920,9 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
         }
         else if (gate->get_type() == BLOCK_OPERATION ) {
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
-            block_gate->apply_to(parameters_mtx, ret_matrix);            
+std::vector<Gate*> gates_loc = block_gate->get_gates();
+Matrix_real parameters_mtx_rev     = reverse_parameters( parameters_mtx, gates_loc.begin(), gates_loc.size() ); 
+            block_gate->apply_to(parameters_mtx_rev, ret_matrix);            
         }
         else if (gate->get_type() == ADAPTIVE_OPERATION ) {
             Adaptive* ad_gate = static_cast<Adaptive*>( gate );

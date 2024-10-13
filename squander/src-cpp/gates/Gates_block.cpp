@@ -172,6 +172,7 @@ Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 
     // create matrix representation of the gate operations
     Matrix block_mtx = create_identity(matrix_size);
+
     apply_to(parameters, block_mtx, parallel);
 
 #ifdef DEBUG
@@ -214,14 +215,13 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix> inp
 void 
 Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
+
     double* parameters = parameters_mtx.get_data();
 
-    parameters = parameters + parameter_num;
+    //parameters = parameters + parameter_num;
     std::vector<int> involved_qubits = get_involved_qubits();
-    
-	// REVERSE PARAMETERS
-    //Matrix_real parameters = reverse_parameters( parameters_orig, gates_it, num_of_gates );    
-    
+       
+    // TODO: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!
     if(max_fusion !=-1 && ((qbit_num>max_fusion && input.cols == 1) && involved_qubits.size()>1)){
 
         if (fragmented==false){
@@ -317,8 +317,8 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
         for( int idx=gates.size()-1; idx>=0; idx--) {
 
             Gate* operation = gates[idx];
-            parameters = parameters - operation->get_parameter_num();
             Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
+            parameters = parameters + operation->get_parameter_num();
 
             switch (operation->get_type()) {
             case CNOT_OPERATION: case CZ_OPERATION:
@@ -370,7 +370,9 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
             }
             case BLOCK_OPERATION: {
                 Gates_block* block_operation = static_cast<Gates_block*>(operation);
-                block_operation->apply_to(parameters_mtx, input, parallel);
+
+Matrix_real parameters_mtx_rev_tmp     = reverse_parameters( parameters_mtx, block_operation->gates.begin(), block_operation->gates.size() ); 
+                block_operation->apply_to(parameters_mtx_rev_tmp, input, parallel);
                 break;
             }
             case COMPOSITE_OPERATION: {
@@ -697,14 +699,17 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 std::vector<Matrix> 
 Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) {
 
+
     //The stringstream input to store the output messages.
     std::stringstream sstream;
   
     std::vector<Matrix> grad(parameter_num, Matrix(0,0));
 
     // deriv_idx ... the index of the gate block for which the gradient is to be calculated
-    tbb::parallel_for( tbb::blocked_range<int>(0,gates.size()), [&](tbb::blocked_range<int> r) {
-        for (int deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
+   // tbb::parallel_for( tbb::blocked_range<int>(0,gates.size()), [&](tbb::blocked_range<int> r) {
+     //   for (int deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
+
+        for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
 
 
             Gate* gate_deriv = gates[deriv_idx];
@@ -721,8 +726,12 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
             Matrix&& input_loc = input.copy();
 
+            //double* parameters = parameters_mtx_in.get_data();
+            //parameters = parameters + parameter_num;
+
+////////////////////
             double* parameters = parameters_mtx_in.get_data();
-            parameters = parameters + parameter_num;
+///////////////////
 
 
             std::vector<Matrix> grad_loc;
@@ -730,8 +739,15 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
             for( int idx=gates.size()-1; idx>=0; idx--) {
 
                 Gate* operation = gates[idx];
-                parameters = parameters - operation->get_parameter_num();
+                //parameters = parameters - operation->get_parameter_num();
+                //Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
+
+////////////////////
                 Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
+                parameters = parameters + operation->get_parameter_num();
+///////////////////
+
+
 
                 if (operation->get_type() == CNOT_OPERATION) {
                     CNOT* cnot_operation = static_cast<CNOT*>(operation);
@@ -913,14 +929,18 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
                 else if (operation->get_type() == BLOCK_OPERATION) {
                     Gates_block* block_operation = static_cast<Gates_block*>(operation);
+
+                    Matrix_real parameters_mtx_tmp     = reverse_parameters( parameters_mtx, block_operation->gates.begin(), block_operation->gates.size() );   
+
                     if ( deriv_idx < idx ) {
-                        block_operation->apply_to( parameters_mtx, input_loc );    
+                        block_operation->apply_to( parameters_mtx_tmp, input_loc );    
+                        //block_operation->apply_to( parameters_mtx, input_loc );    
                     }
                     else if ( deriv_idx == idx ) {
-                        grad_loc = block_operation->apply_derivate_to( parameters_mtx, input_loc );    
+                        grad_loc = block_operation->apply_derivate_to( parameters_mtx_tmp, input_loc );    
                     }
                     else {
-                        block_operation->apply_to_list( parameters_mtx, grad_loc );
+                        block_operation->apply_to_list( parameters_mtx_tmp, grad_loc );
                     }
                 }
 
@@ -958,7 +978,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
         } // tbb range end
     
-    });
+    //});
 
     return grad;
 

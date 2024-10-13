@@ -506,10 +506,11 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
     }  
     
     // REVERSE PARAMETERS
-    Matrix_real parameters_tmp = reverse_parameters( parameters, gates.begin(), gates.size() );
-    Matrix matrix_new = get_transformed_matrix( parameters_tmp, gates.begin(), gates.size(), Umtx );
-    //Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
+    //Matrix_real parameters_tmp = reverse_parameters( parameters, gates.begin(), gates.size() );
+    //Matrix matrix_new = get_transformed_matrix( parameters_tmp, gates.begin(), gates.size(), Umtx );
+    Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
 //matrix_new.print_matrix();
+//std::cout << "optimization_problem " << parameters_tmp[0] << std::endl;
 
     if ( cost_fnc == FROBENIUS_NORM ) {
         return get_cost_function(matrix_new, trace_offset);
@@ -704,10 +705,9 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
     // get the transformed matrix with the gates in the list
     Matrix Umtx_loc = instance->get_Umtx();
     // REVERSE PARAMETERS
-    Matrix_real parameters_tmp = reverse_parameters( parameters, gates_loc.begin(), gates_loc.size() );
-    Matrix matrix_new = instance->get_transformed_matrix( parameters_tmp, gates_loc.begin(), gates_loc.size(), Umtx_loc );
-    //Matrix matrix_new = instance->get_transformed_matrix( parameters, gates_loc.begin(), gates_loc.size(), Umtx_loc );
-
+    //Matrix_real parameters_tmp = reverse_parameters( parameters, gates_loc.begin(), gates_loc.size() );
+    //Matrix matrix_new = instance->get_transformed_matrix( parameters_tmp, gates_loc.begin(), gates_loc.size(), Umtx_loc );
+    Matrix matrix_new = instance->get_transformed_matrix( parameters, gates_loc.begin(), gates_loc.size(), Umtx_loc );
   
     cost_function_type cost_fnc = instance->get_cost_function_variant();
 
@@ -945,15 +945,17 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     std::vector<Matrix> Umtx_deriv;
     Matrix trace_tmp(1,3);
     
-   
+
+Matrix_real parameters_rev     = reverse_parameters( parameters, instance->gates.begin(), instance->gates.size() );   
 
     tbb::parallel_invoke(
         [&]{
-            *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance), trace_tmp); 
+            *f0 = instance->optimization_problem(parameters_rev, reinterpret_cast<void*>(instance), trace_tmp); 
         },
         [&]{
             Matrix&& Umtx_loc = instance->get_Umtx();   
-            Umtx_deriv = instance->apply_derivate_to( parameters, Umtx_loc );
+            Umtx_deriv = instance->apply_derivate_to( parameters_rev, Umtx_loc );
+            //Umtx_deriv = instance->apply_derivate_to( parameters, Umtx_loc );
         }
     );
 
