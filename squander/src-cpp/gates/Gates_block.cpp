@@ -370,9 +370,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
             }
             case BLOCK_OPERATION: {
                 Gates_block* block_operation = static_cast<Gates_block*>(operation);
-
-Matrix_real parameters_mtx_rev_tmp     = reverse_parameters( parameters_mtx, block_operation->gates.begin(), block_operation->gates.size() ); 
-                block_operation->apply_to(parameters_mtx_rev_tmp, input, parallel);
+                block_operation->apply_to(parameters_mtx, input, parallel);
                 break;
             }
             case COMPOSITE_OPERATION: {
@@ -719,9 +717,9 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 continue;
             }
 
-            int deriv_parameter_idx = 0;
-            for ( int idx=0; idx<deriv_idx; idx++ ) {
-                deriv_parameter_idx += gates[idx]->get_parameter_num();
+            int deriv_parameter_idx = parameter_num;
+            for ( int idx=0; idx<=deriv_idx; idx++ ) {
+                deriv_parameter_idx -= gates[idx]->get_parameter_num();
             }
 
             Matrix&& input_loc = input.copy();
@@ -930,17 +928,15 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 else if (operation->get_type() == BLOCK_OPERATION) {
                     Gates_block* block_operation = static_cast<Gates_block*>(operation);
 
-                    Matrix_real parameters_mtx_tmp     = reverse_parameters( parameters_mtx, block_operation->gates.begin(), block_operation->gates.size() );   
 
-                    if ( deriv_idx < idx ) {
-                        block_operation->apply_to( parameters_mtx_tmp, input_loc );    
-                        //block_operation->apply_to( parameters_mtx, input_loc );    
+                    if ( deriv_idx < idx ) {  
+                        block_operation->apply_to( parameters_mtx, input_loc );    
                     }
                     else if ( deriv_idx == idx ) {
-                        grad_loc = block_operation->apply_derivate_to( parameters_mtx_tmp, input_loc );    
+                        grad_loc = block_operation->apply_derivate_to( parameters_mtx, input_loc );    
                     }
                     else {
-                        block_operation->apply_to_list( parameters_mtx_tmp, grad_loc );
+                        block_operation->apply_to_list( parameters_mtx, grad_loc );
                     }
                 }
 
@@ -3922,6 +3918,7 @@ Matrix_real reverse_parameters( const Matrix_real& parameters_in, std::vector<Ga
 		throw error;
 	}
 	
+//return parameters_in.copy();
 	
     // determine the number of parameters
     int parameters_num_total = 0;
@@ -3956,7 +3953,7 @@ Matrix_real reverse_parameters( const Matrix_real& parameters_in, std::vector<Ga
         if ( parameter_num_gate == 0 ) {
         	continue;
         }     
-        /*   
+           
         else if (gate->get_type() == BLOCK_OPERATION ) {
         
 	        //std::cout << "block: " << parameter_num_gate << " " << parameters_num_total << std::endl;
@@ -3979,7 +3976,7 @@ Matrix_real reverse_parameters( const Matrix_real& parameters_in, std::vector<Ga
 			//parameters_ret.print_matrix();
 			
         }
-        */
+        
         else {
         
 	        //std::cout << parameter_num_gate << std::endl;
@@ -4053,7 +4050,7 @@ Matrix_real inverse_reverse_parameters( const Matrix_real& parameters_in, std::v
         if ( parameter_num_gate == 0 ) {
         	continue;
         }     
-        /*   
+         
         else if (gate->get_type() == BLOCK_OPERATION ) {
         
 	        //std::cout << "block: " << parameter_num_gate << " " << parameters_num_total << std::endl;
@@ -4076,7 +4073,7 @@ Matrix_real inverse_reverse_parameters( const Matrix_real& parameters_in, std::v
 			//parameters_ret.print_matrix();
 			
         }
-        */
+        
         else {
         
 	        //std::cout << parameter_num_gate << std::endl;

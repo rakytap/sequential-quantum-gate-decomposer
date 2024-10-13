@@ -265,6 +265,8 @@ class Test_Decomposition:
 
         decomp.set_Optimizer("BFGS")
 
+        decomp.set_Verbose(3)
+
         # starting the decomposition
         decomp.Start_Decomposition(prepare_export=True)
 

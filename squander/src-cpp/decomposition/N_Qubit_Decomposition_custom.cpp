@@ -130,16 +130,17 @@ if (optimized_parameters_mtx.size() > 0 ) {
     // final tuning of the decomposition parameters
     final_optimization();
 
-
+// prepare gates export needs original ordering
+optimized_parameters_mtx = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
     // prepare gates to export
     if (prepare_export) {
         prepare_gates_to_export();
     }
+optimized_parameters_mtx = inverse_reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
 
     // calculating the final error of the decomposition
     // REVERSE PARAMETERS
-    Matrix_real parameters_tmp = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
-    Matrix matrix_decomposed = get_transformed_matrix(parameters_tmp, gates.begin(), gates.size(), Umtx );
+    Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
     //Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
     calc_decomposition_error( matrix_decomposed );
 
