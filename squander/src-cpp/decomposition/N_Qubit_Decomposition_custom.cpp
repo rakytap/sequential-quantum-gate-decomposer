@@ -122,9 +122,11 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
 
 
-if (optimized_parameters_mtx.size() > 0 ) {
-    std::cout << "cost function of the imported circuit: " << optimization_problem( optimized_parameters_mtx ) << std::endl;
-}   
+    if (optimized_parameters_mtx.size() > 0 ) {
+        sstream.str("");
+        sstream << "cost function of the imported circuit: " << optimization_problem( optimized_parameters_mtx ) << std::endl;
+        print(sstream, 1);
+    }   
 
 
     // final tuning of the decomposition parameters

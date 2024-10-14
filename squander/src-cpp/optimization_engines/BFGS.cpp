@@ -118,7 +118,7 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS( int num_of_p
                     solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen);
                 }
             }*/
-std::cout << "pppppppp " << current_minimum << std::endl;
+//std::cout << "solve_layer_optimization_problem_BFGS " << current_minimum << std::endl;
             export_current_cost_fnc(current_minimum);
 
 #ifdef __MPI__        
