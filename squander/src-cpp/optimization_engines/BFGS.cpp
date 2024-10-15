@@ -99,6 +99,8 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS( int num_of_p
         }
 
 
+
+
         // do the optimization loops
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 	    

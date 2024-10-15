@@ -176,13 +176,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
 
             // Do the optimization
             if (optimize_layer_num || layer_num >= max_layer_num_loc ) {
-/*
-                // release optimized parameters if necessary
-                if (optimized_parameters != NULL) {
-                    qgd_free(optimized_parameters);
-                    optimized_parameters = NULL;
-                }
-*/
+
                 // solve the optimization problem to find the correct minimum
                 solve_optimization_problem( NULL, 0);
 
@@ -220,11 +214,7 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     subdisentaglement_done = true;
 
     // The subunitarized matrix
-//Matrix_real optimized_parameters_mtx_tmp(optimized_parameters, 1, parameter_num );
-    // REVERSE PARAMETERS
-    Matrix_real parameters_tmp = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
-    subdecomposed_mtx = get_transformed_matrix( parameters_tmp, gates.begin(), gates.size(), Umtx );
-    //subdecomposed_mtx = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+    subdecomposed_mtx = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
 
 }
 
@@ -498,10 +488,7 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 
         // get the transformed matrix with the gates in the list
         Matrix_real parameters_mtx(parameters, 1, parameter_num );
-        // REVERSE PARAMETERS
-        Matrix_real parameters_tmp = reverse_parameters( parameters_mtx, gates.begin(), gates.size() );
-        Matrix matrix_new = get_transformed_matrix( parameters_tmp, gates.begin(), gates.size(), Umtx );
-        //Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
+        Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
@@ -535,10 +522,7 @@ double Sub_Matrix_Decomposition::optimization_problem( Matrix_real parameters, v
 //tbb::spin_mutex::scoped_lock my_lock{my_mutex};
 
     Umtx_loc = instance->get_Umtx();
-    // REVERSE PARAMETERS
-    Matrix_real parameters_tmp = reverse_parameters( parameters, gates_loc.begin(), gates_loc.size() );
-    matrix_new = instance->get_transformed_matrix( parameters_tmp, gates_loc.begin(), gates_loc.size(), Umtx_loc );
-    //matrix_new = instance->get_transformed_matrix( parameters, gates_loc.begin(), gates_loc.size(), Umtx_loc );
+    matrix_new = instance->get_transformed_matrix( parameters, gates_loc.begin(), gates_loc.size(), Umtx_loc );
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {

@@ -596,12 +596,27 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
     //The stringstream input to store the output messages.
     std::stringstream sstream;
 
-    double* parameters = parameters_mtx.get_data();
+
+
+    // determine the number of parameters
+    int parameters_num_total = 0;  
+    for (int idx=0; idx<gates.size(); idx++) {
+
+        // The current gate
+        Gate* gate = gates[idx];
+        parameters_num_total = parameters_num_total + gate->get_parameter_num();
+
+    }
+
+
+    double* parameters = parameters_mtx.get_data() + parameters_num_total;
+
+
 
     for( int idx=0; idx<(int)gates.size(); idx++) {
 
         Gate* operation = gates[idx];
-        Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
+        Matrix_real parameters_mtx(parameters-operation->get_parameter_num(), 1, operation->get_parameter_num());
 
         switch (operation->get_type()) {
         case CNOT_OPERATION: case CZ_OPERATION:
@@ -671,7 +686,7 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
             throw err;
         }
 
-        parameters = parameters + operation->get_parameter_num();
+        parameters = parameters - operation->get_parameter_num();
 
 #ifdef DEBUG
         if (input.isnan()) { 
@@ -704,10 +719,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
     std::vector<Matrix> grad(parameter_num, Matrix(0,0));
 
     // deriv_idx ... the index of the gate block for which the gradient is to be calculated
-   // tbb::parallel_for( tbb::blocked_range<int>(0,gates.size()), [&](tbb::blocked_range<int> r) {
-     //   for (int deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
+    tbb::parallel_for( tbb::blocked_range<int>(0,gates.size()), [&](tbb::blocked_range<int> r) {
+        for (int deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
 
-        for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
+        //for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
 
 
             Gate* gate_deriv = gates[deriv_idx];
@@ -974,7 +989,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
         } // tbb range end
     
-    //});
+    });
 
     return grad;
 

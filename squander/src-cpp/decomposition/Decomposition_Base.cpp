@@ -21,6 +21,7 @@ limitations under the License.
 */
 
 #include "Decomposition_Base.h"
+#include "Sub_Matrix_Decomposition_Cost_Function.h"
 
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
@@ -494,6 +495,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         //measure the time for the decomposition
         tbb::tick_count start_time = tbb::tick_count::now();
 
+
         ////////////////////////////////////////
         // Start the iterations
         long long iter_idx;
@@ -510,16 +512,20 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             for ( int block_idx=block_idx_start-1; block_idx>=block_idx_end; block_idx--) {
                 block_parameter_num = block_parameter_num + gates_loc[block_idx]->get_parameter_num();
             }
-       
+
 
             // ***** get applied the fixed gates applied before the optimized gates *****
             if (block_idx_start < (int)gates_loc.size() ) {
                 std::vector<Gate*>::iterator fixed_gates_pre_it = gates.begin() + 1; 
                 Umtx = get_transformed_matrix(optimized_parameters_mtx, fixed_gates_pre_it, gates.size()-1, Umtx);
+
             }
             else {
                 Umtx = Umtx_loc.copy();
             }
+
+
+
 
             // clear the gate list used in the previous iterations
             gates.clear();
@@ -534,17 +540,21 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             if (block_idx_start == (int)gates_loc.size() ) {
                 // matrix of the fixed gates aplied after the gates to be varied
                 std::vector<Gate*>::iterator fixed_gates_post_it = gates_loc.begin();
-                ////////////////////////////////
+
                 int parameter_idx = optimized_parameters.size();
                 for (int gate_idx=0; gate_idx<block_idx_end; gate_idx++) {
                     Gate* gate = gates_loc[gate_idx];
                     parameter_idx = parameter_idx -  gate->get_parameter_num();   
                 }
+
                 Matrix_real optimized_parameters_partial = Matrix_real( optimized_parameters.get_data()+parameter_idx, 1, optimized_parameters.size()-parameter_idx );
                 gates_mtxs_post = get_gate_products(optimized_parameters_partial, fixed_gates_post_it, block_idx_end);
-                /////////////////////////////////
-                //gates_mtxs_post = get_gate_products(optimized_parameters, fixed_gates_post_it, block_idx_end);
+
             }
+
+
+
+
 
             // Create a general gate describing the cumulative effect of gates following the optimized gates
             if (block_idx_end > 0) {
@@ -556,7 +566,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 gates_mtxs_post.clear();
                 fixed_gate_post->set_matrix( Identity );
             }
-
+ 
             // create a list of gates for the optimization process
             for ( int idx=block_idx_end; idx<block_idx_start; idx++ ) {
                 gates.push_back( gates_loc[idx] );
@@ -570,9 +580,16 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             memcpy( solution_guess_tmp.get_data(), optimized_parameters.get_data() + pre_gate_parameter_num, parameter_num*sizeof(double) );
             /////////////////////////////////////
 
+
+
             // solve the optimization problem of the block
             solve_layer_optimization_problem( parameter_num, solution_guess_tmp );
 
+/*
+Matrix tmp4 = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size() );
+std::cout << "eeee4 " << tmp4[0].real << " " << get_submatrix_cost_function(tmp4) << std::endl;
+std::cout << "current_minimum: " << current_minimum << std::endl;
+*/
             // add the current minimum to the array of minimums and calculate the mean
             double minvec_mean = 0;
             for (int idx=min_vec_num-1; idx>0; idx--) {
@@ -583,17 +600,22 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
             minvec_mean = minvec_mean + current_minimum;
             minvec_mean = minvec_mean/min_vec_num;
 
+
+
             // store the obtained optimalized parameters for the block
             //////////////////////////////////////
-            memcpy( optimized_parameters.get_data()+ pre_gate_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );            
+            memcpy( optimized_parameters.get_data()+pre_gate_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );            
             /////////////////////////////////////
             //memcpy( optimized_parameters.get_data()+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );
 
+
             if (block_idx_end == 0) {
+                // restart the block-wise iteration again
                 block_idx_start = gates_loc.size();
                 pre_gate_parameter_num = 0;
             }
             else {
+                // mode the block-wies optimization to the next block
                 block_idx_start = block_idx_start - optimization_block;
                 pre_gate_parameter_num = pre_gate_parameter_num + block_parameter_num;
             }

@@ -250,11 +250,7 @@ N_Qubit_Decomposition::decompose_submatrix() {
         }
 
         // obtaining the subdecomposed submatrices
-//Matrix_real optimized_parameters_mtx_tmp(optimized_parameters, 1, parameter_num );
-        // REVERSE PARAMETERS
-        Matrix_real parameters_tmp = reverse_parameters( optimized_parameters_mtx, gates.begin(), gates.size() );
-        Matrix subdecomposed_matrix_mtx = get_transformed_matrix( parameters_tmp, gates.begin(), gates.size(), Umtx );
-        //Matrix subdecomposed_matrix_mtx = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+        Matrix subdecomposed_matrix_mtx = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
         QGD_Complex16* subdecomposed_matrix = subdecomposed_matrix_mtx.get_data();
 
         // get the most unitary submatrix
@@ -367,8 +363,6 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
 
         if ( optimized_parameters_mtx.size() > 0 ) {
             memcpy(optimized_parameters_tmp.get_data()+parameter_num_sub_decomp, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double));
-            //qgd_free( optimized_parameters );
-            //optimized_parameters = NULL;
         }
 
         optimized_parameters_mtx = optimized_parameters_tmp;
