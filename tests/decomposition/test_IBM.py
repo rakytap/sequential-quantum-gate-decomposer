@@ -44,7 +44,7 @@ class Test_Decomposition:
 
     
 
-    def ctest_IBM_Chellenge(self):
+    def test_IBM_Chellenge(self):
         r"""
         This method is called by pytest. 
         Test to decompose a 4-qubit unitary of the IBM chellenge

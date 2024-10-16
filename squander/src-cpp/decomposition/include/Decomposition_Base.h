@@ -196,25 +196,10 @@ void set_max_iteration( int max_outer_iterations_in);
 
 
 /**
-@brief After the main optimization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed gates are added to the array of gates needed to the decomposition of the input unitary.
-*/
-void finalize_decomposition();
-
-
-/**
 @brief Call to print the gates decomposing the initial unitary. These gates brings the intial matrix into unity.
 @param start_index The index of the first gate
 */
 void list_gates( int start_index );
-
-/**
-@brief This method determine the gates needed to rotate the indepent qubits into the state |0>
-@param mtx The unitary describing indepent qubits. The resulting matrix is returned by this pointer
-@param finalizing_gates Pointer pointig to a block of gates containing the final gates.
-@param finalizing_parameters Parameters corresponding to the finalizing gates.
-@return Returns with the finalized matrix
-*/
-Matrix get_finalizing_gates( Matrix& mtx, Gates_block* finalizing_gates, Matrix_real& finalizing_parameters);
 
 
 /**

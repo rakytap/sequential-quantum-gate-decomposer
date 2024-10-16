@@ -304,11 +304,12 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                     if gate0['type'] == 'u3':
                         Layer.add_U3( qubit0, True, True, True )
                         params = gate0['params']
-                        params.reverse()
+                        params[0] = params[0]/2 #SQUADER works with theta/2
+                        ###params.reverse()
                         for param in params:
                             optimized_parameters = optimized_parameters + [float(param)]
 
-                        optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
+                        ###optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
                         
 
                 if len(single_qubit_gates[qubit1])>0:
@@ -318,10 +319,11 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                     if gate1['type'] == 'u3':
                         Layer.add_U3( qubit1, True, True, True )
                         params = gate1['params']
-                        params.reverse()
+                        params[0] = params[0]/2 #SQUADER works with theta/2
+                        ###params.reverse()
                         for param in params:
                             optimized_parameters = optimized_parameters + [float(param)]
-                        optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
+                        ###optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
 
                 ## add cz gate to the layer       
                 if name == 'cz':
@@ -345,10 +347,11 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                 if gate['type'] == 'u3':
                     Layer.add_U3( qubit, True, True, True )
                     params = gate['params']
-                    params.reverse()
+                    params[0] = params[0]/2 #SQUADER works with theta/2
+                    ###params.reverse()
                     for param in params:
                         optimized_parameters = optimized_parameters + [float(param)]
-                    optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
+                    ###optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
 
         Circuit_ret.add_Circuit( Layer )
 
@@ -356,7 +359,8 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
         # setting gate structure and optimized initial parameters
         self.set_Gate_Structure(Circuit_ret)
-        self.set_Optimized_Parameters( np.flip(optimized_parameters,0) )      
+        #self.set_Optimized_Parameters( np.flip(optimized_parameters,0) )      
+        self.set_Optimized_Parameters( optimized_parameters )      
         
 
 

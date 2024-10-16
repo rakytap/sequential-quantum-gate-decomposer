@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import numpy as np
 from os import path
-from .qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
+from squander.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
 
 
 

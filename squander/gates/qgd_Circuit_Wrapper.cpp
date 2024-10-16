@@ -263,7 +263,7 @@ qgd_Circuit_Wrapper_add_RZ(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_rz(target_qbit);
+        self->gate->add_rz_p(target_qbit);
     }
 
     return Py_BuildValue("i", 0);

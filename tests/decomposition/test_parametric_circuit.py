@@ -181,12 +181,30 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 
 		qc_final = cDecompose.get_Quantum_Circuit()
 
+
+
 		# get the unitary of the final circuit
 		Umtx_recheck = utils.get_unitary_from_qiskit_circuit( qc_final )
 
 		# get the decomposition error
 		decomposition_error =  get_unitary_distance(Umtx_orig, Umtx_recheck)
 		print('recheck decomposition error: ', decomposition_error)
+
+		print("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiii ")
+		qc_final = cDecompose.get_Quantum_Circuit()
+		cDecompose2 = N_Qubit_Decomposition_custom( Umtx_recheck.conj().T )
+		cDecompose2.import_Qiskit_Circuit(qc_final)
+
+		# set verbosity
+		cDecompose2.set_Verbose( 4 )
+
+		# starting the decomposition
+		cDecompose2.Start_Decomposition()
+
+
+
+
+
 
 		if decomposition_error < 1e-3:
 			break

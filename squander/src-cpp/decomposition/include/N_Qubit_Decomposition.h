@@ -116,6 +116,10 @@ virtual ~N_Qubit_Decomposition();
 virtual void start_decomposition(bool finalize_decomp=true, bool prepare_export=true);
 
 
+/**
+@brief After the main optimization problem is solved, the indepent qubits can be rotated into state |0> by this def. The constructed gates are added to the array of gates needed to the decomposition of the input unitary.
+*/
+void finalize_decomposition();
 
 /**
 @brief Start the decompostion process to recursively decompose the submatrices.
@@ -128,24 +132,6 @@ void  decompose_submatrix();
 @param cSub_decomposition An instance of class Sub_Matrix_Decomposition used to disentangle the n-th qubit from the others.
 */
 void  extract_subdecomposition_results( Sub_Matrix_Decomposition* cSub_decomposition );
-
-/**
-@brief Call to simplify the gate structure in the layers if possible (i.e. tries to reduce the number of CNOT gates)
-*/
-void simplify_layers();
-
-/**
-@brief Call to simplify the gate structure in a block of gates (i.e. tries to reduce the number of CNOT gates)
-@param layer An instance of class Gates_block containing the 2-qubit gate structure to be simplified
-@param parameters An array of parameters to calculate the matrix representation of the gates in the block of gates.
-@param parameter_num_block NUmber of parameters in the block of gates to be simplified.
-@param max_layer_num_loc A map of <int n: int num> indicating the maximal number of CNOT gates allowed in the simplification.
-@param simplified_layer An instance of Gates_block containing the simplified structure of gates.
-@param simplified_parameters An array of parameters containing the parameters of the simplified block structure.
-@param simplified_parameter_num The number of parameters in the simplified block structure.
-@return Returns with 0 if the simplification wa ssuccessful.
-*/
-int simplify_layer( Gates_block* layer, double* parameters, int parameter_num_block, std::map<int,int> max_layer_num_loc, Gates_block* &simplified_layer, double* &simplified_parameters, int &simplified_parameter_num);
 
 
 /**
