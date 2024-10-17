@@ -176,7 +176,8 @@ class Test_VQE:
         # evaluate the VQE energy at the optimized parameters
         Energy = VQE_Heisenberg.Optimization_Problem( parameters )
         
-        print(lambdas[0])
+        print('Expected energy: ', np.real(lambdas[0]))
+        print('Obtained energy: ', Energy)
         assert ((Energy - np.real(lambdas[0]))<1e-2)
 
 

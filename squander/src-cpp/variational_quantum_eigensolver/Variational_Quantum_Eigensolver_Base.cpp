@@ -468,7 +468,8 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
                 for( int idx=0; idx<inner_blocks; idx++) {
                     Gates_block* block_1 = new Gates_block( qbit_num );
                     Gates_block* block_2 = new Gates_block( qbit_num );
-
+ 
+                    // single qubit gates in a ablock are then merged into a single gate kernel.
                     block_1->add_rz(1);
                     block_1->add_ry(1);
                     block_1->add_rz(1);     

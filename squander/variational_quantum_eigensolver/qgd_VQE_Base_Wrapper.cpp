@@ -234,16 +234,10 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Optimized_Parameters( qgd_V
     double* parameters = parameters_mtx.get_data();
     self->vqe->get_optimized_parameters(parameters);
 
-    // reversing the order
-    Matrix_real parameters_mtx_reversed(1, parameter_num);
-    double* parameters_reversed = parameters_mtx_reversed.get_data();
-    for (int idx=0; idx<parameter_num; idx++ ) {
-        parameters_reversed[idx] = parameters[idx];
-    }
 
     // convert to numpy array
-    parameters_mtx_reversed.set_owner(false);
-    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx_reversed );
+    parameters_mtx.set_owner(false);
+    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx );
 
     return parameter_arr;
 }

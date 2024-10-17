@@ -224,6 +224,10 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
     // TODO: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!
     if(max_fusion !=-1 && ((qbit_num>max_fusion && input.cols == 1) && involved_qubits.size()>1)){
 
+
+        std::string error("Gates_block::apply_to: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!");
+        throw error;      
+
         if (fragmented==false){
             fragment_circuit();
         };  
@@ -303,10 +307,11 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
                 }
                     // TODO check gates block
                 Matrix Umtx_mini = create_identity(2);
-                parameters       = parameters - gates_block_mini.get_parameter_num();
 
                 Matrix_real parameters_mtx_loc(parameters, 1, gates_block_mini.get_parameter_num());
                 gates_block_mini.apply_to(parameters_mtx_loc, Umtx_mini);
+
+                parameters       = parameters + gates_block_mini.get_parameter_num();
 
 
                 custom_kernel_1qubit_gate merged_gate( qbit_num, involved_qubits[0], Umtx_mini );
