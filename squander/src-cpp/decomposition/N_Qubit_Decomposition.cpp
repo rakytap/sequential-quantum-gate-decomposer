@@ -364,14 +364,13 @@ void N_Qubit_Decomposition::finalize_decomposition() {
             add_u3(target_qbit, true, true, true );
         }
 
-        std::cout << parameter_num << std::endl;
 
         Matrix_real solution_guess_tmp = Matrix_real(1, parameter_num);
         memset( solution_guess_tmp.get_data(), 0, solution_guess_tmp.size()*sizeof(double) );
 
         solve_layer_optimization_problem( parameter_num, solution_guess_tmp );
 
-        std::cout << "current_minimum: " << current_minimum << std::endl;
+        //std::cout << "current_minimum: " << current_minimum << std::endl;
 
         // combine results
         Gates_block* gates_save2 = static_cast<Gates_block*>(this)->clone();

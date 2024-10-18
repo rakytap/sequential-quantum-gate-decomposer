@@ -74,7 +74,7 @@ def generate_hamiltonian(topology, n):
 
 class Test_VQE:
 
-    def ctest_VQE_Identity(self):
+    def test_VQE_Identity(self):
         layers = 1
         blocks = 1
 
@@ -104,7 +104,7 @@ class Test_VQE:
 
         # create initial parameters 
         param_num  = VQE_eye.get_Parameter_Num()
-        parameters = np.zeros( (param_num,) )
+        parameters = np.random.random( (param_num,) )
 
         VQE_eye.set_Optimized_Parameters(parameters)
 
@@ -157,7 +157,7 @@ class Test_VQE:
 
         # create initial parameters 
         param_num  = VQE_Heisenberg.get_Parameter_Num()
-        parameters = np.zeros( (param_num,) )
+        parameters = np.random.random( (param_num,) )
 
         VQE_Heisenberg.set_Optimized_Parameters(parameters)
 
