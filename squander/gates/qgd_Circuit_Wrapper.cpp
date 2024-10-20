@@ -408,7 +408,36 @@ qgd_Circuit_Wrapper_add_SYC(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
 
 }
 
+/**
+@brief Wrapper function to add a Hadamard gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class Circuit.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_H(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
 
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit",  NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+
+    // adding X gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->gate->add_h(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
 
 /**
 @brief Wrapper function to add a X gate to the front of the gate structure.
@@ -987,6 +1016,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"add_SYC", (PyCFunction) qgd_Circuit_Wrapper_add_SYC, METH_VARARGS | METH_KEYWORDS,
      "Call to add a Sycamore gate to the front of the gate structure"
+    },
+    {"add_H", (PyCFunction) qgd_Circuit_Wrapper_add_H, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a Hadamard gate to the front of the gate structure"
     },
     {"add_X", (PyCFunction) qgd_Circuit_Wrapper_add_X, METH_VARARGS | METH_KEYWORDS,
      "Call to add a X gate to the front of the gate structure"

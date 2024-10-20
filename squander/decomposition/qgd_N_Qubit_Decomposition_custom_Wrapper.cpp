@@ -517,6 +517,19 @@ get_gate( N_Qubit_Decomposition_custom* decomp, int &idx ) {
 
 
     }
+    else if (gate->get_type() == H_OPERATION) {
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "H" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+
+    }    
     else if (gate->get_type() == X_OPERATION) {
 
         // create gate parameters

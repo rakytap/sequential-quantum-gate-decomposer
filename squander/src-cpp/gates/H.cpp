@@ -35,7 +35,7 @@ H::H() {
         // the size of the matrix
         matrix_size = -1;
         // A string describing the type of the gate
-        type = X_OPERATION;
+        type = H_OPERATION;
 
         // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = -1;
@@ -65,7 +65,7 @@ H::H(int qbit_num_in, int target_qbit_in) {
         // the size of the matrix
         matrix_size = Power_of_2(qbit_num);
         // A string describing the type of the gate
-        type = X_OPERATION;
+        type = H_OPERATION;
 
 
         if (target_qbit_in >= qbit_num) {
@@ -149,7 +149,7 @@ H::apply_to( Matrix& input, int parallel ) {
         print(sstream, 0);	       
         exit(-1);
     }
-
+    
     Matrix u3_1qbit = calc_one_qubit_u3();
 
     //apply_kernel_to function to X gate 
@@ -278,10 +278,10 @@ Matrix
 H::calc_one_qubit_u3( ){
 
     Matrix u3_1qbit = Matrix(2,2);
-    u3_1qbit[0].real = 0.0; u3_1qbit[0].imag = 0.0; 
-    u3_1qbit[1].real = 1.0; u3_1qbit[1].imag = 0.0;
-    u3_1qbit[2].real = 1.0; u3_1qbit[2].imag = 0.0;
-    u3_1qbit[3].real = 0.0;u3_1qbit[3].imag = 0.0;
+    u3_1qbit[0].real = 1.0/sqrt(2.0); u3_1qbit[0].imag = 0.0; 
+    u3_1qbit[1].real = 1.0/sqrt(2.0); u3_1qbit[1].imag = 0.0;
+    u3_1qbit[2].real = 1.0/sqrt(2.0); u3_1qbit[2].imag = 0.0;
+    u3_1qbit[3].real = -1.0/sqrt(2.0);u3_1qbit[3].imag = 0.0;
     return u3_1qbit;
 
 }

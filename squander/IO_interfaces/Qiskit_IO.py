@@ -137,7 +137,7 @@ def convert_Qiskit_to_Squander( qc_in ):
         #print('Gate name in Qiskit: ', name )
 
 
-        if name == 'u':
+        if name == 'u' or name == 'u3':
             # add u3 gate 
             qubits = gate[1]                
             qubit = q_register.index( qubits[0] )   # qubits[0].index
@@ -218,6 +218,12 @@ def convert_Qiskit_to_Squander( qc_in ):
                 parameters = parameters + [float(param)]
 
             Circuit_Squander.add_RZ( qubit )
+
+        elif name == "h":
+            qubits = gate[1]                
+            qubit = q_register.index( qubits[0] ) 
+
+            Circuit_Squander.add_H( qubit )
 
         elif name == "x":
             qubits = gate[1]                

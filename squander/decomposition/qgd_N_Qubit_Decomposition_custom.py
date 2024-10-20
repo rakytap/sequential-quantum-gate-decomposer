@@ -137,6 +137,10 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
             elif gate.get("type") == "RZ" or gate.get("type") == "RZ_P":
                 # RZ gate
                 circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
+                
+            elif gate.get("type") == "H":
+                # X gate
+                circuit.h(gate.get("target_qbit"))                
 
             elif gate.get("type") == "X":
                 # X gate
@@ -153,6 +157,9 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
             elif gate.get("type") == "SX":
                 # SX gate
                 circuit.sx(gate.get("target_qbit"))
+                
+            else:
+                print( 'Unimplemented gate in export: ', gate.get("type") )
 
 
         return circuit
@@ -218,6 +225,10 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
                 # RZ gate
                 circuit.append(cirq.rz(gate.get("Phi")).on(q[self.qbit_num-1-gate.get("target_qbit")]))
 
+            elif gate.get("type") == "H":
+                # Hadamard gate
+                circuit.append(cirq.h(q[self.qbit_num-1-gate.get("target_qbit")]))
+
             elif gate.get("type") == "X":
                 # X gate
                 circuit.append(cirq.x(q[self.qbit_num-1-gate.get("target_qbit")]))
@@ -244,123 +255,14 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 # @param qc_in The quantum circuit to be imported
     def import_Qiskit_Circuit( self, qc_in ):  
 
-        from qiskit import QuantumCircuit, transpile
-        from qiskit.circuit import ParameterExpression
-        from squander.gates.qgd_Circuit import qgd_Circuit
-
-        qc = transpile(qc_in, optimization_level=3, basis_gates=['cz', 'cx', 'u3'], layout_method='sabre')
-        #print('Depth of Qiskit transpiled quantum circuit:', qc.depth())
-        #print('Gate counts in Qiskit transpiled quantum circuit:', qc.count_ops())
-
-        # get the register of qubits
-        q_register = qc.qubits
-
-        # get the size of the register
-        register_size = qc.num_qubits
+        from squander import Qiskit_IO
         
-        # prepare dictionary for single qubit gates
-        single_qubit_gates = dict()
-        for idx in range(register_size):
-            single_qubit_gates[idx] = []
-
-        # prepare dictionary for two-qubit gates
-        two_qubit_gates = list()
-
-        # construct the qgd gate structure        
-        Circuit_ret = qgd_Circuit(register_size)
-
-        optimized_parameters = list()
-
-
-        for gate in qc.data:
-
-            name = gate[0].name            
-
-            if name == 'u3':
-                # add u3 gate 
-                qubits = gate[1]
-                
-                qubit = q_register.index( qubits[0] )   # qubits[0].index
-                single_qubit_gates[qubit].append( {'params': gate[0].params, 'type': 'u3'} )
-
-            elif name == 'cz' or name == 'cx':
-                # add cz gate 
-                qubits = gate[1]
-
-                qubit0 = q_register.index( qubits[0] ) #qubits[0].index
-                qubit1 = q_register.index( qubits[1] ) #qubits[1].index
-
-
-                two_qubit_gate = {'type': name, 'qubits': [qubit0, qubit1]}
-
-                # creating an instance of the wrapper class qgd_Circuit
-                Layer = qgd_Circuit( register_size )
-
-                # retrive the corresponding single qubit gates and create layer from them
-                if len(single_qubit_gates[qubit0])>0:
-                    gate0 = single_qubit_gates[qubit0][0]
-                    single_qubit_gates[qubit0].pop(0)
-                    
-                    if gate0['type'] == 'u3':
-                        Layer.add_U3( qubit0, True, True, True )
-                        params = gate0['params']
-                        params[0] = params[0]/2 #SQUADER works with theta/2
-                        ###params.reverse()
-                        for param in params:
-                            optimized_parameters = optimized_parameters + [float(param)]
-
-                        ###optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
-                        
-
-                if len(single_qubit_gates[qubit1])>0:
-                    gate1 = single_qubit_gates[qubit1][0]
-                    single_qubit_gates[qubit1].pop(0)
-                    
-                    if gate1['type'] == 'u3':
-                        Layer.add_U3( qubit1, True, True, True )
-                        params = gate1['params']
-                        params[0] = params[0]/2 #SQUADER works with theta/2
-                        ###params.reverse()
-                        for param in params:
-                            optimized_parameters = optimized_parameters + [float(param)]
-                        ###optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
-
-                ## add cz gate to the layer       
-                if name == 'cz':
-                    Layer.add_CZ( qubit1, qubit0 )
-                elif name == 'cx':
-                    Layer.add_CNOT( qubit1, qubit0 )
-
-                Circuit_ret.add_Circuit( Layer )
-   
-       
-
-        # add remaining single qubit gates
-        # creating an instance of the wrapper class qgd_Circuit
-        Layer = qgd_Circuit( register_size )
-
-        for qubit in range(register_size):
-
-            gates = single_qubit_gates[qubit]
-            for gate in gates:
-
-                if gate['type'] == 'u3':
-                    Layer.add_U3( qubit, True, True, True )
-                    params = gate['params']
-                    params[0] = params[0]/2 #SQUADER works with theta/2
-                    ###params.reverse()
-                    for param in params:
-                        optimized_parameters = optimized_parameters + [float(param)]
-                    ###optimized_parameters[-1] = optimized_parameters[-1]/2 #SQUADER works with theta/2
-
-        Circuit_ret.add_Circuit( Layer )
-
-        optimized_parameters = np.asarray(optimized_parameters, dtype=np.float64)
-
+        
+        Circuit_Squander, circuit_parameters = Qiskit_IO.convert_Qiskit_to_Squander( qc_in )
+        
         # setting gate structure and optimized initial parameters
-        self.set_Gate_Structure(Circuit_ret)
-        #self.set_Optimized_Parameters( np.flip(optimized_parameters,0) )      
-        self.set_Optimized_Parameters( optimized_parameters )      
+        self.set_Gate_Structure( Circuit_Squander )   
+        self.set_Optimized_Parameters( circuit_parameters )      
         
 
 

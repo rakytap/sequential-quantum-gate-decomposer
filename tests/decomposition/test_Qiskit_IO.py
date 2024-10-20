@@ -52,25 +52,25 @@ def pauli_exponent( alpha=0.6217*np.pi ):
 	# creating Qiskit quantum circuit
 	qc_orig = QuantumCircuit(5)
 	
-	#qc_orig.h(1)
+	qc_orig.h(1)
 	qc_orig.cx(1,2)
-	
+
 	qc_orig.rx(np.pi/2,0)
 	qc_orig.rx(np.pi/2,1)
 	qc_orig.cx(2,4)
 	qc_orig.cx(0,1)
-	
-	qc_orig.rx(np.pi/2,0)
-	#qc_orig.h(2)
-	qc_orig.cx(0,2)
-	
 
 	qc_orig.rx(np.pi/2,0)
-	#qc_orig.h(3)
+	qc_orig.h(2)
+	qc_orig.cx(0,2)
+
+
+	qc_orig.rx(np.pi/2,0)
+	qc_orig.h(3)
 	qc_orig.rz(alpha,4)
 	qc_orig.cx(0,3)
 
-	#qc_orig.h(0)
+	qc_orig.h(0)
 	qc_orig.rz(-alpha,1)
 	qc_orig.cx(2,4)
 
@@ -79,11 +79,7 @@ def pauli_exponent( alpha=0.6217*np.pi ):
 	qc_orig.cx(3,1)
 
 	qc_orig.rz(alpha,1)
-
 	qc_orig.cx(0,1)
-	qc_orig.rx(np.pi/2,0) ########
-	
-	
 	qc_orig.cx(3,1)
 	qc_orig.cx(4,1)
 
@@ -93,27 +89,28 @@ def pauli_exponent( alpha=0.6217*np.pi ):
 	qc_orig.rz(alpha,1)
 	qc_orig.cx(3,1)
 	qc_orig.cx(4,1)
+
 	qc_orig.rz(alpha,1)
 	qc_orig.cx(2,4)
 	qc_orig.cx(0,1)
 
-	#qc_orig.h(0)
+	qc_orig.h(0)
 	qc_orig.cx(3,1)
 	qc_orig.cx(0,3)
-	
+
 	qc_orig.rx(-np.pi/2,0)
-	#qc_orig.h(3)
+	qc_orig.h(3)
 	qc_orig.cx(0,2)
-	
+
 	qc_orig.rx(-np.pi/2,0)
-	#qc_orig.h(2)
+	qc_orig.h(2)
 	qc_orig.cx(0,1)
-	
+
 	qc_orig.rx(-np.pi/2,0)
 	qc_orig.rx(-np.pi/2,1)
 	qc_orig.cx(2,4)
 	qc_orig.cx(1,2)
-	#qc_orig.h(1)
+	qc_orig.h(1)
 	
 	return qc_orig
 
@@ -121,48 +118,30 @@ def pauli_exponent( alpha=0.6217*np.pi ):
 
 
 
-class Test_parametric_circuit:
+class Test_Qiskit_IO:
     """This is a test class of the python iterface to the decompsition classes of the QGD package"""
 
 
     def test_circuit_import(self):
 
 	# load circuit via Qiskit from QASM
-        filename = 'data/19CNOT.qasm'
-        qc_trial = QuantumCircuit.from_qasm_file( filename )
-
+        qc_trial = pauli_exponent()#
+        
         # get the unitary of the quantum circuit
         Umtx = utils.get_unitary_from_qiskit_circuit( qc_trial )
-
-        qc_trial = QuantumCircuit.from_qasm_file( filename )
-
-
+        
         Circuit_Squander, parameters = Qiskit_IO.convert_Qiskit_to_Squander( qc_trial )
-
+        
+       
         input = (Umtx.conj().T).copy()
-        print( np.diag(np.abs(input)) )
-
         Circuit_Squander.apply_to( parameters, input )
-        print(' ')
-        print( np.diag(np.abs(input)) )
- 
+                
+        input = input * np.conj(input[0,0]) - np.eye( input.shape[0], dtype=np.complex128 )
 
-        '''
-
-        # create a Squander interface to test whether the imported quntum circuit is equivalent to the unitary matrix
-        cDecompose = N_Qubit_Decomposition_custom( Umtx.conj().T )
-        cDecompose.import_Qiskit_Circuit(qc_trial)
-
-        cDecompose.set_Cost_Function_Variant( 4 )
-
-        # set verbosity
-        cDecompose.set_Verbose( 4 )
-
-        # starting the decomposition
-        cDecompose.Start_Decomposition()
-        '''
-
-
-
+        
+        from numpy import linalg as LA
+        norm = LA.norm( input )
+        
+        assert( norm < 1e-6 )
 
 

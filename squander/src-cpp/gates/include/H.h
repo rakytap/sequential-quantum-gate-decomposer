@@ -20,8 +20,8 @@ limitations under the License.
     \brief Header file for a class representing the Hadamard gate.
 */
 
-#ifndef H_H
-#define H_H
+#ifndef HADAMARD_H
+#define HADAMARD_H
 
 #include "U3.h"
 //#include "Gate.h"
@@ -124,5 +124,5 @@ Matrix calc_one_qubit_u3( );
 };
 
 
-#endif //H
+#endif //HADAMARD
 

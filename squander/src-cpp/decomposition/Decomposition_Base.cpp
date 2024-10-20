@@ -756,6 +756,10 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
             RZ_P* rz_gate = static_cast<RZ_P*>( gate );
             rz_gate->apply_to( parameters_mtx, ret_matrix);            
         }
+        else if (gate->get_type() == H_OPERATION ) {
+            H* h_gate = static_cast<H*>( gate );
+            h_gate->apply_to( ret_matrix );            
+        }        
         else if (gate->get_type() == X_OPERATION ) {
             X* x_gate = static_cast<X*>( gate );
             x_gate->apply_to( ret_matrix );            
@@ -913,6 +917,10 @@ Decomposition_Base::get_gate_products(const Matrix_real& parameters_mtx, std::ve
             RZ_P* rz_gate = static_cast<RZ_P*>(gate);
             rz_gate->apply_from_right(parameters_loc_mtx, mtx);
         }
+        else if (gate->get_type() == H_OPERATION ) {
+            H* h_gate = static_cast<H*>(gate);
+            h_gate->apply_from_right(mtx);
+        }        
         else if (gate->get_type() == X_OPERATION ) {
             X* x_gate = static_cast<X*>(gate);
             x_gate->apply_from_right(mtx);
@@ -1194,6 +1202,9 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         else if (gate->get_type() == SYC_OPERATION) {
             ops_ret.push_back( gate );
         }
+        else if (gate->get_type() == H_OPERATION) {
+            ops_ret.push_back( gate );
+        }        
         else if (gate->get_type() == X_OPERATION) {
             ops_ret.push_back( gate );
         }

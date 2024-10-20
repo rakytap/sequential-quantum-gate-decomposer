@@ -29,6 +29,7 @@ limitations under the License.
 #include "CRY.h"
 #include "RZ.h"
 #include "RZ_P.h"
+#include "H.h"
 #include "X.h"
 #include "Y.h"
 #include "Z.h"
@@ -112,6 +113,7 @@ Gates_block::release_gates() {
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: case RZ_P_OPERATION:
+        case H_OPERATION:
             delete operation;
             break;
         default:
@@ -330,7 +332,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
             case CH_OPERATION: case SYC_OPERATION:
             case X_OPERATION: case Y_OPERATION:
             case Z_OPERATION: case SX_OPERATION:
-            case GENERAL_OPERATION:
+            case GENERAL_OPERATION: case H_OPERATION:
                 operation->apply_to(input, parallel);
                 break;
             case U3_OPERATION: {
@@ -628,7 +630,7 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         case CH_OPERATION: case SYC_OPERATION:
         case X_OPERATION: case Y_OPERATION:
         case Z_OPERATION: case SX_OPERATION:
-        case GENERAL_OPERATION:
+        case GENERAL_OPERATION: case H_OPERATION:
             operation->apply_from_right(input);
             break;
         case U3_OPERATION: {
@@ -887,6 +889,16 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                     }
                 }
 
+                else if (operation->get_type() == H_OPERATION) {
+                    H* h_operation = static_cast<H*>(operation);
+                    if ( deriv_idx < idx ) {
+                        h_operation->apply_to( input_loc );    
+                    }
+                    else {
+                        h_operation->Gate::apply_to_list( grad_loc );
+                    }
+                }
+                
                 else if (operation->get_type() == X_OPERATION) {
                     X* x_operation = static_cast<X*>(operation);
                     if ( deriv_idx < idx ) {
@@ -1252,6 +1264,36 @@ void Gates_block::add_cz(  int target_qbit, int control_qbit) {
         add_gate(gate);
 
 }
+
+/**
+@brief Append a Hadamard gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_h_to_end(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new H( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate_to_end( operation );
+}
+
+/**
+@brief Add a Hadamard gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_h(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new H( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate( gate );
+
+}
+
+
+
 
 
 /**
@@ -1696,6 +1738,7 @@ gates_num Gates_block::get_gate_nums() {
                 gate_nums.cnot = gate_nums.cnot + gate_nums_loc.cnot;
                 gate_nums.cz = gate_nums.cz + gate_nums_loc.cz;
                 gate_nums.ch = gate_nums.ch + gate_nums_loc.ch;
+                gate_nums.h  = gate_nums.h + gate_nums_loc.h;
                 gate_nums.x  = gate_nums.x + gate_nums_loc.x;
                 gate_nums.sx = gate_nums.sx + gate_nums_loc.sx;
                 gate_nums.syc   = gate_nums.syc + gate_nums_loc.syc;
@@ -1736,6 +1779,10 @@ gates_num Gates_block::get_gate_nums() {
             }
             else if (gate->get_type() == CH_OPERATION) {
                 gate_nums.ch   = gate_nums.ch + 1;
+                gate_nums.total = gate_nums.total + 1;
+            }
+            else if (gate->get_type() == H_OPERATION) {
+                gate_nums.h   = gate_nums.h + 1;
                 gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == X_OPERATION) {
@@ -1992,6 +2039,14 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 		print(sstream, 1);	    	
                 gate_idx = gate_idx + 1;
             }
+            else if (gate->get_type() == H_OPERATION) {
+                // get the inverse parameters of the U3 rotation
+                H* h_gate = static_cast<H*>(gate);
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: Hadamard on target qubit: " << h_gate->get_target_qbit() << std::endl;
+		print(sstream, 1);	    	
+                gate_idx = gate_idx + 1;
+            }
             else if (gate->get_type() == X_OPERATION) {
                 // get the inverse parameters of the U3 rotation
                 X* x_gate = static_cast<X*>(gate);
@@ -2129,6 +2184,10 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
              RZ_P* rz_gate = static_cast<RZ_P*>(gate);
              rz_gate->reorder_qubits( qbit_list );
          }
+         else if (gate->get_type() == H_OPERATION) {
+             H* h_gate = static_cast<H*>(gate);
+             h_gate->reorder_qubits( qbit_list );
+         }
          else if (gate->get_type() == X_OPERATION) {
              X* x_gate = static_cast<X*>(gate);
              x_gate->reorder_qubits( qbit_list );
@@ -2260,6 +2319,7 @@ void Gates_block::combine(Gates_block* op_block) {
         case RX_OPERATION:
         case RZ_OPERATION: 
         case RZ_P_OPERATION:
+        case H_OPERATION:
         case X_OPERATION:
         case Y_OPERATION: 
         case Z_OPERATION:
@@ -2311,6 +2371,7 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: case RZ_P_OPERATION:
+        case H_OPERATION:
             op->set_qbit_num( qbit_num_in );
             break;
         default:
@@ -2362,7 +2423,8 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case SX_OPERATION: case BLOCK_OPERATION:
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION: case RZ_P_OPERATION: {
+        case ADAPTIVE_OPERATION: case RZ_P_OPERATION: 
+        case H_OPERATION: {
             Gate* op_cloned = op->clone();
             op_block->add_gate_to_end( op_cloned );
             break; }
@@ -2948,6 +3010,9 @@ void Gates_block::adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgate
 	    	
                 gate_idx = gate_idx + 1;
             }
+            else if (gate->get_type() == H_OPERATION) {
+
+            }
             else if (gate->get_type() == X_OPERATION) {
 
             }
@@ -3342,6 +3407,15 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
 	    	
                 gate_idx = gate_idx + 1;
             }
+            else if (gate->get_type() == H_OPERATION) {
+                // get the inverse parameters of the Hadamard rotation
+                H* h_gate = static_cast<H*>(gate);
+
+                std::string error("Gates_block::convert_to_DFE_gates: Hadamard gate not implemented");
+                throw error;
+	    	
+                gate_idx = gate_idx + 1;
+            }
             else if (gate->get_type() == X_OPERATION) {
                 // get the inverse parameters of the U3 rotation
                 X* x_gate = static_cast<X*>(gate);
@@ -3545,7 +3619,7 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
             fwrite(parameters_data, sizeof(double), parameter_num, pFile);
         }
         
-        else if (gt_type == X_OPERATION || gt_type == Y_OPERATION || gt_type == Z_OPERATION || gt_type == SX_OPERATION) {
+        else if (gt_type == X_OPERATION || gt_type == Y_OPERATION || gt_type == Z_OPERATION || gt_type == SX_OPERATION || gt_type == H_OPERATION) {
             int target_qbit = op->get_target_qbit();
             fwrite(&target_qbit, sizeof(int), 1, pFile);
         }
@@ -3797,6 +3871,18 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             parameters_data++;
 
             gate_block_levels[current_level]->add_rz_p_to_end(target_qbit);
+            gate_block_level_gates_num[current_level]--;
+
+        }
+        else if (gt_type == H_OPERATION) {
+
+            sstream << "importing Hadamard gate" << std::endl;
+
+            int target_qbit;
+            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
+            sstream << "target_qbit: " << target_qbit << std::endl;
+
+            gate_block_levels[current_level]->add_h_to_end(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }

@@ -30,6 +30,7 @@ limitations under the License.
 #include "CNOT.h"
 #include "U3.h"
 #include "RX.h"
+#include "H.h"
 #include "X.h"
 #include "Y.h"
 #include "Z.h"
