@@ -299,7 +299,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 
                 Gates_block gates_block_mini = Gates_block(1);
   
-                for (int idx=gates.size()-1; idx>=0; idx--){
+                for (int idx=0; idx<gates.size(); idx++){
 
                     Gate* gate = gates[idx]->clone();
                     gate->set_target_qbit(0);
@@ -321,7 +321,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
     }
     else {
         // No gate fusion
-        for( int idx=gates.size()-1; idx>=0; idx--) {
+        for( int idx=0; idx<gates.size(); idx++) {
 
             Gate* operation = gates[idx];
             Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
@@ -1019,13 +1019,13 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 @param Phi The Phi parameter of the U3 operation
 @param Lambda The Lambda parameter of the U3 operation
 */
-void Gates_block::add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool Lambda) {
+void Gates_block::add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda) {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new U3( qbit_num, target_qbit, Theta, Phi, Lambda ));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
@@ -1035,13 +1035,13 @@ void Gates_block::add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool Lamb
 @param Phi The Phi parameter of the U3 operation
 @param Lambda The Lambda parameter of the U3 operation
 */
-void Gates_block::add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda) {
+void Gates_block::add_u3_to_front(int target_qbit, bool Theta, bool Phi, bool Lambda) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new U3( qbit_num, target_qbit, Theta, Phi, Lambda ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1051,26 +1051,26 @@ void Gates_block::add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda) {
 @brief Append a RX gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_rx_to_end(int target_qbit) {
+void Gates_block::add_rx(int target_qbit) {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new RX( qbit_num, target_qbit));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
 @brief Add a RX gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_rx(int target_qbit ) {
+void Gates_block::add_rx_to_front(int target_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new RX( qbit_num, target_qbit ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1080,13 +1080,13 @@ void Gates_block::add_rx(int target_qbit ) {
 @brief Append a RY gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_ry_to_end(int target_qbit) {
+void Gates_block::add_ry(int target_qbit) {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new RY( qbit_num, target_qbit));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 
@@ -1094,13 +1094,13 @@ void Gates_block::add_ry_to_end(int target_qbit) {
 @brief Add a RY gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_ry(int target_qbit ) {
+void Gates_block::add_ry_to_front(int target_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new RY( qbit_num, target_qbit ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1112,13 +1112,13 @@ void Gates_block::add_ry(int target_qbit ) {
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cry_to_end(int target_qbit, int control_qbit) {
+void Gates_block::add_cry(int target_qbit, int control_qbit) {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new CRY( qbit_num, target_qbit, control_qbit));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 
@@ -1128,13 +1128,13 @@ void Gates_block::add_cry_to_end(int target_qbit, int control_qbit) {
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cry(int target_qbit, int control_qbit ) {
+void Gates_block::add_cry_to_front(int target_qbit, int control_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new CRY( qbit_num, target_qbit, control_qbit ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1144,26 +1144,26 @@ void Gates_block::add_cry(int target_qbit, int control_qbit ) {
 @brief Append a RZ gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_rz_to_end(int target_qbit) {
+void Gates_block::add_rz(int target_qbit) {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new RZ( qbit_num, target_qbit));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
 @brief Add a RZ gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_rz(int target_qbit ) {
+void Gates_block::add_rz_to_front(int target_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new RZ( qbit_num, target_qbit ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1173,26 +1173,26 @@ void Gates_block::add_rz(int target_qbit ) {
 @brief Append a RZ_P gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_rz_p_to_end(int target_qbit) {
+void Gates_block::add_rz_p(int target_qbit) {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new RZ_P( qbit_num, target_qbit));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
 @brief Add a RZ_P gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_rz_p(int target_qbit ) {
+void Gates_block::add_rz_p_to_front(int target_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new RZ_P( qbit_num, target_qbit ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1203,13 +1203,13 @@ void Gates_block::add_rz_p(int target_qbit ) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cnot_to_end(  int target_qbit, int control_qbit) {
+void Gates_block::add_cnot(  int target_qbit, int control_qbit) {
 
         // new cnot operation
         Gate* gate = static_cast<Gate*>(new CNOT(qbit_num, target_qbit, control_qbit ));
 
         // append the operation to the list
-        add_gate_to_end(gate);
+        add_gate(gate);
 
 }
 
@@ -1220,13 +1220,13 @@ void Gates_block::add_cnot_to_end(  int target_qbit, int control_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cnot( int target_qbit, int control_qbit) {
+void Gates_block::add_cnot_to_front( int target_qbit, int control_qbit) {
 
         // new cnot operation
         Gate* gate = static_cast<Gate*>(new CNOT(qbit_num, target_qbit, control_qbit ));
 
         // put the operation to tghe front of the list
-        add_gate(gate);
+        add_gate_to_front(gate);
 
 }
 
@@ -1238,13 +1238,13 @@ void Gates_block::add_cnot( int target_qbit, int control_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cz_to_end(  int target_qbit, int control_qbit) {
+void Gates_block::add_cz(  int target_qbit, int control_qbit) {
 
         // new cz operation
         Gate* gate = static_cast<Gate*>(new CZ(qbit_num, target_qbit, control_qbit ));
 
         // append the operation to the list
-        add_gate_to_end(gate);
+        add_gate(gate);
 
 }
 
@@ -1255,13 +1255,13 @@ void Gates_block::add_cz_to_end(  int target_qbit, int control_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cz(  int target_qbit, int control_qbit) {
+void Gates_block::add_cz_to_front(  int target_qbit, int control_qbit) {
 
         // new cz operation
         Gate* gate = static_cast<Gate*>(new CZ(qbit_num, target_qbit, control_qbit ));
 
         // put the operation to tghe front of the list
-        add_gate(gate);
+        add_gate_to_front(gate);
 
 }
 
@@ -1269,26 +1269,26 @@ void Gates_block::add_cz(  int target_qbit, int control_qbit) {
 @brief Append a Hadamard gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_h_to_end(int target_qbit) {
+void Gates_block::add_h(int target_qbit) {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new H( qbit_num, target_qbit));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
 @brief Add a Hadamard gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_h(int target_qbit ) {
+void Gates_block::add_h_to_front(int target_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new H( qbit_num, target_qbit ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1300,26 +1300,26 @@ void Gates_block::add_h(int target_qbit ) {
 @brief Append a X gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_x_to_end(int target_qbit) {
+void Gates_block::add_x(int target_qbit) {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new X( qbit_num, target_qbit));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
 @brief Add a X gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_x(int target_qbit ) {
+void Gates_block::add_x_to_front(int target_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new X( qbit_num, target_qbit ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1329,26 +1329,26 @@ void Gates_block::add_x(int target_qbit ) {
 @brief Append a Y gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_y_to_end(int target_qbit) {
+void Gates_block::add_y(int target_qbit) {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new Y( qbit_num, target_qbit));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
 @brief Add a Y gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_y(int target_qbit ) {
+void Gates_block::add_y_to_front(int target_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new Y( qbit_num, target_qbit ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1358,26 +1358,26 @@ void Gates_block::add_y(int target_qbit ) {
 @brief Append a Z gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_z_to_end(int target_qbit) {
+void Gates_block::add_z(int target_qbit) {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new Z( qbit_num, target_qbit));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
 @brief Add a Z gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_z(int target_qbit ) {
+void Gates_block::add_z_to_front(int target_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new Z( qbit_num, target_qbit ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1388,26 +1388,26 @@ void Gates_block::add_z(int target_qbit ) {
 @brief Append a SX gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_sx_to_end(int target_qbit) {
+void Gates_block::add_sx(int target_qbit) {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new SX( qbit_num, target_qbit));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
 @brief Add a SX gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_sx(int target_qbit ) {
+void Gates_block::add_sx_to_front(int target_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new SX( qbit_num, target_qbit ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1420,13 +1420,13 @@ void Gates_block::add_sx(int target_qbit ) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_syc_to_end(  int target_qbit, int control_qbit) {
+void Gates_block::add_syc(  int target_qbit, int control_qbit) {
 
         // new cz operation
         Gate* gate = static_cast<Gate*>(new SYC(qbit_num, target_qbit, control_qbit ));
 
         // append the operation to the list
-        add_gate_to_end(gate);
+        add_gate(gate);
 
 }
 
@@ -1437,13 +1437,13 @@ void Gates_block::add_syc_to_end(  int target_qbit, int control_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_syc(  int target_qbit, int control_qbit) {
+void Gates_block::add_syc_to_front(  int target_qbit, int control_qbit) {
 
         // new cz operation
         Gate* gate = static_cast<Gate*>(new SYC(qbit_num, target_qbit, control_qbit ));
 
         // put the operation to tghe front of the list
-        add_gate(gate);
+        add_gate_to_front(gate);
 
 }
 
@@ -1455,13 +1455,13 @@ void Gates_block::add_syc(  int target_qbit, int control_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_ch_to_end(  int target_qbit, int control_qbit) {
+void Gates_block::add_ch(  int target_qbit, int control_qbit) {
 
         // new cz operation
         Gate* gate = static_cast<Gate*>(new CH(qbit_num, target_qbit, control_qbit ));
 
         // append the operation to the list
-        add_gate_to_end(gate);
+        add_gate(gate);
 
 }
 
@@ -1472,13 +1472,13 @@ void Gates_block::add_ch_to_end(  int target_qbit, int control_qbit) {
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_ch(  int target_qbit, int control_qbit) {
+void Gates_block::add_ch_to_front(  int target_qbit, int control_qbit) {
 
         // new cz operation
         Gate* gate = static_cast<Gate*>(new CH(qbit_num, target_qbit, control_qbit ));
 
         // put the operation to tghe front of the list
-        add_gate(gate);
+        add_gate_to_front(gate);
 
 }
 
@@ -1486,10 +1486,10 @@ void Gates_block::add_ch(  int target_qbit, int control_qbit) {
 @brief Append a list of gates to the list of gates
 @param gates_in A list of operation class instances.
 */
-void Gates_block::add_gates_to_end( std::vector<Gate*> gates_in) {
+void Gates_block::add_gates( std::vector<Gate*> gates_in) {
 
         for(std::vector<Gate*>::iterator it = gates_in.begin(); it != gates_in.end(); ++it) {
-            add_gate_to_end( *it );
+            add_gate( *it );
         }
 
 }
@@ -1499,11 +1499,11 @@ void Gates_block::add_gates_to_end( std::vector<Gate*> gates_in) {
 @brief Add an array of gates to the front of the list of gates
 @param gates_in A list of operation class instances.
 */
-void Gates_block::add_gates( std::vector<Gate*>  gates_in) {
+void Gates_block::add_gates_to_front( std::vector<Gate*>  gates_in) {
 
         // adding gates in reversed order!!
         for(std::vector<Gate*>::iterator it = gates_in.end(); it != gates_in.begin(); --it) {
-            add_gate( *it );
+            add_gate_to_front( *it );
         }
 
 }
@@ -1513,25 +1513,25 @@ void Gates_block::add_gates( std::vector<Gate*>  gates_in) {
 /**
 @brief Append a UN gate to the list of gates
 */
-void Gates_block::add_un_to_end() {
+void Gates_block::add_un() {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new UN( qbit_num ));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
 @brief Add a UN gate to the front of the list of gates
 */
-void Gates_block::add_un() {
+void Gates_block::add_un_to_front() {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new UN( qbit_num ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1539,25 +1539,25 @@ void Gates_block::add_un() {
 /**
 @brief Append a ON gate to the list of gates
 */
-void Gates_block::add_on_to_end() {
+void Gates_block::add_on() {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new ON( qbit_num ));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
 @brief Add a ON gate to the front of the list of gates
 */
-void Gates_block::add_on() {
+void Gates_block::add_on_to_front() {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new ON( qbit_num ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1565,25 +1565,25 @@ void Gates_block::add_on() {
 /**
 @brief Append a Composite gate to the list of gates
 */
-void Gates_block::add_composite_to_end()  {
+void Gates_block::add_composite()  {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new Composite( qbit_num ));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 /**
 @brief Add a Composite gate to the front of the list of gates
 */
-void Gates_block::add_composite()  {
+void Gates_block::add_composite_to_front()  {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new Composite( qbit_num ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1594,13 +1594,13 @@ void Gates_block::add_composite()  {
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_adaptive_to_end(int target_qbit, int control_qbit)  {
+void Gates_block::add_adaptive(int target_qbit, int control_qbit)  {
 
         // create the operation
         Gate* operation = static_cast<Gate*>(new Adaptive( qbit_num, target_qbit, control_qbit));
 
         // adding the operation to the end of the list of gates
-        add_gate_to_end( operation );
+        add_gate( operation );
 }
 
 
@@ -1609,13 +1609,13 @@ void Gates_block::add_adaptive_to_end(int target_qbit, int control_qbit)  {
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_adaptive(int target_qbit, int control_qbit)  {
+void Gates_block::add_adaptive_to_front(int target_qbit, int control_qbit)  {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new Adaptive( qbit_num, target_qbit, control_qbit ));
 
         // adding the operation to the front of the list of gates
-        add_gate( gate );
+        add_gate_to_front( gate );
 
 }
 
@@ -1625,7 +1625,7 @@ void Gates_block::add_adaptive(int target_qbit, int control_qbit)  {
 @brief Append a general gate to the list of gates
 @param gate A pointer to a class Gate describing a gate operation.
 */
-void Gates_block::add_gate_to_end( Gate* gate ) {
+void Gates_block::add_gate( Gate* gate ) {
 
         //set the number of qubit in the gate
         gate->set_qbit_num( qbit_num );
@@ -1647,7 +1647,7 @@ void Gates_block::add_gate_to_end( Gate* gate ) {
 @brief Add a gate to the front of the list of gates
 @param gate A pointer to a class Gate describing a gate.
 */
- void Gates_block::add_gate( Gate* gate) {
+ void Gates_block::add_gate_to_front( Gate* gate) {
 
 
         // set the number of qubit in the gate
@@ -2331,7 +2331,7 @@ void Gates_block::combine(Gates_block* op_block) {
         case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: {
             Gate* op_cloned = op->clone();
-            add_gate_to_end( op_cloned );
+            add_gate( op_cloned );
             break; }
         default:
             std::string err("Gates_block::combine: unimplemented gate"); 
@@ -2426,7 +2426,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case ADAPTIVE_OPERATION: case RZ_P_OPERATION: 
         case H_OPERATION: {
             Gate* op_cloned = op->clone();
-            op_block->add_gate_to_end( op_cloned );
+            op_block->add_gate( op_cloned );
             break; }
         default:
             std::string err("Gates_block::extract_gates: unimplemented gate"); 
@@ -3727,7 +3727,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
-            gate_block_levels[current_level]->add_cnot_to_end(target_qbit, control_qbit);
+            gate_block_levels[current_level]->add_cnot(target_qbit, control_qbit);
             gate_block_level_gates_num[current_level]--;
         }
         else if (gt_type == CZ_OPERATION) {
@@ -3741,7 +3741,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
-            gate_block_levels[current_level]->add_cz_to_end(target_qbit, control_qbit);
+            gate_block_levels[current_level]->add_cz(target_qbit, control_qbit);
             gate_block_level_gates_num[current_level]--;
         }
         else if (gt_type == CH_OPERATION) {
@@ -3755,7 +3755,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
-            gate_block_levels[current_level]->add_ch_to_end(target_qbit, control_qbit);
+            gate_block_levels[current_level]->add_ch(target_qbit, control_qbit);
             gate_block_level_gates_num[current_level]--;
         }
         else if (gt_type == SYC_OPERATION) {
@@ -3769,7 +3769,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(&control_qbit, sizeof(int), 1, pFile);
             sstream << "control_qbit: " << control_qbit << std::endl;
 
-            gate_block_levels[current_level]->add_syc_to_end(target_qbit, control_qbit);
+            gate_block_levels[current_level]->add_syc(target_qbit, control_qbit);
             gate_block_level_gates_num[current_level]--;
         }
         else if (gt_type == U3_OPERATION) {
@@ -3791,7 +3791,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(parameters_data, sizeof(double), parameter_num, pFile);
             parameters_data = parameters_data + parameter_num;
 
-            gate_block_levels[current_level]->add_u3_to_end(target_qbit, Theta, Phi, Lambda);
+            gate_block_levels[current_level]->add_u3(target_qbit, Theta, Phi, Lambda);
             gate_block_level_gates_num[current_level]--;
             
         }
@@ -3806,7 +3806,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
-            gate_block_levels[current_level]->add_rx_to_end(target_qbit);
+            gate_block_levels[current_level]->add_rx(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
@@ -3821,7 +3821,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
-            gate_block_levels[current_level]->add_ry_to_end(target_qbit);
+            gate_block_levels[current_level]->add_ry(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
@@ -3840,7 +3840,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
-            gate_block_levels[current_level]->add_cry_to_end(target_qbit, control_qbit);
+            gate_block_levels[current_level]->add_cry(target_qbit, control_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
@@ -3855,7 +3855,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
-            gate_block_levels[current_level]->add_rz_to_end(target_qbit);
+            gate_block_levels[current_level]->add_rz(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
@@ -3870,7 +3870,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
-            gate_block_levels[current_level]->add_rz_p_to_end(target_qbit);
+            gate_block_levels[current_level]->add_rz_p(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
@@ -3882,7 +3882,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            gate_block_levels[current_level]->add_h_to_end(target_qbit);
+            gate_block_levels[current_level]->add_h(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
@@ -3894,7 +3894,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            gate_block_levels[current_level]->add_x_to_end(target_qbit);
+            gate_block_levels[current_level]->add_x(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
@@ -3906,7 +3906,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            gate_block_levels[current_level]->add_y_to_end(target_qbit);
+            gate_block_levels[current_level]->add_y(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
@@ -3918,7 +3918,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            gate_block_levels[current_level]->add_z_to_end(target_qbit);
+            gate_block_levels[current_level]->add_z(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
@@ -3930,7 +3930,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
             sstream << "target_qbit: " << target_qbit << std::endl;
 
-            gate_block_levels[current_level]->add_sx_to_end(target_qbit);
+            gate_block_levels[current_level]->add_sx(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
@@ -3972,7 +3972,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             fread_status = fread(parameters_data, sizeof(double), 1, pFile);
             parameters_data++;
 
-            gate_block_levels[current_level]->add_adaptive_to_end(target_qbit, control_qbit);
+            gate_block_levels[current_level]->add_adaptive(target_qbit, control_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
@@ -3983,7 +3983,7 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
 
 
         if ( gate_block_level_gates_num[current_level] == 0 ) {
-            gate_block_levels[ current_level-1 ]->add_gate_to_end( static_cast<Gate*>(gate_block_levels[ current_level ]) );
+            gate_block_levels[ current_level-1 ]->add_gate( static_cast<Gate*>(gate_block_levels[ current_level ]) );
             gate_block_levels.pop_back();
             gate_block_level_gates_num.pop_back();
             current_level--;

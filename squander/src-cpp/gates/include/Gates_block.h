@@ -145,7 +145,7 @@ virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matr
 @param Phi The Phi parameter of the U3 gate
 @param Lambda The Lambda parameter of the U3 gate
 */
-void add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool Lambda);
+void add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda);
 
 /**
 @brief Add a U3 gate to the front of the list of gates
@@ -154,33 +154,33 @@ void add_u3_to_end(int target_qbit, bool Theta, bool Phi, bool Lambda);
 @param Phi The Phi parameter of the U3 gate
 @param Lambda The Lambda parameter of the U3 gate
 */
-void add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda);
+void add_u3_to_front(int target_qbit, bool Theta, bool Phi, bool Lambda);
 
 
 /**
 @brief Append a RX gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_rx_to_end(int target_qbit);
+void add_rx(int target_qbit);
 
 /**
 @brief Add a RX gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_rx(int target_qbit);
+void add_rx_to_front(int target_qbit);
 
 
 /**
 @brief Append a RY gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_ry_to_end(int target_qbit);
+void add_ry(int target_qbit);
 
 /**
 @brief Add a RY gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_ry(int target_qbit);
+void add_ry_to_front(int target_qbit);
 
 
 
@@ -190,47 +190,47 @@ void add_ry(int target_qbit);
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cry_to_end(int target_qbit, int control_qbit);
+void add_cry(int target_qbit, int control_qbit);
 
 /**
 @brief Add a CRY gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cry(int target_qbit, int control_qbit);
+void add_cry_to_front(int target_qbit, int control_qbit);
 
 
 /**
 @brief Append a RZ gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_rz_to_end(int target_qbit);
+void add_rz(int target_qbit);
 
 /**
 @brief Add a RZ gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_rz(int target_qbit);
+void add_rz_to_front(int target_qbit);
 
 
 /**
 @brief Append a RZ_P gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_rz_p_to_end(int target_qbit);
+void add_rz_p(int target_qbit);
 
 /**
 @brief Add a RZ_P gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_rz_p(int target_qbit);
+void add_rz_p_to_front(int target_qbit);
 
 /**
 @brief Append a CNOT gate gate to the list of gates
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cnot_to_end( int target_qbit, int control_qbit);
+void add_cnot( int target_qbit, int control_qbit);
 
 
 
@@ -239,7 +239,7 @@ void add_cnot_to_end( int target_qbit, int control_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cnot( int target_qbit, int control_qbit );
+void add_cnot_to_front( int target_qbit, int control_qbit );
 
 
 /**
@@ -247,7 +247,7 @@ void add_cnot( int target_qbit, int control_qbit );
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cz_to_end( int target_qbit, int control_qbit);
+void add_cz( int target_qbit, int control_qbit);
 
 
 
@@ -256,7 +256,7 @@ void add_cz_to_end( int target_qbit, int control_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_cz( int target_qbit, int control_qbit );
+void add_cz_to_front( int target_qbit, int control_qbit );
 
 
 /**
@@ -264,7 +264,7 @@ void add_cz( int target_qbit, int control_qbit );
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_ch_to_end( int target_qbit, int control_qbit);
+void add_ch( int target_qbit, int control_qbit);
 
 
 
@@ -273,77 +273,77 @@ void add_ch_to_end( int target_qbit, int control_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_ch( int target_qbit, int control_qbit );
+void add_ch_to_front( int target_qbit, int control_qbit );
 
 /**
 @brief Append a Hadamard gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_h_to_end(int target_qbit);
+void add_h(int target_qbit);
 
 /**
 @brief Add a Hadamard gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_h(int target_qbit);
+void add_h_to_front(int target_qbit);
 
 
 /**
 @brief Append a X gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_x_to_end(int target_qbit);
+void add_x(int target_qbit);
 
 /**
 @brief Add a X gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_x(int target_qbit);
+void add_x_to_front(int target_qbit);
 
 
 /**
 @brief Append a Y gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_y_to_end(int target_qbit);
+void add_y(int target_qbit);
 
 /**
 @brief Add a Y gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_y(int target_qbit);
+void add_y_to_front(int target_qbit);
 
 
 /**
 @brief Append a Z gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_z_to_end(int target_qbit);
+void add_z(int target_qbit);
 
 /**
 @brief Add a Z gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_z(int target_qbit);
+void add_z_to_front(int target_qbit);
 
 /**
 @brief Append a SX gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_sx_to_end(int target_qbit);
+void add_sx(int target_qbit);
 
 /**
 @brief Add a SX gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_sx(int target_qbit);
+void add_sx_to_front(int target_qbit);
 
 /**
 @brief Append a Sycamore gate (i.e. controlled Hadamard gate) gate to the list of gates
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_syc_to_end( int target_qbit, int control_qbit);
+void add_syc( int target_qbit, int control_qbit);
 
 
 
@@ -352,7 +352,7 @@ void add_syc_to_end( int target_qbit, int control_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_syc( int target_qbit, int control_qbit );
+void add_syc_to_front( int target_qbit, int control_qbit );
 
 
 
@@ -360,34 +360,34 @@ void add_syc( int target_qbit, int control_qbit );
 /**
 @brief Append a UN gate to the list of gates
 */
-void add_un_to_end();
+void add_un();
 
 /**
 @brief Add a UN gate to the front of the list of gates
 */
-void add_un();
+void add_un_to_front();
 
 
 /**
 @brief Append a ON gate to the list of gates
 */
-void add_on_to_end();
+void add_on();
 
 /**
 @brief Add a OUN gate to the front of the list of gates
 */
-void add_on();
+void add_on_to_front();
 
 
 /**
 @brief Append a Composite gate to the list of gates
 */
-void add_composite_to_end();
+void add_composite();
 
 /**
 @brief Add a Composite gate to the front of the list of gates
 */
-void add_composite();
+void add_composite_to_front();
 
 
 /**
@@ -395,41 +395,41 @@ void add_composite();
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_adaptive_to_end(int target_qbit, int control_qbit);
+void add_adaptive(int target_qbit, int control_qbit);
 
 /**
 @brief Add a Adaptive gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_adaptive(int target_qbit, int control_qbit);
+void add_adaptive_to_front(int target_qbit, int control_qbit);
 
 
 /**
 @brief Append a list of gates to the list of gates
 @param gates_in A list of gate class instances.
 */
-void add_gates_to_end( std::vector<Gate*> gates_in );
+void add_gates( std::vector<Gate*> gates_in );
 
 
 /**
 @brief Add an array of gates to the front of the list of gates
 @param gates_in A list of gate class instances.
 */
-void add_gates( std::vector<Gate*> gates_in );
+void add_gates_to_front( std::vector<Gate*> gates_in );
 
 
 /**
 @brief Append a general gate to the list of gates
 @param gate A pointer to a class Gate describing an gate.
 */
-void add_gate_to_end( Gate* gate );
+void add_gate( Gate* gate );
 
 /**
 @brief Add an gate to the front of the list of gates
 @param gate A pointer to a class Gate describing an gate.
 */
-void add_gate( Gate* gate );
+void add_gate_to_front( Gate* gate );
 
 
 /**

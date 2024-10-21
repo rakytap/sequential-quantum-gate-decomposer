@@ -46,8 +46,8 @@ except ModuleNotFoundError:
 
 
 ##
-# @brief ???????????
-# @return ???????????
+# @brief Function to generate a test Qiskit circuit
+# @return Returns with a QISKIT circuit
 def pauli_exponent( alpha=0.6217*np.pi ):
 	# creating Qiskit quantum circuit
 	qc_orig = QuantumCircuit(5)

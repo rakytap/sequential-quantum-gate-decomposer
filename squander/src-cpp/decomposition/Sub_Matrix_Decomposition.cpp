@@ -255,74 +255,74 @@ void Sub_Matrix_Decomposition::add_gate_layers() {
         for (int idx=0;  idx<identical_blocks_loc; idx++) {
             if (gate->get_type() == CNOT_OPERATION ) {
                 CNOT* cnot_gate = static_cast<CNOT*>( gate );
-                add_gate_to_end( (Gate*)cnot_gate->clone() );
+                add_gate( (Gate*)cnot_gate->clone() );
             }
             else if (gate->get_type() == CZ_OPERATION ) {
                 CZ* cz_gate = static_cast<CZ*>( gate );
-                add_gate_to_end( (Gate*)cz_gate->clone() );
+                add_gate( (Gate*)cz_gate->clone() );
             }
             else if (gate->get_type() == CH_OPERATION ) {
                 CH* ch_gate = static_cast<CH*>( gate );
-                add_gate_to_end( (Gate*)ch_gate->clone() );
+                add_gate( (Gate*)ch_gate->clone() );
             }
             else if (gate->get_type() == SYC_OPERATION ) {
                 SYC* syc_gate = static_cast<SYC*>( gate );
-                add_gate_to_end( (Gate*)syc_gate->clone() );
+                add_gate( (Gate*)syc_gate->clone() );
             }
             else if (gate->get_type() == GENERAL_OPERATION ) {
-                add_gate_to_end( gate->clone() );
+                add_gate( gate->clone() );
             }
             else if (gate->get_type() == U3_OPERATION ) {
                 U3* u3_gate = static_cast<U3*>( gate );
-                add_gate_to_end( (Gate*)u3_gate->clone() );
+                add_gate( (Gate*)u3_gate->clone() );
             }
             else if (gate->get_type() == RX_OPERATION ) {
                 RX* rx_gate = static_cast<RX*>( gate );
-                add_gate_to_end( (Gate*)rx_gate->clone() );
+                add_gate( (Gate*)rx_gate->clone() );
             }
             else if (gate->get_type() == RY_OPERATION ) {
                 RY* ry_gate = static_cast<RY*>( gate );
-                add_gate_to_end( (Gate*)ry_gate->clone() );
+                add_gate( (Gate*)ry_gate->clone() );
             }
             else if (gate->get_type() == CRY_OPERATION ) {
                 CRY* cry_gate = static_cast<CRY*>( gate );
-                add_gate_to_end( (Gate*)cry_gate->clone() );
+                add_gate( (Gate*)cry_gate->clone() );
             }
             else if (gate->get_type() == RZ_OPERATION ) {
                 RZ* rz_gate = static_cast<RZ*>( gate );
-                add_gate_to_end( (Gate*)rz_gate->clone() );
+                add_gate( (Gate*)rz_gate->clone() );
             }
             else if (gate->get_type() == RZ_P_OPERATION ) {
                 RZ_P* rz_gate = static_cast<RZ_P*>( gate );
-                add_gate_to_end( (Gate*)rz_gate->clone() );
+                add_gate( (Gate*)rz_gate->clone() );
             }
             else if (gate->get_type() == X_OPERATION ) {
                 X* x_gate = static_cast<X*>( gate );
-                add_gate_to_end( (Gate*)x_gate->clone() );
+                add_gate( (Gate*)x_gate->clone() );
             }
             else if (gate->get_type() == Y_OPERATION ) {
                 Y* y_gate = static_cast<Y*>( gate );
-                add_gate_to_end( (Gate*)y_gate->clone() );
+                add_gate( (Gate*)y_gate->clone() );
             }
             else if (gate->get_type() == Z_OPERATION ) {
                 Z* z_gate = static_cast<Z*>( gate );
-                add_gate_to_end( (Gate*)z_gate->clone() );
+                add_gate( (Gate*)z_gate->clone() );
             }
             else if (gate->get_type() == Y_OPERATION ) {
                 Y* y_gate = static_cast<Y*>( gate );
-                add_gate_to_end( (Gate*)y_gate->clone() );
+                add_gate( (Gate*)y_gate->clone() );
             }
             else if (gate->get_type() == SX_OPERATION ) {
                 SX* sx_gate = static_cast<SX*>( gate );
-                add_gate_to_end( (Gate*)sx_gate->clone() );
+                add_gate( (Gate*)sx_gate->clone() );
             }
             else if (gate->get_type() == ADAPTIVE_OPERATION ) {
                 Adaptive* ad_gate = static_cast<Adaptive*>( gate );
-                add_gate_to_end( (Gate*)ad_gate->clone() );
+                add_gate( (Gate*)ad_gate->clone() );
             }
             else if (gate->get_type() == BLOCK_OPERATION ) {
                 Gates_block* block_gate = static_cast<Gates_block*>( gate );
-                add_gate_to_end( (Gate*)block_gate->clone() );
+                add_gate( (Gate*)block_gate->clone() );
             }
             else {
                 std::string err("Sub_Matrix_Decomposition::add_gate_layers: Unimplemented gate");
