@@ -48,7 +48,7 @@ def get_Qiskit_Circuit( Squander_circuit ):
     gates = Squander_circuit.get_Gates()
 
     # constructing quantum circuit
-    for idx in range(len(gates)-1, -1, -1):
+    for idx in range(len(gates)):
 
         gate = gates[idx]
 
@@ -132,7 +132,7 @@ def get_Qiskit_Circuit_inverse( Squander_circuit ):
 	gates = Squander_circuit.get_Gates()
 
         # constructing quantum circuit
-	for idx in range(len(gates)):
+	for idx in range(len(gates-1), -1, -1):
 
 		gate = gates[idx]
 

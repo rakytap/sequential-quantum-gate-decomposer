@@ -138,7 +138,8 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
     }
 
     // calculating the final error of the decomposition
-    Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+    Matrix matrix_decomposed = Umtx.copy();
+    apply_to(optimized_parameters_mtx, matrix_decomposed );
     calc_decomposition_error( matrix_decomposed );
 
     // get the number of gates used in the decomposition

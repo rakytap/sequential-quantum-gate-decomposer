@@ -710,7 +710,6 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 }
 
 
-
 /**
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
@@ -718,7 +717,6 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 */
 std::vector<Matrix> 
 Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) {
-
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
@@ -732,46 +730,41 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
         //for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
 
 
-            Gate* gate_deriv = gates[deriv_idx];
+            Gate* gate_deriv = gates[deriv_idx];            
 
             // for constant gate no gardient component is calculated
             if ( gate_deriv->get_parameter_num() == 0 ) {
                 continue;
             }
+                     
+            int deriv_parameter_idx = 0;
+            for ( int idx=0; idx<deriv_idx; idx++ ) {
+                deriv_parameter_idx += gates[idx]->get_parameter_num();
+            }            
+                    
+        
 
-            int deriv_parameter_idx = parameter_num;
-            for ( int idx=0; idx<=deriv_idx; idx++ ) {
-                deriv_parameter_idx -= gates[idx]->get_parameter_num();
-            }
+
 
             Matrix&& input_loc = input.copy();
 
-            //double* parameters = parameters_mtx_in.get_data();
-            //parameters = parameters + parameter_num;
-
-////////////////////
             double* parameters = parameters_mtx_in.get_data();
-///////////////////
 
 
             std::vector<Matrix> grad_loc;
 
-            for( int idx=gates.size()-1; idx>=0; idx--) {
+            for( int idx=0; idx<gates.size(); idx++) {            
 
                 Gate* operation = gates[idx];
-                //parameters = parameters - operation->get_parameter_num();
-                //Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
-
-////////////////////
+                
                 Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
                 parameters = parameters + operation->get_parameter_num();
-///////////////////
 
 
 
                 if (operation->get_type() == CNOT_OPERATION) {
                     CNOT* cnot_operation = static_cast<CNOT*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         cnot_operation->apply_to( input_loc );    
                     }
                     else {
@@ -780,7 +773,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }
                 else if (operation->get_type() == CZ_OPERATION) {
                     CZ* cz_operation = static_cast<CZ*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         cz_operation->apply_to( input_loc );    
                     }
                     else {
@@ -789,7 +782,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }
                 else if (operation->get_type() == CH_OPERATION) {
                     CH* ch_operation = static_cast<CH*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         ch_operation->apply_to( input_loc );    
                     }
                     else {
@@ -804,13 +797,12 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 			exit(-1);
                 }
 
-                else if (operation->get_type() == U3_OPERATION) {
-    
+                else if (operation->get_type() == U3_OPERATION) {            
                     U3* u3_operation = static_cast<U3*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         u3_operation->apply_to( parameters_mtx, input_loc );    
                     }
-                    else if ( deriv_idx == idx ) {
+                    else if ( idx == deriv_idx ) {
     
                         grad_loc = u3_operation->apply_derivate_to( parameters_mtx, input_loc );    
                     }
@@ -821,10 +813,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
                 else if (operation->get_type() == RX_OPERATION) {
                     RX* rx_operation = static_cast<RX*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         rx_operation->apply_to( parameters_mtx, input_loc );    
                     }
-                    else if ( deriv_idx == idx ) {
+                    else if ( idx == deriv_idx ) {
     
                         grad_loc = rx_operation->apply_derivate_to( parameters_mtx, input_loc );    
                     }
@@ -836,10 +828,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
                 else if (operation->get_type() == RY_OPERATION) {
                     RY* ry_operation = static_cast<RY*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         ry_operation->apply_to( parameters_mtx, input_loc );    
                     }
-                    else if ( deriv_idx == idx ) {
+                    else if ( idx == deriv_idx ) {
     
                         grad_loc = ry_operation->apply_derivate_to( parameters_mtx, input_loc );    
                     }
@@ -850,10 +842,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
                 else if (operation->get_type() == CRY_OPERATION) {
                     CRY* cry_operation = static_cast<CRY*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         cry_operation->apply_to( parameters_mtx, input_loc );    
                     }
-                    else if ( deriv_idx == idx ) {
+                    else if ( idx == deriv_idx ) {
                         grad_loc = cry_operation->apply_derivate_to( parameters_mtx, input_loc );    
                     }
                     else {
@@ -863,10 +855,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
                 else if (operation->get_type() == RZ_OPERATION) {
                     RZ* rz_operation = static_cast<RZ*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         rz_operation->apply_to( parameters_mtx, input_loc );    
                     }
-                    else if ( deriv_idx == idx ) {
+                    else if ( idx == deriv_idx ) {
     
                         grad_loc = rz_operation->apply_derivate_to( parameters_mtx, input_loc );    
                     }
@@ -877,10 +869,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
                 else if (operation->get_type() == RZ_P_OPERATION) {
                     RZ_P* rz_operation = static_cast<RZ_P*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         rz_operation->apply_to( parameters_mtx, input_loc );    
                     }
-                    else if ( deriv_idx == idx ) {
+                    else if ( idx == deriv_idx ) {
     
                         grad_loc = rz_operation->apply_derivate_to( parameters_mtx, input_loc );    
                     }
@@ -891,7 +883,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
                 else if (operation->get_type() == H_OPERATION) {
                     H* h_operation = static_cast<H*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         h_operation->apply_to( input_loc );    
                     }
                     else {
@@ -901,7 +893,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 
                 else if (operation->get_type() == X_OPERATION) {
                     X* x_operation = static_cast<X*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         x_operation->apply_to( input_loc );    
                     }
                     else {
@@ -910,7 +902,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }
                 else if (operation->get_type() == Y_OPERATION) {
                     Y* y_operation = static_cast<Y*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         y_operation->apply_to( input_loc );    
                     }
                     else {
@@ -919,7 +911,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }
                 else if (operation->get_type() == Z_OPERATION) {
                     Z* z_operation = static_cast<Z*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         z_operation->apply_to( input_loc );    
                     }
                     else {
@@ -928,7 +920,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 }
                 else if (operation->get_type() == SX_OPERATION) {
                     SX* sx_operation = static_cast<SX*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         sx_operation->apply_to( input_loc );    
                     }
                     else {
@@ -936,7 +928,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                     }
                 }
                 else if (operation->get_type() == GENERAL_OPERATION) {
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         operation->apply_to( input_loc );    
                     }
                     else {
@@ -960,11 +952,11 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 else if (operation->get_type() == BLOCK_OPERATION) {
                     Gates_block* block_operation = static_cast<Gates_block*>(operation);
 
-
-                    if ( deriv_idx < idx ) {  
+std::cout << "iiiiiiiiiiiiiiiiioooooooooo " << std::endl;
+                    if( idx < deriv_idx ) {  
                         block_operation->apply_to( parameters_mtx, input_loc );    
                     }
-                    else if ( deriv_idx == idx ) {
+                    else if ( idx == deriv_idx ) {
                         grad_loc = block_operation->apply_derivate_to( parameters_mtx, input_loc );    
                     }
                     else {
@@ -981,10 +973,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
                 else if (operation->get_type() == ADAPTIVE_OPERATION) {
                     Adaptive* ad_operation = static_cast<Adaptive*>(operation);
-                    if ( deriv_idx < idx ) {
+                    if( idx < deriv_idx ) {
                         ad_operation->apply_to( parameters_mtx, input_loc );    
                     }
-                    else if ( deriv_idx == idx ) {
+                    else if ( idx == deriv_idx ) {
                         grad_loc = ad_operation->apply_derivate_to( parameters_mtx, input_loc );    
                     }
                     else {
@@ -1007,6 +999,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
         } // tbb range end
     
     });
+    
 
     return grad;
 

@@ -505,7 +505,8 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
         exit(-1);
     }  
     
-    Matrix matrix_new = get_transformed_matrix( parameters, gates.begin(), gates.size(), Umtx );
+    Matrix matrix_new = Umtx.copy();
+    apply_to( parameters, matrix_new );
 
     if ( cost_fnc == FROBENIUS_NORM ) {
         return get_cost_function(matrix_new, trace_offset);
@@ -699,8 +700,9 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
 
     // get the transformed matrix with the gates in the list
     Matrix Umtx_loc = instance->get_Umtx();
-    Matrix matrix_new = instance->get_transformed_matrix( parameters, gates_loc.begin(), gates_loc.size(), Umtx_loc );
-  
+    Matrix matrix_new = Umtx_loc.copy();
+    instance->apply_to( parameters, matrix_new );
+   
     cost_function_type cost_fnc = instance->get_cost_function_variant();
 
     if ( cost_fnc == FROBENIUS_NORM ) {
@@ -937,7 +939,6 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     std::vector<Matrix> Umtx_deriv;
     Matrix trace_tmp(1,3);
     
-
     tbb::parallel_invoke(
         [&]{
             *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance), trace_tmp); 
@@ -1050,8 +1051,9 @@ void Optimization_Interface::optimization_problem_combined_unitary( Matrix_real 
 
     tbb::parallel_invoke(
         [&]{
-            Matrix Umtx_loc = instance->get_Umtx();     
-            Umtx = instance->get_transformed_matrix( parameters, instance->gates.begin(), instance->gates.size(), Umtx_loc );
+            Matrix Umtx_loc = instance->get_Umtx(); 
+            Umtx = Umtx_loc.copy();    
+            instance->apply_to( parameters, Umtx );
         },
         [&]{
             Matrix Umtx_loc = instance->get_Umtx();
