@@ -86,7 +86,7 @@ class Test_Decomposition:
         cDecompose.List_Gates()
 
         # get the decomposing operations
-        quantum_circuit = cDecompose.get_Quantum_Circuit()
+        quantum_circuit = cDecompose.get_Qiskit_Circuit()
 
         # print the quantum circuit
         print(quantum_circuit)
@@ -141,7 +141,7 @@ class Test_Decomposition:
         cDecompose.List_Gates()
 
         # get the decomposing operations
-        quantum_circuit = cDecompose.get_Quantum_Circuit()
+        quantum_circuit = cDecompose.get_Qiskit_Circuit()
 
         # print the quantum circuit
         print(quantum_circuit)
@@ -197,7 +197,7 @@ class Test_Decomposition:
         cDecompose.List_Gates()
 
         # get the decomposing operations
-        quantum_circuit = cDecompose.get_Quantum_Circuit()
+        quantum_circuit = cDecompose.get_Qiskit_Circuit()
 
         # print the quantum circuit
         print(quantum_circuit)

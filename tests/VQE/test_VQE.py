@@ -112,7 +112,7 @@ class Test_VQE:
         VQE_eye.Start_Optimization()
         
         # retrieve QISKIT format of the optimized circuit
-        quantum_circuit = VQE_eye.get_Quantum_Circuit()
+        quantum_circuit = VQE_eye.get_Qiskit_Circuit()
 
         # retrieve the optimized parameter
         parameters = VQE_eye.get_Optimized_Parameters()
@@ -165,7 +165,7 @@ class Test_VQE:
         VQE_Heisenberg.Start_Optimization()
 
         # retrieve QISKIT format of the optimized circuit
-        quantum_circuit = VQE_Heisenberg.get_Quantum_Circuit()
+        quantum_circuit = VQE_Heisenberg.get_Qiskit_Circuit()
         
         # print the quantum circuit
         lambdas, vecs = sp.sparse.linalg.eigs(Hamiltonian)

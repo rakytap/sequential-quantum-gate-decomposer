@@ -140,9 +140,7 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 	filename = 'data/19CNOT.qasm'
 	qc_trial = QuantumCircuit.from_qasm_file( filename )
 	#qc_trial = QuantumCircuit.from_qasm_file( filename )
-	print(qc_trial)
 	qc_trial = transpile(qc_trial, optimization_level=1, basis_gates=['cz', 'cx', 'u3', 'rz', 'u', 'rx'], layout_method='sabre')
-	print(qc_trial.data)
 
 	##### getting the alpha dependent unitary
 	qc_orig = pauli_exponent( alpha )
@@ -150,9 +148,9 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 	#print('global phase: ', qc_orig.global_phase)
 
 	Umtx_orig  = utils.get_unitary_from_qiskit_circuit( qc_orig )
-	Umtx_trial = utils.get_unitary_from_qiskit_circuit( qc_trial )
+	#Umtx_trial = utils.get_unitary_from_qiskit_circuit( qc_trial )
 	
-	print( np.abs(Umtx_orig @ Umtx_trial.conj().T) )
+	#print( np.abs(Umtx_orig @ Umtx_trial.conj().T) )
 	
 	
 	iteration_max = 1
@@ -189,7 +187,7 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 		# getting the new optimized parameters
 		optimized_parameters_loc = cDecompose.get_Optimized_Parameters()
 
-		qc_final = cDecompose.get_Quantum_Circuit()
+		qc_final = cDecompose.get_Qiskit_Circuit()
 
 		# get the unitary of the final circuit
 		Umtx_recheck = utils.get_unitary_from_qiskit_circuit( qc_final )
@@ -250,7 +248,7 @@ class Test_parametric_circuit:
 
         # determine the quantum circuit at parameter value alpha with BFGS2 optimizer
         qc, optimized_parameters = get_optimized_circuit( alpha, optimizer='BFGS2' )
-        '''
+        
         # determine the quantum circuit at parameter value alpha with BFGS optimizer
         qc, optimized_parameters_tmp = get_optimized_circuit( alpha+0.005, optimizer='BFGS', optimized_parameters=optimized_parameters )
 
@@ -259,7 +257,7 @@ class Test_parametric_circuit:
 
         # determine the quantum circuit at parameter value alpha with ADAM optimizer
         qc, optimized_parameters_tmp = get_optimized_circuit( alpha+0.005, optimizer='ADAM', optimized_parameters=optimized_parameters )
-        '''
+        
 
 
 

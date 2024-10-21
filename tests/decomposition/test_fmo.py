@@ -278,7 +278,7 @@ class Test_Decomposition:
 	
 	
         # get the decomposing operations
-        quantum_circuit = decomp.get_Quantum_Circuit()
+        quantum_circuit = decomp.get_Qiskit_Circuit()
         #print(quantum_circuit )
 	
         # test the decomposition of the matrix

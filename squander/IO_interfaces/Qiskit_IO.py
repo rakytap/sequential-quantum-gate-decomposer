@@ -37,15 +37,15 @@ from squander import Circuit
 # @brief Export the unitary decomposition into Qiskit format.
 # @param a Squander object containing a squander circuit (Circuit, any decomposing class, VQE class, etc..)
 # @return Return with a Qiskit compatible quantum circuit.
-def get_Quantum_Circuit( Squander_circuit):
+def get_Qiskit_Circuit( Squander_circuit ):
 
     from qiskit import QuantumCircuit
 
     # creating Qiskit quantum circuit
-    circuit = QuantumCircuit(self.qbit_num)
+    circuit = QuantumCircuit(Squander_circuit.qbit_num)
 
     # retrive the list of decomposing gate structure
-    gates = self.get_Gates()
+    gates = Squander_circuit.get_Gates()
 
     # constructing quantum circuit
     for idx in range(len(gates)-1, -1, -1):
@@ -88,6 +88,10 @@ def get_Quantum_Circuit( Squander_circuit):
         elif gate.get("type") == "RZ" or gate.get("type") == "RZ_P":
             # RZ gate
             circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
+            
+        elif gate.get("type") == "H":
+            # Hadamard gate
+            circuit.h(gate.get("target_qbit"))            
 
         elif gate.get("type") == "X":
             # X gate
@@ -104,9 +108,82 @@ def get_Quantum_Circuit( Squander_circuit):
         elif gate.get("type") == "SX":
             # SX gate
             circuit.sx(gate.get("target_qbit"))
+            
+        else:
+            raise ValueError("Unsupported gate in the circuit export: " +  gate.get("type"))
 
 
     return circuit
+    
+    
+
+##
+# @brief Export the inverse of a Squsnder circuit into Qiskit circuit.
+# @param a Squander object containing a squander circuit (Circuit, any decomposing class, VQE class, etc..)
+# @return Return with a Qiskit compatible quantum circuit.
+def get_Qiskit_Circuit_inverse( Squander_circuit ):
+
+		from qiskit import QuantumCircuit
+
+        # creating Qiskit quantum circuit
+		circuit = QuantumCircuit(Squander_circuit.qbit_num)
+
+        # retrive the list of decomposing gate structure
+		gates = Squander_circuit.get_Gates()
+
+        # constructing quantum circuit
+		for idx in range(len(gates)):
+
+			gate = gates[idx]
+
+			if gate.get("type") == "CNOT":
+                # adding CNOT gate to the quantum circuit
+				circuit.cx(gate.get("control_qbit"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "CZ":
+                # adding CZ gate to the quantum circuit
+				circuit.cz(gate.get("control_qbit"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "CH":
+                # adding CZ gate to the quantum circuit
+				circuit.ch(gate.get("control_qbit"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "SYC":
+                # Sycamore gate
+				print("Unsupported gate in the circuit export: Sycamore gate")
+				return None;
+
+			elif gate.get("type") == "U3":
+                # adding U3 gate to the quantum circuit
+				circuit.u(-gate.get("Theta"), -gate.get("Lambda"), -gate.get("Phi"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "RX":
+                # RX gate
+				circuit.rx(-gate.get("Theta"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "RY":
+                # RY gate
+				circuit.ry(-gate.get("Theta"), gate.get("target_qbit"))
+
+			elif gate.get("type") == "RZ" or gate.get("type") == "RZ_P":
+                # RZ gate
+				circuit.rz(-gate.get("Phi"), gate.get("target_qbit"))
+				
+			elif gate.get("type") == "H":
+                # Hadamard gate
+				circuit.h(gate.get("target_qbit"))				
+
+			elif gate.get("type") == "X":
+                # X gate
+				circuit.x(gate.get("target_qbit"))
+
+			elif gate.get("type") == "SX":
+                # SX gate
+				circuit.sx(gate.get("target_qbit"))
+
+		return circuit
+    
+    
 
 
 
