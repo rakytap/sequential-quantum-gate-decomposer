@@ -952,7 +952,6 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                 else if (operation->get_type() == BLOCK_OPERATION) {
                     Gates_block* block_operation = static_cast<Gates_block*>(operation);
 
-std::cout << "iiiiiiiiiiiiiiiiioooooooooo " << std::endl;
                     if( idx < deriv_idx ) {  
                         block_operation->apply_to( parameters_mtx, input_loc );    
                     }
