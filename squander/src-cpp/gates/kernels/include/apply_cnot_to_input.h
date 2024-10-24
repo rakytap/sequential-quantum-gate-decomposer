@@ -27,6 +27,6 @@ limitations under the License.
 #include "matrix.h"
 #include "common.h"
 
-void apply_cnot_kernel_to_state_vector_input_OpenMP(Matrix& input,const int& ctrl_qbit, const int& trgt_qbit);
+void apply_cnot_kernel_to_state_vector_input_OpenMP(Matrix& input,const int& control_qbit, const int& target_qbit);
 void apply_cnot_kernel_to_state_vector_input(Matrix& input,const int& ctrl_qbit, const int& trgt_qbit);
 #endif
