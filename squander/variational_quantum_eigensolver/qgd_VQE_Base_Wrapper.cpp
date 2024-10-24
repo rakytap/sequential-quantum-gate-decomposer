@@ -600,7 +600,7 @@ get_gate(  Variational_Quantum_Eigensolver_Base* vqe, int &idx ) {
         Py_XDECREF(Theta);
 
     }
-    else if (gate->get_type() == RZ_OPERATION) {
+    else if (gate->get_type() == RZ_OPERATION || gate->get_type() == RZ_P_OPERATION) {
 
         // get U3 parameters
         RZ* rz_gate = static_cast<RZ*>(gate);
@@ -700,7 +700,8 @@ get_gate(  Variational_Quantum_Eigensolver_Base* vqe, int &idx ) {
 
     }
     else {
-  
+        PyErr_SetString(PyExc_Exception, "get_gate: Unimplemented gate type occured");
+        return NULL;
     }
 
     return py_gate;

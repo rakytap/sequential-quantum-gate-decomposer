@@ -110,6 +110,7 @@ def get_Qiskit_Circuit( Squander_circuit ):
             circuit.sx(gate.get("target_qbit"))
             
         else:
+            print(gate)
             raise ValueError("Unsupported gate in the circuit export: " +  gate.get("type"))
 
 

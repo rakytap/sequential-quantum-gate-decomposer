@@ -168,7 +168,7 @@ print(' ')
 print('Constructing quantum circuit:')
 print(' ')
 ## Qiskit quantum circuit
-quantum_circuit = cStatePrep.get_Quantum_Circuit()
+quantum_circuit = cStatePrep.get_Qiskit_Circuit()
 
 print( quantum_circuit )
 

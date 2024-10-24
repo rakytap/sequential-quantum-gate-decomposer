@@ -202,7 +202,7 @@ decomp.Start_Decomposition()
 decomp.List_Gates()
 
 # get the decomposing operations
-quantum_circuit = decomp.get_Quantum_Circuit()
+quantum_circuit = decomp.get_Qiskit_Circuit()
 
 
 import numpy.linalg as LA
