@@ -330,7 +330,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
 
         // defining temporary variables for iteration cycles
         int block_idx_end;
-        int block_idx_start = gates.size();
+        int block_idx_start = 0;//gates.size();
         gates.clear();
         int block_parameter_num;
         Gate* fixed_gate_post = new Gate( qbit_num );
@@ -362,32 +362,36 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         // Start the iterations
         long long iter_idx;
         for ( iter_idx=0; iter_idx<max_outer_iterations_loc; iter_idx++) {
-
+        
             //determine the range of blocks to be optimalized togedther
-            block_idx_end = block_idx_start - optimization_block;
-            if (block_idx_end < 0) {
-                block_idx_end = 0;
+            block_idx_end = block_idx_start + optimization_block;            
+            if (block_idx_end > gates_loc.size()) {
+                block_idx_end = gates_loc.size();
             }
-            
+                 
             // determine the number of free parameters to be optimized
             block_parameter_num = 0;
-            for ( int block_idx=block_idx_start-1; block_idx>=block_idx_end; block_idx--) {
+            for ( int block_idx=block_idx_start; block_idx < block_idx_end; block_idx++) {
                 block_parameter_num = block_parameter_num + gates_loc[block_idx]->get_parameter_num();
             }
 
-
             // ***** get applied the fixed gates applied before the optimized gates *****
-            if (block_idx_start < (int)gates_loc.size() ) {
-                std::vector<Gate*>::iterator fixed_gates_pre_it = gates.begin() + 1; 
-                Umtx = get_transformed_matrix(optimized_parameters_mtx, fixed_gates_pre_it, gates.size()-1, Umtx);
-std::cout << "iiiiiiiiiiiiiiiiiiiiiiiiiiii " << std::endl;
+            if (block_idx_start > 0 ) {                
+
+                
+                std::vector<Gate*> gates_save = gates;
+                gates.clear();
+                gates.reserve( gates_save.size()-1 );
+                for( std::vector<Gate*>::iterator gate_it = gates_save.begin(); gate_it != gates_save.end()-1; gate_it++ ) {
+                    gates.push_back( *gate_it );
+                }
+                apply_to( optimized_parameters_mtx, Umtx );
+                
+                gates = gates_save;
             }
             else {
-                Umtx = Umtx_loc.copy();
-std::cout << "iiiddddddddddddddddddddddd " << std::endl;                
+                Umtx = Umtx_loc.copy();              
             }
-
-
 
 
             // clear the gate list used in the previous iterations
@@ -398,64 +402,56 @@ std::cout << "iiiddddddddddddddddddddddd " << std::endl;
             }
 
 
-            // ***** get the fixed gates applied after the optimized gates *****
-            // create a list of post gates matrices
-            if (block_idx_start == (int)gates_loc.size() ) {
-                // matrix of the fixed gates aplied after the gates to be varied
-                std::vector<Gate*>::iterator fixed_gates_post_it = gates_loc.begin();
-std::cout << "rrrrrrrrrrrrrrrrrrrrrrrrrrrrrri " << std::endl;
-                int parameter_idx = optimized_parameters.size();
+
+
+            // create a list of gates for the optimization process
+            for ( int idx=block_idx_start; idx<block_idx_end; idx++ ) {
+                gates.push_back( gates_loc[idx] );
+            }
+            
+            // Create a general gate describing the cumulative effect of gates following the optimized gates
+            if (block_idx_end < gates_loc.size()) {
+                
+                int parameter_idx = 0;
                 for (int gate_idx=0; gate_idx<block_idx_end; gate_idx++) {
                     Gate* gate = gates_loc[gate_idx];
-                    parameter_idx = parameter_idx -  gate->get_parameter_num();   
+                    parameter_idx = parameter_idx +  gate->get_parameter_num();   
                 }
-
+                   
                 Matrix_real optimized_parameters_partial = Matrix_real( optimized_parameters.get_data()+parameter_idx, 1, optimized_parameters.size()-parameter_idx );
-                gates_mtxs_post = get_gate_products(optimized_parameters_partial, fixed_gates_post_it, block_idx_end);
-
-            }
-
-
-
-
-
-            // Create a general gate describing the cumulative effect of gates following the optimized gates
-            if (block_idx_end > 0) {
-                fixed_gate_post->set_matrix( gates_mtxs_post[block_idx_end-1] );
-                gates.push_back( fixed_gate_post ); 
-std::cout << "rdddddddddddddggggggggggg " << std::endl;                
+                
+                std::vector<Gate*> gates_save = gates;
+                gates.clear();
+                gates.reserve( gates_loc.size()-block_idx_end );
+                for( std::vector<Gate*>::iterator gate_it = gates_loc.begin() + block_idx_end; gate_it != gates_loc.end(); gate_it++ ) {
+                    gates.push_back( *gate_it );
+                }
+                Matrix post_mtx = Identity.copy();
+                apply_to( optimized_parameters_partial, post_mtx );
+                
+                gates = gates_save;
+                
+                fixed_gate_post->set_matrix( post_mtx );
+                
+                gates.push_back( fixed_gate_post );            
             }
             else {
                 // release gate products
-                gates_mtxs_post.clear();
-                fixed_gate_post->set_matrix( Identity );
-std::cout << "rreeeeeeeeeeeeeeeeeeeeeeee " << std::endl;                
+                //gates_mtxs_post.clear();
+                fixed_gate_post->set_matrix( Identity );             
             }
- 
- std::cout << "reeeddddddrrrtttttttttttt " << block_idx_end << " " << block_idx_start << " " << gates_loc.size() << std::endl;  
-            // create a list of gates for the optimization process
-            for ( int idx=block_idx_end; idx<block_idx_start; idx++ ) {
-                gates.push_back( gates_loc[idx] );
-            }
+             
 
 
             // constructing solution guess for the optimization
             parameter_num = block_parameter_num;
             Matrix_real solution_guess_tmp = Matrix_real(1, parameter_num);
-            //////////////////////////////////////  
             memcpy( solution_guess_tmp.get_data(), optimized_parameters.get_data() + pre_gate_parameter_num, parameter_num*sizeof(double) );
-            /////////////////////////////////////
-
- std::cout << "fewrgrevbrebrereferfergr " << solution_guess_tmp.size() << " " << pre_gate_parameter_num << " " << optimized_parameters.size() << std::endl;  
+ 
 
             // solve the optimization problem of the block
             solve_layer_optimization_problem( parameter_num, solution_guess_tmp );
 
-/*
-Matrix tmp4 = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size() );
-std::cout << "eeee4 " << tmp4[0].real << " " << get_submatrix_cost_function(tmp4) << std::endl;
-std::cout << "current_minimum: " << current_minimum << std::endl;
-*/
             // add the current minimum to the array of minimums and calculate the mean
             double minvec_mean = 0;
             for (int idx=min_vec_num-1; idx>0; idx--) {
@@ -469,20 +465,17 @@ std::cout << "current_minimum: " << current_minimum << std::endl;
 
 
             // store the obtained optimalized parameters for the block
-            //////////////////////////////////////
-            memcpy( optimized_parameters.get_data()+pre_gate_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );            
-            /////////////////////////////////////
-            //memcpy( optimized_parameters.get_data()+parameter_num_loc - pre_gate_parameter_num-block_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );
+            memcpy( optimized_parameters.get_data()+pre_gate_parameter_num, optimized_parameters_mtx.get_data(), parameter_num*sizeof(double) );     
 
 
-            if (block_idx_end == 0) {
+            if (block_idx_end == gates_loc.size()) {
                 // restart the block-wise iteration again
-                block_idx_start = gates_loc.size();
+                block_idx_start = 0;
                 pre_gate_parameter_num = 0;
             }
             else {
                 // mode the block-wies optimization to the next block
-                block_idx_start = block_idx_start - optimization_block;
+                block_idx_start = block_idx_start + optimization_block;
                 pre_gate_parameter_num = pre_gate_parameter_num + block_parameter_num;
             }
 
@@ -519,7 +512,6 @@ std::cout << "current_minimum: " << current_minimum << std::endl;
                 break;
             }
 
-
         }
 
 
@@ -541,11 +533,7 @@ std::cout << "current_minimum: " << current_minimum << std::endl;
 
         optimized_parameters_mtx = Matrix_real( 1, parameter_num );
 
-	///////////////////////
         memcpy( optimized_parameters_mtx.get_data(), optimized_parameters.get_data(), parameter_num*sizeof(double) );
-	//////////////////////
-
-
 
         delete(fixed_gate_post);
 
@@ -660,148 +648,6 @@ void Decomposition_Base::set_optimized_parameters( double* parameters, int num_o
     return;
 }
 
-/**
-@brief Calculate the transformed matrix resulting by an array of gates on the matrix Umtx
-@param parameters An array containing the parameters of the U3 gates.
-@param gates_it An iterator pointing to the first gate to be applied on the initial matrix.
-@param num_of_gates The number of gates to be applied on the initial matrix
-@return Returns with the transformed matrix.
-*/
-Matrix
-Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates ) {
-
-    return get_transformed_matrix( parameters, gates_it, num_of_gates, Umtx );
-}
-
-
-/**
-@brief Calculate the transformed matrix resulting by an array of gates on a given initial matrix.
-@param parameters An array containing the parameters of the U3 gates.
-@param gates_it An iterator pointing to the first gate to be applied on the initial matrix.
-@param num_of_gates The number of gates to be applied on the initial matrix
-@param initial_matrix The initial matrix wich is transformed by the given gates. (by deafult it is set to the attribute Umtx)
-@return Returns with the transformed matrix.
-*/
-Matrix
-Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix ) { //TODO: get rid of functions get_transformed_matrix
-
-    // The matrix to be returned
-    Matrix ret_matrix = initial_matrix.copy();
-    if (num_of_gates==0) {
-        return ret_matrix;
-    }
-           
-    int parameter_idx = 0;
-
-    // apply the gate operations on the inital matrix
-    for (int idx=0; idx<num_of_gates; idx++) {
-
-        // The current gate
-        Gate* gate = *(gates_it++);
-        
-        Matrix_real parameters_mtx( parameters.get_data()+parameter_idx, 1, gate->get_parameter_num() );
-        parameter_idx = parameter_idx + gate->get_parameter_num();
-              
-
-        if (gate->get_type() == CNOT_OPERATION ) {
-            CNOT* cnot_gate = static_cast<CNOT*>( gate );
-            cnot_gate->apply_to(ret_matrix);
-        }
-        else if (gate->get_type() == CZ_OPERATION ) {
-            CZ* cz_gate = static_cast<CZ*>( gate );
-            cz_gate->apply_to(ret_matrix);
-        }
-        else if (gate->get_type() == CH_OPERATION ) {
-            CH* ch_gate = static_cast<CH*>( gate );
-            ch_gate->apply_to(ret_matrix);
-        }
-        else if (gate->get_type() == SYC_OPERATION ) {
-            SYC* syc_gate = static_cast<SYC*>( gate );
-            syc_gate->apply_to(ret_matrix);
-        }
-        else if (gate->get_type() == GENERAL_OPERATION ) {
-            gate->apply_to(ret_matrix);
-        }
-        else if (gate->get_type() == U3_OPERATION ) {
-            U3* u3_gate = static_cast<U3*>( gate );
-            u3_gate->apply_to( parameters_mtx, ret_matrix);            
-        }
-        else if (gate->get_type() == RX_OPERATION ) {
-            RX* rx_gate = static_cast<RX*>( gate );
-            rx_gate->apply_to( parameters_mtx, ret_matrix);            
-        }
-        else if (gate->get_type() == RY_OPERATION ) {
-            RY* ry_gate = static_cast<RY*>( gate );
-            ry_gate->apply_to( parameters_mtx, ret_matrix);            
-        }
-        else if (gate->get_type() == CRY_OPERATION ) {
-            CRY* cry_gate = static_cast<CRY*>( gate );
-            cry_gate->apply_to( parameters_mtx, ret_matrix);            
-        }
-        else if (gate->get_type() == RZ_OPERATION ) {
-            RZ* rz_gate = static_cast<RZ*>( gate );
-            rz_gate->apply_to( parameters_mtx, ret_matrix);            
-        }
-        else if (gate->get_type() == RZ_P_OPERATION ) {
-            RZ_P* rz_gate = static_cast<RZ_P*>( gate );
-            rz_gate->apply_to( parameters_mtx, ret_matrix);            
-        }
-        else if (gate->get_type() == H_OPERATION ) {
-            H* h_gate = static_cast<H*>( gate );
-            h_gate->apply_to( ret_matrix );            
-        }        
-        else if (gate->get_type() == X_OPERATION ) {
-            X* x_gate = static_cast<X*>( gate );
-            x_gate->apply_to( ret_matrix );            
-        }
-        else if (gate->get_type() == Y_OPERATION ) {
-            Y* y_gate = static_cast<Y*>( gate );
-            y_gate->apply_to( ret_matrix );            
-        }
-        else if (gate->get_type() == Z_OPERATION ) {
-            Z* z_gate = static_cast<Z*>( gate );
-            z_gate->apply_to( ret_matrix );            
-        }
-        else if (gate->get_type() == SX_OPERATION ) {
-            SX* sx_gate = static_cast<SX*>( gate );
-            sx_gate->apply_to( ret_matrix );            
-        }
-        else if (gate->get_type() == UN_OPERATION ) {
-            UN* un_gate = static_cast<UN*>( gate );
-            un_gate->apply_to( parameters_mtx, ret_matrix);            
-        }
-        else if (gate->get_type() == ON_OPERATION ) {
-            ON* on_gate = static_cast<ON*>( gate );
-            on_gate->apply_to( parameters_mtx, ret_matrix);            
-        }
-        else if (gate->get_type() == COMPOSITE_OPERATION ) {
-            Composite* com_gate = static_cast<Composite*>( gate );
-            com_gate->apply_to( parameters_mtx, ret_matrix);            
-        }
-        else if (gate->get_type() == BLOCK_OPERATION ) {
-            Gates_block* block_gate = static_cast<Gates_block*>( gate );
-            block_gate->apply_to(parameters_mtx, ret_matrix);            
-        }
-        else if (gate->get_type() == ADAPTIVE_OPERATION ) {
-            Adaptive* ad_gate = static_cast<Adaptive*>( gate );
-            ad_gate->apply_to( parameters_mtx, ret_matrix);            
-        }
-        else {
-            std::string err("Decomposition_Base::get_transformed_matrix: unimplemented gate");
-            throw err;
-        }
-
-
-    }
-
-
-    return ret_matrix;
-
-
-
-
-
-}
 
 /**
 @brief Calculate the decomposed matrix resulted by the effect of the optimized gates on the unitary Umtx
@@ -809,159 +655,14 @@ Decomposition_Base::get_transformed_matrix( Matrix_real &parameters, std::vector
 */
 Matrix Decomposition_Base::get_decomposed_matrix() {
         
-        return get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+        Matrix ret = Umtx.copy();
+        apply_to( optimized_parameters_mtx, ret );
+        
+        return ret;
 }
 
 
 
-/**
-@brief Calculate the list of gate gate matrices such that the i>0-th element in the result list is the product of the gates of all 0<=n<i gates from the input list and the 0th element in the result list is the identity.
-@param parameters An array containing the parameters of the gates.
-@param gates_it An iterator pointing to the first gate.
-@param num_of_gates The number of gates involved in the calculations
-@return Returns with a vector of the product matrices.
-*/
-std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> 
-Decomposition_Base::get_gate_products(const Matrix_real& parameters_mtx, std::vector<Gate*>::iterator gates_it, int num_of_gates) {
-
-
-    // construct the vector of matrix representation of the gates
-    std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> gate_mtxs(num_of_gates);
-
-    // creating identity gate if no gates were involved in the calculations
-    if (num_of_gates==0) {
-        gate_mtxs.push_back( create_identity(matrix_size) );
-        return gate_mtxs;
-    }
-
-//#######################################x
-    // REVERSE PARAMETERS
-
-    // determine the number of parameters
-    int parameters_num_total = 0;  
-    std::vector<Gate*>::iterator gates_it_tmp = gates_it;
-    for (int idx=0; idx<num_of_gates; idx++) {
-
-        // The current gate
-        Gate* gate = *(gates_it_tmp++);
-        parameters_num_total = parameters_num_total + gate->get_parameter_num();
-
-    }
-
-
-    double* parameters = parameters_mtx.get_data() + parameters_num_total;
-
-
-//#######################################x
-
-    double* parameters_loc = parameters;
-    Matrix mtx = create_identity(matrix_size);
-
-    for (int idx=0; idx<num_of_gates; idx++) {
-       
-
-        // get the matrix representation of the gate
-        Gate* gate = *gates_it;
-        Matrix_real parameters_loc_mtx( parameters_loc-gate->get_parameter_num(), 1, gate->get_parameter_num() );
-
-        if (gate->get_type() == CNOT_OPERATION ) {
-            CNOT* cnot_gate = static_cast<CNOT*>(gate);
-            cnot_gate->apply_from_right(mtx);
-        }
-        else if (gate->get_type() == CZ_OPERATION ) {
-            CZ* cz_gate = static_cast<CZ*>(gate);
-            cz_gate->apply_from_right(mtx);
-        }
-        else if (gate->get_type() == CH_OPERATION ) {
-            CH* ch_gate = static_cast<CH*>(gate);
-            ch_gate->apply_from_right(mtx);
-        }
-        else if (gate->get_type() == SYC_OPERATION ) {
-            SYC* syc_gate = static_cast<SYC*>(gate);
-            syc_gate->apply_from_right(mtx);
-        }
-        else if (gate->get_type() == GENERAL_OPERATION ) {
-            gate->apply_from_right(mtx);
-        }
-        else if (gate->get_type() == U3_OPERATION ) {
-            U3* u3_gate = static_cast<U3*>(gate);
-            u3_gate->apply_from_right(parameters_loc_mtx, mtx);
-        }
-        else if (gate->get_type() == RX_OPERATION ) {
-            RX* rx_gate = static_cast<RX*>(gate);
-            rx_gate->apply_from_right(parameters_loc_mtx, mtx);
-        }
-        else if (gate->get_type() == RY_OPERATION ) {
-            RY* ry_gate = static_cast<RY*>(gate);
-            ry_gate->apply_from_right(parameters_loc_mtx, mtx);
-        }
-        else if (gate->get_type() == CRY_OPERATION ) {
-            CRY* cry_gate = static_cast<CRY*>(gate);
-            cry_gate->apply_from_right(parameters_loc_mtx, mtx);
-        }
-        else if (gate->get_type() == RZ_OPERATION ) {
-            RZ* rz_gate = static_cast<RZ*>(gate);
-            rz_gate->apply_from_right(parameters_loc_mtx, mtx);
-        }
-        else if (gate->get_type() == RZ_P_OPERATION ) {
-            RZ_P* rz_gate = static_cast<RZ_P*>(gate);
-            rz_gate->apply_from_right(parameters_loc_mtx, mtx);
-        }
-        else if (gate->get_type() == H_OPERATION ) {
-            H* h_gate = static_cast<H*>(gate);
-            h_gate->apply_from_right(mtx);
-        }        
-        else if (gate->get_type() == X_OPERATION ) {
-            X* x_gate = static_cast<X*>(gate);
-            x_gate->apply_from_right(mtx);
-        }
-        else if (gate->get_type() == Y_OPERATION ) {
-            Y* y_gate = static_cast<Y*>(gate);
-            y_gate->apply_from_right(mtx);
-        }
-        else if (gate->get_type() == Z_OPERATION ) {
-            Z* z_gate = static_cast<Z*>(gate);
-            z_gate->apply_from_right(mtx);
-        }
-        else if (gate->get_type() == SX_OPERATION ) {
-            SX* sx_gate = static_cast<SX*>(gate);
-            sx_gate->apply_from_right(mtx);
-        }
-        else if (gate->get_type() == UN_OPERATION ) {
-            UN* un_gate = static_cast<UN*>(gate);
-            un_gate->apply_from_right(parameters_loc_mtx, mtx);
-        }
-        else if (gate->get_type() == ON_OPERATION ) {
-            ON* on_gate = static_cast<ON*>(gate);
-            on_gate->apply_from_right(parameters_loc_mtx, mtx);
-        }
-        else if (gate->get_type() == COMPOSITE_OPERATION ) {
-            Composite* com_gate = static_cast<Composite*>(gate);
-            com_gate->apply_from_right(parameters_loc_mtx, mtx);
-        }
-        else if (gate->get_type() == BLOCK_OPERATION ) {
-            Gates_block* block_gate = static_cast<Gates_block*>(gate);
-            block_gate->apply_from_right(parameters_loc_mtx, mtx);
-        }
-        else if (gate->get_type() == ADAPTIVE_OPERATION ) {
-            Adaptive* ad_gate = static_cast<Adaptive*>(gate);
-            ad_gate->apply_from_right(parameters_loc_mtx, mtx);
-        }
-        else {
-            std::string err("Decomposition_Base::get_gate_products: unimplemented gate");
-            throw err;
-        }
-
-        parameters_loc = parameters_loc - gate->get_parameter_num();
-
-        gate_mtxs[idx] = mtx.copy();     
-        gates_it++;   
-
-    }
-
-    return gate_mtxs;
-
-}
 
 /**
 @brief Apply an gates on the input matrix

@@ -176,7 +176,9 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
         }
 
         // calculating the final error of the decomposition
-        Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+        Matrix matrix_decomposed = Umtx.copy();
+        apply_to( optimized_parameters_mtx, matrix_decomposed );
+        
 	calc_decomposition_error( matrix_decomposed );
         
 
@@ -242,7 +244,8 @@ N_Qubit_Decomposition::decompose_submatrix() {
         }
 
         // obtaining the subdecomposed submatrices
-        Matrix subdecomposed_matrix_mtx = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+        Matrix subdecomposed_matrix_mtx = Umtx.copy();
+        apply_to( optimized_parameters_mtx, subdecomposed_matrix_mtx );
         QGD_Complex16* subdecomposed_matrix = subdecomposed_matrix_mtx.get_data();
 
         // get the most unitary submatrix
@@ -350,7 +353,7 @@ void N_Qubit_Decomposition::finalize_decomposition() {
         
 
         // get the transformed matrix resulted by the gates in the list
-        Umtx = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+        apply_to( optimized_parameters_mtx, Umtx );
 
 
 
@@ -377,8 +380,8 @@ void N_Qubit_Decomposition::finalize_decomposition() {
         Matrix_real optimized_parameters_mtx_save2 = optimized_parameters_mtx;
 
         release_gates();
-        this->combine( gates_save2 );
         this->combine( gates_save );
+        this->combine( gates_save2 );
 
         Matrix_real parameters_joined( 1, optimized_parameters_mtx_save.size()+optimized_parameters_mtx_save2.size() );
         memcpy( parameters_joined.get_data(), optimized_parameters_mtx_save.get_data(), optimized_parameters_mtx_save.size()*sizeof(double) );
@@ -391,7 +394,8 @@ void N_Qubit_Decomposition::finalize_decomposition() {
         
         Umtx = Umtx_save;
 
-        Matrix final_matrix = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size() );
+        Matrix final_matrix = Umtx.copy();
+        apply_to( optimized_parameters_mtx, final_matrix );
 
         // indicate that the decomposition was finalized
         decomposition_finalized = true;
@@ -442,135 +446,11 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
         std::vector<Gate*> sub_decomp_ops = cSub_decomposition->get_gates();
         int gate_num = cSub_decomposition->get_gate_num();
 
-        for ( int idx = gate_num-1; idx >=0; idx--) {
+        for ( int idx = 0; idx<gate_num; idx++) {
             Gate* op = sub_decomp_ops[idx];
-
-            if (op->get_type() == CNOT_OPERATION) {
-                CNOT* cnot_op = static_cast<CNOT*>( op );
-                CNOT* cnot_op_cloned = cnot_op->clone();
-                cnot_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( cnot_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == CZ_OPERATION) {
-                CZ* cz_op = static_cast<CZ*>( op );
-                CZ* cz_op_cloned = cz_op->clone();
-                cz_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( cz_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == CH_OPERATION) {
-                CH* ch_op = static_cast<CH*>( op );
-                CH* ch_op_cloned = ch_op->clone();
-                ch_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( ch_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == SYC_OPERATION) {
-                SYC* syc_op = static_cast<SYC*>( op );
-                SYC* syc_op_cloned = syc_op->clone();
-                syc_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( syc_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == U3_OPERATION) {
-                U3* u3_op = static_cast<U3*>( op );
-                U3* u3_op_cloned = u3_op->clone();
-                u3_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( u3_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == RX_OPERATION) {
-                RX* rx_op = static_cast<RX*>( op );
-                RX* rx_op_cloned = rx_op->clone();
-                rx_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( rx_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == RY_OPERATION) {
-                RY* ry_op = static_cast<RY*>( op );
-                RY* ry_op_cloned = ry_op->clone();
-                ry_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( ry_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == RZ_OPERATION) {
-                RZ* rz_op = static_cast<RZ*>( op );
-                RZ* rz_op_cloned = rz_op->clone();
-                rz_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( rz_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == RZ_P_OPERATION) {
-                RZ_P* rz_op = static_cast<RZ_P*>( op );
-                RZ_P* rz_op_cloned = rz_op->clone();
-                rz_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( rz_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == X_OPERATION) {
-                X* x_op = static_cast<X*>( op );
-                X* x_op_cloned = x_op->clone();
-                x_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( x_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == Y_OPERATION) {
-                Y* y_op = static_cast<Y*>( op );
-                Y* y_op_cloned = y_op->clone();
-                y_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( y_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == Z_OPERATION) {
-                Z* z_op = static_cast<Z*>( op );
-                Z* z_op_cloned = z_op->clone();
-                z_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( z_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == Y_OPERATION) {
-                Y* y_op = static_cast<Y*>( op );
-                Y* y_op_cloned = y_op->clone();
-                y_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( y_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == SX_OPERATION) {
-                SX* sx_op = static_cast<SX*>( op );
-                SX* sx_op_cloned = sx_op->clone();
-                sx_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( sx_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == CRY_OPERATION) {
-                CRY* cry_op = static_cast<CRY*>( op );
-                CRY* cry_op_cloned = cry_op->clone();
-                cry_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( cry_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == ADAPTIVE_OPERATION) {
-                Adaptive* ad_op = static_cast<Adaptive*>( op );
-                Adaptive* ad_op_cloned = ad_op->clone();
-                ad_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( ad_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == BLOCK_OPERATION) {
-                Gates_block* block_op = static_cast<Gates_block*>( op );
-                Gates_block* block_op_cloned = block_op->clone();
-                block_op_cloned->set_qbit_num( qbit_num );
-                Gate* op_cloned = static_cast<Gate*>( block_op_cloned );
-                add_gate( op_cloned );
-            }
-            else if (op->get_type() == GENERAL_OPERATION) {
-                Gate* op_cloned = op->clone();
-                op_cloned->set_qbit_num( qbit_num );
-                add_gate( op_cloned );
-            }
+            Gate* op_cloned = op->clone();
+            add_gate( op_cloned );            
         }
-
 }
 
 

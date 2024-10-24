@@ -1869,7 +1869,7 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 	//const_cast <Matrix_real&>(parameters);
 
 
-        for(int op_idx = gates.size()-1; op_idx>=0; op_idx--) {
+        for(int op_idx = 0; op_idx<gates.size(); op_idx++) {
 
             Gate* gate = gates[op_idx];
 

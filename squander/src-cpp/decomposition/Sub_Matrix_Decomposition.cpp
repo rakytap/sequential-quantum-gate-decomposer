@@ -214,7 +214,8 @@ void  Sub_Matrix_Decomposition::disentangle_submatrices() {
     subdisentaglement_done = true;
 
     // The subunitarized matrix
-    subdecomposed_mtx = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+    subdecomposed_mtx = Umtx.copy();
+    apply_to( optimized_parameters_mtx, subdecomposed_mtx );
 
 }
 
@@ -253,83 +254,9 @@ void Sub_Matrix_Decomposition::add_gate_layers() {
         Gate* gate = *gates_it;
 
         for (int idx=0;  idx<identical_blocks_loc; idx++) {
-            if (gate->get_type() == CNOT_OPERATION ) {
-                CNOT* cnot_gate = static_cast<CNOT*>( gate );
-                add_gate( (Gate*)cnot_gate->clone() );
-            }
-            else if (gate->get_type() == CZ_OPERATION ) {
-                CZ* cz_gate = static_cast<CZ*>( gate );
-                add_gate( (Gate*)cz_gate->clone() );
-            }
-            else if (gate->get_type() == CH_OPERATION ) {
-                CH* ch_gate = static_cast<CH*>( gate );
-                add_gate( (Gate*)ch_gate->clone() );
-            }
-            else if (gate->get_type() == SYC_OPERATION ) {
-                SYC* syc_gate = static_cast<SYC*>( gate );
-                add_gate( (Gate*)syc_gate->clone() );
-            }
-            else if (gate->get_type() == GENERAL_OPERATION ) {
-                add_gate( gate->clone() );
-            }
-            else if (gate->get_type() == U3_OPERATION ) {
-                U3* u3_gate = static_cast<U3*>( gate );
-                add_gate( (Gate*)u3_gate->clone() );
-            }
-            else if (gate->get_type() == RX_OPERATION ) {
-                RX* rx_gate = static_cast<RX*>( gate );
-                add_gate( (Gate*)rx_gate->clone() );
-            }
-            else if (gate->get_type() == RY_OPERATION ) {
-                RY* ry_gate = static_cast<RY*>( gate );
-                add_gate( (Gate*)ry_gate->clone() );
-            }
-            else if (gate->get_type() == CRY_OPERATION ) {
-                CRY* cry_gate = static_cast<CRY*>( gate );
-                add_gate( (Gate*)cry_gate->clone() );
-            }
-            else if (gate->get_type() == RZ_OPERATION ) {
-                RZ* rz_gate = static_cast<RZ*>( gate );
-                add_gate( (Gate*)rz_gate->clone() );
-            }
-            else if (gate->get_type() == RZ_P_OPERATION ) {
-                RZ_P* rz_gate = static_cast<RZ_P*>( gate );
-                add_gate( (Gate*)rz_gate->clone() );
-            }
-            else if (gate->get_type() == X_OPERATION ) {
-                X* x_gate = static_cast<X*>( gate );
-                add_gate( (Gate*)x_gate->clone() );
-            }
-            else if (gate->get_type() == Y_OPERATION ) {
-                Y* y_gate = static_cast<Y*>( gate );
-                add_gate( (Gate*)y_gate->clone() );
-            }
-            else if (gate->get_type() == Z_OPERATION ) {
-                Z* z_gate = static_cast<Z*>( gate );
-                add_gate( (Gate*)z_gate->clone() );
-            }
-            else if (gate->get_type() == Y_OPERATION ) {
-                Y* y_gate = static_cast<Y*>( gate );
-                add_gate( (Gate*)y_gate->clone() );
-            }
-            else if (gate->get_type() == SX_OPERATION ) {
-                SX* sx_gate = static_cast<SX*>( gate );
-                add_gate( (Gate*)sx_gate->clone() );
-            }
-            else if (gate->get_type() == ADAPTIVE_OPERATION ) {
-                Adaptive* ad_gate = static_cast<Adaptive*>( gate );
-                add_gate( (Gate*)ad_gate->clone() );
-            }
-            else if (gate->get_type() == BLOCK_OPERATION ) {
-                Gates_block* block_gate = static_cast<Gates_block*>( gate );
-                add_gate( (Gate*)block_gate->clone() );
-            }
-            else {
-                std::string err("Sub_Matrix_Decomposition::add_gate_layers: Unimplemented gate");
-                throw err;
-            }
-
+            add_gate( (Gate*)(gate->clone()) );
         }
+        
     }
 
 
@@ -488,7 +415,8 @@ double Sub_Matrix_Decomposition::optimization_problem( double* parameters ) {
 
         // get the transformed matrix with the gates in the list
         Matrix_real parameters_mtx(parameters, 1, parameter_num );
-        Matrix matrix_new = get_transformed_matrix( parameters_mtx, gates.begin(), gates.size(), Umtx );
+        Matrix matrix_new = Umtx.copy();
+        apply_to( parameters_mtx, matrix_new );
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {
@@ -522,7 +450,8 @@ double Sub_Matrix_Decomposition::optimization_problem( Matrix_real parameters, v
 //tbb::spin_mutex::scoped_lock my_lock{my_mutex};
 
     Umtx_loc = instance->get_Umtx();
-    matrix_new = instance->get_transformed_matrix( parameters, gates_loc.begin(), gates_loc.size(), Umtx_loc );
+    matrix_new = Umtx_loc.copy();
+    instance->apply_to( parameters, matrix_new );
 
 #ifdef DEBUG
         if (matrix_new.isnan()) {

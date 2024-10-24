@@ -130,9 +130,9 @@ def get_Qiskit_Circuit_inverse( Squander_circuit ):
 
         # retrive the list of decomposing gate structure
 	gates = Squander_circuit.get_Gates()
-
+	
         # constructing quantum circuit
-	for idx in range(len(gates-1), -1, -1):
+	for idx in range(len(gates)-1, -1, -1):
 
 		gate = gates[idx]
 

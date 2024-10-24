@@ -234,16 +234,6 @@ bool check_optimization_solution();
 
 
 /**
-@brief Calculate the list of gate gate matrices such that the i>0-th element in the result list is the product of the gates of all 0<=n<i gates from the input list and the 0th element in the result list is the identity.
-@param parameters An array containing the parameters of the U3 gates.
-@param gates_it An iterator pointing to the forst gate.
-@param num_of_gates The number of gates involved in the calculations
-@return Returns with a vector of the product matrices.
-*/
-std::vector<Matrix, tbb::cache_aligned_allocator<Matrix>> get_gate_products(const Matrix_real& parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates);
-
-
-/**
 @brief Call to retrive a pointer to the unitary to be transformed
 @return Return with the unitary Umtx
 */
@@ -273,27 +263,6 @@ void get_optimized_parameters( double* ret );
 @param ret Preallocated array to store the optimized parameters.
 */
 void set_optimized_parameters( double* parameters, int num_of_parameters );
-
-/**
-@brief Calculate the transformed matrix resulting by an array of gates on the matrix Umtx
-@param parameters An array containing the parameters of the U3 gates.
-@param gates_it An iterator pointing to the first gate to be applied on the initial matrix.
-@param num_of_gates The number of gates to be applied on the initial matrix
-@return Returns with the transformed matrix.
-*/
-Matrix get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates );
-
-
-
-/**
-@brief Calculate the transformed matrix resulting by an array of gates on a given initial matrix.
-@param parameters An array containing the parameters of the U3 gates.
-@param gates_it An iterator pointing to the first gate to be applied on the initial matrix.
-@param num_of_gates The number of gates to be applied on the initial matrix
-@param initial_matrix The initial matrix wich is transformed by the given gates.
-@return Returns with the transformed matrix.
-*/
-Matrix get_transformed_matrix( Matrix_real &parameters, std::vector<Gate*>::iterator gates_it, int num_of_gates, Matrix& initial_matrix );
 
 
 /**
