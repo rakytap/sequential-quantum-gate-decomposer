@@ -126,16 +126,17 @@ def get_Qiskit_Circuit_inverse( Squander_circuit ):
 
 	from qiskit import QuantumCircuit
 
-        # creating Qiskit quantum circuit
+	# creating Qiskit quantum circuit
 	circuit = QuantumCircuit(Squander_circuit.qbit_num)
 
-        # retrive the list of decomposing gate structure
+	# retrive the list of decomposing gate structure
 	gates = Squander_circuit.get_Gates()
-	
-        # constructing quantum circuit
+
+	# constructing quantum circuit
 	for idx in range(len(gates)-1, -1, -1):
 
 		gate = gates[idx]
+
 
 		if gate.get("type") == "CNOT":
                 # adding CNOT gate to the quantum circuit
@@ -182,7 +183,7 @@ def get_Qiskit_Circuit_inverse( Squander_circuit ):
                 # SX gate
 			circuit.sx(gate.get("target_qbit"))
 
-		return circuit
+	return circuit
     
     
 

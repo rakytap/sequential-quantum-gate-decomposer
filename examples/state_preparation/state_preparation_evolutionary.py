@@ -132,10 +132,10 @@ for new_layer in range(4):
 	params_AGENTS = cStatePrep.get_Optimized_Parameters()
 
 	# setting optimizer
-	#cStatePrep.set_Optimizer("BFGS")
+	cStatePrep.set_Optimizer("BFGS")
 
 	# continue the decomposition with a second optimizer method
-	#cStatePrep.get_Initial_Circuit()   
+	cStatePrep.get_Initial_Circuit()   
 
 	params_BFGS  = cStatePrep.get_Optimized_Parameters()
 	decomp_error = cStatePrep.Optimization_Problem( params_BFGS )		
