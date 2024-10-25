@@ -129,7 +129,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 	initial_state = initial_state_squander[ qbit_num ]
 
 	parameters = parameters_squander[ qbit_num ]
-	parameter_idx = parameters.size-1
+	parameter_idx = 0
 
 	# prepare circuit
 
@@ -145,17 +145,17 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 		for control_qbit in range(qbit_num-1):
 			for target_qbit in range(control_qbit+1, qbit_num):
 
-				circuit_qiskit.u(parameters[parameter_idx-2]*2, parameters[parameter_idx-1], parameters[parameter_idx], target_qbit )
-				parameter_idx = parameter_idx-3
-				circuit_qiskit.u(parameters[parameter_idx-2]*2, parameters[parameter_idx-1], parameters[parameter_idx], control_qbit )
-				parameter_idx = parameter_idx-3
+				circuit_qiskit.u(parameters[parameter_idx]*2, parameters[parameter_idx+1], parameters[parameter_idx+2], target_qbit )
+				parameter_idx = parameter_idx+3
+				circuit_qiskit.u(parameters[parameter_idx]*2, parameters[parameter_idx+1], parameters[parameter_idx+2], control_qbit )
+				parameter_idx = parameter_idx+3
 				#circuit_qiskit.cx( control_qbit, target_qbit )
 				circuit_qiskit.cry( parameters[parameter_idx]*2, control_qbit, target_qbit )
-				parameter_idx = parameter_idx-1
+				parameter_idx = parameter_idx+1
 
 	for target_qbit in range(qbit_num):
-		circuit_qiskit.u(parameters[parameter_idx-2]*2, parameters[parameter_idx-1], parameters[parameter_idx], target_qbit )
-		parameter_idx = parameter_idx-3
+		circuit_qiskit.u(parameters[parameter_idx]*2, parameters[parameter_idx+1], parameters[parameter_idx+2], target_qbit )
+		parameter_idx = parameter_idx+3
 		break
 		
 
@@ -192,7 +192,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 	initial_state = initial_state_squander[ qbit_num ]
 
 	parameters = parameters_squander[ qbit_num ]
-	parameter_idx = parameters.size-1
+	parameter_idx = 0
 
 	# prepare circuit
 
@@ -208,10 +208,10 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 		for control_qbit in range(qbit_num-1):
 			for target_qbit in range(control_qbit+1, qbit_num):
 
-				circuit_qulacs.add_U3_gate(target_qbit, parameters[parameter_idx-2]*2, parameters[parameter_idx-1], parameters[parameter_idx] )
-				parameter_idx = parameter_idx-3
-				circuit_qulacs.add_U3_gate( control_qbit, parameters[parameter_idx-2]*2, parameters[parameter_idx-1], parameters[parameter_idx] )
-				parameter_idx = parameter_idx-3
+				circuit_qulacs.add_U3_gate(target_qbit, parameters[parameter_idx]*2, parameters[parameter_idx+1], parameters[parameter_idx+2] )
+				parameter_idx = parameter_idx+3
+				circuit_qulacs.add_U3_gate( control_qbit, parameters[parameter_idx]*2, parameters[parameter_idx+1], parameters[parameter_idx+2] )
+				parameter_idx = parameter_idx+3
 
 				#circuit_qulacs.add_CNOT_gate( control_qbit, target_qbit )
 				
@@ -220,12 +220,12 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 				RY_gate.add_control_qubit( control_qbit, 1)
 				circuit_qulacs.add_gate( RY_gate )
 				#circuit_qulacs.add_RotY_gate( target_qbit, parameters[parameter_idx]*2 )
-				parameter_idx = parameter_idx-1
+				parameter_idx = parameter_idx+1
 				
 
 	for target_qbit in range(qbit_num):
-		circuit_qulacs.add_U3_gate( target_qbit, parameters[parameter_idx-2]*2, parameters[parameter_idx-1], parameters[parameter_idx] )
-		parameter_idx = parameter_idx-3
+		circuit_qulacs.add_U3_gate( target_qbit, parameters[parameter_idx]*2, parameters[parameter_idx+1], parameters[parameter_idx+2] )
+		parameter_idx = parameter_idx+3
 		break
 		
 
