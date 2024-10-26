@@ -12,6 +12,7 @@ from squander.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolve
 
 #gates
 from squander.gates.qgd_U3 import qgd_U3 as U3
+from squander.gates.qgd_H import qgd_H  as H
 from squander.gates.qgd_X import qgd_X  as X
 from squander.gates.qgd_Y import qgd_Y  as Y
 from squander.gates.qgd_Z import qgd_Z  as Z 

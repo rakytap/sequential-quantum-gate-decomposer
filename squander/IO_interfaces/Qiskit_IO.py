@@ -291,7 +291,8 @@ def convert_Qiskit_to_Squander( qc_in ):
             qubits = gate[1]                
             qubit = q_register.index( qubits[0] ) 
 
-            params = gate[0].params
+            params    = gate[0].params
+            params[0] = params[0]/2 #SQUADER works with phi/2
                     
             for param in params:
                 parameters = parameters + [float(param)]
@@ -328,7 +329,7 @@ def convert_Qiskit_to_Squander( qc_in ):
 
             Circuit_Squander.add_SX( qubit )
         else:
-            print("Unimplemented gate: ", name )
+            print("convert_Qiskit_to_Squander: Unimplemented gate: ", name )
 
 
     parameters = np.asarray(parameters, dtype=np.float64)

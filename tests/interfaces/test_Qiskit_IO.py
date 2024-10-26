@@ -135,7 +135,7 @@ class Test_Qiskit_IO:
        
         input = (Umtx.conj().T).copy()
         Circuit_Squander.apply_to( parameters, input )
-                
+
         input = input * np.conj(input[0,0]) - np.eye( input.shape[0], dtype=np.complex128 )
 
         
@@ -143,5 +143,14 @@ class Test_Qiskit_IO:
         norm = LA.norm( input )
         
         assert( norm < 1e-6 )
+
+
+        gates = Circuit_Squander.get_Gates()
+        for gate in gates:
+            print( gate )
+
+        input = (Umtx.conj().T).copy()
+        gates[1].apply_to( input )
+
 
 

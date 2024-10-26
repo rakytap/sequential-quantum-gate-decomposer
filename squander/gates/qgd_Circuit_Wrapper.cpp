@@ -29,6 +29,26 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <Python.h>
 #include "structmember.h"
 #include "Gates_block.h"
+#include "CZ.h"
+#include "CH.h"
+#include "CNOT.h"
+#include "U3.h"
+#include "RX.h"
+#include "RY.h"
+#include "CRY.h"
+#include "RZ.h"
+#include "RZ_P.h"
+#include "H.h"
+#include "X.h"
+#include "Y.h"
+#include "Z.h"
+#include "SX.h"
+#include "SYC.h"
+#include "UN.h"
+#include "ON.h"
+#include "Adaptive.h"
+#include "Composite.h"
+
 #include "numpy_interface.h"
 
 #ifdef __DFE__
@@ -263,7 +283,7 @@ qgd_Circuit_Wrapper_add_RZ(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_rz_p(target_qbit);
+        self->gate->add_rz(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -992,6 +1012,456 @@ qgd_Circuit_Wrapper_get_Qbit_Num( qgd_Circuit_Wrapper *self ) {
 
 
 
+
+/**
+@brief Call to get the metadata organised into Python dictionary of the idx-th gate
+@param decomp A pointer pointing to an instance of the class N_Qubit_Decomposition_custom.
+@param idx Labels the idx-th decomposing gate.
+@return Returns with a python dictionary containing the metadata of the idx-th gate
+*/
+static PyObject *
+get_gate( Gates_block* decomp, int &idx ) {
+
+
+    // create dictionary conatining the gate data
+    PyObject* py_gate = PyDict_New();
+
+    Gate* gate = decomp->get_gate( idx );
+
+    if (gate->get_type() == CNOT_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_CNOT");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_CNOT" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CNOT");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(control_qbit);
+
+        return py_gate;
+
+    }
+    else if (gate->get_type() == CZ_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_CZ");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_CZ" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CZ");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(control_qbit);
+
+        return py_gate;
+
+    }
+    else if (gate->get_type() == CH_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_CH");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_CH" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CH");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(control_qbit);
+
+        return py_gate;
+    }
+    else if (gate->get_type() == SYC_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_SYC");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_SYC" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_SYC");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+        PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+        Py_XDECREF(control_qbit);
+
+        return py_gate;
+
+    }
+    else if (gate->get_type() == U3_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_U3");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_U3" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_U3");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit );
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+
+        return py_gate;
+
+    }
+    else if (gate->get_type() == RX_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_RX");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_RX" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_RX");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+
+        return py_gate;
+    }
+    else if (gate->get_type() == RY_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_RY");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_RY" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_RY");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+
+        return py_gate;
+
+
+    }
+    else if (gate->get_type() == RZ_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_RZ");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_RZ" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_RZ");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+
+        return py_gate;
+    }
+    else if (gate->get_type() == RZ_P_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_RZ_P");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_RZ_P" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_RZ_P");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit);
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+
+        return py_gate;
+
+
+
+    }
+    else if (gate->get_type() == H_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_H");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_H" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_H");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+
+        return py_gate;
+
+
+    }    
+    else if (gate->get_type() == X_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_X");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_X" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_X");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+
+        return py_gate;
+
+    }
+    else if (gate->get_type() == SX_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_SX");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_SX" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_SX");
+
+        // create gate parameters
+        PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+        PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+        Py_DECREF( qgd_gate );
+        Py_DECREF( py_gate_class );
+        Py_DECREF( gate_input );
+        Py_XDECREF(qbit_num);
+        Py_XDECREF(target_qbit);
+
+        return py_gate;
+
+    }
+    else {
+  
+    }
+
+    return py_gate;
+
+}
+
+
+
+/**
+@brief Wrapper function to set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+@param args A tuple of the input arguments: idx (int)
+idx: labels the idx-th gate.
+*/
+static PyObject *
+qgd_Circuit_Wrapper_get_gate( qgd_Circuit_Wrapper *self, PyObject *args ) {
+
+    // initiate variables for input arguments
+    int  idx; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|i", &idx )) return Py_BuildValue("i", -1);
+
+
+    return get_gate( self->gate, idx );
+
+
+}
+
+
+
+
+
+
+
+/**
+@brief Wrapper function to set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+@param args A tuple of the input arguments: qbit (bool), identical_blocks (bool)
+qbit: The number of qubits for which the subdecomposition should contain identical_blocks successive identical blocks.
+identical_blocks: Number of successive identical blocks in the decomposition.
+*/
+static PyObject *
+qgd_Circuit_Wrapper_get_gates( qgd_Circuit_Wrapper *self ) {
+
+
+
+
+    // get the number of gates
+    int op_num = self->gate->get_gate_num();
+
+    // preallocate Python tuple for the output
+    PyObject* ret = PyTuple_New( (Py_ssize_t) op_num );
+
+
+
+    // iterate over the gates to get the gate list
+    for (int idx = 0; idx < op_num; idx++ ) {
+
+        // get metadata about the idx-th gate
+        PyObject* gate = get_gate( self->gate, idx );
+
+        // adding gate information to the tuple
+        PyTuple_SetItem( ret, (Py_ssize_t) idx, gate );
+
+    }
+
+
+    return ret;
+
+}
+
+
+
+
 static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"add_U3", (PyCFunction) qgd_Circuit_Wrapper_add_U3, METH_VARARGS | METH_KEYWORDS,
      "Call to add a U3 gate to the front of the gate structure"
@@ -1066,6 +1536,12 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"get_Qbit_Num", (PyCFunction) qgd_Circuit_Wrapper_get_Qbit_Num, METH_NOARGS,
      "Call to get the number of qubits in the circuit"
+    },
+    {"get_Gate", (PyCFunction) qgd_Circuit_Wrapper_get_gate, METH_VARARGS,
+     "Method to get the i-th decomposing gates."
+    },
+    {"get_Gates", (PyCFunction) qgd_Circuit_Wrapper_get_gates, METH_NOARGS,
+     "Method to get the tuple of decomposing gates."
     },
     {NULL}  /* Sentinel */
 };

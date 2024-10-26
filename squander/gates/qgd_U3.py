@@ -45,7 +45,7 @@ class qgd_U3(qgd_U3_Wrapper):
 #@param kwds A tuple of keywords
 # @return An instance of the class
 
-    def __init__( self, qbit_num, target_qbit, Theta, Phi, Lambda ):
+    def __init__( self, qbit_num, target_qbit, Theta=True, Phi=True, Lambda=True ):
 
         # initiate variables for input arguments
         #int  qbit_num = -1; 
