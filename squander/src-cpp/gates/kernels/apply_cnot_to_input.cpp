@@ -33,7 +33,7 @@ void apply_cnot_kernel_to_state_vector_input_OpenMP(Matrix& input, const int& co
 
     int control_qbit_step_index = (1<<control_qbit);
 
-    if ( control_qbit == 0 ) {
+
 #pragma omp parallel for
         for (int idx=0; idx<matrix_size/2; idx++ ) {
 
@@ -64,69 +64,6 @@ void apply_cnot_kernel_to_state_vector_input_OpenMP(Matrix& input, const int& co
 
         
         }
-
-    }
-    else {
-
-
-/*
-AVX kernel developed according to https://github.com/qulacs/qulacs/blob/main/src/csim/update_ops_matrix_dense_single.cpp
-
-under MIT License
-
-Copyright (c) 2018 Qulacs Authors
-
-Permission is hereby granted, free of charge, to any person obtaining a copy
-of this software and associated documentation files (the "Software"), to deal
-in the Software without restriction, including without limitation the rights
-to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
-copies of the Software, and to permit persons to whom the Software is
-furnished to do so, subject to the following conditions:
-
-The above copyright notice and this permission notice shall be included in all
-copies or substantial portions of the Software.
-*/
-
-#pragma omp parallel for
-        for (int idx=0; idx<matrix_size/2; idx=idx+2 ) {
-
-                // generate index by inserting state 0 into the place of the target qbit while pushing high bits left by one
-                int current_idx = ((idx & bitmask_high) << 1) | (idx & bitmask_low);
-		
-                // the index pair with target qubit state 1
-                int current_idx_pair = current_idx | (1<<target_qbit);
-
-                if (control_qbit < 0 || (current_idx & control_qbit_step_index) ) {
-
-
-                    double* element = (double*)input.get_data() + 2 * current_idx;
-                    double* element_pair = (double*)input.get_data() + 2 * current_idx_pair;
-
-                   
-                    __m256d data0 = _mm256_loadu_pd(element);
-                    __m256d data1 = _mm256_loadu_pd(element_pair);
-
-                    _mm256_storeu_pd(element, data1);
-                    _mm256_storeu_pd(element_pair, data0);
-
-
-                }
-                else {
-                    // leave the state as it is
-                    continue;
-                }
-
-
-            //std::cout << current_idx_target << " " << current_idx_target_pair << std::endl;
-
-
-
-        }
-
-
-
-    } // else
-
 
 }
 
