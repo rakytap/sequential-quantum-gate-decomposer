@@ -142,6 +142,8 @@ Gates_block::release_gate( int idx) {
     parameter_num -= gate->get_parameter_num();
 
     gates.erase( gates.begin() + idx );
+    
+    reset_parameter_start_indices();
 
 }
 
@@ -215,10 +217,10 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix> inp
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
+Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
 
-    double* parameters = parameters_mtx.get_data();
+    double* parameters = parameters_mtx_in.get_data();
 
     //parameters = parameters + parameter_num;
     std::vector<int> involved_qubits = get_involved_qubits();
@@ -326,6 +328,22 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
             Gate* operation = gates[idx];
             Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
             parameters = parameters + operation->get_parameter_num();
+                
+            
+            /////////////////////////////////
+            if ( parameters_mtx.size() > 0 ) {
+                if( parameters_mtx[0] != parameters_mtx_in[ operation->get_parameter_start_idx() ] ) {
+                    std::cout << parameters_mtx[0] << " " << parameters_mtx_in[ operation->get_parameter_start_idx() ] << std::endl;
+                    
+                    std::string err("Gates_block::apply_to: not a good gate parameter"); 
+                    throw err;
+                } 
+                
+                
+
+            }
+            
+            /////////////////////////////////
 
             switch (operation->get_type()) {
             case CNOT_OPERATION: case CZ_OPERATION:
@@ -335,56 +353,16 @@ Gates_block::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
             case GENERAL_OPERATION: case H_OPERATION:
                 operation->apply_to(input, parallel);
                 break;
-            case U3_OPERATION: {
-                U3* u3_operation = static_cast<U3*>(operation);
-                u3_operation->apply_to( parameters_mtx, input, parallel );
-                break;    
-            }
-            case RX_OPERATION: {
-                RX* rx_operation = static_cast<RX*>(operation);
-                rx_operation->apply_to( parameters_mtx, input, parallel);
-                break; 
-            }
-            case RY_OPERATION: {
-                RY* ry_operation = static_cast<RY*>(operation);
-                ry_operation->apply_to( parameters_mtx, input, parallel );
-                break; 
-            }
-            case CRY_OPERATION: {
-                CRY* cry_operation = static_cast<CRY*>(operation);
-                cry_operation->apply_to( parameters_mtx, input, parallel ); 
-                break;
-            }
-            case RZ_OPERATION: {
-                RZ* rz_operation = static_cast<RZ*>(operation);
-                rz_operation->apply_to( parameters_mtx, input, parallel ); 
-                break;
-            }  
-            case RZ_P_OPERATION: {
-                RZ_P* rz_p_operation = static_cast<RZ_P*>(operation);
-                rz_p_operation->apply_to( parameters_mtx, input, parallel ); 
-                break;
-            }        
-            case UN_OPERATION: {
-                UN* un_operation = static_cast<UN*>(operation);
-                un_operation->apply_to(parameters_mtx, input, parallel);
-                break;
-            }
-            case ON_OPERATION: {
-                ON* on_operation = static_cast<ON*>(operation);
-                on_operation->apply_to(parameters_mtx, input, parallel);
-                break;
-            }
-            case BLOCK_OPERATION: {
-                Gates_block* block_operation = static_cast<Gates_block*>(operation);
-                block_operation->apply_to(parameters_mtx, input, parallel);
-                break;
-            }
-            case COMPOSITE_OPERATION: {
-                Composite* com_operation = static_cast<Composite*>(operation);
-                com_operation->apply_to(parameters_mtx, input, parallel);
-                break;
-            }    
+            case U3_OPERATION: 
+            case RX_OPERATION: 
+            case RY_OPERATION: 
+            case CRY_OPERATION: 
+            case RZ_OPERATION: 
+            case RZ_P_OPERATION: 
+            case UN_OPERATION: 
+            case ON_OPERATION: 
+            case BLOCK_OPERATION:
+            case COMPOSITE_OPERATION:
             case ADAPTIVE_OPERATION: {
                 Adaptive* ad_operation = static_cast<Adaptive*>(operation);
                 ad_operation->apply_to( parameters_mtx, input, parallel );
@@ -1624,6 +1602,9 @@ void Gates_block::add_gate( Gate* gate ) {
 
         // append the gate to the list
         gates.push_back(gate);
+        
+        // set the parameter starting index in the parameters array used to execute the circuit.
+        gate->set_parameter_start_idx( parameter_num );
 
         // increase the number of parameters by the number of parameters
         parameter_num = parameter_num + gate->get_parameter_num();
@@ -1654,6 +1635,8 @@ void Gates_block::add_gate( Gate* gate ) {
         if (gate->get_type() == BLOCK_OPERATION) {
             layer_num = layer_num + 1;
         }
+        
+        reset_parameter_start_indices();
 
 }
 
@@ -1680,6 +1663,8 @@ Gates_block::insert_gate( Gate* gate, int idx ) {
         if (gate->get_type() == BLOCK_OPERATION) {
             layer_num = layer_num + 1;
         }
+        
+        reset_parameter_start_indices();
 
 
 }
@@ -2382,6 +2367,8 @@ Gates_block* Gates_block::clone() {
 
     // creatign new instance of class Gates_block
     Gates_block* ret = new Gates_block( qbit_num );
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     // extracting the gates from the current class
     if (extract_gates( ret ) != 0 ) {
@@ -2704,6 +2691,26 @@ double Gates_block::get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matri
 
 }
 
+
+/**
+@brief Method reset the parameter start indices of gate operations incorporated in the circuit. (When a gate is inserted into the circuit at other position than the end.)
+*/
+void 
+Gates_block::reset_parameter_start_indices() {
+
+    int parameter_idx = 0;
+    
+    for( std::vector<Gate*>::iterator gate_it = gates.begin(); gate_it != gates.end(); gate_it++ ) {
+    
+        Gate* gate = *gate_it;
+        
+        gate->set_parameter_start_idx( parameter_idx );
+        
+        parameter_idx = parameter_idx + gate->get_parameter_num();
+    
+    }
+
+}
 
 
 #ifdef __DFE__

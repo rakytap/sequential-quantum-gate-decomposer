@@ -240,6 +240,8 @@ H::apply_from_right( Matrix& input ) {
 H* H::clone() {
 
     H* ret = new H(qbit_num, target_qbit);
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     return ret;
 

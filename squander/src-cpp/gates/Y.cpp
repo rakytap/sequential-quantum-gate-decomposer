@@ -192,6 +192,8 @@ Y::apply_from_right( Matrix& input ) {
 Y* Y::clone() {
 
     Y* ret = new Y(qbit_num, target_qbit);
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     return ret;
 

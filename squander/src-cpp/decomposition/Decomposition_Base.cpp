@@ -385,6 +385,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 for( std::vector<Gate*>::iterator gate_it = gates_save.begin(); gate_it != gates_save.end()-1; gate_it++ ) {
                     gates.push_back( *gate_it );
                 }
+                reset_parameter_start_indices();
                 apply_to( optimized_parameters_mtx, Umtx );
                 
                 gates = gates_save;
@@ -426,6 +427,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 for( std::vector<Gate*>::iterator gate_it = gates_loc.begin() + block_idx_end; gate_it != gates_loc.end(); gate_it++ ) {
                     gates.push_back( *gate_it );
                 }
+                reset_parameter_start_indices();
+                
                 Matrix post_mtx = Identity.copy();
                 apply_to( optimized_parameters_partial, post_mtx );
                 
@@ -433,7 +436,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 
                 fixed_gate_post->set_matrix( post_mtx );
                 
-                gates.push_back( fixed_gate_post );            
+                gates.push_back( fixed_gate_post ); 
+                reset_parameter_start_indices();           
             }
             else {
                 // release gate products
@@ -527,6 +531,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         // store the result of the optimization
         gates.clear();
         gates = gates_loc;
+        reset_parameter_start_indices();
 
         parameter_num = parameter_num_loc;
 
@@ -838,6 +843,8 @@ void Decomposition_Base::prepare_gates_to_export() {
     // release the gates and replace them with the ones prepared to export
     gates.clear();
     gates = gates_tmp;
+    
+    reset_parameter_start_indices();
 
 }
 

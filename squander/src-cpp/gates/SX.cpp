@@ -245,6 +245,8 @@ SX::apply_from_right( Matrix& input ) {
 SX* SX::clone() {
 
     SX* ret = new SX(qbit_num, target_qbit);
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     return ret;
 

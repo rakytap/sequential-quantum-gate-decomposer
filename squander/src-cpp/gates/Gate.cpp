@@ -50,6 +50,8 @@ Gate::Gate() {
     control_qbit = -1;
     // the number of free parameters of the operation
     parameter_num = 0;
+    // the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
+    parameter_start_idx = 0;
 }
 
 
@@ -78,6 +80,8 @@ Gate::Gate(int qbit_num_in) {
     control_qbit = -1;
     // The number of parameters
     parameter_num = 0;
+    // the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
+    parameter_start_idx = 0;
 }
 
 
@@ -274,6 +278,8 @@ Gate* Gate::clone() {
 
     Gate* ret = new Gate( qbit_num );
     ret->set_matrix( matrix_alloc );
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     return ret;
 
@@ -519,6 +525,30 @@ Gate::parameters_for_calc_one_qubit(double& ThetaOver2, double& Phi, double& Lam
 
  return;
 
+}
+
+
+/**
+@brief Call to set the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
+@param start_idx The starting index
+*/
+void 
+Gate::set_parameter_start_idx(int start_idx) {
+
+    parameter_start_idx = start_idx;
+
+}
+
+
+/**
+@brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
+@param start_idx The starting index
+*/
+int 
+Gate::get_parameter_start_idx() {
+
+    return parameter_start_idx;
+    
 }
 
 

@@ -240,6 +240,8 @@ X::apply_from_right( Matrix& input ) {
 X* X::clone() {
 
     X* ret = new X(qbit_num, target_qbit);
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     return ret;
 

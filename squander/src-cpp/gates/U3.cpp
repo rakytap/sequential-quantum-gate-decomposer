@@ -535,6 +535,8 @@ U3* U3::clone() {
     if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters(parameters[0], parameters[1], parameters[2]);
     }
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
 
     return ret;

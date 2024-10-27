@@ -202,6 +202,8 @@ CH::calc_one_qubit_u3( ){
 CH* CH::clone() {
 
     CH* ret = new CH( qbit_num, target_qbit, control_qbit );
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     return ret;
 

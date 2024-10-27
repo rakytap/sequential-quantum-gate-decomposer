@@ -246,6 +246,7 @@ CRY* CRY::clone() {
         ret->set_optimized_parameters(parameters[0]);
     }
 
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     return ret;
 

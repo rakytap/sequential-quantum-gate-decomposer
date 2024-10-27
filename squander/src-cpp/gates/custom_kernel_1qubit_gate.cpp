@@ -156,6 +156,7 @@ custom_kernel_1qubit_gate* custom_kernel_1qubit_gate::clone() {
 
     custom_kernel_1qubit_gate* ret = new custom_kernel_1qubit_gate(qbit_num, target_qbit, kernel);
 
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     return ret;
 

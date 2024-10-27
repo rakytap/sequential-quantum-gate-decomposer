@@ -575,19 +575,19 @@ void get_parameter_max(Matrix_real &range_max);
 #ifdef __DFE__
 
 /**
-@brief Method to create random initial parameters for the optimization
+@brief Call to convert gate data (and derivate gate data) to DFE data structure
 @return 
 */
 DFEgate_kernel_type* convert_to_DFE_gates_with_derivates( Matrix_real& parameters_mtx, int& gatesNum, int& gateSetNum, int& redundantGateSets, bool only_derivates=false );
 
 /**
-@brief Method to create random initial parameters for the optimization
+@brief Call to adjust DFE gate paremeters to evaluate the derivates
 @return 
 */
 void adjust_parameters_for_derivation( DFEgate_kernel_type* DFEgates, const int  gatesNum, int& gate_idx, int& gate_set_index );
 
 /**
-@brief Method to create random initial parameters for the optimization
+@brief Call to convert gate data to batched DFE data structure
 @return 
 */
 DFEgate_kernel_type* convert_to_batched_DFE_gates( std::vector<Matrix_real>& parameters_mtx_vec, int& gatesNum, int& gateSetNum, int& redundantGateSets );
@@ -595,17 +595,27 @@ DFEgate_kernel_type* convert_to_batched_DFE_gates( std::vector<Matrix_real>& par
 
 
 /**
-@brief Method to create random initial parameters for the optimization
+@brief Call to convert gate data to DFE data structure
 @return 
 */
 DFEgate_kernel_type* convert_to_DFE_gates( Matrix_real& parameters_mtx, int& gatesNum );
 
 /**
-@brief Method to create random initial parameters for the optimization
+@brief Call to convert gate data to DFE data structure
 @return 
 */
 void convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEgate_kernel_type* DFEgates, int& start_index );
 #endif
+
+
+/**
+@brief Method reset the parameter start indices of gate operations incorporated in the circuit. (When a gate is inserted into the circuit at other position than the end.)
+*/
+void reset_parameter_start_indices();
+
+
+
+
 };
 
 
@@ -636,9 +646,9 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, const std::st
 */
 Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, int verbosity=3);
 
-//////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
+//////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////
 bool is_qbit_present(std::vector<int> involved_qbits, int new_qbit, int num_of_qbits);
-//////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
+//////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////
 
 
 

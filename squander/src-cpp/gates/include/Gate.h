@@ -55,6 +55,8 @@ protected:
     int matrix_size;
     /// the number of free parameters of the operation
     int parameter_num;
+    /// the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
+    int parameter_start_idx;
 
 private:
 
@@ -175,6 +177,20 @@ gate_type get_type();
 @return Return with the number of qubits composing the unitary
 */
 int get_qbit_num();
+
+
+/**
+@brief Call to set the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
+@param start_idx The starting index
+*/
+void set_parameter_start_idx(int start_idx);
+
+
+/**
+@brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
+@param start_idx The starting index
+*/
+int get_parameter_start_idx();
 
 /**
 @brief Call to create a clone of the present class

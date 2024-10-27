@@ -199,6 +199,8 @@ CZ::calc_one_qubit_u3( ){
 CZ* CZ::clone() {
 
     CZ* ret = new CZ( qbit_num, target_qbit, control_qbit );
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     return ret;
 
