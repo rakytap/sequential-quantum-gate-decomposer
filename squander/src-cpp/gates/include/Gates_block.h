@@ -108,7 +108,7 @@ Matrix get_matrix( Matrix_real& parameters, int parallel );
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
-void apply_to_list( Matrix_real& parameters, std::vector<Matrix> input );
+void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& input );
 
 /**
 @brief Call to apply the gate on the input array/matrix Gates_block*input

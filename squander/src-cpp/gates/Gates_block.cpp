@@ -200,11 +200,10 @@ Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 @param input The input array on which the gate is applied
 */
 void 
-Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix> input ) {
-
+Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input ) {
 
     for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
-        apply_to( parameters_mtx, *it );
+        this->apply_to( parameters_mtx, *it );
     }
 
 }
@@ -220,9 +219,6 @@ void
 Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
 
-    double* parameters = parameters_mtx_in.get_data();
-
-    //parameters = parameters + parameter_num;
     std::vector<int> involved_qubits = get_involved_qubits();
        
     // TODO: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!
@@ -230,7 +226,9 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 
 
         std::string error("Gates_block::apply_to: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!");
-        throw error;      
+        throw error; 
+        
+        double* parameters = parameters_mtx_in.get_data();     
 
         if (fragmented==false){
             fragment_circuit();
@@ -298,7 +296,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
     }
     else if  ( involved_qubits.size() == 1 && gates.size() > 1 && qbit_num > 1 ) {
     // merge successive single qubit gates
-
+    
                 Gates_block gates_block_mini = Gates_block(1);
   
                 for (int idx=0; idx<gates.size(); idx++){
@@ -312,67 +310,30 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
                     // TODO check gates block
                 Matrix Umtx_mini = create_identity(2);
 
-                Matrix_real parameters_mtx_loc(parameters, 1, gates_block_mini.get_parameter_num());
+                Matrix_real parameters_mtx_loc(parameters_mtx_in.get_data() + gates[0]->get_parameter_start_idx(), 1, gates_block_mini.get_parameter_num());                
                 gates_block_mini.apply_to(parameters_mtx_loc, Umtx_mini);
-
-                parameters       = parameters + gates_block_mini.get_parameter_num();
-
 
                 custom_kernel_1qubit_gate merged_gate( qbit_num, involved_qubits[0], Umtx_mini );
                 merged_gate.apply_to( input );
     }
     else {
+    
         // No gate fusion
         for( int idx=0; idx<gates.size(); idx++) {
 
             Gate* operation = gates[idx];
-            Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
-            parameters = parameters + operation->get_parameter_num();
-                
             
-            /////////////////////////////////
-            if ( parameters_mtx.size() > 0 ) {
-                if( parameters_mtx[0] != parameters_mtx_in[ operation->get_parameter_start_idx() ] ) {
-                    std::cout << parameters_mtx[0] << " " << parameters_mtx_in[ operation->get_parameter_start_idx() ] << std::endl;
-                    
-                    std::string err("Gates_block::apply_to: not a good gate parameter"); 
-                    throw err;
-                } 
-                
-                
-
+            Matrix_real parameters_mtx_loc(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
+            
+            if  ( parameters_mtx_loc.size() == 0 ) {
+                operation->apply_to(input, parallel);            
+            }
+            else {
+                operation->apply_to( parameters_mtx_loc, input, parallel );
             }
             
-            /////////////////////////////////
-
-            switch (operation->get_type()) {
-            case CNOT_OPERATION: case CZ_OPERATION:
-            case CH_OPERATION: case SYC_OPERATION:
-            case X_OPERATION: case Y_OPERATION:
-            case Z_OPERATION: case SX_OPERATION:
-            case GENERAL_OPERATION: case H_OPERATION:
-                operation->apply_to(input, parallel);
-                break;
-            case U3_OPERATION: 
-            case RX_OPERATION: 
-            case RY_OPERATION: 
-            case CRY_OPERATION: 
-            case RZ_OPERATION: 
-            case RZ_P_OPERATION: 
-            case UN_OPERATION: 
-            case ON_OPERATION: 
-            case BLOCK_OPERATION:
-            case COMPOSITE_OPERATION:
-            case ADAPTIVE_OPERATION: {
-                Adaptive* ad_operation = static_cast<Adaptive*>(operation);
-                ad_operation->apply_to( parameters_mtx, input, parallel );
-                break; 
-            }
-            default:
-                std::string err("Gates_block::apply_to: unimplemented gate"); 
-                throw err;
-            }
-
+            
+            
 #ifdef DEBUG
         if (input.isnan()) {
             std::stringstream sstream;
@@ -714,20 +675,12 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
             if ( gate_deriv->get_parameter_num() == 0 ) {
                 continue;
             }
-                     
-            int deriv_parameter_idx = 0;
-            for ( int idx=0; idx<deriv_idx; idx++ ) {
-                deriv_parameter_idx += gates[idx]->get_parameter_num();
-            }            
-                    
-        
+            
+            int deriv_parameter_idx = gate_deriv->get_parameter_start_idx();       
 
 
 
             Matrix&& input_loc = input.copy();
-
-            double* parameters = parameters_mtx_in.get_data();
-
 
             std::vector<Matrix> grad_loc;
 
@@ -735,236 +688,47 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
                 Gate* operation = gates[idx];
                 
-                Matrix_real parameters_mtx(parameters, 1, operation->get_parameter_num());
-                parameters = parameters + operation->get_parameter_num();
-
-
-
-                if (operation->get_type() == CNOT_OPERATION) {
-                    CNOT* cnot_operation = static_cast<CNOT*>(operation);
-                    if( idx < deriv_idx ) {
-                        cnot_operation->apply_to( input_loc );    
-                    }
-                    else {
-                        cnot_operation->Gate::apply_to_list(grad_loc );
-                    }
+                
+                Matrix_real parameters_mtx(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
+                
+                switch (operation->get_type()) {
+                case UN_OPERATION:
+                case ON_OPERATION:
+                case SYC_OPERATION:
+                case COMPOSITE_OPERATION: {
+                        int gate_type = (int)operation->get_type();
+                        std::string err( "Gates_block::apply_derivate_to: Given operation not supported in gardient calculation");
+			throw( err );
+	                break;
                 }
-                else if (operation->get_type() == CZ_OPERATION) {
-                    CZ* cz_operation = static_cast<CZ*>(operation);
-                    if( idx < deriv_idx ) {
-                        cz_operation->apply_to( input_loc );    
+                default :
+                
+                    if ( operation->get_parameter_num() == 0 ) {
+                
+                        if( idx < deriv_idx ) {
+                            operation->apply_to( input_loc );    
+                        }
+                        else {
+                            operation->apply_to_list(grad_loc );
+                        }
+                    
                     }
-                    else {
-                        cz_operation->Gate::apply_to_list(grad_loc );
+                    else  {
+                
+                        if( idx < deriv_idx ) {
+                            operation->apply_to( parameters_mtx, input_loc );    
+                        }
+                        else if ( idx == deriv_idx ) {
+                            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc );
+                        }
+                        else {
+                            operation->apply_to_list(parameters_mtx, grad_loc );
+                        }                       
+                    
                     }
-                }
-                else if (operation->get_type() == CH_OPERATION) {
-                    CH* ch_operation = static_cast<CH*>(operation);
-                    if( idx < deriv_idx ) {
-                        ch_operation->apply_to( input_loc );    
-                    }
-                    else {
-                        ch_operation->Gate::apply_to_list(grad_loc );
-                    }
-                }    
-    
-                else if (operation->get_type() == SYC_OPERATION) {
-                        std::stringstream sstream;
-	    	        sstream << "Sycamore operation not supported in gardient calculation" << std::endl;			
-			print(sstream, 0);	                    
-			exit(-1);
-                }
-
-                else if (operation->get_type() == U3_OPERATION) {            
-                    U3* u3_operation = static_cast<U3*>(operation);
-                    if( idx < deriv_idx ) {
-                        u3_operation->apply_to( parameters_mtx, input_loc );    
-                    }
-                    else if ( idx == deriv_idx ) {
-    
-                        grad_loc = u3_operation->apply_derivate_to( parameters_mtx, input_loc );    
-                    }
-                    else {
-                        u3_operation->apply_to_list( parameters_mtx, grad_loc );
-                    }
-                }
-
-                else if (operation->get_type() == RX_OPERATION) {
-                    RX* rx_operation = static_cast<RX*>(operation);
-                    if( idx < deriv_idx ) {
-                        rx_operation->apply_to( parameters_mtx, input_loc );    
-                    }
-                    else if ( idx == deriv_idx ) {
-    
-                        grad_loc = rx_operation->apply_derivate_to( parameters_mtx, input_loc );    
-                    }
-                    else {
-                        rx_operation->apply_to_list( parameters_mtx, grad_loc );
-                    }
-                }
-
-
-                else if (operation->get_type() == RY_OPERATION) {
-                    RY* ry_operation = static_cast<RY*>(operation);
-                    if( idx < deriv_idx ) {
-                        ry_operation->apply_to( parameters_mtx, input_loc );    
-                    }
-                    else if ( idx == deriv_idx ) {
-    
-                        grad_loc = ry_operation->apply_derivate_to( parameters_mtx, input_loc );    
-                    }
-                    else {
-                        ry_operation->apply_to_list( parameters_mtx, grad_loc );    
-                    }    
-                }
-
-                else if (operation->get_type() == CRY_OPERATION) {
-                    CRY* cry_operation = static_cast<CRY*>(operation);
-                    if( idx < deriv_idx ) {
-                        cry_operation->apply_to( parameters_mtx, input_loc );    
-                    }
-                    else if ( idx == deriv_idx ) {
-                        grad_loc = cry_operation->apply_derivate_to( parameters_mtx, input_loc );    
-                    }
-                    else {
-                        cry_operation->apply_to_list( parameters_mtx, grad_loc );
-                    }
-                }
-
-                else if (operation->get_type() == RZ_OPERATION) {
-                    RZ* rz_operation = static_cast<RZ*>(operation);
-                    if( idx < deriv_idx ) {
-                        rz_operation->apply_to( parameters_mtx, input_loc );    
-                    }
-                    else if ( idx == deriv_idx ) {
-    
-                        grad_loc = rz_operation->apply_derivate_to( parameters_mtx, input_loc );    
-                    }
-                    else {
-                        rz_operation->apply_to_list( parameters_mtx, grad_loc );
-                    }
-                }
-
-                else if (operation->get_type() == RZ_P_OPERATION) {
-                    RZ_P* rz_operation = static_cast<RZ_P*>(operation);
-                    if( idx < deriv_idx ) {
-                        rz_operation->apply_to( parameters_mtx, input_loc );    
-                    }
-                    else if ( idx == deriv_idx ) {
-    
-                        grad_loc = rz_operation->apply_derivate_to( parameters_mtx, input_loc );    
-                    }
-                    else {
-                        rz_operation->apply_to_list( parameters_mtx, grad_loc );
-                    }
-                }
-
-                else if (operation->get_type() == H_OPERATION) {
-                    H* h_operation = static_cast<H*>(operation);
-                    if( idx < deriv_idx ) {
-                        h_operation->apply_to( input_loc );    
-                    }
-                    else {
-                        h_operation->Gate::apply_to_list( grad_loc );
-                    }
+                    
                 }
                 
-                else if (operation->get_type() == X_OPERATION) {
-                    X* x_operation = static_cast<X*>(operation);
-                    if( idx < deriv_idx ) {
-                        x_operation->apply_to( input_loc );    
-                    }
-                    else {
-                        x_operation->Gate::apply_to_list( grad_loc );
-                    }
-                }
-                else if (operation->get_type() == Y_OPERATION) {
-                    Y* y_operation = static_cast<Y*>(operation);
-                    if( idx < deriv_idx ) {
-                        y_operation->apply_to( input_loc );    
-                    }
-                    else {
-                        y_operation->Gate::apply_to_list( grad_loc );
-                    }
-                }
-                else if (operation->get_type() == Z_OPERATION) {
-                    Z* z_operation = static_cast<Z*>(operation);
-                    if( idx < deriv_idx ) {
-                        z_operation->apply_to( input_loc );    
-                    }
-                    else {
-                        z_operation->Gate::apply_to_list( grad_loc );
-                    }
-                }
-                else if (operation->get_type() == SX_OPERATION) {
-                    SX* sx_operation = static_cast<SX*>(operation);
-                    if( idx < deriv_idx ) {
-                        sx_operation->apply_to( input_loc );    
-                    }
-                    else {
-                        sx_operation->Gate::apply_to_list(grad_loc );
-                    }
-                }
-                else if (operation->get_type() == GENERAL_OPERATION) {
-                    if( idx < deriv_idx ) {
-                        operation->apply_to( input_loc );    
-                    }
-                    else {
-                        operation->apply_to_list( grad_loc );
-                    }
-                }
-
-                else if (operation->get_type() == UN_OPERATION) {
-                        std::stringstream sstream;
-	    	        sstream << "UN operation not supported in gardient calculation" << std::endl;
-			print(sstream, 0);	
-			exit(-1);
-                }
-                else if (operation->get_type() == ON_OPERATION) {
-                        std::stringstream sstream;
-		        sstream << "ON operation not supported in gardient calculation" << std::endl;
-			print(sstream, 0);	
-			exit(-1);
-                }
-
-                else if (operation->get_type() == BLOCK_OPERATION) {
-                    Gates_block* block_operation = static_cast<Gates_block*>(operation);
-
-                    if( idx < deriv_idx ) {  
-                        block_operation->apply_to( parameters_mtx, input_loc );    
-                    }
-                    else if ( idx == deriv_idx ) {
-                        grad_loc = block_operation->apply_derivate_to( parameters_mtx, input_loc );    
-                    }
-                    else {
-                        block_operation->apply_to_list( parameters_mtx, grad_loc );
-                    }
-                }
-
-                else if (operation->get_type() == COMPOSITE_OPERATION) {
-                        std::stringstream sstream;
-	    	        sstream << "Composite  operation not supported in gardient calculation" << std::endl;
-			print(sstream, 0);	
-	                exit(-1);
-                }
-
-                else if (operation->get_type() == ADAPTIVE_OPERATION) {
-                    Adaptive* ad_operation = static_cast<Adaptive*>(operation);
-                    if( idx < deriv_idx ) {
-                        ad_operation->apply_to( parameters_mtx, input_loc );    
-                    }
-                    else if ( idx == deriv_idx ) {
-                        grad_loc = ad_operation->apply_derivate_to( parameters_mtx, input_loc );    
-                    }
-                    else {
-                        ad_operation->apply_to_list( parameters_mtx, grad_loc );
-                    }
-                }
-                else {
-                    std::string err("Gates_block::apply_derivate_to: unimplemented gate"); 
-                    throw err;
-                }
-
             }
 
 

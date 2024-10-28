@@ -91,12 +91,18 @@ Gate(int qbit_num_in);
 Matrix get_matrix();
 
 /**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@brief Call to apply the gate on a list of inputs
 @param input The input array on which the gate is applied
 */
-void apply_to_list( std::vector<Matrix>& input );
+virtual void apply_to_list( std::vector<Matrix>& input );
 
+
+/**
+@brief Abstract function to be overriden in derived classes to be used to transform a list of inputs upon a parametric gate operation
+@param parameter_mtx An array conatining the parameters of the gate
+@param input The input array on which the gate is applied
+*/
+virtual void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input );
 
 /**
 @brief Call to apply the gate on the input array/matrix
@@ -104,6 +110,22 @@ void apply_to_list( std::vector<Matrix>& input );
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 virtual void apply_to( Matrix& input, int parallel=0 );
+
+/**
+@brief Abstract function to be overriden in derived classes to be used to transform an input upon a parametric gate operation
+@param parameter_mtx An array conatining the parameters
+@param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+virtual void apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel=0 );
+
+
+/**
+@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@param parameters An array of the input parameters.
+@param input The input array on which the gate is applied
+*/
+virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input );
 
 
 /**
