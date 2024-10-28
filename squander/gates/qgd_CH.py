@@ -75,3 +75,18 @@ class qgd_CH(qgd_CH_Wrapper):
 	# call the C wrapper function
         super().apply_to( unitary_mtx )
 
+
+
+#@brief Call to get the number of free parameters in the gate.
+    def get_Parameter_Num( self, unitary_mtx):
+
+	# call the C wrapper function
+        super().get_Parameter_Num()
+
+
+#@brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated.
+    def get_Parameter_Start_Index( self, unitary_mtx):
+
+	# call the C wrapper function
+        super().get_Parameter_Start_Index()
+

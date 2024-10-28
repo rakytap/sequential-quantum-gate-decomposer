@@ -230,6 +230,33 @@ qgd_CH_Wrapper_get_Gate_Kernel( qgd_CH_Wrapper *self) {
 
 
 /**
+@brief Call to get the number of free parameters in the gate
+@return Returns with the starting index
+*/
+static PyObject *
+qgd_CH_Wrapper_get_Parameter_Num( qgd_CH_Wrapper *self ) {
+
+    int parameter_num = self->gate->get_parameter_num();
+
+    return Py_BuildValue("i", parameter_num);
+
+}
+
+/**
+@brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
+@return Returns with the starting index
+*/
+static PyObject *
+qgd_CH_Wrapper_get_Parameter_Start_Index( qgd_CH_Wrapper *self ) {
+
+    int start_index = self->gate->get_parameter_start_idx();
+
+    return Py_BuildValue("i", start_index);
+
+}
+
+
+/**
 @brief Structure containing metadata about the members of class  qgd_CH_Wrapper.
 */
 static PyMemberDef  qgd_CH_Wrapper_members[] = {
@@ -256,6 +283,12 @@ static PyMethodDef qgd_CH_Wrapper_methods[] = {
     },
     {"get_Gate_Kernel", (PyCFunction) qgd_CH_Wrapper_get_Gate_Kernel, METH_NOARGS,
      "Call to calculate the gate matrix acting on a single qbit space."
+    },
+    {"get_Parameter_Num", (PyCFunction) qgd_CH_Wrapper_get_Parameter_Num, METH_NOARGS,
+     "Call to get the number of free parameters in the gate."
+    },
+    {"get_Parameter_Start_Index", (PyCFunction) qgd_CH_Wrapper_get_Parameter_Start_Index, METH_NOARGS,
+     "Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated."
     },
     {NULL}  /* Sentinel */
 };

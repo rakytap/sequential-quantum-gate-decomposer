@@ -271,3 +271,11 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     
         return super(qgd_Circuit, self).get_Qbit_Num()
 
+
+
+#@brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated.
+    def get_Parameter_Start_Index( self, unitary_mtx):
+
+	# call the C wrapper function
+        super().get_Parameter_Start_Index()
+

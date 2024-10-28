@@ -1039,7 +1039,8 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CNOT");
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CNOT"); 
 
         // create gate parameters
         PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
@@ -1049,8 +1050,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );        
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
@@ -1070,6 +1070,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CZ");
 
         // create gate parameters
@@ -1080,8 +1081,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
@@ -1101,6 +1101,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CH");
 
         // create gate parameters
@@ -1111,8 +1112,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
@@ -1131,6 +1131,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_SYC");
 
         // create gate parameters
@@ -1141,8 +1142,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit, control_qbit);
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
@@ -1162,6 +1162,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_U3");
 
         // create gate parameters
@@ -1171,8 +1172,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit );
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
@@ -1191,6 +1191,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_RX");
 
         // create gate parameters
@@ -1200,8 +1201,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
@@ -1219,6 +1219,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_RY");
 
         // create gate parameters
@@ -1228,8 +1229,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );               
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
@@ -1249,6 +1249,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_RZ");
 
         // create gate parameters
@@ -1258,12 +1259,11 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );        
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
-
+        
         return py_gate;
     }
     else if (gate->get_type() == RZ_P_OPERATION) {
@@ -1277,6 +1277,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_RZ_P");
 
         // create gate parameters
@@ -1286,8 +1287,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OOO)", qbit_num, target_qbit);
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );               
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
@@ -1308,6 +1308,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_H");
 
         // create gate parameters
@@ -1317,12 +1318,11 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );        
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
-
+        
         return py_gate;
 
 
@@ -1338,6 +1338,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_X");
 
         // create gate parameters
@@ -1347,8 +1348,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
@@ -1367,6 +1367,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         }
 
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
         PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_SX");
 
         // create gate parameters
@@ -1376,8 +1377,7 @@ get_gate( Gates_block* decomp, int &idx ) {
         PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
-        Py_DECREF( qgd_gate );
-        Py_DECREF( py_gate_class );
+        Py_DECREF( qgd_gate );               
         Py_DECREF( gate_input );
         Py_XDECREF(qbit_num);
         Py_XDECREF(target_qbit);
@@ -1456,6 +1456,21 @@ qgd_Circuit_Wrapper_get_gates( qgd_Circuit_Wrapper *self ) {
 
 
     return ret;
+
+}
+
+
+
+/**
+@brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
+@return Returns with the starting index
+*/
+static PyObject *
+qgd_Circuit_Wrapper_get_Parameter_Start_Index( qgd_Circuit_Wrapper *self ) {
+
+    int start_index = self->gate->get_parameter_start_idx();
+
+    return Py_BuildValue("i", start_index);
 
 }
 
@@ -1542,6 +1557,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"get_Gates", (PyCFunction) qgd_Circuit_Wrapper_get_gates, METH_NOARGS,
      "Method to get the tuple of decomposing gates."
+    },
+    {"get_Parameter_Start_Index", (PyCFunction) qgd_Circuit_Wrapper_get_Parameter_Start_Index, METH_NOARGS,
+     "Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated."
     },
     {NULL}  /* Sentinel */
 };
