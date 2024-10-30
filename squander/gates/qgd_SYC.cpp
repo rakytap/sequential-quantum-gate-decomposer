@@ -252,6 +252,57 @@ qgd_SYC_get_Control_Qbit( qgd_SYC *self ) {
 }
 
 
+/**
+@brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
+*/
+static PyObject *
+qgd_SYC_Extract_Parameters( qgd_SYC *self, PyObject *args ) {
+
+    PyObject * parameters_arr = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
+    
+    Matrix_real extracted_parameters;
+
+    try {
+        extracted_parameters = self->gate->extract_parameters( parameters_mtx );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    // convert to numpy array
+    extracted_parameters.set_owner(false);
+    PyObject *extracted_parameters_py = matrix_real_to_numpy( extracted_parameters );
+   
+
+    return extracted_parameters_py;
+}
+
+
 
 
 /**
@@ -283,6 +334,9 @@ static PyMethodDef  qgd_SYC_methods[] = {
     },
     {"get_Control_Qbit", (PyCFunction) qgd_SYC_get_Control_Qbit, METH_NOARGS,
      "Call to get the control qbit (returns with -1 if no control qbit is used in the gate)."
+    },
+    {"Extract_Parameters", (PyCFunction) qgd_SYC_Extract_Parameters, METH_VARARGS,
+     "Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded."
     },
     {NULL}  /* Sentinel */
 };

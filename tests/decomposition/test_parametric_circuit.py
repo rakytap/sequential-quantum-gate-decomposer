@@ -256,7 +256,7 @@ class Test_parametric_circuit:
         qc, optimized_parameters_tmp = get_optimized_circuit( alpha+0.005, optimizer='GRAD_DESCEND', optimized_parameters=optimized_parameters )
 
         # determine the quantum circuit at parameter value alpha with ADAM optimizer
-        #qc, optimized_parameters_tmp = get_optimized_circuit( alpha+0.005, optimizer='ADAM', optimized_parameters=optimized_parameters )
+        qc, optimized_parameters_tmp = get_optimized_circuit( alpha+0.005, optimizer='ADAM', optimized_parameters=optimized_parameters )
         
 
 

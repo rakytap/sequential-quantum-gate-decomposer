@@ -862,7 +862,6 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
     std::vector<Gate*> ops_ret;
     int parameter_idx = 0;
 
-
     for(std::vector<Gate*>::iterator it = ops.begin(); it != ops.end(); it++) {
 
         Gate* gate = *it;

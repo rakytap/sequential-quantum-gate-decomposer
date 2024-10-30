@@ -60,35 +60,34 @@ def get_Qiskit_Circuit( Squander_circuit ):
 
     # creating Qiskit quantum circuit
     circuit = QuantumCircuit(Squander_circuit.qbit_num)
+    circuit2 = QuantumCircuit(Squander_circuit.qbit_num)
     
     # retrive the list of decomposing gate structure
     gates = Squander_circuit.get_Gates()
-    '''
+    
     squander_circuit_tmp = Squander_circuit.get_Circuit()
 
     gates_tmp = squander_circuit_tmp.get_Gates()
-
+    parameters = Squander_circuit.get_Optimized_Parameters()
+    
     # constructing quantum circuit
     for gate in gates_tmp:
 
         if isinstance( gate, CNOT ):
             # adding CNOT gate to the quantum circuit
-            #circuit.cx(gate.get("control_qbit"), gate.get("target_qbit"))
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
-            ''
+            circuit2.cx( gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+            '''
         elif isinstance( gate, CRY )
             # adding CNOT gate to the quantum circuit
             #circuit.cry(gate.get("Theta"), gate.get("control_qbit"), gate.get("target_qbit"))
-            ''
+            '''
         elif isinstance( gate, CZ ):
             # adding CZ gate to the quantum circuit
-            #circuit.cz(gate.get("control_qbit"), gate.get("target_qbit"))
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            circuit2.cz( gate.get_Control_Qbit(), gate.get_Target_Qbit() )
 
         elif isinstance( gate, CH ):
             # adding CZ gate to the quantum circuit
-            #circuit.ch(gate.get("control_qbit"), gate.get("target_qbit"))
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            circuit2.ch( gate.get_Control_Qbit(), gate.get_Target_Qbit() )
 
         elif isinstance( gate, SYC ):
             # Sycamore gate
@@ -97,55 +96,50 @@ def get_Qiskit_Circuit( Squander_circuit ):
 
         elif isinstance( gate, U3 ):
             # adding U3 gate to the quantum circuit
-            #circuit.u(gate.get("Theta"), gate.get("Phi"), gate.get("Lambda"), gate.get("target_qbit"))
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            parameters_gate = gate.Extract_Parameters( parameters )
+            circuit2.u( parameters_gate[0], parameters_gate[1], parameters_gate[2], gate.get_Target_Qbit() )    
 
         elif isinstance( gate, RX ):
             # RX gate
-            #circuit.rx(gate.get("Theta"), gate.get("target_qbit"))
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
-
+            parameters_gate = gate.Extract_Parameters( parameters )
+            circuit2.rx( parameters_gate[0], gate.get_Target_Qbit() )    
+            
         elif isinstance( gate, RY ):
             # RY gate
-            #circuit.ry(gate.get("Theta"), gate.get("target_qbit"))
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            parameters_gate = gate.Extract_Parameters( parameters )
+            circuit2.ry( parameters_gate[0], gate.get_Target_Qbit() )    
 
         elif isinstance( gate, RZ ):
             # RZ gate
-            #circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            parameters_gate = gate.Extract_Parameters( parameters )
+            circuit2.rz( parameters_gate[0], gate.get_Target_Qbit() )    
             
         elif isinstance( gate, H ):
             # Hadamard gate
-            #circuit.h(gate.get("target_qbit"))    
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )        
+            circuit.h( gate.get_Target_Qbit() )    
 
         elif isinstance( gate, X ):
             # X gate
-            #circuit.x(gate.get("target_qbit"))
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            circuit2.x( gate.get_Target_Qbit() )  
 
         elif isinstance( gate, Y ):
             # Y gate
-            #circuit.x(gate.get("target_qbit"))
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            circuit2.y( gate.get_Target_Qbit() )  
 
         elif isinstance( gate, Z ):
             # Z gate
-            #circuit.x(gate.get("target_qbit"))
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            circuit2.z( gate.get_Target_Qbit() )  
 
         elif isinstance( gate, SX ):
             # SX gate
-            #circuit.sx(gate.get("target_qbit"))
-            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            circuit2.sx( gate.get_Target_Qbit() )  
             
         else:
             print(gate)
             raise ValueError("Unsupported gate in the circuit export: " +  gate.get("type"))
+    
+    return( circuit2 )
     '''
-
-
     # constructing quantum circuit
     for idx in range(len(gates)):
 
@@ -175,6 +169,7 @@ def get_Qiskit_Circuit( Squander_circuit ):
         elif gate.get("type") == "U3":
             # adding U3 gate to the quantum circuit
             circuit.u(gate.get("Theta"), gate.get("Phi"), gate.get("Lambda"), gate.get("target_qbit"))
+            print( gate.get("Theta") ) 
 
         elif gate.get("type") == "RX":
             # RX gate
@@ -212,9 +207,9 @@ def get_Qiskit_Circuit( Squander_circuit ):
             print(gate)
             raise ValueError("Unsupported gate in the circuit export: " +  gate.get("type"))
 
-
+    print( circuit )
     return circuit
-    
+    '''
     
 
 ##

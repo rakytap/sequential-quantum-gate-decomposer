@@ -596,4 +596,17 @@ Gate::get_parameter_start_idx() {
 
 
 
+/**
+@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is incorporated in.
+@return Returns with the array of the extracted parameters.
+*/
+Matrix_real 
+Gate::extract_parameters( Matrix_real& parameters ) {
+
+    return Matrix_real(0,0);
+
+}
+
+
+
 

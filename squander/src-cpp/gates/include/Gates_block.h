@@ -609,6 +609,12 @@ void reset_parameter_start_indices();
 Gates_block* get_flat_circuit();
 
 
+/**
+@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
+@param parameters The parameter array corresponding to the circuit in which the gate is embedded
+@return Returns with the array of the extracted parameters.
+*/
+virtual Matrix_real extract_parameters( Matrix_real& parameters );
 
 };
 

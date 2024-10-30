@@ -1157,12 +1157,55 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates( qgd_Variational_Quan
 
 
 
+/**
+@brief Wrapper function to retrieve the circuit (Squander format) incorporated in the instance.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_circuit( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self ) {
+
+
+    PyObject* qgd_Circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+    if ( qgd_Circuit == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
+        return NULL;
+    }
+
+    // retrieve the C++ variant of the flat circuit (flat circuit does not conatain any sub-circuits)
+    Gates_block* circuit = self->vqe->get_flat_circuit();
+
+
+
+    // construct python interfarce for the circuit
+    PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_Circuit );
+
+    // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+    PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+    // create gate parameters
+    PyObject* qbit_num     = Py_BuildValue("i",  circuit->get_qbit_num() );
+    PyObject* circuit_input = Py_BuildValue("(O)", qbit_num);
+
+    PyObject* py_circuit   = PyObject_CallObject(py_circuit_class, circuit_input);
+    qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+
+    
+    // replace the empty circuit with the extracted one
+    
+    delete( py_circuit_C->gate );
+    py_circuit_C->gate = circuit;
+
+
+    return py_circuit;
+
+}
 
 
 
 
 /**
-@brief ????????????,
+@brief Call to set a project name.
 */
 static PyObject *
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Project_Name( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
@@ -1250,6 +1293,9 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"get_Gates", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates, METH_NOARGS,
      "Method to get gates."
+    },
+    {"get_Circuit", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_circuit, METH_NOARGS,
+     "Method to get the incorporated circuit."
     },
     {"set_Project_Name", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Project_Name, METH_VARARGS,
     "method to set project name."

@@ -108,3 +108,23 @@ class qgd_U3(qgd_U3_Wrapper):
 	# call the C wrapper function
         return super().get_Control_Qbit()
 
+
+
+#@brief Call to get the control qbit (returns with -1 if no control qbit is used in the gate).
+    def get_Control_Qbit( self ):
+
+	# call the C wrapper function
+        return super().get_Control_Qbit()
+
+
+#@brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
+    def Extract_Parameters( self, parameters_circuit ):
+
+	# call the C wrapper function
+        parameters_gate = super().Extract_Parameters( parameters_circuit )
+
+        parameters_gate = np.reshape( parameters_gate, (parameters_gate.size,) )
+
+        return parameters_gate
+
+

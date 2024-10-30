@@ -604,3 +604,64 @@ void U3::set_lambda(double lambda_in ) {
     lambda0 = lambda_in;
 
 }
+
+
+
+/**
+@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
+@param parameters The parameter array corresponding to the circuit in which the gate is embedded
+@return Returns with the array of the extracted parameters.
+*/
+Matrix_real 
+U3::extract_parameters( Matrix_real& parameters ) {
+
+    if ( get_parameter_start_idx() + get_parameter_num() > parameters.size()  ) {
+        std::string err("U3::extract_parameters: Cant extract parameters, since the dinput arary has not enough elements.");
+        throw err;     
+    }
+
+    Matrix_real extracted_parameters(1,3);
+
+    if ((get_parameter_num() == 1) && is_theta_parameter()) {
+        extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
+        extracted_parameters[1] = 0.0;
+        extracted_parameters[2] = 0.0;
+    }
+    else if ((get_parameter_num() == 1) && is_phi_parameter()) {
+        extracted_parameters[0] = 0.0;
+        extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx() ], 2*M_PI);
+        extracted_parameters[2] = 0.0;
+    }
+    else if ((get_parameter_num() == 1) && is_lambda_parameter()) {
+        extracted_parameters[0] = 0.0;
+        extracted_parameters[1] = 0.0;
+        extracted_parameters[2] = std::fmod( parameters[ get_parameter_start_idx() ], 2*M_PI);
+    }
+    else if ((get_parameter_num() == 2) && is_theta_parameter() && is_phi_parameter() ) {
+        extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
+        extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx()+1 ], 2*M_PI);
+        extracted_parameters[2] = 0.0;
+    }
+    else if ((get_parameter_num() == 2) && is_theta_parameter() && is_lambda_parameter() ) {
+        extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
+        extracted_parameters[1] = 0.0;
+        extracted_parameters[2] = std::fmod( parameters[ get_parameter_start_idx()+1 ], 2*M_PI);
+    }
+    else if ((get_parameter_num() == 2) && is_phi_parameter() && is_lambda_parameter() ) {
+        extracted_parameters[0] = 0.0;
+        extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx() ], 2*M_PI);
+        extracted_parameters[2] = std::fmod( parameters[ get_parameter_start_idx()+1 ], 2*M_PI);
+    }
+    else if ((get_parameter_num() == 3)) {
+        extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);;
+        extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx()+1 ], 2*M_PI);
+        extracted_parameters[2] = std::fmod( parameters[ get_parameter_start_idx()+2 ], 2*M_PI);
+    }
+    else {
+        std::string err("U3::extract_parameters: Cant extract parameters");
+        throw err;        
+    }
+
+    return extracted_parameters;
+
+}

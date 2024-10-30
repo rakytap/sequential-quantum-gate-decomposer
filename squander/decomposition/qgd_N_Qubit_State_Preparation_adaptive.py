@@ -33,40 +33,28 @@ from squander.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubi
 # @brief A QGD Python interface class for the decomposition of N-qubit state into U3 and CNOT gates.
 class qgd_N_Qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive):
 
-	def __init__( self, State, level_limit_max=8, level_limit_min=0, topology=None, config={} ):
+    def __init__( self, State, level_limit_max=8, level_limit_min=0, topology=None, config={} ):
+
+        # check input quantum state
+
+        if type(State) != np.ndarray:
+            raise Exception("Initial state should be a numpy array")
 
 
+        if State.dtype != np.complex128:
+            raise Exception("Initial state should be made of complex values")
 
 
-		print( State.shape )
-                # check input quantum state
+        if not State.data.c_contiguous :
+            raise Exception("Initial state should be contiguous in memory")
 
-		if type(State) != np.ndarray:
-			raise Exception("Initial state should be a numpy array")
-
-
-		if State.dtype != np.complex128:
-			raise Exception("Initial state should be made of complex values")
+        if len(State.shape) == 1:
+            State = State.reshape( (State.size, 1,) )
 
 
-		if not State.data.c_contiguous :
-			raise Exception("Initial state should be contiguous in memory")
+        if len(State.shape) == 2 and State.shape[1]==1:
+            super().__init__( State, level_limit_max, level_limit_min, topology=topology, config=config )
+        else:
+            raise Exception("Initial state not properly formatted. Input state must be a column vector")
 
-		if len(State.shape) == 1:
-			State = State.reshape( (State.size, 1,) )
-
-
-		if len(State.shape) == 2 and State.shape[1]==1:
-			super().__init__( State, level_limit_max, level_limit_min, topology=topology, config=config )
-		else:
-			raise Exception("Initial state not properly formatted. Input state must be a column vector")
-
-
-
-			
-	def get_Qiskit_Circuit( self ):
-
-		from squander import Qiskit_IO
-        
-		return Qiskit_IO.get_Qiskit_Circuit_inverse( self )
 

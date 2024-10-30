@@ -244,7 +244,12 @@ virtual Matrix calc_one_qubit_u3( );
 */
 virtual void parameters_for_calc_one_qubit(double& ThetaOver2, double& Phi, double& Lambda);
 
-
+/**
+@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
+@param parameters The parameter array corresponding to the circuit in which the gate is embedded
+@return Returns with the array of the extracted parameters.
+*/
+virtual Matrix_real extract_parameters( Matrix_real& parameters );
 
 
 

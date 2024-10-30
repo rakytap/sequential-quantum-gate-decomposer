@@ -798,6 +798,53 @@ static PyObject * qgd_N_Qubit_Decomposition_adaptive_Wrapper_apply_Global_Phase_
     
 }
 
+
+/**
+@brief Wrapper function to retrieve the circuit (Squander format) incorporated in the instance.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_circuit( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self ) {
+
+
+    PyObject* qgd_Circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+    if ( qgd_Circuit == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
+        return NULL;
+    }
+
+    // retrieve the C++ variant of the flat circuit (flat circuit does not conatain any sub-circuits)
+    Gates_block* circuit = self->decomp->get_flat_circuit();
+
+
+
+    // construct python interfarce for the circuit
+    PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_Circuit );
+
+    // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+    PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+    // create gate parameters
+    PyObject* qbit_num     = Py_BuildValue("i",  circuit->get_qbit_num() );
+    PyObject* circuit_input = Py_BuildValue("(O)", qbit_num);
+
+    PyObject* py_circuit   = PyObject_CallObject(py_circuit_class, circuit_input);
+    qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+
+    
+    // replace the empty circuit with the extracted one
+    
+    delete( py_circuit_C->gate );
+    py_circuit_C->gate = circuit;
+
+
+    return py_circuit;
+
+}
+
+
+
 /**
 @brief Lists the gates decomposing the initial unitary. (These gates are the inverse gates of the gates bringing the intial matrix into unity.)
 @param start_index The index of the first inverse gate
@@ -2406,6 +2453,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_adaptive_Wrapper_methods[] = {
     },
     {"get_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_gates, METH_NOARGS,
      "Method to get the tuple of decomposing gates."
+    },
+    {"get_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_circuit, METH_NOARGS,
+     "Method to get the incorporated circuit."
     },
     {"List_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_adaptive_Wrapper_List_Gates, METH_NOARGS,
      "Call to print the decomposing nitaries on standard output"

@@ -582,28 +582,6 @@ static PyObject *
 qgd_N_Qubit_Decomposition_custom_Wrapper_get_gates( qgd_N_Qubit_Decomposition_custom_Wrapper *self ) {
 
 
-    PyObject* qgd_Circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
-
-    if ( qgd_Circuit == NULL ) {
-        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
-        return NULL;
-    }
-std::cout << "qgd_N_Qubit_Decomposition_custom_Wrapper_get_gates IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII" << std::endl;
-
-    PyObject* qgd_Circuit_Dict  = PyModule_GetDict( qgd_Circuit );
-
-/*
-    PyObject* recover_factor    = PyDict_GetItemString( compose_BQM_Dict, "recover_factor_str");
-
-        // get p and q in binary string format '0b01011101...'
-        PyObject *recover_factor_input = Py_BuildValue("(OO)", qubo_loc, factoring_problem);
-        PyObject *p_and_q              = PyObject_CallObject(recover_factor, recover_factor_input);
-
-        Py_DECREF( recover_factor_input );
-        Py_DECREF( qubo_loc );
-*/
-
-
     // get the number of gates
     int op_num = self->decomp->get_gate_num();
 
@@ -644,8 +622,6 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_get_circuit( qgd_N_Qubit_Decomposition_
         PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
         return NULL;
     }
-std::cout << "qgd_N_Qubit_Decomposition_custom_Wrapper_get_circuit IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII" << std::endl;
-
 
     // retrieve the C++ variant of the flat circuit (flat circuit does not conatain any sub-circuits)
     Gates_block* circuit = self->decomp->get_flat_circuit();
@@ -667,7 +643,7 @@ std::cout << "qgd_N_Qubit_Decomposition_custom_Wrapper_get_circuit IIIIIIIIIIIII
 
     
     // replace the empty circuit with the extracted one
-    std::cout << "ppppppppppppppppppppppppppppppppppppppppppp " << std::endl;
+    
     delete( py_circuit_C->gate );
     py_circuit_C->gate = circuit;
 

@@ -100,25 +100,9 @@ Gates_block::release_gates() {
     //free the alloctaed memory of the stored gates
     for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
 
-        Gate* operation = *it;
-        switch (operation->get_type()) {
-        case CNOT_OPERATION: case CZ_OPERATION:
-        case CH_OPERATION: case SYC_OPERATION:
-        case U3_OPERATION: case RY_OPERATION:
-        case CRY_OPERATION: case RX_OPERATION:
-        case RZ_OPERATION: case X_OPERATION:
-        case Y_OPERATION: case Z_OPERATION:
-        case SX_OPERATION: case BLOCK_OPERATION:
-        case GENERAL_OPERATION: case UN_OPERATION:
-        case ON_OPERATION: case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION:
-        case H_OPERATION:
-            delete operation;
-            break;
-        default:
-            std::string err("Gates_block::release_gates(): unimplemented gate"); 
-            throw err;        
-        }
+        Gate* gate = *it;
+        delete gate;
+        
     }
     
     gates.clear();
@@ -2429,6 +2413,29 @@ Gates_block::get_flat_circuit() {
 
     return flat_circuit;
 
+
+}
+
+
+
+/**
+@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
+@param parameters The parameter array corresponding to the circuit in which the gate is embedded
+@return Returns with the array of the extracted parameters.
+*/
+Matrix_real 
+Gates_block::extract_parameters( Matrix_real& parameters ) {
+
+    if ( get_parameter_start_idx() + get_parameter_num() < parameters.size()  ) {
+        std::string err("Gates_block::extract_parameters: Cant extract parameters, since th einput arary has not enough elements.");
+        throw err;     
+    }
+
+    Matrix_real extracted_parameters(1, get_parameter_num());
+
+    memcpy( extracted_parameters.get_data(), parameters.get_data() + get_parameter_start_idx(), get_parameter_num()*sizeof(double) );
+
+    return extracted_parameters;
 
 }
 

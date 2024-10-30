@@ -104,4 +104,12 @@ class qgd_Z(qgd_Z_Wrapper):
         return super().get_Control_Qbit()
 
 
+#@brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
+    def Extract_Parameters( self, parameters_circuit ):
 
+	# call the C wrapper function
+        parameters_gate = super().Extract_Parameters( parameters_circuit )
+
+        parameters_gate = np.reshape( parameters_gate, (parameters_gate.size,) )
+
+        return parameters_gate
