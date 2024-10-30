@@ -608,29 +608,6 @@ get_gate( N_Qubit_Decomposition_adaptive* decomp, int &idx ) {
 
 
     }
-    else if (gate->get_type() == RZ_P_OPERATION) {
-
-        // get RZ_P parameters
-        RZ_P* rz_gate = static_cast<RZ_P*>(gate);
-        Matrix_real&& parameters = rz_gate->get_optimized_parameters();
- 
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "RZ_P" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-        PyObject* Phi = Py_BuildValue("f",  parameters[0] );
-
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-        PyDict_SetItemString(py_gate, "Phi", Phi );
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-        Py_XDECREF(Phi);
-
-
-    }
     else if (gate->get_type() == CRY_OPERATION ||  gate->get_type() == ADAPTIVE_OPERATION ) {
 
         // get U3 parameters

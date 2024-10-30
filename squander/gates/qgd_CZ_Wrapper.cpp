@@ -254,6 +254,35 @@ qgd_CZ_Wrapper_get_Parameter_Start_Index( qgd_CZ_Wrapper *self ) {
 
 
 /**
+@brief Call to get the target qbit
+@return Returns with the target qbit
+*/
+static PyObject *
+qgd_CZ_Wrapper_get_Target_Qbit( qgd_CZ_Wrapper *self ) {
+
+    int target_qbit = self->gate->get_target_qbit();
+
+    return Py_BuildValue("i", target_qbit);
+
+}
+
+/**
+@brief Call to get the control qbit (returns with -1 if no control qbit is used in the gate)
+@return Returns with the control qbit
+*/
+static PyObject *
+qgd_CZ_Wrapper_get_Control_Qbit( qgd_CZ_Wrapper *self ) {
+
+    int control_qbit = self->gate->get_control_qbit();
+
+    return Py_BuildValue("i", control_qbit);
+
+}
+
+
+
+
+/**
 @brief Structure containing metadata about the members of class  qgd_CZ_Wrapper.
 */
 static PyMemberDef  qgd_CZ_Wrapper_members[] = {
@@ -279,6 +308,12 @@ static PyMethodDef  qgd_CZ_Wrapper_methods[] = {
     },
     {"get_Parameter_Start_Index", (PyCFunction) qgd_CZ_Wrapper_get_Parameter_Start_Index, METH_NOARGS,
      "Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated."
+    },
+    {"get_Target_Qbit", (PyCFunction) qgd_CZ_Wrapper_get_Target_Qbit, METH_NOARGS,
+     "Call to get the target qbit."
+    },
+    {"get_Control_Qbit", (PyCFunction) qgd_CZ_Wrapper_get_Control_Qbit, METH_NOARGS,
+     "Call to get the control qbit (returns with -1 if no control qbit is used in the gate)."
     },
     {NULL}  /* Sentinel */
 };

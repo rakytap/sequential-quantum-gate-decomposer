@@ -29,6 +29,23 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from squander import Circuit
 
+from squander import CNOT
+#from squander import CRY
+from squander import CZ
+from squander import CH
+from squander import SYC
+from squander import U3
+from squander import RX
+from squander import RY
+from squander import RZ
+from squander import H
+from squander import X
+from squander import Y
+from squander import Z
+from squander import SX
+
+
+
 
 
 
@@ -43,9 +60,91 @@ def get_Qiskit_Circuit( Squander_circuit ):
 
     # creating Qiskit quantum circuit
     circuit = QuantumCircuit(Squander_circuit.qbit_num)
-
+    
     # retrive the list of decomposing gate structure
     gates = Squander_circuit.get_Gates()
+    '''
+    squander_circuit_tmp = Squander_circuit.get_Circuit()
+
+    gates_tmp = squander_circuit_tmp.get_Gates()
+
+    # constructing quantum circuit
+    for gate in gates_tmp:
+
+        if isinstance( gate, CNOT ):
+            # adding CNOT gate to the quantum circuit
+            #circuit.cx(gate.get("control_qbit"), gate.get("target_qbit"))
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            ''
+        elif isinstance( gate, CRY )
+            # adding CNOT gate to the quantum circuit
+            #circuit.cry(gate.get("Theta"), gate.get("control_qbit"), gate.get("target_qbit"))
+            ''
+        elif isinstance( gate, CZ ):
+            # adding CZ gate to the quantum circuit
+            #circuit.cz(gate.get("control_qbit"), gate.get("target_qbit"))
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+
+        elif isinstance( gate, CH ):
+            # adding CZ gate to the quantum circuit
+            #circuit.ch(gate.get("control_qbit"), gate.get("target_qbit"))
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+
+        elif isinstance( gate, SYC ):
+            # Sycamore gate
+            print("Unsupported gate in the circuit export: Sycamore gate")
+            return None;
+
+        elif isinstance( gate, U3 ):
+            # adding U3 gate to the quantum circuit
+            #circuit.u(gate.get("Theta"), gate.get("Phi"), gate.get("Lambda"), gate.get("target_qbit"))
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+
+        elif isinstance( gate, RX ):
+            # RX gate
+            #circuit.rx(gate.get("Theta"), gate.get("target_qbit"))
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+
+        elif isinstance( gate, RY ):
+            # RY gate
+            #circuit.ry(gate.get("Theta"), gate.get("target_qbit"))
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+
+        elif isinstance( gate, RZ ):
+            # RZ gate
+            #circuit.rz(gate.get("Phi"), gate.get("target_qbit"))
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            
+        elif isinstance( gate, H ):
+            # Hadamard gate
+            #circuit.h(gate.get("target_qbit"))    
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )        
+
+        elif isinstance( gate, X ):
+            # X gate
+            #circuit.x(gate.get("target_qbit"))
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+
+        elif isinstance( gate, Y ):
+            # Y gate
+            #circuit.x(gate.get("target_qbit"))
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+
+        elif isinstance( gate, Z ):
+            # Z gate
+            #circuit.x(gate.get("target_qbit"))
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+
+        elif isinstance( gate, SX ):
+            # SX gate
+            #circuit.sx(gate.get("target_qbit"))
+            print( gate.get_Parameter_Num(), ', ', gate.get_Parameter_Start_Index(), ' ', gate.get_Target_Qbit(), ' ' , gate.get_Control_Qbit()   )
+            
+        else:
+            print(gate)
+            raise ValueError("Unsupported gate in the circuit export: " +  gate.get("type"))
+    '''
+
 
     # constructing quantum circuit
     for idx in range(len(gates)):

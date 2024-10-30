@@ -28,7 +28,6 @@ limitations under the License.
 #include "RY.h"
 #include "CRY.h"
 #include "RZ.h"
-#include "RZ_P.h"
 #include "H.h"
 #include "X.h"
 #include "Y.h"
@@ -112,7 +111,7 @@ Gates_block::release_gates() {
         case SX_OPERATION: case BLOCK_OPERATION:
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION: case RZ_P_OPERATION:
+        case ADAPTIVE_OPERATION:
         case H_OPERATION:
             delete operation;
             break;
@@ -597,11 +596,6 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
             rz_operation->apply_from_right( parameters_mtx, input );
             break;         
         }
-        case RZ_P_OPERATION: {
-            RZ_P* rz_p_operation = static_cast<RZ_P*>(operation);
-            rz_p_operation->apply_from_right( parameters_mtx, input );
-            break;         
-        }
         case UN_OPERATION: {
             UN* un_operation = static_cast<UN*>(operation);
             un_operation->apply_from_right( parameters_mtx, input );
@@ -901,34 +895,6 @@ void Gates_block::add_rz_to_front(int target_qbit ) {
 
 }
 
-
-
-/**
-@brief Append a RZ_P gate to the list of gates
-@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-*/
-void Gates_block::add_rz_p(int target_qbit) {
-
-        // create the operation
-        Gate* operation = static_cast<Gate*>(new RZ_P( qbit_num, target_qbit));
-
-        // adding the operation to the end of the list of gates
-        add_gate( operation );
-}
-
-/**
-@brief Add a RZ_P gate to the front of the list of gates
-@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
-*/
-void Gates_block::add_rz_p_to_front(int target_qbit ) {
-
-        // create the operation
-        Gate* gate = static_cast<Gate*>(new RZ_P( qbit_num, target_qbit ));
-
-        // adding the operation to the front of the list of gates
-        add_gate_to_front( gate );
-
-}
 
 
 
@@ -1506,7 +1472,7 @@ gates_num Gates_block::get_gate_nums() {
                 gate_nums.cry   = gate_nums.cry + 1;
                 gate_nums.total = gate_nums.total + 1;
             }
-            else if (gate->get_type() == RZ_OPERATION || gate->get_type() == RZ_P_OPERATION) {
+            else if (gate->get_type() == RZ_OPERATION) {
                 gate_nums.rz   = gate_nums.rz + 1;
                 gate_nums.total = gate_nums.total + 1;
             }
@@ -1767,19 +1733,6 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 		print(sstream, 1);	    	
                 gate_idx = gate_idx + 1;
             }
-            else if (gate->get_type() == RZ_P_OPERATION) {
-                // definig the rotation parameter
-                double varphi;
-                // get the inverse parameters of the U3 rotation
-                RZ_P* rz_gate = static_cast<RZ_P*>(gate);
-                varphi = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
-                parameter_idx = parameter_idx - 1;
-
-		std::stringstream sstream;
-		sstream << gate_idx << "th gate: RZ on target qubit: " << rz_gate->get_target_qbit() << " and with parameters varphi = " << varphi << std::endl;
-		print(sstream, 1);	    	
-                gate_idx = gate_idx + 1;
-            }
             else if (gate->get_type() == H_OPERATION) {
                 // get the inverse parameters of the U3 rotation
                 H* h_gate = static_cast<H*>(gate);
@@ -1921,10 +1874,6 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
              RZ* rz_gate = static_cast<RZ*>(gate);
              rz_gate->reorder_qubits( qbit_list );
          }
-         else if (gate->get_type() == RZ_P_OPERATION) {
-             RZ_P* rz_gate = static_cast<RZ_P*>(gate);
-             rz_gate->reorder_qubits( qbit_list );
-         }
          else if (gate->get_type() == H_OPERATION) {
              H* h_gate = static_cast<H*>(gate);
              h_gate->reorder_qubits( qbit_list );
@@ -2010,7 +1959,7 @@ std::vector<int> Gates_block::get_involved_qubits() {
 
 
 /**
-@brief Call to get the gates stored in the class.
+@brief Call to get the gates stored in the class. (The resulting vector contains borrowed pointers to the gates, so they dont need to be deleted.)
 @return Return with a list of the gates.
 */
 std::vector<Gate*> Gates_block::get_gates() {
@@ -2033,7 +1982,7 @@ Gate* Gates_block::get_gate(int idx) {
 
 
 /**
-@brief Call to append the gates of a gate block to the current block
+@brief Call to append the gates of a gate block to the current circuit.
 @param op_block A pointer to an instance of class Gates_block
 */
 void Gates_block::combine(Gates_block* op_block) {
@@ -2049,36 +1998,8 @@ void Gates_block::combine(Gates_block* op_block) {
 
     for(std::vector<Gate*>::iterator it = (gates_in).begin(); it != (gates_in).end(); ++it) {
         Gate* op = *it;
-        switch (op->get_type()) {
-        case CNOT_OPERATION: 
-        case CZ_OPERATION:
-        case CH_OPERATION: 
-        case SYC_OPERATION:
-        case U3_OPERATION: 
-        case RY_OPERATION:
-        case CRY_OPERATION: 
-        case RX_OPERATION:
-        case RZ_OPERATION: 
-        case RZ_P_OPERATION:
-        case H_OPERATION:
-        case X_OPERATION:
-        case Y_OPERATION: 
-        case Z_OPERATION:
-        case SX_OPERATION: 
-        case BLOCK_OPERATION:
-        case GENERAL_OPERATION: 
-        case UN_OPERATION:
-        case ON_OPERATION: 
-        case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION: {
-            Gate* op_cloned = op->clone();
-            add_gate( op_cloned );
-            break; }
-        default:
-            std::string err("Gates_block::combine: unimplemented gate"); 
-            throw err;
-        }
-
+        Gate* op_cloned = op->clone();
+        add_gate( op_cloned );
     }
 
 }
@@ -2111,7 +2032,7 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case SX_OPERATION: case BLOCK_OPERATION:
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION: case RZ_P_OPERATION:
+        case ADAPTIVE_OPERATION:
         case H_OPERATION:
             op->set_qbit_num( qbit_num_in );
             break;
@@ -2166,7 +2087,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case SX_OPERATION: case BLOCK_OPERATION:
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION: case RZ_P_OPERATION: 
+        case ADAPTIVE_OPERATION: 
         case H_OPERATION: {
             Gate* op_cloned = op->clone();
             op_block->add_gate( op_cloned );
@@ -2473,6 +2394,41 @@ Gates_block::reset_parameter_start_indices() {
         parameter_idx = parameter_idx + gate->get_parameter_num();
     
     }
+
+}
+
+
+/**
+@brief Method to generate a flat circuit. A flat circuit is a circuit does not containing subcircuits: there are no Gates_block instances (containing subcircuits) in the resulting circuit. If the original circuit contains subcircuits, the gates in the subcircuits are directly incorporated in the resulting flat circuit.
+*/
+Gates_block* 
+Gates_block::get_flat_circuit() {
+
+    Gates_block* flat_circuit = new Gates_block( qbit_num );
+
+    for( std::vector<Gate*>::iterator gate_it=gates.begin(); gate_it != gates.end(); gate_it++ ) {
+
+        Gate* gate = *gate_it;
+
+        if( gate->get_type() == BLOCK_OPERATION ) {
+
+            Gates_block* circuit_inner      = static_cast<Gates_block*>( gate );
+            Gates_block* flat_circuit_inner = circuit_inner->get_flat_circuit();
+
+            flat_circuit->combine( flat_circuit_inner );
+
+            delete( flat_circuit_inner );
+        }
+        else {
+            flat_circuit->add_gate( gate->clone() );
+        }
+
+    }
+
+
+
+    return flat_circuit;
+
 
 }
 
@@ -3367,7 +3323,7 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
 
             
         }
-        else if (gt_type == RX_OPERATION || gt_type == RY_OPERATION || gt_type == RZ_OPERATION || gt_type == RZ_P_OPERATION ) {
+        else if (gt_type == RX_OPERATION || gt_type == RY_OPERATION || gt_type == RZ_OPERATION ) {
             int target_qbit = op->get_target_qbit();
             fwrite(&target_qbit, sizeof(int), 1, pFile);
 
@@ -3619,21 +3575,6 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             parameters_data++;
 
             gate_block_levels[current_level]->add_rz(target_qbit);
-            gate_block_level_gates_num[current_level]--;
-
-        }
-        else if (gt_type == RZ_P_OPERATION) {
-
-            sstream << "importing RZ_P gate" << std::endl;
-
-            int target_qbit;
-            fread_status = fread(&target_qbit, sizeof(int), 1, pFile);
-            sstream << "target_qbit: " << target_qbit << std::endl;
-
-            fread_status = fread(parameters_data, sizeof(double), 1, pFile);
-            parameters_data++;
-
-            gate_block_levels[current_level]->add_rz_p(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }

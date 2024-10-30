@@ -1341,7 +1341,7 @@ std::cout << "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
                         RX*   rx_gate_1   = new RX(qbit_num, target_qbit);
                         CZ*   cz_gate     = new CZ(qbit_num, target_qbit, control_qbit);
                         RX*   rx_gate_2   = new RX(qbit_num, target_qbit);
-                        RZ_P* rz_gate     = new RZ_P(qbit_num, control_qbit);
+                        RZ* rz_gate     = new RZ(qbit_num, control_qbit);                        
 
                         Gates_block* czr_gate = new Gates_block(qbit_num);
                         czr_gate->add_gate(rx_gate_1);
@@ -1362,21 +1362,24 @@ std::cout << "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
                         parameters_new[parameter_idx+1] = M_PI/4; // rx_2 parameter
 
 
-                        //QGD_Complex16 global_phase_factor_new;
                         if ( std::sin(parameter) < 0 ) {
-                            parameters_new[parameter_idx+2] = -M_PI/2; // rz parameter
-
-                            //global_phase_factor_new.real = std::cos( -M_PI/4 );
-                            //global_phase_factor_new.imag = std::sin( -M_PI/4 );
-                            //apply_global_phase_factor(global_phase_factor_new, Umtx);
+//                            parameters_new[parameter_idx+2] = -M_PI/2; // rz parameter with original RZ_P gate, in this case no global phase occurs either
+                            parameters_new[parameter_idx+2] = -M_PI/4; // rz parameter   
+                            
+                            QGD_Complex16 global_phase_factor_new;
+                            global_phase_factor_new.real = std::cos( -M_PI/4 );
+                            global_phase_factor_new.imag = std::sin( -M_PI/4 );
+                            apply_global_phase_factor(global_phase_factor_new, Umtx);
 
                         }
                         else{
-                            parameters_new[parameter_idx+2] = M_PI/2; // rz parameter
-
-                            //global_phase_factor_new.real = std::cos( M_PI/4 );
-                            //global_phase_factor_new.imag = std::sin( M_PI/4 );
-                            //apply_global_phase_factor(global_phase_factor_new, Umtx);
+//                            parameters_new[parameter_idx+2] = M_PI/2; // rz parameter with original RZ_P gate, in this case no global phase occurs either
+                            parameters_new[parameter_idx+2] = M_PI/4; // rz parameter   
+                            
+                            QGD_Complex16 global_phase_factor_new;
+                            global_phase_factor_new.real = std::cos( M_PI/4 );
+                            global_phase_factor_new.imag = std::sin( M_PI/4 );
+                            apply_global_phase_factor(global_phase_factor_new, Umtx);
 
                         }
 

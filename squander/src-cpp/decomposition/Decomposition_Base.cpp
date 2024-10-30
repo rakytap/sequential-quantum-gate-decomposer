@@ -1037,24 +1037,6 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
 
         }
-        else if (gate->get_type() == RZ_P_OPERATION) {
-
-            // definig the parameter of the rotational angle
-            double varphi;
-
-            // get the inverse parameters of the RZ rotation
-
-            RZ_P* rz_gate = static_cast<RZ_P*>(gate);
-//            parameter_idx = parameter_idx - 1;
-            varphi = std::fmod( parameters[parameter_idx], 2*M_PI);
-            parameter_idx = parameter_idx + 1;
-
-
-            rz_gate->set_optimized_parameters( varphi );
-            ops_ret.push_back( static_cast<Gate*>(rz_gate) );
-
-
-        }
         else if (gate->get_type() == UN_OPERATION) {
 
             // get the inverse parameters of the RZ rotation

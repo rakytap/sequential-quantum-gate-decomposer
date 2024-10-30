@@ -32,6 +32,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "structmember.h"
 #include <stdio.h>
 #include "N_Qubit_Decomposition_custom.h"
+#include "Gates_block.h"
 
 #include "numpy_interface.h"
 
@@ -494,29 +495,6 @@ get_gate( N_Qubit_Decomposition_custom* decomp, int &idx ) {
 
 
     }
-    else if (gate->get_type() == RZ_P_OPERATION) {
-
-        // get U3 parameters
-        RZ_P* rz_gate = static_cast<RZ_P*>(gate);
-        Matrix_real&& parameters = rz_gate->get_optimized_parameters();
- 
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "RZ_P" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-        PyObject* Phi = Py_BuildValue("f",  parameters[0] );
-
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-        PyDict_SetItemString(py_gate, "Phi", Phi );
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-        Py_XDECREF(Phi);
-
-
-    }
     else if (gate->get_type() == H_OPERATION) {
 
         // create gate parameters
@@ -647,6 +625,54 @@ std::cout << "qgd_N_Qubit_Decomposition_custom_Wrapper_get_gates IIIIIIIIIIIIIII
 
 
     return ret;
+
+}
+
+
+
+/**
+@brief Wrapper function to retrieve the circuit (Squander format) incorporated in the instance.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_custom_Wrapper_get_circuit( qgd_N_Qubit_Decomposition_custom_Wrapper *self ) {
+
+
+    PyObject* qgd_Circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+    if ( qgd_Circuit == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
+        return NULL;
+    }
+std::cout << "qgd_N_Qubit_Decomposition_custom_Wrapper_get_circuit IIIIIIIIIIIIIIIIIIIIIIIIIIIIIIIII" << std::endl;
+
+
+    // retrieve the C++ variant of the flat circuit (flat circuit does not conatain any sub-circuits)
+    Gates_block* circuit = self->decomp->get_flat_circuit();
+
+
+
+    // construct python interfarce for the circuit
+    PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_Circuit );
+
+    // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+    PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+    // create gate parameters
+    PyObject* qbit_num     = Py_BuildValue("i",  circuit->get_qbit_num() );
+    PyObject* circuit_input = Py_BuildValue("(O)", qbit_num);
+
+    PyObject* py_circuit   = PyObject_CallObject(py_circuit_class, circuit_input);
+    qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+
+    
+    // replace the empty circuit with the extracted one
+    std::cout << "ppppppppppppppppppppppppppppppppppppppppppp " << std::endl;
+    delete( py_circuit_C->gate );
+    py_circuit_C->gate = circuit;
+
+
+    return py_circuit;
 
 }
 
@@ -1429,6 +1455,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_custom_Wrapper_methods[] = {
     },
     {"get_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_get_gates, METH_NOARGS,
      "Method to get the tuple of decomposing gates."
+    },
+    {"get_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_get_circuit, METH_NOARGS,
+     "Method to get the incorporated circuit."
     },
     {"List_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_List_Gates, METH_NOARGS,
      "Call to print the decomposing nitaries on standard output"
