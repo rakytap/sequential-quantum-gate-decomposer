@@ -62,10 +62,10 @@ class qgd_RY(qgd_RY_Wrapper):
 #@brief Call to get the parameters of the matrices. 
 #@param self A pointer pointing to an instance of the class qgd_RY.
 
-    def get_Gate_Kernel( self, ThetaOver2, Phi, Lambda):
+    def get_Gate_Kernel( self, ThetaOver2):
 
 	# call the C wrapper function
-        return super().calc_one_qubit_u3(ThetaOver2, Phi, Lambda)
+        return super().calc_one_qubit_u3(ThetaOver2 )
 
 #@brief Call to apply the gate operation on the input matrix
 #@param self A pointer pointing to an instance of the class qgd_RY.

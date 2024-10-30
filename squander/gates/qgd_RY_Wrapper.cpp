@@ -239,17 +239,15 @@ static PyObject *
 qgd_RY_Wrapper_get_Gate_Kernel( qgd_RY_Wrapper *self, PyObject *args ) {
 
     double ThetaOver2;
-    double Phi; 
-    double Lambda; 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|ddd", &ThetaOver2, &Phi, &Lambda )) 
+    if (!PyArg_ParseTuple(args, "|d", &ThetaOver2 )) 
         return Py_BuildValue("i", -1);
 
 
     // create QGD version of the input matrix
 
-    Matrix RY_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix RY_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, 0.0, 0.0 );
     
     PyObject *RY_1qbit = matrix_to_numpy( RY_1qbit_ );
 
