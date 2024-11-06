@@ -112,7 +112,10 @@ class qgd_N_Qubit_Decomposition(qgd_N_Qubit_Decomposition_Wrapper):
 
         from squander import Qiskit_IO
         
-        return Qiskit_IO.get_Qiskit_Circuit( self )
+        squander_circuit = self.get_Circuit()
+        parameters       = self.get_Optimized_Parameters()
+        
+        return Qiskit_IO.get_Qiskit_Circuit( squander_circuit, parameters )
 
 
 

@@ -58,3 +58,18 @@ class qgd_N_Qubit_State_Preparation_adaptive(qgd_N_Qubit_Decomposition_adaptive)
             raise Exception("Initial state not properly formatted. Input state must be a column vector")
 
 
+
+##
+# @brief Export the unitary decomposition into Qiskit format.
+# @return Return with a Qiskit compatible quantum circuit.
+    def get_Qiskit_Circuit( self ):
+    
+        from squander import Qiskit_IO
+        
+        squander_circuit = self.get_Circuit()
+        parameters       = self.get_Optimized_Parameters()
+        
+        return Qiskit_IO.get_Qiskit_Circuit_inverse( squander_circuit, parameters )
+        
+        
+              

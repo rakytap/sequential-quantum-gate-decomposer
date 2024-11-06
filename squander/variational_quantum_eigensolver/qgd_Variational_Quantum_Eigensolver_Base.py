@@ -211,7 +211,10 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 
         from squander import Qiskit_IO
         
-        return Qiskit_IO.get_Qiskit_Circuit( self )
+        squander_circuit = self.get_Circuit()
+        parameters       = self.get_Optimized_Parameters()
+        
+        return Qiskit_IO.get_Qiskit_Circuit( squander_circuit, parameters )
 
 
 ##
