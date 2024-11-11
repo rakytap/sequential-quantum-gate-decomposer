@@ -86,7 +86,6 @@ class Test_Decomposition:
         # get the decomposing operations
         quantum_circuit = decomp.get_Qiskit_Circuit()
 
-        from qiskit import execute
         import numpy.linalg as LA
     
     

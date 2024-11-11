@@ -36,6 +36,18 @@ try:
     MPI_imported = True
 except ModuleNotFoundError:
     MPI_imported = False
+    
+    
+import qiskit
+qiskit_version = qiskit.version.get_version_info()
+
+from qiskit import QuantumCircuit
+import qiskit_aer as Aer    
+    
+if qiskit_version[0] == '1':
+    from qiskit import transpile
+else :
+    from qiskit import execute
 
 
 class Test_State_Preparation:
@@ -132,17 +144,27 @@ class Test_State_Preparation:
         assert decomp_error < 1e-4
         print(f"DECOMPOSITION ERROR: {decomp_error} ")
         
-        # check whether the exported circuit can reproduce the input state
-        from qiskit import Aer, execute
-        from qiskit import QuantumCircuit
-        
-                        
-        # Select the StatevectorSimulator from the Aer provider
-        simulator = Aer.get_backend('statevector_simulator')
-
         # Execute and get the state vector
-        result = execute(circuit_qiskit, simulator).result()
-        transformed_state = result.get_statevector(circuit_qiskit)
+        if qiskit_version[0] == '1':
+	
+            circuit_qiskit.save_statevector()
+	
+            backend = Aer.AerSimulator(method='statevector')
+            compiled_circuit = transpile(circuit_qiskit, backend)
+            result = backend.run(compiled_circuit).result()
+		
+            transformed_state = result.get_statevector(compiled_circuit)		
+       
+        
+        elif qiskit_version[0] == '0':
+	
+            # Select the StatevectorSimulator from the Aer provider
+            simulator = Aer.get_backend('statevector_simulator')	
+		
+            backend = Aer.get_backend('aer_simulator')
+            result = execute(circuit_qiskit, simulator).result()
+		
+            transformed_state = result.get_statevector(circuit_qiskit)
         
         overlap = np.abs( transformed_state.conj().T @ State )
 	

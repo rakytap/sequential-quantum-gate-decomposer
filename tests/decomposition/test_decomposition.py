@@ -129,7 +129,6 @@ class Test_Decomposition:
         # print the quantum circuit
         print(quantum_circuit)
 
-        from qiskit import execute
         import numpy.linalg as LA
     
         # test the decomposition of the matrix
