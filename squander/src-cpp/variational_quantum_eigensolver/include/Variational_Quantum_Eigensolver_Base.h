@@ -27,7 +27,7 @@ limitations under the License.
 #include "Optimization_Interface.h"
 
 /// @brief Type definition of the fifferent types of ansatz
-typedef enum ansatz_type {HEA, HEA_ZYZ,TQR,ZZZ} ansatz_type;
+typedef enum ansatz_type {HEA, HEA_ZYZ,TQR,ZZZ,QAOA} ansatz_type;
     
 #ifdef __cplusplus
 extern "C" 
