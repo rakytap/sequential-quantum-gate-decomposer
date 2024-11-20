@@ -318,6 +318,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/BFGS_Powell.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/Powells_method.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/Bayes_Opt.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/n_aryGrayCodeCounter.cpp    
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/RL_experience.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/ADAM_BATCHED.cpp    
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/optimization_engines/ADAM.cpp

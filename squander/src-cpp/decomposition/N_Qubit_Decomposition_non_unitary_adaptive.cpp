@@ -25,18 +25,20 @@ limitations under the License.
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "Random_Orthogonal.h"
 #include "Random_Unitary.h"
+#include "n_aryGrayCodeCounter.h"
 
 #include "X.h"
 
 #include <time.h>
 #include <stdlib.h>
 
+#include <iostream>
 
 #ifdef __DFE__
 #include "common_DFE.h"
 #endif
 
-
+using namespace std;
 
 
 
@@ -170,6 +172,36 @@ N_Qubit_Decomposition_non_unitary_adaptive::~N_Qubit_Decomposition_non_unitary_a
 
 }
 
+/**
+@brief ?????????????????????????
+*/
+matrix_base<int> 
+N_Qubit_Decomposition_non_unitary_adaptive::tree_comb( int qubitnum, int level) {
+
+int id_max = ((qubitnum*(qubitnum-1))/2);
+int comb_num = pow(id_max,level);
+matrix_base<int> arr(comb_num,2);
+memset(arr.get_data(),0,arr.size());// the array I will store the target and control qubit's place for the tree synthesis
+int first = 0;
+int second = 1; // these will be the target and control qubit I just did not want to use the names again
+for( int i = 1; i<= comb_num;i = i+1){
+    if (second == qubitnum){
+		first = first+1;
+		second = first+1;
+		}
+	arr[i*arr.stride +0] = first;
+	arr[i*arr.stride+1] = second;
+    second= second+1;
+    
+    }
+    std::stringstream sstream;
+    sstream << "my array is: "<< std::endl;
+    arr.print_matrix();
+    return arr;
+}
+
+
+
 
 
 /**
@@ -244,6 +276,9 @@ void N_Qubit_Decomposition_non_unitary_adaptive::get_initial_circuit() {
         print(sstream, 1);
         gate_structure_loc = determine_initial_gate_structure(optimized_parameters_mtx);
     }
+
+
+
 
 
     long long export_circuit_2_binary_loc;
@@ -479,6 +514,429 @@ void N_Qubit_Decomposition_non_unitary_adaptive::finalize_circuit() {
 
 }
 
+
+@brief ?????????????????????????
+*/
+void
+N_Qubit_Decomposition_non_unitary_adaptive::add_two_qubit_block(Gates_block* gate_structure, int target_qbit, int control_qbit) {
+	
+        if ( control_qbit >= qbit_num || target_qbit>= qbit_num ) {
+            std::string error( "N_Qubit_Decomposition_non_unitary_adaptive::add_two_qubit_block: Label of control/target qubit should be less than the number of qubits in the register.");	        
+            throw error;         
+        }
+        
+        if ( control_qbit == target_qbit ) {
+            std::string error( "N_Qubit_Decomposition_non_unitary_adaptive::add_two_qubit_block: Target and control qubits should be different");	        
+            throw error;         
+        }        
+
+        Gates_block* layer = new Gates_block( qbit_num );
+
+        bool Theta = true;
+        bool Phi = true;
+        bool Lambda = true;
+        layer->add_u3(target_qbit, Theta, Phi, Lambda);
+        layer->add_u3(control_qbit, Theta, Phi, Lambda); 
+        layer->add_cnot(target_qbit, control_qbit);
+
+        gate_structure->add_gate(layer);
+
+}
+
+
+
+
+/**
+@brief ?????????????????????????
+*/
+Gates_block* 
+N_Qubit_Decomposition_non_unitary_adaptive::add_2qubitgate(int control_qbit, int target_qbit) {
+
+	std::vector<Gates_block* > layers;
+	
+        if ( control_qbit >= qbit_num || target_qbit >= qbit_num ) {
+            std::string error( "Label of control/target qubit should be less than the number of qubits in the register.");	        
+            throw error;         
+        }
+        
+
+        Gates_block* layer = new Gates_block( qbit_num );
+
+        bool Theta = true;
+        bool Phi = true;
+        bool Lambda = true;
+        layer->add_u3(target_qbit, Theta, Phi, Lambda);
+        layer->add_u3(control_qbit, Theta, Phi, Lambda); 
+        layer->add_cnot(target_qbit, control_qbit);
+
+        layers.push_back(layer);
+
+
+        
+return layer;
+}
+
+
+/**
+@brief 
+@param 
+@param 
+*/
+Gates_block* 
+N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( int level_max ){
+
+    tbb::spin_mutex tree_search_mutex;
+    
+   
+    
+    
+    double optimization_tolerance_loc;
+    if ( config.count("optimization_tolerance") > 0 ) {
+        config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
+    }
+    else {
+        optimization_tolerance_loc = optimization_tolerance;
+    }     
+
+    // construct the possible CNOT combinations within a single level
+    // the number of possible CNOT connections netween the qubits (for dense topology)
+    int n_ary_limit_max = (qbit_num*(qbit_num-1))/2;     
+    
+    matrix_base<int> possible_target_qbits(1, n_ary_limit_max);
+    matrix_base<int> possible_control_qbits(1, n_ary_limit_max);    
+    int element_idx = 0;
+    for(int target_qbit_idx=0; target_qbit_idx<qbit_num-1; target_qbit_idx++ ) {
+    
+       for( int control_qbit_idx=target_qbit_idx+1; control_qbit_idx<qbit_num; control_qbit_idx++ ) {
+       
+           possible_target_qbits[element_idx] = target_qbit_idx;
+           possible_control_qbits[element_idx] = control_qbit_idx;  
+           element_idx++;
+       }
+    
+    }  
+    
+
+    // set the limits for the N-ary Gray counter
+    
+
+    matrix_base<int> n_ary_limits( 1, level_max ); //array containing the limits of the individual Gray code elements    
+    memset( n_ary_limits.get_data(), n_ary_limit_max, n_ary_limits.size()*sizeof(int) );
+    
+    for( int idx=0; idx<n_ary_limits.size(); idx++) {
+        n_ary_limits[idx] = n_ary_limit_max;
+    }
+        
+
+    Gates_block* gate_structure_best_solution = NULL;    
+    bool found_optimal_solution = false;
+    
+    //n_aryGrayCodeCounter gcode_counter( n_ary_limits );
+
+
+
+    int64_t iteration_max = pow( (int64_t)n_ary_limit_max, level_max );
+    
+    
+    // determine the concurrency of the calculation
+    unsigned int nthreads = std::thread::hardware_concurrency();
+    int64_t concurrency = 1;//(int64_t)nthreads;
+    concurrency = concurrency < iteration_max ? concurrency : iteration_max;  
+    
+    //std::cout <<    "concurrency: " << concurrency << " " << iteration_max << std::endl;
+   // if level max 0 add finalizing layer és return 
+    tbb::parallel_for( (int64_t)0, concurrency, (int64_t)1, [&](int64_t job_idx) {
+    //for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {  // TODO: currently the for loop is redundant, but will need to parallelize it
+    
+        // initial offset and upper boundary of the gray code counter
+        int64_t work_batch = iteration_max/concurrency;
+        int64_t initial_offset = job_idx*work_batch;
+        int64_t offset_max = (job_idx+1)*work_batch-1;
+        
+        if ( job_idx == concurrency-1) {
+            offset_max = iteration_max-1;
+        } 
+
+//std::cout << initial_offset << " " << offset_max << " " << iteration_max << " " << work_batch << std::endl;
+
+        n_aryGrayCodeCounter gcode_counter(n_ary_limits, initial_offset);  // see piquassoboost for deatils of the implementation
+        gcode_counter.set_offset_max( offset_max );
+        
+        
+        for (int64_t iter_idx=initial_offset+1; iter_idx<offset_max+1; iter_idx++ ) {       
+
+    
+        matrix_base<int> gcode = gcode_counter.get();
+        
+        // determine the target qubit indices and control qbit indices for the CNOT gates from the Gray code counter
+        matrix_base<int> target_qbits(1, level_max);
+        matrix_base<int> control_qbits(1, level_max);
+        
+        for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
+        
+            // gcode[idx] = target_qbit[idx] * n_ary_limit_max + control_qbit[idx], where control_qbit > target_qbit
+            
+            int target_qbit = possible_target_qbits[ gcode[gcode_idx] ];            
+            int control_qbit = possible_control_qbits[ gcode[gcode_idx] ];
+            
+            
+            target_qbits[gcode_idx] = target_qbit;
+            control_qbits[gcode_idx] = control_qbit;  
+            
+            
+            //std::cout <<   gcode[gcode_idx] << " " << target_qbit << " " << control_qbit << std::endl;        
+        }
+        
+        
+        //  ----------- contruct the gate structure to be optimized ----------- 
+        Gates_block* gate_structure_loc = new Gates_block(qbit_num);  // cnot nélkül megyek mi lesz? 
+                           
+        for (int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++) {
+        
+            // add new 2-qbit block to the circuit
+            add_two_qubit_block( gate_structure_loc, target_qbits[gcode_idx], control_qbits[gcode_idx]  );
+        }
+           
+        // add finalyzing layer to the top of the gate structure
+        add_finalyzing_layer( gate_structure_loc );
+               
+    
+
+        // ----------- start the decomposition ----------- 
+        
+        //measure the time for the decompositin
+        tbb::tick_count start_time_loc = tbb::tick_count::now();
+
+
+        N_Qubit_Decomposition_custom cDecomp_custom_random;
+
+        std::stringstream sstream;
+        sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+        print(sstream, 1);
+        
+        // solve the optimization problem in isolated optimization process
+        cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+        cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
+        cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+        cDecomp_custom_random.set_max_iteration( max_outer_iterations );
+#ifndef __DFE__
+        cDecomp_custom_random.set_verbose(verbose);
+#else
+        cDecomp_custom_random.set_verbose(0);
+#endif
+        cDecomp_custom_random.set_cost_function_variant( cost_fnc );
+        cDecomp_custom_random.set_debugfile("");
+        cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance_loc );
+        cDecomp_custom_random.set_trace_offset( trace_offset ); 
+        cDecomp_custom_random.set_optimizer( alg );
+        cDecomp_custom_random.set_project_name( project_name );
+        if ( alg == ADAM || alg == BFGS2 ) {
+            int param_num_loc = gate_structure_loc->get_parameter_num();
+            int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+            cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+            cDecomp_custom_random.set_random_shift_count_max( 10000 ); 
+        }
+        else if ( alg==ADAM_BATCHED ) {
+            cDecomp_custom_random.set_optimizer( alg );  
+            int max_inner_iterations_loc = 2000;
+            cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+            cDecomp_custom_random.set_random_shift_count_max( 5 );   
+        }
+        else if ( alg==BFGS ) {
+            cDecomp_custom_random.set_optimizer( alg );  
+            int max_inner_iterations_loc = 10000;
+            cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+        }
+                
+            
+        cDecomp_custom_random.start_decomposition(true);
+                
+
+                
+        number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization           
+    
+    
+        double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
+        sstream.str("");
+        sstream << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp;
+        print(sstream, 1);
+        //std::cout << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp << std::endl;
+        
+        {
+            tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
+        
+            if( current_minimum_tmp < current_minimum && !found_optimal_solution) {
+                current_minimum = current_minimum_tmp;
+            
+                gate_structure_best_solution = gate_structure_loc;
+                optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+            }
+            else {
+                delete( gate_structure_loc );
+                gate_structure_loc = NULL;
+            }
+
+     
+            if ( current_minimum < optimization_tolerance_loc && !found_optimal_solution)  {            
+                found_optimal_solution = true;
+            } 
+    
+        }
+
+        if( found_optimal_solution ) {
+            break;
+        }
+        
+        // iterate the Gray code to the next element
+        int changed_index, value_prev, value;
+        if ( gcode_counter.next(changed_index, value_prev, value) ) {
+                // exit from the for loop if no further gcode is present
+                break;
+        }   
+        
+        
+        }
+    
+    });
+
+    return gate_structure_best_solution;
+
+
+}
+
+
+
+/**
+@brief 
+@param 
+@param 
+*/
+Gates_block* 
+N_Qubit_Decomposition_non_unitary_adaptive::tree_synthesis(int qubitnum, int level){
+  
+  
+
+    N_Qubit_Decomposition_custom cDecomp_custom;
+    N_Qubit_Decomposition_custom cDecomp_custom_random;
+    double optimization_tolerance_loc;
+    current_minimum = cDecomp_custom.get_current_minimum();
+    if ( config.count("optimization_tolerance") > 0 ) {
+        config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
+    }
+    else {
+        optimization_tolerance_loc = optimization_tolerance;
+    }     
+    
+    
+       
+    
+    while ( current_minimum > optimization_tolerance_loc) {
+		
+        // array containing the list ....?
+        matrix_base<int> v(1,level);
+        memset(v.get_data(),0,v.size());
+        
+        matrix_base<int> d(1,level);
+        memset(d.get_data(),1,d.size());   //direction, the default is 1, whitch represents +, and -1 represents minus direction
+        
+        
+        int id_max = ((qubitnum*(qubitnum-1))/2); //maximum possible number
+        int comb_num = pow(id_max,level);
+
+
+        matrix_base<int> array = tree_comb(comb_num,qubitnum);
+
+	
+		for( int i = 1; i<= comb_num;i = i+1){
+		
+			Gates_block* gate_structure_loc = NULL; // from line 236
+			std::stringstream sstream;
+			sstream << "Construct initial gate structure for the decomposition." << std::endl;
+	//	print(sstream, 1); why and how did I copy a print here?
+		
+		    			
+		add_2qubitgate(array[i*array.stride +0],array[i*array.stride+1] ); 
+		
+		  // solve the optimization problem in isolated optimization process
+            cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+            cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
+            cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+            cDecomp_custom_random.set_max_iteration( max_outer_iterations );
+			#ifndef __DFE__
+            cDecomp_custom_random.set_verbose(verbose);
+			#else
+            cDecomp_custom_random.set_verbose(0);
+			#endif
+            cDecomp_custom_random.set_cost_function_variant( cost_fnc );
+            cDecomp_custom_random.set_debugfile("");
+            cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance_loc );
+            cDecomp_custom_random.set_trace_offset( trace_offset ); 
+            cDecomp_custom_random.set_optimizer( alg );
+            cDecomp_custom_random.set_project_name( project_name );
+            
+            if ( alg == ADAM || alg == BFGS2 ) {
+                int param_num_loc = gate_structure_loc->get_parameter_num();
+                int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+                cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+                cDecomp_custom_random.set_random_shift_count_max( 10000 ); 
+            }
+            else if ( alg==ADAM_BATCHED ) {
+                cDecomp_custom_random.set_optimizer( alg );  
+                int max_inner_iterations_loc = 2000;
+                cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+                cDecomp_custom_random.set_random_shift_count_max( 5 );   
+            }
+            else if ( alg==BFGS ) {
+                cDecomp_custom_random.set_optimizer( alg );  
+                int max_inner_iterations_loc = 10000;
+                cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+            }
+            
+        
+            cDecomp_custom_random.start_decomposition(true);
+    
+
+            
+            number_of_iters += cDecomp_custom_random.get_num_iters(); // retrieve the number of iterations spent on optimization
+
+
+			if (current_minimum > optimization_tolerance_loc) {  // from line 600 to around 640
+				std::stringstream sstream;
+				sstream << "Decomposition did not reached prescribed high numerical precision." << std::endl; 
+				print(sstream, 1);             
+				optimization_tolerance_loc = 1.5*current_minimum < 1e-2 ? 1.5*current_minimum : 1e-2;
+			}
+			
+		    int index = 0 ;//the number's place that  will changed
+		    for( int k = 0; k<= level; k = k+1) {// check if I have to go to another index
+		       
+		        if( v[index]==id_max-1){
+		            if (d[index]==1){
+		                d[index]=-1 ;
+		                index+=1;
+		                }}
+		        else if (v[index]==0 ){
+		            if (d[index]==-1){
+		                d[index]=1;
+		                index+=1;
+		                }}
+		                }
+		                
+		    v[index] = v[index] + d[index];
+		    delete[] gate_structure_loc ;
+		}
+		
+		
+
+		
+	}
+	
+	 return NULL;
+}
+
+
+
+
 /**
 @brief Call to optimize an imported gate structure
 @param optimized_parameters_mtx_loc A matrix containing the initial parameters
@@ -581,10 +1039,6 @@ N_Qubit_Decomposition_non_unitary_adaptive::optimize_imported_gate_structure(Mat
 Gates_block* 
 N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Matrix_real& optimized_parameters_mtx_loc) {
 
-    // strages to store the optimized minimums in case of different cirquit depths
-    std::vector<double> minimum_vec;
-    std::vector<Gates_block*> gate_structure_vec;
-    std::vector<Matrix_real> optimized_parameters_vec;
     
     double optimization_tolerance_loc;
     if ( config.count("optimization_tolerance") > 0 ) {
@@ -594,22 +1048,14 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
         optimization_tolerance_loc = optimization_tolerance;
     }         
            
-
-
-    int level = level_limit_min;
-    while ( current_minimum > optimization_tolerance_loc && level <= 2 ) {//level_limit) {
-
-        // create gate structure to be optimized
-        Gates_block* gate_structure_loc = new Gates_block(qbit_num);  
-        
-        optimized_parameters_mtx_loc = Matrix_real(0,0);
-                   
-        for (int idx=0; idx<level; idx++) {
-
-            // create the new decomposing layer and add to the gate structure
-            add_adaptive_layers( gate_structure_loc );
-
+    Gates_block* gate_structure_loc = NULL;
+    
+    int level_max = 5;
+    for ( int level = level_limit_min+1; level < level_max; level++ ) { // 0 cnot 
+        if ( gate_structure_loc != 0 ){
+           delete( gate_structure_loc );
         }
+<<<<<<< HEAD
            
         // add finalizing layer to the top of the gate structure
         add_finalyzing_layer( gate_structure_loc );
@@ -660,67 +1106,26 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
                 
             
                 cDecomp_custom_random.start_decomposition();
+=======
+    
+        gate_structure_loc = tree_search_over_gate_structures( level );
+>>>>>>> 5c2f12a0 (tree_synthesis_cpp)
         
-
-                
-                number_of_iters += cDecomp_custom_random.get_num_iters(); // retrieve the number of iterations spent on optimization
-
-
-         tbb::tick_count end_time_loc = tbb::tick_count::now();
-
-         double current_minimum_random         = cDecomp_custom_random.get_current_minimum();
-
-         double current_minimum_loc = current_minimum_random;
-         optimized_parameters_mtx_loc = cDecomp_custom_random.get_optimized_parameters();
-         initial_guess = RANDOM;
-         
-
-        minimum_vec.push_back(current_minimum_loc);
-        gate_structure_vec.push_back(gate_structure_loc);
-        optimized_parameters_vec.push_back(optimized_parameters_mtx_loc);
-
-
-
-        if ( current_minimum_loc < optimization_tolerance_loc ) {
-	    std::stringstream sstream;
-            sstream << "Optimization problem solved with " << gate_structure_loc->get_gate_num() << " decomposing layers in " << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
-            print(sstream, 1);	       
+        if (current_minimum < optimization_tolerance_loc ) {
             break;
-        }   
-        else {
-            std::stringstream sstream;
-            sstream << "Optimization problem converged to " << current_minimum_loc << " with " <<  gate_structure_loc->get_gate_num() << " decomposing layers in "   << (end_time_loc-start_time_loc).seconds() << " seconds." << std::endl;
-            print(sstream, 1);  
         }
 
-        level++;
-    }
-
-
-    // find the best decomposition
-    int idx_min = 0;
-    double current_minimum = minimum_vec[0];
-    for (int idx=1; idx<(int)minimum_vec.size(); idx++) {
-        if( current_minimum > minimum_vec[idx] ) {
-            idx_min = idx;
-            current_minimum = minimum_vec[idx];
-        }
-    }
-     
-
-    Gates_block* gate_structure_loc = gate_structure_vec[idx_min];
-    optimized_parameters_mtx_loc = optimized_parameters_vec[idx_min];
-
-    // release unnecesarry data
-    for (int idx=0; idx<(int)minimum_vec.size(); idx++) {
-        if( idx == idx_min ) {
-            continue;
-        }
-        delete( gate_structure_vec[idx] );
     }    
-    minimum_vec.clear();
-    gate_structure_vec.clear();
-    optimized_parameters_vec.clear();
+    
+    
+    
+    /*
+    int qubitnum = 2;
+    for ( int level = level_limit_min; level < 5; level=level+1 ) {
+        tree_synthesis ( qubitnum, level );
+    }
+    */
+    //exit(-1);
     
 
 
@@ -734,6 +1139,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
     std::stringstream sstream;
     sstream << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
     print(sstream, 1);	
+    
     return gate_structure_loc;
        
 }
