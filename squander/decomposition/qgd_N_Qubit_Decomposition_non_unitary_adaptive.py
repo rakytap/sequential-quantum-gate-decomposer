@@ -75,8 +75,34 @@ class qgd_N_Qubit_Decomposition_non_unitary_adaptive(qgd_N_Qubit_Decomposition_n
 
         # call the constructor of the wrapper class
         super(qgd_N_Qubit_Decomposition_non_unitary_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, topology=topology_validated, config=config, accelerator_num=accelerator_num)
+##
+# @brief Wrapper function to call the tree_comb method of C++ class N_Qubit_Decomposition
+# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
 
+#    def tree_comb(self,qubitnum,level):
+        
+        # call the C wrapper function
+#        super(qgd_N_Qubit_Decomposition_non_unitary_adaptive, self).tree_comb(qubitnum,level)
+        
+##
+# @brief Wrapper function to call the add_2qubitgate method of C++ class N_Qubit_Decomposition
+# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
 
+ #   def add_2qubitgate(self,control,target):
+        
+        # call the C wrapper function
+ #       super(qgd_N_Qubit_Decomposition_non_unitary_adaptive, self).add_2qubitgate(control,target)
+        
+##
+# @brief Wrapper function to call the tree_synthesis method of C++ class N_Qubit_Decomposition
+# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
+
+ #   def tree_synthesis(self,qubitnum,level):
+        
+        # call the C wrapper function
+ #       super(qgd_N_Qubit_Decomposition_non_unitary_adaptive, self).tree_synthesis(qubitnum,level)
+        
+        
 ##
 # @brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
 # @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
@@ -100,6 +126,8 @@ class qgd_N_Qubit_Decomposition_non_unitary_adaptive(qgd_N_Qubit_Decomposition_n
 	# call the C wrapper function
         super(qgd_N_Qubit_Decomposition_non_unitary_adaptive, self).Finalize_Circuit(prepare_export=prepare_export)
 
+
+    
 ##
 # @brief Call to reorder the qubits in the matrix of the gate
 # @param qbit_list The reordered list of qubits spanning the matrix

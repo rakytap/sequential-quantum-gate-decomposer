@@ -152,6 +152,38 @@ Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_
 
 
 /**
+@brief 
+@param 
+*/
+Gates_block* tree_synthesis(int qubitnum, int level);
+
+/**
+@brief 
+@param 
+*/
+
+matrix_base<int>  tree_comb(int qubitnum,int level);
+/**
+@brief 
+@param 
+*/
+Gates_block* add_2qubitgate(int control,int target);
+
+
+/**
+@brief ?????????????????????????
+*/
+void add_two_qubit_block(Gates_block* gate_structure, int target_qbit, int control_qbit);
+
+/**
+@brief C????????????????????????????????
+@param gate_structure The gate structure to be optimized
+@param optimized_parameters A matrix containing the initial parameters
+*/
+Gates_block* tree_search_over_gate_structures( int level_max );
+
+
+/**
 @brief Call to replace CZ_NU gates in the circuit that are close to either an identity or to a CNOT gate.
 @param gate_structure The gate structure to be optimized
 @param optimized_parameters A matrix containing the initial parameters

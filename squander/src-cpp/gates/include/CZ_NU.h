@@ -106,7 +106,7 @@ void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& input );
 @param input The input array on which the gate is applied
 */
 std::vector<Matrix> 
-CZ_NU::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input );
+apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input );
 
 
 
@@ -115,14 +115,14 @@ CZ_NU::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input );
 @brief Call to set the final optimized parameters of the gate.
 @param param Real parameter of the gate.
 */
-void CZ_NU::set_optimized_parameters(double param );
+void set_optimized_parameters(double param );
 
 
 /**
 @brief Call to get the final optimized parameters of the gate.
 @return Returns with an array containing the optimized parameter
 */
-Matrix_real CZ_NU::get_optimized_parameters();
+Matrix_real get_optimized_parameters();
 
 
 
