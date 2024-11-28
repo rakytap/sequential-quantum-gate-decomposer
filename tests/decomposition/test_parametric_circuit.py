@@ -31,7 +31,7 @@ from qiskit import QuantumCircuit, transpile
 import numpy as np
 
 
-from qiskit import execute
+
 
 from squander import utils
 from squander import N_Qubit_Decomposition_custom

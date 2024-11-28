@@ -26,36 +26,51 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 ##    \brief Utility function for SQUANDER python binding
 
 
-from qiskit import execute
+
 import numpy as np
 
-try:
+import qiskit
+qiskit_version = qiskit.version.get_version_info()
+
+if qiskit_version[0] == '1':
     import qiskit_aer as Aer
-    qiskit_version = 1
-except ImportError as err:
+    from qiskit import transpile
+else :
     from qiskit import Aer
-    qiskit_version = 0
+    from qiskit import execute
+
+
 
 
 ##
 # @brief Call to retrieve the unitary from QISKIT circuit
 def get_unitary_from_qiskit_circuit( circuit ):
 
-
-    if qiskit_version == 1:
-        backend = Aer.AerSimulator(method='unitary')
-    elif qiskit_version == 0:
-        backend = Aer.get_backend('aer_simulator')
-
-
     circuit.save_unitary()
-                
-    # job execution and getting the result as an object
-    job = execute(circuit, backend)
+    
+    
+    if qiskit_version[0] == '1':
+        backend = Aer.AerSimulator(method='unitary')
         
-    # the result of the Qiskit job
-    result=job.result()  
+        compiled_circuit = transpile(circuit, backend)
+        result = backend.run(compiled_circuit).result()
+        
+        return np.asarray( result.get_unitary(circuit) )    
+        
+    elif qiskit_version[0] == '0':
+        backend = Aer.get_backend('aer_simulator')
+        
+        # job execution and getting the result as an object
+        job = execute(circuit, backend)
+        
+        # the result of the Qiskit job
+        result=job.result()  
 
 
-    return np.asarray( result.get_unitary(circuit) )
+        return np.asarray( result.get_unitary(circuit) )        
+
+
+
+                
+
 
