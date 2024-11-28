@@ -91,7 +91,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
 
         // the current result
         current_minimum = optimization_problem( optimized_parameters_mtx );
-        number_of_iters = number_of_iters + 1; 
+        export_current_cost_fnc(current_minimum);
         
 
         // the array storing the optimized parameters
@@ -110,9 +110,14 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
              batch_size = (int) value;
         }
         else {
-            batch_size = 64;
+            batch_size = 64 <= num_of_parameters ? 64 : num_of_parameters;
+            
         }
-
+        
+        if( batch_size > num_of_parameters ) {
+            std::string err("Optimization_Interface::solve_layer_optimization_problem_COSINE: batch size should be lower or equal to the number of free parameters");
+            throw err;
+        }
 
         long long max_inner_iterations_loc;
         if ( config.count("max_inner_iterations_grad_descend_shift_rule") > 0 ) {
@@ -165,6 +170,40 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
         }
 
 
+
+        // whether to use line search or just gradient update with a learning rate
+        int use_line_search;
+        if ( config.count("use_line_search_grad_descend_shift_rule") > 0 ) {
+             long long value = 1;
+             config["use_line_search_grad_descend_shift_rule"].get_property( value ); 
+             use_line_search = (int) value;
+        }
+        if ( config.count("use_line_search") > 0 ) {
+             long long value = 1;
+             config["use_line_search"].get_property( value ); 
+             use_line_search = (int) value;
+        }
+        else {
+            use_line_search = 1;
+        }
+        
+        // The number if iterations after which the current results are displed/exported
+        int output_periodicity;
+        if ( config.count("output_periodicity_grad_descend_shift_rule") > 0 ) {
+             long long value = 1;
+             config["output_periodicity_grad_descend_shift_rule"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        if ( config.count("output_periodicity") > 0 ) {
+             long long value = 1;
+             config["output_periodicity"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        else {
+            output_periodicity = 50;
+        }        
+
+
         // vector stroing the lates values of current minimums to identify convergence
         Matrix_real f0_vec(1, 100); 
         memset( f0_vec.get_data(), 0.0, f0_vec.size()*sizeof(double) );
@@ -176,26 +215,31 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
         Matrix_real param_update_mtx( batch_size, 1 );
         matrix_base<int> param_idx_agents( batch_size, 1 );
 
-        // random generator of integers   
-        std::uniform_int_distribution<> distrib_int(0, num_of_parameters-1);
-
+        
         std::vector<Matrix_real> parameters_mtx_vec(batch_size);
         parameters_mtx_vec.reserve(batch_size); 
-
-                 
-             
-
-        bool three_point_line_search               =    cost_fnc == FROBENIUS_NORM;
-        bool three_point_line_search_double_period =    cost_fnc == VQE;
-
+        
 
         for (unsigned long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++) {
+        
+            // build up a vector of indices providing a set from which we can draw random (but unique) choices
+            std::vector<int> indices(num_of_parameters);
+            indices.reserve(num_of_parameters);
+            for( int idx=0; idx<num_of_parameters; idx++ ) {
+                indices[idx] = idx;
+            }
 
             for( int idx=0; idx<batch_size; idx++ ) {
                 parameters_mtx_vec[idx] = solution_guess_tmp_mtx.copy();
+                
+                // random generator of integers   
+                std::uniform_int_distribution<> distrib_int(0, indices.size()-1);
 
                 // The index array of the chosen parameters
-                param_idx_agents[ idx ] = distrib_int(gen);
+                int chosen_idx = distrib_int(gen);
+                param_idx_agents[ idx ] = indices[ chosen_idx ];
+                indices.erase( indices.begin()+chosen_idx ); 
+                   
             }
 
 
@@ -211,14 +255,13 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
       
             Matrix_real f0_shifted_pi2_agents = optimization_problem_batched( parameters_mtx_vec );  
 
-
             for(int idx=0; idx<batch_size; idx++) { 
                 Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ];             
                 solution_guess_mtx_idx[ param_idx_agents[idx] ] -= M_PI_half;
             }   
              
             Matrix_real f0_shifted_pi_agents = optimization_problem_batched( parameters_mtx_vec );
-
+            
             for( int idx=0; idx<batch_size; idx++ ) {
      
                 double f0_shifted_pi         = f0_shifted_pi_agents[idx];
@@ -239,45 +282,60 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
 
             }
 
-            // parameters for line search
-            int line_points = 128;  
 
-            std::vector<Matrix_real> parameters_line_search_mtx_vec(line_points);
-            parameters_line_search_mtx_vec.reserve(line_points);         
+            if ( use_line_search == 1 ) {
+                // parameters for line search
+                int line_points = 128;  
+
+                std::vector<Matrix_real> parameters_line_search_mtx_vec(line_points);
+                parameters_line_search_mtx_vec.reserve(line_points);         
                     
-            // perform line search over the deriction determined previously  
-            for( int line_idx=0; line_idx<line_points; line_idx++ ) {
+                // perform line search over the deriction determined previously  
+                for( int line_idx=0; line_idx<line_points; line_idx++ ) {
 
-                Matrix_real parameters_line_idx = solution_guess_tmp_mtx.copy();
+                    Matrix_real parameters_line_idx = solution_guess_tmp_mtx.copy();
 
-                for( int idx=0; idx<batch_size; idx++ ) {
-                    parameters_line_idx[ param_idx_agents[idx] ] -= param_update_mtx[ idx ]*(double)line_idx/line_points;                    
+                    for( int idx=0; idx<batch_size; idx++ ) {
+                        parameters_line_idx[ param_idx_agents[idx] ] -= param_update_mtx[ idx ]*(double)line_idx/line_points;                    
+                    }
+
+                    parameters_line_search_mtx_vec[ line_idx] = parameters_line_idx;
+    
                 }
-
-                parameters_line_search_mtx_vec[ line_idx] = parameters_line_idx;
-
-            }
            
 
-            Matrix_real line_values = optimization_problem_batched( parameters_line_search_mtx_vec ); 
+                Matrix_real line_values = optimization_problem_batched( parameters_line_search_mtx_vec ); 
                    
 
-            // find the smallest value
-            double f0_min = line_values[0];
-            int idx_min = 0;
-            for (int idx=1; idx<line_points; idx++) {
-                if ( line_values[idx] < f0_min ) {
-                    idx_min = idx;
-                    f0_min = line_values[idx];
+                // find the smallest value
+                double f0_min = line_values[0];
+                int idx_min = 0;
+                for (int idx=1; idx<line_points; idx++) {
+                    if ( line_values[idx] < f0_min ) {
+                        idx_min = idx;
+                        f0_min = line_values[idx];
+                    }
                 }
-            }
 
-            current_minimum = f0_min;
+                current_minimum = f0_min;
 
-            // update parameters
-            for (int param_idx=0; param_idx<batch_size; param_idx++) {
+                // update parameters
+                for (int param_idx=0; param_idx<batch_size; param_idx++) {
                 solution_guess_tmp_mtx[ param_idx_agents[param_idx] ] -= param_update_mtx[ param_idx ]*(double)idx_min/line_points;
-            } 
+                } 
+
+            }
+            else {
+
+
+                // update parameters
+                for (int param_idx=0; param_idx<batch_size; param_idx++) {
+                    solution_guess_tmp_mtx[ param_idx_agents[param_idx] ] -= param_update_mtx[ param_idx ];
+                } 
+
+                current_minimum = optimization_problem( solution_guess_tmp_mtx );
+
+            }
 
 #ifdef __MPI__   
             MPI_Bcast( solution_guess_tmp_mtx.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
@@ -287,7 +345,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
             // update the current cost function
             //current_minimum = optimization_problem( solution_guess_tmp_mtx );
 
-            if ( iter_idx % 50 == 0 ) {
+            if ( iter_idx % output_periodicity == 0 ) {
                 std::stringstream sstream;
                 sstream << "GRAD_DESCEND_SHIFT_RULE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;

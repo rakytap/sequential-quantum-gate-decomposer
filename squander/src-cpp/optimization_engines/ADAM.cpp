@@ -158,6 +158,18 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
         }
 
 
+       double eta_loc;
+        if ( config.count("eta_adam") > 0 ) {
+             config["eta_adam"].get_property( eta_loc );  
+        }
+        if ( config.count("eta") > 0 ) {
+             config["eta"].get_property( eta_loc );  
+        }
+        else {
+            eta_loc = 1e-3;
+        }
+        optimizer.eta = eta_loc;
+
 
         double f0 = DBL_MAX;
         std::stringstream sstream;

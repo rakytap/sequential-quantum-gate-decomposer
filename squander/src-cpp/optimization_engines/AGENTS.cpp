@@ -99,8 +99,7 @@ void Optimization_Interface::solve_layer_optimization_problem_AGENTS( int num_of
 
 
         
-        current_minimum =   optimization_problem( optimized_parameters_mtx );  
-        number_of_iters = number_of_iters + 1; 
+        current_minimum =   optimization_problem( optimized_parameters_mtx ); 
 
         int max_inner_iterations_loc;
         if ( config.count("max_inner_iterations_agent") > 0 ) {
@@ -808,8 +807,7 @@ exit(-1);
                             
                                 if ( random_num < agent_randomization_rate_loc ) {
                                     randomize_parameters( optimized_parameters_mtx, solution_guess_mtx_agent, current_minimum  );  
-                                    current_minimum_agents[agent_idx] = optimization_problem( solution_guess_mtx_agent );     
-                                    number_of_iters = number_of_iters + 1;                         
+                                    current_minimum_agents[agent_idx] = optimization_problem( solution_guess_mtx_agent );   
                                 }     
 
                        

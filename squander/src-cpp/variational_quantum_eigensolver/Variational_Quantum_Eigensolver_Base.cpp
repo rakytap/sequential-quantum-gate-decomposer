@@ -21,6 +21,7 @@ limitations under the License.
 */
 #include "Variational_Quantum_Eigensolver_Base.h"
 
+tbb::spin_mutex my_mutex;
 
 /**
 @brief A base class to solve VQE problems
@@ -209,7 +210,12 @@ double Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy(Matrix&
 
     tmp.release_data(); // TODO: this is not necessary, beacause it is called with the destructor of the class Matrix
 
-    number_of_iters++;
+    {
+        tbb::spin_mutex::scoped_lock my_lock{my_mutex};
+
+        number_of_iters++;
+        
+    }
 
     return Energy;
 }

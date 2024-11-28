@@ -42,7 +42,7 @@ limitations under the License.
 extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, int lda, int *ipiv, double *b, int ldb); 	
 
 
-
+tbb::spin_mutex my_mutex_optimization_interface;
 
 
 /**
@@ -496,7 +496,7 @@ double Optimization_Interface::optimization_problem( double* parameters ) {
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
-
+std::cout << "ioioio" << std::endl;
     // get the transformed matrix with the gates in the list
     if ( parameters.size() != parameter_num ) {
         std::stringstream sstream;
@@ -556,7 +556,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
 
 
         Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
-        
+             
 #ifdef __DFE__
     if ( get_accelerator_num() > 0 ) {
         int gatesNum, gateSetNum, redundantGateSets;
@@ -565,7 +565,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
         Matrix_real trace_DFE_mtx(gateSetNum, 3);
         
         
-
+        
         number_of_iters = number_of_iters + parameters_vec.size();  
        
         
@@ -629,7 +629,6 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
 
 #endif // __DFE__
 
-
 #ifdef __MPI__
 
 
@@ -653,7 +652,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
             cost_fnc_mtx_loc[idx] = optimization_problem( parameters_vec[idx + mpi_starting_batchIdx] );
         });
 
-        number_of_iters = number_of_iters + mpi_batch_element_num; 
+        //number_of_iters = number_of_iters + mpi_batch_element_num; 
 
 
 
@@ -662,11 +661,11 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
 
 
 #else
+
         tbb::parallel_for( 0, (int)parameters_vec.size(), 1, [&]( int idx) {
             cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
         });
 
-        number_of_iters = number_of_iters + parameters_vec.size(); 
 
 #endif  // __MPI__
        
@@ -697,6 +696,12 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
     Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
 
+    {
+        tbb::spin_mutex::scoped_lock my_lock{my_mutex_optimization_interface};
+
+        number_of_iters++;
+        
+    }
 
     // get the transformed matrix with the gates in the list
     Matrix Umtx_loc = instance->get_Umtx();
