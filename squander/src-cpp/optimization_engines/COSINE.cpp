@@ -175,6 +175,10 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         }        
 
 
+        if ( output_periodicity == 0 ) {
+            std::string err("Output periodicity should be greater than zero");
+            throw err;
+        }   
 
         // vector stroing the lates values of current minimums to identify convergence
         Matrix_real f0_vec(1, 100); 

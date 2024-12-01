@@ -161,7 +161,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
         if ( config.count("eta_grad_descend_shift_rule") > 0 ) {
              config["eta_grad_descend_shift_rule"].get_property( eta_loc ); 
         }
-        if ( config.count("eta") > 0 ) {
+        else if ( config.count("eta") > 0 ) {
              long long tmp;
              config["eta"].get_property( eta_loc );  
         }
@@ -194,14 +194,20 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
              config["output_periodicity_grad_descend_shift_rule"].get_property( value ); 
              output_periodicity = (int) value;
         }
-        if ( config.count("output_periodicity") > 0 ) {
+        else if ( config.count("output_periodicity") > 0 ) {
              long long value = 1;
              config["output_periodicity"].get_property( value ); 
              output_periodicity = (int) value;
         }
         else {
             output_periodicity = 50;
-        }        
+        }     
+
+
+        if ( output_periodicity == 0 ) {
+            std::string err("Output periodicity should be greater than zero");
+            throw err;
+        }   
 
 
         // vector stroing the lates values of current minimums to identify convergence
@@ -221,7 +227,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
         
 
         for (unsigned long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++) {
-        
+
             // build up a vector of indices providing a set from which we can draw random (but unique) choices
             std::vector<int> indices(num_of_parameters);
             indices.reserve(num_of_parameters);
@@ -302,7 +308,6 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
                     parameters_line_search_mtx_vec[ line_idx] = parameters_line_idx;
     
                 }
-           
 
                 Matrix_real line_values = optimization_problem_batched( parameters_line_search_mtx_vec ); 
                    
@@ -321,9 +326,8 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
 
                 // update parameters
                 for (int param_idx=0; param_idx<batch_size; param_idx++) {
-                solution_guess_tmp_mtx[ param_idx_agents[param_idx] ] -= param_update_mtx[ param_idx ]*(double)idx_min/line_points;
+                    solution_guess_tmp_mtx[ param_idx_agents[param_idx] ] -= param_update_mtx[ param_idx ]*(double)idx_min/line_points;
                 } 
-
             }
             else {
 
@@ -349,7 +353,8 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
                 std::stringstream sstream;
                 sstream << "GRAD_DESCEND_SHIFT_RULE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
-                print(sstream, 0);   
+                print(sstream, 0); 
+        
                 if ( export_circuit_2_binary_loc > 0 ) {
                     std::string filename("initial_circuit_iteration.binary");
                     if (project_name != "") { 
@@ -364,12 +369,12 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
 
 
             }
-
+           
             if (current_minimum < optimization_tolerance_loc ) {
                 break;
             }
             
-            
+         
             // test local minimum convergence
             f0_mean = f0_mean + (current_minimum - f0_vec[ f0_idx ])/f0_vec.size();
             f0_vec[ f0_idx ] = current_minimum;
