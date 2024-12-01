@@ -158,7 +158,7 @@ print(' ')
 print('Constructing quantum circuit:')
 print(' ')
 ## Qiskit quantum circuit
-quantum_circuit = cDecompose.get_Quantum_Circuit()
+quantum_circuit = cDecompose.get_Qiskit_Circuit()
 
 print(quantum_circuit)
 
@@ -171,7 +171,7 @@ product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
 phase = np.angle(product_matrix[0,0])
 product_matrix = product_matrix*np.exp(-1j*phase)
     
-product_matrix = np.eye(matrix_size)*2 - product_matrix - product_matrix.conj().T
+product_matrix = np.eye(product_matrix.shape[0])*2 - product_matrix - product_matrix.conj().T
 # the error of the decomposition
 decomposition_error =  (np.real(np.trace(product_matrix)))/2
        

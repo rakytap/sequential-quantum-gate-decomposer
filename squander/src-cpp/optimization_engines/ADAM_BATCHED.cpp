@@ -222,12 +222,10 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM_BATCHED( int 
     
 
                 if ( iter_idx % 5000 == 0 ) {
-
-                    Matrix matrix_new = get_transformed_matrix( optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
-
+                    
                     std::stringstream sstream;
                     sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100;
-                    sstream << "\%, current minimum:" << current_minimum << ", pure cost function:" << get_cost_function(matrix_new, trace_offset) << std::endl;
+                    sstream << "\%, current minimum:" << current_minimum << ", pure cost function:" << optimization_problem( optimized_parameters_mtx ) << std::endl;
                     print(sstream, 0);   
                     std::string filename("initial_circuit_iteration.binary");
                     export_gate_list_to_binary(optimized_parameters_mtx, this, filename, verbose);

@@ -351,6 +351,52 @@ install(TARGETS qgd_RZ_Wrapper LIBRARY
 
 
 
+###################################################################
+
+
+
+add_library( qgd_H_Wrapper MODULE
+    ${EXT_DIR}/qgd_H_Wrapper.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_H_Wrapper qgd)
+
+target_link_libraries (qgd_H_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+
+
+python_extension_module(qgd_H_Wrapper)
+
+# adding compile options
+target_compile_options(qgd_H_Wrapper PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
+)
+
+
+target_include_directories(qgd_H_Wrapper PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
+                            ${EXTRA_INCLUDES})
+
+
+set_target_properties( qgd_H_Wrapper PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_H_Wrapper LIBRARY 
+         DESTINATION squander/gates)
+
+
+
+
 
 
 ###################################################################

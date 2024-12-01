@@ -121,16 +121,16 @@ N_Qubit_Decomposition_custom::start_decomposition(bool prepare_export) {
 
 
 
-/*
-if (optimized_parameters_mtx.size() > 0 ) {
-    std::cout << "cost function of the imported circuit: " << optimization_problem( optimized_parameters_mtx ) << std::endl;
-}   
-std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
-*/
+
+    if (optimized_parameters_mtx.size() > 0 ) {
+        sstream.str("");
+        sstream << "cost function of the imported circuit: " << optimization_problem( optimized_parameters_mtx ) << std::endl;
+        print(sstream, 1);
+    }   
+
 
     // final tuning of the decomposition parameters
     final_optimization();
-
 
     // prepare gates to export
     if (prepare_export) {
@@ -138,7 +138,8 @@ std::cout << "ooooooooooooo " <<  optimized_parameters_mtx.size() << std::endl;
     }
 
     // calculating the final error of the decomposition
-    Matrix matrix_decomposed = get_transformed_matrix(optimized_parameters_mtx, gates.begin(), gates.size(), Umtx );
+    Matrix matrix_decomposed = Umtx.copy();
+    apply_to(optimized_parameters_mtx, matrix_decomposed );
     calc_decomposition_error( matrix_decomposed );
 
     // get the number of gates used in the decomposition

@@ -176,6 +176,9 @@ double arg( const QGD_Complex16& a );
 
 
 
+
+
+
 void conjugate_gradient(Matrix_real A, Matrix_real b, Matrix_real& x0, double tol);
 
 

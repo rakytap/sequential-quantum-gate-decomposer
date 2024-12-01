@@ -60,6 +60,8 @@ struct gates_num {
   int cz;
   /// The number of CH (i.e. controlled Hadamard) gates
   int ch;
+  /// The number of Hadamard gates
+  int h;
   /// The number of X gates
   int x;
   /// The number of Y gates

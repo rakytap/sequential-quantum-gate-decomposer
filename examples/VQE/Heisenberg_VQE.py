@@ -98,7 +98,6 @@ VQE_Heisenberg.Generate_Circuit( layers, inner_blocks)
 # create random initial parameters 
 param_num  = VQE_Heisenberg.get_Parameter_Num()
 print('The number of free parameters is: ', str(param_num) )
-#parameters = np.random.randn( param_num ) *2*np.pi
 
 
 parameters = np.zeros( (param_num,) )
@@ -137,7 +136,7 @@ for iter_idx in range(400):
 
     print('Current VQE energy: ', VQE_energy, ' normalized entropy: ', normalized_entropy)
 
-    np.save( project_name + '.npy', parameters, topology ) 
+    np.save( 'Heisenberg_VQE_data.npy', parameters, topology ) 
     
     initial_state = np.zeros( (1 << qbit_num), dtype=np.complex128 )
     initial_state[0] = 1.0 + 0j        

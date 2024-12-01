@@ -27,6 +27,8 @@ from squander.gates.qgd_SYC import qgd_SYC  as SYC
 # quantum circuit
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 
+# Qiskit IO
+from squander.IO_interfaces import Qiskit_IO
 
 ## NN component (experimental interface)
 from squander.nn.qgd_nn import qgd_nn as NN

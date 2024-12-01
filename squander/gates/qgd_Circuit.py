@@ -28,7 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 import numpy as np
 from os import path
-from .qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
+from squander.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
 
 
 
@@ -121,6 +121,16 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 	# call the C wrapper function
         super(qgd_Circuit, self).add_SYC(target_qbit, control_qbit)
+
+
+#@brief Call to add a Hadamard gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int)
+
+    def add_H( self, target_qbit):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_H(target_qbit)
 
 #@brief Call to add a X gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.

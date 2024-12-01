@@ -35,6 +35,7 @@ from qiskit import execute
 
 from squander import utils
 from squander import N_Qubit_Decomposition_custom
+from squander import Qiskit_IO
 
 
 
@@ -51,6 +52,7 @@ except ModuleNotFoundError:
 def pauli_exponent( alpha=0.6217*np.pi ):
 	# creating Qiskit quantum circuit
 	qc_orig = QuantumCircuit(5)
+	
 	qc_orig.h(1)
 	qc_orig.cx(1,2)
 
@@ -110,7 +112,6 @@ def pauli_exponent( alpha=0.6217*np.pi ):
 	qc_orig.cx(2,4)
 	qc_orig.cx(1,2)
 	qc_orig.h(1)
-
 	return qc_orig
 
 
@@ -138,17 +139,21 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 	
 	filename = 'data/19CNOT.qasm'
 	qc_trial = QuantumCircuit.from_qasm_file( filename )
-	qc_trial = transpile(qc_trial, optimization_level=3, basis_gates=['cz', 'cx', 'u3'], layout_method='sabre')
-	#print(qc_trial)
+	#qc_trial = QuantumCircuit.from_qasm_file( filename )
+	qc_trial = transpile(qc_trial, optimization_level=1, basis_gates=['cz', 'cx', 'u3', 'rz', 'u', 'rx'], layout_method='sabre')
 
 	##### getting the alpha dependent unitary
-	qc_orig = pauli_exponent(alpha )
-	qc_orig = transpile(qc_orig, optimization_level=3, basis_gates=['cx', 'u3'], layout_method='sabre')
+	qc_orig = pauli_exponent( alpha )
+	#qc_orig = transpile(qc_orig, optimization_level=3, basis_gates=['cx', 'u3'], layout_method='sabre')
 	#print('global phase: ', qc_orig.global_phase)
 
-	Umtx_orig = utils.get_unitary_from_qiskit_circuit( qc_orig )
-        
-	iteration_max = 10
+	Umtx_orig  = utils.get_unitary_from_qiskit_circuit( qc_orig )
+	#Umtx_trial = utils.get_unitary_from_qiskit_circuit( qc_trial )
+	
+	#print( np.abs(Umtx_orig @ Umtx_trial.conj().T) )
+	
+	
+	iteration_max = 1
 	
 	for jdx in range(iteration_max):
         
@@ -158,7 +163,7 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 		cDecompose.set_Optimization_Tolerance( 1e-5 )
 
 		# importing the quantum circuit
-		cDecompose.import_Qiskit_Circuit(qc_trial)
+		cDecompose.import_Qiskit_Circuit( qc_trial )
 		
 		# set the number of successive identical blocks in the optimalization of disentanglement of the n-th qubits
 		cDecompose.set_Optimization_Blocks( 200 )
@@ -172,6 +177,9 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 
 		# set verbosity
 		cDecompose.set_Verbose( 4 )
+		
+		# set the cost function to Hilbert-Schmidt test 
+		cDecompose.set_Cost_Function_Variant( 3 ) 
 
 		# starting the decomposition
 		cDecompose.Start_Decomposition()
@@ -179,7 +187,7 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 		# getting the new optimized parameters
 		optimized_parameters_loc = cDecompose.get_Optimized_Parameters()
 
-		qc_final = cDecompose.get_Quantum_Circuit()
+		qc_final = cDecompose.get_Qiskit_Circuit()
 
 		# get the unitary of the final circuit
 		Umtx_recheck = utils.get_unitary_from_qiskit_circuit( qc_final )
@@ -188,14 +196,15 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 		decomposition_error =  get_unitary_distance(Umtx_orig, Umtx_recheck)
 		print('recheck decomposition error: ', decomposition_error)
 
+
 		if decomposition_error < 1e-3:
 			break
 		
 	            
-	assert( decomposition_error < 1e-3 )
 	if decomposition_error < 1e-3:
 		return qc_final, optimized_parameters_loc
 	else:
+		assert(decomposition_error < 1e-3)
 		return None, None
 	
 
@@ -204,6 +213,32 @@ def get_optimized_circuit( alpha, optimizer='BFGS', optimized_parameters=None ):
 class Test_parametric_circuit:
     """This is a test class of the python iterface to the decompsition classes of the QGD package"""
 
+    
+    def test_circuit_import(self):
+
+        
+        qc_trial = pauli_exponent()
+
+
+
+        # get the unitary of the final circuit
+        Umtx_check = utils.get_unitary_from_qiskit_circuit( qc_trial )
+
+        qc_trial = pauli_exponent()
+        Circuit_Squander, parameters = Qiskit_IO.convert_Qiskit_to_Squander( qc_trial )
+
+        cDecompose = N_Qubit_Decomposition_custom( Umtx_check.conj().T )
+
+        cDecompose.set_Gate_Structure(Circuit_Squander)
+
+        cDecompose.set_Cost_Function_Variant( 4 )
+
+        # starting the decomposition
+        cost_function = cDecompose.Optimization_Problem( parameters )
+
+        assert(cost_function < 1e-3)
+
+    
 
     def test_optimizer(self):
 
@@ -213,7 +248,7 @@ class Test_parametric_circuit:
 
         # determine the quantum circuit at parameter value alpha with BFGS2 optimizer
         qc, optimized_parameters = get_optimized_circuit( alpha, optimizer='BFGS2' )
-
+        
         # determine the quantum circuit at parameter value alpha with BFGS optimizer
         qc, optimized_parameters_tmp = get_optimized_circuit( alpha+0.005, optimizer='BFGS', optimized_parameters=optimized_parameters )
 
@@ -222,7 +257,7 @@ class Test_parametric_circuit:
 
         # determine the quantum circuit at parameter value alpha with ADAM optimizer
         qc, optimized_parameters_tmp = get_optimized_circuit( alpha+0.005, optimizer='ADAM', optimized_parameters=optimized_parameters )
-
+        
 
 
 

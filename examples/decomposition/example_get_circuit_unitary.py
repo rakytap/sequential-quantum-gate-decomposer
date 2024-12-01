@@ -29,7 +29,7 @@ import random
 
 
 # The gate stucture created by the adaptive decomposition class reads as:
-# [ || U3, U3, ..., U3, || CRY, U3, U3 || CRY, U3, U3 || CRY, U3, U3 || .... ]
+# [ U3, U3, CRY || U3, U3, CRY || U3, U3, CRY ||  U3, U3, CRY || .... || U3, U3, U3, U3, ... ]
 # The individual blocks are separated by ||. Each U3 gate has 3 free parameters, the CRY gates have 1 free parameter
 # The first qbit_num gates are U3 transformations on each qubit. 
 # In the quantum circuit the operations on the unitary Umtx are performed in the following order:

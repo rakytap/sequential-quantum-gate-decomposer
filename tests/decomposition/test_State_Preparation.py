@@ -118,7 +118,7 @@ class Test_State_Preparation:
 
         # get the decomposing operations
 
-        quantum_circuit = cDecompose.get_Quantum_Circuit()
+        quantum_circuit = cDecompose.get_Qiskit_Circuit()
 
         # print the quantum circuit
 

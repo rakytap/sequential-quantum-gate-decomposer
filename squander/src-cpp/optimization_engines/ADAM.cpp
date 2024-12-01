@@ -205,11 +205,10 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
 
             if ( iter_idx % 5000 == 0 ) {
                 if (cost_fnc != VQE){
-                Matrix matrix_new = get_transformed_matrix( solution_guess_tmp, gates.begin(), gates.size(), Umtx );
-
-                std::stringstream sstream;
-                sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << ", current cost function:" << get_cost_function(matrix_new, trace_offset) << ", sub_iter_idx:" << sub_iter_idx <<std::endl;
-                print(sstream, 0);   
+                
+                    std::stringstream sstream;
+                    sstream << "ADAM: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum << ", current cost function:" << optimization_problem(solution_guess_tmp) << ", sub_iter_idx:" << sub_iter_idx <<std::endl;
+                    print(sstream, 0);   
                 }
                 else{
                     std::stringstream sstream;

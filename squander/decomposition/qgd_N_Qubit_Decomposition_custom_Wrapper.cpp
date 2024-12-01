@@ -517,6 +517,19 @@ get_gate( N_Qubit_Decomposition_custom* decomp, int &idx ) {
 
 
     }
+    else if (gate->get_type() == H_OPERATION) {
+
+        // create gate parameters
+        PyObject* type = Py_BuildValue("s",  "H" );
+        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
+
+        PyDict_SetItemString(py_gate, "type", type );
+        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
+
+        Py_XDECREF(type);
+        Py_XDECREF(target_qbit);
+
+    }    
     else if (gate->get_type() == X_OPERATION) {
 
         // create gate parameters
@@ -1149,6 +1162,190 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Cost_Function_Variant( qgd_N_Qubit_
 
 }
 
+//////////////////////////////////////////////////////
+
+/**
+@brief Wrapper function to evaluate the cost function.
+@return teh value of the cost function
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem( qgd_N_Qubit_Decomposition_custom_Wrapper *self, PyObject *args)
+{
+
+
+    PyObject* parameters_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg )) {
+
+        std::string err( "Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;      
+
+    } 
+
+    // establish memory contiguous arrays for C calculations
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ){
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
+        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err( "Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arg );
+    double f0;
+
+    try {
+        f0 = self->decomp->optimization_problem(parameters_mtx );
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    Py_DECREF(parameters_arg);
+
+
+    return Py_BuildValue("d", f0);
+}
+
+
+/**
+@brief Wrapper function to evaluate the cost function an dthe gradient components.
+@return Unitarty numpy matrix
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem_Grad( qgd_N_Qubit_Decomposition_custom_Wrapper *self, PyObject *args)
+{
+
+
+    PyObject* parameters_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg )) {
+
+        std::string err( "Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;      
+
+    } 
+
+    // establish memory contiguous arrays for C calculations
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ){
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
+        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err( "Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arg );
+    Matrix_real grad_mtx(parameters_mtx.size(), 1);
+
+    try {
+        self->decomp->optimization_problem_grad(parameters_mtx, self->decomp, grad_mtx );
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // convert to numpy array
+    grad_mtx.set_owner(false);
+    PyObject *grad_py = matrix_real_to_numpy( grad_mtx );
+
+    Py_DECREF(parameters_arg);
+
+
+    return grad_py;
+}
+
+/**
+@brief Wrapper function to evaluate the cost function an dthe gradient components.
+@return Unitarty numpy matrix
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem_Combined( qgd_N_Qubit_Decomposition_custom_Wrapper *self, PyObject *args)
+{
+
+
+    PyObject* parameters_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg )) {
+
+        std::string err( "Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;      
+
+    } 
+
+    // establish memory contiguous arrays for C calculations
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ){
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
+        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err( "Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arg );
+    Matrix_real grad_mtx(parameters_mtx.size(), 1);
+    double f0;
+
+    try {
+        self->decomp->optimization_problem_combined(parameters_mtx, &f0, grad_mtx );
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // convert to numpy array
+    grad_mtx.set_owner(false);
+    PyObject *grad_py = matrix_real_to_numpy( grad_mtx );
+
+    Py_DECREF(parameters_arg);
+
+
+    PyObject* p = Py_BuildValue("(dO)", f0, grad_py);
+    Py_DECREF(grad_py);
+    return p;
+}
 
 
 
@@ -1249,6 +1446,15 @@ static PyMethodDef qgd_N_Qubit_Decomposition_custom_Wrapper_methods[] = {
     },
     {"set_Cost_Function_Variant", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_set_Cost_Function_Variant, METH_VARARGS | METH_KEYWORDS,
      "Wrapper method to to set the variant of the cost function. Input argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for HILBERT_SCHMIDT_TEST, 4 for HILBERT_SCHMIDT_TEST_CORRECTION1, 5 for HILBERT_SCHMIDT_TEST_CORRECTION2."
+    },
+    {"Optimization_Problem", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem, METH_VARARGS,
+     "Wrapper function to evaluate the cost function."
+    },
+    {"Optimization_Problem_Grad", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem_Grad, METH_VARARGS,
+     "Wrapper function to evaluate the gradient components."
+    },
+    {"Optimization_Problem_Combined", (PyCFunction) qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem_Combined, METH_VARARGS,
+     "Wrapper function to evaluate the cost function and the gradient components."
     },
     {NULL}  /* Sentinel */
 };
