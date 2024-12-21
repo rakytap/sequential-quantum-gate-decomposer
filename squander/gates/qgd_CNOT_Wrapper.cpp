@@ -155,7 +155,7 @@ qgd_CNOT_Wrapper_get_Matrix( qgd_CNOT_Wrapper *self ) {
 static PyObject *
 qgd_CNOT_Wrapper_apply_to( qgd_CNOT_Wrapper *self, PyObject *args ) {
 
-    PyObject * unitary_arg = NULL;
+    PyArrayObject * unitary_arg = NULL;
 
 
 
@@ -174,10 +174,10 @@ qgd_CNOT_Wrapper_apply_to( qgd_CNOT_Wrapper *self, PyObject *args ) {
         Py_INCREF(unitary_arg);
     }
     else {
-        unitary_arg = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+        unitary_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
     }
 
-   PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+   PyArrayObject* unitary = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
@@ -286,7 +286,7 @@ qgd_CNOT_Wrapper_get_Control_Qbit( qgd_CNOT_Wrapper *self ) {
 static PyObject *
 qgd_CNOT_Wrapper_Extract_Parameters( qgd_CNOT_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
+    PyArrayObject * parameters_arr = NULL;
 
 
     // parsing input arguments
@@ -298,7 +298,7 @@ qgd_CNOT_Wrapper_Extract_Parameters( qgd_CNOT_Wrapper *self, PyObject *args ) {
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
     // get the C++ wrapper around the data

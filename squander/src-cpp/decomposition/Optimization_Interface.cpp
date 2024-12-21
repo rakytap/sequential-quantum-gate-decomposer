@@ -496,7 +496,7 @@ double Optimization_Interface::optimization_problem( double* parameters ) {
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
-std::cout << "ioioio" << std::endl;
+
     // get the transformed matrix with the gates in the list
     if ( parameters.size() != parameter_num ) {
         std::stringstream sstream;

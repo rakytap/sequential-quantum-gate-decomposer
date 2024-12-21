@@ -29,7 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include <Python.h>
 #include "structmember.h"
-#include "X.h"
+#include "H.h"
 #include "numpy_interface.h"
 
 
@@ -41,7 +41,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 typedef struct {
     PyObject_HEAD
     /// Pointer to the C++ class of the X gate
-    X* gate;
+    H* gate;
 } qgd_H_Wrapper;
 
 
@@ -50,10 +50,10 @@ typedef struct {
 @param qbit_num The number of qubits spanning the operation.
 @param target_qbit The 0<=ID<qbit_num of the target qubit.
 */
-X* 
-create_X( int qbit_num, int target_qbit ) {
+H* 
+create_H( int qbit_num, int target_qbit ) {
 
-    return new X( qbit_num, target_qbit );
+    return new H( qbit_num, target_qbit );
 }
 
 
@@ -62,7 +62,7 @@ create_X( int qbit_num, int target_qbit ) {
 @param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 void
-release_X( X*  instance ) {
+release_H( H*  instance ) {
     delete instance;
     return;
 }
@@ -84,7 +84,7 @@ qgd_H_Wrapper_dealloc(qgd_H_Wrapper *self)
 {
 
     // release the X gate
-    release_X( self->gate );
+    release_H( self->gate );
 
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
@@ -126,7 +126,7 @@ qgd_H_Wrapper_init(qgd_H_Wrapper *self, PyObject *args, PyObject *kwds)
         return -1;
 
     if (qbit_num != -1 && target_qbit != -1) {
-        self->gate = create_X( qbit_num, target_qbit );
+        self->gate = create_H( qbit_num, target_qbit );
     }
 
 
@@ -161,7 +161,7 @@ qgd_H_Wrapper_get_Matrix( qgd_H_Wrapper *self ) {
 static PyObject *
 qgd_H_Wrapper_apply_to( qgd_H_Wrapper *self, PyObject *args ) {
 
-    PyObject * unitary_arg = NULL;
+    PyArrayObject * unitary_arg = NULL;
 
 
 
@@ -176,7 +176,7 @@ qgd_H_Wrapper_apply_to( qgd_H_Wrapper *self, PyObject *args ) {
         return NULL;
     }
 
-    PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject* unitary = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
@@ -284,7 +284,7 @@ qgd_H_Wrapper_get_Control_Qbit( qgd_H_Wrapper *self ) {
 static PyObject *
 qgd_H_Wrapper_Extract_Parameters( qgd_H_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
+    PyArrayObject * parameters_arr = NULL;
 
 
     // parsing input arguments
@@ -296,7 +296,7 @@ qgd_H_Wrapper_Extract_Parameters( qgd_H_Wrapper *self, PyObject *args ) {
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
     // get the C++ wrapper around the data
