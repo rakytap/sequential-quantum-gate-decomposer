@@ -66,13 +66,13 @@ PyObject* matrix_int8_to_numpy( matrix_base<int8_t> &mtx );
 /**
 @brief Call to create a PIC matrix representation of a numpy array
 */
-Matrix numpy2matrix(PyObject *arr);
+Matrix numpy2matrix(PyArrayObject *arr);
 
 
 /**
 @brief Call to create a PIC matrix_real representation of a numpy array
 */
-Matrix_real numpy2matrix_real(PyObject *arr);
+Matrix_real numpy2matrix_real(PyArrayObject *arr);
 
 
 

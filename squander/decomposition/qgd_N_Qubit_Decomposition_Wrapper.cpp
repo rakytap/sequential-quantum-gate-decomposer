@@ -54,7 +54,7 @@ typedef struct qgd_Circuit_Wrapper {
 typedef struct qgd_N_Qubit_Decomposition_Wrapper {
     PyObject_HEAD
     /// pointer to the unitary to be decomposed to keep it alive
-    PyObject *Umtx;
+    PyArrayObject *Umtx;
     /// An object to decompose the unitary
     N_Qubit_Decomposition* decomp;
 
@@ -151,7 +151,7 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
     static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"optimize_layer_num", (char*)"initial_guess", NULL};
  
     // initiate variables for input arguments
-    PyObject *Umtx_arg = NULL;
+    PyArrayObject *Umtx_arg = NULL;
     int  qbit_num = -1; 
     bool optimize_layer_num = false;
     PyObject *initial_guess = NULL;
@@ -163,10 +163,10 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
 
     // convert python object array to numpy C API array
     if ( Umtx_arg == NULL ) return -1;
-    self->Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    self->Umtx = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
-    if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
+    if ( !PyArray_IS_C_CONTIGUOUS((PyArrayObject*)self->Umtx) ) {
         std::cout << "Umtx is not memory contiguous" << std::endl;
     }
 

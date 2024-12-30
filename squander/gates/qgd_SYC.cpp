@@ -157,7 +157,7 @@ qgd_SYC_get_Matrix( qgd_SYC *self ) {
 static PyObject *
 qgd_SYC_apply_to( qgd_SYC *self, PyObject *args ) {
 
-    PyObject * unitary_arg = NULL;
+    PyArrayObject * unitary_arg = NULL;
 
 
 
@@ -177,7 +177,7 @@ qgd_SYC_apply_to( qgd_SYC *self, PyObject *args ) {
         Py_INCREF(unitary_arg);
     }
     else {
-        unitary_arg = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+        unitary_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
     }
 
 
@@ -258,7 +258,7 @@ qgd_SYC_get_Control_Qbit( qgd_SYC *self ) {
 static PyObject *
 qgd_SYC_Extract_Parameters( qgd_SYC *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
+    PyArrayObject * parameters_arr = NULL;
 
 
     // parsing input arguments
@@ -270,7 +270,7 @@ qgd_SYC_Extract_Parameters( qgd_SYC *self, PyObject *args ) {
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
     // get the C++ wrapper around the data

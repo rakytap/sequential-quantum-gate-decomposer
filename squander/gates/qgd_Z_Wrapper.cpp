@@ -156,7 +156,7 @@ qgd_Z_Wrapper_get_Matrix( qgd_Z_Wrapper *self ) {
 static PyObject *
 qgd_Z_Wrapper_apply_to( qgd_Z_Wrapper *self, PyObject *args ) {
 
-    PyObject * unitary_arg = NULL;
+    PyArrayObject * unitary_arg = NULL;
 
 
     // parsing input arguments
@@ -170,7 +170,7 @@ qgd_Z_Wrapper_apply_to( qgd_Z_Wrapper *self, PyObject *args ) {
         return NULL;
     }
 
-    PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject* unitary = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
@@ -283,7 +283,7 @@ qgd_Z_Wrapper_get_Control_Qbit( qgd_Z_Wrapper *self ) {
 static PyObject *
 qgd_Z_Wrapper_Extract_Parameters( qgd_Z_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
+    PyArrayObject * parameters_arr = NULL;
 
 
     // parsing input arguments
@@ -295,7 +295,7 @@ qgd_Z_Wrapper_Extract_Parameters( qgd_Z_Wrapper *self, PyObject *args ) {
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
     // get the C++ wrapper around the data

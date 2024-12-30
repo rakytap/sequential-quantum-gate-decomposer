@@ -54,7 +54,7 @@ typedef struct qgd_Circuit_Wrapper {
 typedef struct qgd_N_Qubit_Decomposition_adaptive_Wrapper {
     PyObject_HEAD
     /// pointer to the unitary to be decomposed to keep it alive
-    PyObject *Umtx;
+    PyArrayObject* Umtx;
     /// An object to decompose the unitary
     N_Qubit_Decomposition_adaptive* decomp;
     /// An object to decompose the unitary
@@ -160,7 +160,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
     static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"level_limit_min", (char*)"method", (char*)"topology", (char*)"config", (char*)"accelerator_num", NULL};
  
     // initiate variables for input arguments
-    PyObject *Umtx_arg = NULL;
+    PyArrayObject *Umtx_arg = NULL;
     PyObject *config_arg = NULL;
     int  qbit_num = -1; 
     int level_limit = 0;
@@ -175,7 +175,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_init(qgd_N_Qubit_Decomposition_adapti
 
     // convert python object array to numpy C API array
     if ( Umtx_arg == NULL ) return -1;
-    self->Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    self->Umtx = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*) Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
@@ -913,7 +913,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Num_of_Iters( qgd_N_Qubit_Decompo
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimized_Parameters( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
+    PyArrayObject* parameters_arr = NULL;
 
 
     // parsing input arguments
@@ -925,7 +925,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Optimized_Parameters( qgd_N_Qubit
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
 
@@ -1531,7 +1531,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem( qgd_N_Qubit_Dec
 {
 
 
-    PyObject* parameters_arg = NULL;
+    PyArrayObject* parameters_arg = NULL;
 
 
     // parsing input arguments
@@ -1548,7 +1548,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem( qgd_N_Qubit_Dec
         Py_INCREF(parameters_arg);
     }
     else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
-        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
     }
     else {
         std::string err( "Parameters should be should be real (given in float64 format)");
@@ -1589,7 +1589,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Grad( qgd_N_Qubi
 {
 
 
-    PyObject* parameters_arg = NULL;
+    PyArrayObject* parameters_arg = NULL;
 
 
     // parsing input arguments
@@ -1606,7 +1606,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Grad( qgd_N_Qubi
         Py_INCREF(parameters_arg);
     }
     else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
-        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
     }
     else {
         std::string err( "Parameters should be should be real (given in float64 format)");
@@ -1650,7 +1650,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined( qgd_N_
 {
 
 
-    PyObject* parameters_arg = NULL;
+    PyArrayObject* parameters_arg = NULL;
 
 
     // parsing input arguments
@@ -1667,7 +1667,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined( qgd_N_
         Py_INCREF(parameters_arg);
     }
     else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
-        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
     }
     else {
         std::string err( "Parameters should be should be real (given in float64 format)");
@@ -1714,7 +1714,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined_Unitary
 {
 
 
-    PyObject* parameters_arg = NULL;
+    PyArrayObject* parameters_arg = NULL;
 
 
     // parsing input arguments
@@ -1731,7 +1731,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Combined_Unitary
         Py_INCREF(parameters_arg);
     }
     else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
-        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
     }
     else {
         std::string err( "Parameters should be should be real (given in float64 format)");
@@ -1783,7 +1783,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Batch( qgd_N_Qub
 {
 
 
-    PyObject* parameters_arg = NULL;
+    PyArrayObject* parameters_arg = NULL;
 
 
     // parsing input arguments
@@ -1800,7 +1800,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_Optimization_Problem_Batch( qgd_N_Qub
         Py_INCREF(parameters_arg);
     }
     else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
-        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
     }
     else {
         std::string err( "Parameters should be should be real (given in float64 format)");
@@ -1848,7 +1848,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary( qgd_N_Qubit_Decompositio
            self->Umtx = NULL;
        }
 
-       PyObject *Umtx_arg = NULL;
+       PyArrayObject *Umtx_arg = NULL;
        //Parse arguments 
        if (!PyArg_ParseTuple(args, "|O", &Umtx_arg )) return Py_BuildValue("i", -1);
 	   
@@ -1858,7 +1858,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary( qgd_N_Qubit_Decompositio
            return NULL;
        }
 	
-	self->Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+	self->Umtx = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
 	// test C-style contiguous memory allocation of the array
 	if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
@@ -1868,9 +1868,9 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Unitary( qgd_N_Qubit_Decompositio
 
 	// create QGD version of the Umtx
 	Matrix Umtx_mtx = numpy2matrix(self->Umtx);
-        self->decomp->set_unitary(Umtx_mtx);
+    self->decomp->set_unitary(Umtx_mtx);
 
-        return Py_BuildValue("i", 0);
+    return Py_BuildValue("i", 0);
 }
 
 /**
@@ -1971,7 +1971,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Layer_To_Imported_Gate_Structure(
 static PyObject *
 qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Matrix( qgd_N_Qubit_Decomposition_adaptive_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
+    PyArrayObject* parameters_arr = NULL;
 
 
     // parsing input arguments
@@ -1983,7 +1983,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Matrix( qgd_N_Qubit_Decomposition
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
 
@@ -2298,8 +2298,8 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Second_Renyi_Entropy( qgd_N_Qubit
 {
 
 
-    PyObject * parameters_arr = NULL;
-    PyObject * input_state_arg = NULL;
+    PyArrayObject * parameters_arr = NULL;
+    PyArrayObject * input_state_arg = NULL;
     PyObject * qubit_list_arg = NULL;
 
 
@@ -2312,7 +2312,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Second_Renyi_Entropy( qgd_N_Qubit
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
     // get the C++ wrapper around the data
@@ -2325,7 +2325,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_get_Second_Renyi_Entropy( qgd_N_Qubit
         return NULL;
     }
 
-    PyObject* input_state = PyArray_FROM_OTF(input_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject* input_state = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)input_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(input_state) ) {

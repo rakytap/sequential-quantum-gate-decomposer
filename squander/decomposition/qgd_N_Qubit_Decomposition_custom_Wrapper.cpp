@@ -54,7 +54,7 @@ typedef struct qgd_Circuit_Wrapper {
 typedef struct qgd_N_Qubit_Decomposition_custom_Wrapper {
     PyObject_HEAD
     /// pointer to the unitary to be decomposed to keep it alive
-    PyObject *Umtx;
+    PyArrayObject *Umtx;
     /// An object to decompose the unitary
     N_Qubit_Decomposition_custom* decomp;
 
@@ -163,7 +163,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_init(qgd_N_Qubit_Decomposition_custom_W
 
     // convert python object array to numpy C API array
     if ( Umtx_arg == NULL ) return -1;
-    self->Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    self->Umtx = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
@@ -698,7 +698,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_get_Optimized_Parameters( qgd_N_Qubit_D
 static PyObject *
 qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimized_Parameters( qgd_N_Qubit_Decomposition_custom_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
+    PyArrayObject * parameters_arr = NULL;
 
 
     // parsing input arguments
@@ -710,7 +710,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_set_Optimized_Parameters( qgd_N_Qubit_D
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
 
@@ -1197,7 +1197,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem( qgd_N_Qubit_Decom
 {
 
 
-    PyObject* parameters_arg = NULL;
+    PyArrayObject* parameters_arg = NULL;
 
 
     // parsing input arguments
@@ -1214,7 +1214,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem( qgd_N_Qubit_Decom
         Py_INCREF(parameters_arg);
     }
     else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
-        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
     }
     else {
         std::string err( "Parameters should be should be real (given in float64 format)");
@@ -1255,7 +1255,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem_Grad( qgd_N_Qubit_
 {
 
 
-    PyObject* parameters_arg = NULL;
+    PyArrayObject* parameters_arg = NULL;
 
 
     // parsing input arguments
@@ -1272,7 +1272,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem_Grad( qgd_N_Qubit_
         Py_INCREF(parameters_arg);
     }
     else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
-        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
     }
     else {
         std::string err( "Parameters should be should be real (given in float64 format)");
@@ -1316,7 +1316,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem_Combined( qgd_N_Qu
 {
 
 
-    PyObject* parameters_arg = NULL;
+    PyArrayObject* parameters_arg = NULL;
 
 
     // parsing input arguments
@@ -1333,7 +1333,7 @@ qgd_N_Qubit_Decomposition_custom_Wrapper_Optimization_Problem_Combined( qgd_N_Qu
         Py_INCREF(parameters_arg);
     }
     else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
-        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
     }
     else {
         std::string err( "Parameters should be should be real (given in float64 format)");

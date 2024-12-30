@@ -134,9 +134,9 @@ PyObject* matrix_int8_to_numpy( matrix_base<int8_t> &mtx ) {
 @brief Call to create a matrix representation of a numpy array
 */
 Matrix
-numpy2matrix(PyObject *arr) {
+numpy2matrix(PyArrayObject* arr) {
 
-    if ( arr == Py_None ) {
+    if ( (PyObject*)arr == Py_None ) {
         return Matrix(0,0);
     }
 
@@ -176,10 +176,10 @@ numpy2matrix(PyObject *arr) {
 @brief Call to create a PIC matrix_real representation of a numpy array
 */
 Matrix_real
-numpy2matrix_real(PyObject *arr) {
+numpy2matrix_real(PyArrayObject* arr) {
 
 
-    if ( arr == Py_None ) {
+    if ( (PyObject*)arr == Py_None ) {
         return Matrix_real(0,0);
     }
 

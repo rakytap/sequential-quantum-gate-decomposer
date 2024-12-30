@@ -942,7 +942,7 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *ar
 static PyObject *
 qgd_Circuit_Wrapper_get_Matrix( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
+    PyArrayObject * parameters_arr = NULL;
 
 
     // parsing input arguments
@@ -954,7 +954,7 @@ qgd_Circuit_Wrapper_get_Matrix( qgd_Circuit_Wrapper *self, PyObject *args ) {
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
 
@@ -995,8 +995,8 @@ qgd_Circuit_Wrapper_get_Parameter_Num( qgd_Circuit_Wrapper *self ) {
 static PyObject *
 qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
-    PyObject * unitary_arg = NULL;
+    PyArrayObject * parameters_arr = NULL;
+    PyArrayObject * unitary_arg = NULL;
 
 
     // parsing input arguments
@@ -1008,7 +1008,7 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
     // get the C++ wrapper around the data
@@ -1021,7 +1021,7 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
         return NULL;
     }
 
-    PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject* unitary = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
@@ -1056,8 +1056,8 @@ qgd_Circuit_Wrapper_get_Second_Renyi_Entropy( qgd_Circuit_Wrapper *self, PyObjec
 {
 
 
-    PyObject * parameters_arr = NULL;
-    PyObject * input_state_arg = NULL;
+    PyArrayObject * parameters_arr = NULL;
+    PyArrayObject * input_state_arg = NULL;
     PyObject * qubit_list_arg = NULL;
 
 
@@ -1070,7 +1070,7 @@ qgd_Circuit_Wrapper_get_Second_Renyi_Entropy( qgd_Circuit_Wrapper *self, PyObjec
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
     // get the C++ wrapper around the data
@@ -1083,7 +1083,7 @@ qgd_Circuit_Wrapper_get_Second_Renyi_Entropy( qgd_Circuit_Wrapper *self, PyObjec
         return NULL;
     }
 
-    PyObject* input_state = PyArray_FROM_OTF(input_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject* input_state = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)input_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(input_state) ) {
@@ -1575,7 +1575,7 @@ qgd_Circuit_Wrapper_get_gates( qgd_Circuit_Wrapper *self ) {
 static PyObject *
 qgd_Circuit_Wrapper_Extract_Parameters( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
+    PyArrayObject * parameters_arr = NULL;
 
 
     // parsing input arguments
@@ -1587,7 +1587,7 @@ qgd_Circuit_Wrapper_Extract_Parameters( qgd_Circuit_Wrapper *self, PyObject *arg
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
     // get the C++ wrapper around the data
