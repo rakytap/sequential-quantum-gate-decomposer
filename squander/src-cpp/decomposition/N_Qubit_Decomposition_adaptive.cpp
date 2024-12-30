@@ -1331,7 +1331,6 @@ N_Qubit_Decomposition_adaptive::replace_trivial_CRY_gates( Gates_block* gate_str
 
 
                     if ( gate_tmp->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) > 0.999 && std::abs(std::cos(parameter)) < 1e-3) {
-std::cout << "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp " << std::endl;
 
                         // convert to CZ gate
                         int target_qbit = gate_tmp->get_target_qbit();
@@ -1392,7 +1391,6 @@ std::cout << "pppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppppp
                     }
 
                     else if ( gate_tmp->get_type() == ADAPTIVE_OPERATION &&  std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3  ) {
-std::cout << "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt " << std::endl;
                         // release trivial gate  
 
                         layer->release_gate( jdx );
@@ -1406,7 +1404,7 @@ std::cout << "ttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttttt " 
                     }
 
                     else if ( gate_tmp->get_type() == ADAPTIVE_OPERATION ) {
-std::cout << "wwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwwww " << std::endl;
+                    
                         // controlled Y rotation decomposed into 2 CNOT gates
                         int target_qbit = gate_tmp->get_target_qbit();
                         int control_qbit = gate_tmp->get_control_qbit();

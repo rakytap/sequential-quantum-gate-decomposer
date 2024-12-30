@@ -177,27 +177,90 @@ void Variational_Quantum_Eigensolver_Base::start_optimization(){
 
 
 
+/**
+@brief Call to evaluate the expectation value of the energy  <State_left| H | State_right>.
+@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
+@param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
+@return The calculated expectation value
+*/
+QGD_Complex16 Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy( Matrix& State_left, Matrix& State_right ) {
+
+
+    if ( State_left.rows != State_right.rows || Hamiltonian.rows != State_right.rows) {
+        std::string error("Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy: States on the right and left should be of the same dimension as the Hamiltonian");
+        throw error;
+    }
+
+    Matrix tmp = mult(Hamiltonian, State_right);
+    QGD_Complex16 Energy;
+    Energy.real = 0.0;
+    Energy.imag = 0.0;    
+
+    
+    tbb::combinable<double> priv_partial_energy_real{[](){return 0.0;}};
+    tbb::combinable<double> priv_partial_energy_imag{[](){return 0.0;}};    
+
+    tbb::parallel_for( tbb::blocked_range<int>(0, State_left.rows, 1024), [&](tbb::blocked_range<int> r) { 
+
+        double& energy_local_real = priv_partial_energy_real.local();
+        double& energy_local_imag = priv_partial_energy_imag.local();        
+
+        for (int idx=r.begin(); idx<r.end(); idx++){
+	    energy_local_real += State_left[idx].real*tmp[idx].real + State_left[idx].imag*tmp[idx].imag;
+	    energy_local_imag += State_left[idx].real*tmp[idx].imag - State_left[idx].imag*tmp[idx].real;	    
+        }
+
+    });
+
+    // calculate the final cost function
+    priv_partial_energy_real.combine_each([&Energy](double a) {
+        Energy.real = Energy.real + a;
+    });
+    
+    priv_partial_energy_imag.combine_each([&Energy](double a) {
+        Energy.imag = Energy.imag + a;
+    });    
+ 
+
+    tmp.release_data(); // TODO: this is not necessary, beacause it is called with the destructor of the class Matrix
+
+    {
+        tbb::spin_mutex::scoped_lock my_lock{my_mutex};
+
+        number_of_iters++;
+        
+    }
+
+    return Energy;
+}
 
 
 /**
-@brief Call to evaluate the expectation value of the energy.
-@param State The state for which the expectation value is evaluated
+@brief Call to evaluate the expectation value of the energy  <State_left| H | State_right>. Calculates only the real part of the expectation value.
+@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
+@param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
 @return The calculated expectation value
 */
-double Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy(Matrix& State) {
+double Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy_real( Matrix& State_left, Matrix& State_right ) {
 
-    Matrix tmp = mult(Hamiltonian, State);
+
+    if ( State_left.rows != State_right.rows || Hamiltonian.rows != State_right.rows) {
+        std::string error("Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy_real: States on the right and left should be of the same dimension as the Hamiltonian");
+        throw error;
+    }
+
+    Matrix tmp = mult(Hamiltonian, State_right);
     double Energy = 0.0;
 
     
     tbb::combinable<double> priv_partial_energy{[](){return 0.0;}};
 
-    tbb::parallel_for( tbb::blocked_range<int>(0, State.rows, 1024), [&](tbb::blocked_range<int> r) { 
+    tbb::parallel_for( tbb::blocked_range<int>(0, State_left.rows, 1024), [&](tbb::blocked_range<int> r) { 
 
         double& energy_local = priv_partial_energy.local();
 
         for (int idx=r.begin(); idx<r.end(); idx++){
-	    energy_local += State[idx].real*tmp[idx].real + State[idx].imag*tmp[idx].imag;
+	    energy_local += State_left[idx].real*tmp[idx].real + State_left[idx].imag*tmp[idx].imag;
         }
 
     });
@@ -231,14 +294,14 @@ double Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy(Matrix&
 */
 double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Matrix_real parameters, void* void_instance){
 
-    double Energy=0.;
+    double Energy=0.0;
 
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
 
     Matrix State = instance->initial_state.copy();
 
     instance->apply_to(parameters, State);
-    Energy = instance->Expectation_value_of_energy(State);
+    Energy = instance->Expectation_value_of_energy_real(State, State);
 
     return Energy;
 }
@@ -262,7 +325,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 	
     //State.print_matrix();
 	
-    double Energy = Expectation_value_of_energy(State);
+    double Energy = Expectation_value_of_energy_real(State, State);
 	
     return Energy;
 }
@@ -292,10 +355,14 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
 
     // vector containing gradients of the transformed matrix
     std::vector<Matrix> State_deriv;
+    Matrix State;
 
     tbb::parallel_invoke(
         [&]{
-            *f0 = instance->optimization_problem_non_static(parameters, reinterpret_cast<void*>(instance));
+            State = instance->initial_state.copy();
+            instance->apply_to(parameters, State);
+            *f0 = instance->Expectation_value_of_energy_real(State, State);
+            
         },
         [&]{
             Matrix State_loc = instance->initial_state.copy();
@@ -306,11 +373,28 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
 
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
-            grad[idx] = instance->Expectation_value_of_energy(State_deriv[idx]);
+            grad[idx] = 2*instance->Expectation_value_of_energy_real(State_deriv[idx], State);
         }
     });
+    
+    /*
+    double delta = 0.0000001;
+    
+    tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,1), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+            Matrix_real param_tmp = parameters.copy();
+            param_tmp[idx] += delta;
+            
+            Matrix State = instance->initial_state.copy();
+            instance->apply_to(param_tmp, State);
+            double f_loc = instance->Expectation_value_of_energy_real(State, State);
+            
+            
+            grad[idx] = (f_loc-*f0)/delta;
+        }
+    });    
 
-
+*/
     return;
 }
 

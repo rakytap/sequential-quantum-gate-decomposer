@@ -430,12 +430,14 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
     }
 
 
+    bool deriv = true;
+
 
     if (theta) {
 
         Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2+M_PIOver2, Phi, Lambda);
         Matrix res_mtx = input.copy();
-        apply_kernel_to( u3_1qbit, res_mtx );
+        apply_kernel_to( u3_1qbit, res_mtx, deriv );
         ret.push_back(res_mtx);
 
     }
@@ -448,7 +450,7 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
         memset(u3_1qbit.get_data(), 0.0, 2*sizeof(QGD_Complex16) );
 
         Matrix res_mtx = input.copy();
-        apply_kernel_to( u3_1qbit, res_mtx );
+        apply_kernel_to( u3_1qbit, res_mtx, deriv );
         ret.push_back(res_mtx);
 
     }
@@ -462,7 +464,7 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
         memset(u3_1qbit.get_data()+2, 0.0, sizeof(QGD_Complex16) );
 
         Matrix res_mtx = input.copy();
-        apply_kernel_to( u3_1qbit, res_mtx );
+        apply_kernel_to( u3_1qbit, res_mtx, deriv );
         ret.push_back(res_mtx);
 
     }

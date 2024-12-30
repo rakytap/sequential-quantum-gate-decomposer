@@ -207,19 +207,15 @@ RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
         throw err;
     }
 
-    double Phi_over_2 = parameters[0] + M_PI/2;
-
-    
-
-    // get the U3 gate of one qubit
-    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
-    Matrix u3_1qbit = calc_one_qubit_u3( Phi_over_2 );
-
-    Matrix&& res_mtx = input.copy();
-    apply_kernel_to( u3_1qbit, res_mtx );
-
     std::vector<Matrix> ret;
+
+    Matrix_real parameters_tmp(1,1);
+
+    parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
+    Matrix res_mtx = input.copy();
+    apply_to(parameters_tmp, res_mtx);
     ret.push_back(res_mtx);
+    
 
 
     return ret;

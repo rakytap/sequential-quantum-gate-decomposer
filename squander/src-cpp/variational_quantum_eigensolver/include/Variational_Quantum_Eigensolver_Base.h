@@ -101,11 +101,22 @@ Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num
 virtual ~Variational_Quantum_Eigensolver_Base();
 
 /**
-@brief Call to evaluate the expectation value of the energy.
-@param State The state for which the expectation value is evaluated
+@brief Call to evaluate the expectation value of the energy  <State_left| H | State_right>.
+@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
+@param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
 @return The calculated expectation value
 */
-double Expectation_value_of_energy(Matrix& State);
+QGD_Complex16 Expectation_value_of_energy(Matrix& State_left, Matrix& State_right);
+
+
+/**
+@brief Call to evaluate the expectation value of the energy  <State_left| H | State_right>. Calculates only the real part of the expectation value.
+@param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
+@param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
+@return The calculated expectation value
+*/
+double Expectation_value_of_energy_real(Matrix& State_left, Matrix& State_right);
+
 
 
 /**

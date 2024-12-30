@@ -208,7 +208,7 @@ RY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
     Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx, 0.5);
+    apply_to(parameters_tmp, res_mtx);
     ret.push_back(res_mtx);
 
 

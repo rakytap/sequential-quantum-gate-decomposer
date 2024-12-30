@@ -148,7 +148,6 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
              config["optimization_tolerance_grad_descend_shift_rule"].get_property( optimization_tolerance_loc );  
         }
         else if ( config.count("optimization_tolerance") > 0 ) {
-             double value;
              config["optimization_tolerance"].get_property( optimization_tolerance_loc );
         }
         else {
@@ -266,23 +265,25 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
                 solution_guess_mtx_idx[ param_idx_agents[idx] ] -= M_PI_half;
             }   
              
-            Matrix_real f0_shifted_pi_agents = optimization_problem_batched( parameters_mtx_vec );
+            Matrix_real f0_shifted_mpi2_agents = optimization_problem_batched( parameters_mtx_vec );
+            
             
             for( int idx=0; idx<batch_size; idx++ ) {
      
-                double f0_shifted_pi         = f0_shifted_pi_agents[idx];
+                double f0_shifted_mpi2       = f0_shifted_mpi2_agents[idx];
                 double f0_shifted_pi2        = f0_shifted_pi2_agents[idx];     
             
 
 
 
-                double grad_component = (f0_shifted_pi2 - f0_shifted_pi);
-//std::cout << grad_component << std::endl;
+                double grad_component = (f0_shifted_pi2 - f0_shifted_mpi2);
+                             
+
 
                                    
                 param_update_mtx[ idx ] = grad_component * eta_loc;
 
-                //revert the changed parameters
+                //revert the shifted parameters
                 Matrix_real& solution_guess_mtx_idx             = parameters_mtx_vec[idx];  
                 solution_guess_mtx_idx[ param_idx_agents[idx] ] = solution_guess_tmp_mtx[ param_idx_agents[idx] ];  	
 
@@ -366,8 +367,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp_mtx.get_data(), num_of_parameters*sizeof(double) );
 
                 export_current_cost_fnc(current_minimum);
-
-
+if ( iter_idx > 0 ) exit(1);
             }
            
             if (current_minimum < optimization_tolerance_loc ) {
