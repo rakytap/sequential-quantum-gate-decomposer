@@ -28,6 +28,10 @@ limitations under the License.
 #include "Bayes_Opt.h"
 #include "Powells_method.h"
 
+#ifdef __DFE__
+#include "common_DFE.h"
+#endif
+
 /// @brief Type definition of the fifferent types of the cost function
 typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
     HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2,
@@ -503,7 +507,68 @@ void upload_Umtx_to_DFE();
 */
 int get_accelerator_num();
 
-
+#ifdef __DFE__
+virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 )
+{
+    if (ctz(input.rows) == 17) {
+        std::vector<int> target_qbit;
+        std::vector<int> control_qbit;
+        std::vector<Matrix> u3_qbit;
+        target_qbit.reserve(gates.size());
+        control_qbit.reserve(gates.size());
+        double* parameters = parameters_mtx.get_data();
+        for( int idx=0; idx<gates.size(); idx++) {
+            Gate* operation = gates[idx];
+            parameters = parameters + operation->get_parameter_num();
+            Matrix_real params_mtx(parameters, 1, operation->get_parameter_num());
+            switch (operation->get_type()) {
+            case CNOT_OPERATION: case CZ_OPERATION:
+            case CH_OPERATION: {
+                CNOT* cnot_operation = static_cast<CNOT*>(operation);
+                u3_qbit.push_back(cnot_operation->get_matrix(0));
+                break;    
+            }
+            case SYC_OPERATION: {
+                SYC* syc_operation = static_cast<SYC*>(operation);
+                u3_qbit.push_back(syc_operation->get_matrix(0));
+                break;    
+            }
+            case H_OPERATION:
+            case X_OPERATION: case Y_OPERATION:
+            case Z_OPERATION: case SX_OPERATION:                
+            case U3_OPERATION: case RX_OPERATION: case RY_OPERATION:
+            case CRY_OPERATION: case RZ_OPERATION: case RZ_P_OPERATION:
+            case ADAPTIVE_OPERATION: {
+                U3* u3_operation = static_cast<U3*>(operation);
+                u3_qbit.push_back(u3_operation->get_matrix(params_mtx));
+                break;    
+            }
+            case UN_OPERATION: {
+                UN* un_operation = static_cast<UN*>(operation);
+                u3_qbit.push_back(un_operation->get_matrix(params_mtx, 0));
+                break;
+            }
+            case ON_OPERATION: {
+                ON* on_operation = static_cast<ON*>(operation);
+                u3_qbit.push_back(on_operation->get_matrix(params_mtx, 0));
+                break;
+            }
+            //case BLOCK_OPERATION:
+            //case COMPOSITE_OPERATION:
+            //case GENERAL_OPERATION:
+            default:
+                std::string err("Optimization_Interface::apply_to: unimplemented gate"); 
+                throw err;
+            }
+            target_qbit.push_back(operation->get_target_qbit());
+            control_qbit.push_back(operation->get_control_qbit());
+        }
+        const int device_num = 0;
+        apply_to_groq_sv(device_num, u3_qbit, input, target_qbit, control_qbit);
+    }
+    return Decomposition_Base::apply_to(parameters_mtx, input, parallel);
+}
+#endif
 
 #endif
 

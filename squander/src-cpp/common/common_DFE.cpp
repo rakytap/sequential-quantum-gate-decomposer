@@ -51,6 +51,13 @@ int (*load2LMEM_dll)(QGD_Complex16* data, size_t rows, size_t cols) = NULL;
 void (*releive_DFE_dll)() = NULL;
 int (*initialize_DFE_dll)( int accelerator_num ) = NULL;
 int (*get_chained_gates_num_dll)() = NULL;
+
+size_t (*get_accelerator_avail_num_sv_dll)() = NULL;
+size_t (*get_accelerator_free_num_sv_dll)() = NULL;
+int (*calcsvKernelGroq_dll)(int num_gates, float* gates, int* target_qubits, int* control_qubits, float* result, int device_num) = NULL;
+int (*load_sv_dll)(float* data, size_t num_qubits, size_t device_num) = NULL;
+void (*releive_groq_sv_dll)() = NULL;
+int (*initialize_groq_sv_dll)( int accelerator_num ) = NULL;
 }
 
 // The ID of the class initializing the DFE lib
@@ -216,4 +223,88 @@ int get_chained_gates_num() {
 
 }
 
+
+// pointer to the dynamically loaded groq library
+void* handle_sv = NULL;
+
+void unload_groq_sv_lib()
+{
+    if (handle_sv) {
+        releive_groq_sv_dll();
+        dlclose(handle_sv);
+        handle_sv = NULL;
+    }
+}
+
+int init_groq_sv_lib( const int accelerator_num )  {  
+    
+    unload_groq_sv_lib();
+
+
+    std::string lib_name     = DFE_LIB_SV;
+
+    // dynamic-loading the Groq calculator from shared library
+    handle_sv = dlopen(lib_name.c_str(), RTLD_NOW); //"MAXELEROSDIR"
+    if (handle == NULL) {
+        std::string err("init_groq_lib: failed to load library " + lib_name);
+        throw err;
+    } 
+    else {
+        get_accelerator_avail_num_sv_dll = (size_t (*)())dlsym(handle_sv, "get_accelerator_avail_num_sv");
+        get_accelerator_free_num_sv_dll  = (size_t (*)())dlsym(handle_sv, "get_accelerator_free_num_sv");
+        calcsvKernelGroq_dll          = (int (*)(int, float*, int*, int*, float*, int))dlsym(handle_sv, "calcsvKernelGroq");
+        load_sv_dll                 = (int (*)(float*, size_t, size_t))dlsym(handle_sv, "load_sv");
+        releive_groq_sv_dll               = (void (*)())dlsym(handle_sv, "releive_groq_sv");
+        initialize_groq_sv_dll            = (int (*)(int))dlsym(handle_sv, "initialize_groq_sv");
+
+        if (initialize_groq_sv_dll(accelerator_num)) return 0;
+
+    }
+    return 1;
+
+}
+
+//https://graphics.stanford.edu/~seander/bithacks.html#ZerosOnRightParallel
+unsigned int ctz(unsigned int v) { //can use consecutive trailing zero bits if and only if v is exact power of 2
+    unsigned int c = 32; // c will be the number of zero bits on the right
+    v &= -signed(v);
+    if (v) c--;
+    if (v & 0x0000FFFF) c -= 16;
+    if (v & 0x00FF00FF) c -= 8;
+    if (v & 0x0F0F0F0F) c -= 4;
+    if (v & 0x33333333) c -= 2;
+    if (v & 0x55555555) c -= 1;
+    return c;
+}
+
+void apply_to_groq_sv(int device_num, std::vector<Matrix>& u3_qbit, Matrix& input, std::vector<int>& target_qbit, std::vector<int>& control_qbit) {
+    int alloc_dfes = 2;
+    if (handle_sv == NULL && init_groq_sv_lib(alloc_dfes))
+        throw std::string("Could not load and initialize DFE library");
+    std::vector<float> inout;
+    inout.reserve(input.size());
+    for (size_t i = 0; i < input.rows; i++) {
+        for (size_t j = 0; j < input.cols; j++) {
+            inout.push_back(input.data[i*input.stride+j].real);
+            inout.push_back(input.data[i*input.stride+j].imag);
+        }
+    }
+    std::vector<float> gateMatrices;
+    for (const Matrix& m : u3_qbit) {
+        for (size_t i = 0; i < m.rows; i++) {
+            for (size_t j = 0; j < m.rows; j++) {
+                gateMatrices.push_back(m.data[i*m.stride+j].real);
+                gateMatrices.push_back(m.data[i*m.stride+j].imag);
+            }
+        }
+    }
+    if (load_sv_dll(inout.data(), ctz(input.rows), device_num)) throw std::string("Error loading state vector to groq");
+    if (calcsvKernelGroq_dll(u3_qbit.size(), gateMatrices.data(), target_qbit.data(), control_qbit.data(), inout.data(), device_num)) throw std::string("Error running gate kernels on groq");
+    for (size_t i = 0; i < input.rows; i++) {
+        for (size_t j = 0; j < input.cols; j++) {
+            input.data[i*input.stride+j].real = inout[i*input.rows+j];
+            input.data[i*input.stride+j].imag = inout[i*input.rows+j];
+        }
+    }
+}
 
