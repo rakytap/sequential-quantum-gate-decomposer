@@ -194,7 +194,20 @@ Optimization_Interface::~Optimization_Interface() {
 @brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1.
 @param current_minimum The current minimum (to avoid calculating it again
 */
-void Optimization_Interface::export_current_cost_fnc(double current_minimum){
+void Optimization_Interface::export_current_cost_fnc(double current_minimum ){
+
+    export_current_cost_fnc( current_minimum, optimized_parameters_mtx);
+    
+}
+
+
+
+/**
+@brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1.
+@param current_minimum The current minimum (to avoid calculating it again
+@param parameters Parameters to be used in the calculations (For Rényi entropy)
+*/
+void Optimization_Interface::export_current_cost_fnc(double current_minimum, Matrix_real& parameters){
 
     FILE* pFile;
     std::string filename("costfuncs_and_entropy.txt");
@@ -221,12 +234,28 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum){
     qbit_sublist[0] = 0;//distrib(gen);
     qbit_sublist[1] = 1;//qbit_sublist[0]+1;
 
-    double renyi_entropy = get_second_Renyi_entropy(optimized_parameters_mtx,input_state,qbit_sublist);
+    double renyi_entropy = get_second_Renyi_entropy(parameters, input_state, qbit_sublist);
 
     fprintf(pFile,"%i\t%f\t%f\n", (int)number_of_iters, current_minimum, renyi_entropy);
     fclose(pFile);
 
     return;
+}
+
+
+/**
+@brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1.
+@param current_minimum The current minimum (to avoid calculating it again
+@param parameters Parameters to be used in the calculations (For Rényi entropy)
+@param instance A pointer pointing ti the current class instance.
+*/
+void Optimization_Interface::export_current_cost_fnc(double current_minimum, Matrix_real& parameters, void* void_instance) {
+
+
+    Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
+    
+    instance->export_current_cost_fnc( current_minimum, parameters );
+
 }
 
 

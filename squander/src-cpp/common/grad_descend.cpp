@@ -22,7 +22,6 @@ limitations under the License.
 #include <grad_descend.h>
 
 
-
 /**
 @brief Constructor of the class.
 @param f_pointer A function pointer (x, meta_data, f, grad) to evaluate the cost function and its gradients. The cost function and the gradient vector are returned via reference by the two last arguments.
@@ -40,7 +39,34 @@ Grad_Descend::Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Ma
 
     
     costfnc__and__gradient = f_pointer;
+    export_fnc = NULL;
     meta_data = meta_data_in;
+
+    // number of function calls during the optimization process
+    function_call_count = 0;
+
+}
+
+
+/**
+@brief Constructor of the class.
+@param f_pointer A function pointer (x, meta_data, f, grad) to evaluate the cost function and its gradients. The cost function and the gradient vector are returned via reference by the two last arguments.
+@param meta_data void pointer to additional meta data needed to evaluate the cost function.
+@return An instance of the class
+*/
+Grad_Descend::Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Matrix_real&), void (* export_pointer)(double , Matrix_real&, void* ), void* meta_data_in) {
+
+    maximal_iterations = 5001;
+    status             = INITIAL_STATE;
+    
+    // numerical precision used in the calculations
+    num_precision = 1.42e-14;    
+
+
+    
+    costfnc__and__gradient = f_pointer;
+    export_fnc             = export_pointer;
+    meta_data              = meta_data_in;
 
     // number of function calls during the optimization process
     function_call_count = 0;
@@ -332,6 +358,10 @@ void Grad_Descend::Optimize(Matrix_real& x, double& f)
         }
 
         fprev = f;
+        
+        if ( export_fnc ) {
+            export_fnc( f, x, meta_data );
+        }
 
 
         // terminate if maximal number of iteration reached
