@@ -42,12 +42,14 @@ import qiskit
 qiskit_version = qiskit.version.get_version_info()
 
 from qiskit import QuantumCircuit
-import qiskit_aer as Aer    
+
     
 if qiskit_version[0] == '1':
     from qiskit import transpile
+    import qiskit_aer as Aer    
 else :
     from qiskit import execute
+    from qiskit import Aer        
 
 
 class Test_State_Preparation:
