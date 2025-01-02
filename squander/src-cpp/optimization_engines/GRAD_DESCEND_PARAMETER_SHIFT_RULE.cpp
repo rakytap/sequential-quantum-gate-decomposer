@@ -367,7 +367,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp_mtx.get_data(), num_of_parameters*sizeof(double) );
 
                 export_current_cost_fnc(current_minimum);
-if ( iter_idx > 0 ) exit(1);
+
             }
            
             if (current_minimum < optimization_tolerance_loc ) {
