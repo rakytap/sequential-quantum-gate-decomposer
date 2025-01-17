@@ -123,7 +123,7 @@ int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in 
     }
     if (handle == NULL) {
         initialize_id = -1;
-        std::string err("init_dfe_lib: failed to load library " + lib_name);
+        std::string err("init_dfe_lib: failed to load library " + lib_name + " - " + std::string(dlerror()));
         throw err;
     } 
     else {
@@ -245,8 +245,8 @@ int init_groq_sv_lib( const int accelerator_num )  {
 
     // dynamic-loading the Groq calculator from shared library
     handle_sv = dlopen(lib_name.c_str(), RTLD_NOW); //"MAXELEROSDIR"
-    if (handle == NULL) {
-        std::string err("init_groq_lib: failed to load library " + lib_name);
+    if (handle_sv == NULL) {
+        std::string err("init_groq_lib: failed to load library " + lib_name + " - " + std::string(dlerror()));
         throw err;
     } 
     else {
@@ -279,10 +279,10 @@ unsigned int ctz(unsigned int v) { //can use consecutive trailing zero bits if a
 
 void apply_to_groq_sv(int device_num, std::vector<Matrix>& u3_qbit, Matrix& input, std::vector<int>& target_qbit, std::vector<int>& control_qbit) {
     int alloc_dfes = 2;
-    if (handle_sv == NULL && init_groq_sv_lib(alloc_dfes))
+    if (handle_sv == NULL && !init_groq_sv_lib(alloc_dfes))
         throw std::string("Could not load and initialize DFE library");
     std::vector<float> inout;
-    inout.reserve(input.size());
+    inout.reserve(input.size()*2);
     for (size_t i = 0; i < input.rows; i++) {
         for (size_t j = 0; j < input.cols; j++) {
             inout.push_back(input.data[i*input.stride+j].real);
@@ -292,7 +292,7 @@ void apply_to_groq_sv(int device_num, std::vector<Matrix>& u3_qbit, Matrix& inpu
     std::vector<float> gateMatrices;
     for (const Matrix& m : u3_qbit) {
         for (size_t i = 0; i < m.rows; i++) {
-            for (size_t j = 0; j < m.rows; j++) {
+            for (size_t j = 0; j < m.cols; j++) {
                 gateMatrices.push_back(m.data[i*m.stride+j].real);
                 gateMatrices.push_back(m.data[i*m.stride+j].imag);
             }

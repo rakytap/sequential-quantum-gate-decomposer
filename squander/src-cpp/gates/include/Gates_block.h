@@ -605,6 +605,9 @@ DFEgate_kernel_type* convert_to_DFE_gates( Matrix_real& parameters_mtx, int& gat
 @return 
 */
 void convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEgate_kernel_type* DFEgates, int& start_index );
+
+void get_matrices_target_control(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx);
+
 #endif
 };
 

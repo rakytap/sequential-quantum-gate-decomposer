@@ -180,7 +180,7 @@ Optimization_Interface::~Optimization_Interface() {
 
 
 #ifdef __DFE__
-    if ( qbit_num >= 2 && get_accelerator_num() > 0 ) {
+    if ( Umtx.cols == Umtx.rows && qbit_num >= 2 && get_accelerator_num() > 0 ) {
         unload_dfe_lib();//releive_DFE();
     }
 #endif
@@ -558,7 +558,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
         Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
         
 #ifdef __DFE__
-    if ( get_accelerator_num() > 0 ) {
+    if ( Umtx.cols == Umtx.rows && get_accelerator_num() > 0 ) {
         int gatesNum, gateSetNum, redundantGateSets;
         DFEgate_kernel_type* DFEgates = convert_to_batched_DFE_gates( parameters_vec, gatesNum, gateSetNum, redundantGateSets );                        
             
@@ -838,7 +838,7 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
 ///////////////////////////////////////
 //std::cout << "number of qubits: " << instance->qbit_num << std::endl;
 //tbb::tick_count t0_DFE = tbb::tick_count::now();/////////////////////////////////    
-if ( instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
+if ( Umtx.cols == Umtx.rows && instance->qbit_num >= 5 && instance->get_accelerator_num() > 0 ) {
 
     int gatesNum, redundantGateSets, gateSetNum;
     DFEgate_kernel_type* DFEgates = instance->convert_to_DFE_gates_with_derivates( parameters, gatesNum, gateSetNum, redundantGateSets );
@@ -1321,18 +1321,19 @@ Optimization_Interface::set_trace_offset(int trace_offset_in) {
 
 void 
 Optimization_Interface::upload_Umtx_to_DFE() {
+    if (Umtx.cols == Umtx.rows) {
+        lock_lib();
 
-    lock_lib();
+        if ( get_initialize_id() != id ) {
+            // initialize DFE library
+            init_dfe_lib( accelerator_num, qbit_num, id );
+        }
 
-    if ( get_initialize_id() != id ) {
-        // initialize DFE library
-        init_dfe_lib( accelerator_num, qbit_num, id );
+        uploadMatrix2DFE( Umtx );
+
+
+        unlock_lib();
     }
-
-    uploadMatrix2DFE( Umtx );
-
-
-    unlock_lib();
 
 }
 

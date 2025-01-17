@@ -3508,6 +3508,109 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
     return;
 
 }
+
+void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx)
+{   u3_qbit.reserve(u3_qbit.capacity() + gates.size());
+    target_qbit.reserve(target_qbit.capacity() + gates.size());
+    control_qbit.reserve(control_qbit.capacity() + gates.size());
+    double* parameters = parameters_mtx.get_data();
+    for( int idx=0; idx<gates.size(); idx++) {
+        Gate* operation = gates[idx];
+        parameters = parameters + operation->get_parameter_num();
+        Matrix_real params_mtx(parameters, 1, operation->get_parameter_num());
+        switch (operation->get_type()) {
+        case CNOT_OPERATION: case CZ_OPERATION:
+        case CH_OPERATION: {
+            CNOT* cnot_operation = static_cast<CNOT*>(operation);
+            u3_qbit.push_back(cnot_operation->calc_one_qubit_u3());
+            break;    
+        }
+        case H_OPERATION: {
+            H* h_operation = static_cast<H*>(operation);
+            u3_qbit.push_back(h_operation->calc_one_qubit_u3());
+            break;
+        }
+        case X_OPERATION: {
+            X* x_operation = static_cast<X*>(operation);
+            u3_qbit.push_back(x_operation->calc_one_qubit_u3());
+            break;
+        }
+        case Y_OPERATION: {
+            Y* y_operation = static_cast<Y*>(operation);
+            u3_qbit.push_back(y_operation->calc_one_qubit_u3());
+            break;
+        }
+        case Z_OPERATION: {
+            Z* z_operation = static_cast<Z*>(operation);
+            u3_qbit.push_back(z_operation->calc_one_qubit_u3());
+            break;
+        }
+        case SX_OPERATION: {
+            SX* sx_operation = static_cast<SX*>(operation);
+            u3_qbit.push_back(sx_operation->calc_one_qubit_u3());
+            break;
+        }
+        case U3_OPERATION: {
+            U3* u3_operation = static_cast<U3*>(operation);
+            u3_qbit.push_back(u3_operation->calc_one_qubit_u3(params_mtx[0], params_mtx[1], params_mtx[2]));
+            break;
+        }
+        case RX_OPERATION: {
+            RX* rx_operation = static_cast<RX*>(operation);
+            double ThetaOver2, Phi, Lambda;
+            ThetaOver2 = params_mtx[0];
+            rx_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+            u3_qbit.push_back(rx_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
+            break;
+        }
+        case RY_OPERATION: {
+            RY* ry_operation = static_cast<RY*>(operation);
+            double ThetaOver2, Phi, Lambda;
+            ThetaOver2 = params_mtx[0];
+            ry_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+            u3_qbit.push_back(ry_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
+            break;
+        }
+        case CRY_OPERATION: {
+            CRY* cry_operation = static_cast<CRY*>(operation);
+            double ThetaOver2, Phi, Lambda;
+            ThetaOver2 = params_mtx[0];
+            cry_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+            u3_qbit.push_back(cry_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
+            break;
+        }
+        case RZ_OPERATION: {
+            RZ* rz_operation = static_cast<RZ*>(operation);
+            u3_qbit.push_back(rz_operation->calc_one_qubit_u3(params_mtx[0]));
+            break;
+        }
+        case RZ_P_OPERATION: {
+            RZ_P* rz_p_operation = static_cast<RZ_P*>(operation);
+            double ThetaOver2, Phi, Lambda;
+            Phi = params_mtx[0];
+            rz_p_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+            u3_qbit.push_back(rz_p_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
+            break;
+        }
+        case BLOCK_OPERATION: {
+            Gates_block* block_operation = static_cast<Gates_block*>(operation);
+            block_operation->get_matrices_target_control(u3_qbit, target_qbit, control_qbit, params_mtx);
+            continue;
+        }
+        //case ADAPTIVE_OPERATION:
+        //case SYC_OPERATION:
+        //case UN_OPERATION:
+        //case ON_OPERATION:
+        //case COMPOSITE_OPERATION:
+        //case GENERAL_OPERATION:
+        default:
+            std::string err("Optimization_Interface::apply_to: unimplemented gate (" + std::to_string(operation->get_type()) + ")"); 
+            throw err;
+        }
+        target_qbit.push_back(operation->get_target_qbit());
+        control_qbit.push_back(operation->get_control_qbit());
+    }    
+}
 #endif
 
 
