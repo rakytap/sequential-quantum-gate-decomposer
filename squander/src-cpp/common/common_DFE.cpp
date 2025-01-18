@@ -302,8 +302,8 @@ void apply_to_groq_sv(int device_num, std::vector<Matrix>& u3_qbit, Matrix& inpu
     if (calcsvKernelGroq_dll(u3_qbit.size(), gateMatrices.data(), target_qbit.data(), control_qbit.data(), inout.data(), device_num)) throw std::string("Error running gate kernels on groq");
     for (size_t i = 0; i < input.rows; i++) {
         for (size_t j = 0; j < input.cols; j++) {
-            input.data[i*input.stride+j].real = inout[i*input.rows+j];
-            input.data[i*input.stride+j].imag = inout[i*input.rows+j];
+            input.data[i*input.stride+j].real = inout[2*(i*input.cols+j)];
+            input.data[i*input.stride+j].imag = inout[2*(i*input.cols+j)+1];
         }
     }
 }
