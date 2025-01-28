@@ -28,6 +28,10 @@ limitations under the License.
 #include "Bayes_Opt.h"
 #include "Powells_method.h"
 
+#ifdef __DFE__
+#include "common_DFE.h"
+#endif
+
 /// @brief Type definition of the fifferent types of the cost function
 typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
     HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2,
@@ -521,7 +525,21 @@ void upload_Umtx_to_DFE();
 */
 int get_accelerator_num();
 
-
+#ifdef __DFE__
+virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 )
+{
+    if (ctz(input.rows) == 17) {
+        std::vector<int> target_qbit;
+        std::vector<int> control_qbit;
+        std::vector<Matrix> u3_qbit;
+        get_matrices_target_control(u3_qbit, target_qbit, control_qbit, parameters_mtx);
+        const int device_num = 0;
+        apply_to_groq_sv(device_num, u3_qbit, input, target_qbit, control_qbit);
+        return;
+    }
+    Decomposition_Base::apply_to(parameters_mtx, input, parallel);
+}
+#endif
 
 #endif
 

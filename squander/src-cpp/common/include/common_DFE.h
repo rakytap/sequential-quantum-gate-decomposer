@@ -43,7 +43,7 @@ limitations under the License.
 #define DFE_LIB_10QUBITS "libqgdDFE_10qubits.so"
 #define DFE_LIB_SIM "libqgdDFE_SIM.so"
 
-
+#define DFE_LIB_SV "libsvDFE.so"
 
 extern "C"
 {
@@ -147,6 +147,10 @@ void unlock_lib();
 int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in);
 
 
+int init_groq_sv_lib( const int accelerator_num );
+void unload_groq_sv_lib();
+unsigned int ctz(unsigned int v);
+void apply_to_groq_sv(int device_num, std::vector<Matrix>& u3_qbit, Matrix& input, std::vector<int>& target_qbit, std::vector<int>& control_qbit);
 
 #endif
 

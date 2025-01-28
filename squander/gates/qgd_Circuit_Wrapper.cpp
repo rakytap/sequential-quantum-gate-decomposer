@@ -884,7 +884,7 @@ qgd_Circuit_Wrapper_adjust_parameters_for_derivation(qgd_Circuit_Wrapper *self, 
     return Py_BuildValue("Oii", DFEgateQGD_to_Python(dfegates_qgd, gatesNum), gate_idx, gate_set_index);
 }
 
-static PyObject *
+/*static PyObject *
 qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *args)
 {
     PyObject* parameters_mtx_np = NULL;
@@ -906,7 +906,7 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *ar
     int gatesNum = -1;
     DFEgate_kernel_type* ret = self->gate->convert_to_DFE_gates(parameters_mtx_mtx, gatesNum);
     return DFEgateQGD_to_Python(ret, gatesNum);
-}
+}*/
 
 static PyObject *
 qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *args)
