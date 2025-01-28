@@ -27,8 +27,6 @@ from squander import N_Qubit_Decomposition_custom
 
 from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
-from qiskit import assemble,Aer
-from qiskit import execute
 from squander import utils
 
 try:

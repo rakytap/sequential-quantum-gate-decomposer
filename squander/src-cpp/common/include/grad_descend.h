@@ -48,6 +48,9 @@ protected:
 
     /// function pointer to evaluate the cost function and its gradient vector
     void (*costfnc__and__gradient) (Matrix_real x, void * params, double * f, Matrix_real& g);
+    
+    /// function pointer to evaluate the cost function and its gradient vector
+    void (*export_fnc) (double , Matrix_real&, void* );    
      
     /// additional data needed to evaluate the cost function
     void* meta_data;
@@ -114,6 +117,15 @@ public:
 @return An instance of the class
 */
 Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Matrix_real&), void* meta_data_in);
+
+
+/**
+@brief Constructor of the class.
+@param f_pointer A function pointer (x, meta_data, f, grad) to evaluate the cost function and its gradients. The cost function and the gradient vector are returned via reference by the two last arguments.
+@param meta_data void pointer to additional meta data needed to evaluate the cost function.
+@return An instance of the class
+*/
+Grad_Descend(void (* f_pointer) (Matrix_real, void *, double *, Matrix_real&), void (* export_pointer)(double , Matrix_real&, void* ), void* meta_data_in);
 
 
 /**

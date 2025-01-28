@@ -385,6 +385,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 for( std::vector<Gate*>::iterator gate_it = gates_save.begin(); gate_it != gates_save.end()-1; gate_it++ ) {
                     gates.push_back( *gate_it );
                 }
+                reset_parameter_start_indices();
                 apply_to( optimized_parameters_mtx, Umtx );
                 
                 gates = gates_save;
@@ -426,6 +427,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 for( std::vector<Gate*>::iterator gate_it = gates_loc.begin() + block_idx_end; gate_it != gates_loc.end(); gate_it++ ) {
                     gates.push_back( *gate_it );
                 }
+                reset_parameter_start_indices();
+                
                 Matrix post_mtx = Identity.copy();
                 apply_to( optimized_parameters_partial, post_mtx );
                 
@@ -433,7 +436,8 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
                 
                 fixed_gate_post->set_matrix( post_mtx );
                 
-                gates.push_back( fixed_gate_post );            
+                gates.push_back( fixed_gate_post ); 
+                reset_parameter_start_indices();           
             }
             else {
                 // release gate products
@@ -527,6 +531,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         // store the result of the optimization
         gates.clear();
         gates = gates_loc;
+        reset_parameter_start_indices();
 
         parameter_num = parameter_num_loc;
 
@@ -838,6 +843,8 @@ void Decomposition_Base::prepare_gates_to_export() {
     // release the gates and replace them with the ones prepared to export
     gates.clear();
     gates = gates_tmp;
+    
+    reset_parameter_start_indices();
 
 }
 
@@ -854,7 +861,6 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
 
     std::vector<Gate*> ops_ret;
     int parameter_idx = 0;
-
 
     for(std::vector<Gate*>::iterator it = ops.begin(); it != ops.end(); it++) {
 
@@ -1022,24 +1028,6 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             RZ* rz_gate = static_cast<RZ*>(gate);
 //            parameter_idx = parameter_idx - 1;
             varphi = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
-            parameter_idx = parameter_idx + 1;
-
-
-            rz_gate->set_optimized_parameters( varphi );
-            ops_ret.push_back( static_cast<Gate*>(rz_gate) );
-
-
-        }
-        else if (gate->get_type() == RZ_P_OPERATION) {
-
-            // definig the parameter of the rotational angle
-            double varphi;
-
-            // get the inverse parameters of the RZ rotation
-
-            RZ_P* rz_gate = static_cast<RZ_P*>(gate);
-//            parameter_idx = parameter_idx - 1;
-            varphi = std::fmod( parameters[parameter_idx], 2*M_PI);
             parameter_idx = parameter_idx + 1;
 
 

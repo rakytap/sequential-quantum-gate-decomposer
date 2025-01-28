@@ -430,12 +430,14 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
     }
 
 
+    bool deriv = true;
+
 
     if (theta) {
 
         Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2+M_PIOver2, Phi, Lambda);
         Matrix res_mtx = input.copy();
-        apply_kernel_to( u3_1qbit, res_mtx );
+        apply_kernel_to( u3_1qbit, res_mtx, deriv );
         ret.push_back(res_mtx);
 
     }
@@ -448,7 +450,7 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
         memset(u3_1qbit.get_data(), 0.0, 2*sizeof(QGD_Complex16) );
 
         Matrix res_mtx = input.copy();
-        apply_kernel_to( u3_1qbit, res_mtx );
+        apply_kernel_to( u3_1qbit, res_mtx, deriv );
         ret.push_back(res_mtx);
 
     }
@@ -462,7 +464,7 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
         memset(u3_1qbit.get_data()+2, 0.0, sizeof(QGD_Complex16) );
 
         Matrix res_mtx = input.copy();
-        apply_kernel_to( u3_1qbit, res_mtx );
+        apply_kernel_to( u3_1qbit, res_mtx, deriv );
         ret.push_back(res_mtx);
 
     }
@@ -535,6 +537,8 @@ U3* U3::clone() {
     if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters(parameters[0], parameters[1], parameters[2]);
     }
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
 
     return ret;
@@ -600,5 +604,66 @@ void U3::set_phi(double phi_in ) {
 void U3::set_lambda(double lambda_in ) {
 
     lambda0 = lambda_in;
+
+}
+
+
+
+/**
+@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
+@param parameters The parameter array corresponding to the circuit in which the gate is embedded
+@return Returns with the array of the extracted parameters.
+*/
+Matrix_real 
+U3::extract_parameters( Matrix_real& parameters ) {
+
+    if ( get_parameter_start_idx() + get_parameter_num() > parameters.size()  ) {
+        std::string err("U3::extract_parameters: Cant extract parameters, since the dinput arary has not enough elements.");
+        throw err;     
+    }
+
+    Matrix_real extracted_parameters(1,3);
+
+    if ((get_parameter_num() == 1) && is_theta_parameter()) {
+        extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
+        extracted_parameters[1] = 0.0;
+        extracted_parameters[2] = 0.0;
+    }
+    else if ((get_parameter_num() == 1) && is_phi_parameter()) {
+        extracted_parameters[0] = 0.0;
+        extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx() ], 2*M_PI);
+        extracted_parameters[2] = 0.0;
+    }
+    else if ((get_parameter_num() == 1) && is_lambda_parameter()) {
+        extracted_parameters[0] = 0.0;
+        extracted_parameters[1] = 0.0;
+        extracted_parameters[2] = std::fmod( parameters[ get_parameter_start_idx() ], 2*M_PI);
+    }
+    else if ((get_parameter_num() == 2) && is_theta_parameter() && is_phi_parameter() ) {
+        extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
+        extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx()+1 ], 2*M_PI);
+        extracted_parameters[2] = 0.0;
+    }
+    else if ((get_parameter_num() == 2) && is_theta_parameter() && is_lambda_parameter() ) {
+        extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
+        extracted_parameters[1] = 0.0;
+        extracted_parameters[2] = std::fmod( parameters[ get_parameter_start_idx()+1 ], 2*M_PI);
+    }
+    else if ((get_parameter_num() == 2) && is_phi_parameter() && is_lambda_parameter() ) {
+        extracted_parameters[0] = 0.0;
+        extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx() ], 2*M_PI);
+        extracted_parameters[2] = std::fmod( parameters[ get_parameter_start_idx()+1 ], 2*M_PI);
+    }
+    else if ((get_parameter_num() == 3)) {
+        extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);;
+        extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx()+1 ], 2*M_PI);
+        extracted_parameters[2] = std::fmod( parameters[ get_parameter_start_idx()+2 ], 2*M_PI);
+    }
+    else {
+        std::string err("U3::extract_parameters: Cant extract parameters");
+        throw err;        
+    }
+
+    return extracted_parameters;
 
 }

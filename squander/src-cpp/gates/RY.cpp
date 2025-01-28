@@ -208,7 +208,7 @@ RY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
     Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx, 0.5);
+    apply_to(parameters_tmp, res_mtx);
     ret.push_back(res_mtx);
 
 
@@ -270,8 +270,33 @@ RY* RY::clone() {
     if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters(parameters[0]);
     }
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
 
     return ret;
+
+}
+
+
+
+/**
+@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
+@param parameters The parameter array corresponding to the circuit in which the gate is embedded
+@return Returns with the array of the extracted parameters.
+*/
+Matrix_real 
+RY::extract_parameters( Matrix_real& parameters ) {
+
+    if ( get_parameter_start_idx() + get_parameter_num() > parameters.size()  ) {
+        std::string err("RY::extract_parameters: Cant extract parameters, since the dinput arary has not enough elements.");
+        throw err;     
+    }
+
+    Matrix_real extracted_parameters(1,1);
+
+    extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
+
+    return extracted_parameters;
 
 }

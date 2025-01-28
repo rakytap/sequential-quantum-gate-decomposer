@@ -217,11 +217,29 @@ void solve_layer_optimization_problem_GRAD_DESCEND( int num_of_parameters, Matri
 void solve_layer_optimization_problem_AGENTS( int num_of_parameters, Matrix_real& solution_guess);
 
 
+
+/**
+@brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1. Parameters stored in the class are used to calculate the Renyi entropy
+@param current_minimum The current minimum (to avoid calculating it again
+*/
+void export_current_cost_fnc(double current_minimum );
+
+
 /**
 @brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1.
 @param current_minimum The current minimum (to avoid calculating it again
+@param parameters Parameters to be used in the calculations (For Rényi entropy)
 */
-void export_current_cost_fnc(double current_minimum);
+void export_current_cost_fnc(double current_minimum, Matrix_real& parameters );
+
+
+/**
+@brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1.
+@param current_minimum The current minimum (to avoid calculating it again
+@param parameters Parameters to be used in the calculations (For Rényi entropy)
+@param instance A pointer pointing ti the current class instance.
+*/
+static void export_current_cost_fnc(double current_minimum, Matrix_real& parameters, void* void_instance);
 
 
 /**

@@ -82,7 +82,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 				circuit_squander.add_U3(target_qbit, True, True, True )
 				circuit_squander.add_U3(control_qbit, True, True, True )
 				#circuit_squander.add_CNOT( target_qbit=target_qbit, control_qbit=control_qbit )
-				circuit_squander.add_adaptive( target_qbit=target_qbit, control_qbit=control_qbit )
+				circuit_squander.add_CRY( target_qbit=target_qbit, control_qbit=control_qbit )
 				gates_num = gates_num + 3
 
 	for target_qbit in range(qbit_num):
@@ -118,8 +118,20 @@ print( execution_times_squander )
 execution_times_qiskit = {}
 transformed_states_qiskit = {}
 
+
+import qiskit
+qiskit_version = qiskit.version.get_version_info()
+
 from qiskit import QuantumCircuit
-from qiskit import Aer, execute
+import qiskit_aer as Aer    
+    
+if qiskit_version[0] == '1':
+    from qiskit import transpile
+else :
+    from qiskit import execute
+    
+    
+
 
 for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 
@@ -160,13 +172,34 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 		
 
 
-	# Select the StatevectorSimulator from the Aer provider
-	simulator = Aer.get_backend('statevector_simulator')
+
 
 	t0 = time.time()
+
 	# Execute and get the state vector
-	result = execute(circuit_qiskit, simulator).result()
-	transformed_state = result.get_statevector(circuit_qiskit)
+	if qiskit_version[0] == '1':
+	
+		circuit_qiskit.save_statevector()
+	
+		backend = Aer.AerSimulator(method='statevector')
+		compiled_circuit = transpile(circuit_qiskit, backend)
+		result = backend.run(compiled_circuit).result()
+		
+		transformed_state = result.get_statevector(compiled_circuit)		
+       
+        
+	elif qiskit_version[0] == '0':
+	
+		# Select the StatevectorSimulator from the Aer provider
+		simulator = Aer.get_backend('statevector_simulator')	
+		
+		backend = Aer.get_backend('aer_simulator')
+		result = execute(circuit_qiskit, simulator).result()
+		
+		transformed_state = result.get_statevector(circuit_qiskit)
+
+
+
 	t_qiskit = time.time() - t0
 	#print( "Time elapsed QISKIT: ", t_qiskit, " at qbit_num = ", qbit_num )
 

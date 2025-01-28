@@ -161,7 +161,7 @@ qgd_X_Wrapper_get_Matrix( qgd_X_Wrapper *self ) {
 static PyObject *
 qgd_X_Wrapper_apply_to( qgd_X_Wrapper *self, PyObject *args ) {
 
-    PyObject * unitary_arg = NULL;
+    PyArrayObject * unitary_arg = NULL;
 
 
 
@@ -176,7 +176,7 @@ qgd_X_Wrapper_apply_to( qgd_X_Wrapper *self, PyObject *args ) {
         return NULL;
     }
 
-    PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject* unitary = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
@@ -223,6 +223,114 @@ qgd_X_Wrapper_get_Gate_Kernel( qgd_X_Wrapper *self ) {
 
 }
 
+
+/**
+@brief Call to get the number of free parameters in the gate
+@return Returns with the starting index
+*/
+static PyObject *
+qgd_X_Wrapper_get_Parameter_Num( qgd_X_Wrapper *self ) {
+
+    int parameter_num = self->gate->get_parameter_num();
+
+    return Py_BuildValue("i", parameter_num);
+
+}
+
+/**
+@brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
+@return Returns with the starting index
+*/
+static PyObject *
+qgd_X_Wrapper_get_Parameter_Start_Index( qgd_X_Wrapper *self ) {
+
+    int start_index = self->gate->get_parameter_start_idx();
+
+    return Py_BuildValue("i", start_index);
+
+}
+
+
+/**
+@brief Call to get the target qbit
+@return Returns with the target qbit
+*/
+static PyObject *
+qgd_X_Wrapper_get_Target_Qbit( qgd_X_Wrapper *self ) {
+
+    int target_qbit = self->gate->get_target_qbit();
+
+    return Py_BuildValue("i", target_qbit);
+
+}
+
+/**
+@brief Call to get the control qbit (returns with -1 if no control qbit is used in the gate)
+@return Returns with the control qbit
+*/
+static PyObject *
+qgd_X_Wrapper_get_Control_Qbit( qgd_X_Wrapper *self ) {
+
+    int control_qbit = self->gate->get_control_qbit();
+
+    return Py_BuildValue("i", control_qbit);
+
+}
+
+
+
+/**
+@brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
+*/
+static PyObject *
+qgd_X_Wrapper_Extract_Parameters( qgd_X_Wrapper *self, PyObject *args ) {
+
+    PyArrayObject * parameters_arr = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
+    
+    Matrix_real extracted_parameters;
+
+    try {
+        extracted_parameters = self->gate->extract_parameters( parameters_mtx );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    // convert to numpy array
+    extracted_parameters.set_owner(false);
+    PyObject *extracted_parameters_py = matrix_real_to_numpy( extracted_parameters );
+   
+
+    return extracted_parameters_py;
+}
+
+
+
 /**
 @brief Structure containing metadata about the members of class qgd_X_Wrapper.
 */
@@ -243,6 +351,21 @@ static PyMethodDef qgd_X_Wrapper_methods[] = {
     },
     {"get_Gate_Kernel", (PyCFunction) qgd_X_Wrapper_get_Gate_Kernel, METH_NOARGS,
      "Call to calculate the gate matrix acting on a single qbit space."
+    },
+    {"get_Parameter_Num", (PyCFunction) qgd_X_Wrapper_get_Parameter_Num, METH_NOARGS,
+     "Call to get the number of free parameters in the gate."
+    },
+    {"get_Parameter_Start_Index", (PyCFunction) qgd_X_Wrapper_get_Parameter_Start_Index, METH_NOARGS,
+     "Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated."
+    },
+    {"get_Target_Qbit", (PyCFunction) qgd_X_Wrapper_get_Target_Qbit, METH_NOARGS,
+     "Call to get the target qbit."
+    },
+    {"get_Control_Qbit", (PyCFunction) qgd_X_Wrapper_get_Control_Qbit, METH_NOARGS,
+     "Call to get the control qbit (returns with -1 if no control qbit is used in the gate)."
+    },
+    {"Extract_Parameters", (PyCFunction) qgd_X_Wrapper_Extract_Parameters, METH_VARARGS,
+     "Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded."
     },
     {NULL}  /* Sentinel */
 };

@@ -106,6 +106,7 @@ void reorder_qubits( std::vector<int> qbit_list);
 */
 SYC* clone();
 
+
 };
 
 #endif //SYC

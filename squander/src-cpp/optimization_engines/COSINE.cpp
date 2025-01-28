@@ -92,7 +92,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
         // the current result
         current_minimum = optimization_problem( optimized_parameters_mtx );
-        number_of_iters = number_of_iters + 1; 
+        export_current_cost_fnc(current_minimum);
         
 
         // the array storing the optimized parameters
@@ -111,7 +111,13 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
              batch_size = (int) value;
         }
         else {
-            batch_size = 64;
+            batch_size = 64 <= num_of_parameters ? 64 : num_of_parameters;
+            
+        }
+        
+        if( batch_size > num_of_parameters ) {
+            std::string err("Optimization_Interface::solve_layer_optimization_problem_COSINE: batch size should be lower or equal to the number of free parameters");
+            throw err;
         }
 
 
@@ -150,8 +156,29 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         else {
             optimization_tolerance_loc = optimization_tolerance;
         }
+        
+        
+        // The number if iterations after which the current results are displed/exported
+        int output_periodicity;
+        if ( config.count("output_periodicity_cosine") > 0 ) {
+             long long value = 1;
+             config["output_periodicity_cosine"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        if ( config.count("output_periodicity") > 0 ) {
+             long long value = 1;
+             config["output_periodicity"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        else {
+            output_periodicity = 50;
+        }        
 
 
+        if ( output_periodicity == 0 ) {
+            std::string err("Output periodicity should be greater than zero");
+            throw err;
+        }   
 
         // vector stroing the lates values of current minimums to identify convergence
         Matrix_real f0_vec(1, 100); 
@@ -164,8 +191,6 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         Matrix_real param_update_mtx( batch_size, 1 );
         matrix_base<int> param_idx_agents( batch_size, 1 );
 
-        // random generator of integers   
-        std::uniform_int_distribution<> distrib_int(0, num_of_parameters-1);
 
         std::vector<Matrix_real> parameters_mtx_vec(batch_size);
         parameters_mtx_vec.reserve(batch_size); 
@@ -178,12 +203,24 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
 
         for (unsigned long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++) {
+        
+            // build up a vector of indices providing a set from which we can draw random (but unique) choices
+            std::vector<int> indices(num_of_parameters);
+            indices.reserve(num_of_parameters);
+            for( int idx=0; idx<num_of_parameters; idx++ ) {
+                indices[idx] = idx;
+            }        
 
             for( int idx=0; idx<batch_size; idx++ ) {
                 parameters_mtx_vec[idx] = solution_guess_tmp_mtx.copy();
 
+                // random generator of integers   
+                std::uniform_int_distribution<> distrib_int(0, indices.size()-1);
+
                 // The index array of the chosen parameters
-                param_idx_agents[ idx ] = distrib_int(gen);
+                int chosen_idx = distrib_int(gen);
+                param_idx_agents[ idx ] = indices[ chosen_idx ];
+                indices.erase( indices.begin()+chosen_idx ); 
             }
 
 
@@ -336,7 +373,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
             // update the current cost function
             //current_minimum = optimization_problem( solution_guess_tmp_mtx );
 
-            if ( iter_idx % 50 == 0 ) {
+            if ( iter_idx % output_periodicity == 0 ) {
                 std::stringstream sstream;
                 sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;

@@ -83,6 +83,15 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 	# call the C wrapper function
         super(qgd_N_Qubit_Decomposition_custom, self).List_Gates()
 
+
+##
+# @brief Call to retrieve the incorporated quantum circuit (Squander format)
+# @return Return with a Qiskit compatible quantum circuit.
+    def get_Circuit( self ):
+        
+        # call the C wrapper function
+        return super().get_Circuit()
+
 ##
 # @brief Export the unitary decomposition into Qiskit format.
 # @return Return with a Qiskit compatible quantum circuit.
@@ -90,7 +99,10 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
     
         from squander import Qiskit_IO
         
-        return Qiskit_IO.get_Qiskit_Circuit( self )
+        squander_circuit = self.get_Circuit()
+        parameters       = self.get_Optimized_Parameters()
+        
+        return Qiskit_IO.get_Qiskit_Circuit( squander_circuit, parameters )
 
 
 

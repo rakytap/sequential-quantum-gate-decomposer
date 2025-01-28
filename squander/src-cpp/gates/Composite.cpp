@@ -300,6 +300,8 @@ Composite* Composite::clone() {
     if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters( parameters );
     }
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     return ret;
 

@@ -118,6 +118,14 @@ RZ* clone();
 Matrix calc_one_qubit_u3(double PhiOver2 );
 
 
+
+/**
+@brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
+@param parameters The parameter array corresponding to the circuit in which the gate is embedded
+@return Returns with the array of the extracted parameters.
+*/
+virtual Matrix_real extract_parameters( Matrix_real& parameters );
+
 };
 
 

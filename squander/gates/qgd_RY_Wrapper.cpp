@@ -138,7 +138,7 @@ qgd_RY_Wrapper_init(qgd_RY_Wrapper *self, PyObject *args, PyObject *kwds)
 static PyObject *
 qgd_RY_Wrapper_get_Matrix( qgd_RY_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
+    PyArrayObject * parameters_arr = NULL;
 
 
     // parsing input arguments
@@ -150,7 +150,7 @@ qgd_RY_Wrapper_get_Matrix( qgd_RY_Wrapper *self, PyObject *args ) {
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
 
@@ -178,8 +178,8 @@ qgd_RY_Wrapper_get_Matrix( qgd_RY_Wrapper *self, PyObject *args ) {
 static PyObject *
 qgd_RY_Wrapper_apply_to( qgd_RY_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
-    PyObject * unitary_arg = NULL;
+    PyArrayObject * parameters_arr = NULL;
+    PyArrayObject * unitary_arg = NULL;
 
 
 
@@ -191,7 +191,7 @@ qgd_RY_Wrapper_apply_to( qgd_RY_Wrapper *self, PyObject *args ) {
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
     // get the C++ wrapper around the data
@@ -203,7 +203,7 @@ qgd_RY_Wrapper_apply_to( qgd_RY_Wrapper *self, PyObject *args ) {
         return NULL;
     }
 
-    PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject* unitary = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
@@ -239,23 +239,126 @@ static PyObject *
 qgd_RY_Wrapper_get_Gate_Kernel( qgd_RY_Wrapper *self, PyObject *args ) {
 
     double ThetaOver2;
-    double Phi; 
-    double Lambda; 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|ddd", &ThetaOver2, &Phi, &Lambda )) 
+    if (!PyArg_ParseTuple(args, "|d", &ThetaOver2 )) 
         return Py_BuildValue("i", -1);
 
 
     // create QGD version of the input matrix
 
-    Matrix RY_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Matrix RY_1qbit_ = self->gate->calc_one_qubit_u3(ThetaOver2, 0.0, 0.0 );
     
     PyObject *RY_1qbit = matrix_to_numpy( RY_1qbit_ );
 
     return RY_1qbit;
 
 
+}
+
+
+/**
+@brief Call to get the number of free parameters in the gate
+@return Returns with the starting index
+*/
+static PyObject *
+qgd_RY_Wrapper_get_Parameter_Num( qgd_RY_Wrapper *self ) {
+
+    int parameter_num = self->gate->get_parameter_num();
+
+    return Py_BuildValue("i", parameter_num);
+
+}
+
+/**
+@brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
+@return Returns with the starting index
+*/
+static PyObject *
+qgd_RY_Wrapper_get_Parameter_Start_Index( qgd_RY_Wrapper *self ) {
+
+    int start_index = self->gate->get_parameter_start_idx();
+
+    return Py_BuildValue("i", start_index);
+
+}
+
+
+/**
+@brief Call to get the target qbit
+@return Returns with the target qbit
+*/
+static PyObject *
+qgd_RY_Wrapper_get_Target_Qbit( qgd_RY_Wrapper *self ) {
+
+    int target_qbit = self->gate->get_target_qbit();
+
+    return Py_BuildValue("i", target_qbit);
+
+}
+
+/**
+@brief Call to get the control qbit (returns with -1 if no control qbit is used in the gate)
+@return Returns with the control qbit
+*/
+static PyObject *
+qgd_RY_Wrapper_get_Control_Qbit( qgd_RY_Wrapper *self ) {
+
+    int control_qbit = self->gate->get_control_qbit();
+
+    return Py_BuildValue("i", control_qbit);
+
+}
+
+
+/**
+@brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
+*/
+static PyObject *
+qgd_RY_Wrapper_Extract_Parameters( qgd_RY_Wrapper *self, PyObject *args ) {
+
+    PyArrayObject * parameters_arr = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) 
+        return Py_BuildValue("i", -1);
+
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
+    
+    Matrix_real extracted_parameters;
+
+    try {
+        extracted_parameters = self->gate->extract_parameters( parameters_mtx );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    // convert to numpy array
+    extracted_parameters.set_owner(false);
+    PyObject *extracted_parameters_py = matrix_real_to_numpy( extracted_parameters );
+   
+
+    return extracted_parameters_py;
 }
 
 
@@ -279,6 +382,21 @@ static PyMethodDef qgd_RY_Wrapper_methods[] = {
     },
     {"get_Gate_Kernel", (PyCFunction) qgd_RY_Wrapper_get_Gate_Kernel, METH_VARARGS,
      "Call to calculate the gate matrix acting on a single qbit space."
+    },
+    {"get_Parameter_Num", (PyCFunction) qgd_RY_Wrapper_get_Parameter_Num, METH_NOARGS,
+     "Call to get the number of free parameters in the gate."
+    },
+    {"get_Parameter_Start_Index", (PyCFunction) qgd_RY_Wrapper_get_Parameter_Start_Index, METH_NOARGS,
+     "Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated."
+    },
+    {"get_Target_Qbit", (PyCFunction) qgd_RY_Wrapper_get_Target_Qbit, METH_NOARGS,
+     "Call to get the target qbit."
+    },
+    {"get_Control_Qbit", (PyCFunction) qgd_RY_Wrapper_get_Control_Qbit, METH_NOARGS,
+     "Call to get the control qbit (returns with -1 if no control qbit is used in the gate)."
+    },
+    {"Extract_Parameters", (PyCFunction) qgd_RY_Wrapper_Extract_Parameters, METH_VARARGS,
+     "Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded."
     },
     {NULL}  /* Sentinel */
 };

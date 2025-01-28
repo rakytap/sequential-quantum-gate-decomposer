@@ -42,7 +42,7 @@ limitations under the License.
 extern "C" int LAPACKE_dgesv( 	int  matrix_layout, int n, int nrhs, double *a, int lda, int *ipiv, double *b, int ldb); 	
 
 
-
+tbb::spin_mutex my_mutex_optimization_interface;
 
 
 /**
@@ -194,7 +194,20 @@ Optimization_Interface::~Optimization_Interface() {
 @brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1.
 @param current_minimum The current minimum (to avoid calculating it again
 */
-void Optimization_Interface::export_current_cost_fnc(double current_minimum){
+void Optimization_Interface::export_current_cost_fnc(double current_minimum ){
+
+    export_current_cost_fnc( current_minimum, optimized_parameters_mtx);
+    
+}
+
+
+
+/**
+@brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1.
+@param current_minimum The current minimum (to avoid calculating it again
+@param parameters Parameters to be used in the calculations (For Rényi entropy)
+*/
+void Optimization_Interface::export_current_cost_fnc(double current_minimum, Matrix_real& parameters){
 
     FILE* pFile;
     std::string filename("costfuncs_and_entropy.txt");
@@ -221,12 +234,28 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum){
     qbit_sublist[0] = 0;//distrib(gen);
     qbit_sublist[1] = 1;//qbit_sublist[0]+1;
 
-    double renyi_entropy = get_second_Renyi_entropy(optimized_parameters_mtx,input_state,qbit_sublist);
+    double renyi_entropy = get_second_Renyi_entropy(parameters, input_state, qbit_sublist);
 
     fprintf(pFile,"%i\t%f\t%f\n", (int)number_of_iters, current_minimum, renyi_entropy);
     fclose(pFile);
 
     return;
+}
+
+
+/**
+@brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1.
+@param current_minimum The current minimum (to avoid calculating it again
+@param parameters Parameters to be used in the calculations (For Rényi entropy)
+@param instance A pointer pointing ti the current class instance.
+*/
+void Optimization_Interface::export_current_cost_fnc(double current_minimum, Matrix_real& parameters, void* void_instance) {
+
+
+    Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
+    
+    instance->export_current_cost_fnc( current_minimum, parameters );
+
 }
 
 
@@ -556,7 +585,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
 
 
         Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
-        
+             
 #ifdef __DFE__
     if ( get_accelerator_num() > 0 ) {
         int gatesNum, gateSetNum, redundantGateSets;
@@ -565,7 +594,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
         Matrix_real trace_DFE_mtx(gateSetNum, 3);
         
         
-
+        
         number_of_iters = number_of_iters + parameters_vec.size();  
        
         
@@ -629,7 +658,6 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
 
 #endif // __DFE__
 
-
 #ifdef __MPI__
 
 
@@ -653,7 +681,7 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
             cost_fnc_mtx_loc[idx] = optimization_problem( parameters_vec[idx + mpi_starting_batchIdx] );
         });
 
-        number_of_iters = number_of_iters + mpi_batch_element_num; 
+        //number_of_iters = number_of_iters + mpi_batch_element_num; 
 
 
 
@@ -662,11 +690,11 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
 
 
 #else
+
         tbb::parallel_for( 0, (int)parameters_vec.size(), 1, [&]( int idx) {
             cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
         });
 
-        number_of_iters = number_of_iters + parameters_vec.size(); 
 
 #endif  // __MPI__
        
@@ -697,6 +725,12 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
     Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
     std::vector<Gate*> gates_loc = instance->get_gates();
 
+    {
+        tbb::spin_mutex::scoped_lock my_lock{my_mutex_optimization_interface};
+
+        number_of_iters++;
+        
+    }
 
     // get the transformed matrix with the gates in the list
     Matrix Umtx_loc = instance->get_Umtx();

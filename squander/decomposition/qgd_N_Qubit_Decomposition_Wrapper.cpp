@@ -54,7 +54,7 @@ typedef struct qgd_Circuit_Wrapper {
 typedef struct qgd_N_Qubit_Decomposition_Wrapper {
     PyObject_HEAD
     /// pointer to the unitary to be decomposed to keep it alive
-    PyObject *Umtx;
+    PyArrayObject *Umtx;
     /// An object to decompose the unitary
     N_Qubit_Decomposition* decomp;
 
@@ -151,7 +151,7 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
     static char *kwlist[] = {(char*)"Umtx", (char*)"qbit_num", (char*)"optimize_layer_num", (char*)"initial_guess", NULL};
  
     // initiate variables for input arguments
-    PyObject *Umtx_arg = NULL;
+    PyArrayObject *Umtx_arg = NULL;
     int  qbit_num = -1; 
     bool optimize_layer_num = false;
     PyObject *initial_guess = NULL;
@@ -163,10 +163,10 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
 
     // convert python object array to numpy C API array
     if ( Umtx_arg == NULL ) return -1;
-    self->Umtx = PyArray_FROM_OTF(Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    self->Umtx = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)Umtx_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
-    if ( !PyArray_IS_C_CONTIGUOUS(self->Umtx) ) {
+    if ( !PyArray_IS_C_CONTIGUOUS((PyArrayObject*)self->Umtx) ) {
         std::cout << "Umtx is not memory contiguous" << std::endl;
     }
 
@@ -450,28 +450,6 @@ get_gate( N_Qubit_Decomposition* decomp, int &idx ) {
         Py_XDECREF(Phi);
 
     }
-    else if (gate->get_type() == RZ_P_OPERATION) {
-
-        // get U3 parameters
-        RZ_P* rz_gate = static_cast<RZ_P*>(gate);
-        Matrix_real&& parameters = rz_gate->get_optimized_parameters();
- 
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "RZ_P" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-        PyObject* Phi = Py_BuildValue("f",  parameters[0] );
-
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-        PyDict_SetItemString(py_gate, "Phi", Phi );
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-        Py_XDECREF(Phi);
-
-    }
     else if (gate->get_type() == X_OPERATION) {
 
         // create gate parameters
@@ -571,6 +549,52 @@ qgd_N_Qubit_Decomposition_Wrapper_get_gates( qgd_N_Qubit_Decomposition_Wrapper *
 }
 
 
+
+/**
+@brief Wrapper function to retrieve the circuit (Squander format) incorporated in the instance.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+*/
+static PyObject *
+qgd_N_Qubit_Decomposition_Wrapper_get_circuit( qgd_N_Qubit_Decomposition_Wrapper *self ) {
+
+
+    PyObject* qgd_Circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+    if ( qgd_Circuit == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
+        return NULL;
+    }
+
+    // retrieve the C++ variant of the flat circuit (flat circuit does not conatain any sub-circuits)
+    Gates_block* circuit = self->decomp->get_flat_circuit();
+
+
+
+    // construct python interfarce for the circuit
+    PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_Circuit );
+
+    // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+    PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+    // create gate parameters
+    PyObject* qbit_num     = Py_BuildValue("i",  circuit->get_qbit_num() );
+    PyObject* circuit_input = Py_BuildValue("(O)", qbit_num);
+
+    PyObject* py_circuit   = PyObject_CallObject(py_circuit_class, circuit_input);
+    qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+
+    
+    // replace the empty circuit with the extracted one
+    
+    delete( py_circuit_C->gate );
+    py_circuit_C->gate = circuit;
+
+
+    return py_circuit;
+
+}
+
+
 /**
 @brief Lists the gates decomposing the initial unitary. (These gates are the inverse gates of the gates bringing the intial matrix into unity.)
 @param start_index The index of the first inverse gate
@@ -599,16 +623,9 @@ qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters( qgd_N_Qubit_Decompos
     double* parameters = parameters_mtx.get_data();
     self->decomp->get_optimized_parameters(parameters);
 
-    // reversing the order
-    Matrix_real parameters_mtx_reversed(1, parameter_num);
-    double* parameters_reversed = parameters_mtx_reversed.get_data();
-    for (int idx=0; idx<parameter_num; idx++ ) {
-        parameters_reversed[idx] = parameters[parameter_num-1-idx];
-    }
-
     // convert to numpy array
-    parameters_mtx_reversed.set_owner(false);
-    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx_reversed );
+    parameters_mtx.set_owner(false);
+    PyObject * parameter_arr = matrix_real_to_numpy( parameters_mtx );
 
     return parameter_arr;
 }
@@ -1015,6 +1032,9 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Wrapper_methods[] = {
     },
     {"get_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_gates, METH_NOARGS,
      "Method to get the tuple of decomposing gates."
+    },
+    {"get_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_circuit, METH_NOARGS,
+     "Method to get the incorporated circuit."
     },
     {"List_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_List_Gates, METH_NOARGS,
      "Call to print the decomposing nitaries on standard output"

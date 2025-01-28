@@ -36,6 +36,20 @@ try:
     MPI_imported = True
 except ModuleNotFoundError:
     MPI_imported = False
+    
+    
+import qiskit
+qiskit_version = qiskit.version.get_version_info()
+
+from qiskit import QuantumCircuit
+
+    
+if qiskit_version[0] == '1':
+    from qiskit import transpile
+    import qiskit_aer as Aer    
+else :
+    from qiskit import execute
+    from qiskit import Aer        
 
 
 class Test_State_Preparation:
@@ -77,6 +91,9 @@ class Test_State_Preparation:
 
         Umtx = data['Umtx']
         State = Umtx[:, 0].reshape(16, 1)
+        norm = np.sqrt( State.conj().T @ State )
+        State = State/norm
+       
 
         config = { 'max_outer_iterations': 1, 
 		'max_inner_iterations': 10000, 
@@ -118,17 +135,46 @@ class Test_State_Preparation:
 
         # get the decomposing operations
 
-        quantum_circuit = cDecompose.get_Qiskit_Circuit()
+        circuit_qiskit = cDecompose.get_Qiskit_Circuit()
 
         # print the quantum circuit
 
-        print (quantum_circuit)
-
+        print (circuit_qiskit)
         # the unitary matrix from the result object
 
         decomp_error = cDecompose.Optimization_Problem_Combined(cDecompose.get_Optimized_Parameters())[0]
         assert decomp_error < 1e-4
         print(f"DECOMPOSITION ERROR: {decomp_error} ")
+        
+        # Execute and get the state vector
+        if qiskit_version[0] == '1':
+	
+            circuit_qiskit.save_statevector()
+	
+            backend = Aer.AerSimulator(method='statevector')
+            compiled_circuit = transpile(circuit_qiskit, backend)
+            result = backend.run(compiled_circuit).result()
+		
+            transformed_state = result.get_statevector(compiled_circuit)		
+       
+        
+        elif qiskit_version[0] == '0':
+	
+            # Select the StatevectorSimulator from the Aer provider
+            simulator = Aer.get_backend('statevector_simulator')	
+		
+            backend = Aer.get_backend('aer_simulator')
+            result = execute(circuit_qiskit, simulator).result()
+		
+            transformed_state = result.get_statevector(circuit_qiskit)
+        
+        overlap = np.abs( transformed_state.conj().T @ State )
+	
+        print( 'Overlap integral with the initial state: ', overlap )        
+        assert( np.abs(overlap - 1) < 1e-6 )
+        
+        
+        
 
     def test_State_Preparation_BFGS(self):
         r"""

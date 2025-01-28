@@ -147,9 +147,9 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_init(qgd_Variational_Quantum_Ei
     static char *kwlist[] = {(char*)"Hamiltonian_data", (char*)"Hamiltonian_indices", (char*)"Hamiltonian_indptr", (char*)"qbit_num", (char*)"config", NULL};
  
     // initiate variables for input arguments
-    PyObject *Hamiltonian_data_arg = NULL;
-    PyObject *Hamiltonian_indices_arg = NULL;
-    PyObject *Hamiltonian_indptr_arg = NULL;
+    PyArrayObject *Hamiltonian_data_arg = NULL;
+    PyArrayObject *Hamiltonian_indices_arg = NULL;
+    PyArrayObject *Hamiltonian_indptr_arg = NULL;
     int  qbit_num = -1; 
     PyObject *config_arg = NULL;
     
@@ -161,14 +161,19 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_init(qgd_Variational_Quantum_Ei
     int shape = Power_of_2(qbit_num);
     // convert python object array to numpy C API array
     if ( Hamiltonian_data_arg == NULL ) return -1;
-    Hamiltonian_data_arg = PyArray_FROM_OTF(Hamiltonian_data_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    
+    Hamiltonian_data_arg            = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)Hamiltonian_data_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
     QGD_Complex16* Hamiltonian_data = (QGD_Complex16*)PyArray_DATA(Hamiltonian_data_arg);
-    int NNZ = PyArray_DIMS(Hamiltonian_data_arg)[0];
+    int NNZ                         = PyArray_DIMS(Hamiltonian_data_arg)[0];
+    
     if ( Hamiltonian_indices_arg == NULL ) return -1;
-    Hamiltonian_indices_arg = PyArray_FROM_OTF(Hamiltonian_indices_arg, NPY_INT32, NPY_ARRAY_IN_ARRAY);
+    
+    Hamiltonian_indices_arg  = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)Hamiltonian_indices_arg, NPY_INT32, NPY_ARRAY_IN_ARRAY);
     int* Hamiltonian_indices = (int*)PyArray_DATA(Hamiltonian_indices_arg);
+    
     if ( Hamiltonian_indptr_arg == NULL ) return -1;
-    Hamiltonian_indptr_arg = PyArray_FROM_OTF(Hamiltonian_indptr_arg, NPY_INT32, NPY_ARRAY_IN_ARRAY);
+    
+    Hamiltonian_indptr_arg  = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)Hamiltonian_indptr_arg, NPY_INT32, NPY_ARRAY_IN_ARRAY);
     int* Hamiltonian_indptr = (int*)PyArray_DATA(Hamiltonian_indptr_arg);
     
     Matrix_sparse Hamiltonian_mtx = Matrix_sparse(Hamiltonian_data, shape, shape, NNZ, Hamiltonian_indices, Hamiltonian_indptr);
@@ -304,7 +309,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Qbit_Num(qgd_Variational_Qu
 static PyObject *
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimized_Parameters( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
+    PyArrayObject * parameters_arr = NULL;
 
 
     // parsing input arguments
@@ -316,7 +321,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimized_Parameters( qgd_V
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
 
@@ -350,7 +355,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Optimized_Parameters( qgd_V
 static PyObject *
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Initial_State( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
 
-    PyObject * initial_state_arg = NULL;
+    PyArrayObject * initial_state_arg = NULL;
 
     // parsing input arguments
     if (!PyArg_ParseTuple(args, "|O", &initial_state_arg )) {
@@ -362,7 +367,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Initial_State( qgd_Variatio
         Py_INCREF(initial_state_arg);
     }
     else {
-        initial_state_arg = PyArray_FROM_OTF(initial_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+        initial_state_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)initial_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
     }
 
 
@@ -712,8 +717,8 @@ get_gate(  Variational_Quantum_Eigensolver_Base* vqe, int &idx ) {
 static PyObject *
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_apply_to( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
 
-    PyObject * parameters_arr = NULL;
-    PyObject * unitary_arg = NULL;
+    PyArrayObject * parameters_arr = NULL;
+    PyArrayObject * unitary_arg = NULL;
 
 
     // parsing input arguments
@@ -725,7 +730,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_apply_to( qgd_Variational_Quant
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
     // get the C++ wrapper around the data
@@ -738,7 +743,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_apply_to( qgd_Variational_Quant
         return NULL;
     }
 
-    PyObject* unitary = PyArray_FROM_OTF(unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject* unitary = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(unitary) ) {
@@ -943,8 +948,8 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Second_Renyi_Entropy( qgd_V
 {
 
 
-    PyObject * parameters_arr = NULL;
-    PyObject * input_state_arg = NULL;
+    PyArrayObject * parameters_arr = NULL;
+    PyArrayObject * input_state_arg = NULL;
     PyObject * qubit_list_arg = NULL;
 
 
@@ -957,7 +962,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Second_Renyi_Entropy( qgd_V
         Py_INCREF(parameters_arr);
     }
     else {
-        parameters_arr = PyArray_FROM_OTF(parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     }
 
     // get the C++ wrapper around the data
@@ -969,7 +974,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_Second_Renyi_Entropy( qgd_V
         return NULL;
     }
 
-    PyObject* input_state = PyArray_FROM_OTF(input_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject* input_state = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)input_state_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(input_state) ) {
@@ -1063,7 +1068,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem( qgd_Varia
 {
 
 
-    PyObject* parameters_arg = NULL;
+    PyArrayObject* parameters_arg = NULL;
 
 
     // parsing input arguments
@@ -1080,7 +1085,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem( qgd_Varia
         Py_INCREF(parameters_arg);
     }
     else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
-        parameters_arg = PyArray_FROM_OTF(parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
     }
     else {
         std::string err( "Parameters should be should be real (given in float64 format)");
@@ -1157,12 +1162,55 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates( qgd_Variational_Quan
 
 
 
+/**
+@brief Wrapper function to retrieve the circuit (Squander format) incorporated in the instance.
+@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_circuit( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self ) {
+
+
+    PyObject* qgd_Circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+    if ( qgd_Circuit == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
+        return NULL;
+    }
+
+    // retrieve the C++ variant of the flat circuit (flat circuit does not conatain any sub-circuits)
+    Gates_block* circuit = self->vqe->get_flat_circuit();
+
+
+
+    // construct python interfarce for the circuit
+    PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_Circuit );
+
+    // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+    PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+    // create gate parameters
+    PyObject* qbit_num     = Py_BuildValue("i",  circuit->get_qbit_num() );
+    PyObject* circuit_input = Py_BuildValue("(O)", qbit_num);
+
+    PyObject* py_circuit   = PyObject_CallObject(py_circuit_class, circuit_input);
+    qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+
+    
+    // replace the empty circuit with the extracted one
+    
+    delete( py_circuit_C->gate );
+    py_circuit_C->gate = circuit;
+
+
+    return py_circuit;
+
+}
 
 
 
 
 /**
-@brief ????????????,
+@brief Call to set a project name.
 */
 static PyObject *
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Project_Name( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args ) {
@@ -1250,6 +1298,9 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"get_Gates", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_gates, METH_NOARGS,
      "Method to get gates."
+    },
+    {"get_Circuit", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_circuit, METH_NOARGS,
+     "Method to get the incorporated circuit."
     },
     {"set_Project_Name", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Project_Name, METH_VARARGS,
     "method to set project name."

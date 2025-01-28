@@ -193,6 +193,17 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 	# call the C wrapper function
         super().apply_to( parameters_mtx, state_to_be_transformed )
 
+
+##
+# @brief Call to retrieve the incorporated quantum circuit (Squander format)
+# @return Return with a Qiskit compatible quantum circuit.
+    def get_Circuit( self ):
+        
+        # call the C wrapper function
+        return super().get_Circuit()
+
+
+
 ##
 # @brief Export the unitary decomposition into Qiskit format.
 # @return Return with a Qiskit compatible quantum circuit.        
@@ -200,7 +211,10 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
 
         from squander import Qiskit_IO
         
-        return Qiskit_IO.get_Qiskit_Circuit( self )
+        squander_circuit = self.get_Circuit()
+        parameters       = self.get_Optimized_Parameters()
+        
+        return Qiskit_IO.get_Qiskit_Circuit( squander_circuit, parameters )
 
 
 ##

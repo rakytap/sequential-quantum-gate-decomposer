@@ -62,10 +62,10 @@ class qgd_RX(qgd_RX_Wrapper):
 #@brief Call to get the parameters of the matrices. 
 #@param self A pointer pointing to an instance of the class qgd_RX.
 
-    def get_Gate_Kernel( self, Theta, Phi, Lambda):
+    def get_Gate_Kernel( self, ThetaOver2):
 
 	# call the C wrapper function
-        return super().calc_one_qubit_u3(ThetaOver2, Phi, Lambda)
+        return super().calc_one_qubit_u3(ThetaOver2)
 
 #@brief Call to apply the gate operation on the input matrix
 #@param self A pointer pointing to an instance of the class qgd_RX.
@@ -76,3 +76,43 @@ class qgd_RX(qgd_RX_Wrapper):
 	# call the C wrapper function
         super().apply_to( parameters_mtx, unitary_mtx )
 
+
+
+#@brief Call to get the number of free parameters in the gate.
+    def get_Parameter_Num( self):
+
+	# call the C wrapper function
+        return super().get_Parameter_Num()
+
+
+#@brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated.
+    def get_Parameter_Start_Index( self):
+
+	# call the C wrapper function
+        return super().get_Parameter_Start_Index()
+
+
+#@brief Call to get the target qbit.
+    def get_Target_Qbit( self ):
+
+	# call the C wrapper function
+        return super().get_Target_Qbit()
+
+
+#@brief Call to get the control qbit (returns with -1 if no control qbit is used in the gate).
+    def get_Control_Qbit( self ):
+
+	# call the C wrapper function
+        return super().get_Control_Qbit()
+
+
+
+#@brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
+    def Extract_Parameters( self, parameters_circuit ):
+
+	# call the C wrapper function
+        parameters_gate = super().Extract_Parameters( parameters_circuit )
+
+        parameters_gate = np.reshape( parameters_gate, (parameters_gate.size,) )
+
+        return parameters_gate

@@ -338,6 +338,8 @@ void SYC::reorder_qubits( vector<int> qbit_list) {
 SYC* SYC::clone() {
 
     SYC* ret = new SYC( qbit_num, target_qbit, control_qbit );
+    
+    ret->set_parameter_start_idx( get_parameter_start_idx() );
 
     return ret;
 

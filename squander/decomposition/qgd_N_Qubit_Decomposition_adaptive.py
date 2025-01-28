@@ -74,7 +74,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             return
 
         # call the constructor of the wrapper class
-        super(qgd_N_Qubit_Decomposition_adaptive, self).__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, topology=topology_validated, config=config, accelerator_num=accelerator_num)
+        super().__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, topology=topology_validated, config=config, accelerator_num=accelerator_num)
 
 
 ##
@@ -83,20 +83,20 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def Start_Decomposition(self,prepare_export=True):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_adaptive, self).Start_Decomposition(prepare_export=prepare_export)
+        super().Start_Decomposition(prepare_export=prepare_export)
 ##
 # @brief Wrapper function to call the get_initial_circuit method of C++ class N_Qubit_Decomposition
     def get_Initial_Circuit(self):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_adaptive, self).get_Initial_Circuit()
+        super().get_Initial_Circuit()
         
 ##
 # @brief Wrapper function to call the compress_circuit method of C++ class N_Qubit_Decomposition
     def Compress_Circuit(self,prepare_export=True):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_adaptive, self).Compress_Circuit()
+        super().Compress_Circuit()
 
 ##
 # @brief Wrapper function to call the finalize_circuit method of C++ class N_Qubit_Decomposition
@@ -104,7 +104,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def Finalize_Circuit(self,prepare_export=True):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_adaptive, self).Finalize_Circuit(prepare_export=prepare_export)
+        super().Finalize_Circuit(prepare_export=prepare_export)
 
 ##
 # @brief Call to reorder the qubits in the matrix of the gate
@@ -112,7 +112,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def Reorder_Qubits( self, qbit_list ):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_adaptive, self).Reorder_Qubits(qbit_list)
+        super().Reorder_Qubits(qbit_list)
 
 
 ##
@@ -120,7 +120,17 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def List_Gates(self):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_adaptive, self).List_Gates()
+        super().List_Gates()
+
+
+##
+# @brief Call to retrieve the incorporated quantum circuit (Squander format)
+# @return Return with a Qiskit compatible quantum circuit.
+    def get_Circuit( self ):
+        
+        # call the C wrapper function
+        return super().get_Circuit()
+
 
 ##
 # @brief Export the unitary decomposition into Qiskit format.
@@ -129,7 +139,10 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         from squander import Qiskit_IO
         
-        return Qiskit_IO.get_Qiskit_Circuit( self )
+        squander_circuit = self.get_Circuit()
+        parameters       = self.get_Optimized_Parameters()
+        
+        return Qiskit_IO.get_Qiskit_Circuit( squander_circuit, parameters )
 
 
 
@@ -349,7 +362,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             raise Exception("Input parameter Gate_structure should be a an instance of Circuit")
                     
                     
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Gate_Structure( Gate_structure )
+        return super().set_Gate_Structure( Gate_structure )
         
         
                   
@@ -358,14 +371,14 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param filename String containing the filename
     def set_Gate_Structure_From_Binary( self, filename ):  
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Gate_Structure_From_Binary( filename )
+        return super().set_Gate_Structure_From_Binary( filename )
 
 
 ##
 # @brief Call to add an adaptive layer to the gate structure previously imported gate structure
     def add_Layer_To_Imported_Gate_Structure( self ):  
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Layer_To_Imported_Gate_Structure()
+        return super().add_Layer_To_Imported_Gate_Structure()
 
 
 
@@ -373,102 +386,102 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @brief Call to set the radius in which randomized parameters are generated around the current minimum duting the optimization process
     def set_Randomized_Radius( self, radius ):  
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Randomized_Radius(radius)
+        return super().set_Randomized_Radius(radius)
 
 ##
 # @brief Call to append custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
     def add_Gate_Structure_From_Binary( self, filename ):  
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Gate_Structure_From_Binary( filename )
+        return super().add_Gate_Structure_From_Binary( filename )
         
 ##
 # @brief Call to set unitary matrix from a binary file created from SQUANDER
     def set_Unitary_From_Binary( self, filename ):  
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Unitary_From_Binary( filename )
+        return super().set_Unitary_From_Binary( filename )
  
 ##
 # @brief Call to set unitary matrix from a numpy array
 # @param Umtx_arr numpy complex array 
     def set_Unitary( self, Umtx_arr ):  
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Unitary( Umtx_arr )
+        return super().set_Unitary( Umtx_arr )
         
 ##
 # @brief Call to get unitary matrix
     def get_Unitary( self ):
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Unitary()
+        return super().get_Unitary()
         
 ##
 # @brief Call to export unitary matrix to binary file
 # @param filename string
     def export_Unitary( self, filename ):
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).export_Unitary(filename)
+        return super().export_Unitary(filename)
 
 
 ##
 # @brief Call to get the number of free parameters in the gate structure used for the decomposition
     def get_Parameter_Num( self ):
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Parameter_Num()
+        return super().get_Parameter_Num()
 
 ##
 # @brief Call to get global phase
     def get_Global_Phase( self ):
 	
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Global_Phase()
+        return super().get_Global_Phase()
 
 ##
 # @brief Call to set global phase
 # @param new_global_phase New global phase (in radians)
     def set_Global_Phase( self, new_global_phase ):
 	
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Global_Phase(new_global_phase)
+        return super().set_Global_Phase(new_global_phase)
 ##
 # @brief Call to get the name of the SQUANDER project
     def get_Project_Name( self ):
 	
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Project_Name()
+        return super().get_Project_Name()
 
 ##
 # @brief Call to set the name of the SQUANDER project
 # @param project_name_new new project name
     def set_Project_Name( self, project_name_new ):
 	
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).set_Project_Name(project_name_new)
+        return super().set_Project_Name(project_name_new)
 ##
 # @brief Call to apply global phase on Unitary matrix
     def apply_Global_Phase_Factor( self ):
 	
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Global_Phase_Factor()
+        return super().apply_Global_Phase_Factor()
 
 ##
 # @brief Call to add adaptive layers to the gate structure stored by the class.
     def add_Adaptive_Layers( self ):  
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Adaptive_Layers()
+        return super().add_Adaptive_Layers()
 
 ##
 # @brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
     def add_Finalyzing_Layer_To_Gate_Structure( self ):  
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).add_Finalyzing_Layer_To_Gate_Structure()
+        return super().add_Finalyzing_Layer_To_Gate_Structure()
 
 
 ##
 # @brief Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released.
     def apply_Imported_Gate_Structure( self ):  
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).apply_Imported_Gate_Structure()
+        return super().apply_Imported_Gate_Structure()
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
 # @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2", "ADAM_BATCHED", "AGENTS", "COSINE", "AGENTS_COMBINED".
     def set_Optimizer( self, optimizer="BFGS" ):
 
         # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Optimizer(optimizer)  
+        super().set_Optimizer(optimizer)  
 
 
 ##
@@ -481,7 +494,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             print( "get_Matrix: arary of input parameters is None")
             return None
 
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Matrix( parameters )
+        return super().get_Matrix( parameters )
         
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
@@ -489,7 +502,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def set_Cost_Function_Variant( self, costfnc=0 ):
 
         # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(costfnc=costfnc)  
+        super().set_Cost_Function_Variant(costfnc=costfnc)  
 
 
 ## 
@@ -498,7 +511,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def set_Iteration_Threshold_of_Randomization( self, threshold=2500 ):
 
         # Set the threshold
-        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Iteration_Threshold_of_Randomization(threshold)  
+        super().set_Iteration_Threshold_of_Randomization(threshold)  
 
 
 
@@ -508,7 +521,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def set_Trace_Offset( self, trace_offset=0 ):
 
         # Set the trace offset
-        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Trace_Offset(trace_offset=trace_offset)  
+        super().set_Trace_Offset(trace_offset=trace_offset)  
 
 
 ## 
@@ -517,7 +530,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def get_Trace_Offset( self ):
 
         # Set the optimizer
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Trace_Offset()  
+        return super().get_Trace_Offset()  
 
 
 ## 
@@ -525,7 +538,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @return Returns with the optimized parameters
     def get_Optimized_Parameters(self):
     
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Optimized_Parameters()
+        return super().get_Optimized_Parameters()
 
 
 ## 
@@ -533,7 +546,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @param A numpy array containing the parameters. The number of parameters can be  retrieved with method get_Parameter_Num
     def set_Optimized_Parameters(self, new_params):
         
-        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Optimized_Parameters(new_params)
+        super().set_Optimized_Parameters(new_params)
 
 
 ## 
@@ -546,7 +559,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             return None
 
         # evaluate the cost function and gradients
-        cost_function = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem(parameters)  
+        cost_function = super().Optimization_Problem(parameters)  
 
 
         return cost_function
@@ -562,7 +575,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             return None
 
         # evaluate the cost function and gradients
-        grad = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem_Grad(parameters)  
+        grad = super().Optimization_Problem_Grad(parameters)  
 
         grad = grad.reshape( (-1,))
 
@@ -579,7 +592,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             return None
 
         # evaluate the cost function and gradients
-        cost_function, grad = super(qgd_N_Qubit_Decomposition_adaptive, self).Optimization_Problem_Combined(parameters)  
+        cost_function, grad = super().Optimization_Problem_Combined(parameters)  
 
         grad = grad.reshape( (-1,))
 
@@ -590,27 +603,27 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def Prepare_Gates_To_Export(self):
 
         # Set the optimizer
-        super(qgd_N_Qubit_Decomposition_adaptive, self).Prepare_Gates_To_Export()
+        super().Prepare_Gates_To_Export()
 
 ##
 # @brief Call to get the number of iterations  
     def get_Num_of_Iters(self):
     
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Num_of_Iters()
+        return super().get_Num_of_Iters()
     
 ##
 # @brief Call to set the maximum number of iterations for each optimization loop
 # @param max_iters int number of maximum iterations each loop
     def set_Max_Iterations(self, max_iters):
         
-        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Max_Iterations(max_iters)
+        super().set_Max_Iterations(max_iters)
     
 ##
 # @brief call to set the cost function type of the optimization problem
 # @param cost_func int argument 0 stands for FROBENIUS_NORM, 1 for FROBENIUS_NORM_CORRECTION1, 2 for FROBENIUS_NORM_CORRECTION2, 3 for HILBERT_SCHMIDT_TEST, 4 for HILBERT_SCHMIDT_TEST_CORRECTION1, 5 for HILBERT_SCHMIDT_TEST_CORRECTION2 see more at: https://arxiv.org/abs/2210.09191
     def set_Cost_Function_Variant(self, cost_func):
     
-        super(qgd_N_Qubit_Decomposition_adaptive, self).set_Cost_Function_Variant(cost_func)
+        super().set_Cost_Function_Variant(cost_func)
 
 
 ##
@@ -618,7 +631,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @return Returns with the error of the decmposition
     def get_Decomposition_Error(self):
     
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Decomposition_Error()
+        return super().get_Decomposition_Error()
 
 
 
@@ -660,7 +673,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
             input_state[0] = 1
 
         # evaluate the entropy
-        entropy = super(qgd_N_Qubit_Decomposition_adaptive, self).get_Second_Renyi_Entropy( parameters, input_state, qubit_list_validated)  
+        entropy = super().get_Second_Renyi_Entropy( parameters, input_state, qubit_list_validated)  
 
 
         return entropy
@@ -672,4 +685,4 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 # @return Returns with the number of qubits
     def get_Qbit_Num(self):
     
-        return super(qgd_N_Qubit_Decomposition_adaptive, self).get_Qbit_Num()
+        return super().get_Qbit_Num()

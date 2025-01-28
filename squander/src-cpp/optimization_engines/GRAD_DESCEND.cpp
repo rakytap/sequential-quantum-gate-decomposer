@@ -111,7 +111,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND( int 
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 	    
 
-            Grad_Descend cGrad_Descend(optimization_problem_combined, this);
+            Grad_Descend cGrad_Descend(optimization_problem_combined, export_current_cost_fnc, this);
             double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations_loc);
 
             if (current_minimum > f) {
