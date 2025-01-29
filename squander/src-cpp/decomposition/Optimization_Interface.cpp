@@ -1394,7 +1394,7 @@ Optimization_Interface::apply_to( Matrix_real& parameters_mtx, Matrix& input, in
 
 std::cout << "Optimization_Interface::apply_to " << get_accelerator_num() << std::endl;
 
-
+std::cout << "rrrrrrrrrrrrrrrrrr " << get_accelerator_num() << std::endl;
     if ( get_accelerator_num() > 0 ) {
 
         ///////////////////////////////
@@ -1409,11 +1409,23 @@ std::cout << "Optimization_Interface::apply_to " << get_accelerator_num() << std
         extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, parameters_mtx);
         const int device_num = 0;
 
+tbb::tick_count t0_DFE = tbb::tick_count::now();
+        struct timespec starttime;
+        timespec_get(&starttime, TIME_UTC);
         apply_to_groq_sv(device_num, u3_qbit, input, target_qbit, control_qbit);
+tbb::tick_count t1_DFE = tbb::tick_count::now();
+std::cout << "Time elapsed with Groq: " << (t1_DFE-t0_DFE).seconds() << std::endl;
+        struct timespec t;
+        timespec_get(&t, TIME_UTC);
+        printf("Time elapsed with Groq: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
 
 
         ///////////////////////////////
+tbb::tick_count t0_CPU = tbb::tick_count::now();
         Decomposition_Base::apply_to(parameters_mtx, input_copy, parallel);
+
+tbb::tick_count t1_CPU = tbb::tick_count::now();
+std::cout << "Time elapsed with CPU: " << (t1_CPU-t0_CPU).seconds() << std::endl;
 
         double diff = 0.0;
         for( int64_t idx=0; idx<input_copy.size(); idx++ ) {
@@ -1432,7 +1444,7 @@ std::cout << "Optimization_Interface::apply_to " << get_accelerator_num() << std
 
     }
     else {
-
+std::cout << "zzzzzzzzzzzzzzzzzzzz " << std::endl;
         Decomposition_Base::apply_to(parameters_mtx, input, parallel);
 
     }

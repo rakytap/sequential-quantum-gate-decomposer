@@ -278,9 +278,19 @@ unsigned int ctz(unsigned int v) { //can use consecutive trailing zero bits if a
 }
 
 void apply_to_groq_sv(int device_num, std::vector<Matrix>& u3_qbit, Matrix& input, std::vector<int>& target_qbit, std::vector<int>& control_qbit) {
+
+    struct timespec starttime;
+    timespec_get(&starttime, TIME_UTC);
     int alloc_dfes = 2;
     if (handle_sv == NULL && !init_groq_sv_lib(alloc_dfes))
         throw std::string("Could not load and initialize DFE library");
+
+    struct timespec t;
+    timespec_get(&t, TIME_UTC);
+    printf("Total time on uploading the Groq program: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+
+
+    timespec_get(&starttime, TIME_UTC);
     std::vector<float> inout;
     inout.reserve(input.size()*2);
     for (size_t i = 0; i < input.rows; i++) {
@@ -298,16 +308,36 @@ void apply_to_groq_sv(int device_num, std::vector<Matrix>& u3_qbit, Matrix& inpu
             }
         }
     }
-    if (load_sv_dll(inout.data(), ctz(input.rows), device_num)) {
-        throw std::string("Error loading state vector to groq");
-    }
+    timespec_get(&t, TIME_UTC);
+    printf("Total time on converting data to float: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
 
+
+    timespec_get(&starttime, TIME_UTC);
+    if (load_sv_dll(inout.data(), ctz(input.rows), device_num)) {
+        throw std::string("Error occured while uploading state vector to Groq LPU");
+    }
+    timespec_get(&t, TIME_UTC);
+    printf("Total time on load_sv: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+
+
+
+    timespec_get(&starttime, TIME_UTC);
     if (calcsvKernelGroq_dll(u3_qbit.size(), gateMatrices.data(), target_qbit.data(), control_qbit.data(), inout.data(), device_num)) throw std::string("Error running gate kernels on groq");
+    timespec_get(&t, TIME_UTC);
+    printf("Total time on calcsvKernelGroq: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+
+
+    timespec_get(&starttime, TIME_UTC);    
     for (size_t i = 0; i < input.rows; i++) {
         for (size_t j = 0; j < input.cols; j++) {
             input.data[i*input.stride+j].real = inout[2*(i*input.cols+j)];
             input.data[i*input.stride+j].imag = inout[2*(i*input.cols+j)+1];
         }
     }
+    timespec_get(&t, TIME_UTC);
+    printf("Total time on copying transformed data: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+
+
+
 }
 
