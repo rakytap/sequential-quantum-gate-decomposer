@@ -298,7 +298,10 @@ void apply_to_groq_sv(int device_num, std::vector<Matrix>& u3_qbit, Matrix& inpu
             }
         }
     }
-    if (load_sv_dll(inout.data(), ctz(input.rows), device_num)) throw std::string("Error loading state vector to groq");
+    if (load_sv_dll(inout.data(), ctz(input.rows), device_num)) {
+        throw std::string("Error loading state vector to groq");
+    }
+
     if (calcsvKernelGroq_dll(u3_qbit.size(), gateMatrices.data(), target_qbit.data(), control_qbit.data(), inout.data(), device_num)) throw std::string("Error running gate kernels on groq");
     for (size_t i = 0; i < input.rows; i++) {
         for (size_t j = 0; j < input.cols; j++) {

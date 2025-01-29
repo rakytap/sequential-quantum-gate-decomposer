@@ -89,9 +89,10 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         double optimization_time = 0.0;
         tbb::tick_count optimization_start = tbb::tick_count::now();
 
-
+std::cout << "Optimization_Interface::solve_layer_optimization_problem_COSINE 0" << std::endl;
         // the current result
         current_minimum = optimization_problem( optimized_parameters_mtx );
+std::cout << "Optimization_Interface::solve_layer_optimization_problem_COSINE 1" << std::endl;
         export_current_cost_fnc(current_minimum);
         
 

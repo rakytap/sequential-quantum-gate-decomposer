@@ -855,7 +855,7 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates_with_derivates(qgd_Circuit_Wrapper *sel
         return Py_BuildValue("");
 
     if ( parameters_mtx_np == NULL ) return Py_BuildValue("");
-    PyObject* parameters_mtx = PyArray_FROM_OTF(parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject* parameters_mtx = (PyArrayObject*) PyArray_FROM_OTF(parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(parameters_mtx) ) {
@@ -918,7 +918,7 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *ar
         return Py_BuildValue("");
 
     if ( parameters_mtx_np == NULL ) return Py_BuildValue("");
-    PyObject* parameters_mtx = PyArray_FROM_OTF(parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    PyArrayObject* parameters_mtx = (PyArrayObject*)PyArray_FROM_OTF(parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(parameters_mtx) ) {

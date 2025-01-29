@@ -201,7 +201,6 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& in
 void 
 Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
-
     std::vector<int> involved_qubits = get_involved_qubits();
        
     // TODO: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!
@@ -225,7 +224,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
                 Gates_block gates_block_mini = Gates_block(block_type[block_idx]);
                 std::vector<int> qbits = involved_qbits[block_idx];
 #ifdef _WIN32
-				int* indices = (int*)_malloca(qbit_num*sizeof(int));
+                int* indices = (int*)_malloca(qbit_num*sizeof(int));
 #else
                 int indices[qbit_num];
 #endif
@@ -3243,11 +3242,20 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
 
 }
 
-void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx)
-{   u3_qbit.reserve(u3_qbit.capacity() + gates.size());
+
+
+
+//TODO docstring
+void 
+Gates_block::extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx)
+{   
+
+    u3_qbit.reserve(u3_qbit.capacity() + gates.size());
     target_qbit.reserve(target_qbit.capacity() + gates.size());
     control_qbit.reserve(control_qbit.capacity() + gates.size());
     double* parameters = parameters_mtx.get_data();
+
+
     for( int idx=0; idx<gates.size(); idx++) {
         Gate* operation = gates[idx];
         parameters = parameters + operation->get_parameter_num();
@@ -3318,6 +3326,7 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
             u3_qbit.push_back(rz_operation->calc_one_qubit_u3(params_mtx[0]));
             break;
         }
+/*
         case RZ_P_OPERATION: {
             RZ_P* rz_p_operation = static_cast<RZ_P*>(operation);
             double ThetaOver2, Phi, Lambda;
@@ -3326,9 +3335,10 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
             u3_qbit.push_back(rz_p_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
             break;
         }
+*/
         case BLOCK_OPERATION: {
             Gates_block* block_operation = static_cast<Gates_block*>(operation);
-            block_operation->get_matrices_target_control(u3_qbit, target_qbit, control_qbit, params_mtx);
+            block_operation->extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, params_mtx);
             continue;
         }
         //case ADAPTIVE_OPERATION:
@@ -3341,6 +3351,7 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
             std::string err("Optimization_Interface::apply_to: unimplemented gate (" + std::to_string(operation->get_type()) + ")"); 
             throw err;
         }
+
         target_qbit.push_back(operation->get_target_qbit());
         control_qbit.push_back(operation->get_control_qbit());
     }    

@@ -74,7 +74,7 @@ Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base() {
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Variational_Quantum_Eigensolver_Base::Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, int accelerator_num) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
 	Hamiltonian = Hamiltonian_in;
     // config maps
@@ -320,13 +320,13 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
     }
 	
     Matrix State = initial_state.copy();
-	
+std::cout << 	"Variational_Quantum_Eigensolver_Base::optimization_problem 0 " << std::endl;
     apply_to(parameters, State);
-	
+std::cout << 	"Variational_Quantum_Eigensolver_Base::optimization_problem 1 " << std::endl;	
     //State.print_matrix();
 	
     double Energy = Expectation_value_of_energy_real(State, State);
-	
+std::cout << 	"Variational_Quantum_Eigensolver_Base::optimization_problem 2 " << std::endl;		
     return Energy;
 }
 

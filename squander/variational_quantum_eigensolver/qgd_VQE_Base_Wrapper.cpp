@@ -67,9 +67,9 @@ typedef struct qgd_Variational_Quantum_Eigensolver_Base_Wrapper {
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 Variational_Quantum_Eigensolver_Base* 
-create_qgd_Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian, int qbit_num, std::map<std::string, Config_Element>& config) {
+create_qgd_Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian, int qbit_num, std::map<std::string, Config_Element>& config, int accelerator_num) {
 
-    return new Variational_Quantum_Eigensolver_Base( Hamiltonian, qbit_num, config);
+    return new Variational_Quantum_Eigensolver_Base( Hamiltonian, qbit_num, config, accelerator_num);
 }
 
 
@@ -144,7 +144,7 @@ static int
 qgd_Variational_Quantum_Eigensolver_Base_Wrapper_init(qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"Hamiltonian_data", (char*)"Hamiltonian_indices", (char*)"Hamiltonian_indptr", (char*)"qbit_num", (char*)"config", NULL};
+    static char *kwlist[] = {(char*)"Hamiltonian_data", (char*)"Hamiltonian_indices", (char*)"Hamiltonian_indptr", (char*)"qbit_num", (char*)"config", (char*)"accelerator_num", NULL};
  
     // initiate variables for input arguments
     PyArrayObject *Hamiltonian_data_arg = NULL;
@@ -152,10 +152,11 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_init(qgd_Variational_Quantum_Ei
     PyArrayObject *Hamiltonian_indptr_arg = NULL;
     int  qbit_num = -1; 
     PyObject *config_arg = NULL;
+    int accelerator_num = 0;
     
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOiO", kwlist,
-                                   &Hamiltonian_data_arg, &Hamiltonian_indices_arg, &Hamiltonian_indptr_arg, &qbit_num, &config_arg))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOOiOi", kwlist,
+                                   &Hamiltonian_data_arg, &Hamiltonian_indices_arg, &Hamiltonian_indptr_arg, &qbit_num, &config_arg, &accelerator_num))
         return -1;
     
     int shape = Power_of_2(qbit_num);
@@ -213,7 +214,7 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_init(qgd_Variational_Quantum_Ei
 
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
-        self->vqe =  create_qgd_Variational_Quantum_Eigensolver_Base(Hamiltonian_mtx, qbit_num, config);
+        self->vqe =  create_qgd_Variational_Quantum_Eigensolver_Base(Hamiltonian_mtx, qbit_num, config, accelerator_num);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;

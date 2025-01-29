@@ -583,7 +583,6 @@ Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& 
 tbb::tick_count t0_DFE = tbb::tick_count::now();    
 
 
-
         Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
              
 #ifdef __DFE__
@@ -1380,6 +1379,63 @@ Optimization_Interface::get_accelerator_num() {
 
     return accelerator_num;
 
+}
+
+
+/**
+@brief Overriding the apply_to functionality coming from Gates_block when accelerator is used
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+*/
+void 
+Optimization_Interface::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel )
+{
+
+std::cout << "Optimization_Interface::apply_to " << get_accelerator_num() << std::endl;
+
+
+    if ( get_accelerator_num() > 0 ) {
+
+        ///////////////////////////////
+        Matrix input_copy = input.copy();
+        //////////////////////////////
+
+
+
+        std::vector<int> target_qbit;
+        std::vector<int> control_qbit;
+        std::vector<Matrix> u3_qbit;
+        extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, parameters_mtx);
+        const int device_num = 0;
+
+        apply_to_groq_sv(device_num, u3_qbit, input, target_qbit, control_qbit);
+
+
+        ///////////////////////////////
+        Decomposition_Base::apply_to(parameters_mtx, input_copy, parallel);
+
+        double diff = 0.0;
+        for( int64_t idx=0; idx<input_copy.size(); idx++ ) {
+
+            QGD_Complex16 element = input[idx];
+            QGD_Complex16 element_copy = input_copy[idx];
+            QGD_Complex16 element_diff;
+            element_diff.real = element.real - element_copy.real;
+            element_diff.imag = element.imag - element_copy.imag;
+            diff = diff + element_diff.real*element_diff.real + element_diff.imag*element_diff.imag;
+        }
+       
+        std::cout << "Optimization_Interface::apply_to checking diff: " << diff << std::endl;
+
+        //////////////////////////////
+
+    }
+    else {
+
+        Decomposition_Base::apply_to(parameters_mtx, input, parallel);
+
+    }
 }
 
 

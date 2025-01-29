@@ -525,21 +525,11 @@ void upload_Umtx_to_DFE();
 */
 int get_accelerator_num();
 
-#ifdef __DFE__
-virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 )
-{
-    if (ctz(input.rows) == 17) {
-        std::vector<int> target_qbit;
-        std::vector<int> control_qbit;
-        std::vector<Matrix> u3_qbit;
-        get_matrices_target_control(u3_qbit, target_qbit, control_qbit, parameters_mtx);
-        const int device_num = 0;
-        apply_to_groq_sv(device_num, u3_qbit, input, target_qbit, control_qbit);
-        return;
-    }
-    Decomposition_Base::apply_to(parameters_mtx, input, parallel);
-}
-#endif
+
+/**
+@brief Get the number of accelerators to be reserved on DFEs on users demand. 
+*/
+virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 );
 
 #endif
 

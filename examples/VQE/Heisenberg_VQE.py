@@ -56,13 +56,13 @@ def generate_hamiltonian(n):
 
 
 # The number of circuit layers
-layers = 100
+layers = 2
 
 # the number of subblocks in a single layer
 inner_blocks = 1
 
 # The number of qubits
-qbit_num = 10
+qbit_num = 17
 
 
 
@@ -84,7 +84,7 @@ config = {"max_inner_iterations":800,
 	"convergence_length": 20}
 
 # initiate the VQE object with the Hamiltonian
-VQE_Heisenberg = Variational_Quantum_Eigensolver(Hamiltonian, qbit_num, config)
+VQE_Heisenberg = Variational_Quantum_Eigensolver(Hamiltonian, qbit_num, config, accelerator_num=1)
 
 # set the optimization engine to agents
 VQE_Heisenberg.set_Optimizer("COSINE")
