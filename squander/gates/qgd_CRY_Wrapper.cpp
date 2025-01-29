@@ -41,7 +41,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 typedef struct {
     PyObject_HEAD
     /// Pointer to the C++ class of the RY gate
-    RY* gate;
+    CRY* gate;
 } qgd_CRY_Wrapper;
 
 
