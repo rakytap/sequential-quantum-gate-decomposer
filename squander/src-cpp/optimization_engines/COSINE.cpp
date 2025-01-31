@@ -94,7 +94,7 @@ std::cout << "Optimization_Interface::solve_layer_optimization_problem_COSINE 0"
         current_minimum = optimization_problem( optimized_parameters_mtx );
 std::cout << "Optimization_Interface::solve_layer_optimization_problem_COSINE 1" << std::endl;
         export_current_cost_fnc(current_minimum);
-        
+exit(1);        
 
         // the array storing the optimized parameters
         Matrix_real solution_guess_tmp_mtx = Matrix_real( num_of_parameters, 1 );

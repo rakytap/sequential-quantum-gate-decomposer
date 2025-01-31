@@ -56,13 +56,13 @@ def generate_hamiltonian(n):
 
 
 # The number of circuit layers
-layers = 2
+layers = 500
 
 # the number of subblocks in a single layer
 inner_blocks = 1
 
 # The number of qubits
-qbit_num = 17
+qbit_num = 16
 
 
 

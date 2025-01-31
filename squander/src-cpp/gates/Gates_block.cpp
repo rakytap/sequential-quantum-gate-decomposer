@@ -3250,9 +3250,19 @@ void
 Gates_block::extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx)
 {   
 
+    if ( u3_qbit.size() == 0 ) {
+        gates_num gate_nums   = get_gate_nums();
+        int gates_total_num   = gate_nums.total; 
+
+        u3_qbit.reserve( gates_total_num );
+        target_qbit.reserve( gates_total_num );
+        control_qbit.reserve( gates_total_num );
+    }
+/*
     u3_qbit.reserve(u3_qbit.capacity() + gates.size());
     target_qbit.reserve(target_qbit.capacity() + gates.size());
     control_qbit.reserve(control_qbit.capacity() + gates.size());
+*/
     double* parameters = parameters_mtx.get_data();
 
 

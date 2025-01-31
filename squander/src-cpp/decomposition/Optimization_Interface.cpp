@@ -1400,16 +1400,18 @@ std::cout << "rrrrrrrrrrrrrrrrrr " << get_accelerator_num() << std::endl;
         ///////////////////////////////
         Matrix input_copy = input.copy();
         //////////////////////////////
-
-
+tbb::tick_count t0_DFE = tbb::tick_count::now();
+tbb::tick_count t0_data_extraction = tbb::tick_count::now();
         std::vector<int> target_qbit;
         std::vector<int> control_qbit;
         std::vector<Matrix> u3_qbit;
         extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, parameters_mtx);
-        const int device_num = 0;
-std::cout << "gate num: " << u3_qbit.size() << std::endl;
+tbb::tick_count t1_data_extraction = tbb::tick_count::now();
+std::cout << "Time elapsed with extracting gate kernels: " << (t1_data_extraction-t0_data_extraction).seconds() << std::endl;
 
-tbb::tick_count t0_DFE = tbb::tick_count::now();
+
+        const int device_num = 0;
+
         apply_to_groq_sv(device_num, u3_qbit, input, target_qbit, control_qbit);
 tbb::tick_count t1_DFE = tbb::tick_count::now();
 std::cout << "Time elapsed with Groq: " << (t1_DFE-t0_DFE).seconds() << std::endl;

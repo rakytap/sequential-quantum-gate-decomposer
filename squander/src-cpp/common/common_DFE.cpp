@@ -25,6 +25,7 @@ limitations under the License.
 // gates acting on the N-qubit space
 
 #include "common_DFE.h"
+#include "matrix_base.h"
 
 #include <atomic>
 #include <dlfcn.h>
@@ -54,7 +55,7 @@ int (*get_chained_gates_num_dll)() = NULL;
 
 size_t (*get_accelerator_avail_num_sv_dll)() = NULL;
 size_t (*get_accelerator_free_num_sv_dll)() = NULL;
-int (*calcsvKernelGroq_dll)(int num_gates, float* gates, int* target_qubits, int* control_qubits, float* result, int device_num) = NULL;
+int (*calcsvKernelGroq_dll)(int num_gates, float* gates, int* target_qubits, int* control_qubits, float* result_real, float* result_imag, int device_num) = NULL;
 int (*load_sv_dll)(float* data, size_t num_qubits, size_t device_num) = NULL;
 void (*releive_groq_sv_dll)() = NULL;
 int (*initialize_groq_sv_dll)( int accelerator_num ) = NULL;
@@ -252,7 +253,7 @@ int init_groq_sv_lib( const int accelerator_num )  {
     else {
         get_accelerator_avail_num_sv_dll = (size_t (*)())dlsym(handle_sv, "get_accelerator_avail_num_sv");
         get_accelerator_free_num_sv_dll  = (size_t (*)())dlsym(handle_sv, "get_accelerator_free_num_sv");
-        calcsvKernelGroq_dll          = (int (*)(int, float*, int*, int*, float*, int))dlsym(handle_sv, "calcsvKernelGroq");
+        calcsvKernelGroq_dll          = (int (*)(int, float*, int*, int*, float*, float*, int))dlsym(handle_sv, "calcsvKernelGroq");
         load_sv_dll                 = (int (*)(float*, size_t, size_t))dlsym(handle_sv, "load_sv");
         releive_groq_sv_dll               = (void (*)())dlsym(handle_sv, "releive_groq_sv");
         initialize_groq_sv_dll            = (int (*)(int))dlsym(handle_sv, "initialize_groq_sv");
@@ -309,7 +310,7 @@ void apply_to_groq_sv(int device_num, std::vector<Matrix>& u3_qbit, Matrix& inpu
         }
     }
     timespec_get(&t, TIME_UTC);
-    printf("Total time on converting data to float: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+    printf("Total time on converting input data to float: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
 
 
     timespec_get(&starttime, TIME_UTC);
@@ -317,25 +318,33 @@ void apply_to_groq_sv(int device_num, std::vector<Matrix>& u3_qbit, Matrix& inpu
         throw std::string("Error occured while uploading state vector to Groq LPU");
     }
     timespec_get(&t, TIME_UTC);
-    printf("Total time on load_sv: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+    printf("Total time on uploading the state vector: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
 
 
 
     timespec_get(&starttime, TIME_UTC);
-    if (calcsvKernelGroq_dll(u3_qbit.size(), gateMatrices.data(), target_qbit.data(), control_qbit.data(), inout.data(), device_num)) throw std::string("Error running gate kernels on groq");
+    // evaluate the gate kernels on the Groq chip
+    matrix_base<float> transformed_sv_real(input.size(), 1);
+    matrix_base<float> transformed_sv_imag(input.size(), 1);
+
+    if (calcsvKernelGroq_dll(u3_qbit.size(), gateMatrices.data(), target_qbit.data(), control_qbit.data(), transformed_sv_real.get_data(), transformed_sv_imag.get_data(), device_num)) {
+        throw std::string("Error running gate kernels on groq");
+    }
+
     timespec_get(&t, TIME_UTC);
     printf("Total time on calcsvKernelGroq: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
 
 
-    timespec_get(&starttime, TIME_UTC);    
+    timespec_get(&starttime, TIME_UTC);  
+    // transform the state vector to double representation  
     for (size_t i = 0; i < input.rows; i++) {
         for (size_t j = 0; j < input.cols; j++) {
-            input.data[i*input.stride+j].real = inout[2*(i*input.cols+j)];
-            input.data[i*input.stride+j].imag = inout[2*(i*input.cols+j)+1];
+            input.data[i*input.stride+j].real = transformed_sv_real[i*input.cols+j];
+            input.data[i*input.stride+j].imag = transformed_sv_imag[i*input.cols+j];
         }
     }
     timespec_get(&t, TIME_UTC);
-    printf("Total time on copying transformed data: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+    printf("Total time on transforming state vector to double: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
 
 
 
