@@ -1402,22 +1402,17 @@ std::cout << "rrrrrrrrrrrrrrrrrr " << get_accelerator_num() << std::endl;
         //////////////////////////////
 
 
-
         std::vector<int> target_qbit;
         std::vector<int> control_qbit;
         std::vector<Matrix> u3_qbit;
         extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, parameters_mtx);
         const int device_num = 0;
+std::cout << "gate num: " << u3_qbit.size() << std::endl;
 
 tbb::tick_count t0_DFE = tbb::tick_count::now();
-        struct timespec starttime;
-        timespec_get(&starttime, TIME_UTC);
         apply_to_groq_sv(device_num, u3_qbit, input, target_qbit, control_qbit);
 tbb::tick_count t1_DFE = tbb::tick_count::now();
 std::cout << "Time elapsed with Groq: " << (t1_DFE-t0_DFE).seconds() << std::endl;
-        struct timespec t;
-        timespec_get(&t, TIME_UTC);
-        printf("Time elapsed with Groq: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
 
 
         ///////////////////////////////
@@ -1439,6 +1434,8 @@ std::cout << "Time elapsed with CPU: " << (t1_CPU-t0_CPU).seconds() << std::endl
         }
        
         std::cout << "Optimization_Interface::apply_to checking diff: " << diff << std::endl;
+
+std::cout << input[0].real <<  " " << input_copy[0].real << std::endl;
 
         //////////////////////////////
 
