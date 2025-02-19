@@ -526,10 +526,6 @@ void upload_Umtx_to_DFE();
 int get_accelerator_num();
 
 
-/**
-@brief Get the number of accelerators to be reserved on DFEs on users demand. 
-*/
-virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 );
 
 #endif
 

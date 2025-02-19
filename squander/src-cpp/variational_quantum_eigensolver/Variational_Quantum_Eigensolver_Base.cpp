@@ -314,19 +314,92 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Mat
 */
 double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& parameters)  {
 
-    // initialize the initial state if it was not given
-    if ( initial_state.size() == 0 ) {
-        initialize_zero_state();
-    }
+
+    Matrix State;
+
+#ifdef __DFE__
+    if ( get_accelerator_num() > 0 ) {
+/*
+// initialize the initial state if it was not given
+        if ( initial_state.size() == 0 ) {
+            initialize_zero_state();
+        }
 	
-    Matrix State = initial_state.copy();
-std::cout << 	"Variational_Quantum_Eigensolver_Base::optimization_problem 0 " << std::endl;
-    apply_to(parameters, State);
-std::cout << 	"Variational_Quantum_Eigensolver_Base::optimization_problem 1 " << std::endl;	
-    //State.print_matrix();
+        State = initial_state.copy();
+
+
+        //////////////////////////////
+        Matrix State_copy = State.copy();
+*/
+
+//tbb::tick_count t0_DFE = tbb::tick_count::now();
+//tbb::tick_count t0_data_extraction = tbb::tick_count::now();
+        std::vector<int> target_qbit;
+        std::vector<int> control_qbit;
+        std::vector<Matrix> u3_qbit;
+        extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, parameters);
+//tbb::tick_count t1_data_extraction = tbb::tick_count::now();
+//std::cout << "Time elapsed with extracting gate kernels: " << (t1_data_extraction-t0_data_extraction).seconds() << std::endl;
+
+        // starting logical index of the device to bu used to run the IOP
+        const int device_num = 0;
+
+	Matrix State_zero(0,0);
+        // apply state transformation via the Groq chip
+        //apply_to_groq_sv(device_num, qbit_num, u3_qbit, State, target_qbit, control_qbit);
+        apply_to_groq_sv(device_num, qbit_num, u3_qbit, State_zero, target_qbit, control_qbit); 
+        State = State_zero;
+/*
+tbb::tick_count t1_DFE = tbb::tick_count::now();
+std::cout << "Time elapsed with Groq: " << (t1_DFE-t0_DFE).seconds() << std::endl;
+
+
+        ///////////////////////////////
+tbb::tick_count t0_CPU = tbb::tick_count::now();
+        Decomposition_Base::apply_to(parameters, State_copy );
+
+tbb::tick_count t1_CPU = tbb::tick_count::now();
+std::cout << "Time elapsed with CPU: " << (t1_CPU-t0_CPU).seconds() << std::endl;
+
+        double diff = 0.0;
+        for( int64_t idx=0; idx<State_copy.size(); idx++ ) {
+
+            QGD_Complex16 element = State[idx];
+            QGD_Complex16 element_copy = State_copy[idx];
+            QGD_Complex16 element_diff;
+            element_diff.real = element.real - element_copy.real;
+            element_diff.imag = element.imag - element_copy.imag;
+            diff = diff + element_diff.real*element_diff.real + element_diff.imag*element_diff.imag;
+        }
+       
+        std::cout << "Optimization_Interface::apply_to checking diff: " << diff << std::endl;
+
+std::cout << State[0].real <<  " " << State_copy[0].real << " " << initial_state[0].real << std::endl;
+std::cout << State[1].real <<  " " << State_copy[1].real << " " << initial_state[1].real << std::endl;
+
+        //////////////////////////////
+*/
+
+    }
+    else {
+#endif
+        // initialize the initial state if it was not given
+        if ( initial_state.size() == 0 ) {
+            initialize_zero_state();
+        }
+	
+        State = initial_state.copy();
+        apply_to(parameters, State);
+
+#ifdef __DFE__
+    }
+#endif
+
+
+
 	
     double Energy = Expectation_value_of_energy_real(State, State);
-std::cout << 	"Variational_Quantum_Eigensolver_Base::optimization_problem 2 " << std::endl;		
+	
     return Energy;
 }
 
@@ -464,7 +537,10 @@ void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
 
     initial_state[0].real = 1.0;
     initial_state[0].imag = 0.0;
-    memset(initial_state.get_data()+2, 0.0, (initial_state.size()*2-2)*sizeof(double) );      
+    memset(initial_state.get_data()+2, 0.0, (initial_state.size()*2-2)*sizeof(double) );    
+
+    initial_state[1].real = 0.0;
+    initial_state[1].imag = 0.0;  
 
 
     return;

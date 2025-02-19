@@ -101,6 +101,7 @@ print('The number of free parameters is: ', str(param_num) )
 
 
 parameters = np.random.randn( param_num )*2*np.pi#np.zeros( (param_num,) )
+parameters[0] = 1.2
 VQE_Heisenberg.set_Optimized_Parameters(parameters)
 
 #VQE_Heisenberg.set_Initial_State( eigvec )

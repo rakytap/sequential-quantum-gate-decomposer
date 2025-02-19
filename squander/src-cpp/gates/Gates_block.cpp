@@ -2305,8 +2305,9 @@ Gates_block::get_reduced_density_matrix( Matrix_real& parameters_mtx, Matrix& in
     }
 
     if ( abs( trace-1.0 ) > 1e-6 ) {
-        std::string error("Gates_block::get_reduced_density_matrix: The trace of the reduced density matrix is not unity");
-        throw error;
+        std::stringstream sstream;
+     	sstream << "Warning: Gates_block::get_reduced_density_matrix: The error of the trace of the reduced density matrix is " << abs( trace-1.0 ) << std::endl;
+	    print(sstream, 1);	 
     }
 
     return rho;
@@ -3352,8 +3353,37 @@ Gates_block::extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> 
         }
 */
         case BLOCK_OPERATION: {
+        
             Gates_block* block_operation = static_cast<Gates_block*>(operation);
-            block_operation->extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, params_mtx);
+            //std::vector<Gate*> involved_gates = block_operation->get_gates();
+
+            std::vector<int>&& involved_qubits = block_operation->get_involved_qubits();
+            
+            if  ( involved_qubits.size() == 1 && block_operation->gates.size() > 1 && block_operation->get_qbit_num() > 1 ) {           
+                // possibly merge successive single qubit gates        
+    
+                Gates_block gates_block_mini = Gates_block(1);
+  
+                for (int idx=0; idx<block_operation->gates.size(); idx++){
+                    Gate* gate = block_operation->gates[idx]->clone();
+                    gate->set_target_qbit(0);
+                    gate->set_qbit_num(1);
+
+                    gates_block_mini.add_gate(gate);
+                }
+                
+                Matrix merged_kernel = create_identity(2);
+             
+                gates_block_mini.apply_to(params_mtx, merged_kernel);
+                
+                u3_qbit.push_back( merged_kernel );
+                target_qbit.push_back( involved_qubits[0] );
+                control_qbit.push_back( -1 );
+
+            }
+            else {                
+                block_operation->extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, params_mtx);
+            }
             continue;
         }
         //case ADAPTIVE_OPERATION:
