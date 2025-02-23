@@ -72,10 +72,9 @@ N_Qubit_Decomposition::~N_Qubit_Decomposition() {
 /**
 @brief Start the disentanglig process of the unitary
 @param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
-@param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
 */
 void
-N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_export) {
+N_Qubit_Decomposition::start_decomposition(bool finalize_decomp) {
 
 
 
@@ -170,10 +169,6 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp, bool prepare_ex
 
         optimization_block = optimization_block_orig;
 
-        // prepare gates to export
-        if (prepare_export) {
-            prepare_gates_to_export();
-        }
 
         // calculating the final error of the decomposition
         Matrix matrix_decomposed = Umtx.copy();
@@ -329,7 +324,7 @@ N_Qubit_Decomposition::decompose_submatrix() {
         cdecomposition->set_optimization_tolerance( optimization_tolerance );
 
         // starting the decomposition of the random unitary
-        cdecomposition->start_decomposition(false, false);
+        cdecomposition->start_decomposition(false);
 
 
         // saving the decomposition gates

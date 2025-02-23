@@ -79,11 +79,10 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
 ##
 # @brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
-# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
-    def Start_Decomposition(self,prepare_export=True):
+    def Start_Decomposition(self,):
 
 	# call the C wrapper function
-        super().Start_Decomposition(prepare_export=prepare_export)
+        super().Start_Decomposition()
 ##
 # @brief Wrapper function to call the get_initial_circuit method of C++ class N_Qubit_Decomposition
     def get_Initial_Circuit(self):
@@ -93,18 +92,17 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         
 ##
 # @brief Wrapper function to call the compress_circuit method of C++ class N_Qubit_Decomposition
-    def Compress_Circuit(self,prepare_export=True):
+    def Compress_Circuit(self):
 
 	# call the C wrapper function
         super().Compress_Circuit()
 
 ##
 # @brief Wrapper function to call the finalize_circuit method of C++ class N_Qubit_Decomposition
-# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
-    def Finalize_Circuit(self,prepare_export=True):
+    def Finalize_Circuit(self):
 
 	# call the C wrapper function
-        super().Finalize_Circuit(prepare_export=prepare_export)
+        super().Finalize_Circuit()
 
 ##
 # @brief Call to reorder the qubits in the matrix of the gate
@@ -597,13 +595,6 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
         grad = grad.reshape( (-1,))
 
         return cost_function, grad
-
-## 
-# @brief Call to prepare the circuit to be exported into Qiskit format. (parameters and gates gets bound together, gate block structure is converted to plain structure).
-    def Prepare_Gates_To_Export(self):
-
-        # Set the optimizer
-        super().Prepare_Gates_To_Export()
 
 ##
 # @brief Call to get the number of iterations  

@@ -111,9 +111,8 @@ virtual ~N_Qubit_Decomposition();
 /**
 @brief Start the disentanglig process of the unitary
 @param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
-@param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
 */
-virtual void start_decomposition(bool finalize_decomp=true, bool prepare_export=true);
+virtual void start_decomposition(bool finalize_decomp=true);
 
 
 /**

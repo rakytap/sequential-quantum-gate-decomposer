@@ -221,7 +221,6 @@ qgd_N_Qubit_Decomposition_Wrapper_init(qgd_N_Qubit_Decomposition_Wrapper *self, 
 /**
 @brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
 @param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
-@param args A tuple of the input arguments: prepare_export (bool)
 @param kwds A tuple of keywords
 */
 static PyObject *
@@ -229,19 +228,16 @@ qgd_N_Qubit_Decomposition_Wrapper_Start_Decomposition(qgd_N_Qubit_Decomposition_
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"prepare_export", NULL};
+    static char *kwlist[] = {NULL};
 
-    // initiate variables for input arguments
-    bool  prepare_export = true; 
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|b", kwlist,
-                                     &prepare_export))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|", kwlist))
         return Py_BuildValue("i", -1);
 
 
     // starting the decomposition
-    self->decomp->start_decomposition(true, prepare_export);
+    self->decomp->start_decomposition(true);
 
 
     return Py_BuildValue("i", 0);
@@ -269,284 +265,6 @@ qgd_N_Qubit_Decomposition_Wrapper_get_gate_num( qgd_N_Qubit_Decomposition_Wrappe
 }
 
 
-
-/**
-@brief Call to get the metadata organised into Python dictionary of the idx-th gate
-@param decomp A pointer pointing to an instance of the class N_Qubit_Decomposition.
-@param idx Labels the idx-th decomposing gate.
-@return Returns with a python dictionary containing the metadata of the idx-th gate
-*/
-static PyObject *
-get_gate( N_Qubit_Decomposition* decomp, int &idx ) {
-
-
-    // create dictionary conatining the gate data
-    PyObject* py_gate = PyDict_New();
-
-    Gate* gate = decomp->get_gate( idx );
-
-    if (gate->get_type() == CNOT_OPERATION) {
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "CNOT" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-        PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
-
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-        PyDict_SetItemString(py_gate, "control_qbit", control_qbit );            
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-        Py_XDECREF(control_qbit);
-
-    }
-    else if (gate->get_type() == CZ_OPERATION) {
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "CZ" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-        PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
-
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-        PyDict_SetItemString(py_gate, "control_qbit", control_qbit );            
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-        Py_XDECREF(control_qbit);
-
-    }
-    else if (gate->get_type() == CH_OPERATION) {
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "CH" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-        PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
-
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-        PyDict_SetItemString(py_gate, "control_qbit", control_qbit );            
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-        Py_XDECREF(control_qbit);
-
-    }
-    else if (gate->get_type() == SYC_OPERATION) {
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "SYC" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-        PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
-
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-        PyDict_SetItemString(py_gate, "control_qbit", control_qbit );            
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-        Py_XDECREF(control_qbit);
-
-    }
-    else if (gate->get_type() == U3_OPERATION) {
-
-        // get U3 parameters
-        U3* u3_gate = static_cast<U3*>(gate);
-        Matrix_real&& parameters = u3_gate->get_optimized_parameters();
- 
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "U3" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-        PyObject* Theta = Py_BuildValue("f",  parameters[0] );
-        PyObject* Phi = Py_BuildValue("f",  parameters[1] );
-        PyObject* Lambda = Py_BuildValue("f",  parameters[2] );
-
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-        PyDict_SetItemString(py_gate, "Theta", Theta );
-        PyDict_SetItemString(py_gate, "Phi", Phi );
-        PyDict_SetItemString(py_gate, "Lambda", Lambda );
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-        Py_XDECREF(Theta);
-        Py_XDECREF(Phi);
-        Py_XDECREF(Lambda);
-
-
-    }
-    else if (gate->get_type() == RX_OPERATION) {
-
-        // get U3 parameters
-        RX* rx_gate = static_cast<RX*>(gate);
-        Matrix_real&& parameters = rx_gate->get_optimized_parameters();
- 
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "RX" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-        PyObject* Theta = Py_BuildValue("f",  parameters[0] );
-
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-        PyDict_SetItemString(py_gate, "Theta", Theta );
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-        Py_XDECREF(Theta);
-
-
-    }
-    else if (gate->get_type() == RY_OPERATION) {
-
-        // get U3 parameters
-        RY* ry_gate = static_cast<RY*>(gate);
-        Matrix_real&& parameters = ry_gate->get_optimized_parameters();
- 
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "RY" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-        PyObject* Theta = Py_BuildValue("f",  parameters[0] );
-
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-        PyDict_SetItemString(py_gate, "Theta", Theta );
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-        Py_XDECREF(Theta);
-
-
-    }
-    else if (gate->get_type() == RZ_OPERATION) {
-
-        // get U3 parameters
-        RZ* rz_gate = static_cast<RZ*>(gate);
-        Matrix_real&& parameters = rz_gate->get_optimized_parameters();
- 
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "RZ" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-        PyObject* Phi = Py_BuildValue("f",  parameters[0] );
-
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-        PyDict_SetItemString(py_gate, "Phi", Phi );
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-        Py_XDECREF(Phi);
-
-    }
-    else if (gate->get_type() == X_OPERATION) {
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "X" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-
-    }
-    else if (gate->get_type() == SX_OPERATION) {
-
-        // create gate parameters
-        PyObject* type = Py_BuildValue("s",  "SX" );
-        PyObject* target_qbit = Py_BuildValue("i",  gate->get_target_qbit() );
-
-        PyDict_SetItemString(py_gate, "type", type );
-        PyDict_SetItemString(py_gate, "target_qbit", target_qbit );
-
-        Py_XDECREF(type);
-        Py_XDECREF(target_qbit);
-
-    }
-    else {
-  
-    }
-
-    return py_gate;
-
-}
-
-
-
-/**
-@brief Wrapper function to set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
-@param args A tuple of the input arguments: idx (int)
-idx: labels the idx-th gate.
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_Wrapper_get_gate( qgd_N_Qubit_Decomposition_Wrapper *self, PyObject *args ) {
-
-    // initiate variables for input arguments
-    int  idx; 
-
-    // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|i", &idx )) return Py_BuildValue("i", -1);
-
-
-    return get_gate( self->decomp, idx );
-
-
-}
-
-
-
-
-
-
-
-/**
-@brief Wrapper function to set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
-@param args A tuple of the input arguments: qbit (bool), identical_blocks (bool)
-qbit: The number of qubits for which the subdecomposition should contain identical_blocks successive identical blocks.
-identical_blocks: Number of successive identical blocks in the decomposition.
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_Wrapper_get_gates( qgd_N_Qubit_Decomposition_Wrapper *self ) {
-
-
-    // get the number of gates
-    int op_num = self->decomp->get_gate_num();
-
-    // preallocate Python tuple for the output
-    PyObject* ret = PyTuple_New( (Py_ssize_t) op_num );
-
-
-
-    // iterate over the gates to get the gate list
-    for (int idx = 0; idx < op_num; idx++ ) {
-
-        // get metadata about the idx-th gate
-        PyObject* gate = get_gate( self->decomp, idx );
-
-        // adding gate information to the tuple
-        PyTuple_SetItem( ret, (Py_ssize_t) idx, gate );
-
-    }
-
-
-    return ret;
-
-}
 
 
 
@@ -1026,12 +744,6 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Wrapper_methods[] = {
     },
     {"get_Optimized_Parameters", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_Optimized_Parameters, METH_NOARGS,
      "Method to get the array of optimized parameters."
-    },
-    {"get_Gate", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_gate, METH_VARARGS,
-     "Method to get the i-th decomposing gates."
-    },
-    {"get_Gates", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_gates, METH_NOARGS,
-     "Method to get the tuple of decomposing gates."
     },
     {"get_Circuit", (PyCFunction) qgd_N_Qubit_Decomposition_Wrapper_get_circuit, METH_NOARGS,
      "Method to get the incorporated circuit."
