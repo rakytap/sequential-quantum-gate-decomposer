@@ -171,7 +171,6 @@ virtual void optimization_problem_combined( Matrix_real parameters, double* f0, 
 */
 static void optimization_problem_grad_vqe( Matrix_real parameters, void* void_instance, Matrix_real& grad );
 
-virtual void get_derivative_components(Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad, std::vector<Matrix>& State_deriv, Matrix& State_loc) override;
 
 /**
 @brief Initialize the state used in the quantun circuit. All qubits are initialized to state 0
@@ -190,6 +189,7 @@ void start_optimization();
 @param ansatz_in The ansatz type . Possible values: "HEA" (hardware efficient ansatz with U3 and CNOT gates).
 */ 
 void set_ansatz(ansatz_type ansatz_in);
+
 
 void generate_circuit_custom(int inner_blocks, std::vector<matrix_base<int>> topology );
 /**

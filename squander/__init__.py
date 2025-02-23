@@ -25,6 +25,8 @@ from squander.gates.qgd_RZ import qgd_RZ  as RZ
 from squander.gates.qgd_SX import qgd_SX  as SX 
 from squander.gates.qgd_SYC import qgd_SYC  as SYC 
 from squander.gates.qgd_CRY import qgd_CRY  as CRY 
+from squander.gates.qgd_RYY import qgd_RYY  as RYY 
+from squander.gates.qgd_RXX import qgd_RXX  as RXX 
 
 # quantum circuit
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit

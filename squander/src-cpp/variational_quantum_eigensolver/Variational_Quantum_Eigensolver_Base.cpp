@@ -284,6 +284,8 @@ double Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy_real( M
 }
 
 
+
+
 /**
 @brief The optimization problem of the final optimization
 @param parameters Array containing the parameters to be optimized.
@@ -328,8 +330,17 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
     return Energy;
 }
 
-void Variational_Quantum_Eigensolver_Base::get_derivative_components(Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad, std::vector<Matrix>& State_deriv, Matrix& State_loc){
-    
+
+
+/**
+@brief Call to calculate both the cost function and the its gradient components.
+@param parameters Array containing the free parameters to be optimized.
+@param void_instance A void pointer pointing to the instance of the current class.
+@param f0 The value of the cost function at x0.
+@param grad Array containing the calculated gradient components.
+*/
+void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
+
     Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
 
     // initialize the initial state if it was not given
@@ -354,12 +365,12 @@ void Variational_Quantum_Eigensolver_Base::get_derivative_components(Matrix_real
             
         },
         [&]{
-            State_loc = instance->initial_state.copy();
+            Matrix State_loc = instance->initial_state.copy();
 
             State_deriv = instance->apply_derivate_to( parameters, State_loc );
-
+            State_loc.release_data();
     });
-    instance->apply_to( parameters, State_loc );
+
     tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
             grad[idx] = 2*instance->Expectation_value_of_energy_real(State_deriv[idx], State);
@@ -387,23 +398,9 @@ void Variational_Quantum_Eigensolver_Base::get_derivative_components(Matrix_real
     return;
 }
 
-/**
-@brief Call to calculate both the cost function and the its gradient components.
-@param parameters Array containing the free parameters to be optimized.
-@param void_instance A void pointer pointing to the instance of the current class.
-@param f0 The value of the cost function at x0.
-@param grad Array containing the calculated gradient components.
-*/
-void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_static( Matrix_real parameters, void* void_instance, double* f0, Matrix_real& grad ) {
-    // vector containing gradients of the transformed matrix
-    std::vector<Matrix> State_deriv;
-    Matrix State_loc;
-    Variational_Quantum_Eigensolver_Base* instance = reinterpret_cast<Variational_Quantum_Eigensolver_Base*>(void_instance);
-    instance->get_derivative_components(parameters,reinterpret_cast<void*>(instance),f0,grad,State_deriv,State_loc);
-    State_loc.release_data();
-    return;
 
-}
+
+
 
 
 /**
@@ -453,6 +450,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem( double* param
 
 
 }
+
 
 
 
@@ -911,6 +909,8 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit_custom(int inner_blo
         }
     }
 }
+
+
 void 
 Variational_Quantum_Eigensolver_Base::set_gate_structure( std::string filename ) {
 

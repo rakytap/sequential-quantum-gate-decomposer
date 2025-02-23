@@ -673,4 +673,96 @@ set_target_properties( qgd_SX_Wrapper PROPERTIES
 install(TARGETS qgd_SX_Wrapper LIBRARY 
          DESTINATION squander/gates)
 
+###################################################################
+
+
+
+add_library( qgd_RXX_Wrapper MODULE
+    ${EXT_DIR}/qgd_RXX_Wrapper.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_RXX_Wrapper qgd)
+
+target_link_libraries (qgd_RXX_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+
+
+python_extension_module(qgd_RXX_Wrapper)
+
+# adding compile options
+target_compile_options(qgd_RXX_Wrapper PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
+)
+
+
+target_include_directories(qgd_RXX_Wrapper PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
+                            ${EXTRA_INCLUDES})
+
+
+set_target_properties( qgd_RXX_Wrapper PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_RXX_Wrapper LIBRARY 
+         DESTINATION squander/gates)
+
+
+
+
+###################################################################
+
+
+
+add_library( qgd_RYY_Wrapper MODULE
+    ${EXT_DIR}/qgd_RYY_Wrapper.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/numpy_interface.cpp
+)
+
+
+ADD_DEPENDENCIES (qgd_RYY_Wrapper qgd)
+
+target_link_libraries (qgd_RYY_Wrapper qgd ${BLAS_LIBRARIES} ${TBB_LIB} ${TBBMALLOC_LIB})
+
+
+python_extension_module(qgd_RYY_Wrapper)
+
+# adding compile options
+target_compile_options(qgd_RYY_Wrapper PRIVATE
+    ${CXX_FLAGS}
+    "$<$<CONFIG:Debug>:${CXX_FLAGS_DEBUG}>"
+    "$<$<CONFIG:Release>:${CXX_FLAGS_RELEASE}>"
+    "-DCPYTHON"
+)
+
+
+target_include_directories(qgd_RYY_Wrapper PRIVATE
+                            ${PYTHON_INCLUDE_DIR}
+                            ${NUMPY_INC_DIR}
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/include
+                            ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/include
+                            ${EXTRA_INCLUDES})
+
+
+set_target_properties( qgd_RYY_Wrapper PROPERTIES
+                        INSTALL_RPATH "$ORIGIN/.."
+                        LIBRARY_OUTPUT_DIRECTORY ${EXT_DIR}
+)
+
+
+install(TARGETS qgd_RYY_Wrapper LIBRARY 
+         DESTINATION squander/gates)
+
+
+
+
 
