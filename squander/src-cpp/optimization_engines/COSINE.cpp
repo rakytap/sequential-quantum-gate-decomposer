@@ -324,7 +324,119 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
             }
 		
             
+////////////////////////////////////////////////////////////////////////////////
+            // the line search is converted onto a onediemnsional search between x0+a*param_update_mtx and x0+b*param_update_mtx
+            double interval_coeff = 2.0/(sqrt(5.0) + 1); // = 1/tau in Fig 1 of  https://ieeexplore.ieee.org/stamp/stamp.jsp?tp=&arnumber=1606817
 
+
+            // lowest point on the search interval
+            double point_a = 0.0;
+            double point_b = 1.0;
+            double epsilon = 1e-2;
+
+            double interval_length = point_b - point_a;
+
+            double x1 = point_a + interval_length*interval_coeff*interval_coeff;
+            double x2; // = point_a + interval_length*interval_coeff;
+
+            Matrix_real parameters_x1 = solution_guess_tmp_mtx.copy();
+            Matrix_real parameters_x2;
+            for( int idx=0; idx<batch_size; idx++ ) {
+                parameters_x1[ param_idx_agents[idx] ] += param_update_mtx[ idx ]*x1;     
+            }
+
+            
+            double val_x1 = optimization_problem( parameters_x1 ); 
+            double val_x2;
+
+
+		
+            int iter_max = 50;
+            int iter = 0;
+
+            double current_best_point = point_a;
+            double current_best_value = current_minimum;
+
+
+            while( true ) {
+
+                interval_length = point_b - point_a;
+
+                if ( interval_length < epsilon) {
+                    break;
+                }
+
+                if ( (x1-point_a) < (point_b-x1) ) {
+                    // x1 is closer to "a" than to "b"  --> x2 should be closer to "b"
+                    x2 = point_a + interval_length*interval_coeff;
+
+                    parameters_x2 = solution_guess_tmp_mtx.copy();
+
+                    for( int idx=0; idx<batch_size; idx++ ) {
+                        parameters_x2[ param_idx_agents[idx] ] += param_update_mtx[ idx ]*x2;     
+                    }
+
+                    val_x2 = optimization_problem( parameters_x2 ); 
+                }
+                else {
+                    // x1 should be always closer to "a"
+                    x2      = x1; 
+                    val_x2 = val_x1;
+
+                    x1 = point_a + interval_length*interval_coeff*interval_coeff;
+
+                    parameters_x1 = solution_guess_tmp_mtx.copy();
+
+                    for( int idx=0; idx<batch_size; idx++ ) {
+                        parameters_x1[ param_idx_agents[idx] ] += param_update_mtx[ idx ]*x1;     
+                    }
+
+                    val_x1 = optimization_problem( parameters_x1 ); 
+
+                }                
+
+
+         //std::cout << point_a << " " << x1 << " " << x2 << " " << point_b << std::endl;
+         //std::cout << val_x1 << " " << val_x2 << " " << current_minimum << " " << std::endl;
+
+                if ( val_x1 < val_x2 ) {
+                    point_b = x2;
+                    if ( current_best_value > val_x1 ) {
+                        current_best_point = x1; 
+                        current_best_value = val_x1;
+                    }
+                }
+                else {
+                    point_a = x1;
+                    if ( current_best_value > val_x2 ) {
+                        current_best_point = x2; 
+                        current_best_value = val_x2;
+                    }
+
+                    x1 = x2;
+                    val_x1 = val_x2;
+                }
+   
+
+                iter = iter + 1;
+
+                if ( iter > iter_max) {
+                    std::cout << "line search not  converged: interval length: " << interval_length << " " << interval_coeff << std::endl;
+                    break;
+                }
+            }
+       
+            std::cout << "number of costfunction evaluations : " << iter+1 << " " << interval_coeff << std::endl;
+
+            current_minimum = current_best_value;
+
+            // update parameters
+            for (int param_idx=0; param_idx<batch_size; param_idx++) {
+                solution_guess_tmp_mtx[ param_idx_agents[param_idx] ] += param_update_mtx[ param_idx ]*current_best_point;
+            } 
+
+////////////////////////////////////////////////////////////////////////////////
+/*
             // parameters for line search
             int line_points = 128;  
 
@@ -364,7 +476,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
             for (int param_idx=0; param_idx<batch_size; param_idx++) {
                 solution_guess_tmp_mtx[ param_idx_agents[param_idx] ] += param_update_mtx[ param_idx ]*(double)idx_min/line_points;
             } 
-
+*/
 #ifdef __MPI__   
             MPI_Bcast( solution_guess_tmp_mtx.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);
 #endif
