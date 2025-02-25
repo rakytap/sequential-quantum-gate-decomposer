@@ -1223,7 +1223,18 @@ void Decomposition_Base::prepare_gates_to_export() {
     std::vector<Gate*> gates_tmp = prepare_gates_to_export( gates, optimized_parameters_mtx.get_data() );
 
     // release the gates and replace them with the ones prepared to export
-    gates.clear();
+
+
+    int layer_num_loc = layer_num;
+    int parameter_num_loc = parameter_num;
+    
+    release_gates();
+    
+
+    
+    
+    layer_num = layer_num_loc;
+    parameter_num = parameter_num_loc;
     gates = gates_tmp;
 
 }
@@ -1248,28 +1259,28 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         Gate* gate = *it;
 
         if (gate->get_type() == CNOT_OPERATION) {
-            ops_ret.push_back( gate );
+            ops_ret.push_back( gate->clone() );
         }
         else if (gate->get_type() == CZ_OPERATION) {
-            ops_ret.push_back( gate );
+            ops_ret.push_back( gate->clone() );
         }
         else if (gate->get_type() == CH_OPERATION) {
-            ops_ret.push_back( gate );
+            ops_ret.push_back( gate->clone() );
         }
         else if (gate->get_type() == SYC_OPERATION) {
-            ops_ret.push_back( gate );
+            ops_ret.push_back( gate->clone() );
         }
         else if (gate->get_type() == X_OPERATION) {
-            ops_ret.push_back( gate );
+            ops_ret.push_back( gate->clone() );
         }
         else if (gate->get_type() == Y_OPERATION) {
-            ops_ret.push_back( gate );
+            ops_ret.push_back( gate->clone() );
         }
         else if (gate->get_type() == Z_OPERATION) {
-            ops_ret.push_back( gate );
+            ops_ret.push_back( gate->clone() );
         }
         else if (gate->get_type() == SX_OPERATION) {
-            ops_ret.push_back( gate );
+            ops_ret.push_back( gate->clone() );
         }
         else if (gate->get_type() == U3_OPERATION) {
 
@@ -1278,7 +1289,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             double varphi;
             double varlambda;
 
-            U3* u3_gate = static_cast<U3*>(gate);
+            U3* u3_gate = static_cast<U3*>(gate->clone());
 
             if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
                 vartheta = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
@@ -1339,7 +1350,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             double vartheta;
 
 
-            RX* rx_gate = static_cast<RX*>(gate);
+            RX* rx_gate = static_cast<RX*>(gate->clone());
 
             vartheta = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
             parameter_idx = parameter_idx + 1;
@@ -1356,7 +1367,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             double vartheta;
 
 
-            RY* ry_gate = static_cast<RY*>(gate);
+            RY* ry_gate = static_cast<RY*>(gate->clone());
 
             vartheta = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
             parameter_idx = parameter_idx + 1;
@@ -1373,7 +1384,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             double Theta;
 
 
-            CRY* cry_gate = static_cast<CRY*>(gate);
+            CRY* cry_gate = static_cast<CRY*>(gate->clone());
 
             Theta = std::fmod( 2.0*parameters[parameter_idx], 4*M_PI);
             parameter_idx = parameter_idx + 1;
@@ -1389,7 +1400,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             // define the parameter of the rotational angle
             double varphi;
 
-            RZ* rz_gate = static_cast<RZ*>(gate);
+            RZ* rz_gate = static_cast<RZ*>(gate->clone());
 
             varphi = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
             parameter_idx = parameter_idx + 1;
@@ -1406,7 +1417,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             double varphi;
 
 
-            RZ_P* rz_gate = static_cast<RZ_P*>(gate);
+            RZ_P* rz_gate = static_cast<RZ_P*>(gate->clone());
 
             varphi = std::fmod( parameters[parameter_idx], 2*M_PI);
             parameter_idx = parameter_idx + 1;
@@ -1423,7 +1434,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             double Theta;
 
 
-            CZ_NU* cz_nu_gate = static_cast<CZ_NU*>(gate);
+            CZ_NU* cz_nu_gate = static_cast<CZ_NU*>(gate->clone());
 
             Theta = std::fmod( parameters[parameter_idx], 2*M_PI);
             parameter_idx = parameter_idx + 1;
@@ -1436,7 +1447,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         }        
         else if (gate->get_type() == UN_OPERATION) {
 
-            UN* un_gate = static_cast<UN*>(gate);
+            UN* un_gate = static_cast<UN*>(gate->clone());
 
             Matrix_real optimized_parameters( parameters+parameter_idx, 1, (int)un_gate->get_parameter_num());
             parameter_idx = parameter_idx + un_gate->get_parameter_num();
@@ -1449,7 +1460,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         }
         else if (gate->get_type() == ON_OPERATION) {
 
-            ON* on_gate = static_cast<ON*>(gate);
+            ON* on_gate = static_cast<ON*>(gate->clone());
 
             Matrix_real optimized_parameters( parameters+parameter_idx, 1, (int)on_gate->get_parameter_num());
             parameter_idx = parameter_idx + on_gate->get_parameter_num();
@@ -1462,7 +1473,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
         }
         else if (gate->get_type() == COMPOSITE_OPERATION) {
 
-            Composite* com_gate = static_cast<Composite*>(gate);
+            Composite* com_gate = static_cast<Composite*>(gate->clone());
 
             Matrix_real optimized_parameters( parameters+parameter_idx, 1, (int)com_gate->get_parameter_num());
             parameter_idx = parameter_idx + com_gate->get_parameter_num();
@@ -1479,7 +1490,7 @@ std::vector<Gate*> Decomposition_Base::prepare_gates_to_export( std::vector<Gate
             double Theta;
 
 
-            Adaptive* ad_gate = static_cast<Adaptive*>(gate);
+            Adaptive* ad_gate = static_cast<Adaptive*>(gate->clone());
 
             Theta = std::fmod( 2*parameters[parameter_idx], 4*M_PI);
             parameter_idx = parameter_idx + 1;

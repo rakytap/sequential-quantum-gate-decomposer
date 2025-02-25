@@ -151,24 +151,6 @@ Gates_block* optimize_imported_gate_structure(Matrix_real& optimized_parameters_
 Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_mtx);
 
 
-/**
-@brief 
-@param 
-*/
-Gates_block* tree_synthesis(int qubitnum, int level);
-
-/**
-@brief 
-@param 
-*/
-
-matrix_base<int>  tree_comb(int qubitnum,int level);
-/**
-@brief 
-@param 
-*/
-Gates_block* add_2qubitgate(int control,int target);
-
 
 /**
 @brief ?????????????????????????
