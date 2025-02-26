@@ -325,38 +325,6 @@ static void Init_max_layer_num();
 
 
 /**
-@brief Call to prepare the optimized gates to export. The gates are stored in the attribute gates
-*/
-void prepare_gates_to_export();
-
-/**
-@brief Call to prepare the optimized gates to export
-@param ops A list of gates
-@param parameters The parameters of the gates
-@return Returns with a list of gate gates.
-*/
-std::vector<Gate*> prepare_gates_to_export( std::vector<Gate*> ops, const Matrix_real& parameters );
-
-
-
-/**
-@brief Call to prepare the gates of an gate block to export
-@param block_op A pointer to a block of gates
-@param parameters The parameters of the gates
-@return Returns with a list of gate gates.
-*/
-std::vector<Gate*> prepare_gates_to_export( Gates_block* block_op, const Matrix_real& parameters );
-
-/**
-@brief Call to prepare the optimized gates to export
-@param n Integer labeling the n-th oepration  (n>=0).
-@return Returns with a pointer to the n-th Gate, or with MULL if the n-th gate cant be retrived.
-*/
-Gate* get_gate( int n );
-
-
-
-/**
 @brief Call to set the tolerance of the optimization processes.
 @param tolerance_in The value of the tolerance. 
 */
