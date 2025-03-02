@@ -5,7 +5,7 @@ requires = [
     "scikit-build",
     "ninja",
     "scipy", 
-    "tbb-devel",
+    #"tbb-devel",
     "cmake>=3.10.2",
     "networkx",
     "qiskit"
