@@ -24,7 +24,7 @@ limitations under the License.
 #ifndef apply_large_kerel_to_input_H
 #define apply_large_kerel_to_input_H
 
-#include <immintrin.h>
+//#include <immintrin.h>
 #include "matrix.h"
 #include "common.h"
 
