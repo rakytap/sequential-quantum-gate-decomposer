@@ -105,9 +105,9 @@ $ conda activate qgd
 
 Install dependencies:
 
-$ conda install numpy scipy pip pytest scikit-build tbb-devel
+$ conda install numpy scipy pip pytest scikit-build tbb-devel ninja
 
-$ pip install qiskit matplotlib 
+$ pip install qiskit qiskit-aer matplotlib 
 
 After the basic environment variables are set and the dependencies are installed, the compilation of the package can be started by the Python command:
 
