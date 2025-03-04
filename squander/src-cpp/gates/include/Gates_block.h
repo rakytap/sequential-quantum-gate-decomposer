@@ -469,7 +469,7 @@ virtual void reorder_qubits( std::vector<int> qbit_list );
 
 /**
 @brief Call to get the qubits involved in the gates stored in the block of gates.
-@return Return with a list of the invovled qubits
+@return Return with a list of the involved qubits
 */
 std::vector<int> get_involved_qubits();
 
@@ -551,6 +551,19 @@ Matrix get_reduced_density_matrix( Matrix_real& parameters_mtx, Matrix& input_st
 double get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matrix& input_state, matrix_base<int>& qbit_list );
 
 
+
+/**
+@brief Call to obtain the parent gates in the circuit. A parent gate needs to be applied prior to the given gate. The parent gates are stored via the "parents" attribute of the gate instance
+@param gate The gate for which the parents are determined. 
+*/
+void determine_parents( Gate* gate );
+
+
+/**
+@brief Call to obtain the child gates in the circuit. A child gate needs to be applied after the given gate. The children gates are stored via the "children" attribute of the gate instance
+@param gate The gate for which the children are determined. 
+*/
+void determine_children( Gate* gate );
 
 
 

@@ -57,6 +57,10 @@ protected:
     int parameter_num;
     /// the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
     int parameter_start_idx;
+    /// list of parent gates to be applied in the circuit prior to this current gate
+    std::vector<Gate*> parents;
+    /// list of child gates to be applied after this current gate
+    std::vector<Gate*> children;
 
 private:
 
@@ -179,6 +183,26 @@ int get_target_qbit();
 @return Return with the index of the control qubit (return with -1 if control qubit was not set)
 */
 int get_control_qbit();
+
+/**
+@brief Call to get the qubits involved in the gate operation.
+@return Return with a list of the involved qubits
+*/
+virtual std::vector<int> get_involved_qubits();
+
+
+/**
+@brief Call to add a child gate to the current gate 
+@param child The parent gate of the current gate.
+*/
+void add_child( Gate* child );
+
+
+/**
+@brief Call to add a parent gate to the current gate 
+@param parent The parent gate of the current gate.
+*/
+void add_parent( Gate* parent );
 
 
 /**

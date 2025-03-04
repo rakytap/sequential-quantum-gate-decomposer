@@ -287,6 +287,63 @@ int Gate::get_control_qbit()  {
 }
 
 /**
+@brief Call to get the qubits involved in the gate operation.
+@return Return with a list of the involved qubits
+*/
+std::vector<int> Gate::get_involved_qubits() {
+
+    std::vector<int> involved_qbits;
+    
+    if( target_qbit != -1 ) {
+        involved_qbits.push_back( target_qbit );
+    }
+    
+    if( control_qbit != -1 ) {
+        involved_qbits.push_back( control_qbit );
+    }    
+    
+    
+    return involved_qbits;
+    
+
+}
+
+
+/**
+@brief Call to add a parent gate to the current gate 
+@param parent The parent gate of the current gate.
+*/
+void Gate::add_parent( Gate* parent ) {
+
+    // check if parent already present in th elist of parents
+    if ( std::count(parents.begin(), parents.end(), parent) > 0 ) {
+        return;
+    }
+    
+    parents.push_back( parent );
+
+}
+
+
+
+/**
+@brief Call to add a child gate to the current gate 
+@param child The parent gate of the current gate.
+*/
+void Gate::add_child( Gate* child ) {
+
+    // check if parent already present in th elist of parents
+    if ( std::count(children.begin(), children.end(), child) > 0 ) {
+        return;
+    }
+    
+    children.push_back( child );
+
+}
+
+
+
+/**
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */
