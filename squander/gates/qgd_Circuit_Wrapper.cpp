@@ -1197,9 +1197,9 @@ get_gate( Gates_block* circuit, int &idx ) {
     Gate* gate = circuit->get_gate( idx );
 
     // create dummy gate parameters to instantiate dummy object, which are then filled up with valid data
-    PyObject* qbit_num     = Py_BuildValue("i",  2 );
-    PyObject* target_qbit  = Py_BuildValue("i",  0 );
-    PyObject* control_qbit = Py_BuildValue("i",  1 );
+    PyObject* qbit_num     = Py_BuildValue("i",  gate->get_qbit_num() );
+    PyObject* target_qbit  = Py_BuildValue("i",  gate->get_target_qbit() );
+    PyObject* control_qbit = Py_BuildValue("i",  gate->get_control_qbit() );
 
     // The python instance of the gate
     PyObject* py_gate = NULL;
@@ -1551,8 +1551,32 @@ get_gate( Gates_block* circuit, int &idx ) {
 
     }
     else if (gate->get_type() == BLOCK_OPERATION) {
-            PyErr_SetString(PyExc_Exception, "qgd_Circuit_Wrapper::get_gate: circuit should not contain subcircuits" );
+
+        // import gate operation modules
+        PyObject* qgd_circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+        if ( qgd_circuit == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
             return NULL;
+        }
+
+        PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_circuit );    
+
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+        PyObject* circuit_input = Py_BuildValue("(O)", qbit_num );
+        py_gate    = PyObject_CallObject(py_circuit_class, circuit_input);
+
+        // replace dummy data with real gate data
+        qgd_Circuit_Wrapper* py_gate_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_gate );
+
+        Gates_block* circuit = reinterpret_cast<Gates_block*>( gate );
+        py_gate_C->circuit->combine( circuit );
+
+        Py_DECREF( qgd_circuit );            
+        Py_DECREF( circuit_input );
+
     }
     else {
             PyErr_SetString(PyExc_Exception, "qgd_Circuit_Wrapper::get_gate: unimplemented gate type" );

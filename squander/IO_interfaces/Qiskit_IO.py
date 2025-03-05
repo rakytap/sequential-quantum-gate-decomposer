@@ -127,10 +127,14 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
         elif isinstance( gate, SX ):
             # SX gate
             circuit.sx( gate.get_Target_Qbit() )  
+
+        elif isinstance( gate, Circuit ):
+            # Sub-circuit gate
+            raise ValueError("Qiskit export of circuits with subcircuit is not supported. Use Circuit::get_Flat_Circuit prior of exporting circuit.")  
             
         else:
             print(gate)
-            raise ValueError("Unsupported gate in the circuit export: " +  gate.get("type"))
+            raise ValueError("Unsupported gate in the circuit export.")
     
     return( circuit )
     
@@ -213,11 +217,15 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
 
         elif isinstance( gate, SX ):
             # SX gate
-            circuit.sx( gate.get_Target_Qbit() )  
+            circuit.sx( gate.get_Target_Qbit() )
+
+        elif isinstance( gate, Circuit ):
+            # Sub-circuit gate
+            raise ValueError("Qiskit export of circuits with subcircuit is not supported. Use Circuit::get_Flat_Circuit prior of exporting circuit.")   
             
         else:
             print(gate)
-            raise ValueError("Unsupported gate in the circuit export: " +  gate.get("type"))
+            raise ValueError("Unsupported gate in the circuit export.")
     #print( circuit )
     return( circuit )
 
