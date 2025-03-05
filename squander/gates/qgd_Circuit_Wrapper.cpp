@@ -201,7 +201,7 @@ typedef struct {
 */
 typedef struct qgd_Circuit_Wrapper {
     PyObject_HEAD
-    Gates_block* gate;
+    Gates_block* circuit;
 } qgd_Circuit_Wrapper;
 
 
@@ -242,7 +242,7 @@ qgd_Circuit_Wrapper_dealloc(qgd_Circuit_Wrapper *self)
 {
 
     // deallocate the instance of class N_Qubit_Decomposition
-    release_Circuit( self->gate );
+    release_Circuit( self->circuit );
 
     Py_TYPE(self)->tp_free((PyObject *) self);
 }
@@ -284,7 +284,7 @@ qgd_Circuit_Wrapper_init(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kw
 
     // create instance of class Circuit
     if (qbit_num > 0 ) {
-        self->gate = create_Circuit( qbit_num );
+        self->circuit = create_Circuit( qbit_num );
     }
     return 0;
 }
@@ -325,7 +325,7 @@ qgd_Circuit_Wrapper_add_U3(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_u3(target_qbit, Theta, Phi, Lambda);
+        self->circuit->add_u3(target_qbit, Theta, Phi, Lambda);
     }
 
     return Py_BuildValue("i", 0);
@@ -357,7 +357,7 @@ qgd_Circuit_Wrapper_add_RX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_rx(target_qbit);
+        self->circuit->add_rx(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -390,7 +390,7 @@ qgd_Circuit_Wrapper_add_RY(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_ry(target_qbit);
+        self->circuit->add_ry(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -423,7 +423,7 @@ qgd_Circuit_Wrapper_add_RZ(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_rz(target_qbit);
+        self->circuit->add_rz(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -456,7 +456,7 @@ qgd_Circuit_Wrapper_add_CNOT(qgd_Circuit_Wrapper *self, PyObject *args, PyObject
 
     // adding CNOT gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_cnot(target_qbit, control_qbit);
+        self->circuit->add_cnot(target_qbit, control_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -490,7 +490,7 @@ qgd_Circuit_Wrapper_add_CZ(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
     // adding CZ gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_cz(target_qbit, control_qbit);
+        self->circuit->add_cz(target_qbit, control_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -525,7 +525,7 @@ qgd_Circuit_Wrapper_add_CH(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
     // adding CZ gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_ch(target_qbit, control_qbit);
+        self->circuit->add_ch(target_qbit, control_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -561,7 +561,7 @@ qgd_Circuit_Wrapper_add_SYC(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
 
     // adding Sycamore gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_syc(target_qbit, control_qbit);
+        self->circuit->add_syc(target_qbit, control_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -592,7 +592,7 @@ qgd_Circuit_Wrapper_add_H(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
 
     // adding X gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_h(target_qbit);
+        self->circuit->add_h(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -623,7 +623,7 @@ qgd_Circuit_Wrapper_add_X(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
 
     // adding X gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_x(target_qbit);
+        self->circuit->add_x(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -655,7 +655,7 @@ qgd_Circuit_Wrapper_add_Y(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
 
     // adding X gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_y(target_qbit);
+        self->circuit->add_y(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -687,7 +687,7 @@ qgd_Circuit_Wrapper_add_Z(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
 
     // adding X gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_z(target_qbit);
+        self->circuit->add_z(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -720,7 +720,7 @@ qgd_Circuit_Wrapper_add_SX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
     // adding SX gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_sx(target_qbit);
+        self->circuit->add_sx(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -752,7 +752,7 @@ qgd_Circuit_Wrapper_add_CRY(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_cry(target_qbit, control_qbit);
+        self->circuit->add_cry(target_qbit, control_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -784,7 +784,7 @@ qgd_Circuit_Wrapper_add_adaptive(qgd_Circuit_Wrapper *self, PyObject *args, PyOb
 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->gate->add_adaptive(target_qbit, control_qbit);
+        self->circuit->add_adaptive(target_qbit, control_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -815,7 +815,7 @@ qgd_Circuit_Wrapper_add_Circuit(qgd_Circuit_Wrapper *self, PyObject *args)
 
 
     // adding general gate to the end of the gate structure
-    self->gate->add_gate( static_cast<Gate*>( qgd_op_block->gate->clone() ) );
+    self->circuit->add_gate( static_cast<Gate*>( qgd_op_block->circuit->clone() ) );
 
     return Py_BuildValue("i", 0);
 
@@ -876,7 +876,7 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates_with_derivates(qgd_Circuit_Wrapper *sel
     Matrix_real parameters_mtx_mtx = numpy2matrix_real(parameters_mtx);
         
     int gatesNum = -1, gateSetNum = -1, redundantGateSets = -1;
-    DFEgate_kernel_type* ret = self->gate->convert_to_DFE_gates_with_derivates(parameters_mtx_mtx, gatesNum, gateSetNum, redundantGateSets, only_derivates);
+    DFEgate_kernel_type* ret = self->circuit->convert_to_DFE_gates_with_derivates(parameters_mtx_mtx, gatesNum, gateSetNum, redundantGateSets, only_derivates);
     return Py_BuildValue("Oii", DFEgateQGD_to_Python(ret, gatesNum), gateSetNum, redundantGateSets);
 }
 
@@ -890,7 +890,7 @@ qgd_Circuit_Wrapper_adjust_parameters_for_derivation(qgd_Circuit_Wrapper *self, 
         return Py_BuildValue("");
     int gate_idx = -1, gate_set_index = -1;
     DFEgate_kernel_type* dfegates_qgd = DFEgatePython_to_QGD(dfegates);
-    self->gate->adjust_parameters_for_derivation(dfegates_qgd, gatesNum, gate_idx, gate_set_index);    
+    self->circuit->adjust_parameters_for_derivation(dfegates_qgd, gatesNum, gate_idx, gate_set_index);    
     return Py_BuildValue("Oii", DFEgateQGD_to_Python(dfegates_qgd, gatesNum), gate_idx, gate_set_index);
 }
 
@@ -914,7 +914,7 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *ar
     Matrix_real parameters_mtx_mtx = numpy2matrix_real(parameters_mtx);
         
     int gatesNum = -1;
-    DFEgate_kernel_type* ret = self->gate->convert_to_DFE_gates(parameters_mtx_mtx, gatesNum);
+    DFEgate_kernel_type* ret = self->circuit->convert_to_DFE_gates(parameters_mtx_mtx, gatesNum);
     return DFEgateQGD_to_Python(ret, gatesNum);
 }*/
 
@@ -939,7 +939,7 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *ar
     Matrix_real parameters_mtx_mtx = numpy2matrix_real(parameters_mtx);
     DFEgate_kernel_type* dfegates_qgd = DFEgatePython_to_QGD(dfegates);
     Py_ssize_t gatesNum = PyList_Size(dfegates);
-    self->gate->convert_to_DFE_gates(parameters_mtx_mtx, dfegates_qgd, start_index);
+    self->circuit->convert_to_DFE_gates(parameters_mtx_mtx, dfegates_qgd, start_index);
     return DFEgateQGD_to_Python(dfegates_qgd, gatesNum);
 }
 
@@ -972,7 +972,7 @@ qgd_Circuit_Wrapper_get_Matrix( qgd_Circuit_Wrapper *self, PyObject *args ) {
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
 
-    Matrix mtx = self->gate->get_matrix( parameters_mtx );
+    Matrix mtx = self->circuit->get_matrix( parameters_mtx );
     
     // convert to numpy array
     mtx.set_owner(false);
@@ -992,7 +992,7 @@ qgd_Circuit_Wrapper_get_Matrix( qgd_Circuit_Wrapper *self, PyObject *args ) {
 static PyObject *
 qgd_Circuit_Wrapper_get_Parameter_Num( qgd_Circuit_Wrapper *self ) {
 
-    int parameter_num = self->gate->get_parameter_num();
+    int parameter_num = self->circuit->get_parameter_num();
 
     return Py_BuildValue("i", parameter_num);
 }
@@ -1044,7 +1044,7 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
     Matrix unitary_mtx = numpy2matrix(unitary);
 
     int parallel = 1;
-    self->gate->apply_to( parameters_mtx, unitary_mtx, parallel );
+    self->circuit->apply_to( parameters_mtx, unitary_mtx, parallel );
     
     if (unitary_mtx.data != PyArray_DATA(unitary)) {
         memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));
@@ -1129,7 +1129,7 @@ qgd_Circuit_Wrapper_get_Second_Renyi_Entropy( qgd_Circuit_Wrapper *self, PyObjec
 
 
     try {
-        entropy = self->gate->get_second_Renyi_entropy( parameters_mtx, input_state_mtx, qbit_list_mtx );
+        entropy = self->circuit->get_second_Renyi_entropy( parameters_mtx, input_state_mtx, qbit_list_mtx );
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1163,7 +1163,7 @@ qgd_Circuit_Wrapper_get_Qbit_Num( qgd_Circuit_Wrapper *self ) {
     int qbit_num = 0;
 
     try {
-        qbit_num = self->gate->get_qbit_num();
+        qbit_num = self->circuit->get_qbit_num();
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1186,15 +1186,15 @@ qgd_Circuit_Wrapper_get_Qbit_Num( qgd_Circuit_Wrapper *self ) {
 
 /**
 @brief Call to get the metadata organised into Python dictionary of the idx-th gate
-@param decomp A pointer pointing to an instance of the class N_Qubit_Decomposition_custom.
-@param idx Labels the idx-th decomposing gate.
+@param circuit A pointer pointing to an instance of the class Gates_block.
+@param idx Labels the idx-th gate.
 @return Returns with a python dictionary containing the metadata of the idx-th gate
 */
 static PyObject *
-get_gate( Gates_block* decomp, int &idx ) {
+get_gate( Gates_block* circuit, int &idx ) {
 
 
-    Gate* gate = decomp->get_gate( idx );
+    Gate* gate = circuit->get_gate( idx );
 
     // create dummy gate parameters to instantiate dummy object, which are then filled up with valid data
     PyObject* qbit_num     = Py_BuildValue("i",  2 );
@@ -1550,8 +1550,12 @@ get_gate( Gates_block* decomp, int &idx ) {
 
 
     }
+    else if (gate->get_type() == BLOCK_OPERATION) {
+            PyErr_SetString(PyExc_Exception, "qgd_Circuit_Wrapper::get_gate: circuit should not contain subcircuits" );
+            return NULL;
+    }
     else {
-            PyErr_SetString(PyExc_Exception, "qgd_Circuit_Wrapper::get_gate: inumplemented gate" );
+            PyErr_SetString(PyExc_Exception, "qgd_Circuit_Wrapper::get_gate: unimplemented gate type" );
             return NULL;
     }
 
@@ -1566,8 +1570,8 @@ get_gate( Gates_block* decomp, int &idx ) {
 
 
 /**
-@brief Wrapper function to set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
+@brief Wrapper function to get a gate from the circuit
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
 @param args A tuple of the input arguments: idx (int)
 idx: labels the idx-th gate.
 */
@@ -1581,7 +1585,7 @@ qgd_Circuit_Wrapper_get_gate( qgd_Circuit_Wrapper *self, PyObject *args ) {
     if (!PyArg_ParseTuple(args, "|i", &idx )) return Py_BuildValue("i", -1);
 
 
-    return get_gate( self->gate, idx );
+    return get_gate( self->circuit, idx );
 
 
 }
@@ -1602,7 +1606,7 @@ qgd_Circuit_Wrapper_get_gates( qgd_Circuit_Wrapper *self ) {
 
 
     // get the number of gates
-    int op_num = self->gate->get_gate_num();
+    int op_num = self->circuit->get_gate_num();
 
     // preallocate Python tuple for the output
     PyObject* ret = PyTuple_New( (Py_ssize_t) op_num );
@@ -1613,7 +1617,7 @@ qgd_Circuit_Wrapper_get_gates( qgd_Circuit_Wrapper *self ) {
     for (int idx = 0; idx < op_num; idx++ ) {
 
         // get metadata about the idx-th gate
-        PyObject* gate = get_gate( self->gate, idx );
+        PyObject* gate = get_gate( self->circuit, idx );
 
         // adding gate information to the tuple
         PyTuple_SetItem( ret, (Py_ssize_t) idx, gate );
@@ -1655,7 +1659,7 @@ qgd_Circuit_Wrapper_Extract_Parameters( qgd_Circuit_Wrapper *self, PyObject *arg
     Matrix_real extracted_parameters;
 
     try {
-        extracted_parameters = self->gate->extract_parameters( parameters_mtx );
+        extracted_parameters = self->circuit->extract_parameters( parameters_mtx );
     }
     catch (std::string err) {
         PyErr_SetString(PyExc_Exception, err.c_str());
@@ -1678,6 +1682,45 @@ qgd_Circuit_Wrapper_Extract_Parameters( qgd_Circuit_Wrapper *self, PyObject *arg
 
 
 
+/**
+@brief Method to generate a flat circuit. A flat circuit is a circuit does not containing subcircuits: there are no Gates_block instances (containing subcircuits) in the resulting circuit. If the original circuit contains subcircuits, the gates in the subcircuits are directly incorporated in the resulting flat circuit.
+*/
+static PyObject *
+qgd_Circuit_Wrapper_get_Flat_Circuit( qgd_Circuit_Wrapper *self ) {
+
+    Gates_block* flat_circuit = self->circuit->get_flat_circuit();
+    int qbit_num = flat_circuit->get_qbit_num();
+
+    // import gate operation modules
+    PyObject* qgd_circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+    if ( qgd_circuit == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
+        return NULL;
+    }
+
+    PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_circuit );    
+
+    // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+    PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+    PyObject* circuit_input = Py_BuildValue("(O)", Py_BuildValue("i", qbit_num) );
+    PyObject* py_circuit    = PyObject_CallObject(py_circuit_class, circuit_input);
+
+    // replace dummy data with real gate data
+    qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+    delete( py_circuit_C->circuit );
+    py_circuit_C->circuit = flat_circuit;
+
+
+    Py_DECREF( qgd_circuit  );                
+    Py_DECREF( circuit_input );
+  
+    return py_circuit;
+}
+
+
+ 
 
 
 /**
@@ -1687,7 +1730,7 @@ qgd_Circuit_Wrapper_Extract_Parameters( qgd_Circuit_Wrapper *self, PyObject *arg
 static PyObject *
 qgd_Circuit_Wrapper_get_Parameter_Start_Index( qgd_Circuit_Wrapper *self ) {
 
-    int start_index = self->gate->get_parameter_start_idx();
+    int start_index = self->circuit->get_parameter_start_idx();
 
     return Py_BuildValue("i", start_index);
 
@@ -1785,6 +1828,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"Extract_Parameters", (PyCFunction) qgd_Circuit_Wrapper_Extract_Parameters, METH_VARARGS,
      "Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded."
+    },
+    {"get_Flat_Circuit", (PyCFunction) qgd_Circuit_Wrapper_get_Flat_Circuit, METH_NOARGS,
+     "Method to generate a flat circuit. A flat circuit is a circuit does not containing subcircuits: there are no Gates_block instances (containing subcircuits) in the resulting circuit. If the original circuit contains subcircuits, the gates in the subcircuits are directly incorporated in the resulting flat circuit."
     },
     {NULL}  /* Sentinel */
 };
