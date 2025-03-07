@@ -206,6 +206,17 @@ void add_parent( Gate* parent );
 
 
 /**
+@brief Call to erase data on children.
+*/
+void clear_children();
+
+
+/**
+@brief Call to erase data on parents.
+*/
+void clear_parents();
+
+/**
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */

@@ -342,6 +342,26 @@ void Gate::add_child( Gate* child ) {
 }
 
 
+/**
+@brief Call to erase data on children.
+*/
+void Gate::clear_children() {
+
+    children.clear();
+
+}
+
+
+/**
+@brief Call to erase data on parents.
+*/
+void Gate::clear_parents() {
+
+    parents.clear();
+
+}
+
+
 
 /**
 @brief Call to get the number of free parameters
