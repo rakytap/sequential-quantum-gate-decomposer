@@ -244,6 +244,20 @@ void set_parameter_start_idx(int start_idx);
 
 
 /**
+@brief Call to set the parents of the current gate
+@param parents_ the list of the parents
+*/
+void set_parents( std::vector<Gate*>& parents_ );
+
+
+/**
+@brief Call to set the children of the current gate
+@param children_ the list of the children
+*/
+void set_children( std::vector<Gate*>& children_ );
+
+
+/**
 @brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
 @param start_idx The starting index
 */

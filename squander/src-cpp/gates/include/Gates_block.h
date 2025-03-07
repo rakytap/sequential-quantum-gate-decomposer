@@ -619,6 +619,7 @@ void get_matrices_target_control(std::vector<Matrix> &u3_qbit, std::vector<int> 
 void reset_parameter_start_indices();
 
 
+
 /**
 @brief Method to reset the dependency graph of the gates in the circuit
 */

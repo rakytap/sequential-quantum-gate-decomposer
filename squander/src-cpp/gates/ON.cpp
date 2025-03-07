@@ -332,6 +332,8 @@ ON* ON::clone() {
     }
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
+    ret->set_parents( parents );
+    ret->set_children( children );
 
     return ret;
 

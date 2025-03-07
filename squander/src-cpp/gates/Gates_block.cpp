@@ -2051,6 +2051,8 @@ Gates_block* Gates_block::clone() {
     Gates_block* ret = new Gates_block( qbit_num );
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
+    ret->set_parents( parents );
+    ret->set_children( children );
 
     // extracting the gates from the current class
     if (extract_gates( ret ) != 0 ) {

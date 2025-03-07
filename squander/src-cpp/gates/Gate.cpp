@@ -400,6 +400,8 @@ Gate* Gate::clone() {
     ret->set_matrix( matrix_alloc );
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
+    ret->set_parents( parents );
+    ret->set_children( children );
 
     return ret;
 
@@ -658,6 +660,29 @@ void
 Gate::set_parameter_start_idx(int start_idx) {
 
     parameter_start_idx = start_idx;
+
+}
+
+/**
+@brief Call to set the parents of the current gate
+@param parents_ the list of the parents
+*/
+void 
+Gate::set_parents( std::vector<Gate*>& parents_ ) {
+
+    parents = parents_;
+
+}
+
+
+/**
+@brief Call to set the children of the current gate
+@param children_ the list of the children
+*/
+void 
+Gate::set_children( std::vector<Gate*>& children_ ) {
+
+    children = children_;
 
 }
 
