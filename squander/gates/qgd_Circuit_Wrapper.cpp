@@ -197,6 +197,16 @@ typedef struct {
 
 
 /**
+@brief Type definition of the  qgd_Gate Python class of the  qgd_Gate module
+*/
+typedef struct {
+    PyObject_HEAD
+    /// Pointer to the C++ class of the base Gate gate
+    Gate* gate;
+} qgd_Gate;
+
+
+/**
 @brief Type definition of the qgd_Operation_Block Python class of the qgd_Operation_Block module
 */
 typedef struct qgd_Circuit_Wrapper {
@@ -1654,6 +1664,142 @@ qgd_Circuit_Wrapper_get_gates( qgd_Circuit_Wrapper *self ) {
 }
 
 
+
+/**
+@brief Wrapper function to get the indices of parent gates
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: 
+gate: the gate for which we are retriving the parents
+*/
+static PyObject *
+qgd_Circuit_Wrapper_get_parents( qgd_Circuit_Wrapper *self, PyObject *args ) {
+
+    // the gate for which we look for the parents
+    PyObject* py_gate = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &py_gate )) return Py_BuildValue("i", -1);
+
+
+    if( py_gate == NULL ) {
+        return PyTuple_New( 0 );
+    }
+
+    qgd_Gate* gate_struct = reinterpret_cast<qgd_Gate*>( py_gate );
+    std::vector<Gate*> parents = gate_struct->gate->get_parents();
+
+    // preallocate tuple for the output 
+    PyObject* parent_tuple = PyTuple_New( (Py_ssize_t) parents.size() );
+
+    std::vector<Gate*>&& gates = self->circuit->get_gates();
+
+
+    // find the indices of the parents
+    for(int idx=0; idx<parents.size(); idx++) {
+
+        Gate* parent_gate = parents[idx];
+
+        // find the index of the parent_gate
+        int parent_idx = -1;
+        for( int jdx=0; jdx<gates.size(); jdx++ ) {
+
+            Gate* gate = gates[jdx];
+
+            if( parent_gate == gate ) {
+                parent_idx = jdx;
+                break;
+            }
+
+            if( jdx == gates.size()-1 ) {
+                std::string err( "Parent gate did not found in the circuit. May be the gate is not in the circuit");
+                PyErr_SetString(PyExc_Exception, err.c_str());
+                return NULL;
+            }
+
+        }
+
+        // adding parent_idx the tuple
+        PyTuple_SetItem( parent_tuple, (Py_ssize_t) idx, Py_BuildValue("i", parent_idx) );
+        
+       
+    }
+
+
+    return parent_tuple;
+
+
+}
+
+
+
+
+/**
+@brief Wrapper function to get the indices of children gates
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: 
+gate: the gate for which we are retriving the children
+*/
+static PyObject *
+qgd_Circuit_Wrapper_get_children( qgd_Circuit_Wrapper *self, PyObject *args ) {
+
+    // the gate for which we look for the children
+    PyObject* py_gate = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &py_gate )) return Py_BuildValue("i", -1);
+
+
+    if( py_gate == NULL ) {
+        return PyTuple_New( 0 );
+    }
+
+    qgd_Gate* gate_struct = reinterpret_cast<qgd_Gate*>( py_gate );
+    std::vector<Gate*> children = gate_struct->gate->get_children();
+
+    // preallocate tuple for the output 
+    PyObject* children_tuple = PyTuple_New( (Py_ssize_t) children.size() );
+
+    std::vector<Gate*>&& gates = self->circuit->get_gates();
+
+
+    // find the indices of the children
+    for(int idx=0; idx<children.size(); idx++) {
+
+        Gate* child_gate = children[idx];
+
+        // find the index of the child_gate
+        int child_idx = -1;
+        for( int jdx=0; jdx<gates.size(); jdx++ ) {
+
+            Gate* gate = gates[jdx];
+
+            if( child_gate == gate ) {
+                child_idx = jdx;
+                break;
+            }
+
+            if( jdx == gates.size()-1 ) {
+                std::string err( "Child gate did not found in the circuit. May be the gate is not in the circuit");
+                PyErr_SetString(PyExc_Exception, err.c_str());
+                return NULL;
+            }
+
+        }
+
+        // adding child_idx the tuple
+        PyTuple_SetItem( children_tuple, (Py_ssize_t) idx, Py_BuildValue("i", child_idx) );
+        
+       
+    }
+
+
+    return children_tuple;
+
+
+}
+
+
+
 /**
 @brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
 */
@@ -1855,6 +2001,12 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"get_Flat_Circuit", (PyCFunction) qgd_Circuit_Wrapper_get_Flat_Circuit, METH_NOARGS,
      "Method to generate a flat circuit. A flat circuit is a circuit does not containing subcircuits: there are no Gates_block instances (containing subcircuits) in the resulting circuit. If the original circuit contains subcircuits, the gates in the subcircuits are directly incorporated in the resulting flat circuit."
+    },
+    {"get_Parents", (PyCFunction) qgd_Circuit_Wrapper_get_parents, METH_VARARGS,
+     "Method to get the list of parent gate indices. Then the parent gates can be obtained from the list of gates involved in the circuit."
+    },
+    {"get_Children", (PyCFunction) qgd_Circuit_Wrapper_get_children, METH_VARARGS,
+     "Method to get the list of child gate indices. Then the children gates can be obtained from the list of gates involved in the circuit."
     },
     {NULL}  /* Sentinel */
 };

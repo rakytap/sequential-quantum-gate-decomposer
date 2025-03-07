@@ -279,3 +279,17 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 	# call the C wrapper function
         super().get_Parameter_Start_Index()
 
+
+#@brief Method to get the list of parent gate indices. Then the parent gates can be obtained from the list of gates involved in the circuit.
+    def get_Parents( self, gate):
+
+	# call the C wrapper function
+        return super().get_Parents( gate )
+
+
+#@brief Method to get the list of child gate indices. Then the children gates can be obtained from the list of gates involved in the circuit.
+    def get_Children( self, gate):
+
+	# call the C wrapper function
+        return super().get_Children( gate )
+

@@ -364,6 +364,29 @@ void Gate::clear_parents() {
 
 
 /**
+@brief Call to get the parents of the current gate
+@return Returns with the list of the parents
+*/
+std::vector<Gate*> Gate::get_parents() {
+
+    return parents;
+
+}
+
+
+/**
+@brief Call to get the children of the current gate
+@return Returns with the list of the children
+*/
+std::vector<Gate*> Gate::get_children() {
+
+    return children;
+
+}
+
+
+
+/**
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */

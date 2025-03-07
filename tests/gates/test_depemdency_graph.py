@@ -190,6 +190,60 @@ class Test_Decomposition:
 
 
 
+    def test_parents(self):
+
+        # the number of qubits spanning the unitary
+        qbit_num = 4
+
+        
+        # create custom gate structure for the decomposition
+        squander_circuit = self.create_flat_circuit( qbit_num, 2 )
+
+
+        gates = squander_circuit.get_Gates()
+
+
+        chosen_gate_idx = 18
+        chosen_gate = gates[ chosen_gate_idx ]
+
+
+        print( "The chosen gate is: " + str(chosen_gate) )
+
+        parents_indices = squander_circuit.get_Parents( chosen_gate )
+        parent_gate = gates[ parents_indices[0] ]
+   
+
+        print("The parents gate is: " + str( parent_gate )  )
+
+
+
+    def test_children(self):
+
+        # the number of qubits spanning the unitary
+        qbit_num = 4
+
+        
+        # create custom gate structure for the decomposition
+        squander_circuit = self.create_flat_circuit( qbit_num, 2 )
+
+
+        gates = squander_circuit.get_Gates()
+
+
+        chosen_gate_idx = 18
+        chosen_gate = gates[ chosen_gate_idx ]
+
+
+        print( "The chosen gate is: " + str(chosen_gate) )
+
+        children_indices = squander_circuit.get_Children( chosen_gate )
+        child_gate = gates[ children_indices[0] ]
+   
+
+        print("The parents gate is: " + str( child_gate )  )
+
+
+
 
 
 
