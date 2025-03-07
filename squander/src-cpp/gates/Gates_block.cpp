@@ -126,7 +126,10 @@ Gates_block::release_gate( int idx) {
 
     gates.erase( gates.begin() + idx );
     
+    // TODO: develop a more efficient method for large circuits. Now it is updating the whole circuit
     reset_parameter_start_indices();
+    reset_dependency_graph();
+
 
 }
 
@@ -1356,7 +1359,9 @@ void Gates_block::add_gate( Gate* gate ) {
             layer_num = layer_num + 1;
         }
         
+        // TODO: develop a more efficient method for large circuits. Now it is updating the whole circuit
         reset_parameter_start_indices();
+        reset_dependency_graph();
 
 }
 
@@ -1384,7 +1389,9 @@ Gates_block::insert_gate( Gate* gate, int idx ) {
             layer_num = layer_num + 1;
         }
         
+        // TODO: develop a more efficient method for large circuits. Now it is updating the whole circuit
         reset_parameter_start_indices();
+        reset_dependency_graph();
 
 
 }
@@ -2495,6 +2502,35 @@ Gates_block::reset_parameter_start_indices() {
         parameter_idx = parameter_idx + gate->get_parameter_num();
     
     }
+
+}
+
+
+/**
+@brief Method to reset the dependency graph of the gates in the circuit
+*/
+void  
+Gates_block::reset_dependency_graph() {
+
+    // first clear parent/children data from the gates
+    for( std::vector<Gate*>::iterator gate_it = gates.begin(); gate_it != gates.end(); gate_it++ ) {    
+        Gate* gate = *gate_it;
+        gate->clear_children();
+        gate->clear_parents();    
+    }
+
+
+    // first clear parent/children data from the gates
+    for( std::vector<Gate*>::iterator gate_it = gates.begin(); gate_it != gates.end(); gate_it++ ) {    
+        Gate* gate = *gate_it;
+
+        // determine the parents of the gate
+        determine_parents( gate );
+
+    }
+
+
+
 
 }
 

@@ -614,9 +614,15 @@ void get_matrices_target_control(std::vector<Matrix> &u3_qbit, std::vector<int> 
 
 
 /**
-@brief Method reset the parameter start indices of gate operations incorporated in the circuit. (When a gate is inserted into the circuit at other position than the end.)
+@brief Method to reset the parameter start indices of gate operations incorporated in the circuit. (When a gate is inserted into the circuit at other position than the end.)
 */
 void reset_parameter_start_indices();
+
+
+/**
+@brief Method to reset the dependency graph of the gates in the circuit
+*/
+void reset_dependency_graph();
 
 
 /**
