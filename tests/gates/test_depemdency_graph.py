@@ -240,7 +240,7 @@ class Test_Decomposition:
         child_gate = gates[ children_indices[0] ]
    
 
-        print("The parents gate is: " + str( child_gate )  )
+        print("The child gate is: " + str( child_gate )  )
 
 
 
