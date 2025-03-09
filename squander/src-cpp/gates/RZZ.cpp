@@ -16,11 +16,11 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file CRY.cpp
-    \brief Class representing a controlled Y rotattion gate.
+/*! \file RYY.cpp
+    \brief Class representing a YY rotation gate.
 */
 
-#include "RXX.h"
+#include "RZZ.h"
 #include "apply_large_kernel_to_input_AVX.h"
 #include "apply_large_kernel_to_input.h"
 
@@ -29,10 +29,10 @@ limitations under the License.
 /**
 @brief Nullary constructor of the class.
 */
-RXX::RXX() : RY() {
+RZZ::RZZ() : RY() {
 
         // A string describing the type of the gate
-        type = RXX_OPERATION;
+        type = RZZ_OPERATION;
 
 }
 
@@ -46,11 +46,11 @@ RXX::RXX() : RY() {
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-RXX::RXX(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RY(qbit_num_in, target_qbit_in) {
+RZZ::RZZ(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RY(qbit_num_in, target_qbit_in) {
 
 
         // A string describing the type of the gate
-        type = RXX_OPERATION;
+        type = RZZ_OPERATION;
 
 
         if (control_qbit_in >= qbit_num) {
@@ -69,7 +69,7 @@ RXX::RXX(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RY(qbit_num
 /**
 @brief Destructor of the class
 */
-RXX::~RXX() {
+RZZ::~RZZ() {
 
 }
 
@@ -77,13 +77,13 @@ RXX::~RXX() {
 
 
 /**
-@brief Call to apply the gate on the input array/matrix by CRY3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@brief Call to apply the gate on the input array/matrix by RYY*input
+@param parameters An array of parameters to calculate the matrix of the RYY gate.
 @param input The input array on which the gate is applied
 @param parallel Set true to apply parallel kernels, false otherwise (optional)
 */
 void 
-RXX::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
+RZZ::apply_to( Matrix_real& parameters, Matrix& input, bool parallel ) {
 
 
     if (input.rows != matrix_size ) {
@@ -113,15 +113,13 @@ Phi = Phi - M_PI;
     Matrix U_2qbit(4,4);
     memset(U_2qbit.get_data(), 0.0, (U_2qbit.size()*2)*sizeof(double) );      
     U_2qbit[0].real = std::cos(ThetaOver2);
-    U_2qbit[3].imag = -1.*std::sin(ThetaOver2);
+    U_2qbit[0].imag = -1.*std::sin(ThetaOver2);
     U_2qbit[1*4+1].real = std::cos(ThetaOver2);
-    U_2qbit[1*4+2].imag =  -1.*std::sin(ThetaOver2);
-    U_2qbit[2*4+1].imag = -1.*std::sin(ThetaOver2);
+    U_2qbit[1*4+1].imag =  1.*std::sin(ThetaOver2);
+    U_2qbit[2*4+2].imag = 1.*std::sin(ThetaOver2);
     U_2qbit[2*4+2].real = std::cos(ThetaOver2);
-    U_2qbit[3*4].imag = -1.*std::sin(ThetaOver2);
+    U_2qbit[3*4+3].imag = -1.*std::sin(ThetaOver2);
     U_2qbit[3*4+3].real = std::cos(ThetaOver2);
-
-
     int inner = (target_qbit>control_qbit) ? control_qbit:target_qbit;
     int outer = (target_qbit>control_qbit) ? target_qbit:control_qbit;
     if (parallel){
@@ -141,7 +139,7 @@ Phi = Phi - M_PI;
 @param input The input array on which the gate is applied
 */
 void 
-RXX::apply_from_right( Matrix_real& parameters, Matrix& input ) {
+RZZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
 
 
@@ -155,7 +153,10 @@ RXX::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 @param input The input array on which the gate is applied
 */
 std::vector<Matrix> 
-RXX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+RZZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+
+
+
     std::vector<Matrix> ret;
 
     double ThetaOver2;
@@ -165,26 +166,27 @@ RXX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     // the resulting matrix
     Matrix res_mtx = input.copy();   
+
     Matrix U_2qbit(4,4);
     memset(U_2qbit.get_data(), 0.0, (U_2qbit.size()*2)*sizeof(double) );      
     U_2qbit[0].real = std::cos(ThetaOver2);
-    U_2qbit[3].imag = -1.*std::sin(ThetaOver2);
+    U_2qbit[0].imag = -1.*std::sin(ThetaOver2);
     U_2qbit[1*4+1].real = std::cos(ThetaOver2);
-    U_2qbit[1*4+2].imag =  -1.*std::sin(ThetaOver2);
-    U_2qbit[2*4+1].imag = -1.*std::sin(ThetaOver2);
+    U_2qbit[1*4+1].imag =  1.*std::sin(ThetaOver2);
+    U_2qbit[2*4+2].imag = 1.*std::sin(ThetaOver2);
     U_2qbit[2*4+2].real = std::cos(ThetaOver2);
-    U_2qbit[3*4].imag = -1.*std::sin(ThetaOver2);
+    U_2qbit[3*4+3].imag = -1.*std::sin(ThetaOver2);
     U_2qbit[3*4+3].real = std::cos(ThetaOver2);
-
 
     int inner = (target_qbit>control_qbit) ? control_qbit:target_qbit;
     int outer = (target_qbit>control_qbit) ? target_qbit:control_qbit;
 
-    apply_2qbit_kernel_to_state_vector_input(U_2qbit,res_mtx,inner,outer,input.size());
- 
+        apply_2qbit_kernel_to_state_vector_input(U_2qbit,res_mtx,inner,outer,input.size());
 
     ret.push_back(res_mtx);
     return ret;
+
+
 }
 
 
@@ -195,7 +197,7 @@ RXX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 @param Phi Real parameter standing for the parameter phi.
 @param Lambda Real parameter standing for the parameter lambda.
 */
-void RXX::set_optimized_parameters(double ThetaOver2 ) {
+void RZZ::set_optimized_parameters(double ThetaOver2 ) {
 
     parameters = Matrix_real(1, parameter_num);
 
@@ -208,7 +210,7 @@ void RXX::set_optimized_parameters(double ThetaOver2 ) {
 @brief Call to get the final optimized parameters of the gate.
 @param parameters_in Preallocated pointer to store the parameters ThetaOver2, Phi and Lambda of the U3 gate.
 */
-Matrix_real RXX::get_optimized_parameters() {
+Matrix_real RZZ::get_optimized_parameters() {
 
     return parameters.copy();
 
@@ -220,9 +222,9 @@ Matrix_real RXX::get_optimized_parameters() {
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-RXX* RXX::clone() {
+RZZ* RZZ::clone() {
 
-    RXX* ret = new RXX(qbit_num, target_qbit, control_qbit);
+    RZZ* ret = new RZZ(qbit_num, target_qbit, control_qbit);
 
     if ( parameters.size() > 0 ) {
         ret->set_optimized_parameters(parameters[0]);

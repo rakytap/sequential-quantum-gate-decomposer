@@ -117,10 +117,9 @@ Phi = Phi - M_PI;
     U_2qbit[1*4+1].real = std::cos(ThetaOver2);
     U_2qbit[1*4+2].imag =  -1.*std::sin(ThetaOver2);
     U_2qbit[2*4+1].imag = -1.*std::sin(ThetaOver2);
-    U_2qbit[3*4].imag = 1.*std::sin(ThetaOver2);
     U_2qbit[2*4+2].real = std::cos(ThetaOver2);
     U_2qbit[3*4+3].real = std::cos(ThetaOver2);
-
+    U_2qbit[3*4].imag = 1.*std::sin(ThetaOver2);
     int inner = (target_qbit>control_qbit) ? control_qbit:target_qbit;
     int outer = (target_qbit>control_qbit) ? target_qbit:control_qbit;
     if (parallel){
@@ -175,9 +174,9 @@ RYY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
     U_2qbit[1*4+1].real = std::cos(ThetaOver2);
     U_2qbit[1*4+2].imag =  -1.*std::sin(ThetaOver2);
     U_2qbit[2*4+1].imag = -1.*std::sin(ThetaOver2);
-    U_2qbit[3*4].imag = 1.*std::sin(ThetaOver2);
     U_2qbit[2*4+2].real = std::cos(ThetaOver2);
     U_2qbit[3*4+3].real = std::cos(ThetaOver2);
+    U_2qbit[3*4].imag = 1.*std::sin(ThetaOver2);
 
     int inner = (target_qbit>control_qbit) ? control_qbit:target_qbit;
     int outer = (target_qbit>control_qbit) ? target_qbit:control_qbit;

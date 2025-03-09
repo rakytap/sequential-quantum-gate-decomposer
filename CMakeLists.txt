@@ -352,6 +352,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZ_P.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RXX.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RYY.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RZZ.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/custom_kernel_1qubit_gate.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Composite.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/kernels/apply_kernel_to_input.cpp

@@ -828,6 +828,37 @@ qgd_Circuit_Wrapper_add_RYY(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
 @param kwds A tuple of keywords
 */
 static PyObject *
+qgd_Circuit_Wrapper_add_RZZ(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+    int  control_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist,
+                                     &target_qbit, &control_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->gate->add_rzz(target_qbit, control_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+/**
+@brief Wrapper function to add an adaptive gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
 qgd_Circuit_Wrapper_add_adaptive(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
 {
 
@@ -1805,6 +1836,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"add_RYY", (PyCFunction) qgd_Circuit_Wrapper_add_RYY, METH_VARARGS | METH_KEYWORDS,
      "Call to add a RYY gate to the front of the gate structure"
+    },
+    {"add_RZZ", (PyCFunction) qgd_Circuit_Wrapper_add_RZZ, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a RZZ gate to the front of the gate structure"
     },
     {"add_adaptive", (PyCFunction) qgd_Circuit_Wrapper_add_adaptive, METH_VARARGS | METH_KEYWORDS,
      "Call to add an adaptive gate to the front of the gate structure"

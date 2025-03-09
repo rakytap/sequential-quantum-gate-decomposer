@@ -195,6 +195,10 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 	# call the C wrapper function
         super(qgd_Circuit, self).add_RYY(target_qbit, control_qbit)
         
+    def add_RZZ( self, target_qbit, control_qbit):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_RZZ(target_qbit, control_qbit)
 #@brief Call to add adaptive gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: target_qbit (int), control_qbit (int).

@@ -213,15 +213,20 @@ void add_rz(int target_qbit);
 void add_rz_to_front(int target_qbit);
 
 /**
-@brief Add a RZ gate to the front of the list of gates
+@brief Add a RYY gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
 void add_ryy(int target_qbit, int control_qbit);
 /**
-@brief Add a RZ gate to the front of the list of gates
+@brief Add a RXX gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
 void add_rxx(int target_qbit, int control_qbit);
+/**
+@brief Add a RZZ gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_rzz(int target_qbit, int control_qbit);
 /**
 @brief Append a RZ_P gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)

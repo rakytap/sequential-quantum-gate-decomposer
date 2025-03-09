@@ -549,24 +549,20 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
                 throw error;
             }
 
+
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
+                for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++){
+                    Gates_block* block = new Gates_block( qbit_num );
+
+                    // single qubit gates in a ablock are then merged into a single gate kernel.
+                    block->add_rz(qbit_idx);
+                    block->add_ry(qbit_idx);
+                    block->add_rz(qbit_idx);     
+
+                    add_gate( block );                           
+                } 
 
                 for( int idx=0; idx<inner_blocks; idx++) {
-                    Gates_block* block_1 = new Gates_block( qbit_num );
-                    Gates_block* block_2 = new Gates_block( qbit_num );
- 
-                    // single qubit gates in a ablock are then merged into a single gate kernel.
-                    block_1->add_rz(1);
-                    block_1->add_ry(1);
-                    block_1->add_rz(1);     
-
-                    add_gate( block_1 );                           
-
-                    block_2->add_rz(0);
-                    block_2->add_ry(0);
-                    block_2->add_rz(0);         
-
-                    add_gate( block_2 );           
                 
                     add_cnot(1,0);
                 }
@@ -576,49 +572,32 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
 
                         for( int idx=0; idx<inner_blocks; idx++) {
 
-                            Gates_block* block_1 = new Gates_block( qbit_num );
-                            Gates_block* block_2 = new Gates_block( qbit_num );
-
-                            block_1->add_rz(control_qbit+1);
-                            block_1->add_ry(control_qbit+1);
-                            block_1->add_rz(control_qbit+1); 
-                            add_gate( block_1 );                                
-
-                            block_2->add_rz(control_qbit+2);
-                            block_2->add_ry(control_qbit+2);
-                            block_2->add_rz(control_qbit+2);  
-                            add_gate( block_2 );                              
-
                             add_cnot(control_qbit+2,control_qbit+1);
                         }
 
                     }
 
                     for( int idx=0; idx<inner_blocks; idx++) {
-
-                        Gates_block* block_1 = new Gates_block( qbit_num );
-                        Gates_block* block_2 = new Gates_block( qbit_num );
-
-                        block_1->add_rz(control_qbit+1);
-                        block_1->add_ry(control_qbit+1);
-                        block_1->add_rz(control_qbit+1); 
-                        add_gate( block_1 );                      
-
-                        block_2->add_rz(control_qbit);
-                        block_2->add_ry(control_qbit);
-                        block_2->add_rz(control_qbit);     
-                        add_gate( block_2 );                  
-
                         add_cnot(control_qbit+1,control_qbit);
                     }
 
                 }
             }
+            for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++){
+                Gates_block* block = new Gates_block( qbit_num );
 
+                // single qubit gates in a ablock are then merged into a single gate kernel.
+                block->add_rz(qbit_idx);
+                block->add_ry(qbit_idx);
+                block->add_rz(qbit_idx);     
+
+                add_gate( block );                           
+            }
             return;
         }
         case TQR:
         {
+
             release_gates();
 
             if ( qbit_num < 2 ) {
@@ -626,72 +605,47 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
                 throw error;
             }
 
+
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
+                for (int qbit_idx=0; qbit_idx<qbit_num; qbit_idx++){
+                    Gates_block* block = new Gates_block( qbit_num );
+
+                    // single qubit gates in a ablock are then merged into a single gate kernel.
+                    block->add_rz(qbit_idx);
+                    block->add_ry(qbit_idx);
+                    block->add_rz(qbit_idx);     
+
+                    add_gate( block );                           
+                } 
 
                 for( int idx=0; idx<inner_blocks; idx++) {
-                    Gates_block* block_1 = new Gates_block( qbit_num );
-                    Gates_block* block_2 = new Gates_block( qbit_num );
- 
-                    // single qubit gates in a ablock are then merged into a single gate kernel.
-                    block_1->add_rz(1);
-                    block_1->add_ry(1);
-                    block_1->add_rz(1);     
-
-                    add_gate( block_1 );                           
-
-                    block_2->add_rz(0);
-                    block_2->add_ry(0);
-                    block_2->add_rz(0);         
-
-                    add_gate( block_2 );  
-                    add_ryy(1,0);
+                
                     add_rxx(1,0);
+                    add_ryy(1,0);                    
+                    add_rzz(1,0);
                 }
-
 
                 for (int control_qbit=1; control_qbit<qbit_num-1; control_qbit=control_qbit+2){
                     if (control_qbit+2<qbit_num){
 
                         for( int idx=0; idx<inner_blocks; idx++) {
-                            Gates_block* block_1 = new Gates_block( qbit_num );
-                            Gates_block* block_2 = new Gates_block( qbit_num );
 
-                            block_1->add_rz(control_qbit+1);
-                            block_1->add_ry(control_qbit+1);
-                            block_1->add_rz(control_qbit+1); 
-                            add_gate( block_1 );                                
+                        add_rxx(control_qbit+2,control_qbit+1);
+                        add_ryy(control_qbit+2,control_qbit+1);
+                        add_rzz(control_qbit+2,control_qbit+1);
 
-                            block_2->add_rz(control_qbit+2);
-                            block_2->add_ry(control_qbit+2);
-                            block_2->add_rz(control_qbit+2);  
-                            add_gate( block_2 );
-                            add_ryy(control_qbit+2,control_qbit+1);
-                            add_rxx(control_qbit+2,control_qbit+1);
                         }
 
                     }
 
                     for( int idx=0; idx<inner_blocks; idx++) {
-                        Gates_block* block_1 = new Gates_block( qbit_num );
-                        Gates_block* block_2 = new Gates_block( qbit_num );
-
-                        block_1->add_rz(control_qbit+1);
-                        block_1->add_ry(control_qbit+1);
-                        block_1->add_rz(control_qbit+1); 
-                        add_gate( block_1 );                      
-
-                        block_2->add_rz(control_qbit);
-                        block_2->add_ry(control_qbit);
-                        block_2->add_rz(control_qbit);     
-                        add_gate( block_2 );          
-                        add_ryy(control_qbit+1,control_qbit);
                         add_rxx(control_qbit+1,control_qbit);
+                        add_ryy(control_qbit+1,control_qbit);
+                        add_rzz(control_qbit+1,control_qbit);
                     }
 
                 }
             }
-
-
             return;
         }        
         default:
