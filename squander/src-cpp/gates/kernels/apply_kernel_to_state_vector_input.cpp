@@ -22,7 +22,7 @@ limitations under the License.
 
 
 #include "apply_kernel_to_state_vector_input.h"
-#include <immintrin.h>
+//#include <immintrin.h>
 #include "tbb/tbb.h"
 
 /**

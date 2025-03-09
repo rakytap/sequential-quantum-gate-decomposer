@@ -83,7 +83,7 @@ class Test_Decomposition:
         decomp = N_Qubit_Decomposition( Umtx )
 
         # start the decomposition
-        decomp.Start_Decomposition(prepare_export=True)
+        decomp.Start_Decomposition()
 
         decomp.List_Gates()
 

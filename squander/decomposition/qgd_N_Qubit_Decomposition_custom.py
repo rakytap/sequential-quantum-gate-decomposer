@@ -60,11 +60,10 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 
 ##
 # @brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
-# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
-    def Start_Decomposition(self,prepare_export=True):
+    def Start_Decomposition(self):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_custom, self).Start_Decomposition(prepare_export=prepare_export)
+        super(qgd_N_Qubit_Decomposition_custom, self).Start_Decomposition()
 
 
 ##
@@ -112,7 +111,7 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
 # @brief Export the unitary decomposition into Qiskit format.
 # @return Return with a Qiskit compatible quantum circuit.
     def get_Cirq_Circuit( self ):
-
+        #TODO: implement like for QISKIT
         import cirq
 
 

@@ -32,7 +32,7 @@ from skbuild.cmaker import get_cmake_version
 setup(
     name="squander",
     packages= [ 'squander' ],
-    version='1.8.9',
+    version='1.9.0',
     url="https://github.com/rakytap/sequential-quantum-gate-decomposer", 
     maintainer="Peter Rakyta",
     maintainer_email="peter.rakyta@ttk.elte.hu",

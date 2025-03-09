@@ -90,7 +90,7 @@ class Test_Decomposition:
         decomp.set_Optimization_Blocks( 20 )
 
         # starting the decomposition
-        decomp.Start_Decomposition(prepare_export=True)
+        decomp.Start_Decomposition()
 
         # list of reordered qubits to revert the initial order
         revert_qbits = (1,0,2,3)             

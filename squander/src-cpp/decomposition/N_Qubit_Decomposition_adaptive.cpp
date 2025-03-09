@@ -175,10 +175,9 @@ N_Qubit_Decomposition_adaptive::~N_Qubit_Decomposition_adaptive() {
 /**
 @brief Start the disentanglig process of the unitary
 @param finalize_decomp Optional logical parameter. If true (default), the decoupled qubits are rotated into state |0> when the disentangling of the qubits is done. Set to False to omit this procedure
-@param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
 */
 void
-N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
+N_Qubit_Decomposition_adaptive::start_decomposition() {
 
 
     //The stringstream input to store the output messages.
@@ -200,7 +199,7 @@ N_Qubit_Decomposition_adaptive::start_decomposition(bool prepare_export) {
    
     // finalyzing the gate structure by turning CRY gates inti CNOT gates and do optimization cycles to correct approximation in this transformation 
     // (CRY gates with small rotation angles are expressed with a single CNOT gate
-    finalize_circuit(prepare_export);
+    finalize_circuit();
 
 }
 
@@ -423,7 +422,7 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
 /**
 @brief Call to replace adaptive gates with conventional gates and refine the gate structure.
 */
-void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export) {
+void N_Qubit_Decomposition_adaptive::finalize_circuit() {
 
 
 // temporarily turn off OpenMP parallelism
@@ -537,7 +536,7 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export) {
         int max_inner_iterations_loc = 10000;
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );  
     }
-    cDecomp_custom.start_decomposition(true);
+    cDecomp_custom.start_decomposition();
     number_of_iters += cDecomp_custom.get_num_iters();
 
     current_minimum = cDecomp_custom.get_current_minimum();
@@ -572,11 +571,6 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit(bool prepare_export) {
 
         export_gate_list_to_binary(optimized_parameters_mtx, this, filename2, verbose);  
     
-    }
-
-    // prepare gates to export
-    if (prepare_export) {
-        prepare_gates_to_export();
     }
 
     decomposition_error = optimization_problem(optimized_parameters_mtx);
@@ -672,7 +666,7 @@ N_Qubit_Decomposition_adaptive::optimize_imported_gate_structure(Matrix_real& op
         int max_inner_iterations_loc = 10000;
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
     }
-    cDecomp_custom.start_decomposition(true);
+    cDecomp_custom.start_decomposition();
     number_of_iters += cDecomp_custom.get_num_iters();
     //cDecomp_custom.list_gates(0);
 
@@ -805,7 +799,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
                 }
                 
             
-                cDecomp_custom_random.start_decomposition(true);
+                cDecomp_custom_random.start_decomposition();
                 
 
                 
@@ -1205,7 +1199,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
         int max_inner_iterations_loc = 100;
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc ); 
     }
-    cDecomp_custom.start_decomposition(true);
+    cDecomp_custom.start_decomposition();
     iteration_num = cDecomp_custom.get_num_iters();
     double current_minimum_tmp = cDecomp_custom.get_current_minimum();
 

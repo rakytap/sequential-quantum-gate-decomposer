@@ -1654,11 +1654,7 @@ qgd_Circuit_Wrapper_get_gate( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
 
 /**
-@brief Wrapper function to set the number of identical successive blocks during the subdecomposition of the qbit-th qubit.
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_custom_Wrapper.
-@param args A tuple of the input arguments: qbit (bool), identical_blocks (bool)
-qbit: The number of qubits for which the subdecomposition should contain identical_blocks successive identical blocks.
-identical_blocks: Number of successive identical blocks in the decomposition.
+@brief Call to get the incorporated gates in a python list
 */
 static PyObject *
 qgd_Circuit_Wrapper_get_gates( qgd_Circuit_Wrapper *self ) {
