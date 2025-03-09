@@ -426,7 +426,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 }
             }
        
-            std::cout << "number of costfunction evaluations : " << iter+1 << " " << interval_coeff << std::endl;
+            //std::cout << "number of costfunction evaluations : " << iter+1 << " " << interval_coeff << std::endl;
 
             current_minimum = current_best_value;
 
