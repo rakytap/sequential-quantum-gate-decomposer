@@ -530,7 +530,7 @@ bool U3::is_lambda_parameter() {
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-U3* U3::clone() {
+Gate* U3::clone() {
 
     U3* ret = new U3(qbit_num, target_qbit, theta, phi, lambda);
 
