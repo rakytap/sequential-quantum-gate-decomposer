@@ -111,7 +111,7 @@ Matrix calc_one_qubit_u3( );
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-virtual Gate* clone();
+virtual CNOT* clone();
 
 };
 
