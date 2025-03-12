@@ -504,7 +504,7 @@ virtual void set_qbit_num( int qbit_num_in );
 @brief Create a clone of the present class.
 @return Return with a pointer pointing to the cloned object.
 */
-virtual Gates_block* clone();
+virtual Gate* clone();
 
 /**
 @brief Call to extract the gates stored in the class.
