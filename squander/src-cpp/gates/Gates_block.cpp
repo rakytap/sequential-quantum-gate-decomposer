@@ -308,7 +308,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
             
             Matrix_real parameters_mtx_loc(parameters_mtx_in.get_data() + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
             
-            if  ( parameters_mtx_loc.size() == 0 ) {
+            if  ( parameters_mtx_loc.size() == 0 && operation->get_type() != BLOCK_OPERATION ) {
                 operation->apply_to(input, parallel);            
             }
             else {
