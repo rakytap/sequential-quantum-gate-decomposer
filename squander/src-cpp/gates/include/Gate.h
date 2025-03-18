@@ -57,6 +57,10 @@ protected:
     int parameter_num;
     /// the index in the parameter array (corrensponding to the encapsulated circuit) where the gate parameters begin (if gates are placed into a circuit a single parameter array is used to execute the whole circuit)
     int parameter_start_idx;
+    /// list of parent gates to be applied in the circuit prior to this current gate
+    std::vector<Gate*> parents;
+    /// list of child gates to be applied after this current gate
+    std::vector<Gate*> children;
 
 private:
 
@@ -180,6 +184,37 @@ int get_target_qbit();
 */
 int get_control_qbit();
 
+/**
+@brief Call to get the qubits involved in the gate operation.
+@return Return with a list of the involved qubits
+*/
+virtual std::vector<int> get_involved_qubits();
+
+
+/**
+@brief Call to add a child gate to the current gate 
+@param child The parent gate of the current gate.
+*/
+void add_child( Gate* child );
+
+
+/**
+@brief Call to add a parent gate to the current gate 
+@param parent The parent gate of the current gate.
+*/
+void add_parent( Gate* parent );
+
+
+/**
+@brief Call to erase data on children.
+*/
+void clear_children();
+
+
+/**
+@brief Call to erase data on parents.
+*/
+void clear_parents();
 
 /**
 @brief Call to get the number of free parameters
@@ -206,6 +241,35 @@ int get_qbit_num();
 @param start_idx The starting index
 */
 void set_parameter_start_idx(int start_idx);
+
+
+/**
+@brief Call to set the parents of the current gate
+@param parents_ the list of the parents
+*/
+void set_parents( std::vector<Gate*>& parents_ );
+
+
+/**
+@brief Call to set the children of the current gate
+@param children_ the list of the children
+*/
+void set_children( std::vector<Gate*>& children_ );
+
+
+
+/**
+@brief Call to get the parents of the current gate
+@return Returns with the list of the parents
+*/
+std::vector<Gate*> get_parents();
+
+
+/**
+@brief Call to get the children of the current gate
+@return Returns with the list of the children
+*/
+std::vector<Gate*> get_children();
 
 
 /**

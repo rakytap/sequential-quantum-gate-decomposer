@@ -206,6 +206,8 @@ CNOT* CNOT::clone() {
     CNOT* ret = new CNOT( qbit_num, target_qbit, control_qbit );
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
+    ret->set_parents( parents );
+    ret->set_children( children );
 
     return ret;
 

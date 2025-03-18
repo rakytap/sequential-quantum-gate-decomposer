@@ -287,6 +287,106 @@ int Gate::get_control_qbit()  {
 }
 
 /**
+@brief Call to get the qubits involved in the gate operation.
+@return Return with a list of the involved qubits
+*/
+std::vector<int> Gate::get_involved_qubits() {
+
+    std::vector<int> involved_qbits;
+    
+    if( target_qbit != -1 ) {
+        involved_qbits.push_back( target_qbit );
+    }
+    
+    if( control_qbit != -1 ) {
+        involved_qbits.push_back( control_qbit );
+    }    
+    
+    
+    return involved_qbits;
+    
+
+}
+
+
+/**
+@brief Call to add a parent gate to the current gate 
+@param parent The parent gate of the current gate.
+*/
+void Gate::add_parent( Gate* parent ) {
+
+    // check if parent already present in th elist of parents
+    if ( std::count(parents.begin(), parents.end(), parent) > 0 ) {
+        return;
+    }
+    
+    parents.push_back( parent );
+
+}
+
+
+
+/**
+@brief Call to add a child gate to the current gate 
+@param child The parent gate of the current gate.
+*/
+void Gate::add_child( Gate* child ) {
+
+    // check if parent already present in th elist of parents
+    if ( std::count(children.begin(), children.end(), child) > 0 ) {
+        return;
+    }
+    
+    children.push_back( child );
+
+}
+
+
+/**
+@brief Call to erase data on children.
+*/
+void Gate::clear_children() {
+
+    children.clear();
+
+}
+
+
+/**
+@brief Call to erase data on parents.
+*/
+void Gate::clear_parents() {
+
+    parents.clear();
+
+}
+
+
+
+/**
+@brief Call to get the parents of the current gate
+@return Returns with the list of the parents
+*/
+std::vector<Gate*> Gate::get_parents() {
+
+    return parents;
+
+}
+
+
+/**
+@brief Call to get the children of the current gate
+@return Returns with the list of the children
+*/
+std::vector<Gate*> Gate::get_children() {
+
+    return children;
+
+}
+
+
+
+/**
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */
@@ -323,6 +423,8 @@ Gate* Gate::clone() {
     ret->set_matrix( matrix_alloc );
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
+    ret->set_parents( parents );
+    ret->set_children( children );
 
     return ret;
 
@@ -581,6 +683,29 @@ void
 Gate::set_parameter_start_idx(int start_idx) {
 
     parameter_start_idx = start_idx;
+
+}
+
+/**
+@brief Call to set the parents of the current gate
+@param parents_ the list of the parents
+*/
+void 
+Gate::set_parents( std::vector<Gate*>& parents_ ) {
+
+    parents = parents_;
+
+}
+
+
+/**
+@brief Call to set the children of the current gate
+@param children_ the list of the children
+*/
+void 
+Gate::set_children( std::vector<Gate*>& children_ ) {
+
+    children = children_;
 
 }
 

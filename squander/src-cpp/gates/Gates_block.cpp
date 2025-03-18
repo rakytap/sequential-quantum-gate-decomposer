@@ -126,7 +126,10 @@ Gates_block::release_gate( int idx) {
 
     gates.erase( gates.begin() + idx );
     
+    // TODO: develop a more efficient method for large circuits. Now it is updating the whole circuit
     reset_parameter_start_indices();
+    reset_dependency_graph();
+
 
 }
 
@@ -1313,6 +1316,9 @@ void Gates_block::add_gate( Gate* gate ) {
 
         //set the number of qubit in the gate
         gate->set_qbit_num( qbit_num );
+        
+        // determine the parents of the gate
+        determine_parents( gate );
 
         // append the gate to the list
         gates.push_back(gate);
@@ -1340,6 +1346,9 @@ void Gates_block::add_gate( Gate* gate ) {
         // set the number of qubit in the gate
         gate->set_qbit_num( qbit_num );
 
+        // determine the parents of the gate
+        determine_children( gate );
+
         gates.insert( gates.begin(), gate);
 
         // increase the number of U3 gate parameters by the number of parameters
@@ -1350,7 +1359,9 @@ void Gates_block::add_gate( Gate* gate ) {
             layer_num = layer_num + 1;
         }
         
+        // TODO: develop a more efficient method for large circuits. Now it is updating the whole circuit
         reset_parameter_start_indices();
+        reset_dependency_graph();
 
 }
 
@@ -1378,7 +1389,9 @@ Gates_block::insert_gate( Gate* gate, int idx ) {
             layer_num = layer_num + 1;
         }
         
+        // TODO: develop a more efficient method for large circuits. Now it is updating the whole circuit
         reset_parameter_start_indices();
+        reset_dependency_graph();
 
 
 }
@@ -2038,6 +2051,8 @@ Gates_block* Gates_block::clone() {
     Gates_block* ret = new Gates_block( qbit_num );
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
+    ret->set_parents( parents );
+    ret->set_children( children );
 
     // extracting the gates from the current class
     if (extract_gates( ret ) != 0 ) {
@@ -2362,6 +2377,117 @@ double Gates_block::get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matri
 
 
 /**
+@brief Call to remove those integer elements from list1 which are present in list 
+@param list1 A list of integers
+@param list2 A list of integers
+@return Returns with the reduced list determined from list1.
+*/
+std::vector<int> remove_list_intersection( std::vector<int>& list1, std::vector<int>& list2 ) {
+
+    std::vector<int> ret = list1;
+
+    for( std::vector<int>::iterator it2 = list2.begin(); it2 != list2.end(); it2++ ) {
+    
+        std::vector<int>::iterator element_found = std::find(ret.begin(), ret.end(), *it2);
+        
+        if( element_found != ret.end() ) {
+            ret.erase( element_found );
+        }    
+        
+    }
+    
+    return ret;
+
+
+
+}
+
+
+/**
+@brief Call to obtain the parent gates in the circuit. A parent gate needs to be applied prior to the given gate. The parent gates are stored via the "parents" attribute of the gate instance
+@param gate The gate for which the parents are determined. 
+*/
+void 
+Gates_block::determine_parents( Gate* gate ) {
+
+
+    std::vector<int>&& involved_qubits = gate->get_involved_qubits();
+/*
+    std::cout << "involved qubits in the current gate: " << std::endl;
+    for( int idx=0; idx<involved_qubits.size(); idx++ ) {
+    std::cout << involved_qubits[idx] << ", ";
+    }
+    std::cout << std::endl;
+  */  
+    // iterate over gates in the circuit
+    for( int idx=gates.size()-1; idx>=0; idx-- ) {
+        Gate* gate_loc = gates[idx];
+        std::vector<int>&& involved_qubits_loc = gate_loc->get_involved_qubits();
+        
+        std::vector<int>&& reduced_qbit_list = remove_list_intersection( involved_qubits, involved_qubits_loc );
+        
+        if( reduced_qbit_list.size() < involved_qubits.size() ) {
+            // parent gate found, setting parent-child relation
+            
+            gate->add_parent( gate_loc );
+            gate_loc->add_child( gate );
+            
+            involved_qubits = std::move(reduced_qbit_list);
+            
+            
+        }
+        
+        
+        // return if no further involved qubits left
+        if( involved_qubits.size() == 0 ) {
+            break;
+        }
+    }
+    
+    
+}
+    
+    
+    
+/**
+@brief Call to obtain the child gates in the circuit. A child gate needs to be applied after the given gate. The children gates are stored via the "children" attribute of the gate instance
+@param gate The gate for which the children are determined. 
+*/
+void 
+Gates_block::determine_children( Gate* gate ) {
+
+
+    std::vector<int>&& involved_qubits = gate->get_involved_qubits();
+    
+    // iterate over gates in the circuit
+    for( int idx=0; idx<gates.size(); idx++ ) {
+        Gate* gate_loc = gates[idx];
+        std::vector<int>&& involved_qubits_loc = gate_loc->get_involved_qubits();
+        
+        std::vector<int>&& reduced_qbit_list = remove_list_intersection( involved_qubits, involved_qubits_loc );
+        
+        if( reduced_qbit_list.size() < involved_qubits.size() ) {
+            // child gate found, setting parent-child relation
+            
+            gate->add_child( gate_loc );
+            gate_loc->add_parent( gate );
+            
+            involved_qubits = std::move(reduced_qbit_list);
+            
+            
+        }
+        
+        
+        // return if no further involved qubits left
+        if( involved_qubits.size() == 0 ) {
+            break;
+        }
+    }    
+
+}
+
+
+/**
 @brief Method reset the parameter start indices of gate operations incorporated in the circuit. (When a gate is inserted into the circuit at other position than the end.)
 */
 void 
@@ -2378,6 +2504,35 @@ Gates_block::reset_parameter_start_indices() {
         parameter_idx = parameter_idx + gate->get_parameter_num();
     
     }
+
+}
+
+
+/**
+@brief Method to reset the dependency graph of the gates in the circuit
+*/
+void  
+Gates_block::reset_dependency_graph() {
+
+    // first clear parent/children data from the gates
+    for( std::vector<Gate*>::iterator gate_it = gates.begin(); gate_it != gates.end(); gate_it++ ) {    
+        Gate* gate = *gate_it;
+        gate->clear_children();
+        gate->clear_parents();    
+    }
+
+
+    // first clear parent/children data from the gates
+    for( std::vector<Gate*>::iterator gate_it = gates.begin(); gate_it != gates.end(); gate_it++ ) {    
+        Gate* gate = *gate_it;
+
+        // determine the parents of the gate
+        determine_parents( gate );
+
+    }
+
+
+
 
 }
 

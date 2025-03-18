@@ -46,10 +46,11 @@ else :
 # @brief Call to retrieve the unitary from QISKIT circuit
 def get_unitary_from_qiskit_circuit( circuit ):
 
-    circuit.save_unitary()
     
     
     if qiskit_version[0] == '1':
+
+        circuit.save_unitary()
         backend = Aer.AerSimulator(method='unitary')
         
         compiled_circuit = transpile(circuit, backend)
@@ -59,6 +60,7 @@ def get_unitary_from_qiskit_circuit( circuit ):
         
     elif qiskit_version[0] == '0':
         backend = Aer.get_backend('aer_simulator')
+        circuit.save_unitary()
         
         # job execution and getting the result as an object
         job = execute(circuit, backend)

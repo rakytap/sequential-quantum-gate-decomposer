@@ -469,7 +469,7 @@ virtual void reorder_qubits( std::vector<int> qbit_list );
 
 /**
 @brief Call to get the qubits involved in the gates stored in the block of gates.
-@return Return with a list of the invovled qubits
+@return Return with a list of the involved qubits
 */
 std::vector<int> get_involved_qubits();
 
@@ -552,6 +552,19 @@ double get_second_Renyi_entropy( Matrix_real& parameters_mtx, Matrix& input_stat
 
 
 
+/**
+@brief Call to obtain the parent gates in the circuit. A parent gate needs to be applied prior to the given gate. The parent gates are stored via the "parents" attribute of the gate instance
+@param gate The gate for which the parents are determined. 
+*/
+void determine_parents( Gate* gate );
+
+
+/**
+@brief Call to obtain the child gates in the circuit. A child gate needs to be applied after the given gate. The children gates are stored via the "children" attribute of the gate instance
+@param gate The gate for which the children are determined. 
+*/
+void determine_children( Gate* gate );
+
 
 
 //////// experimental attributes to partition the circuits into subsegments. Advantageous in simulation of larger circuits ///////////űű
@@ -601,9 +614,16 @@ void get_matrices_target_control(std::vector<Matrix> &u3_qbit, std::vector<int> 
 
 
 /**
-@brief Method reset the parameter start indices of gate operations incorporated in the circuit. (When a gate is inserted into the circuit at other position than the end.)
+@brief Method to reset the parameter start indices of gate operations incorporated in the circuit. (When a gate is inserted into the circuit at other position than the end.)
 */
 void reset_parameter_start_indices();
+
+
+
+/**
+@brief Method to reset the dependency graph of the gates in the circuit
+*/
+void reset_dependency_graph();
 
 
 /**
