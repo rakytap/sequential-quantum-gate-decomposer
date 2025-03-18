@@ -21,7 +21,6 @@ limitations under the License.
 */
 
 #include "N_Qubit_Decomposition_non_unitary_adaptive.h"
-#include "N_Qubit_Decomposition_custom.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 #include "Random_Orthogonal.h"
 #include "Random_Unitary.h"
@@ -509,7 +508,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::add_two_qubit_block(Gates_block* gat
         bool Lambda = true;
         layer->add_u3(target_qbit, Theta, Phi, Lambda);
         layer->add_u3(control_qbit, Theta, Phi, Lambda); 
-        layer->add_cnot(target_qbit, control_qbit);
+        layer->add_cnot(target_qbit, control_qbit); // véletszerüen vagy cz_nu-t vagy cnot, vagy egy teljes layer
 
         gate_structure->add_gate(layer);
 
@@ -523,6 +522,50 @@ N_Qubit_Decomposition_non_unitary_adaptive::add_two_qubit_block(Gates_block* gat
 @param 
 @param 
 */
+
+N_Qubit_Decomposition_custom
+N_Qubit_Decomposition_non_unitary_adaptive::perform_optimization(Gates_block* gate_structure_loc){
+
+         
+            N_Qubit_Decomposition_custom cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+            cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
+            cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+            cDecomp_custom_random.set_max_iteration( max_outer_iterations );
+#ifndef __DFE__
+            cDecomp_custom_random.set_verbose(verbose);
+#else
+            cDecomp_custom_random.set_verbose(0);
+#endif
+            cDecomp_custom_random.set_cost_function_variant( cost_fnc );
+            cDecomp_custom_random.set_debugfile("");
+            cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance_loc );
+            cDecomp_custom_random.set_trace_offset( trace_offset ); 
+            cDecomp_custom_random.set_optimizer( alg );
+            cDecomp_custom_random.set_project_name( project_name );
+            if ( alg == ADAM || alg == BFGS2 ) {
+                int param_num_loc = gate_structure_loc->get_parameter_num();
+                int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+                cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+                cDecomp_custom_random.set_random_shift_count_max( 10000 ); 
+            }
+            else if ( alg==ADAM_BATCHED ) {
+                cDecomp_custom_random.set_optimizer( alg );  
+                int max_inner_iterations_loc = 2000;
+                cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+                cDecomp_custom_random.set_random_shift_count_max( 5 );   
+            }
+            else if ( alg==BFGS ) {
+                cDecomp_custom_random.set_optimizer( alg );  
+                int max_inner_iterations_loc = 10000;
+                cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+            }
+                
+            
+            cDecomp_custom_random.start_decomposition(true);
+        return cDecomp_custom_random;
+}
+                
+
 Gates_block* 
 N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( int level_max ){
 
@@ -565,6 +608,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
     
      if (level_max == 0){
         Gates_block* gate_structure_loc = new Gates_block(qbit_num);
+
         add_finalyzing_layer( gate_structure_loc );
        
         
@@ -630,8 +674,8 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
            
         
         if( current_minimum_tmp < current_minimum && !found_optimal_solution) {
-            current_minimum = current_minimum_tmp;
 
+            current_minimum = current_minimum_tmp;
             if ( gate_structure_best_solution != NULL ) {
                 delete( gate_structure_best_solution );
             }
@@ -648,7 +692,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
         }
 
      
-        if ( current_minimum < optimization_tolerance_loc && !found_optimal_solution)  {            
+        if ( current_minimum < optimization_tolerance_loc && !found_optimal_solution)  { 
             found_optimal_solution = true;
         } 
     
@@ -797,7 +841,6 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
                 
             number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization  
     
-    
             double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
             sstream.str("");
             sstream << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp;
@@ -810,7 +853,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
                 if( current_minimum_tmp < current_minimum && !found_optimal_solution) {
                     current_minimum = current_minimum_tmp;
 
-                    if ( gate_structure_best_solution ) {
+                    if ( gate_structure_best_solution != NULL ) {
                         delete( gate_structure_best_solution );
                     }
             
@@ -853,7 +896,6 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
     
     });
 //}
-
 
     return gate_structure_best_solution;
 
@@ -964,32 +1006,57 @@ N_Qubit_Decomposition_non_unitary_adaptive::optimize_imported_gate_structure(Mat
 Gates_block* 
 N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Matrix_real& optimized_parameters_mtx_loc) {
 
-    
+    N_Qubit_Decomposition_custom cDecomp_custom_random;
+    cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
     double optimization_tolerance_loc;
+    long long level_max; 
     if ( config.count("optimization_tolerance") > 0 ) {
         config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
+
     }
     else {
         optimization_tolerance_loc = optimization_tolerance;
-    }         
-           
-    Gates_block* gate_structure_loc = NULL;
+    }      
     
-    int level_max = 4;
+    if  (config.count("tree_level_max") > 0 ){
+        std::cout << "lefut\n";
+        config["tree_level_max"].get_property( level_max );
+    } 
+    
+    std::cout << level_max<<std::endl;
+    exit(1);
+    Gates_block* gate_structure_loc = NULL;
+    Gates_block* best_so_far = NULL;
+
+    
+    gate_structure_loc = tree_search_over_gate_structures( 0 );
+    best_so_far = gate_structure_loc;
+    double best_minimum_so_far  = current_minimum; 
+
+    
 //    for ( int level = level_limit_min; level < level_max; level++ ) { // 0 cnot 
     for ( int level = 0; level <= level_max; level++ ) { // 0 cnot 
-        if ( gate_structure_loc != 0 ){
-           delete( gate_structure_loc );
+
+        gate_structure_loc = tree_search_over_gate_structures( level );   
+
+        if (current_minimum < best_minimum_so_far) { 
+            best_minimum_so_far = current_minimum;
+            delete( best_so_far ) ;
+            best_so_far = gate_structure_loc;  
+            gate_structure_loc = NULL;
+        }
+        else{
+            delete( gate_structure_loc );
+            gate_structure_loc = NULL;
         }
         
-        gate_structure_loc = tree_search_over_gate_structures( level );
-        
         if (current_minimum < optimization_tolerance_loc ) {
+
             break;
         }
 
     }    
-
+    
     
     if (current_minimum > optimization_tolerance_loc) {
        std::stringstream sstream;
@@ -999,10 +1066,10 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
     }
 
     std::stringstream sstream;
-    sstream << "Continue with the compression of gate structure consisting of " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+    sstream << "Continue with the compression of gate structure consisting of " << best_so_far->get_gate_num() << " decomposing layers." << std::endl;
     print(sstream, 1);	
-   
-    return gate_structure_loc;
+
+    return best_so_far;
        
 }
 

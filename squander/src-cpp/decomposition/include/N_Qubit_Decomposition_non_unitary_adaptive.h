@@ -26,7 +26,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #ifndef N_Qubit_Decomposition_non_unitary_adaptive_H
 #define N_Qubit_Decomposition_non_unitary_adaptive_H
 
-#include "Optimization_Interface.h"
+#include "N_Qubit_Decomposition_custom.h"
 
 #ifdef __cplusplus
 extern "C" 
@@ -163,6 +163,13 @@ void add_two_qubit_block(Gates_block* gate_structure, int target_qbit, int contr
 @param optimized_parameters A matrix containing the initial parameters
 */
 Gates_block* tree_search_over_gate_structures( int level_max );
+
+/**
+@brief C????????????????????????????????
+@param gate_structure The gate structure to be optimized
+@param optimized_parameters A matrix containing the initial parameters
+*/
+N_Qubit_Decomposition_custom perform_optimization(Gates_block* gate_structure_loc);
 
 
 /**
