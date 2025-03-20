@@ -1005,6 +1005,27 @@ Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
 }
 
 
+/**
+@brief Get the parallel configuration from the config
+@return Returns with the parallel configuration (0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional))
+*/
+int Decomposition_Base::get_parallel_configuration() {
+
+    int parallel;
+    if ( config.count("parallel") > 0 ) { 
+         long long value;                   
+         config["parallel"].get_property( value );  
+         parallel = (int) value;
+    }
+    else {
+        parallel = 2;          
+    }
+
+
+    return parallel;
+
+}
+
 
 /**
 @brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.

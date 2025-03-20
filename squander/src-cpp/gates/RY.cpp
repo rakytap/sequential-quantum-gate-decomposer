@@ -191,9 +191,10 @@ RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 std::vector<Matrix> 
-RY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+RY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;
@@ -208,7 +209,7 @@ RY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
     Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx);
+    apply_to(parameters_tmp, res_mtx, parallel);
     ret.push_back(res_mtx);
 
 

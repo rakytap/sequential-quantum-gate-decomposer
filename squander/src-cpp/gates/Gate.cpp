@@ -129,9 +129,9 @@ Gate::get_matrix() {
 void 
 Gate::apply_to_list( std::vector<Matrix>& input ) {
 
-
+//TODO parallel
     for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
-        this->apply_to( *it );
+        this->apply_to( *it, 0 );
     }
 
 }
@@ -184,9 +184,10 @@ Gate::apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel ) {
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional)
 */
 std::vector<Matrix> 
-Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) {
+Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
     std::vector<Matrix> ret;
     return ret;

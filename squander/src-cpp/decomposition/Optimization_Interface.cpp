@@ -584,7 +584,9 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
 
 
 
-        Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
+    Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
+
+    int parallel = get_parallel_configuration();
              
 #ifdef __DFE__
     if ( Umtx.cols == Umtx.rows && get_accelerator_num() > 0 ) {
@@ -677,7 +679,12 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
 
         Matrix_real cost_fnc_mtx_loc(mpi_batch_element_num, 1);
 
-        tbb::parallel_for( 0, mpi_batch_element_num, 1, [&]( int idx) {
+        int work_batch = 1;
+        if( parallel==0) {
+            work_batch = mpi_batch_element_num;
+        }
+
+        tbb::parallel_for( 0, mpi_batch_element_num, work_batch, [&]( int idx) {
             cost_fnc_mtx_loc[idx] = optimization_problem( parameters_vec[idx + mpi_starting_batchIdx] );
         });
 
@@ -691,7 +698,12 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
 
 #else
 
-        tbb::parallel_for( 0, (int)parameters_vec.size(), 1, [&]( int idx) {
+        int work_batch = 1;
+        if( parallel==0) {
+            work_batch = parameters_vec.size();
+        }
+
+        tbb::parallel_for( 0, (int)parameters_vec.size(), work_batch, [&]( int idx) {
             cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
         });
 
@@ -853,6 +865,8 @@ void Optimization_Interface::optimization_problem_combined_non_static( Matrix_re
 
     Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
 
+    int parallel = instance->get_parallel_configuration();
+
     // the number of free parameters
     int parameter_num_loc = instance->get_parameter_num();
 
@@ -972,19 +986,38 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
     // vector containing gradients of the transformed matrix
     std::vector<Matrix> Umtx_deriv;
     Matrix trace_tmp(1,3);
-    
-    tbb::parallel_invoke(
-        [&]{
-            *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance), trace_tmp); 
-        },
-        [&]{
-            Matrix&& Umtx_loc = instance->get_Umtx();   
-            Umtx_deriv = instance->apply_derivate_to( parameters, Umtx_loc );
-        }
-    );
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,2), [&](tbb::blocked_range<int> r) {
+    int work_batch = 10;
+
+    if( parallel == 0 ) {
+
+        *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance), trace_tmp); 
+        Matrix&& Umtx_loc = instance->get_Umtx();   
+        Umtx_deriv = instance->apply_derivate_to( parameters, Umtx_loc, parallel );
+       
+        work_batch = parameter_num_loc;
+    }
+    else {
+
+        tbb::parallel_invoke(
+            [&]{
+                *f0 = instance->optimization_problem(parameters, reinterpret_cast<void*>(instance), trace_tmp); 
+            },
+            [&]{
+                Matrix&& Umtx_loc = instance->get_Umtx();   
+                Umtx_deriv = instance->apply_derivate_to( parameters, Umtx_loc, parallel );
+            }
+        );
+
+        work_batch = 10;
+    }
+
+
+    tbb::parallel_for( tbb::blocked_range<int>(0,parameter_num_loc,work_batch), [&](tbb::blocked_range<int> r) {
         for (int idx=r.begin(); idx<r.end(); ++idx) { 
+
+
+        //for( int idx=0; idx<parameter_num_loc; idx++ ) {
 
             double grad_comp;
             if ( cost_fnc == FROBENIUS_NORM ) {
@@ -1026,6 +1059,7 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
 
 
         }
+
     });
 
     instance->number_of_iters = instance->number_of_iters + parameter_num_loc + 1;  
@@ -1083,16 +1117,40 @@ void Optimization_Interface::optimization_problem_combined_unitary( Matrix_real 
     // vector containing gradients of the transformed matrix
     Optimization_Interface* instance = reinterpret_cast<Optimization_Interface*>(void_instance);
 
-    tbb::parallel_invoke(
-        [&]{
-            Matrix Umtx_loc = instance->get_Umtx(); 
-            Umtx = Umtx_loc.copy();    
-            instance->apply_to( parameters, Umtx );
-        },
-        [&]{
-            Matrix Umtx_loc = instance->get_Umtx();
-            Umtx_deriv = instance->apply_derivate_to( parameters, Umtx_loc );
-        });
+    int parallel = instance->get_parallel_configuration();
+
+    if ( parallel ) {
+
+        Matrix Umtx_loc = instance->get_Umtx(); 
+        Umtx = Umtx_loc.copy();    
+        instance->apply_to( parameters, Umtx );
+
+
+        Umtx_loc = instance->get_Umtx();
+        Umtx_deriv = instance->apply_derivate_to( parameters, Umtx_loc, parallel );
+
+    }
+    else {
+
+        tbb::parallel_invoke(
+            [&]{
+                Matrix Umtx_loc = instance->get_Umtx(); 
+                Umtx = Umtx_loc.copy();    
+                instance->apply_to( parameters, Umtx );
+            },
+            [&]{
+                Matrix Umtx_loc = instance->get_Umtx();
+                Umtx_deriv = instance->apply_derivate_to( parameters, Umtx_loc, parallel );
+            });
+
+    }
+
+
+
+  
+
+
+
 }
 
 

@@ -734,8 +734,8 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
     int64_t concurrency = (int64_t)nthreads;
     concurrency = concurrency < iteration_max ? concurrency : iteration_max;  
        
-    tbb::parallel_for( (int64_t)0, concurrency, (int64_t)1, [&](int64_t job_idx) {
-    //for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {  
+    //tbb::parallel_for( (int64_t)0, concurrency, (int64_t)1, [&](int64_t job_idx) {
+    for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {  
     
         // initial offset and upper boundary of the gray code counter
         int64_t work_batch = iteration_max/concurrency;
@@ -899,8 +899,8 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
         
         }
     
-    });
-//}
+    //});
+}
 
     return gate_structure_best_solution;
 

@@ -188,9 +188,9 @@ Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 */
 void 
 Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input ) {
-
+int parallel = 0;
     for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
-        this->apply_to( parameters_mtx, *it );
+        this->apply_to( parameters_mtx, *it, parallel );
     }
 
 }
@@ -641,20 +641,30 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional)
 */
 std::vector<Matrix> 
-Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) {
+Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
   
     std::vector<Matrix> grad(parameter_num, Matrix(0,0));
 
+    int concurrency = gates.size();
+    if ( parallel == 0 ) {
+        concurrency = gates.size();
+    }
+    else {
+        concurrency = 1;
+    }
+
     // deriv_idx ... the index of the gate block for which the gradient is to be calculated
+/*
     tbb::parallel_for( tbb::blocked_range<int>(0,gates.size()), [&](tbb::blocked_range<int> r) {
         for (int deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
-
-        //for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
+*/
+        for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
 
 
             Gate* gate_deriv = gates[deriv_idx];            
@@ -694,7 +704,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                     if ( operation->get_parameter_num() == 0 ) {
                 
                         if( idx < deriv_idx ) {
-                            operation->apply_to( input_loc );    
+                            operation->apply_to( input_loc, parallel );    
                         }
                         else {
                             operation->apply_to_list(grad_loc );
@@ -704,10 +714,10 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                     else  {
                 
                         if( idx < deriv_idx ) {
-                            operation->apply_to( parameters_mtx, input_loc );    
+                            operation->apply_to( parameters_mtx, input_loc, parallel );    
                         }
                         else if ( idx == deriv_idx ) {
-                            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc );
+                            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
                         }
                         else {
                             operation->apply_to_list(parameters_mtx, grad_loc );
@@ -725,9 +735,9 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
 
 
         } // tbb range end
-    
+/*    
     });
-    
+  */  
 
     return grad;
 

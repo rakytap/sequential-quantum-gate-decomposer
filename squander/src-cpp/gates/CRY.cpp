@@ -168,9 +168,10 @@ Phi = Phi - M_PI;
 @brief Call to evaluate the derivate of the circuit on an input with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 std::vector<Matrix> 
-CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
 	std::stringstream sstream;
@@ -197,7 +198,7 @@ CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     // apply the computing kernel on the matrix
     bool deriv = true;
-    apply_kernel_to(u3_1qbit, res_mtx, deriv);
+    apply_kernel_to(u3_1qbit, res_mtx, deriv, parallel);
 
     ret.push_back(res_mtx);
     return ret;

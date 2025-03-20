@@ -407,6 +407,13 @@ Matrix import_unitary_from_binary(std::string& filename);
 
 
 /**
+@brief Get the parallel configuration from the config
+@return Returns with the parallel configuration (0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional))
+*/
+int get_parallel_configuration();
+
+
+/**
 @brief Set the number of qubits spanning the matrix of the gates stored in the block of gates.
 @param qbit_num_in The number of qubits spanning the matrices.
 */

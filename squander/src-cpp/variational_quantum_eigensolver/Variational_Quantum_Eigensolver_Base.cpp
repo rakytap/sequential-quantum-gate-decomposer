@@ -353,6 +353,8 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
     std::vector<Matrix> State_deriv;
     Matrix State;
 
+    int parallel = get_parallel_configuration();
+
     tbb::parallel_invoke(
         [&]{
             State = instance->initial_state.copy();
@@ -363,7 +365,7 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
         [&]{
             Matrix State_loc = instance->initial_state.copy();
 
-            State_deriv = instance->apply_derivate_to( parameters, State_loc );
+            State_deriv = instance->apply_derivate_to( parameters, State_loc, parallel );
             State_loc.release_data();
     });
 

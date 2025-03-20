@@ -82,8 +82,9 @@ Adaptive(int qbit_num_in, int target_qbit_in, int control_qbit_in, int limit_in)
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
+std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, int parallel );
 
 
 
@@ -93,7 +94,7 @@ std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel=0 );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel );
 
 
 /**
