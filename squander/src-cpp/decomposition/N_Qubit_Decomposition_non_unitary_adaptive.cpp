@@ -522,47 +522,55 @@ N_Qubit_Decomposition_non_unitary_adaptive::add_two_qubit_block(Gates_block* gat
 @param 
 @param 
 */
-
 N_Qubit_Decomposition_custom
 N_Qubit_Decomposition_non_unitary_adaptive::perform_optimization(Gates_block* gate_structure_loc){
 
+
+    double optimization_tolerance_loc;
+    if ( config.count("optimization_tolerance") > 0 ) {
+        config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
+    }
+    else {
+        optimization_tolerance_loc = optimization_tolerance;
+    }     
+
          
-            N_Qubit_Decomposition_custom cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
-            cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
-            cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
-            cDecomp_custom_random.set_max_iteration( max_outer_iterations );
+    N_Qubit_Decomposition_custom cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
+    cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
+    cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
+    cDecomp_custom_random.set_max_iteration( max_outer_iterations );
 #ifndef __DFE__
-            cDecomp_custom_random.set_verbose(verbose);
+    cDecomp_custom_random.set_verbose(verbose);
 #else
-            cDecomp_custom_random.set_verbose(0);
+    cDecomp_custom_random.set_verbose(0);
 #endif
-            cDecomp_custom_random.set_cost_function_variant( cost_fnc );
-            cDecomp_custom_random.set_debugfile("");
-            cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance_loc );
-            cDecomp_custom_random.set_trace_offset( trace_offset ); 
-            cDecomp_custom_random.set_optimizer( alg );
-            cDecomp_custom_random.set_project_name( project_name );
-            if ( alg == ADAM || alg == BFGS2 ) {
-                int param_num_loc = gate_structure_loc->get_parameter_num();
-                int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
-                cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
-                cDecomp_custom_random.set_random_shift_count_max( 10000 ); 
-            }
-            else if ( alg==ADAM_BATCHED ) {
-                cDecomp_custom_random.set_optimizer( alg );  
-                int max_inner_iterations_loc = 2000;
-                cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
-                cDecomp_custom_random.set_random_shift_count_max( 5 );   
-            }
-            else if ( alg==BFGS ) {
-                cDecomp_custom_random.set_optimizer( alg );  
-                int max_inner_iterations_loc = 10000;
-                cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
-            }
+    cDecomp_custom_random.set_cost_function_variant( cost_fnc );
+    cDecomp_custom_random.set_debugfile("");
+    cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance_loc );
+    cDecomp_custom_random.set_trace_offset( trace_offset ); 
+    cDecomp_custom_random.set_optimizer( alg );
+    cDecomp_custom_random.set_project_name( project_name );
+    if ( alg == ADAM || alg == BFGS2 ) {
+         int param_num_loc = gate_structure_loc->get_parameter_num();
+         int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
+         cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+         cDecomp_custom_random.set_random_shift_count_max( 10000 ); 
+    }
+    else if ( alg==ADAM_BATCHED ) {
+         cDecomp_custom_random.set_optimizer( alg );  
+         int max_inner_iterations_loc = 2000;
+         cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+         cDecomp_custom_random.set_random_shift_count_max( 5 );   
+    }
+    else if ( alg==BFGS ) {
+         cDecomp_custom_random.set_optimizer( alg );  
+         int max_inner_iterations_loc = 10000;
+         cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
+    }
                 
             
-            cDecomp_custom_random.start_decomposition(true);
-        return cDecomp_custom_random;
+    cDecomp_custom_random.start_decomposition();
+    return cDecomp_custom_random;
 }
                 
 
@@ -607,6 +615,8 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
     
     
      if (level_max == 0){
+
+
         Gates_block* gate_structure_loc = new Gates_block(qbit_num);
 
         add_finalyzing_layer( gate_structure_loc );
@@ -668,7 +678,6 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
 	sstream.str("");
 	sstream << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp;
 	print(sstream, 1);
-	//std::cout << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp << std::endl;
         
         
            
@@ -696,9 +705,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
             found_optimal_solution = true;
         } 
     
-        if( found_optimal_solution ) {
-             return gate_structure_best_solution;
-        }
+        return gate_structure_best_solution;
    
     }
   
@@ -726,12 +733,9 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
     unsigned int nthreads = std::thread::hardware_concurrency();
     int64_t concurrency = (int64_t)nthreads;
     concurrency = concurrency < iteration_max ? concurrency : iteration_max;  
-    
-    //std::cout <<    "concurrency: " << concurrency << " " << iteration_max << std::endl;
-   // if level max 0 add finalizing layer és return 
-   
+       
     tbb::parallel_for( (int64_t)0, concurrency, (int64_t)1, [&](int64_t job_idx) {
-    //for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {  // TODO: currently the for loop is redundant, but will need to parallelize it
+    //for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {  
     
         // initial offset and upper boundary of the gray code counter
         int64_t work_batch = iteration_max/concurrency;
@@ -783,7 +787,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
                 add_two_qubit_block( gate_structure_loc, target_qbits[gcode_idx], control_qbits[gcode_idx]  );
             }
            
-            // add finalyzing layer to the top of the gate structure
+            // add finalyzing layer to the the gate structure
             add_finalyzing_layer( gate_structure_loc );
               
     
@@ -845,6 +849,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
             sstream.str("");
             sstream << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp;
             print(sstream, 1);
+
             //std::cout << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp << std::endl;
         
             {
@@ -1022,32 +1027,37 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
         std::cout << "lefut\n";
         config["tree_level_max"].get_property( level_max );
     } 
+    else {
+        level_max = 14;
+    }
     
-    std::cout << level_max<<std::endl;
-    exit(1);
+
     Gates_block* gate_structure_loc = NULL;
     Gates_block* best_so_far = NULL;
 
     
-    gate_structure_loc = tree_search_over_gate_structures( 0 );
-    best_so_far = gate_structure_loc;
+    gate_structure_loc          = tree_search_over_gate_structures( 0 );
+    best_so_far                 = gate_structure_loc;
     double best_minimum_so_far  = current_minimum; 
 
-    
-//    for ( int level = level_limit_min; level < level_max; level++ ) { // 0 cnot 
-    for ( int level = 0; level <= level_max; level++ ) { // 0 cnot 
+    for ( int level = 1; level <= level_max; level++ ) { 
 
         gate_structure_loc = tree_search_over_gate_structures( level );   
 
         if (current_minimum < best_minimum_so_far) { 
+
             best_minimum_so_far = current_minimum;
+
             delete( best_so_far ) ;
-            best_so_far = gate_structure_loc;  
+
+            best_so_far        = gate_structure_loc;  
             gate_structure_loc = NULL;
         }
         else{
+
             delete( gate_structure_loc );
             gate_structure_loc = NULL;
+
         }
         
         if (current_minimum < optimization_tolerance_loc ) {

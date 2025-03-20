@@ -121,10 +121,10 @@ class qgd_N_Qubit_Decomposition_non_unitary_adaptive(qgd_N_Qubit_Decomposition_n
 ##
 # @brief Wrapper function to call the finalize_circuit method of C++ class N_Qubit_Decomposition
 # @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
-    def Finalize_Circuit(self,prepare_export=True):
+    def Finalize_Circuit(self):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_non_unitary_adaptive, self).Finalize_Circuit(prepare_export=prepare_export)
+        super(qgd_N_Qubit_Decomposition_non_unitary_adaptive, self).Finalize_Circuit()
 
 
     
