@@ -530,8 +530,9 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
     if ( parameters.size() != parameter_num ) {
         std::stringstream sstream;
 	sstream << "Optimization_Interface::optimization_problem: Number of free paramaters should be " << parameter_num << ", but got " << parameters.size() << std::endl;
-        print(sstream, 0);	  
-        exit(-1);
+        print(sstream, 0);
+        std::string err("Optimization_Interface::optimization_problem: Wrong number of parameters.");
+        throw err;
     }  
     
     Matrix matrix_new = Umtx.copy();

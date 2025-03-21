@@ -265,11 +265,8 @@ void Gate::reorder_qubits( std::vector<int> qbit_list ) {
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
-	std::stringstream sstream;
-	sstream << "Wrong number of qubits" << std::endl;
-	print(sstream, 0);	    	
-       
-        exit(-1);
+        std::string err("Gate::reorder_qubits: Wrong number of qubits.");
+        throw err;
     }
 
 

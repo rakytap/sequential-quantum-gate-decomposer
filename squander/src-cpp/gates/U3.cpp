@@ -225,10 +225,8 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
-        print(sstream, 0);	        
-        exit(-1);
+        std::string err("U3::apply_to: Wrong matrix size in U3 gate apply.");
+        throw err;    
     }
 
 
@@ -308,10 +306,8 @@ void
 U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.cols != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
-        print(sstream, 1);	      
-        exit(-1);
+        std::string err("U3::apply_from_right: Wrong matrix size in U3 apply_from_right.");
+        throw err;    
     }
 
     double ThetaOver2, Phi, Lambda;
@@ -386,10 +382,8 @@ std::vector<Matrix>
 U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
-        print(sstream, 1);	   
-        exit(-1);
+        std::string err("U3::apply_derivate_to: Wrong matrix size in U3 gate apply.");
+        throw err;    
     }
 
 
