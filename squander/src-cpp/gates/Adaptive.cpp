@@ -166,9 +166,10 @@ Phi_transformed[0] = Phi - M_PI;
 @brief Call to apply the gate on the input array/matrix.
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 std::vector<Matrix>
-Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input ) {
+Adaptive::apply_derivate_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;
@@ -194,7 +195,7 @@ Phi_transformed[0] = Phi - M_PI;
 
 
 
-    return CRY::apply_derivate_to( Phi_transformed, input );
+    return CRY::apply_derivate_to( Phi_transformed, input, parallel );
 
 
 

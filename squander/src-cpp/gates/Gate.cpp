@@ -124,15 +124,34 @@ Gate::get_matrix() {
 
 /**
 @brief Call to apply the gate on a list of inputs
-@param input The input array on which the gate is applied
+@param inputs The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-Gate::apply_to_list( std::vector<Matrix>& input ) {
+Gate::apply_to_list( std::vector<Matrix>& inputs, int parallel ) {
 
-
-    for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
-        this->apply_to( *it );
+    int work_batch = 1;
+    if ( parallel == 0 ) {
+        work_batch = inputs.size();
     }
+    else {
+        work_batch = 1;
+    }
+
+
+    tbb::parallel_for( tbb::blocked_range<int>(0,inputs.size(),work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+
+            Matrix* input = &inputs[idx];
+
+            apply_to( *input, parallel );
+
+        }
+
+    });
+
+
+
 
 }
 
@@ -141,10 +160,11 @@ Gate::apply_to_list( std::vector<Matrix>& input ) {
 /**
 @brief Abstract function to be overriden in derived classes to be used to transform a list of inputs upon a parametric gate operation
 @param parameter_mtx An array conatining the parameters of the gate
-@param input The input array on which the gate is applied
+@param inputs The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-Gate::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input ) {
+Gate::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) {
 
     return;
 
@@ -184,9 +204,10 @@ Gate::apply_to( Matrix_real& parameter_mtx, Matrix& input, int parallel ) {
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional)
 */
 std::vector<Matrix> 
-Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) {
+Gate::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
     std::vector<Matrix> ret;
     return ret;
@@ -244,11 +265,8 @@ void Gate::reorder_qubits( std::vector<int> qbit_list ) {
 
     // check the number of qubits
     if ((int)qbit_list.size() != qbit_num ) {
-	std::stringstream sstream;
-	sstream << "Wrong number of qubits" << std::endl;
-	print(sstream, 0);	    	
-       
-        exit(-1);
+        std::string err("Gate::reorder_qubits: Wrong number of qubits.");
+        throw err;
     }
 
 

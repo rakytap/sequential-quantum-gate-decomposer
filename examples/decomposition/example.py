@@ -24,7 +24,7 @@ limitations under the License.
 from squander import N_Qubit_Decomposition 
 ## [import]
 ## [import adaptive]
-from squander import N_Qubit_Decomposition_adaptive       
+from squander import N_Qubit_Decomposition_non_unitary_adaptive       
 ## [import adaptive]
 
 
@@ -59,8 +59,11 @@ matrix_size = len(Umtx)
 
 ## [create decomposition class]
 ## creating a class to decompose the unitary
-cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=0 )
+cDecompose = N_Qubit_Decomposition_non_unitary_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1 )
 ## [create decomposition class]
+
+
+cDecompose.set_Optimizer("AGENTS")
 
 
 ## [start decomposition]
@@ -97,43 +100,6 @@ print('The error of the decomposition is ' + str(decomposition_error))
 
 ## [qiskit]
 
-print('******************** Decomposing general 3-qubit matrix *******************************')
-
-
-# cerate unitary q-bit matrix
-from scipy.stats import unitary_group
-
-
-    
-# the number of qubits spanning the unitary
-qbit_num = 3
-
-# determine the soze of the unitary to be decomposed
-matrix_size = int(2**qbit_num)
-   
-# creating a random unitary to be decomposed
-Umtx = unitary_group.rvs(matrix_size)
-
-# creating a class to decompose the 
-cDecompose = N_Qubit_Decomposition( Umtx.conj().T )
-
-# setting the verbosity of the decomposition
-cDecompose.set_Verbose( 3 )
-
-# setting the debugfile name. If it is not set, the program will not debug. 
-cDecompose.set_Debugfile("debug.txt")
-
-# setting the tolerance of the optimization process. The final error of the decomposition would scale with the square root of this value.
-cDecompose.set_Optimization_Tolerance( 1e-12 )
-
-# set the number of block to be optimized in one shot
-cDecompose.set_Optimization_Blocks( 20 )
-
-# starting the decomposition
-cDecompose.Start_Decomposition()
-
-# list the decomposing operations
-cDecompose.List_Gates()
 
 
 

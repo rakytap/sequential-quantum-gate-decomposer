@@ -668,7 +668,6 @@ Matrix Decomposition_Base::get_decomposed_matrix() {
 
 
 
-
 /**
 @brief Apply an gates on the input matrix
 @param gate_mtx The matrix of the gate.
@@ -830,10 +829,6 @@ void Decomposition_Base::Init_max_layer_num() {
     max_layer_num_def[7] = 7000;//6180;
 
 }
-
-
-
-
 
 
 
@@ -1009,6 +1004,27 @@ Matrix Decomposition_Base::import_unitary_from_binary(std::string& filename){
 	return Umtx_;
 }
 
+
+/**
+@brief Get the parallel configuration from the config
+@return Returns with the parallel configuration (0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional))
+*/
+int Decomposition_Base::get_parallel_configuration() {
+
+    int parallel;
+    if ( config.count("parallel") > 0 ) { 
+         long long value;                   
+         config["parallel"].get_property( value );  
+         parallel = (int) value;
+    }
+    else {
+        parallel = 2;          
+    }
+
+
+    return parallel;
+
+}
 
 
 /**

@@ -49,9 +49,6 @@ CRY();
 @brief Constructor of the class.
 @param qbit_num_in The number of qubits spanning the gate.
 @param target_qbit_in The 0<=ID<qbit_num of the target qubit.
-@param theta_in logical value indicating whether the matrix creation takes an argument theta.
-@param phi_in logical value indicating whether the matrix creation takes an argument phi
-@param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
 CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in);
 
@@ -67,7 +64,7 @@ virtual ~CRY();
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel=0  );
+virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel  );
 
 
 /**
@@ -81,8 +78,9 @@ virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input );
+virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& input, int parallel );
 
 
 /**

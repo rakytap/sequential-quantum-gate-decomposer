@@ -504,10 +504,8 @@ void functor_cost_fnc::operator()( tbb::blocked_range<int> r ) const {
     for ( int row_idx = r.begin(); row_idx != r.end(); row_idx++) {
 
         if ( row_idx > matrix_size ) {
-            std::stringstream sstream;
-      	    sstream << "Error: row idx should be less than the number of roes in the matrix" << std::endl;
-            print(sstream, 0);   
-            exit(-1);
+            std::string err("Error: row idx should be less than the number of roes in the matrix.");
+            throw err;
         }
 
         // getting the corner element

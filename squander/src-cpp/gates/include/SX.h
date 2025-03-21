@@ -76,7 +76,7 @@ Matrix get_matrix();
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( int parallel=0 );
+Matrix get_matrix( int parallel );
 
 
 /**
@@ -85,7 +85,7 @@ Matrix get_matrix( int parallel=0 );
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_to( Matrix& input, int parallel=0 );
+void apply_to( Matrix& input, int parallel );
 
 
 /**

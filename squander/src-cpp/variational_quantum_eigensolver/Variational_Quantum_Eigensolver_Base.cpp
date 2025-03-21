@@ -353,6 +353,8 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
     std::vector<Matrix> State_deriv;
     Matrix State;
 
+    int parallel = get_parallel_configuration();
+
     tbb::parallel_invoke(
         [&]{
             State = instance->initial_state.copy();
@@ -363,7 +365,7 @@ void Variational_Quantum_Eigensolver_Base::optimization_problem_combined_non_sta
         [&]{
             Matrix State_loc = instance->initial_state.copy();
 
-            State_deriv = instance->apply_derivate_to( parameters, State_loc );
+            State_deriv = instance->apply_derivate_to( parameters, State_loc, parallel );
             State_loc.release_data();
     });
 
@@ -660,7 +662,8 @@ Variational_Quantum_Eigensolver_Base::set_gate_structure( std::string filename )
         if ( gates_num.syc>0 )  std::cout << gates_num.syc << " Sycamore gates," << std::endl;   
         if ( gates_num.un>0 )  std::cout << gates_num.un << " UN gates," << std::endl;
         if ( gates_num.cry>0 )  std::cout << gates_num.cry << " CRY gates," << std::endl;  
-        if ( gates_num.adap>0 )  std::cout << gates_num.adap << " Adaptive gates," << std::endl;    	
+        if ( gates_num.adap>0 )  std::cout << gates_num.adap << " Adaptive gates," << std::endl;
+        if ( gates_num.cz_nu>0 )  std::cout << gates_num.cz_nu << " CZ_NU gates," << std::endl; 
     }
 
 }

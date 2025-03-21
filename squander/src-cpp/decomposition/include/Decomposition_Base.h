@@ -43,6 +43,7 @@ limitations under the License.
 #include "UN.h"
 #include "ON.h"
 #include "Adaptive.h"
+#include "CZ_NU.h"
 #include "Composite.h"
 #include <map>
 #include <cstdlib>
@@ -403,6 +404,13 @@ void export_unitary(std::string& filename);
 @param filename  .binary file to read
 */
 Matrix import_unitary_from_binary(std::string& filename);
+
+
+/**
+@brief Get the parallel configuration from the config
+@return Returns with the parallel configuration (0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional))
+*/
+int get_parallel_configuration();
 
 
 /**

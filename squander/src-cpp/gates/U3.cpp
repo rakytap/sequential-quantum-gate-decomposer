@@ -185,14 +185,30 @@ U3::get_matrix( Matrix_real& parameters, int parallel ) {
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input ) {
+U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) {
 
-
-    for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
-        apply_to( parameters_mtx, *it );
+    int work_batch = 1;
+    if ( parallel == 0 ) {
+        work_batch = inputs.size();
     }
+    else {
+        work_batch = 1;
+    }
+
+
+    tbb::parallel_for( tbb::blocked_range<int>(0,inputs.size(),work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+
+            Matrix* input = &inputs[idx];
+
+            apply_to( parameters_mtx, *input, parallel );
+
+        }
+
+    });
 
 }
 
@@ -209,10 +225,8 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
-        print(sstream, 0);	        
-        exit(-1);
+        std::string err("U3::apply_to: Wrong matrix size in U3 gate apply.");
+        throw err;    
     }
 
 
@@ -292,10 +306,8 @@ void
 U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 
     if (input.cols != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
-        print(sstream, 1);	      
-        exit(-1);
+        std::string err("U3::apply_from_right: Wrong matrix size in U3 apply_from_right.");
+        throw err;    
     }
 
     double ThetaOver2, Phi, Lambda;
@@ -364,15 +376,14 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 std::vector<Matrix> 
-U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
-        print(sstream, 1);	   
-        exit(-1);
+        std::string err("U3::apply_derivate_to: Wrong matrix size in U3 gate apply.");
+        throw err;    
     }
 
 
@@ -437,7 +448,7 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
         Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2+M_PIOver2, Phi, Lambda);
         Matrix res_mtx = input.copy();
-        apply_kernel_to( u3_1qbit, res_mtx, deriv );
+        apply_kernel_to( u3_1qbit, res_mtx, deriv, parallel );
         ret.push_back(res_mtx);
 
     }
@@ -450,7 +461,7 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
         memset(u3_1qbit.get_data(), 0.0, 2*sizeof(QGD_Complex16) );
 
         Matrix res_mtx = input.copy();
-        apply_kernel_to( u3_1qbit, res_mtx, deriv );
+        apply_kernel_to( u3_1qbit, res_mtx, deriv, parallel );
         ret.push_back(res_mtx);
 
     }
@@ -464,7 +475,7 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
         memset(u3_1qbit.get_data()+2, 0.0, sizeof(QGD_Complex16) );
 
         Matrix res_mtx = input.copy();
-        apply_kernel_to( u3_1qbit, res_mtx, deriv );
+        apply_kernel_to( u3_1qbit, res_mtx, deriv, parallel );
         ret.push_back(res_mtx);
 
     }

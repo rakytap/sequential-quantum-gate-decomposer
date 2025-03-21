@@ -37,6 +37,7 @@ limitations under the License.
 #include "UN.h"
 #include "ON.h"
 #include "Adaptive.h"
+#include "CZ_NU.h"
 #include "Composite.h"
 #include "Gates_block.h"
 
@@ -186,11 +187,28 @@ Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 @param input The input array on which the gate is applied
 */
 void 
-Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input ) {
+Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) {
 
-    for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
-        this->apply_to( parameters_mtx, *it );
+    int work_batch = 1;
+    if ( parallel == 0 ) {
+        work_batch = inputs.size();
     }
+    else {
+        work_batch = 1;
+    }
+
+
+    tbb::parallel_for( tbb::blocked_range<int>(0,inputs.size(),work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+
+            Matrix* input = &inputs[idx];
+
+            apply_to( parameters_mtx, *input, parallel );
+
+        }
+
+    });
+
 
 }
 
@@ -317,9 +335,6 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
             else {
                 operation->apply_to( parameters_mtx_loc, input, parallel );
             }
-            
-            
-            
 #ifdef DEBUG
         if (input.isnan()) {
             std::stringstream sstream;
@@ -500,6 +515,10 @@ void Gates_block::get_parameter_max(Matrix_real &range_max) {
                 data[parameter_idx-1] = 4 * M_PI;
                 parameter_idx = parameter_idx - 1;
                 break;
+            case CZ_NU_OPERATION:
+                data[parameter_idx-1] = 2 * M_PI;
+                parameter_idx = parameter_idx - 1;
+                break;
             case BLOCK_OPERATION: {
                 Gates_block* block_gate = static_cast<Gates_block*>(gate);
                 Matrix_real parameters_layer(range_max.get_data() + parameter_idx - gate->get_parameter_num(), 1, gate->get_parameter_num() );
@@ -598,6 +617,11 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
             block_operation->apply_from_right(parameters_mtx, input);
             break;
         }
+        case CZ_NU_OPERATION: {
+            CZ_NU* cz_nu_operation = static_cast<CZ_NU*>(operation);
+            cz_nu_operation->apply_from_right( parameters_mtx, input );
+            break; 
+        }        
         case COMPOSITE_OPERATION: {
             Composite* com_operation = static_cast<Composite*>(operation);
             com_operation->apply_from_right( parameters_mtx, input );
@@ -634,17 +658,27 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional)
 */
 std::vector<Matrix> 
-Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) {
+Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
   
     std::vector<Matrix> grad(parameter_num, Matrix(0,0));
 
+    int work_batch = 1;
+    if ( parallel == 0 ) {
+        work_batch = gates.size();
+    }
+    else {
+        work_batch = 1;
+    }
+
     // deriv_idx ... the index of the gate block for which the gradient is to be calculated
-    tbb::parallel_for( tbb::blocked_range<int>(0,gates.size()), [&](tbb::blocked_range<int> r) {
+
+    tbb::parallel_for( tbb::blocked_range<int>(0,gates.size(),work_batch), [&](tbb::blocked_range<int> r) {
         for (int deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
 
         //for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
@@ -687,29 +721,28 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
                     if ( operation->get_parameter_num() == 0 ) {
                 
                         if( idx < deriv_idx ) {
-                            operation->apply_to( input_loc );    
+                            operation->apply_to( input_loc, parallel );    
                         }
                         else {
-                            operation->apply_to_list(grad_loc );
+                            operation->apply_to_list(grad_loc, parallel );
                         }
                     
                     }
                     else  {
                 
                         if( idx < deriv_idx ) {
-                            operation->apply_to( parameters_mtx, input_loc );    
+                            operation->apply_to( parameters_mtx, input_loc, parallel );    
                         }
                         else if ( idx == deriv_idx ) {
-                            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc );
+                            grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
                         }
                         else {
-                            operation->apply_to_list(parameters_mtx, grad_loc );
+                            operation->apply_to_list(parameters_mtx, grad_loc, parallel );
                         }                       
                     
                     }
                     
                 }
-                
             }
 
 
@@ -721,7 +754,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input ) 
         } // tbb range end
     
     });
-    
+   
 
     return grad;
 
@@ -823,7 +856,7 @@ void Gates_block::add_ry_to_front(int target_qbit ) {
 
 
 /**
-@brief Append a RY gate to the list of gates
+@brief Append a CRY gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
@@ -839,7 +872,7 @@ void Gates_block::add_cry(int target_qbit, int control_qbit) {
 
 
 /**
-@brief Add a RY gate to the front of the list of gates
+@brief Add a CRY gate to the front of the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
@@ -847,6 +880,40 @@ void Gates_block::add_cry_to_front(int target_qbit, int control_qbit ) {
 
         // create the operation
         Gate* gate = static_cast<Gate*>(new CRY( qbit_num, target_qbit, control_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+
+
+
+/**
+@brief Append a CZ_NU gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cz_nu(int target_qbit, int control_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new CZ_NU( qbit_num, target_qbit, control_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+
+
+/**
+@brief Add a CZ_NU gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cz_nu_to_front(int target_qbit, int control_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new CZ_NU( qbit_num, target_qbit, control_qbit ));
 
         // adding the operation to the front of the list of gates
         add_gate_to_front( gate );
@@ -1419,6 +1486,7 @@ gates_num Gates_block::get_gate_nums() {
         gate_nums.y       = 0;
         gate_nums.sx      = 0;
         gate_nums.syc     = 0;
+        gate_nums.cz_nu   = 0;
         gate_nums.un     = 0;
         gate_nums.on     = 0;
         gate_nums.com     = 0;
@@ -1525,6 +1593,10 @@ gates_num Gates_block::get_gate_nums() {
                 gate_nums.com   = gate_nums.com + 1;
                 gate_nums.total = gate_nums.total + 1;
             }
+            else if (gate->get_type() == CZ_NU_OPERATION) {
+                gate_nums.cz_nu   = gate_nums.cz_nu + 1;
+                gate_nums.total = gate_nums.total + 1;
+            }            
             else if (gate->get_type() == ADAPTIVE_OPERATION) {
                 gate_nums.adap   = gate_nums.adap + 1;
                 gate_nums.total = gate_nums.total + 1;
@@ -1786,6 +1858,19 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 		print(sstream, 1);	    	         
                 gate_idx = gate_idx + 1;
             }
+            else if (gate->get_type() == CZ_NU_OPERATION) {
+                // definig the rotation parameter
+                double Theta;
+                // get the inverse parameters of the U3 rotation
+                CZ_NU* cz_nu_gate = static_cast<CZ_NU*>(gate);
+                Theta = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                parameter_idx = parameter_idx - 1;
+
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: CZ_NU gate on target qubit: " << cz_nu_gate->get_target_qbit() << ", control qubit " << cz_nu_gate->get_control_qbit() << " and with parameters Theta = " << Theta << std::endl;
+		print(sstream, 1);	    	
+                gate_idx = gate_idx + 1;
+            }         
             else if (gate->get_type() == ON_OPERATION) {
                 parameter_idx = parameter_idx - gate->get_parameter_num();
 		std::stringstream sstream;
@@ -2031,6 +2116,7 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION:
         case H_OPERATION:
+        case CZ_NU_OPERATION:
             op->set_qbit_num( qbit_num_in );
             break;
         default:
@@ -2087,7 +2173,9 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: 
-        case H_OPERATION: {
+        case H_OPERATION: 
+        case CZ_NU_OPERATION:
+        {
             Gate* op_cloned = op->clone();
             op_block->add_gate( op_cloned );
             break; }

@@ -72,6 +72,8 @@ struct gates_num {
   int sx;
   /// The number of Sycamore gates
   int syc;
+  /// The number of CZ_NU gates
+  int cz_nu;  
   /// The number of general gates
   int general;
   /// The number of general UN gates

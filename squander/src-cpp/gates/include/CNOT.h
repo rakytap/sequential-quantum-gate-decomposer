@@ -77,7 +77,7 @@ Matrix get_matrix(int parallel);
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to( Matrix& input, int parallel=0 );
+virtual void apply_to( Matrix& input, int parallel );
 
 
 /**

@@ -106,9 +106,10 @@ Matrix get_matrix( Matrix_real& parameters, int parallel );
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
+@param inputs The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& input );
+void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int parallel );
 
 /**
 @brief Call to apply the gate on the input array/matrix Gates_block*input
@@ -132,8 +133,9 @@ virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP (NOT IMPLEMENTED YET) and 2 for parallel with TBB (optional)
 */
-virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input );
+virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel );
 
 
 
@@ -198,6 +200,23 @@ void add_cry(int target_qbit, int control_qbit);
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
 void add_cry_to_front(int target_qbit, int control_qbit);
+
+/**
+@brief Append a CZ_NU gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cz_nu(int target_qbit, int control_qbit);
+
+
+
+/**
+@brief Add a CZ_NU gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_cz_nu_to_front(int target_qbit, int control_qbit );
+
 
 
 /**

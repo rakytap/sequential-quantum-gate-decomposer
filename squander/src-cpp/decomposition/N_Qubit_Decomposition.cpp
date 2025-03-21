@@ -193,7 +193,8 @@ N_Qubit_Decomposition::start_decomposition(bool finalize_decomp) {
         if ( gates_num.x>0 ) sstream << gates_num.x << " X gates," << std::endl;
         if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX gates," << std::endl; 
         if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore gates," << std::endl;
-        if ( gates_num.adap>0 )sstream << gates_num.adap << " Adaptive gates," << std::endl;   	
+        if ( gates_num.adap>0 )sstream << gates_num.adap << " Adaptive gates," << std::endl;
+        if ( gates_num.cz_nu>0 )sstream << gates_num.cz_nu << " CZ_NU gates," << std::endl;   	
 
 
         sstream << std::endl;
@@ -445,6 +446,7 @@ N_Qubit_Decomposition::extract_subdecomposition_results( Sub_Matrix_Decompositio
             Gate* op = sub_decomp_ops[idx];
             Gate* op_cloned = op->clone();
             add_gate( op_cloned );            
+
         }
 }
 

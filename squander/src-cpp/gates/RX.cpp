@@ -104,7 +104,7 @@ RX::RX(int qbit_num_in, int target_qbit_in) {
 
         parameter_num = 1;
 
-        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitaRX is done
+        // Parameter theta of the RX gate after the decomposition of the unitary is done
         parameters = Matrix_real(1, parameter_num);
 
 }
@@ -188,9 +188,10 @@ RX::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 @brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 std::vector<Matrix> 
-RX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
+RX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
         std::stringstream sstream;
@@ -206,7 +207,7 @@ RX::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input ) {
 
     parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
     Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx );
+    apply_to(parameters_tmp, res_mtx, parallel );
     ret.push_back(res_mtx);
 
     

@@ -544,9 +544,8 @@ void Sub_Matrix_Decomposition::optimization_problem_combined( Matrix_real parame
         // set the gradient
 #ifdef DEBUG
         if (isnan(f->data[idx])) {
-	  sstream << "Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN " << std::endl;
-	  print(sstream, 0);	  
-          exit(-1);
+          std::string err("Sub_Matrix_Decomposition::optimization_problem_combined: f->data[i] is NaN.");
+          throw err;
         }
 #endif // DEBUG
         grad[idx] = (f[idx]-(*f0))/dparam;
@@ -619,10 +618,8 @@ Sub_Matrix_Decomposition* Sub_Matrix_Decomposition::clone() {
     ret->set_iteration_loops( iteration_loops );
 
     if ( extract_gates(static_cast<Gates_block*>(ret)) != 0 ) {
-	std::stringstream sstream;
-	sstream << "Sub_Matrix_Decomposition::clone(): extracting gates was not succesfull\n" << std::endl;
-	print(sstream, 0);	    	
-        exit(-1);
+        std::string err("Sub_Matrix_Decomposition::clone(): extracting gates was not succesfull.");
+        throw err;
     }
 
     return ret;
