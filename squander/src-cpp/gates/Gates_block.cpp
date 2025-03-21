@@ -660,11 +660,11 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
     }
 
     // deriv_idx ... the index of the gate block for which the gradient is to be calculated
-/*
+
     tbb::parallel_for( tbb::blocked_range<int>(0,gates.size()), [&](tbb::blocked_range<int> r) {
         for (int deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
-*/
-        for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
+
+        //for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
 
 
             Gate* gate_deriv = gates[deriv_idx];            
@@ -735,9 +735,9 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
 
 
         } // tbb range end
-/*    
+    
     });
-  */  
+   
 
     return grad;
 
