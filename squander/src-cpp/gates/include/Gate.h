@@ -96,17 +96,19 @@ Matrix get_matrix();
 
 /**
 @brief Call to apply the gate on a list of inputs
-@param input The input array on which the gate is applied
+@param inputs The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to_list( std::vector<Matrix>& input );
+virtual void apply_to_list( std::vector<Matrix>& inputs, int parallel );
 
 
 /**
 @brief Abstract function to be overriden in derived classes to be used to transform a list of inputs upon a parametric gate operation
 @param parameter_mtx An array conatining the parameters of the gate
-@param input The input array on which the gate is applied
+@param inputs The input array on which the gate is applied
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-virtual void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input );
+virtual void apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel );
 
 /**
 @brief Call to apply the gate on the input array/matrix

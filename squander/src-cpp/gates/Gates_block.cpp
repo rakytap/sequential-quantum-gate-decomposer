@@ -187,11 +187,28 @@ Gates_block::get_matrix( Matrix_real& parameters, int parallel ) {
 @param input The input array on which the gate is applied
 */
 void 
-Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& input ) {
-int parallel = 0;
-    for ( std::vector<Matrix>::iterator it=input.begin(); it != input.end(); it++ ) {
-        this->apply_to( parameters_mtx, *it, parallel );
+Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int parallel ) {
+
+    int work_batch = 1;
+    if ( parallel == 0 ) {
+        work_batch = inputs.size();
     }
+    else {
+        work_batch = 1;
+    }
+
+
+    tbb::parallel_for( tbb::blocked_range<int>(0,inputs.size(),work_batch), [&](tbb::blocked_range<int> r) {
+        for (int idx=r.begin(); idx<r.end(); ++idx) { 
+
+            Matrix* input = &inputs[idx];
+
+            apply_to( parameters_mtx, *input, parallel );
+
+        }
+
+    });
+
 
 }
 
@@ -651,17 +668,17 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
   
     std::vector<Matrix> grad(parameter_num, Matrix(0,0));
 
-    int concurrency = gates.size();
+    int work_batch = 1;
     if ( parallel == 0 ) {
-        concurrency = gates.size();
+        work_batch = gates.size();
     }
     else {
-        concurrency = 1;
+        work_batch = 1;
     }
 
     // deriv_idx ... the index of the gate block for which the gradient is to be calculated
 
-    tbb::parallel_for( tbb::blocked_range<int>(0,gates.size()), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(0,gates.size(),work_batch), [&](tbb::blocked_range<int> r) {
         for (int deriv_idx=r.begin(); deriv_idx<r.end(); ++deriv_idx) { 
 
         //for (int deriv_idx=0; deriv_idx<gates.size(); ++deriv_idx) { 
@@ -707,7 +724,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
                             operation->apply_to( input_loc, parallel );    
                         }
                         else {
-                            operation->apply_to_list(grad_loc );
+                            operation->apply_to_list(grad_loc, parallel );
                         }
                     
                     }
@@ -720,7 +737,7 @@ Gates_block::apply_derivate_to( Matrix_real& parameters_mtx_in, Matrix& input, i
                             grad_loc = operation->apply_derivate_to( parameters_mtx, input_loc, parallel );
                         }
                         else {
-                            operation->apply_to_list(parameters_mtx, grad_loc );
+                            operation->apply_to_list(parameters_mtx, grad_loc, parallel );
                         }                       
                     
                     }
