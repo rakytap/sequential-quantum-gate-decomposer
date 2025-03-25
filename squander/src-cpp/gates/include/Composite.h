@@ -119,6 +119,11 @@ virtual void set_qbit_num( int qbit_num_in );
 */
 virtual void reorder_qubits( std::vector<int> qbit_list );
 
+/**
+@brief Call to map the qubits in the matrix of the operation
+@param qbit_list The map list of qubits spanning the matrix
+*/
+virtual void map_qubits( std::vector<int> qbit_map);
 
 /**
 @brief Call to set the final optimized parameters of the gate.

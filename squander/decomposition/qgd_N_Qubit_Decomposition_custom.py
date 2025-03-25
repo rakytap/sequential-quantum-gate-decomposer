@@ -103,7 +103,27 @@ class qgd_N_Qubit_Decomposition_custom(qgd_N_Qubit_Decomposition_custom_Wrapper)
         
         return Qiskit_IO.get_Qiskit_Circuit( squander_circuit, parameters )
 
+## 
+# @brief Call to get the optimized parameters set in numpy array
+# @return Returns with the optimized parameters
+    def get_Optimized_Parameters(self):
+    
+        return super().get_Optimized_Parameters()
+        
+## 
+# @brief Call to evaluate the cost function.
+# @param parameters A float64 numpy array. The number of parameters can be  retrieved with method get_Parameter_Num 
+    def Optimization_Problem( self, parameters=None ):
 
+        if parameters is None:
+            print( "Optimization_Problem: array of input parameters is None")
+            return None
+
+        # evaluate the cost function and gradients
+        cost_function = super().Optimization_Problem(parameters)  
+
+
+        return cost_function
 
 
 

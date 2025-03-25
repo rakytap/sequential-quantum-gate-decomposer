@@ -898,7 +898,66 @@ qgd_Variational_Quantum_Eigensolver_Base_Wrapper_get_circuit( qgd_Variational_Qu
 
 }
 
+/**
+@brief Wrapper function to evaluate the cost function an dthe gradient components.
+@return Unitarty numpy matrix
+*/
+static PyObject *
+qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem_Grad( qgd_Variational_Quantum_Eigensolver_Base_Wrapper *self, PyObject *args)
+{
 
+
+    PyArrayObject* parameters_arg = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arg )) {
+
+        std::string err( "Unsuccessful argument parsing not ");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;      
+
+    } 
+
+    // establish memory contiguous arrays for C calculations
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arg) && PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ){
+        Py_INCREF(parameters_arg);
+    }
+    else if (PyArray_TYPE(parameters_arg) == NPY_FLOAT64 ) {
+        parameters_arg = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arg, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    }
+    else {
+        std::string err( "Parameters should be should be real (given in float64 format)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    Matrix_real parameters_mtx = numpy2matrix_real( parameters_arg );
+    Matrix_real grad_mtx(parameters_mtx.size(), 1);
+
+    try {
+        self->vqe->optimization_problem_grad(parameters_mtx, self->vqe, grad_mtx );
+    }
+    catch (std::string err ) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch (...) {
+        std::string err( "Invalid pointer to decomposition class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // convert to numpy array
+    grad_mtx.set_owner(false);
+    PyObject *grad_py = matrix_real_to_numpy( grad_mtx );
+
+    Py_DECREF(parameters_arg);
+
+
+    return grad_py;
+}
 
 
 /**
@@ -1023,6 +1082,9 @@ static PyMethodDef qgd_Variational_Quantum_Eigensolver_Base_Wrapper_methods[] = 
     },
     {"set_Gate_Structure", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_set_Gate_Structure, METH_VARARGS,
      "Call to set custom gate structure for VQE experiments."
+    },
+    {"Optimization_Problem_Grad", (PyCFunction) qgd_Variational_Quantum_Eigensolver_Base_Wrapper_Optimization_Problem_Grad, METH_VARARGS,
+     "Method to get the expected energy of the circuit at parameters."
     },
     {NULL}  /* Sentinel */
 };

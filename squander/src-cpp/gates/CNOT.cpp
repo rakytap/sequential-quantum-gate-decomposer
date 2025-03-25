@@ -21,8 +21,8 @@ limitations under the License.
 */
 
 #include "CNOT.h"
-
-
+#include "apply_large_kernel_to_input.h"
+#include "apply_large_kernel_to_input_AVX.h"
 using namespace std;
 
 
@@ -134,9 +134,10 @@ CNOT::get_matrix( int parallel) {
 void 
 CNOT::apply_to( Matrix& input, int parallel ) {
  
-
     Matrix u3_1qbit = calc_one_qubit_u3();
     apply_kernel_to(u3_1qbit, input, false, parallel);
+    
+
 
 
 }
@@ -179,6 +180,16 @@ void CNOT::set_qbit_num(int qbit_num) {
 void CNOT::reorder_qubits( vector<int> qbit_list) {
 
         Gate::reorder_qubits(qbit_list);
+
+}
+
+/**
+@brief Call to map the qubits in the matrix of the gate
+@param qbit_list The map of qubits spanning the matrix
+*/
+void CNOT::map_qubits( vector<int> qbit_map) {
+
+        Gate::map_qubits(qbit_map);
 
 }
 

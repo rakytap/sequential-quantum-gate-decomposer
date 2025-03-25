@@ -329,7 +329,15 @@ void SYC::reorder_qubits( vector<int> qbit_list) {
 
 }
 
+/**
+@brief Call to map the qubits in the matrix of the gate
+@param qbit_list The map of qubits spanning the matrix
+*/
+void SYC::map_qubits( vector<int> qbit_map) {
 
+        Gate::map_qubits(qbit_map);
+
+}
 
 /**
 @brief Call to create a clone of the present class

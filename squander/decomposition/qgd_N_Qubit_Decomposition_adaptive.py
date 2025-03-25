@@ -460,7 +460,7 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def add_Adaptive_Layers( self ):  
 
         return super().add_Adaptive_Layers()
-
+    
 ##
 # @brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
     def add_Finalyzing_Layer_To_Gate_Structure( self ):  
@@ -669,8 +669,16 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         return entropy
 
+##
+# @brief Call to set custom gate structure to used in the decomposition
+# @param Gate_structure An instance of SQUANDER Circuit
+    def set_Custom_Layer_Template( self, Gate_structure ):  
 
-
+        if not isinstance(Gate_structure, qgd_Circuit) :
+            raise Exception("Input parameter Gate_structure should be a an instance of Circuit")
+                    
+                    
+        return super().set_Custom_Layer_Template( Gate_structure )
 ##
 # @brief Call to get the number of qubits in the circuit
 # @return Returns with the number of qubits

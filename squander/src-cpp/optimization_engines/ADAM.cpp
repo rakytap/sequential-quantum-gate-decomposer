@@ -213,7 +213,7 @@ void Optimization_Interface::solve_layer_optimization_problem_ADAM( int num_of_p
                 
                 randomization_successful = 1;
             }
-    	    export_current_cost_fnc(current_minimum);
+    	    //export_current_cost_fnc(current_minimum);
 
             if ( iter_idx % 5000 == 0 ) {
                 if (cost_fnc != VQE){

@@ -369,6 +369,16 @@ double get_hilbert_schmidt_test(Matrix& matrix){
     return cost_function;
 }
 
+double get_infidelity(Matrix& matrix){
+    
+    double d = matrix.cols;
+    double cost_function = 0.0;
+    QGD_Complex16 ret = get_trace(matrix);
+    cost_function = 1.0-((ret.real*ret.real+ret.imag*ret.imag)/d+1)/(d+1);
+
+    return cost_function;
+}
+
 /**
 @brief Call co calculate the Hilbert Schmidt testof the optimization process, and the first correction to the cost finction according to https://arxiv.org/pdf/2210.09191.pdf
 @param matrix The square shaped complex matrix from which the cost function is calculated.

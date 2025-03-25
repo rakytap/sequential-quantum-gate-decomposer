@@ -29,6 +29,22 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from os import path
 from squander.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
+from squander.gates.qgd_U3 import qgd_U3 
+from squander.gates.qgd_H import qgd_H 
+from squander.gates.qgd_X import qgd_X  
+from squander.gates.qgd_Y import qgd_Y  
+from squander.gates.qgd_Z import qgd_Z  
+from squander.gates.qgd_CH import qgd_CH   
+from squander.gates.qgd_CNOT import qgd_CNOT  
+from squander.gates.qgd_CZ import qgd_CZ  
+from squander.gates.qgd_RX import qgd_RX  
+from squander.gates.qgd_RY import qgd_RY  
+from squander.gates.qgd_RZ import qgd_RZ   
+from squander.gates.qgd_SX import qgd_SX  
+from squander.gates.qgd_SYC import qgd_SYC   
+from squander.gates.qgd_CRY import qgd_CRY 
+from squander.gates.qgd_CROT import qgd_CROT
+
 
 
 
@@ -43,7 +59,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 # @return An instance of the class
 
     def __init__( self, qbit_num ):
-
+        self.qbit_num = qbit_num
         # call the constructor of the wrapper class
         super(qgd_Circuit, self).__init__( qbit_num )
 
@@ -176,6 +192,15 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 	# call the C wrapper function
         super(qgd_Circuit, self).add_adaptive(target_qbit, control_qbit)
+        
+#@brief Call to add a SX gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int).
+
+    def add_CROT( self, target_qbit, control_qbit, subtype):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_CROT(target_qbit, control_qbit, subtype)
 
 #@brief Call to add adaptive gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -292,4 +317,151 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 	# call the C wrapper function
         return super().get_Children( gate )
+#@brief Method to get the list of parent gate indices. Then the parent gates can be obtained from the list of gates involved in the circuit.
+    def reorder_qubits( self, qbit_order):
 
+	# call the C wrapper function
+        super().reorder_qubits( qbit_order )
+        
+#@brief Method to get the list of parent gate indices. Then the parent gates can be obtained from the list of gates involved in the circuit.
+    def map_qubits( self, qbit_map):
+
+	# call the C wrapper function
+        super().map_qubits( qbit_map )
+
+    def get_Gate_Nums(self):
+        number_of_gates = {}
+        gates = self.get_Gates()
+        for gate in gates:
+            if isinstance( gate, qgd_CNOT ):
+                # adding CNOT gate to the quantum circuit
+                if "CNOT" not in number_of_gates.keys():
+                    number_of_gates['CNOT'] = 1
+                else:
+                    number_of_gates['CNOT']+=1
+            elif isinstance( gate, qgd_CROT ):
+                # adding CNOT gate to the quantum circuit
+                if "CROT" not in number_of_gates.keys():
+                    number_of_gates['CROT'] = 1
+                else:
+                    number_of_gates['CROT']+=1
+            elif isinstance( gate, qgd_CRY ):
+                # adding CNOT gate to the quantum circuit
+                if "CRY" not in number_of_gates.keys():
+                    number_of_gates['CRY'] = 1
+                else:
+                    number_of_gates['CRY']+=1
+            elif isinstance( gate, qgd_RY ):
+                # adding CNOT gate to the quantum circuit
+                if "RY" not in number_of_gates.keys():
+                    number_of_gates['RY'] = 1
+                else:
+                    number_of_gates['RY']+=1
+            elif isinstance( gate, qgd_RX ):
+                # adding CNOT gate to the quantum circuit
+                if "RX" not in number_of_gates.keys():
+                    number_of_gates['RX'] = 1
+                else:
+                    number_of_gates['RX']+=1
+            elif isinstance( gate, qgd_RZ ):
+                # adding CNOT gate to the quantum circuit
+                if "RZ" not in number_of_gates.keys():
+                    number_of_gates['RZ'] = 1
+                else:
+                    number_of_gates['RZ']+=1
+            elif isinstance( gate, qgd_U3 ):
+                # adding CNOT gate to the quantum circuit
+                if "U3" not in number_of_gates.keys():
+                    number_of_gates['U3'] = 1
+                else:
+                    number_of_gates['U3']+=1
+        return number_of_gates
+        
+    def get_Circuit_Depth(self):
+        used_gates_idx = []
+        gates = self.get_Gates()
+        depth = 0
+        gate_start_idx = 0
+        gate_groups = []
+        while (len(used_gates_idx) != len(gates)):
+            involved_qbits=[]
+            gate_start_idx_prev = gate_start_idx
+            gate_idx = gate_start_idx
+            depth += 1
+            control_last_single=[False]*self.qbit_num
+            gate_group=[]
+            while((len(involved_qbits)<self.qbit_num) and gate_idx<len(gates)):
+                if gate_idx not in used_gates_idx:
+                    target_qbit = gates[gate_idx].get_Target_Qbit()
+                    control_qbit = gates[gate_idx].get_Control_Qbit()
+                    gate = gates[gate_idx]
+                    if isinstance( gate, qgd_CROT ):
+                        if ((control_qbit in involved_qbits) and control_last_single[control_qbit]==False) and (target_qbit not in involved_qbits):
+                            involved_qbits.append(target_qbit)
+                            used_gates_idx.append(gate_idx)
+                            gate_group.append(gate_idx)
+                            control_last_single[control_qbit]=False
+                        elif ((control_qbit in involved_qbits) and control_last_single[control_qbit]==True) and (target_qbit not in involved_qbits):
+                            involved_qbits.append(target_qbit)
+                            if (gate_start_idx == gate_start_idx_prev):
+                                gate_start_idx=gate_idx
+                        elif (control_qbit not in involved_qbits) and (target_qbit not in involved_qbits):
+                            involved_qbits.append(target_qbit)
+                            involved_qbits.append(control_qbit)
+                            used_gates_idx.append(gate_idx)
+                            gate_group.append(gate_idx)
+                            control_last_single[control_qbit]=False
+                        elif (gate_start_idx == gate_start_idx_prev):
+                            gate_start_idx=gate_idx
+                    else:
+                        if control_qbit!=-1:
+                            if (control_qbit not in involved_qbits) and (target_qbit not in involved_qbits):
+                                involved_qbits.append(target_qbit)
+                                involved_qbits.append(control_qbit)
+                                used_gates_idx.append(gate_idx)
+                                gate_group.append(gate_idx)
+                            elif (gate_start_idx == gate_start_idx_prev):
+                                gate_start_idx=gate_idx
+                        else:
+                            control_last_single[target_qbit]=True
+                            if target_qbit not in involved_qbits:
+                                involved_qbits.append(target_qbit)
+                                used_gates_idx.append(gate_idx)
+                                control_last_single[target_qbit]=True
+                                gate_group.append(gate_idx)
+                            elif (gate_start_idx == gate_start_idx_prev):
+                                gate_start_idx=gate_idx
+                gate_idx+=1
+            gate_groups.append(gate_group)
+        return depth
+        
+    def add_Gate(self,qgd_gate):
+        gate_type = qgd_gate.type
+        if gate_type == "H":
+            self.add_H(qgd_gate.get_Target_Qbit())
+        elif gate_type == "X":
+            self.add_X(qgd_gate.get_Target_Qbit())
+        elif gate_type == "Y":
+            self.add_Y(qgd_gate.get_Target_Qbit())
+        elif gate_type == "Z":
+            self.add_Z(qgd_gate.get_Target_Qbit())
+        elif gate_type == "CH":
+            self.add_CH(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif gate_type == "CZ":
+            self.add_CZ(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif gate_type == "RX":
+            self.add_RX(qgd_gate.get_Target_Qbit())
+        elif gate_type == "RY":
+            self.add_RY(qgd_gate.get_Target_Qbit())
+        elif gate_type == "RZ":
+            self.add_RZ(qgd_gate.get_Target_Qbit())
+        elif gate_type == "SX":
+            self.add_SX(qgd_gate.get_Target_Qbit())
+        elif gate_type == "U3":
+            self.add_U3(qgd_gate.get_Target_Qbit(),qgd_gate.Theta,qgd_gate.Phi,qgd_gate.Lambda)
+        elif gate_type == "CRY":
+            self.add_CRY(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif gate_type == "CNOT":
+            self.add_CNOT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif gate_type == "CROT":
+            self.add_CROT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit(),qgd_gate.subtype)

@@ -124,6 +124,12 @@ class qgd_Variational_Quantum_Eigensolver_Base(qgd_Variational_Quantum_Eigensolv
     
         return super(qgd_Variational_Quantum_Eigensolver_Base, self).Optimization_Problem(parameters)
 
+## 
+# @brief Call to evaluate the VQE energy.
+# @param parameters A float64 numpy array. The number of parameters can be  retrieved with method get_Parameter_Num 
+    def Optimization_Problem_Grad(self, parameters):
+    
+        return super(qgd_Variational_Quantum_Eigensolver_Base, self).Optimization_Problem_Grad(parameters)
 
 ##
 # @brief Call to get the second Rényi entropy

@@ -36,6 +36,7 @@ limitations under the License.
 #include "SYC.h"
 #include "UN.h"
 #include "ON.h"
+#include "CROT.h"
 #include "Adaptive.h"
 #include "CZ_NU.h"
 #include "Composite.h"
@@ -277,7 +278,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
                 outer_idx        = block_end[block_idx]-1;
 
 #ifdef USE_AVX
-                apply_large_kernel_to_state_vector_input_AVX(Umtx_mini, input, qbits, input.size() );
+                apply_large_kernel_to_input_AVX(Umtx_mini, input, qbits, input.size() );
 #else
                 apply_large_kernel_to_state_vector_input(Umtx_mini, input, qbits, input.size() );
 #endif                
@@ -508,6 +509,21 @@ void Gates_block::get_parameter_max(Matrix_real &range_max) {
                     parameter_idx = parameter_idx - 3;
                 }
                 break; }
+            case CROT_OPERATION: {
+            CROT* crot_gate = static_cast<CROT*>(gate);
+            if ((crot_gate->get_subtype() == SINGLE) || (crot_gate->get_subtype() == CONTROL_OPPOSITE)){
+                    data[parameter_idx-2] = 4 * M_PI;
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 2;
+            }
+            else if (crot_gate->get_subtype() == CONTROL_INDEPENDENT){
+                    data[parameter_idx-4] = 4 * M_PI;
+                    data[parameter_idx-3] = 2 * M_PI;
+                    data[parameter_idx-2] = 4 * M_PI;
+                    data[parameter_idx-1] = 2 * M_PI;
+                    parameter_idx = parameter_idx - 4;
+            }
+            break;}
             case RX_OPERATION:
             case RY_OPERATION:
             case CRY_OPERATION:
@@ -887,7 +903,36 @@ void Gates_block::add_cry_to_front(int target_qbit, int control_qbit ) {
 }
 
 
+/**
+@brief Append a RY gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_crot(int target_qbit, int control_qbit, crot_type subtype_in) {
 
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new CROT( qbit_num, target_qbit, control_qbit, subtype_in));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+
+
+/**
+@brief Add a RY gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_crot_to_front(int target_qbit, int control_qbit,crot_type subtype_in ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new CROT( qbit_num, target_qbit, control_qbit,subtype_in ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
 
 /**
 @brief Append a CZ_NU gate to the list of gates
@@ -1489,6 +1534,7 @@ gates_num Gates_block::get_gate_nums() {
         gate_nums.cz_nu   = 0;
         gate_nums.un     = 0;
         gate_nums.on     = 0;
+        gate_nums.crot     = 0;
         gate_nums.com     = 0;
         gate_nums.general = 0;
         gate_nums.adap = 0;
@@ -1517,6 +1563,7 @@ gates_num Gates_block::get_gate_nums() {
                 gate_nums.un   = gate_nums.un + gate_nums_loc.un;
                 gate_nums.on   = gate_nums.on + gate_nums_loc.on;
                 gate_nums.com  = gate_nums.com + gate_nums_loc.com;
+                gate_nums.crot  = gate_nums.crot + gate_nums_loc.crot;
                 gate_nums.adap = gate_nums.adap + gate_nums_loc.adap;
                 gate_nums.total = gate_nums.total + gate_nums_loc.total;
 
@@ -1601,6 +1648,10 @@ gates_num Gates_block::get_gate_nums() {
                 gate_nums.adap   = gate_nums.adap + 1;
                 gate_nums.total = gate_nums.total + 1;
             }
+            else if (gate->get_type() == CROT_OPERATION) {
+                gate_nums.crot   = gate_nums.crot + 1;
+                gate_nums.total = gate_nums.total + 1;
+            }
             else {
                 std::string err("Gates_block::get_gate_nums: unimplemented gate"); 
                 throw err;
@@ -1662,6 +1713,37 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 std::stringstream sstream;
 		sstream << gate_idx << "th gate: CNOT with control qubit: " << cnot_gate->get_control_qbit() << " and target qubit: " << cnot_gate->get_target_qbit() << std::endl;
 		print(sstream, 1);   		
+                gate_idx = gate_idx + 1;
+            }
+            else if (gate->get_type() == CROT_OPERATION) {
+                CROT* crot_gate = static_cast<CROT*>(gate);
+                std::stringstream sstream;
+                if ((crot_gate->get_subtype() == SINGLE)){
+                    double theta0,phi0;
+                    theta0 = std::fmod( 2*parameters_data[parameter_idx-2], 4*M_PI);
+                    phi0 = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                    parameter_idx = parameter_idx - 2;
+            		sstream << gate_idx << "th gate: CROT_SINGLE with control qubit: " << crot_gate->get_control_qbit() << " and target qubit: " << crot_gate->get_target_qbit()<< " and parameters theta=" << theta0 <<" and phi="<< phi0 << std::endl;
+		print(sstream, 1);   
+            }
+            else if ((crot_gate->get_subtype() == CONTROL_OPPOSITE)){
+                    double theta0,phi0;
+                    theta0 = std::fmod( 2*parameters_data[parameter_idx-2], 4*M_PI);
+                    phi0 = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+                    parameter_idx = parameter_idx - 2;
+            		sstream << gate_idx << "th gate: CROT_OPPOSITE with control qubit: " << crot_gate->get_control_qbit() << " and target qubit: " << crot_gate->get_target_qbit()<< " and parameters theta=" << theta0 <<" and phi="<< phi0 << std::endl;
+		print(sstream, 1);
+            }
+            else if (crot_gate->get_subtype() == CONTROL_INDEPENDENT){
+                    double theta0,phi0,theta1,phi1;
+                    theta0 = std::fmod( 2*parameters_data[parameter_idx-4], 4*M_PI);
+                    phi0 = std::fmod( parameters_data[parameter_idx-3], 2*M_PI);
+                    theta1 = std::fmod( 2*parameters_data[parameter_idx-2], 4*M_PI);
+                    phi1 = std::fmod( parameters_data[parameter_idx-1], 2*M_PI);
+            		sstream << gate_idx << "th gate: CROT_INDEPENDENT with control qubit: " << crot_gate->get_control_qbit() << " and target qubit: " << crot_gate->get_target_qbit()<< " and parameters theta0=" << theta0 <<", phi0="<< phi0 << ", theta1=" << theta1 <<" and phi1="<< phi1 << std::endl;
+		print(sstream, 1);
+                    parameter_idx = parameter_idx - 4;
+            }
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == CZ_OPERATION) {
@@ -1952,6 +2034,10 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
              CRY* cry_gate = static_cast<CRY*>(gate);
              cry_gate->reorder_qubits( qbit_list );
          }
+         else if (gate->get_type() == CROT_OPERATION) {
+             CROT* crot_gate = static_cast<CROT*>(gate);
+             crot_gate->reorder_qubits( qbit_list );
+         }
          else if (gate->get_type() == RZ_OPERATION) {
              RZ* rz_gate = static_cast<RZ*>(gate);
              rz_gate->reorder_qubits( qbit_list );
@@ -1998,6 +2084,107 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
          }
          else {
              std::string err("Gates_block::reorder_qubits: unimplemented gate"); 
+             throw err;
+         }
+
+
+    }
+
+}
+
+
+/**
+@brief Call to map the qubits in the matrix of the gate
+@param qbit_map The maped list of qubits spanning the matrix
+*/
+void Gates_block::map_qubits( std::vector<int>  qbit_map) {
+
+    for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
+
+        Gate* gate = *it;
+
+        if (gate->get_type() == CNOT_OPERATION) {
+            CNOT* cnot_gate = static_cast<CNOT*>(gate);
+            cnot_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == CZ_OPERATION) {
+            CZ* cz_gate = static_cast<CZ*>(gate);
+            cz_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == CH_OPERATION) {
+            CH* ch_gate = static_cast<CH*>(gate);
+            ch_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == SYC_OPERATION) {
+            SYC* syc_gate = static_cast<SYC*>(gate);
+            syc_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == U3_OPERATION) {
+             U3* u3_gate = static_cast<U3*>(gate);
+             u3_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == RX_OPERATION) {
+             RX* rx_gate = static_cast<RX*>(gate);
+             rx_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == RY_OPERATION) {
+             RY* ry_gate = static_cast<RY*>(gate);
+             ry_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == CRY_OPERATION) {
+             CRY* cry_gate = static_cast<CRY*>(gate);
+             cry_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == CROT_OPERATION) {
+             CROT* crot_gate = static_cast<CROT*>(gate);
+             crot_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == RZ_OPERATION) {
+             RZ* rz_gate = static_cast<RZ*>(gate);
+             rz_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == H_OPERATION) {
+             H* h_gate = static_cast<H*>(gate);
+             h_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == X_OPERATION) {
+             X* x_gate = static_cast<X*>(gate);
+             x_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == Y_OPERATION) {
+             Y* y_gate = static_cast<Y*>(gate);
+             y_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == Z_OPERATION) {
+             Z* z_gate = static_cast<Z*>(gate);
+             z_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == SX_OPERATION) {
+             SX* sx_gate = static_cast<SX*>(gate);
+             sx_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == BLOCK_OPERATION) {
+             Gates_block* block_gate = static_cast<Gates_block*>(gate);
+             block_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == UN_OPERATION) {
+             UN* un_gate = static_cast<UN*>(gate);
+             un_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == ON_OPERATION) {
+             ON* on_gate = static_cast<ON*>(gate);
+             on_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == COMPOSITE_OPERATION) {
+             Composite* com_gate = static_cast<Composite*>(gate);
+             com_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == ADAPTIVE_OPERATION) {
+             Adaptive* ad_gate = static_cast<Adaptive*>(gate);
+             ad_gate->map_qubits( qbit_map );
+         }
+         else {
+             std::string err("Gates_block::map_qubits: unimplemented gate"); 
              throw err;
          }
 
@@ -2114,7 +2301,7 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case SX_OPERATION: case BLOCK_OPERATION:
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION:
+        case ADAPTIVE_OPERATION: case CROT_OPERATION:
         case H_OPERATION:
         case CZ_NU_OPERATION:
             op->set_qbit_num( qbit_num_in );
@@ -2172,7 +2359,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case SX_OPERATION: case BLOCK_OPERATION:
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
-        case ADAPTIVE_OPERATION: 
+        case ADAPTIVE_OPERATION: case CROT_OPERATION:
         case H_OPERATION: 
         case CZ_NU_OPERATION:
         {
@@ -3673,7 +3860,6 @@ export_gate_list_to_binary(Matrix_real& parameters, Gates_block* gates_block, FI
 
 
             fwrite(parameters_data, sizeof(double), parameter_num, pFile);
-
             
         }
         else if (gt_type == RX_OPERATION || gt_type == RY_OPERATION || gt_type == RZ_OPERATION ) {

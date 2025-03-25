@@ -369,6 +369,9 @@ Optimization_Interface::calc_decomposition_error(Matrix& decomposed_matrix ) {
     else if ( cost_fnc == SUM_OF_SQUARES) {
         decomposition_error = get_cost_function_sum_of_squares(decomposed_matrix);
     }
+    else if (cost_fnc == INFIDELITY){
+        decomposition_error = get_infidelity(decomposed_matrix);
+    }
     else {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
         throw err;
@@ -564,6 +567,9 @@ double Optimization_Interface::optimization_problem( Matrix_real& parameters ) {
     }
     else if ( cost_fnc == SUM_OF_SQUARES) {
         return get_cost_function_sum_of_squares(matrix_new);
+    }
+    else if (cost_fnc == INFIDELITY){
+        return get_infidelity(matrix_new);
     }
     else {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
@@ -790,6 +796,13 @@ double Optimization_Interface::optimization_problem( Matrix_real parameters, voi
     }
     else if ( cost_fnc == SUM_OF_SQUARES) {
         return get_cost_function_sum_of_squares(matrix_new);
+    }
+    else if (cost_fnc == INFIDELITY){
+    	QGD_Complex16 trace_temp = get_trace(matrix_new);
+    	ret_temp[0].real = trace_temp.real;
+    	ret_temp[0].imag = trace_temp.imag;
+    	double d = matrix_new.cols;
+        return 1.0-((trace_temp.real*trace_temp.real+trace_temp.imag*trace_temp.imag)/d+1)/(d+1);
     }
     else {
         std::string err("Optimization_Interface::optimization_problem: Cost function variant not implmented.");
@@ -1049,6 +1062,11 @@ tbb::tick_count t0_CPU = tbb::tick_count::now();////////////////////////////////
             }
             else if ( cost_fnc == SUM_OF_SQUARES) {
                 grad_comp = get_cost_function_sum_of_squares(Umtx_deriv[idx]);
+            }
+            else if (cost_fnc == INFIDELITY){
+                double d = Umtx_deriv[idx].cols;
+                QGD_Complex16 deriv_tmp = get_trace(Umtx_deriv[idx]);
+                grad_comp = -2.0/d/(d+1)*trace_tmp[0].real*deriv_tmp.real-2.0/d/(d+1)*trace_tmp[0].imag*deriv_tmp.imag;
             }
             else {
                 std::string err("Optimization_Interface::optimization_problem_combined: Cost function variant not implmented.");

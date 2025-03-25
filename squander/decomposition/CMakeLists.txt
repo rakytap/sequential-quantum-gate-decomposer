@@ -187,5 +187,4 @@ set_target_properties( qgd_N_Qubit_Decomposition_custom_Wrapper PROPERTIES
 install(TARGETS qgd_N_Qubit_Decomposition_custom_Wrapper LIBRARY 
          DESTINATION squander/decomposition)
 
-
-
+###############################################################################

@@ -86,6 +86,8 @@ struct gates_num {
   int adap;
   /// The total number of gates
   int total;
+  /// The number of crot gates
+  int crot;
 };
 
 

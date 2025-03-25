@@ -118,7 +118,7 @@ void Optimization_Interface::solve_layer_optimization_problem_BAYES_AGENTS( int 
                 memcpy(solution_guess.get_data() + fragment_size*number_of_agents,parameters_agents.get_data()+fragment_size*number_of_agents,sizeof(double)*leftover);
                 }
             }
-        export_current_cost_fnc(current_minimum);
+        //export_current_cost_fnc(current_minimum);
         }
 
 }

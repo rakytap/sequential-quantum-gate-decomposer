@@ -27,7 +27,7 @@ limitations under the License.
 #include "common.h"
 #include "matrix_real.h"
 #include "Gate.h"
-
+#include "CROT.h"
 #ifdef __DFE__
 #include "common_DFE.h"
 #endif
@@ -249,6 +249,22 @@ void add_cnot( int target_qbit, int control_qbit);
 */
 void add_cnot_to_front( int target_qbit, int control_qbit );
 
+
+/**
+@brief Append a CNOT gate gate to the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crot( int target_qbit, int control_qbit, crot_type subtype_in);
+
+
+
+/**
+@brief Add a C_NOT gate gate to the front of the list of gates
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_crot_to_front( int target_qbit, int control_qbit, crot_type subtype_in );
 
 /**
 @brief Append a CZ gate gate to the list of gates
@@ -485,6 +501,11 @@ void list_gates( const Matrix_real &parameters, int start_index );
 */
 virtual void reorder_qubits( std::vector<int> qbit_list );
 
+/**
+@brief Call to map the qubits in the matrix of the operation
+@param qbit_list The map list of qubits spanning the matrix
+*/
+virtual void map_qubits( std::vector<int> qbit_map);
 
 /**
 @brief Call to get the qubits involved in the gates stored in the block of gates.

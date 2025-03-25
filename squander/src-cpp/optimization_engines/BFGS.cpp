@@ -121,7 +121,7 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS( int num_of_p
                 }
             }*/
 //std::cout << "solve_layer_optimization_problem_BFGS " << current_minimum << std::endl;
-            export_current_cost_fnc(current_minimum);
+            //export_current_cost_fnc(current_minimum);
 
 #ifdef __MPI__        
             MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);

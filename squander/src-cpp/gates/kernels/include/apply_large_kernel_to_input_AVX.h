@@ -34,9 +34,11 @@ __m256d get_AVX_vector(double* element_outer, double* element_inner);
 
 __m256d complex_mult_AVX(__m256d input_vec, __m256d unitary_row_vec, __m256d neg);
 
-void apply_large_kernel_to_state_vector_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
+void apply_large_kernel_to_input_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
 void apply_2qbit_kernel_to_state_vector_input_AVX(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
+
+void apply_2qbit_kernel_to_matrix_input_AVX(Matrix& two_qbit_unitary, Matrix& input, const int& inner_qbit, const int& outer_qbit, const int& matrix_size);
 
 void apply_2qbit_kernel_to_state_vector_input_parallel_AVX(Matrix& two_qbit_unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
@@ -44,4 +46,5 @@ void apply_3qbit_kernel_to_state_vector_input_parallel_AVX(Matrix& unitary, Matr
 
 void apply_4qbit_kernel_to_state_vector_input_parallel_AVX(Matrix& unitary, Matrix& input, std::vector<int> involved_qbits, const int& matrix_size);
 
+void apply_crot_kernel_to_matrix_input_AVX_parallel(Matrix& u3_1qbit1,Matrix& u3_1qbit2,Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 #endif

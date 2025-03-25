@@ -111,7 +111,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND( int 
         for (long long idx=0; idx<iteration_loops_max; idx++) {
 	    
 
-            Grad_Descend cGrad_Descend(optimization_problem_combined, export_current_cost_fnc, this);
+            Grad_Descend cGrad_Descend(optimization_problem_combined, this);
             double f = cGrad_Descend.Start_Optimization(solution_guess, max_inner_iterations_loc);
 
             if (current_minimum > f) {
@@ -127,7 +127,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND( int 
                     solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen);
                 }
             }
-            export_current_cost_fnc(current_minimum);
+            //export_current_cost_fnc(current_minimum);
 
 #ifdef __MPI__        
             MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);

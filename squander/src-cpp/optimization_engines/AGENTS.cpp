@@ -43,7 +43,7 @@ void Optimization_Interface::solve_layer_optimization_problem_AGENTS( int num_of
 
 
 
-        if ( ((cost_fnc != FROBENIUS_NORM) && (cost_fnc != HILBERT_SCHMIDT_TEST)) && cost_fnc != VQE  ) {
+        if ( (((cost_fnc != FROBENIUS_NORM) && (cost_fnc != HILBERT_SCHMIDT_TEST)) && cost_fnc != VQE  ) && (cost_fnc != INFIDELITY)) {
             std::string err("Optimization_Interface::solve_layer_optimization_problem_AGENTS: Only cost functions 0 and 3 are implemented");
             throw err;
         }
@@ -828,7 +828,7 @@ exit(-1);
 
                     // test global convergence 
                     if ( agent_idx == 0 ) {
-                        export_current_cost_fnc(current_minimum);
+                        //export_current_cost_fnc(current_minimum);
                         current_minimum_mean = current_minimum_mean + (current_minimum - current_minimum_vec[ current_minimum_idx ])/current_minimum_vec.size();
                         current_minimum_vec[ current_minimum_idx ] = current_minimum;
                         current_minimum_idx = (current_minimum_idx + 1) % current_minimum_vec.size();
@@ -843,7 +843,7 @@ exit(-1);
                         if ( std::abs( current_minimum_mean - current_minimum) < 1e-7  && var_current_minimum < 1e-7 ) {
                             std::stringstream sstream;
                             sstream << "AGENTS, iterations converged to "<< current_minimum << std::endl;
-                            print(sstream, 0); 
+                            print(sstream, 3); 
                             terminate_optimization = true;
                         }                    
 
@@ -857,7 +857,7 @@ exit(-1);
                     sstream << "AGENTS, agent " << agent_idx << ": processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%";
                     sstream << ", current minimum of agent 0: " << current_minimum_agents[ 0 ] << " global current minimum: " << current_minimum  << " CPU time: " << CPU_time;
                     sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
-                    print(sstream, 0); 
+                    print(sstream, 3); 
                 }
 
 

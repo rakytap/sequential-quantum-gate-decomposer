@@ -267,6 +267,15 @@ void SX::reorder_qubits( std::vector<int> qbit_list) {
 
 }
 
+/**
+@brief Call to map the qubits in the matrix of the gate
+@param qbit_list The map of qubits spanning the matrix
+*/
+void SX::map_qubits( std::vector<int> qbit_map) {
+
+        Gate::map_qubits(qbit_map);
+
+}
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the gate

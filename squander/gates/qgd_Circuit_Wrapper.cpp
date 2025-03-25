@@ -36,6 +36,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "RX.h"
 #include "RY.h"
 #include "CRY.h"
+#include "CROT.h"
 #include "RZ.h"
 #include "H.h"
 #include "X.h"
@@ -195,6 +196,14 @@ typedef struct {
     SYC* gate;
 } qgd_SYC;
 
+/**
+@brief Type definition of the  qgd_CROT Python class of the  qgd_CROT module
+*/
+typedef struct {
+    PyObject_HEAD
+    /// Pointer to the C++ class of the SYC gate
+    CROT* gate;
+} qgd_CROT_Wrapper;
 
 /**
 @brief Type definition of the  qgd_Gate Python class of the  qgd_Gate module
@@ -763,6 +772,49 @@ qgd_Circuit_Wrapper_add_CRY(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
         self->circuit->add_cry(target_qbit, control_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+/**
+@brief Wrapper function to add an adaptive gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_CROT(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", (char*)"control_qbit",(char*)"crot_type", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+    int  control_qbit = -1; 
+    PyObject* subtype_arg = NULL;
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iiO", kwlist,
+                                     &target_qbit, &control_qbit,&subtype_arg))
+        return Py_BuildValue("i", -1);
+    PyObject* subtype_string = PyObject_Str(subtype_arg);
+    PyObject* subtype_string_unicode = PyUnicode_AsEncodedString(subtype_string, "utf-8", "~E~");
+    const char* subtype_C = PyBytes_AS_STRING(subtype_string_unicode);
+    crot_type qgd_subtype;
+    if ( strcmp("single", subtype_C) == 0 || strcmp("SINGLE", subtype_C) == 0) {
+        qgd_subtype = SINGLE;        
+    }
+    else if ( strcmp("control_opposite", subtype_C)==0 || strcmp("CONTROL_OPPOSITE", subtype_C)==0) {
+        qgd_subtype = CONTROL_OPPOSITE;        
+    }
+    else if ( strcmp("control_independent", subtype_C)==0 || strcmp("CONTROL_INDEPENDENT", subtype_C)==0) {
+        qgd_subtype = CONTROL_INDEPENDENT;        
+    }
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_crot(target_qbit, control_qbit,qgd_subtype);
     }
 
     return Py_BuildValue("i", 0);
@@ -1453,6 +1505,39 @@ get_gate( Gates_block* circuit, int &idx ) {
         Py_DECREF( gate_input );
 */
     }
+    else if (gate->get_type() == CROT_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_CROT");
+        CROT* crot_gate = static_cast<CROT*>( gate->clone() );
+        crot_type qgd_subtype = crot_gate->get_subtype();
+        PyObject* subtype_pybytes;
+        if(qgd_subtype==SINGLE){subtype_pybytes = PyBytes_FromString("SINGLE");}
+        else if(qgd_subtype==CONTROL_OPPOSITE){subtype_pybytes = PyBytes_FromString("CONTROL_OPPOSITE");}
+        else if(qgd_subtype==CONTROL_INDEPENDENT){subtype_pybytes = PyBytes_FromString("CONTROL_INDEPENDENT");}
+        PyObject* subtype_string = PyObject_Str(subtype_pybytes);
+        
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_CROT" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_CROT");
+
+        PyObject* gate_input = Py_BuildValue("(OOOO)", qbit_num, target_qbit, control_qbit,subtype_string);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_CROT_Wrapper* py_gate_C = reinterpret_cast<qgd_CROT_Wrapper*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<CROT*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+    }
     else if (gate->get_type() == RZ_OPERATION) {
 
         // import gate operation modules
@@ -1527,6 +1612,60 @@ get_gate( Gates_block* circuit, int &idx ) {
         qgd_X_Wrapper* py_gate_C = reinterpret_cast<qgd_X_Wrapper*>( py_gate );
         delete( py_gate_C->gate );
         py_gate_C->gate = static_cast<X*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+
+    }
+        else if (gate->get_type() == Y_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_Y");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Y" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_Y");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Y_Wrapper* py_gate_C = reinterpret_cast<qgd_Y_Wrapper*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Y*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+
+    }
+    else if (gate->get_type() == Z_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_Z");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Z" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_Z");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Z_Wrapper* py_gate_C = reinterpret_cast<qgd_Z_Wrapper*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Z*>( gate->clone() );
 
         Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
@@ -1890,8 +2029,91 @@ qgd_Circuit_Wrapper_get_Flat_Circuit( qgd_Circuit_Wrapper *self ) {
 }
 
 
- 
+ /**
+@brief Call to apply the gate operation on the inut matrix
+*/
+static PyObject *
+qgd_Circuit_Wrapper_reorder_qubits( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
+
+    PyObject *qbit_order = NULL;
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &qbit_order )) 
+        return Py_BuildValue("i", -1);
+
+      // create C++ variant of the list
+    std::vector<int> qbit_order_Cpp;
+
+    // elaborate connectivity topology
+    bool is_None = qbit_order == Py_None;
+    bool is_list = PyList_Check(qbit_order);
+
+    // Check whether input is a list
+    if (!is_list && !is_None) {
+        printf("Input topology must be a list!\n");
+        return -1;
+    }
+
+    // get the number of qbubits
+    Py_ssize_t element_num = PyList_GET_SIZE(qbit_order);
+
+    for ( Py_ssize_t idx=0; idx<element_num; idx++ ) {
+    
+        PyObject *item = PyList_GetItem(qbit_order, idx );
+
+
+        int qbit_new = (int) PyLong_AsLong( item );
+
+
+        qbit_order_Cpp.push_back( qbit_new );        
+    }
+    
+    self->circuit->reorder_qubits(qbit_order_Cpp);
+    return Py_BuildValue("i", 0);
+}
+
+ /**
+@brief Call to apply the gate operation on the inut matrix
+*/
+static PyObject *
+qgd_Circuit_Wrapper_map_qubits( qgd_Circuit_Wrapper *self, PyObject *args ) {
+
+
+    PyObject *qbit_map = NULL;
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &qbit_map )) 
+        return Py_BuildValue("i", -1);
+
+      // create C++ variant of the list
+    std::vector<int> qbit_map_Cpp;
+
+    // elaborate connectivity topology
+    bool is_None = qbit_map == Py_None;
+    bool is_list = PyList_Check(qbit_map);
+
+    // Check whether input is a list
+    if (!is_list && !is_None) {
+        printf("Input topology must be a list!\n");
+        return -1;
+    }
+
+    // get the number of qbubits
+    Py_ssize_t element_num = PyList_GET_SIZE(qbit_map);
+
+    for ( Py_ssize_t idx=0; idx<element_num; idx++ ) {
+    
+        PyObject *item = PyList_GetItem(qbit_map, idx );
+
+
+        int qbit_new = (int) PyLong_AsLong( item );
+
+
+        qbit_map_Cpp.push_back( qbit_new );        
+    }
+    
+    self->circuit->map_qubits(qbit_map_Cpp);
+    return Py_BuildValue("i", 0);
+}
 
 /**
 @brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
@@ -1952,6 +2174,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"add_CRY", (PyCFunction) qgd_Circuit_Wrapper_add_CRY, METH_VARARGS | METH_KEYWORDS,
      "Call to add a CRY gate to the front of the gate structure"
     },
+    {"add_CROT", (PyCFunction) qgd_Circuit_Wrapper_add_CROT, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a CROT gate to the front of the gate structure"
+    },
     {"add_adaptive", (PyCFunction) qgd_Circuit_Wrapper_add_adaptive, METH_VARARGS | METH_KEYWORDS,
      "Call to add an adaptive gate to the front of the gate structure"
     },
@@ -1988,6 +2213,12 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
      "Call to get the number of qubits in the circuit"
     },
     {"get_Gate", (PyCFunction) qgd_Circuit_Wrapper_get_gate, METH_VARARGS,
+     "Method to get the i-th decomposing gates."
+    },
+    {"reorder_qubits", (PyCFunction) qgd_Circuit_Wrapper_reorder_qubits, METH_VARARGS,
+     "Method to get the i-th decomposing gates."
+    },
+    {"map_qubits", (PyCFunction) qgd_Circuit_Wrapper_map_qubits, METH_VARARGS,
      "Method to get the i-th decomposing gates."
     },
     {"get_Gates", (PyCFunction) qgd_Circuit_Wrapper_get_gates, METH_NOARGS,
