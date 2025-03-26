@@ -584,7 +584,8 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit() {
         if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY gates," << std::endl;
         if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ gates," << std::endl;
         if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT gates," << std::endl;
-        if ( gates_num.cnot>0 ) sstream << gates_num.crot << " CROT gates," << std::endl;
+        if ( gates_num.crot>0 ) sstream << gates_num.crot << " CROT gates," << std::endl;
+        if ( gates_num.r>0 ) sstream << gates_num.r << " R gates," << std::endl;
         if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ gates," << std::endl;
         if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH gates," << std::endl;
         if ( gates_num.x>0 ) sstream << gates_num.x << " X gates," << std::endl;

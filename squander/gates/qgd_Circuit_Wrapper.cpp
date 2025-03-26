@@ -843,8 +843,8 @@ qgd_Circuit_Wrapper_add_CROT(qgd_Circuit_Wrapper *self, PyObject *args, PyObject
     PyObject* subtype_string_unicode = PyUnicode_AsEncodedString(subtype_string, "utf-8", "~E~");
     const char* subtype_C = PyBytes_AS_STRING(subtype_string_unicode);
     crot_type qgd_subtype;
-    if ( strcmp("single", subtype_C) == 0 || strcmp("SINGLE", subtype_C) == 0) {
-        qgd_subtype = SINGLE;        
+    if ( strcmp("control_r", subtype_C) == 0 || strcmp("CONTROL_R", subtype_C) == 0) {
+        qgd_subtype = CONTROL_R;        
     }
     else if ( strcmp("control_opposite", subtype_C)==0 || strcmp("CONTROL_OPPOSITE", subtype_C)==0) {
         qgd_subtype = CONTROL_OPPOSITE;        
@@ -1578,7 +1578,7 @@ get_gate( Gates_block* circuit, int &idx ) {
         CROT* crot_gate = static_cast<CROT*>( gate->clone() );
         crot_type qgd_subtype = crot_gate->get_subtype();
         PyObject* subtype_pybytes;
-        if(qgd_subtype==SINGLE){subtype_pybytes = PyBytes_FromString("SINGLE");}
+        if(qgd_subtype==CONTROL_R){subtype_pybytes = PyBytes_FromString("CONTROL_R");}
         else if(qgd_subtype==CONTROL_OPPOSITE){subtype_pybytes = PyBytes_FromString("CONTROL_OPPOSITE");}
         else if(qgd_subtype==CONTROL_INDEPENDENT){subtype_pybytes = PyBytes_FromString("CONTROL_INDEPENDENT");}
         PyObject* subtype_string = PyObject_Str(subtype_pybytes);

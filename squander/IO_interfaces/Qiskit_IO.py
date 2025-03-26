@@ -44,7 +44,7 @@ from squander import Y
 from squander import Z
 from squander import SX
 from squander import CROT
-from squnader import R 
+from squander import R 
 
 
 

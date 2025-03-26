@@ -31,7 +31,7 @@ limitations under the License.
 #include <math.h>
 
 
-typedef enum crot_type {SINGLE, CONTROL_OPPOSITE, CONTROL_INDEPENDENT, CONTROL_BLOCK} crot_type;
+typedef enum crot_type {CONTROL_R, CONTROL_OPPOSITE, CONTROL_INDEPENDENT} crot_type;
 
 /**
 @brief A class representing a CROT gate.
@@ -86,8 +86,6 @@ virtual CROT* clone();
 Matrix calc_one_qubit_rotation(double ThetaOver2, double Phi);
 
 Matrix calc_one_qubit_rotation_deriv_Phi(double ThetaOver2, double Phi);
-
-Matrix calc_one_qubit_rotation_deriv_Phi_three_parameters(double ThetaOver2, double Phi, double Theta1Over2);
 
 virtual Matrix_real extract_parameters( Matrix_real& parameters );
 

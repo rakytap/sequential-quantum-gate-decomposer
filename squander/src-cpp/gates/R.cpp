@@ -140,12 +140,21 @@ R::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
-    Phi = parameters[1] - M_PI/2;
-    Lambda = -1.*parameters[1] + M_PI/2;
-
-  
-    // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
+    Phi = parameters[1];
+    
+    
+    Matrix u3_1qbit = Matrix(2,2);
+    u3_1qbit[0].real = std::cos(ThetaOver2); 
+    u3_1qbit[0].imag = 0;
+    
+    u3_1qbit[1].real = -1.*std::sin(ThetaOver2)*std::sin(Phi); 
+    u3_1qbit[1].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi);
+    
+    u3_1qbit[2].real = std::sin(ThetaOver2)*std::sin(Phi); 
+    u3_1qbit[2].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi);
+    
+    u3_1qbit[3].real = std::cos(ThetaOver2); 
+    u3_1qbit[3].imag = 0;
 
 
     apply_kernel_to( u3_1qbit, input, false, parallel );
@@ -207,31 +216,45 @@ R::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel )
 
     std::vector<Matrix> ret;
 
-    Matrix_real parameters_tmp(1,2);
 
-    parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
-    parameters_tmp[1] = parameters_mtx[1];
-    Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx, parallel );
-    ret.push_back(res_mtx);
+    
     double ThetaOver2,Phi;
     ThetaOver2 = parameters_mtx[0];
-    Phi = parameters_mtx[1] + M_PI/2;
-    Matrix res_mtx2 = input.copy();
+    Phi = parameters_mtx[1];
+
+    Matrix res_mtx = input.copy();
     Matrix u3_1qbit = Matrix(2,2);
+    u3_1qbit[0].real = std::cos(ThetaOver2+ M_PI/2); 
+    u3_1qbit[0].imag = 0;
+    
+    u3_1qbit[1].real = -1.*std::sin(ThetaOver2+ M_PI/2)*std::sin(Phi); 
+    u3_1qbit[1].imag = -1.*std::sin(ThetaOver2+ M_PI/2)*std::cos(Phi);
+    
+    u3_1qbit[2].real = std::sin(ThetaOver2+ M_PI/2)*std::sin(Phi); 
+    u3_1qbit[2].imag = -1.*std::sin(ThetaOver2+ M_PI/2)*std::cos(Phi);
+    
+    u3_1qbit[3].real = std::cos(ThetaOver2+ M_PI/2); 
+    u3_1qbit[3].imag = 0;
+    
+    apply_kernel_to( u3_1qbit, res_mtx, true, parallel );
+    ret.push_back(res_mtx);
+
+
+    Matrix res_mtx2 = input.copy();
+    u3_1qbit = Matrix(2,2);
     u3_1qbit[0].real = 0; 
     u3_1qbit[0].imag = 0;
     
-    u3_1qbit[1].real = -1.*std::sin(ThetaOver2)*std::sin(Phi); 
-    u3_1qbit[1].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi);
+    u3_1qbit[1].real = -1.*std::sin(ThetaOver2)*std::sin(Phi+ M_PI/2); 
+    u3_1qbit[1].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi+ M_PI/2);
     
-    u3_1qbit[2].real = std::sin(ThetaOver2)*std::sin(Phi); 
-    u3_1qbit[2].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi);
+    u3_1qbit[2].real = std::sin(ThetaOver2)*std::sin(Phi+ M_PI/2); 
+    u3_1qbit[2].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi+ M_PI/2);
     
     u3_1qbit[3].real = 0; 
     u3_1qbit[3].imag = 0;
     
-    apply_kernel_to( u3_1qbit, res_mtx2, false, parallel );
+    apply_kernel_to( u3_1qbit, res_mtx2, true, parallel );
     ret.push_back(res_mtx2);
     
     return ret;
