@@ -46,7 +46,7 @@ class qgd_CZ(qgd_CZ_Wrapper):
 # @return An instance of the class
 
     def __init__( self, qbit_num, target_qbit, control_qbit):
-
+        self.type = "CZ"
         # initiate variables for input arguments
         #int  qbit_num = -1; 
         # call the constructor of the wrapper class
@@ -106,7 +106,19 @@ class qgd_CZ(qgd_CZ_Wrapper):
 
 	# call the C wrapper function
         return super().get_Control_Qbit()
+        
+#@brief Call to set the target qbit.
+    def set_Target_Qbit( self, target_qbit_in ):
 
+	# call the C wrapper function
+        super().set_Target_Qbit(target_qbit_in)
+
+
+#@brief Call to set the control qbit (does nothing if no control qbit is used in the gate).
+    def set_Control_Qbit( self, control_qbit_in ):
+
+	# call the C wrapper function
+        super().set_Control_Qbit(control_qbit_in)
 
 #@brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
     def Extract_Parameters( self, parameters_circuit ):

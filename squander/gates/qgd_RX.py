@@ -46,7 +46,7 @@ class qgd_RX(qgd_RX_Wrapper):
 # @return An instance of the class
 
     def __init__( self, qbit_num, target_qbit ):
-
+        self.type = "RX"
         # call the constructor of the wrapper class
         super().__init__(qbit_num, target_qbit)
 
@@ -105,7 +105,18 @@ class qgd_RX(qgd_RX_Wrapper):
 	# call the C wrapper function
         return super().get_Control_Qbit()
 
+#@brief Call to set the target qbit.
+    def set_Target_Qbit( self, target_qbit_in ):
 
+	# call the C wrapper function
+        super().set_Target_Qbit(target_qbit_in)
+
+
+#@brief Call to set the control qbit (does nothing if no control qbit is used in the gate).
+    def set_Control_Qbit( self, control_qbit_in ):
+
+	# call the C wrapper function
+        return
 
 #@brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
     def Extract_Parameters( self, parameters_circuit ):
