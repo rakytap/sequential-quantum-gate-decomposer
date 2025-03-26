@@ -32,6 +32,9 @@ from squander.gates.qgd_CROT import qgd_R  as R
 # quantum circuit
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 
+#SABRE
+from squander.decomposition.qgd_SABRE import qgd_SABRE as SABRE
+
 # Qiskit IO
 from squander.IO_interfaces import Qiskit_IO
 
