@@ -171,6 +171,17 @@ void add_rx(int target_qbit);
 */
 void add_rx_to_front(int target_qbit);
 
+/**
+@brief Append a R gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_r(int target_qbit);
+
+/**
+@brief Add a R gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_r_to_front(int target_qbit);
 
 /**
 @brief Append a RY gate to the list of gates

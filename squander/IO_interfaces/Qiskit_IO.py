@@ -44,6 +44,7 @@ from squander import Y
 from squander import Z
 from squander import SX
 from squander import CROT
+from squnader import R 
 
 
 
@@ -112,6 +113,10 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             parameters_gate = gate.Extract_Parameters( parameters )
             circuit.rz( parameters_gate[0], gate.get_Target_Qbit() )    
             
+        elif isinstance( gate, R ):
+            # R gate
+            parameters_gate = gate.Extract_Parameters( parameters )
+            circuit.r( parameters_gate[0],parameters_gate[1], gate.get_Target_Qbit() )    
         elif isinstance( gate, H ):
             # Hadamard gate
             circuit.h( gate.get_Target_Qbit() )    

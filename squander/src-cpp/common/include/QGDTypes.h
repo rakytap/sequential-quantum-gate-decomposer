@@ -88,6 +88,8 @@ struct gates_num {
   int total;
   /// The number of crot gates
   int crot;
+  
+  int r;
 };
 
 

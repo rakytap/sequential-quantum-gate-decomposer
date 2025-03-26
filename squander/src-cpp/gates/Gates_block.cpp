@@ -26,6 +26,7 @@ limitations under the License.
 #include "U3.h"
 #include "RX.h"
 #include "RY.h"
+#include "R.h"
 #include "CRY.h"
 #include "RZ.h"
 #include "H.h"
@@ -524,6 +525,11 @@ void Gates_block::get_parameter_max(Matrix_real &range_max) {
                     parameter_idx = parameter_idx - 4;
             }
             break;}
+            case R_OPERATION:{
+                data[parameter_idx-1] = 4*M_PI;
+                data[parameter_idx-2] = 2*M_PI;
+                parameter_idx = parameter_idx - 2;
+            break;}
             case RX_OPERATION:
             case RY_OPERATION:
             case CRY_OPERATION:
@@ -596,6 +602,11 @@ Gates_block::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         case U3_OPERATION: {
             U3* u3_operation = static_cast<U3*>(operation);
             u3_operation->apply_from_right( parameters_mtx, input );
+            break; 
+        }
+        case R_OPERATION: {
+            R* r_operation = static_cast<R*>(operation);
+            r_operation->apply_from_right( parameters_mtx, input );
             break; 
         }
         case RX_OPERATION: {
@@ -838,6 +849,32 @@ void Gates_block::add_rx_to_front(int target_qbit ) {
 
 }
 
+/**
+@brief Append a R gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_r(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new R( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a R gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_r_to_front(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new R( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
 
 
 /**
@@ -1520,6 +1557,7 @@ gates_num Gates_block::get_gate_nums() {
 
         gate_nums.u3      = 0;
         gate_nums.rx      = 0;
+        gate_nums.r      = 0;
         gate_nums.ry      = 0;
         gate_nums.cry      = 0;
         gate_nums.rz      = 0;
@@ -1549,6 +1587,7 @@ gates_num Gates_block::get_gate_nums() {
                 Gates_block* block_gate = static_cast<Gates_block*>(gate);
                 gates_num gate_nums_loc = block_gate->get_gate_nums();
                 gate_nums.u3   = gate_nums.u3 + gate_nums_loc.u3;
+                gate_nums.r   = gate_nums.r + gate_nums_loc.r;
                 gate_nums.rx   = gate_nums.rx + gate_nums_loc.rx;
                 gate_nums.ry   = gate_nums.ry + gate_nums_loc.ry;
                 gate_nums.cry   = gate_nums.cry + gate_nums_loc.cry;
@@ -1570,6 +1609,10 @@ gates_num Gates_block::get_gate_nums() {
             }
             else if (gate->get_type() == U3_OPERATION) {
                 gate_nums.u3   = gate_nums.u3 + 1;
+                gate_nums.total = gate_nums.total + 1;
+            }
+            else if (gate->get_type() == R_OPERATION) {
+                gate_nums.r   = gate_nums.r + 1;
                 gate_nums.total = gate_nums.total + 1;
             }
             else if (gate->get_type() == RX_OPERATION) {
@@ -1832,6 +1875,20 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 gate_idx = gate_idx + 1;
 
             }
+            else if (gate->get_type() == R_OPERATION) {
+	        // definig the rotation parameter
+                double vartheta,varphi;
+                // get the inverse parameters of the U3 rotation
+                R* r_gate = static_cast<R*>(gate);		
+                vartheta = std::fmod( 2*parameters_data[parameter_idx], 4*M_PI);
+                varphi = std::fmod( parameters_data[parameter_idx], 2*M_PI);
+                parameter_idx = parameter_idx + 2;
+
+		std::stringstream sstream;
+		sstream << gate_idx << "th gate: X on target qubit: " << r_gate->get_target_qbit() << " and with parameters theta = " << vartheta << " and phi:" << varphi << std::endl;
+		print(sstream, 1);	    	
+                gate_idx = gate_idx + 1;
+            }
             else if (gate->get_type() == RX_OPERATION) {
 	        // definig the rotation parameter
                 double vartheta;
@@ -2022,6 +2079,10 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
              U3* u3_gate = static_cast<U3*>(gate);
              u3_gate->reorder_qubits( qbit_list );
          }
+         else if (gate->get_type() == R_OPERATION) {
+             R* r_gate = static_cast<R*>(gate);
+             r_gate->reorder_qubits( qbit_list );
+         }
          else if (gate->get_type() == RX_OPERATION) {
              RX* rx_gate = static_cast<RX*>(gate);
              rx_gate->reorder_qubits( qbit_list );
@@ -2122,6 +2183,10 @@ void Gates_block::map_qubits( std::vector<int>  qbit_map) {
          else if (gate->get_type() == U3_OPERATION) {
              U3* u3_gate = static_cast<U3*>(gate);
              u3_gate->map_qubits( qbit_map );
+         }
+         else if (gate->get_type() == R_OPERATION) {
+             R* r_gate = static_cast<R*>(gate);
+             r_gate->map_qubits( qbit_map );
          }
          else if (gate->get_type() == RX_OPERATION) {
              RX* rx_gate = static_cast<RX*>(gate);
@@ -2302,7 +2367,7 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: case CROT_OPERATION:
-        case H_OPERATION:
+        case H_OPERATION: case R_OPERATION:
         case CZ_NU_OPERATION:
             op->set_qbit_num( qbit_num_in );
             break;
@@ -2360,7 +2425,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case GENERAL_OPERATION: case UN_OPERATION:
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: case CROT_OPERATION:
-        case H_OPERATION: 
+        case H_OPERATION:  case R_OPERATION:
         case CZ_NU_OPERATION:
         {
             Gate* op_cloned = op->clone();

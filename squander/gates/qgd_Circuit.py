@@ -37,7 +37,8 @@ from squander.gates.qgd_Z import qgd_Z
 from squander.gates.qgd_CH import qgd_CH   
 from squander.gates.qgd_CNOT import qgd_CNOT  
 from squander.gates.qgd_CZ import qgd_CZ  
-from squander.gates.qgd_RX import qgd_RX  
+from squander.gates.qgd_RX import qgd_RX
+from squander.gates.qgd_R import qgd_R
 from squander.gates.qgd_RY import qgd_RY  
 from squander.gates.qgd_RZ import qgd_RZ   
 from squander.gates.qgd_SX import qgd_SX  
@@ -82,7 +83,15 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 	# call the C wrapper function
         super(qgd_Circuit, self).add_RX(target_qbit)
+        
+#@brief Call to add a R gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int).
 
+    def add_R( self, target_qbit):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_R(target_qbit)
 
 #@brief Call to add a RY gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -363,6 +372,12 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
                     number_of_gates['RX'] = 1
                 else:
                     number_of_gates['RX']+=1
+            elif isinstance( gate, qgd_R ):
+                # adding CNOT gate to the quantum circuit
+                if "R" not in number_of_gates.keys():
+                    number_of_gates['R'] = 1
+                else:
+                    number_of_gates['R']+=1
             elif isinstance( gate, qgd_RZ ):
                 # adding CNOT gate to the quantum circuit
                 if "RZ" not in number_of_gates.keys():

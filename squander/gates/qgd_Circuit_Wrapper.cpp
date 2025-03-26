@@ -34,6 +34,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CNOT.h"
 #include "U3.h"
 #include "RX.h"
+#include "R.h"
 #include "RY.h"
 #include "CRY.h"
 #include "CROT.h"
@@ -74,6 +75,15 @@ typedef struct {
     /// Pointer to the C++ class of the RX gate
     RX* gate;
 } qgd_RX_Wrapper;
+
+/**
+@brief Type definition of the qgd_R_Wrapper Python class of the qgd_R_Wrapper module
+*/
+typedef struct {
+    PyObject_HEAD
+    /// Pointer to the C++ class of the R gate
+    R* gate;
+} qgd_R_Wrapper;
 
 /**
 @brief Type definition of the qgd_RY_Wrapper Python class of the qgd_RX_Wrapper module
@@ -377,6 +387,36 @@ qgd_Circuit_Wrapper_add_RX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
         self->circuit->add_rx(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+
+}
+
+/**
+@brief Wrapper function to add a R gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_R(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
+
+    // initiate variables for input arguments
+    int  target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U3 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_r(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
@@ -1428,6 +1468,32 @@ get_gate( Gates_block* circuit, int &idx ) {
         Py_DECREF( gate_input );
 
     }
+    else if (gate->get_type() == R_OPERATION) {
+
+        // import gate operation modules
+        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_R");
+
+        if ( qgd_gate == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_R" );
+            return NULL;
+        }
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_R");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_R_Wrapper* py_gate_C = reinterpret_cast<qgd_R_Wrapper*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<R*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+    }
     else if (gate->get_type() == RY_OPERATION) {
 
         // import gate operation modules
@@ -2137,6 +2203,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"add_RX", (PyCFunction) qgd_Circuit_Wrapper_add_RX, METH_VARARGS | METH_KEYWORDS,
      "Call to add a RX gate to the front of the gate structure"
+    },
+    {"add_R", (PyCFunction) qgd_Circuit_Wrapper_add_R, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a R gate to the front of the gate structure"
     },
     {"add_RY", (PyCFunction) qgd_Circuit_Wrapper_add_RY, METH_VARARGS | METH_KEYWORDS,
      "Call to add a RY gate to the front of the gate structure"
