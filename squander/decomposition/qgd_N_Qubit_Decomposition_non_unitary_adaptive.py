@@ -106,10 +106,10 @@ class qgd_N_Qubit_Decomposition_non_unitary_adaptive(qgd_N_Qubit_Decomposition_n
 ##
 # @brief Wrapper function to call the start_decomposition method of C++ class N_Qubit_Decomposition
 # @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
-    def Start_Decomposition(self,prepare_export=True):
+    def Start_Decomposition(self):
 
 	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_non_unitary_adaptive, self).Start_Decomposition(prepare_export=prepare_export)
+        super(qgd_N_Qubit_Decomposition_non_unitary_adaptive, self).Start_Decomposition()
 ##
 # @brief Wrapper function to call the get_initial_circuit method of C++ class N_Qubit_Decomposition
     def get_Initial_Circuit(self):
