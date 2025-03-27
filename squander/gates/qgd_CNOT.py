@@ -46,7 +46,7 @@ class qgd_CNOT(qgd_CNOT_Wrapper):
 # @return An instance of the class
 
     def __init__( self, qbit_num, target_qbit, control_qbit ):
-        self.type = "CNOT"
+
         # initiate variables for input arguments
         #int  qbit_num = -1; 
         # call the constructor of the wrapper class

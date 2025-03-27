@@ -46,7 +46,7 @@ class qgd_CZ(qgd_CZ_Wrapper):
 # @return An instance of the class
 
     def __init__( self, qbit_num, target_qbit, control_qbit):
-        self.type = "CZ"
+
         # initiate variables for input arguments
         #int  qbit_num = -1; 
         # call the constructor of the wrapper class

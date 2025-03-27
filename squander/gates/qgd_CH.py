@@ -46,7 +46,7 @@ class qgd_CH(qgd_CH_Wrapper):
 # @return An instance of the class
 
     def __init__( self, qbit_num, target_qbit, control_qbit ):
-        self.type = "CH"
+
         # call the constructor of the wrapper class
         super().__init__(qbit_num, target_qbit, control_qbit)
 

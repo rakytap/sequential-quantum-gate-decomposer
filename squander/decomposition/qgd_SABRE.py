@@ -3,6 +3,7 @@
 from os import path
 import numpy as np 
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
+from squander.gates.qgd_CNOT import qgd_CNOT as CNOT
 
 class qgd_SABRE:
     
@@ -235,11 +236,11 @@ class qgd_SABRE:
                 if flags[gate_idx] == 1:
                     gate.set_Target_Qbit(Q_control)
                     gate.set_Control_Qbit(Q_target)
-                    if gate.type=="CNOT":
+                    if isinstance(gate,CNOT):
                         circuit_mapped.add_H(Q_target)
                         circuit_mapped.add_H(Q_control)
                 circuit_mapped.add_Gate(gate)
-                if flags[gate_idx] == 1 and gate.type=="CNOT":
+                if flags[gate_idx] == 1 and isinstance(gate,CNOT):
                     circuit_mapped.add_H(Q_target)
                     circuit_mapped.add_H(Q_control)
             else:

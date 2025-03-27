@@ -46,7 +46,7 @@ class qgd_RY(qgd_RY_Wrapper):
 # @return An instance of the class
 
     def __init__( self, qbit_num, target_qbit ):
-        self.type = "RY"
+
         # call the constructor of the wrapper class
         super().__init__(qbit_num, target_qbit)
 

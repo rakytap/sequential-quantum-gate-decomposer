@@ -46,7 +46,7 @@ class qgd_RX(qgd_RX_Wrapper):
 # @return An instance of the class
 
     def __init__( self, qbit_num, target_qbit ):
-        self.type = "RX"
+
         # call the constructor of the wrapper class
         super().__init__(qbit_num, target_qbit)
 
