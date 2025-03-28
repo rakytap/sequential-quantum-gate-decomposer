@@ -206,7 +206,7 @@ void add_cry_to_front(int target_qbit, int control_qbit);
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cz_nu(int target_qbit, int control_qbit);
+void add_cz_nu(int target_qbit, int control_qbit);
 
 
 
@@ -215,7 +215,7 @@ void Gates_block::add_cz_nu(int target_qbit, int control_qbit);
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void Gates_block::add_cz_nu_to_front(int target_qbit, int control_qbit );
+void add_cz_nu_to_front(int target_qbit, int control_qbit );
 
 
 
