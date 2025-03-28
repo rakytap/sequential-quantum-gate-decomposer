@@ -28,6 +28,8 @@ limitations under the License.
 #include "Bayes_Opt.h"
 #include "Powells_method.h"
 
+extern tbb::spin_mutex my_mutex;
+
 #ifdef __DFE__
 #include "common_DFE.h"
 #endif

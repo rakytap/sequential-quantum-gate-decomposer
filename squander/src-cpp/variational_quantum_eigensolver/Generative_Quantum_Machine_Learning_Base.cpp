@@ -21,7 +21,6 @@ limitations under the License.
 */
 #include "Generative_Quantum_Machine_Learning_Base.h"
 
-tbb::spin_mutex my_mutex;
 
 /**
 @brief A base class to solve VQE problems
@@ -178,12 +177,12 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
 }
 
 double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star() {
-    double ev;
+    double ev=0.0;
     tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
     tbb::parallel_for( tbb::blocked_range<int>(0, P_star.size(), 1024), [&](tbb::blocked_range<int> r) {
         double& ev_local = priv_partial_ev.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            for (int idx2=0; idx2<P_star.size(); idx2++) {
+            for (int idx2=0; idx2<P_star.rows; idx2++) {
                 if (idx1 != idx2) ev_local += exp((P_star[idx1]-P_star[idx2]));
             }
         }
@@ -203,14 +202,14 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 @return The calculated expectation value
 */
 double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matrix& State_left, Matrix& State_right ) {
-    if ( State_left.rows != State_right.rows || x_vectors[0].size() != State_right.rows) {
+    if ( State_left.rows != State_right.rows || x_vectors[0].size() != static_cast<size_t>(State_right.rows)) {
         std::string error("Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy_real: States on the right and left should be of the same dimension as the Hamiltonian");
         throw error;
     }
 
     std::vector<double> P_theta;
 
-    for (int x_idx=0; x_idx<x_vectors.size(); x_idx++){
+    for (size_t x_idx=0; x_idx<x_vectors.size(); x_idx++){
         tbb::combinable<QGD_Complex16> priv_partial_x_times_state{[](){QGD_Complex16 init;
                                                           init.real=0.0; init.imag=0.0;
                                                           return init;}};
@@ -250,15 +249,15 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
         P_theta.push_back(x_times_state.real*state_times_x.real - x_times_state.imag*state_times_x.imag);
     }
 
-    double ev_P_theta_P_theta;
-    double ev_P_theta_P_star;
+    double ev_P_theta_P_theta   = 0.0;
+    double ev_P_theta_P_star    = 0.0;
     tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[](){return 0.0;}};
     tbb::combinable<double> priv_partial_ev_P_theta_P_star{[](){return 0.0;}};
     tbb::parallel_for( tbb::blocked_range<int>(0, P_theta.size(), 1024), [&](tbb::blocked_range<int> r) {
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            for (int idx2=0; idx2 < P_star.size(); idx2++) {
+            for (int idx2=0; idx2 < P_star.rows; idx2++) {
                 if (idx1 != idx2) ev_P_theta_P_theta_local += exp((P_theta[idx1]-P_theta[idx2])*(P_theta[idx1]-P_theta[idx2]));
                 ev_P_theta_P_star_local += exp((P_theta[idx1]-P_star[idx2])*(P_theta[idx1]-P_star[idx2]));
             }
@@ -289,16 +288,16 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
 */
 double Generative_Quantum_Machine_Learning_Base::optimization_problem_non_static(Matrix_real parameters, void* void_instance){
 
-    double Energy=0.0;
+    double MMD=0.0;
 
     Generative_Quantum_Machine_Learning_Base* instance = reinterpret_cast<Generative_Quantum_Machine_Learning_Base*>(void_instance);
 
     Matrix State = instance->initial_state.copy();
 
     instance->apply_to(parameters, State);
-    Energy = instance->MMD_of_the_distributions(State, State);
+    MMD = instance->MMD_of_the_distributions(State, State);
 
-    return Energy;
+    return MMD;
 }
 
 
@@ -352,6 +351,8 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
     std::vector<Matrix> State_deriv;
     Matrix State;
 
+    int parallel = get_parallel_configuration();
+
     tbb::parallel_invoke(
         [&]{
             State = instance->initial_state.copy();
@@ -362,7 +363,7 @@ void Generative_Quantum_Machine_Learning_Base::optimization_problem_combined_non
         [&]{
             Matrix State_loc = instance->initial_state.copy();
 
-            State_deriv = instance->apply_derivate_to( parameters, State_loc );
+            State_deriv = instance->apply_derivate_to( parameters, State_loc, parallel );
             State_loc.release_data();
     });
 
