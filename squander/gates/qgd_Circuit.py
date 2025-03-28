@@ -338,3 +338,5 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_CRY(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate,qgd_CNOT):
             self.add_CNOT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        else:
+            raise Exception("Cannot add gate: unimplemented gate type")
