@@ -47,7 +47,6 @@ Qiskit_circuit.append(CircuitInstruction( PermutationGate(list(final_pi)),qubits
 print("CIRCUIT MAPPED WITH SABRE:")
 print( Qiskit_circuit )
 print("SABRE SWAP COUNT:", swap_count)
-
 # defining the qubit topology/connectivity for Squander
 coupling_map = [[0,1],[0,2],[0,3],[0,4]]
 '''
@@ -61,11 +60,11 @@ print("QISKIT SWAP COUNT:",  dict(Qiskit_circuit_mapped.count_ops())['swap'])
 
 # test the generated squander circuits
 matrix_size = 1 << Squander_initial_circuit.get_Qbit_Num()
-unitary_squander_initial = Operator(circuit_qiskit).to_matrix()
+unitary_squander_initial = utils.get_unitary_from_qiskit_circuit_operator(circuit_qiskit)
 
 #unitary_squander_remapped_circuit = np.eye( 1 << Squander_initial_circuit.get_Qbit_Num(), dtype=np.complex128 )
 #Squander_remapped_circuit.apply_to( parameters_remapped_circuit, unitary_squander_remapped_circuit)
-unitary_squander_remapped_circuit =  Operator(Qiskit_circuit).to_matrix()
+unitary_squander_remapped_circuit = utils.get_unitary_from_qiskit_circuit_operator(Qiskit_circuit)
 
 
 product_matrix = np.dot(unitary_squander_initial.conj().T, unitary_squander_remapped_circuit)
