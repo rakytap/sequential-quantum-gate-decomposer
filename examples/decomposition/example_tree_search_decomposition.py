@@ -24,10 +24,10 @@ limitations under the License.
 from squander import N_Qubit_Decomposition 
 ## [import]
 ## [import adaptive]
-from squander import N_Qubit_Decomposition_adaptive       
+from squander import N_Qubit_Decomposition_non_unitary_adaptive       
 ## [import adaptive]
 
-
+from squander import Qiskit_IO
 print(' ')
 print(' ')
 print(' ')
@@ -59,13 +59,14 @@ matrix_size = len(Umtx)
 
 ## [create decomposition class]
 ## creating a class to decompose the unitary
-cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1 )
+cDecompose = N_Qubit_Decomposition_non_unitary_adaptive( Umtx.conj().T)
 ## [create decomposition class]
 
-# set the optimization engine to be used (default is BFGS)
+
 cDecompose.set_Optimizer("BFGS")
-
-
+cDecompose.set_Cost_Function_Variant(3)
+#cDecompose.set_Ansatz("CROT_OPPOSITE")
+cDecompose.set_Verbose(3)
 ## [start decomposition]
 # starting the decomposition
 cDecompose.Start_Decomposition()
@@ -80,12 +81,12 @@ print(' ')
 print('Constructing quantum circuit:')
 print(' ')
 ## Qiskit quantum circuit
-quantum_circuit = cDecompose.get_Qiskit_Circuit()
-
+quantum_circuit = Qiskit_IO.get_Qiskit_Circuit(cDecompose.get_Circuit(),cDecompose.get_Optimized_Parameters())
 print(quantum_circuit)
 
 import numpy.linalg as LA
     
+
 ## the unitary matrix from the result object
 decomposed_matrix = utils.get_unitary_from_qiskit_circuit( quantum_circuit )
 product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
