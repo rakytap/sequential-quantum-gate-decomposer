@@ -280,8 +280,63 @@ qgd_CH_Wrapper_get_Control_Qbit( qgd_CH_Wrapper *self ) {
 
     return Py_BuildValue("i", control_qbit);
 
+} 
+
+/**
+@brief Call to set the target qbit
+*/
+static PyObject *
+qgd_CH_Wrapper_set_Target_Qbit( qgd_CH_Wrapper *self, PyObject *args ) {
+    int target_qbit_in = -1;
+    if (!PyArg_ParseTuple(args, "|i", &target_qbit_in )) 
+        return Py_BuildValue("i", -1);
+        
+    try{
+    self->gate->set_target_qbit(target_qbit_in);
+    }
+    catch (std::string err) {
+    PyErr_SetString(PyExc_Exception, err.c_str());
+    return NULL;
+    }
+    catch(...) {
+    std::string err( "Invalid pointer to circuit class");
+    PyErr_SetString(PyExc_Exception, err.c_str());
+    return NULL;
+    }
+
+
+    return Py_BuildValue("i", 0);
+
 }
 
+/**
+@brief Call to set the target qbit
+*/
+static PyObject *
+qgd_CH_Wrapper_set_Control_Qbit( qgd_CH_Wrapper *self, PyObject *args ) {
+    int control_qbit_in = -1;
+    if (!PyArg_ParseTuple(args, "|i", &control_qbit_in )) 
+        return Py_BuildValue("i", -1);
+        
+    try{
+    self->gate->set_control_qbit(control_qbit_in);
+    }
+    catch (std::string err) {
+    PyErr_SetString(PyExc_Exception, err.c_str());
+    return NULL;
+    }
+    catch(...) {
+    std::string err( "Invalid pointer to circuit class");
+    PyErr_SetString(PyExc_Exception, err.c_str());
+    return NULL;
+    }
+
+
+
+
+    return Py_BuildValue("i", 0);
+
+}
 
 /**
 @brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
@@ -374,6 +429,12 @@ static PyMethodDef qgd_CH_Wrapper_methods[] = {
     },
     {"get_Control_Qbit", (PyCFunction) qgd_CH_Wrapper_get_Control_Qbit, METH_NOARGS,
      "Call to get the control qbit (returns with -1 if no control qbit is used in the gate)."
+    },
+    {"set_Target_Qbit", (PyCFunction) qgd_CH_Wrapper_set_Target_Qbit, METH_VARARGS,
+     "Call to set the target qbit."
+    },
+    {"set_Control_Qbit", (PyCFunction) qgd_CH_Wrapper_set_Control_Qbit, METH_VARARGS,
+     "Call to set the control qbit."
     },
     {"Extract_Parameters", (PyCFunction) qgd_CH_Wrapper_Extract_Parameters, METH_VARARGS,
      "Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded."
