@@ -24,7 +24,7 @@ limitations under the License.
 from squander import N_Qubit_Decomposition 
 ## [import]
 ## [import adaptive]
-from squander import N_Qubit_Decomposition_non_unitary_adaptive       
+from squander import N_Qubit_Decomposition_adaptive       
 ## [import adaptive]
 
 
@@ -59,11 +59,11 @@ matrix_size = len(Umtx)
 
 ## [create decomposition class]
 ## creating a class to decompose the unitary
-cDecompose = N_Qubit_Decomposition_non_unitary_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1 )
+cDecompose = N_Qubit_Decomposition_adaptive( Umtx.conj().T, level_limit_max=5, level_limit_min=1 )
 ## [create decomposition class]
 
-
-cDecompose.set_Optimizer("AGENTS")
+# set the optimization engine to be used (default is BFGS)
+cDecompose.set_Optimizer("BFGS")
 
 
 ## [start decomposition]
