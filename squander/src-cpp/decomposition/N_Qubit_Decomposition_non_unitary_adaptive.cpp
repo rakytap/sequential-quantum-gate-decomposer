@@ -109,6 +109,19 @@ N_Qubit_Decomposition_non_unitary_adaptive::N_Qubit_Decomposition_non_unitary_ad
 
     }
 
+    if( topology.size() == 0 ) {
+        for( int qbit1=0; qbit1<qbit_num; qbit1++ ) {
+            for( int qbit2=qbit1; qbit2<qbit_num; qbit2++ ) {
+                matrix_base<int> edge(2,1);
+                edge[0] = qbit1;
+                edge[1] = qbit2;
+
+                topology.push_back( edge );
+            }
+        }
+    }
+
+
     // Boolean variable to determine whether randomized adaptive layers are used or not
     randomized_adaptive_layers = false;
 
@@ -140,6 +153,18 @@ N_Qubit_Decomposition_non_unitary_adaptive::N_Qubit_Decomposition_non_unitary_ad
     
     // setting the topology
     topology = topology_in;
+
+    if( topology.size() == 0 ) {
+        for( int qbit1=0; qbit1<qbit_num; qbit1++ ) {
+            for( int qbit2=qbit1; qbit2<qbit_num; qbit2++ ) {
+                matrix_base<int> edge(2,1);
+                edge[0] = qbit1;
+                edge[1] = qbit2;
+
+                topology.push_back( edge );
+            }
+        }
+    }
 
 
 
@@ -591,23 +616,18 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
     }     
 
     // construct the possible CNOT combinations within a single level
-    // the number of possible CNOT connections netween the qubits (for dense topology)
-    int n_ary_limit_max = (qbit_num*(qbit_num-1))/2;     
+    // the number of possible CNOT connections netween the qubits (including topology constraints)
+    int n_ary_limit_max = topology.size();
     
     matrix_base<int> possible_target_qbits(1, n_ary_limit_max);
     matrix_base<int> possible_control_qbits(1, n_ary_limit_max);    
-    int element_idx = 0;
-    for(int target_qbit_idx=0; target_qbit_idx<qbit_num-1; target_qbit_idx++ ) {
-    
-       for( int control_qbit_idx=target_qbit_idx+1; control_qbit_idx<qbit_num; control_qbit_idx++ ) {
-       
-           possible_target_qbits[element_idx] = target_qbit_idx;
-           possible_control_qbits[element_idx] = control_qbit_idx;  
-           element_idx++;
-       }
-    
-    }  
-    
+    for( int element_idx = 0; element_idx<n_ary_limit_max; element_idx++ ) {
+
+       matrix_base<int>& edge = topology[ element_idx ];
+       possible_target_qbits[element_idx] = edge[0];
+       possible_control_qbits[element_idx] = edge[1]; 
+ 
+    }   
     
     
     Gates_block* gate_structure_best_solution = NULL;    
