@@ -202,7 +202,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 @return The calculated expectation value
 */
 double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matrix& State_left, Matrix& State_right ) {
-    if ( State_left.rows != State_right.rows || x_vectors[0].size() != static_cast<size_t>(State_right.rows)) {
+    if ( State_left.rows != State_right.rows) {
         std::string error("Variational_Quantum_Eigensolver_Base::Expectation_value_of_energy_real: States on the right and left should be of the same dimension as the Hamiltonian");
         throw error;
     }
@@ -319,9 +319,9 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem(Matrix_rea
 	
     //State.print_matrix();
 	
-    double Energy = MMD_of_the_distributions(State, State);
+    double MMD = MMD_of_the_distributions(State, State);
 	
-    return Energy;
+    return MMD;
 }
 
 

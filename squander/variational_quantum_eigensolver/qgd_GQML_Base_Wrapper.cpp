@@ -168,28 +168,48 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     int shape = Power_of_2(qbit_num);
     // convert python object array to numpy C API array
     if ( x_bitstring_data_arg == NULL ) return -1;
-    
-    x_bitstring_data_arg    = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)x_bitstring_data_arg, NPY_INT32, NPY_ARRAY_IN_ARRAY);
+
+    if ( !PyArray_ISINTEGER(x_bitstring_data_arg) && PyArray_TYPE(x_bitstring_data_arg) != NPY_BOOL) {
+        PyErr_SetString(PyExc_TypeError, "x_bitstring_data should be int type or bool!" );
+        return -1;
+    }
+
+    x_bitstring_data_arg    = (PyArrayObject*)PyArray_FROM_OF( (PyObject*)x_bitstring_data_arg, NPY_ARRAY_IN_ARRAY);
     int* x_bitsring_data    = (int*)PyArray_DATA(x_bitstring_data_arg);
-    int* x_bistring_shape   = (int*)PyArray_DIMS(x_bitstring_data_arg);
+    npy_intp* x_bistring_shape   = PyArray_DIMS(x_bitstring_data_arg);
+
+    if (x_bistring_shape[1] != shape) {
+        PyErr_SetString(PyExc_ValueError, "Each vector in x_bitsring_data should be 2^qbit_num length!");
+        return -1;
+    }
     
     if ( p_star_data_arg == NULL ) return -1;
     
     p_star_data_arg  = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)p_star_data_arg, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
     double* p_star_data = (double*)PyArray_DATA(p_star_data_arg);
-    int* p_star_shape = (int*)PyArray_DIMS(p_star_data_arg);
+    int p_star_ndim = PyArray_NDIM(p_star_data_arg);
+    int p_star_shape = PyArray_DIMS(p_star_data_arg)[0];
+
+    if (x_bistring_shape[0] != p_star_shape) {
+        PyErr_SetString(PyExc_ValueError, "x_bitsring_data and p_star_data should the same length!");
+        return -1;
+    }
+    if ( p_star_ndim != 1 ) {
+        PyErr_SetString(PyExc_ValueError, "p_star_data should be 1D array!");
+        return -1;
+    }
     
-    std::vector<int> x_bitstrings(x_bitsring_data, x_bitsring_data+(x_bistring_shape[0]+x_bistring_shape[1]));
-    std::vector<std::vector<int>> x_nnz_indices(p_star_shape[0], std::vector<int>());
+    std::vector<int> x_bitstrings(x_bitsring_data, x_bitsring_data+(x_bistring_shape[0]*x_bistring_shape[1]));
+    std::vector<std::vector<int>> x_nnz_indices(p_star_shape, std::vector<int>());
     for (int idx_data=0; idx_data < x_bistring_shape[0]; idx_data++) {
         for (int idx=0; idx < x_bistring_shape[1]; idx++) {
-            if (x_bitstrings[idx_data*x_bistring_shape[0]+idx] == 1) {
+            if (x_bitstrings[idx_data*x_bistring_shape[1]+idx] == 1) {
                 x_nnz_indices[idx_data].push_back(idx);
             }
         }
     }
 
-    Matrix_real p_stars = Matrix_real(p_star_data, p_star_shape[0], p_star_shape[1]);
+    Matrix_real p_stars = Matrix_real(p_star_data, p_star_shape, 1);
 
     // integer type config metadata utilized during the optimization
     std::map<std::string, Config_Element> config;
