@@ -222,6 +222,24 @@ void Optimization_Interface::solve_layer_optimization_problem_AGENTS( int num_of
              config["linesearch_points"].get_property( value );
              linesearch_points = (int) value;
         }
+
+
+
+        // The number if iterations after which the current results are displed/exported
+        int output_periodicity;
+        if ( config.count("output_periodicity_cosine") > 0 ) {
+             long long value = 1;
+             config["output_periodicity_cosine"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        if ( config.count("output_periodicity") > 0 ) {
+             long long value = 1;
+             config["output_periodicity"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        else {
+            output_periodicity = 0;
+        }        
         
         sstream.str("");
         sstream << "AGENTS: number of agents " << agent_num << std::endl;
@@ -828,7 +846,11 @@ exit(-1);
 
                     // test global convergence 
                     if ( agent_idx == 0 ) {
-                        export_current_cost_fnc(current_minimum);
+                 
+                        if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
+                            export_current_cost_fnc(current_minimum);
+                        }
+
                         current_minimum_mean = current_minimum_mean + (current_minimum - current_minimum_vec[ current_minimum_idx ])/current_minimum_vec.size();
                         current_minimum_vec[ current_minimum_idx ] = current_minimum;
                         current_minimum_idx = (current_minimum_idx + 1) % current_minimum_vec.size();
