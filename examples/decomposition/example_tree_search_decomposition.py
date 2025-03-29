@@ -81,7 +81,7 @@ print(' ')
 print('Constructing quantum circuit:')
 print(' ')
 ## Qiskit quantum circuit
-quantum_circuit = Qiskit_IO.get_Qiskit_Circuit(cDecompose.get_Circuit(),cDecompose.get_Optimized_Parameters())
+quantum_circuit = cDecompose.get_Qiskit_Circuit()
 print(quantum_circuit)
 
 import numpy.linalg as LA
