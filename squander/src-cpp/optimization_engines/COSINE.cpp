@@ -92,8 +92,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
         // the current result
         current_minimum = optimization_problem( optimized_parameters_mtx );
-        export_current_cost_fnc(current_minimum);
-        
+
 
         // the array storing the optimized parameters
         Matrix_real solution_guess_tmp_mtx = Matrix_real( num_of_parameters, 1 );
@@ -175,6 +174,10 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         }        
  
 
+
+        if ( output_periodicity>0 ) {
+            export_current_cost_fnc(current_minimum);
+        }
       
 
         // vector stroing the lates values of current minimums to identify convergence
@@ -423,7 +426,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 }
             }
        
-            std::cout << "number of costfunction evaluations : " << iter+1 << " " << interval_coeff << std::endl;
+            //std::cout << "number of costfunction evaluations : " << iter+1 << " " << interval_coeff << std::endl;
 
             current_minimum = current_best_value;
 
