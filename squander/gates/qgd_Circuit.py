@@ -451,32 +451,32 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         return depth
         
     def add_Gate(self,qgd_gate):
-        gate_type = qgd_gate.type
-        if gate_type == "H":
+        gate_type = qgd_gate
+        if isinstance(qgd_gate,qgd_H):
             self.add_H(qgd_gate.get_Target_Qbit())
-        elif gate_type == "X":
+        elif isinstance(qgd_gate,qgd_X):
             self.add_X(qgd_gate.get_Target_Qbit())
-        elif gate_type == "Y":
+        elif isinstance(qgd_gate,qgd_Y):
             self.add_Y(qgd_gate.get_Target_Qbit())
-        elif gate_type == "Z":
+        elif isinstance(qgd_gate,qgd_Z):
             self.add_Z(qgd_gate.get_Target_Qbit())
-        elif gate_type == "CH":
+        elif isinstance(qgd_gate,qgd_CH):
             self.add_CH(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
-        elif gate_type == "CZ":
+        elif isinstance(qgd_gate,qgd_CZ):
             self.add_CZ(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
-        elif gate_type == "RX":
+        elif isinstance(qgd_gate,qgd_RX):
             self.add_RX(qgd_gate.get_Target_Qbit())
-        elif gate_type == "RY":
+        elif isinstance(qgd_gate,qgd_RY):
             self.add_RY(qgd_gate.get_Target_Qbit())
-        elif gate_type == "RZ":
+        elif isinstance(qgd_gate,qgd_RZ):
             self.add_RZ(qgd_gate.get_Target_Qbit())
-        elif gate_type == "SX":
+        elif isinstance(qgd_gate,qgd_SX):
             self.add_SX(qgd_gate.get_Target_Qbit())
-        elif gate_type == "U3":
+        elif isinstance(qgd_gate,qgd_U3):
             self.add_U3(qgd_gate.get_Target_Qbit(),qgd_gate.Theta,qgd_gate.Phi,qgd_gate.Lambda)
-        elif gate_type == "CRY":
+        elif isinstance(qgd_gate,qgd_CRY):
             self.add_CRY(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
-        elif gate_type == "CNOT":
+        elif isinstance(qgd_gate,qgd_CNOT):
             self.add_CNOT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
-        elif gate_type == "CROT":
-            self.add_CROT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit(),qgd_gate.subtype)
+        else:
+            raise Exception("Cannot add gate: unimplemented gate type")

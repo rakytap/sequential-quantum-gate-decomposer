@@ -40,3 +40,5 @@ from squander.IO_interfaces import Qiskit_IO
 
 ## NN component (experimental interface)
 from squander.nn.qgd_nn import qgd_nn as NN
+
+import squander.utils

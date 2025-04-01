@@ -102,7 +102,7 @@ R::R(int qbit_num_in, int target_qbit_in) {
         phi0 = -M_PI/2;
         lambda0 = M_PI/2;
 
-        parameter_num = 1;
+        parameter_num = 2;
 
         // Parameter theta of the RX gate after the decomposition of the unitary is done
         parameters = Matrix_real(1, parameter_num);
@@ -332,7 +332,7 @@ R::extract_parameters( Matrix_real& parameters ) {
     Matrix_real extracted_parameters(1,2);
 
     extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
-    extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx() ], 2*M_PI);
+    extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx() +1], 2*M_PI);
 
     return extracted_parameters;
 

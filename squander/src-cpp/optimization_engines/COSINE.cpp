@@ -24,7 +24,6 @@ limitations under the License.
 #include "Optimization_Interface.h"
 #include "N_Qubit_Decomposition_Cost_Function.h"
 
-#include "RL_experience.h"
 
 #include <fstream>
 
@@ -44,7 +43,7 @@ limitations under the License.
 void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of_parameters, Matrix_real& solution_guess) {
 
 
-        if ( ((cost_fnc != FROBENIUS_NORM) && (cost_fnc != HILBERT_SCHMIDT_TEST)) && cost_fnc != VQE   ){
+        if ( cost_fnc != FROBENIUS_NORM && cost_fnc != VQE ) {
             std::string err("Optimization_Interface::solve_layer_optimization_problem_COSINE: Only cost functions FROBENIUS_NORM and VQE are implemented for this strategy");
             throw err;
         }
@@ -93,8 +92,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
         // the current result
         current_minimum = optimization_problem( optimized_parameters_mtx );
-        //export_current_cost_fnc(current_minimum);
-        
+
 
         // the array storing the optimized parameters
         Matrix_real solution_guess_tmp_mtx = Matrix_real( num_of_parameters, 1 );
@@ -112,7 +110,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
              batch_size = (int) value;
         }
         else {
-            batch_size = 128 <= num_of_parameters ? 128 : num_of_parameters;
+            batch_size = 64 <= num_of_parameters ? 64 : num_of_parameters;
             
         }
         
@@ -172,26 +170,15 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
              output_periodicity = (int) value;
         }
         else {
-            output_periodicity = 50;
-        }
-        
-        int linesearch_points = 3;
-        if ( config.count("linesearch_points_cosine") > 0 ) {
-             long long value;                   
-             config["linesearch_points_cosine"].get_property( value );
-             linesearch_points = (int) value;
-        }
-        else if ( config.count("linesearch_points") > 0 ) {
-             long long value;                   
-             config["linesearch_points"].get_property( value );
-             linesearch_points = (int) value;
+            output_periodicity = 0;
         }        
+ 
 
 
-        if ( output_periodicity == 0 ) {
-            std::string err("Output periodicity should be greater than zero");
-            throw err;
-        }   
+        if ( output_periodicity>0 ) {
+            export_current_cost_fnc(current_minimum);
+        }
+      
 
         // vector stroing the lates values of current minimums to identify convergence
         Matrix_real f0_vec(1, 100); 
@@ -212,8 +199,8 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
              
 
         bool three_point_line_search               =    cost_fnc == FROBENIUS_NORM;
-        bool three_point_line_search_double_period =    cost_fnc == VQE ;
-        bool five_point_line_search                =    (cost_fnc == HILBERT_SCHMIDT_TEST) || ( cost_fnc == VQE && linesearch_points == 5 ); 
+        bool three_point_line_search_double_period =    cost_fnc == VQE;
+
 
         for (unsigned long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++) {
         
@@ -331,110 +318,6 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
 
             }
-            else if (five_point_line_search){
-                
-                for(int idx=0; idx<batch_size; idx++) { 
-                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ]; 
-                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_quarter;                
-                }                 
-      
-                Matrix_real f0_shifted_pi4_agents = optimization_problem_batched( parameters_mtx_vec );  
-
-
-                for(int idx=0; idx<batch_size; idx++) { 
-                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ];             
-                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_quarter;
-                }   
-             
-                Matrix_real f0_shifted_pi2_agents = optimization_problem_batched( parameters_mtx_vec );
-                
-                for(int idx=0; idx<batch_size; idx++) { 
-                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ];             
-                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_half;
-                }   
-             
-                Matrix_real f0_shifted_pi_agents = optimization_problem_batched( parameters_mtx_vec );
-                
-                for(int idx=0; idx<batch_size; idx++) { 
-                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[ idx ];             
-                    solution_guess_mtx_idx[ param_idx_agents[idx] ] += M_PI_half;
-                }   
-             
-                Matrix_real f0_shifted_3pi2_agents = optimization_problem_batched( parameters_mtx_vec );
-                                                                     
-                
-                // determine the parameters of the cosine function and determine the parameter shift at the minimum
-                for( int idx=0; idx<batch_size; idx++ ) {
-                
-                    double parameter_value_original = solution_guess_tmp_mtx[ param_idx_agents[idx] ];
-
-                    double f0_shifted_pi4        = f0_shifted_pi4_agents[idx];                    
-                    double f0_shifted_pi2        = f0_shifted_pi2_agents[idx];                    
-                    double f0_shifted_pi         = f0_shifted_pi_agents[idx];                   
-                    double f0_shifted_3pi2       = f0_shifted_3pi2_agents[idx];   
-/*                                                                              
-                    f(p)          = kappa*sin(2p+xi) + gamma*sin(p+phi) + offset
-                    f(p + pi/4)   = kappa*cos(2p+xi) + gamma*sin(p+pi/4+phi) + offset
-                    f(p + pi/2)   = -kappa*sin(2p+xi) + gamma*cos(p+phi) + offset
-                    f(p + pi)     = kappa*sin(2p+xi) - gamma*sin(p+phi) + offset
-                    f(p + 3*pi/2) = -kappa*sin(2p+xi) - gamma*cos(p+phi) + offset
-*/
-
-                    double f1 = current_minimum -  f0_shifted_pi;
-                    double f2 = f0_shifted_pi2 - f0_shifted_3pi2;
-
-                    double gamma = sqrt( f1*f1 + f2*f2 )*0.5;
-                    //print( "gamma: ", gamma )
-
-                    double varphi = atan2( f1, f2) - parameter_value_original;
-                    //print( "varphi: ", varphi )
-
-                    double offset = 0.25*(current_minimum +  f0_shifted_pi + f0_shifted_pi2 + f0_shifted_3pi2);
-                    double f3     = 0.5*(current_minimum +  f0_shifted_pi - 2*offset);
-                    double f4     = f0_shifted_pi4 - offset - gamma*sin(parameter_value_original+M_PI_quarter+varphi);
-
-
-                    double kappa = sqrt( f3*f3 + f4*f4);
-                    //print( "kappa: ", kappa )
-
-                    double xi = atan2( f3, f4) - 2*parameter_value_original;
-                    //print( "xi: ", xi )
-
-
-                    double f; 
-                    double params[5];
-                    params[0] = kappa;
-                    params[1] = xi + 2*parameter_value_original;
-                    params[2] = gamma;
-                    params[3] = varphi + parameter_value_original;
-                    params[4] = offset;
-                    
-
-                    Matrix_real parameter_shift(1,1);
-                    if ( abs(gamma) > abs(kappa) ) {
-                        parameter_shift[0] = 3*M_PI/2 - varphi - parameter_value_original;                        
-                    }
-                    else {
-                        parameter_shift[0] = 3*M_PI/4 - xi/2 - parameter_value_original/2;
-                        
-
-                    }
-                   
-                    parameter_shift[0] = std::fmod( parameter_shift[0], M_PI_double);    
-                                                 
-                    BFGS_Powell cBFGS_Powell(HS_partial_optimization_problem_combined,(void*)&params);
-                    f = cBFGS_Powell.Start_Optimization(parameter_shift, 10);
-                    
-		
-                    param_update_mtx[ idx ] = std::fmod( parameter_shift[0], M_PI_double);
-
-                    //revert the changed parameters
-                    Matrix_real& solution_guess_mtx_idx             = parameters_mtx_vec[idx];  
-                    solution_guess_mtx_idx[ param_idx_agents[idx] ] = solution_guess_tmp_mtx[ param_idx_agents[idx] ];  	
-                    
-                }    
-            
-            }
             else {
                 std::string err("solve_layer_optimization_problem_COSINE: Not implemented method.");
                 throw err;
@@ -543,7 +426,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 }
             }
        
-           // std::cout << "number of costfunction evaluations : " << iter+1 << " " << interval_coeff << std::endl;
+            //std::cout << "number of costfunction evaluations : " << iter+1 << " " << interval_coeff << std::endl;
 
             current_minimum = current_best_value;
 
@@ -602,11 +485,11 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
             // update the current cost function
             //current_minimum = optimization_problem( solution_guess_tmp_mtx );
 
-            if ( iter_idx % output_periodicity == 0 ) {
+            if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
                 std::stringstream sstream;
                 sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
-                print(sstream, 3);   
+                print(sstream, 0);   
                 if ( export_circuit_2_binary_loc > 0 ) {
                     std::string filename("initial_circuit_iteration.binary");
                     if (project_name != "") { 
@@ -617,7 +500,9 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp_mtx.get_data(), num_of_parameters*sizeof(double) );
 
-                export_current_cost_fnc(current_minimum);
+                if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
+                    export_current_cost_fnc(current_minimum);
+                }
 
 
             }
@@ -640,7 +525,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
 
      
-            /*if ( std::abs( f0_mean - current_minimum) < 1e-7  && var_f0/f0_mean < 1e-7 ) {
+            if ( std::abs( f0_mean - current_minimum) < 1e-7  && var_f0/f0_mean < 1e-7 ) {
                 std::stringstream sstream;
                 sstream << "COSINE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
@@ -655,7 +540,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 
 
                 break;
-            }*/
+            }
 
         }
         
@@ -677,5 +562,4 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         print(sstream, 0); 
 
 }
-
 

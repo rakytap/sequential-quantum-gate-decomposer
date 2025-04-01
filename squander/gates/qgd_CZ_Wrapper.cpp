@@ -287,7 +287,20 @@ qgd_CZ_Wrapper_set_Target_Qbit( qgd_CZ_Wrapper *self, PyObject *args ) {
     int target_qbit_in = -1;
     if (!PyArg_ParseTuple(args, "|i", &target_qbit_in )) 
         return Py_BuildValue("i", -1);
+        
+    try{
     self->gate->set_target_qbit(target_qbit_in);
+    }
+    catch (std::string err) {
+    PyErr_SetString(PyExc_Exception, err.c_str());
+    return NULL;
+    }
+    catch(...) {
+    std::string err( "Invalid pointer to circuit class");
+    PyErr_SetString(PyExc_Exception, err.c_str());
+    return NULL;
+    }
+
 
     return Py_BuildValue("i", 0);
 
@@ -301,7 +314,20 @@ qgd_CZ_Wrapper_set_Control_Qbit( qgd_CZ_Wrapper *self, PyObject *args ) {
     int control_qbit_in = -1;
     if (!PyArg_ParseTuple(args, "|i", &control_qbit_in )) 
         return Py_BuildValue("i", -1);
+        
+    try{
     self->gate->set_control_qbit(control_qbit_in);
+    }
+    catch (std::string err) {
+    PyErr_SetString(PyExc_Exception, err.c_str());
+    return NULL;
+    }
+    catch(...) {
+    std::string err( "Invalid pointer to circuit class");
+    PyErr_SetString(PyExc_Exception, err.c_str());
+    return NULL;
+    }
+
 
     return Py_BuildValue("i", 0);
 

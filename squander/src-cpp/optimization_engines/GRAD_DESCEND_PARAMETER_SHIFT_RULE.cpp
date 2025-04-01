@@ -199,14 +199,10 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
              output_periodicity = (int) value;
         }
         else {
-            output_periodicity = 50;
+            output_periodicity = 0;
         }     
 
 
-        if ( output_periodicity == 0 ) {
-            std::string err("Output periodicity should be greater than zero");
-            throw err;
-        }   
 
 
         // vector stroing the lates values of current minimums to identify convergence
@@ -366,7 +362,9 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
 
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp_mtx.get_data(), num_of_parameters*sizeof(double) );
 
-                export_current_cost_fnc(current_minimum);
+                if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
+                    export_current_cost_fnc(current_minimum);
+                }
 
             }
            

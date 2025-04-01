@@ -404,6 +404,14 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
     def set_Unitary( self, Umtx_arr ):  
 
         return super().set_Unitary( Umtx_arr )
+
+
+##
+# @brief Call to set the error tolerance of the decomposition
+# @param tolerance Error tolerance given as a floating point number
+    def set_Optimization_Tolerance( self, tolerance ):  
+
+        return super().set_Optimization_Tolerance( tolerance )
         
 ##
 # @brief Call to get unitary matrix

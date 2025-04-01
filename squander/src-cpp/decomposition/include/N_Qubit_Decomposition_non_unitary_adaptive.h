@@ -248,6 +248,15 @@ void apply_imported_gate_structure();
 void add_layer_to_imported_gate_structure();
 
 
+
+/**
+@brief 
+@param 
+@param 
+*/
+Gates_block* 
+CZ_nu_search( int level_max );
+
 };
 
 
