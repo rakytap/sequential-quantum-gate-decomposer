@@ -29,6 +29,21 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from os import path
 from squander.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
+from squander.gates.qgd_U3 import qgd_U3 
+from squander.gates.qgd_H import qgd_H 
+from squander.gates.qgd_X import qgd_X  
+from squander.gates.qgd_Y import qgd_Y  
+from squander.gates.qgd_Z import qgd_Z  
+from squander.gates.qgd_CH import qgd_CH   
+from squander.gates.qgd_CNOT import qgd_CNOT  
+from squander.gates.qgd_CZ import qgd_CZ  
+from squander.gates.qgd_RX import qgd_RX  
+from squander.gates.qgd_RY import qgd_RY  
+from squander.gates.qgd_RZ import qgd_RZ   
+from squander.gates.qgd_SX import qgd_SX  
+from squander.gates.qgd_SYC import qgd_SYC   
+from squander.gates.qgd_CRY import qgd_CRY 
+
 
 
 
@@ -43,7 +58,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 # @return An instance of the class
 
     def __init__( self, qbit_num ):
-
+        self.qbit_num = qbit_num
         # call the constructor of the wrapper class
         super(qgd_Circuit, self).__init__( qbit_num )
 
@@ -176,6 +191,8 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 	# call the C wrapper function
         super(qgd_Circuit, self).add_adaptive(target_qbit, control_qbit)
+        
+
 
 #@brief Call to add adaptive gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -292,4 +309,34 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 	# call the C wrapper function
         return super().get_Children( gate )
-
+        
+    def add_Gate(self,qgd_gate):
+        gate_type = qgd_gate
+        if isinstance(qgd_gate,qgd_H):
+            self.add_H(qgd_gate.get_Target_Qbit())
+        elif isinstance(qgd_gate,qgd_X):
+            self.add_X(qgd_gate.get_Target_Qbit())
+        elif isinstance(qgd_gate,qgd_Y):
+            self.add_Y(qgd_gate.get_Target_Qbit())
+        elif isinstance(qgd_gate,qgd_Z):
+            self.add_Z(qgd_gate.get_Target_Qbit())
+        elif isinstance(qgd_gate,qgd_CH):
+            self.add_CH(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate,qgd_CZ):
+            self.add_CZ(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate,qgd_RX):
+            self.add_RX(qgd_gate.get_Target_Qbit())
+        elif isinstance(qgd_gate,qgd_RY):
+            self.add_RY(qgd_gate.get_Target_Qbit())
+        elif isinstance(qgd_gate,qgd_RZ):
+            self.add_RZ(qgd_gate.get_Target_Qbit())
+        elif isinstance(qgd_gate,qgd_SX):
+            self.add_SX(qgd_gate.get_Target_Qbit())
+        elif isinstance(qgd_gate,qgd_U3):
+            self.add_U3(qgd_gate.get_Target_Qbit(),qgd_gate.Theta,qgd_gate.Phi,qgd_gate.Lambda)
+        elif isinstance(qgd_gate,qgd_CRY):
+            self.add_CRY(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate,qgd_CNOT):
+            self.add_CNOT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        else:
+            raise Exception("Cannot add gate: unimplemented gate type")

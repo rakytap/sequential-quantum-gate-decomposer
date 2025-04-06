@@ -76,6 +76,25 @@ void Optimization_Interface::solve_layer_optimization_problem_BAYES_AGENTS( int 
         else {
             max_inner_iterations_loc =max_inner_iterations;
         }
+
+
+        // The number if iterations after which the current results are displed/exported
+        int output_periodicity;
+        if ( config.count("output_periodicity_cosine") > 0 ) {
+             long long value = 1;
+             config["output_periodicity_cosine"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        if ( config.count("output_periodicity") > 0 ) {
+             long long value = 1;
+             config["output_periodicity"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        else {
+            output_periodicity = 0;
+        }        
+
+
         int fragment_size = 5;
         int leftover = num_of_parameters%fragment_size;
         int number_of_agents = num_of_parameters/fragment_size;
@@ -118,7 +137,10 @@ void Optimization_Interface::solve_layer_optimization_problem_BAYES_AGENTS( int 
                 memcpy(solution_guess.get_data() + fragment_size*number_of_agents,parameters_agents.get_data()+fragment_size*number_of_agents,sizeof(double)*leftover);
                 }
             }
-        export_current_cost_fnc(current_minimum);
+
+            if ( output_periodicity>0 && iter % output_periodicity == 0 ) {
+               export_current_cost_fnc(current_minimum);
+            }
         }
 
 }
