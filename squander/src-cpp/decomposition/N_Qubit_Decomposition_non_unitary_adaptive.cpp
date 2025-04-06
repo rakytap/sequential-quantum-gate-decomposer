@@ -661,59 +661,23 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
        
        
         tbb::tick_count start_time_loc = tbb::tick_count::now();
-
-
-        N_Qubit_Decomposition_custom cDecomp_custom_random;
-
+        
+        
         std::stringstream sstream;
         sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
         print(sstream, 1);
 
-	// solve the optimization problem in isolated optimization process
-	cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
-	cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
-	cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
-	cDecomp_custom_random.set_max_iteration( max_outer_iterations );
-	#ifndef __DFE__
-	cDecomp_custom_random.set_verbose(verbose);
-	#else
-	cDecomp_custom_random.set_verbose(0);
-	#endif
-	cDecomp_custom_random.set_cost_function_variant( cost_fnc );
-	cDecomp_custom_random.set_debugfile("");
-	cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance_loc );
-	cDecomp_custom_random.set_trace_offset( trace_offset ); 
-	cDecomp_custom_random.set_optimizer( alg );
-	cDecomp_custom_random.set_project_name( project_name );
-	if ( alg == ADAM || alg == BFGS2 ) {
-	    int param_num_loc = gate_structure_loc->get_parameter_num();
-	    int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
-	    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
-	    cDecomp_custom_random.set_random_shift_count_max( 10000 ); 
-	}
-	else if ( alg==ADAM_BATCHED ) {
-	    cDecomp_custom_random.set_optimizer( alg );  
-	    int max_inner_iterations_loc = 2000;
-	    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
-	    cDecomp_custom_random.set_random_shift_count_max( 5 );   
-	}
-	else if ( alg==BFGS ) {
-	    cDecomp_custom_random.set_optimizer( alg );  
-	    int max_inner_iterations_loc = 10000;
-	    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
-	}
-		
-	    
-	cDecomp_custom_random.start_decomposition();
 
 
-	 number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization           
+        N_Qubit_Decomposition_custom cDecomp_custom_random = perform_optimization( gate_structure_loc );
+
+        number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization           
 
 
-	double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
-	sstream.str("");
-	sstream << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp;
-	print(sstream, 1);
+        double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
+        sstream.str("");
+        sstream << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp;
+        print(sstream, 1);
         
         
            
@@ -846,50 +810,12 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
                 tbb::tick_count start_time_loc = tbb::tick_count::now();
 
 
-                N_Qubit_Decomposition_custom cDecomp_custom_random;
-
                 std::stringstream sstream;
                 sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
                 print(sstream, 1);
+                
+                N_Qubit_Decomposition_custom cDecomp_custom_random = perform_optimization( gate_structure_loc );
         
-                // solve the optimization problem in isolated optimization process
-                cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
-                cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
-                cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
-                cDecomp_custom_random.set_max_iteration( max_outer_iterations );
-#ifndef __DFE__
-                cDecomp_custom_random.set_verbose(verbose);
-#else
-                cDecomp_custom_random.set_verbose(0);
-#endif
-                cDecomp_custom_random.set_cost_function_variant( cost_fnc );
-                cDecomp_custom_random.set_debugfile("");
-                cDecomp_custom_random.set_optimization_tolerance( optimization_tolerance_loc );    
-                cDecomp_custom_random.set_trace_offset( trace_offset ); 
-                cDecomp_custom_random.set_optimizer( alg );    
-                cDecomp_custom_random.set_project_name( project_name );
-                if ( alg == ADAM || alg == BFGS2 ) {
-                    int param_num_loc = gate_structure_loc->get_parameter_num();
-                    int max_inner_iterations_loc = (double)param_num_loc/852 * 1e7;
-                    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
-                    cDecomp_custom_random.set_random_shift_count_max( 10000 ); 
-                }
-                else if ( alg==ADAM_BATCHED ) {
-                    cDecomp_custom_random.set_optimizer( alg );  
-                    int max_inner_iterations_loc = 2000;
-                    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
-                    cDecomp_custom_random.set_random_shift_count_max( 5 );   
-                }
-                else if ( alg==BFGS ) {
-                    cDecomp_custom_random.set_optimizer( alg );  
-                    int max_inner_iterations_loc = 10000;
-                    cDecomp_custom_random.set_max_inner_iterations( max_inner_iterations_loc );  
-                }
-                
-            
-                cDecomp_custom_random.start_decomposition();
-                
-
                 
                 number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization  
     
