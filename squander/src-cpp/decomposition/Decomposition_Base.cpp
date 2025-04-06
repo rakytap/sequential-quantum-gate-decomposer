@@ -22,6 +22,7 @@ limitations under the License.
 
 #include "Decomposition_Base.h"
 #include "Sub_Matrix_Decomposition_Cost_Function.h"
+#include <limits>
 
 // default layer numbers
 std::map<int,int> Decomposition_Base::max_layer_num_def;
@@ -54,7 +55,7 @@ Decomposition_Base::Decomposition_Base() {
     finalizing_parameter_num = 0;
 
     // The current minimum of the optimization problem
-    current_minimum = 1e10;
+    current_minimum = std::numeric_limits<double>::max();
 
     // The global minimum of the optimization problem
     global_target_minimum = 0;
@@ -136,7 +137,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::ma
     finalizing_parameter_num = 0;
 
     // The current minimum of the optimization problem
-    current_minimum = 1e10;
+    current_minimum = std::numeric_limits<double>::max();
 
     // The global minimum of the optimization problem
     global_target_minimum = 0;
@@ -263,7 +264,7 @@ void  Decomposition_Base::solve_optimization_problem( double* solution_guess, in
         }
 
         // setting the initial value for the current minimum
-        current_minimum = 1e8;
+        current_minimum = std::numeric_limits<double>::max();
 
         // store the gates
         std::vector<Gate*> gates_loc = gates;

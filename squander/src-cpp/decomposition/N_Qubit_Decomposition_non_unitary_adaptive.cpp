@@ -69,8 +69,6 @@ N_Qubit_Decomposition_non_unitary_adaptive::N_Qubit_Decomposition_non_unitary_ad
     }
     
 
-    // Boolean variable to determine whether randomized adaptive layers are used or not
-    randomized_adaptive_layers = false;
 
 
 }
@@ -120,12 +118,24 @@ N_Qubit_Decomposition_non_unitary_adaptive::N_Qubit_Decomposition_non_unitary_ad
             }
         }
     }
+    
+    // construct the possible CNOT combinations within a single level
+    // the number of possible CNOT connections netween the qubits (including topology constraints)
+    int n_ary_limit_max = topology.size();
+    
+    possible_target_qbits = matrix_base<int>(1, n_ary_limit_max);
+    possible_control_qbits = matrix_base<int>(1, n_ary_limit_max);    
+    for( int element_idx = 0; element_idx<n_ary_limit_max; element_idx++ ) {
+
+       matrix_base<int>& edge = topology[ element_idx ];
+       possible_target_qbits[element_idx] = edge[0];
+       possible_control_qbits[element_idx] = edge[1]; 
+ 
+    }   
 
 
-    // Boolean variable to determine whether randomized adaptive layers are used or not
-    randomized_adaptive_layers = false;
 
-current_minimum = 30;
+
 
 }
 
@@ -166,6 +176,21 @@ N_Qubit_Decomposition_non_unitary_adaptive::N_Qubit_Decomposition_non_unitary_ad
             }
         }
     }
+    
+    
+    // construct the possible CNOT combinations within a single level
+    // the number of possible CNOT connections netween the qubits (including topology constraints)
+    int n_ary_limit_max = topology.size();
+    
+    possible_target_qbits = matrix_base<int>(1, n_ary_limit_max);
+    possible_control_qbits = matrix_base<int>(1, n_ary_limit_max);    
+    for( int element_idx = 0; element_idx<n_ary_limit_max; element_idx++ ) {
+
+       matrix_base<int>& edge = topology[ element_idx ];
+       possible_target_qbits[element_idx] = edge[0];
+       possible_control_qbits[element_idx] = edge[1]; 
+ 
+    }   
 
 
 
@@ -185,8 +210,6 @@ N_Qubit_Decomposition_non_unitary_adaptive::N_Qubit_Decomposition_non_unitary_ad
         max_outer_iterations = 1;
     }
 
-    // Boolean variable to determine whether randomized adaptive layers are used or not
-    randomized_adaptive_layers = false;
 
 }
 
@@ -608,12 +631,62 @@ N_Qubit_Decomposition_non_unitary_adaptive::perform_optimization(Gates_block* ga
     cDecomp_custom_random.start_decomposition();
     return cDecomp_custom_random;
 }
-                
+
+
 
 /**
-@brief 
-@param 
-@param 
+@brief  Call to construnc a gate structure corresponding to the configuration of the two-qubit gates described by the Gray code  
+@param gcode The N-ary Gray code describing the configuration of the two-qubit gates.
+@return Returns with the generated circuit
+*/
+Gates_block* 
+N_Qubit_Decomposition_non_unitary_adaptive::construct_gate_structure_from_Gray_code( const matrix_base<int>& gcode ) {
+
+
+
+    // determine the target qubit indices and control qbit indices for the CNOT gates from the Gray code counter
+    matrix_base<int> target_qbits(1, gcode.size());
+    matrix_base<int> control_qbits(1, gcode.size());
+
+        
+    for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
+        
+        // gcode[idx] = target_qbit[idx] * n_ary_limit_max + control_qbit[idx], where control_qbit > target_qbit
+            
+        int target_qbit = possible_target_qbits[ gcode[gcode_idx] ];            
+        int control_qbit = possible_control_qbits[ gcode[gcode_idx] ];
+            
+            
+        target_qbits[gcode_idx] = target_qbit;
+        control_qbits[gcode_idx] = control_qbit;  
+            
+            
+                    //std::cout <<   target_qbit << " " << control_qbit << std::endl;        
+    }
+
+        
+    //  ----------- contruct the gate structure to be optimized ----------- 
+    Gates_block* gate_structure_loc = new Gates_block(qbit_num);  // cnot nélkül megyek mi lesz? 
+
+                            
+    for (int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++) {
+            
+        // add new 2-qbit block to the circuit
+        add_two_qubit_block( gate_structure_loc, target_qbits[gcode_idx], control_qbits[gcode_idx]  );
+    }
+               
+    // add finalyzing layer to the the gate structure
+    add_finalyzing_layer( gate_structure_loc );
+                
+    return  gate_structure_loc;           
+
+}
+
+
+
+/**
+@brief Call to perform tree search over possible gate structures
+@param level_max The number of decomposing levels (i.e. the maximal tree depth)
 */
 Gates_block* 
 N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( int level_max ){
@@ -631,19 +704,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
         optimization_tolerance_loc = optimization_tolerance;
     }     
 
-    // construct the possible CNOT combinations within a single level
-    // the number of possible CNOT connections netween the qubits (including topology constraints)
-    int n_ary_limit_max = topology.size();
     
-    matrix_base<int> possible_target_qbits(1, n_ary_limit_max);
-    matrix_base<int> possible_control_qbits(1, n_ary_limit_max);    
-    for( int element_idx = 0; element_idx<n_ary_limit_max; element_idx++ ) {
-
-       matrix_base<int>& edge = topology[ element_idx ];
-       possible_target_qbits[element_idx] = edge[0];
-       possible_control_qbits[element_idx] = edge[1]; 
- 
-    }   
     
     
     Gates_block* gate_structure_best_solution = NULL;    
@@ -669,7 +730,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
 
 
 
-        N_Qubit_Decomposition_custom cDecomp_custom_random = perform_optimization( gate_structure_loc );
+        N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( gate_structure_loc );
 
         number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization           
 
@@ -711,7 +772,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
   
     // set the limits for the N-ary Gray counter
     
-
+    int n_ary_limit_max = topology.size();
     matrix_base<int> n_ary_limits( 1, level_max ); //array containing the limits of the individual Gray code elements    
     memset( n_ary_limits.get_data(), n_ary_limit_max, n_ary_limits.size()*sizeof(int) );
     
@@ -768,40 +829,8 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
     
                 matrix_base<int> gcode = gcode_counter.get();
         
-                // determine the target qubit indices and control qbit indices for the CNOT gates from the Gray code counter
-                matrix_base<int> target_qbits(1, level_max);
-                matrix_base<int> control_qbits(1, level_max);
-
-        
-                for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
-        
-                    // gcode[idx] = target_qbit[idx] * n_ary_limit_max + control_qbit[idx], where control_qbit > target_qbit
-            
-                    int target_qbit = possible_target_qbits[ gcode[gcode_idx] ];            
-                    int control_qbit = possible_control_qbits[ gcode[gcode_idx] ];
-            
-            
-                    target_qbits[gcode_idx] = target_qbit;
-                    control_qbits[gcode_idx] = control_qbit;  
-            
-            
-                    //std::cout <<   target_qbit << " " << control_qbit << std::endl;        
-                }
-
-        
-                //  ----------- contruct the gate structure to be optimized ----------- 
-                Gates_block* gate_structure_loc = new Gates_block(qbit_num);  // cnot nélkül megyek mi lesz? 
-
-                            
-                for (int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++) {
-            
-                    // add new 2-qbit block to the circuit
-                    add_two_qubit_block( gate_structure_loc, target_qbits[gcode_idx], control_qbits[gcode_idx]  );
-                }
-               
-                // add finalyzing layer to the the gate structure
-                add_finalyzing_layer( gate_structure_loc );
-              
+                Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode );
+             
     
 
                 // ----------- start the decomposition ----------- 
@@ -814,7 +843,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
                 sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
                 print(sstream, 1);
                 
-                N_Qubit_Decomposition_custom cDecomp_custom_random = perform_optimization( gate_structure_loc );
+                N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( gate_structure_loc );
         
                 
                 number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization  
@@ -1434,6 +1463,8 @@ N_Qubit_Decomposition_non_unitary_adaptive::construct_adaptive_gate_layers() {
     }
 */
 
+/// Boolean variable to determine whether randomized adaptive layers are used or not
+    bool randomized_adaptive_layers = false;
     bool randomized_adaptive_layers_loc;
     if ( config.count("randomized_adaptive_layers") > 0 ) {
         config["randomized_adaptive_layers"].get_property( randomized_adaptive_layers_loc );  

@@ -73,8 +73,13 @@ protected:
     int level_limit_min;
     /// A vector of index pairs encoding the connectivity between the qubits
     std::vector<matrix_base<int>> topology;
-    /// Boolean variable to determine whether randomized adaptive layers are used or not
-    bool randomized_adaptive_layers;
+    
+    /// List of possible target qubits according to the topology -- paired up with possible control qubits
+    matrix_base<int> possible_target_qbits;
+    /// List of possible control qubits according to the topology -- paired up with possible target qubits
+    matrix_base<int> possible_control_qbits;   
+    
+    
     
     
 
@@ -157,10 +162,19 @@ Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_
 */
 void add_two_qubit_block(Gates_block* gate_structure, int target_qbit, int control_qbit);
 
+
+
 /**
-@brief C????????????????????????????????
-@param gate_structure The gate structure to be optimized
-@param optimized_parameters A matrix containing the initial parameters
+@brief  Call to construnc a gate structure corresponding to the configuration of the two-qubit gates described by the Gray code  
+@param gcode The N-ary Gray code describing the configuration of the two-qubit gates.
+@return Returns with the generated circuit
+*/
+Gates_block* 
+construct_gate_structure_from_Gray_code( const matrix_base<int>& gcode );
+
+/**
+@brief Call to perform tree search over possible gate structures
+@param level_max The number of decomposing levels (i.e. the maximal tree depth)
 */
 Gates_block* tree_search_over_gate_structures( int level_max );
 
