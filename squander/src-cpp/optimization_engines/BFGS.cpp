@@ -99,6 +99,22 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS( int num_of_p
         }
 
 
+        // The number if iterations after which the current results are displed/exported
+        int output_periodicity;
+        if ( config.count("output_periodicity_cosine") > 0 ) {
+             long long value = 1;
+             config["output_periodicity_cosine"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        if ( config.count("output_periodicity") > 0 ) {
+             long long value = 1;
+             config["output_periodicity"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        else {
+            output_periodicity = 0;
+        }        
+
 
 
         // do the optimization loops
@@ -120,8 +136,10 @@ void Optimization_Interface::solve_layer_optimization_problem_BFGS( int num_of_p
                     solution_guess[jdx] = solution_guess[jdx] + distrib_real(gen);
                 }
             }*/
-//std::cout << "solve_layer_optimization_problem_BFGS " << current_minimum << std::endl;
-            export_current_cost_fnc(current_minimum);
+
+            if ( output_periodicity>0 && idx % output_periodicity == 0 ) {
+                export_current_cost_fnc(current_minimum);
+            }
 
 #ifdef __MPI__        
             MPI_Bcast( (void*)solution_guess.get_data(), num_of_parameters, MPI_DOUBLE, 0, MPI_COMM_WORLD);

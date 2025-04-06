@@ -685,8 +685,10 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
             work_batch = mpi_batch_element_num;
         }
 
-        tbb::parallel_for( 0, mpi_batch_element_num, work_batch, [&]( int idx) {
-            cost_fnc_mtx_loc[idx] = optimization_problem( parameters_vec[idx + mpi_starting_batchIdx] );
+        tbb::parallel_for( tbb::blocked_range<int>(0, (int)mpi_batch_element_num, work_batch), [&](tbb::blocked_range<int> r) {
+            for (int idx=r.begin(); idx<r.end(); ++idx) { 
+                cost_fnc_mtx_loc[idx] = optimization_problem( parameters_vec[idx + mpi_starting_batchIdx] );
+            }
         });
 
         //number_of_iters = number_of_iters + mpi_batch_element_num; 
@@ -704,8 +706,10 @@ tbb::tick_count t0_DFE = tbb::tick_count::now();
             work_batch = parameters_vec.size();
         }
 
-        tbb::parallel_for( 0, (int)parameters_vec.size(), work_batch, [&]( int idx) {
-            cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
+        tbb::parallel_for( tbb::blocked_range<int>(0, (int)parameters_vec.size(), work_batch), [&](tbb::blocked_range<int> r) {
+            for (int idx=r.begin(); idx<r.end(); ++idx) { 
+                cost_fnc_mtx[idx] = optimization_problem( parameters_vec[idx] );
+            }
         });
 
 

@@ -3,7 +3,6 @@ requires = [
         "setuptools>=40.8.0",
     "wheel",
     "scikit-build",
-    "ninja",
     "scipy", 
     "tbb-devel; platform_machine == 'x86' or platform_machine == 'x86_64'",
     "cmake>=3.10.2",

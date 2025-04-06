@@ -473,9 +473,9 @@ void Gates_block::fragment_circuit(){
 
 
 void Gates_block::get_parameter_max(Matrix_real &range_max) {
-    int parameter_idx = parameter_num;
+    int parameter_idx = 0;
 	double *data = range_max.get_data();
-        for(int op_idx = gates.size()-1; op_idx>=0; op_idx--) {
+        for(int op_idx = 0; op_idx<gates.size(); op_idx++) {
 
             Gate* gate = gates[op_idx];
             switch (gate->get_type()) {
@@ -483,52 +483,52 @@ void Gates_block::get_parameter_max(Matrix_real &range_max) {
                 U3* u3_gate = static_cast<U3*>(gate);
 
                 if ((u3_gate->get_parameter_num() == 1) && u3_gate->is_theta_parameter()) {
-		            data[parameter_idx-1] = 4 * M_PI;
-                    parameter_idx = parameter_idx - 1;
+		            data[parameter_idx] = 4 * M_PI;
+                    parameter_idx = parameter_idx + 1;
 
                 }
                 else if ((u3_gate->get_parameter_num() == 1) && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
-                    data[parameter_idx-1] = 2 * M_PI;
-                    parameter_idx = parameter_idx - 1;
+                    data[parameter_idx] = 2 * M_PI;
+                    parameter_idx = parameter_idx + 1;
                 }
                 else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_theta_parameter() && (u3_gate->is_phi_parameter() || u3_gate->is_lambda_parameter())) {
-                    data[parameter_idx-2] = 4 * M_PI;
-                    data[parameter_idx-1] = 2 * M_PI;
-                    parameter_idx = parameter_idx - 2;
+                    data[parameter_idx] = 4 * M_PI;
+                    data[parameter_idx+1] = 2 * M_PI;
+                    parameter_idx = parameter_idx + 2;
                 }
                 else if ((u3_gate->get_parameter_num() == 2) && u3_gate->is_phi_parameter() && u3_gate->is_lambda_parameter() ) {
-                    data[parameter_idx-2] = 2 * M_PI;
-                    data[parameter_idx-1] = 2 * M_PI;
-                    parameter_idx = parameter_idx - 2;
+                    data[parameter_idx] = 2 * M_PI;
+                    data[parameter_idx+1] = 2 * M_PI;
+                    parameter_idx = parameter_idx + 2;
                 }
                 else if ((u3_gate->get_parameter_num() == 3)) {
-                    data[parameter_idx-3] = 4 * M_PI;
-                    data[parameter_idx-2] = 2 * M_PI;
-                    data[parameter_idx-1] = 2 * M_PI;
-                    parameter_idx = parameter_idx - 3;
+                    data[parameter_idx] = 4 * M_PI;
+                    data[parameter_idx+1] = 2 * M_PI;
+                    data[parameter_idx+2] = 2 * M_PI;
+                    parameter_idx = parameter_idx + 3;
                 }
                 break; }
             case RX_OPERATION:
             case RY_OPERATION:
             case CRY_OPERATION:
             case ADAPTIVE_OPERATION:
-                data[parameter_idx-1] = 4 * M_PI;
-                parameter_idx = parameter_idx - 1;
+                data[parameter_idx] = 4 * M_PI;
+                parameter_idx = parameter_idx + 1;
                 break;
             case CZ_NU_OPERATION:
-                data[parameter_idx-1] = 2 * M_PI;
-                parameter_idx = parameter_idx - 1;
+                data[parameter_idx] = 2 * M_PI;
+                parameter_idx = parameter_idx + 1;
                 break;
             case BLOCK_OPERATION: {
                 Gates_block* block_gate = static_cast<Gates_block*>(gate);
-                Matrix_real parameters_layer(range_max.get_data() + parameter_idx - gate->get_parameter_num(), 1, gate->get_parameter_num() );
+                Matrix_real parameters_layer(range_max.get_data() + parameter_idx + gate->get_parameter_num(), 1, gate->get_parameter_num() );
                 block_gate->get_parameter_max( parameters_layer );
-                parameter_idx = parameter_idx - block_gate->get_parameter_num();
+                parameter_idx = parameter_idx + block_gate->get_parameter_num();
                 break; }
             default:
                 for (int i = 0; i < gate->get_parameter_num(); i++)
-                    data[parameter_idx-1-i] = 2 * M_PI;    
-                parameter_idx = parameter_idx - gate->get_parameter_num();
+                    data[parameter_idx+i] = 2 * M_PI;    
+                parameter_idx = parameter_idx + gate->get_parameter_num();
             }
         }
 }
@@ -1872,14 +1872,14 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
                 gate_idx = gate_idx + 1;
             }         
             else if (gate->get_type() == ON_OPERATION) {
-                parameter_idx = parameter_idx - gate->get_parameter_num();
+                parameter_idx = parameter_idx + gate->get_parameter_num();
 		std::stringstream sstream;
 		sstream << gate_idx << "th gate: ON " << gate->get_parameter_num() << " parameters" << std::endl;
 		print(sstream, 1);	    	 
                 gate_idx = gate_idx + 1;
             }
             else if (gate->get_type() == COMPOSITE_OPERATION) {
-                parameter_idx = parameter_idx - gate->get_parameter_num();
+                parameter_idx = parameter_idx + gate->get_parameter_num();
 
 		std::stringstream sstream;
 		sstream << gate_idx << "th gate: Composite " << gate->get_parameter_num() << " parameters" << std::endl;

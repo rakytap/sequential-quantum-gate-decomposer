@@ -92,8 +92,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
         // the current result
         current_minimum = optimization_problem( optimized_parameters_mtx );
-        export_current_cost_fnc(current_minimum);
-        
+
 
         // the array storing the optimized parameters
         Matrix_real solution_guess_tmp_mtx = Matrix_real( num_of_parameters, 1 );
@@ -171,14 +170,15 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
              output_periodicity = (int) value;
         }
         else {
-            output_periodicity = 50;
+            output_periodicity = 0;
         }        
+ 
 
 
-        if ( output_periodicity == 0 ) {
-            std::string err("Output periodicity should be greater than zero");
-            throw err;
-        }   
+        if ( output_periodicity>0 ) {
+            export_current_cost_fnc(current_minimum);
+        }
+      
 
         // vector stroing the lates values of current minimums to identify convergence
         Matrix_real f0_vec(1, 100); 
@@ -426,7 +426,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 }
             }
        
-            std::cout << "number of costfunction evaluations : " << iter+1 << " " << interval_coeff << std::endl;
+            //std::cout << "number of costfunction evaluations : " << iter+1 << " " << interval_coeff << std::endl;
 
             current_minimum = current_best_value;
 
@@ -485,7 +485,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
             // update the current cost function
             //current_minimum = optimization_problem( solution_guess_tmp_mtx );
 
-            if ( iter_idx % output_periodicity == 0 ) {
+            if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
                 std::stringstream sstream;
                 sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
@@ -500,7 +500,9 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
                 memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp_mtx.get_data(), num_of_parameters*sizeof(double) );
 
-                export_current_cost_fnc(current_minimum);
+                if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
+                    export_current_cost_fnc(current_minimum);
+                }
 
 
             }
