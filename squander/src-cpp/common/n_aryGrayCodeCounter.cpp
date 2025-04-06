@@ -145,7 +145,7 @@ matrix_base<int>
 n_aryGrayCodeCounter::get() {
 
 
-    return gray_code;
+    return gray_code.copy();
 
 }
 

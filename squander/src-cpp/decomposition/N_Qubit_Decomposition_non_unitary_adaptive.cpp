@@ -432,8 +432,8 @@ N_Qubit_Decomposition_non_unitary_adaptive::construct_gate_structure_from_Gray_c
         
         // gcode[idx] = target_qbit[idx] * n_ary_limit_max + control_qbit[idx], where control_qbit > target_qbit
             
-        int target_qbit = possible_target_qbits[ gcode[gcode_idx] ];            
-        int control_qbit = possible_control_qbits[ gcode[gcode_idx] ];
+        int target_qbit = possible_target_qbits[ gcode[gcode.size()-gcode_idx-1] ];            
+        int control_qbit = possible_control_qbits[ gcode[gcode.size()-gcode_idx-1] ];
             
             
         target_qbits[gcode_idx] = target_qbit;
@@ -469,7 +469,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::construct_gate_structure_from_Gray_c
 @return Returns with the best Gray-code corresponding to the best circuit. (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
 */
 matrix_base<int> 
-N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( int level_num ){
+N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( int level_num, const matrix_base<int>& gcode_offset ){
 
     tbb::spin_mutex tree_search_mutex;
     
@@ -550,7 +550,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
         work_batch = concurrency;
     }
 
-
+//std::cout << "levels " << level_num << std::endl;
     tbb::parallel_for( tbb::blocked_range<int64_t>((int64_t)0, concurrency, work_batch), [&](tbb::blocked_range<int64_t> r) {
         for (int64_t job_idx=r.begin(); job_idx<r.end(); ++job_idx) { 
         
@@ -572,9 +572,20 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
       
         
             for (int64_t iter_idx=initial_offset; iter_idx<offset_max+1; iter_idx++ ) {       
+            
+                if( found_optimal_solution ) {
+                    return;
+                }
+        
 
     
                 matrix_base<int> gcode = gcode_counter.get();
+                
+                for( int gcode_idx=0; gcode_idx<gcode_offset.size(); gcode_idx++ ) {
+                    gcode[gcode.size()-gcode_idx-1] = ( gcode[gcode.size()-gcode_idx-1] + gcode_offset[gcode_offset.size()-gcode_idx-1]) % n_ary_limit_max;
+                }
+                
+                
         
                 Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode );
              
@@ -598,6 +609,8 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
                 sstream.str("");
                 sstream << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp;
                 print(sstream, 1);
+                
+               
 
                 //std::cout << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp << std::endl;
         
@@ -619,13 +632,14 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
                     } 
     
                 }
-                
-                
 
-                if( found_optimal_solution ) {
-                    break;
+ 
+                /*
+                for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
+                    std::cout << gcode[gcode_idx] << ", ";
                 }
-        
+                std::cout << current_minimum_tmp  << std::endl;
+                */
 
                 // iterate the Gray code to the next element
                 int changed_index, value_prev, value;
@@ -681,12 +695,12 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
 
 
     
-    matrix_base<int>&& gcode_best_solution = tree_search_over_gate_structures( 0 );
+    matrix_base<int>&& gcode_best_solution = tree_search_over_gate_structures( 0, matrix_base<int>(0,0) );
     double minimum_best_solution  = current_minimum; 
 
     for ( int level = 1; level <= level_max; level++ ) { 
 
-        matrix_base<int>&& gcode = tree_search_over_gate_structures( level );   
+        matrix_base<int>&& gcode = tree_search_over_gate_structures( level, gcode_best_solution );   
 
         if (current_minimum < minimum_best_solution) { 
 

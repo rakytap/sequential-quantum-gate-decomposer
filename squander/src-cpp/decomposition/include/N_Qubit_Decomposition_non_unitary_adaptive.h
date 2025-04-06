@@ -170,7 +170,7 @@ construct_gate_structure_from_Gray_code( const matrix_base<int>& gcode );
 @param level_mum The number of decomposing levels (i.e. the maximal tree depth)
 @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
 */
-matrix_base<int> tree_search_over_gate_structures( int level_num );
+matrix_base<int> tree_search_over_gate_structures( int level_num, const matrix_base<int>& gcode_offset );
 
 /**
 @brief Call to perform the optimization on the given gate structure
