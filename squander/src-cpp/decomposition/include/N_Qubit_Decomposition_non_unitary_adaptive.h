@@ -130,17 +130,7 @@ virtual ~N_Qubit_Decomposition_non_unitary_adaptive();
 */
 virtual void start_decomposition();
 
-/**
-@brief get initial circuit
-*/
-virtual void get_initial_circuit();
 
-
-/**
-@brief Finalize the circuit
-@param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
-*/
-virtual void finalize_circuit();
 
 /**
 @brief Call to optimize an imported gate structure
@@ -158,14 +148,17 @@ Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_
 
 
 /**
-@brief ?????????????????????????
+@brief Call to add two-qubit building block (two single qubit rotation blocks and one two-qubit gate) to the circuit
+@param gate_structure Appending the two-qubit building block to this circuit
+@param target_qbit The target qubit of the two-qubit gate
+@param control_qbit The control qubit of the two-qubit gate
 */
 void add_two_qubit_block(Gates_block* gate_structure, int target_qbit, int control_qbit);
 
 
 
 /**
-@brief  Call to construnc a gate structure corresponding to the configuration of the two-qubit gates described by the Gray code  
+@brief  Call to construct a gate structure corresponding to the configuration of the two-qubit gates described by the Gray code  
 @param gcode The N-ary Gray code describing the configuration of the two-qubit gates.
 @return Returns with the generated circuit
 */
@@ -180,41 +173,11 @@ construct_gate_structure_from_Gray_code( const matrix_base<int>& gcode );
 matrix_base<int> tree_search_over_gate_structures( int level_num );
 
 /**
-@brief C????????????????????????????????
-@param gate_structure The gate structure to be optimized
-@param optimized_parameters A matrix containing the initial parameters
+@brief Call to perform the optimization on the given gate structure
+@param gate_structure_loc The gate structure to be optimized
 */
 N_Qubit_Decomposition_custom perform_optimization(Gates_block* gate_structure_loc);
 
-
-/**
-@brief Call to replace CZ_NU gates in the circuit that are close to either an identity or to a CNOT gate.
-@param gate_structure The gate structure to be optimized
-@param optimized_parameters A matrix containing the initial parameters
-*/
-Gates_block* replace_trivial_CZ_NU_gates( Gates_block* gate_structure, Matrix_real& optimized_parameters );
-
-
-/**
-@brief Call to add adaptive layers to the gate structure stored by the class.
-*/
-void add_adaptive_layers();
-
-/**
-@brief Call to add adaptive layers to the gate structure.
-*/
-void add_adaptive_layers( Gates_block* gate_structure );
-
-/**
-@brief Call to construct adaptive layers.
-*/
-Gates_block* construct_adaptive_gate_layers();
-
-
-/**
-@brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure stored by the class.
-*/
-void add_finalyzing_layer();
 
 
 /**
@@ -224,19 +187,6 @@ void add_finalyzing_layer( Gates_block* gate_structure );
 
 
 
-/**
-@brief Call to set custom layers to the gate structure that are intended to be used in the decomposition.
-@param filename
-*/
-void set_adaptive_gate_structure( std::string filename );
- 
- 
- /**
- @brief Set unitary matrix from file
- @param filename file to read unitary from
- */
- void set_unitary_from_file( std::string filename );
-
 
  /** 
  @brief Set unitary matrix 
@@ -244,33 +194,7 @@ void set_adaptive_gate_structure( std::string filename );
  */
  void set_unitary( Matrix& Umtx_new ) ;
 
-/**
-@brief Call to append custom layers to the gate structure that are intended to be used in the decomposition.
-@param filename
-*/
-void add_adaptive_gate_structure( std::string filename );
 
-/**
-@brief Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gfate structure is released.
-*/
-void apply_imported_gate_structure();
-
-
-/**
-@brief Call to add an adaptive layer to the gate structure previously imported gate structure
-@param filename
-*/
-void add_layer_to_imported_gate_structure();
-
-
-
-/**
-@brief 
-@param 
-@param 
-*/
-Gates_block* 
-CZ_nu_search( int level_max );
 
 };
 

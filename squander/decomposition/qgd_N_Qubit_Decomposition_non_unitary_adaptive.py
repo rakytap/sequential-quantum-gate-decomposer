@@ -84,12 +84,6 @@ class qgd_N_Qubit_Decomposition_non_unitary_adaptive(qgd_N_Qubit_Decomposition_n
 
 	# call the C wrapper function
         super(qgd_N_Qubit_Decomposition_non_unitary_adaptive, self).Start_Decomposition()
-##
-# @brief Wrapper function to call the get_initial_circuit method of C++ class N_Qubit_Decomposition
-    def get_Initial_Circuit(self):
-
-	# call the C wrapper function
-        super(qgd_N_Qubit_Decomposition_non_unitary_adaptive, self).get_Initial_Circuit()
         
 
 ##
