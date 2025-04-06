@@ -643,7 +643,6 @@ Gates_block*
 N_Qubit_Decomposition_non_unitary_adaptive::construct_gate_structure_from_Gray_code( const matrix_base<int>& gcode ) {
 
 
-
     // determine the target qubit indices and control qbit indices for the CNOT gates from the Gray code counter
     matrix_base<int> target_qbits(1, gcode.size());
     matrix_base<int> control_qbits(1, gcode.size());
@@ -666,7 +665,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::construct_gate_structure_from_Gray_c
 
         
     //  ----------- contruct the gate structure to be optimized ----------- 
-    Gates_block* gate_structure_loc = new Gates_block(qbit_num);  // cnot nélkül megyek mi lesz? 
+    Gates_block* gate_structure_loc = new Gates_block(qbit_num); 
 
                             
     for (int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++) {
@@ -685,15 +684,14 @@ N_Qubit_Decomposition_non_unitary_adaptive::construct_gate_structure_from_Gray_c
 
 
 /**
-@brief Call to perform tree search over possible gate structures
-@param level_max The number of decomposing levels (i.e. the maximal tree depth)
+@brief Call to perform tree search over possible gate structures with a given tree search depth.
+@param level_num The number of decomposing levels (i.e. the maximal tree depth)
+@return Returns with the best Gray-code corresponding to the best circuit. (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
 */
-Gates_block* 
-N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( int level_max ){
+matrix_base<int> 
+N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( int level_num ){
 
     tbb::spin_mutex tree_search_mutex;
-    
-   
     
     
     double optimization_tolerance_loc;
@@ -703,26 +701,13 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
     else {
         optimization_tolerance_loc = optimization_tolerance;
     }     
+    
+    
+    if (level_num == 0){
 
-    
-    
-    
-    Gates_block* gate_structure_best_solution = NULL;    
-    bool found_optimal_solution = false;
-    
-    
-     if (level_max == 0){
-
-
-        Gates_block* gate_structure_loc = new Gates_block(qbit_num);
-
-        add_finalyzing_layer( gate_structure_loc );
-       
-        
-       
-       
-        tbb::tick_count start_time_loc = tbb::tick_count::now();
-        
+        // empty Gray code describing a circuit without two-qubit gates
+        matrix_base<int> gcode(0,0);
+        Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode );
         
         std::stringstream sstream;
         sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
@@ -737,57 +722,39 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
 
         double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
         sstream.str("");
-        sstream << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp;
+        sstream << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp;
         print(sstream, 1);
         
         
-           
-        
-        if( current_minimum_tmp < current_minimum && !found_optimal_solution) {
-
+        if( current_minimum_tmp < current_minimum ) {
             current_minimum = current_minimum_tmp;
-            if ( gate_structure_best_solution != NULL ) {
-                delete( gate_structure_best_solution );
-            }
-            
-            gate_structure_best_solution = gate_structure_loc;
-            gate_structure_loc = NULL;
-
             optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
         }
-        else 
-        {
-            delete( gate_structure_loc );
-            gate_structure_loc = NULL;
-        }
-
      
-        if ( current_minimum < optimization_tolerance_loc && !found_optimal_solution)  { 
-            found_optimal_solution = true;
-        } 
     
-        return gate_structure_best_solution;
+        delete( gate_structure_loc );
+        return gcode;
    
     }
   
+     
+    matrix_base<int> gcode_best_solution(0,0);
+    bool found_optimal_solution = false;
+    
+    
+    
     // set the limits for the N-ary Gray counter
     
     int n_ary_limit_max = topology.size();
-    matrix_base<int> n_ary_limits( 1, level_max ); //array containing the limits of the individual Gray code elements    
+    matrix_base<int> n_ary_limits( 1, level_num ); //array containing the limits of the individual Gray code elements    
     memset( n_ary_limits.get_data(), n_ary_limit_max, n_ary_limits.size()*sizeof(int) );
     
     for( int idx=0; idx<n_ary_limits.size(); idx++) {
         n_ary_limits[idx] = n_ary_limit_max;
     }
-        
-
-    
-    
-    //n_aryGrayCodeCounter gcode_counter( n_ary_limits );
 
 
-
-    int64_t iteration_max = pow( (int64_t)n_ary_limit_max, level_max );
+    int64_t iteration_max = pow( (int64_t)n_ary_limit_max, level_num );
     
     
     // determine the concurrency of the calculation
@@ -835,59 +802,47 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
 
                 // ----------- start the decomposition ----------- 
         
-                //measure the time for the decompositin
-                tbb::tick_count start_time_loc = tbb::tick_count::now();
-
-
                 std::stringstream sstream;
                 sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
                 print(sstream, 1);
                 
                 N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( gate_structure_loc );
+                
+                delete( gate_structure_loc );
+                gate_structure_loc = NULL;
         
                 
                 number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization  
     
                 double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
                 sstream.str("");
-                sstream << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp;
+                sstream << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp;
                 print(sstream, 1);
 
-                //std::cout << "Optimization with " << level_max << " levels converged to " << current_minimum_tmp << std::endl;
+                //std::cout << "Optimization with " << level_num << " levels converged to " << current_minimum_tmp << std::endl;
         
                 {
                     tbb::spin_mutex::scoped_lock tree_search_lock{tree_search_mutex};
 
                     if( current_minimum_tmp < current_minimum && !found_optimal_solution) {
-                        current_minimum = current_minimum_tmp;
-
-                        if ( gate_structure_best_solution != NULL ) {
-                            delete( gate_structure_best_solution );
-                        }
-            
-                        gate_structure_best_solution = gate_structure_loc;
-                        gate_structure_loc = NULL;
+                    
+                        current_minimum     = current_minimum_tmp;                        
+                        gcode_best_solution = gcode;
 
                         optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
                     }
-                    else {
-                        delete( gate_structure_loc );
-                        gate_structure_loc = NULL;
-                    }
-
+                    
+                     
      
                     if ( current_minimum < optimization_tolerance_loc && !found_optimal_solution)  {            
                         found_optimal_solution = true;
                     } 
     
                 }
+                
+                
 
                 if( found_optimal_solution ) {
- 
-                    if ( gate_structure_loc ) {
-                        delete( gate_structure_loc );
-                    } 
-
                     break;
                 }
         
@@ -907,7 +862,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
     });
 
 
-    return gate_structure_best_solution;
+    return gcode_best_solution;
 
 
 }
@@ -1205,38 +1160,23 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
     }
     
 
-    Gates_block* gate_structure_loc = NULL;
-    Gates_block* best_so_far = NULL;
 
     
-    gate_structure_loc          = tree_search_over_gate_structures( 0 );
-    best_so_far                 = gate_structure_loc;
-    double best_minimum_so_far  = current_minimum; 
-
-    //best_so_far = CZ_nu_search( level_max );
+    matrix_base<int>&& gcode_best_solution = tree_search_over_gate_structures( 0 );
+    double minimum_best_solution  = current_minimum; 
 
     for ( int level = 1; level <= level_max; level++ ) { 
 
-        gate_structure_loc = tree_search_over_gate_structures( level );   
+        matrix_base<int>&& gcode = tree_search_over_gate_structures( level );   
 
-        if (current_minimum < best_minimum_so_far) { 
+        if (current_minimum < minimum_best_solution) { 
 
-            best_minimum_so_far = current_minimum;
-
-            delete( best_so_far ) ;
-
-            best_so_far        = gate_structure_loc;  
-            gate_structure_loc = NULL;
-        }
-        else{
-
-            delete( gate_structure_loc );
-            gate_structure_loc = NULL;
-
+            minimum_best_solution = current_minimum;
+            gcode_best_solution   = gcode;  
+            
         }
         
         if (current_minimum < optimization_tolerance_loc ) {
-
             break;
         }
 
@@ -1247,14 +1187,10 @@ N_Qubit_Decomposition_non_unitary_adaptive::determine_initial_gate_structure(Mat
        std::stringstream sstream;
        sstream << "Decomposition did not reached prescribed high numerical precision." << std::endl;
        print(sstream, 1);              
-       optimization_tolerance_loc = 1.5*current_minimum < 1e-2 ? 1.5*current_minimum : 1e-2;
     }
 
-    std::stringstream sstream;
-    sstream << "Continue with the compression of gate structure consisting of " << best_so_far->get_gate_num() << " decomposing layers." << std::endl;
-    print(sstream, 1);	
 
-    return best_so_far;
+    return construct_gate_structure_from_Gray_code( gcode_best_solution );
        
 }
 
