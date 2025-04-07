@@ -212,7 +212,7 @@ void set_unitary( Matrix& Umtx_new ) ;
 @param levels The maximal number of decomposing layers
 @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
 */
-matrix_base<int> tabu_search_over_gate_structures( int levels );
+GrayCode tabu_search_over_gate_structures( int levels );
 
 
 

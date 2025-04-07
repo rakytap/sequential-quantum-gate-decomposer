@@ -202,6 +202,20 @@ copy() const {
 
 
 
+/**
+@brief Call to get the n-ary limits of the Gray code
+@return Returns with the instance of the class.
+*/
+matrix_base<intType>
+get_Limits() const {
+
+    return n_ary_limits.copy();
+
+}
+
+
+
+
 
 };
 

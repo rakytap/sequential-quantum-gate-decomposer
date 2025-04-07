@@ -597,13 +597,13 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
 @param levels The maximal number of decomposing layers
 @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
 */
-matrix_base<int> 
+GrayCode 
 N_Qubit_Decomposition_non_unitary_adaptive::tabu_search_over_gate_structures( int levels ) {
 
     GrayCode gcode;
     tested_gate_structures.insert( gcode );
 
-    return matrix_base<int>(0,0);
+    return gcode;
 
 }
 
