@@ -92,6 +92,8 @@ protected:
     
     
     ////////// tabu serach specific attributes ///////////
+
+    /// the set of already examined gate structures (mapped to n-ary Gray codes)
     std::unordered_set<GrayCode, GrayCodeHash> tested_gate_structures;
     
 

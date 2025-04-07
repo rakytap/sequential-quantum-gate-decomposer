@@ -121,16 +121,16 @@ operator==( const GrayCode_base &gcode) const {
         return false;
     }
 
-    intType *data_this = this->data;
-    intType *data = gcode.data;
 
     for (size_t idx=0; idx<this->cols; idx++) {
-        if ( data_this[idx] != data[idx] ) {
+        if ( this->data[idx] != gcode[idx] ) {
+            return false;
+        }
+
+        if ( n_ary_limits[idx] != gcode.n_ary_limits[idx] ) {
             return false;
         }
     }
-
-    n_ary_limits = gcode.n_ary_limits;
 
     return true;
 
