@@ -27,6 +27,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #define N_Qubit_Decomposition_non_unitary_adaptive_H
 
 #include "N_Qubit_Decomposition_custom.h"
+#include "GrayCode.h"
+#include <unordered_set>
 
 #ifdef __cplusplus
 extern "C" 
@@ -55,6 +57,14 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 #endif
 
 
+
+struct VectorHash {
+    size_t operator()(const matrix_base<int>& gcode) const;
+};
+
+
+
+
 /**
 @brief A base class to determine the decomposition of an N-qubit unitary into a sequence of CNOT and U3 gates.
 This class contains the non-template implementation of the decomposition class.
@@ -80,7 +90,8 @@ protected:
     matrix_base<int> possible_control_qbits;   
     
     
-    
+    ////////// tabu serach specific attributes ///////////
+    std::unordered_set<matrix_base<int>, VectorHash> tested_gate_structures;
     
 
 public:
@@ -163,14 +174,14 @@ void add_two_qubit_block(Gates_block* gate_structure, int target_qbit, int contr
 @return Returns with the generated circuit
 */
 Gates_block* 
-construct_gate_structure_from_Gray_code( const matrix_base<int>& gcode );
+construct_gate_structure_from_Gray_code( const GrayCode& gcode );
 
 /**
 @brief Call to perform tree search over possible gate structures
 @param level_mum The number of decomposing levels (i.e. the maximal tree depth)
 @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
 */
-matrix_base<int> tree_search_over_gate_structures( int level_num, const matrix_base<int>& gcode_offset );
+GrayCode tree_search_over_gate_structures( int level_num );
 
 /**
 @brief Call to perform the optimization on the given gate structure
@@ -188,11 +199,20 @@ void add_finalyzing_layer( Gates_block* gate_structure );
 
 
 
- /** 
- @brief Set unitary matrix 
- @param matrix to set unitary to
- */
- void set_unitary( Matrix& Umtx_new ) ;
+/** 
+@brief Set unitary matrix 
+@param matrix to set unitary to
+*/
+void set_unitary( Matrix& Umtx_new ) ;
+
+
+/** 
+@brief Perform tabu serach over gate structures
+@param levels The maximal number of decomposing layers
+@return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
+*/
+matrix_base<int> tabu_search_over_gate_structures( int levels );
+
 
 
 
