@@ -20,15 +20,11 @@ def kahn_partition(c, max_qubit):
     top_circuit = Circuit(c.get_Qbit_Num())
 
     # Build dependency graphs
-    g, rg = {}, {}
     gate_dict = {i: gate for i, gate in enumerate(c.get_Gates())}
+    g, rg = { i: set() for i in gate_dict }, { i: set() for i in gate_dict }
 
     for gate in gate_dict:
-        g.setdefault(gate, set())
-        rg.setdefault(gate, set())
         for child in c.get_Children(gate_dict[gate]):
-            g.setdefault(child, set())
-            rg.setdefault(child, set())
             g[gate].add(child)
             rg[child].add(gate)
     
