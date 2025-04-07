@@ -420,7 +420,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
     if (level_num == 0){
 
         // empty Gray code describing a circuit without two-qubit gates
-        GrayCode gcode(0);
+        GrayCode gcode;
         Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode );
         
         std::stringstream sstream;
@@ -452,7 +452,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
     }
   
      
-    GrayCode gcode_best_solution(0);
+    GrayCode gcode_best_solution;
     bool found_optimal_solution = false;
     
     
@@ -513,7 +513,7 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
         
 
     
-                GrayCode gcode = gcode_counter.get();               
+                GrayCode&& gcode = gcode_counter.get();               
                 
         
                 Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode );
@@ -600,8 +600,8 @@ N_Qubit_Decomposition_non_unitary_adaptive::tree_search_over_gate_structures( in
 matrix_base<int> 
 N_Qubit_Decomposition_non_unitary_adaptive::tabu_search_over_gate_structures( int levels ) {
 
-    matrix_base<int> gcode(0,0);
-    //tested_gate_structures.insert( gcode );
+    GrayCode gcode;
+    tested_gate_structures.insert( gcode );
 
     return matrix_base<int>(0,0);
 

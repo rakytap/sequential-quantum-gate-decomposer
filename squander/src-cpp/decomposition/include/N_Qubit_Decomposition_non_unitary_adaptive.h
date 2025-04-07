@@ -28,6 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "N_Qubit_Decomposition_custom.h"
 #include "GrayCode.h"
+#include "GrayCodeHash.h"
 #include <unordered_set>
 
 #ifdef __cplusplus
@@ -91,7 +92,7 @@ protected:
     
     
     ////////// tabu serach specific attributes ///////////
-    std::unordered_set<matrix_base<int>, VectorHash> tested_gate_structures;
+    std::unordered_set<GrayCode, GrayCodeHash> tested_gate_structures;
     
 
 public:

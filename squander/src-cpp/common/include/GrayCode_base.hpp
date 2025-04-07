@@ -29,14 +29,15 @@ template <typename intType>
 class GrayCode_base : public matrix_base<intType> {
 
 public:
-    /// The number of phonons stored by the state. Must be set manually
-    intType number_of_photons = -1;
 
 #if CACHELINE>=64
 private:
     /// padding class object to cache line borders
     uint8_t padding[CACHELINE-sizeof(matrix_base<intType>)-sizeof(intType)];
 #endif
+
+    /// the limits of the gray code digits
+    matrix_base<intType> n_ary_limits;
 
 
 public:
@@ -46,8 +47,10 @@ public:
 @return Returns with the instance of the class.
 */
 GrayCode_base() : matrix_base<intType>() {
-    this->rows = 1;
+    this->rows = 0;
     this->cols = 0;
+
+    n_ary_limits = matrix_base<intType>();
 }
 
 /**
@@ -56,7 +59,9 @@ GrayCode_base() : matrix_base<intType>() {
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
-GrayCode_base( intType* data_in, size_t cols_in) : matrix_base<intType>(data_in, 1, cols_in) {
+GrayCode_base( intType* data_in, matrix_base<intType> n_ary_limits_) : matrix_base<intType>(data_in, 1, n_ary_limits_.size()) {
+
+    n_ary_limits = n_ary_limits_;
 
 }
 
@@ -66,7 +71,9 @@ GrayCode_base( intType* data_in, size_t cols_in) : matrix_base<intType>(data_in,
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
-GrayCode_base( size_t cols_in) : matrix_base<intType>(1, cols_in) {
+GrayCode_base( matrix_base<intType> n_ary_limits_) : matrix_base<intType>(1, n_ary_limits_.size()) {
+
+    n_ary_limits = n_ary_limits_;
 
 }
 
@@ -76,16 +83,18 @@ GrayCode_base( size_t cols_in) : matrix_base<intType>(1, cols_in) {
 @param cols_in The number of columns in the stored matrix
 @return Returns with the instance of the class.
 */
-GrayCode_base( size_t cols_in, intType value) : matrix_base<intType>(1, cols_in) {
+GrayCode_base( intType value, matrix_base<intType>& n_ary_limits_) : matrix_base<intType>(1, n_ary_limits_.size()) {
 
     if (value == 0) {
-        memset(this->data, value, cols_in*sizeof(intType));
+        memset(this->data, value, n_ary_limits_.size()*sizeof(intType));
     }
     else {
         for (size_t idx=0; idx < this->size(); idx ++) {
             this->data[idx] = value;
         }
     }
+
+    n_ary_limits = n_ary_limits_;
 
 }
 
@@ -96,7 +105,7 @@ GrayCode_base( size_t cols_in, intType value) : matrix_base<intType>(1, cols_in)
 */
 GrayCode_base(const GrayCode_base &in) : matrix_base<intType>(in) {
 
-    number_of_photons = in.number_of_photons;
+    n_ary_limits = in.n_ary_limits;
 
 }
 
@@ -106,20 +115,22 @@ GrayCode_base(const GrayCode_base &in) : matrix_base<intType>(in) {
 @return Returns with true if the two keys are equal, or false otherwise
 */
 bool
-operator==( const GrayCode_base &state) const {
+operator==( const GrayCode_base &gcode) const {
 
-    if (this->cols != state.cols) {
+    if (this->cols != gcode.cols) {
         return false;
     }
 
     intType *data_this = this->data;
-    intType *data = state.data;
+    intType *data = gcode.data;
 
     for (size_t idx=0; idx<this->cols; idx++) {
         if ( data_this[idx] != data[idx] ) {
             return false;
         }
     }
+
+    n_ary_limits = gcode.n_ary_limits;
 
     return true;
 
@@ -154,11 +165,11 @@ operator[](size_t idx) const {
 @return Returns with the instance of the class.
 */
 void
-operator= (const GrayCode_base &state ) {
+operator= (const GrayCode_base &gcode ) {
 
-    matrix_base<intType>::operator=( state );
+    matrix_base<intType>::operator=( gcode );
 
-    number_of_photons = state.number_of_photons;
+    n_ary_limits = gcode.n_ary_limits;
 
 }
 
@@ -170,7 +181,7 @@ operator= (const GrayCode_base &state ) {
 GrayCode_base
 copy() const {
 
-     GrayCode_base ret = GrayCode_base(this->cols);
+     GrayCode_base ret = GrayCode_base(this->n_ary_limits);
 
     // logical variable indicating whether the matrix needs to be conjugated in CBLAS operations
     ret.conjugated = this->conjugated;
@@ -182,40 +193,13 @@ copy() const {
     memcpy( ret.data, this->data, this->rows*this->cols*sizeof(intType));
 
 
-    ret.number_of_photons = number_of_photons;
+    ret.n_ary_limits = n_ary_limits.copy();
 
     return ret;
 
 }
 
 
-/**
-@brief Call to create a filtered copy of the state based on the param func.
-@param func The filtering function
-@return Returns with the instance of the class.
-*/
-GrayCode_base
-filter(std::function<bool(intType)> func){
-
-    size_t numberOfElements = 0;
-    intType *data = this->get_data();
-    for (size_t i = 0; i < this->cols; i++){
-        if (func(data[i])){
-            numberOfElements++;
-        }
-    }
-
-    GrayCode_base new_state(numberOfElements);
-
-    numberOfElements = 0;
-    for (size_t i = 0; i < this->cols; i++){
-        if (func(data[i])){
-            new_state[numberOfElements++] = data[i];
-        }
-    }
-
-    return new_state;
-}
 
 
 
