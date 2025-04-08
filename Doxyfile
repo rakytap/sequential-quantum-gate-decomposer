@@ -38,7 +38,7 @@ PROJECT_NAME           = "Sequential Quantum Gate Decomposer"
 # could be handy for archiving the generated documentation or if some version
 # control system is used.
 
-PROJECT_NUMBER         = v1.9.0
+PROJECT_NUMBER         = v1.9.2
 
 # Using the PROJECT_BRIEF tag one can provide an optional one line description
 # for a project that appears at the top of each page and should give viewer a
@@ -239,7 +239,7 @@ TAB_SIZE               = 5
 # newlines.
 
 ALIASES                = QGD=SQUANDER \
-                         version=v1.9.0 \
+                         version=v1.9.2 \
                          "index=<a href=\"index.html\">Main Page</a>" \
                          "python_iface=<a href=\"group__python.html\">QGD Python Interface</a>" \
                          "example=<a href=\"group__examples.html\">Examples</a>"
