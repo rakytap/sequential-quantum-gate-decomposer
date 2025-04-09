@@ -35,7 +35,7 @@ class qgd_SABRE:
 # @param topology target topology for circuit to be routed to
 # @param max_E_size Maximum lookahead size for more see at:  https://arxiv.org/pdf/1809.02573
 # @param W lookahead cost function weight for more see at:  https://arxiv.org/pdf/1809.02573
-    def __init__(self,quantum_circuit,topology, max_E_size=20,W=0.5):
+    def __init__(self,quantum_circuit,topology, max_lookahead=4, max_E_size=20,W=0.5):
         self.circuit_qbit_num = quantum_circuit.get_Qbit_Num() # number of qubits in circuit to be mapped and routed
         self.qbit_num = max(max(topology))+1 # number of qubits in system to be mapped to
         self.initial_circuit = quantum_circuit 
@@ -46,6 +46,7 @@ class qgd_SABRE:
         self.max_E_size = max_E_size
         self.W = W
         self.possible_connections_control,self.neighbours = self.geneterate_possible_connections()
+        self.max_lookahead = max_lookahead
 
 ##
 ## @brief Floyd_warshall algorithm to calculate distance matrix
@@ -189,10 +190,56 @@ class qgd_SABRE:
                 if swap not in swaps:
                     swaps.append(swap)
         return swaps
-
+        
+##
+## @brief Generates lookahead extended layer containing all upcoming two qubit gates
+## @param F front layer containing unresolved gates
+## @param DAG dag to walk
+    def generate_E(self,F,DAG,IDAG,resolved_gates):
+        E = []
+        for front_gate in F:
+            if len(E) < self.max_E_size:
+                involved_qbits = [DAG[front_gate][0].get_Target_Qbit(),DAG[front_gate][0].get_Control_Qbit()]
+                lookahead_count = 0
+                children = list(DAG[front_gate][1]).copy()
+                while (lookahead_count<self.max_lookahead and len(children)>0):
+                    for gate_idx in children.copy():
+                        gate = DAG[gate_idx][0]
+                        if gate.get_Control_Qbit() == -1:
+                            children.extend(DAG[gate_idx][1])
+                        else:
+                            gate_depth = self.calculate_gate_depth(gate_idx,IDAG,resolved_gates,F)
+                            if len(E)< self.max_E_size and (gate.get_Target_Qbit() in involved_qbits or gate.get_Control_Qbit() in involved_qbits) and gate_idx not in E and gate_depth<4:
+                                E.append(gate_idx)
+                                lookahead_count +=1
+                                if lookahead_count<self.max_lookahead:
+                                    children.extend(DAG[gate_idx][1])
+                        children.remove(gate_idx)
+        return E
+        
+        
+##
+## @brief Calculates the number of predecessing unresolved gates for a gate 
+## @param gate_idx gate to be calculated "distance for"
+## @param DAG circuit DAG
+## @param resolved_gates indicates whether gate at index is resolved or not
+## @param F front layer 
+    def calculate_gate_depth(self,gate_idx,IDAG,resolved_gates,F):
+        depth = 1
+        gate = IDAG[gate_idx][0]
+        parents = list(IDAG[gate_idx][1])
+        while (len(parents)>0):
+            for parent_idx in parents.copy():
+                parent_gate = IDAG[parent_idx][0]
+                if resolved_gates[parent_idx]==False:
+                    if parent_gate.get_Control_Qbit() != -1: 
+                        depth += 1
+                    parents.extend(IDAG[parent_idx][1])
+                parents.remove(parent_idx)
+        return depth
 ##
 ## @brief Heuristic search to map circuit to topology based on initial mapping pi this is an implementation of Algorithm 1 as seen in: https://arxiv.org/pdf/1809.02573
-## @breif F front layer containing unresolved gates 
+## @param F front layer containing unresolved gates 
 ## @param pi mapping between virtual qubits q and physical qubits Q
 ## @param DAG DAG of circuit
 ## @param IDAG inverse DAG of circuit
@@ -203,19 +250,8 @@ class qgd_SABRE:
         flags = [0]*len(DAG)
         swap_list = []
         gate_order = []
-        E = []
+        E = self.generate_E(F,DAG,IDAG,resolved_gates)
         swap_prev = []
-        for gate_idx in F: 
-            successors = DAG[gate_idx][1]
-            for successor in successors:
-                if successor not in E and len(E)<self.max_E_size:
-                    E.append(successor)
-            if len(E)<self.max_E_size:
-                for successor in successors:
-                    children = DAG[gate_idx][1]
-                    for child in children:
-                        if child not in E and len(E)<self.max_E_size:
-                            E.append(child)
         while len(F)!=0:
             execute_gate_list = []
             for gate_idx in F:
@@ -237,18 +273,7 @@ class qgd_SABRE:
                             resolved *= resolved_gates[dependency]
                         if resolved and new_gate_idx not in F:
                             F.append(new_gate_idx)
-                E = []
-                for gate_idx in F: 
-                    successors = DAG[gate_idx][1]
-                    for successor in successors:
-                        if successor not in E and len(E)<self.max_E_size:
-                            E.append(successor)
-                    if len(E)<self.max_E_size:
-                        for successor in successors:
-                            children = DAG[gate_idx][1]
-                            for child in children:
-                                if child not in E and len(E)<self.max_E_size:
-                                    E.append(child)
+                E = self.generate_E(F,DAG,IDAG,resolved_gates)
                 continue
             else:
                 scores = []
@@ -272,7 +297,7 @@ class qgd_SABRE:
                             for gate_idx in E:
                                 gate = DAG[gate_idx][0]
                                 q_target, q_control = gate.get_Target_Qbit(),gate.get_Control_Qbit()
-                                score_temp += self.H_basic(pi_temp,q_target, q_control)
+                                score_temp += self.H_basic(pi_temp,q_target, q_control)/self.calculate_gate_depth(gate_idx,IDAG,resolved_gates,F)
                             score_temp *= self.W/len(E)
                             score+=score_temp
                         scores.append(score)
