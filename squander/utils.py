@@ -35,7 +35,10 @@ qiskit_version = qiskit.version.get_version_info()
 if qiskit_version[0] == '1':
     import qiskit_aer as Aer
     from qiskit import transpile
+    from qiskit.quantum_info import Operator
 else :
+    if int(qiskit_version[2])>3:
+        from qiskit.quantum_info import Operator
     from qiskit import Aer
     from qiskit import execute
 
@@ -71,8 +74,16 @@ def get_unitary_from_qiskit_circuit( circuit ):
 
         return np.asarray( result.get_unitary(circuit) )        
 
+def get_unitary_from_qiskit_circuit_operator(circuit):
 
 
+    if qiskit_version[0] == '0' and int(qiskit_version[2])<4:
+    
+        print("Currently installed version of qiskit does not support extracting the unitary of a circuit via Operator. Using get_unitary_from_qiskit_circuit function instead.")
+        
+        return get_unitary_from_qiskit_circuit(circuit)
+
+    return Operator(circuit).to_matrix()
                 
 
 
