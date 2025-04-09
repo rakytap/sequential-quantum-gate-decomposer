@@ -208,7 +208,7 @@ class qgd_SABRE:
                         if gate.get_Control_Qbit() == -1:
                             children.extend(DAG[gate_idx][1])
                         else:
-                            gate_depth = self.calculate_gate_depth(gate_idx,IDAG,resolved_gates,F)
+                            gate_depth = self.calculate_gate_depth(gate_idx,IDAG,resolved_gates)
                             if len(E)< self.max_E_size and (gate.get_Target_Qbit() in involved_qbits or gate.get_Control_Qbit() in involved_qbits) and gate_idx not in E and gate_depth<4:
                                 E.append(gate_idx)
                                 lookahead_count +=1
@@ -224,7 +224,7 @@ class qgd_SABRE:
 ## @param DAG circuit DAG
 ## @param resolved_gates indicates whether gate at index is resolved or not
 ## @param F front layer 
-    def calculate_gate_depth(self,gate_idx,IDAG,resolved_gates,F):
+    def calculate_gate_depth(self,gate_idx,IDAG,resolved_gates):
         depth = 1
         gate = IDAG[gate_idx][0]
         parents = list(IDAG[gate_idx][1])
@@ -237,6 +237,24 @@ class qgd_SABRE:
                     parents.extend(IDAG[parent_idx][1])
                 parents.remove(parent_idx)
         return depth
+##
+## @brief Checks if gate dependencies have been resolved
+## @param gate_idx gate to check
+## @param IDAG inverse DAG of circuit
+## @param resolved_gates indicates whether gate at index is resolved or not
+    def check_dependencies(self,gate_idx,IDAG,resolved_gates):
+        resolved = True
+        gate = IDAG[gate_idx][0]
+        parents = list(IDAG[gate_idx][1])
+        while (len(parents)>0 and resolved!=False):
+            for parent_idx in parents.copy():
+                parent_gate = IDAG[parent_idx][0]
+                resolved *= resolved_gates[parent_idx]
+                parents.extend(IDAG[parent_idx][1])
+                parents.remove(parent_idx)
+        return resolved
+    
+
 ##
 ## @brief Heuristic search to map circuit to topology based on initial mapping pi this is an implementation of Algorithm 1 as seen in: https://arxiv.org/pdf/1809.02573
 ## @param F front layer containing unresolved gates 
@@ -267,13 +285,11 @@ class qgd_SABRE:
                     gate_order.append(gate_idx)
                     successors = DAG[gate_idx][1]
                     for new_gate_idx in successors:
-                        dependencies = IDAG[new_gate_idx][1]
-                        resolved = 1
-                        for dependency in dependencies:
-                            resolved *= resolved_gates[dependency]
+                        resolved = self.check_dependencies(new_gate_idx,IDAG,resolved_gates)
                         if resolved and new_gate_idx not in F:
                             F.append(new_gate_idx)
                 E = self.generate_E(F,DAG,IDAG,resolved_gates)
+
                 continue
             else:
                 scores = []
@@ -297,7 +313,7 @@ class qgd_SABRE:
                             for gate_idx in E:
                                 gate = DAG[gate_idx][0]
                                 q_target, q_control = gate.get_Target_Qbit(),gate.get_Control_Qbit()
-                                score_temp += self.H_basic(pi_temp,q_target, q_control)/self.calculate_gate_depth(gate_idx,IDAG,resolved_gates,F)
+                                score_temp += self.H_basic(pi_temp,q_target, q_control)/self.calculate_gate_depth(gate_idx,IDAG,resolved_gates)
                             score_temp *= self.W/len(E)
                             score+=score_temp
                         scores.append(score)
