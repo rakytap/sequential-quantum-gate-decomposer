@@ -209,7 +209,7 @@ class qgd_SABRE:
                             children.extend(DAG[gate_idx][1])
                         else:
                             gate_depth = self.calculate_gate_depth(gate_idx,IDAG,resolved_gates)
-                            if len(E)< self.max_E_size and (gate.get_Target_Qbit() in involved_qbits or gate.get_Control_Qbit() in involved_qbits) and gate_idx not in E and gate_depth<4:
+                            if len(E)< self.max_E_size and (gate.get_Target_Qbit() in involved_qbits or gate.get_Control_Qbit() in involved_qbits) and gate_idx not in E and gate_depth<6:
                                 E.append(gate_idx)
                                 lookahead_count +=1
                                 if lookahead_count<self.max_lookahead:
