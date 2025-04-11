@@ -4,11 +4,17 @@ from itertools import dropwhile
 import numpy as np
 
 
+#@brief Retrieves the set of qubits involved in a given gate
+#@param gate The SQUANDER gate
+#@return A tuple of qubit indices used by the gate
 def get_qubits(gate):
     return ({gate.get_Target_Qbit(), gate.get_Control_Qbit()}
             if isinstance(gate, (CH, CRY, CNOT, CZ)) else {gate.get_Target_Qbit()})
 
 
+#@brief Converts a QASM file to a SQUANDER circuit
+#@param filename The path to the QASM file
+#@return A tuple (the SQUANDER circuit, a list of circuit parameters)
 def qasm_to_squander(filename):
     from squander import Qiskit_IO
     qc = QuantumCircuit.from_qasm_file(filename)
@@ -16,6 +22,10 @@ def qasm_to_squander(filename):
     return circuit_squander, circut_parameters
 
 
+#@brief Partitions a flat circuit into subcircuits using Kahn's algorithm
+#@param c The SQUANDER circuit to be partitioned
+#param max_qubit The maximum number of qubits allowed in each partition
+#@return A tuple (the partitioned 2-level circuit, a list of tuples specifying new parameter positions)
 def kahn_partition(c, max_qubit):
     top_circuit = Circuit(c.get_Qbit_Num())
 
@@ -77,6 +87,9 @@ def kahn_partition(c, max_qubit):
     return top_circuit, param_order
 
 
+#@brief Reorders the circuit parameters according to the partitioned execution order
+#@param params The original parameter array
+#@param param_order The list of tuples specifying the new parameter positions
 def translate_param_order(params, param_order):
     reordered = np.empty_like(params)
     for s_idx, n_idx, n_params in param_order:
@@ -84,26 +97,12 @@ def translate_param_order(params, param_order):
     return reordered
 
 
+#@brief Converts a QASM file to a partitioned SQUANDER circuit with reordered parameters
+#@param filename The path to the QASM file
+#@param max_qubit The maximum number of qubits allowed in each partition
+#@return A tuple (the partitioned SQUANDER circuit, the reordered parameter array)
 def qasm_to_partitioned_circuit(filename, max_qubit):
     c, param = qasm_to_squander(filename)
     top_c, param_order = kahn_partition(c, max_qubit)
     param_reordered = translate_param_order(param, param_order)
     return top_c, param_reordered
-
-
-def test_partition():
-    filename, max_qubit = "samples/heisenberg-16-20.qasm", 4
-    top_c, _ = qasm_to_partitioned_circuit( filename, max_qubit )
-
-    print("Partitions (#id: num_gates {qubits}):")
-    total = 0
-    for i, partition in enumerate(top_c.get_Gates()):
-        num_gates = len(partition.get_Gates())
-        qubits = set.union(*(get_qubits(gate) for gate in partition.get_Gates()))
-        total += num_gates
-        print(f"#{i + 1}: {num_gates} {qubits}")
-    print(f"Total gates: {total}")
-
-
-if __name__ == "__main__":
-    test_partition()
