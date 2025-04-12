@@ -217,6 +217,22 @@ void set_unitary( Matrix& Umtx_new ) ;
 GrayCode tabu_search_over_gate_structures( int levels );
 
 
+/** 
+@brief ????
+@param ????
+@return Returns with the ????
+*/
+std::vector<GrayCode> determine_derived_structures( const GrayCode& gcode );
+
+
+
+/** 
+@brief ????
+@param ????
+@return Returns with the ????
+*/
+GrayCode draw_gate_structure_from_list( const std::vector<GrayCode>& gcodes );
+
 
 
 };

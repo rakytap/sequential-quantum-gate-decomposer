@@ -25,6 +25,7 @@ limitations under the License.
 #include "Random_Orthogonal.h"
 #include "Random_Unitary.h"
 #include "n_aryGrayCodeCounter.h"
+#include <random>
 
 #include "X.h"
 
@@ -355,10 +356,10 @@ N_Qubit_Decomposition_Tree_Search::determine_initial_gate_structure(Matrix_real&
     else {
         level_max = 14;
     }
-    /*
-    int levels = 6;
+    
+    int levels = 5;
     matrix_base<int>&& gcode_best_solution3 = tabu_search_over_gate_structures( levels );
-*/
+current_minimum = std::numeric_limits<double>::max();
     //exit(1);
     
     GrayCode gcode_best_solution;
@@ -389,7 +390,8 @@ N_Qubit_Decomposition_Tree_Search::determine_initial_gate_structure(Matrix_real&
        sstream << "Decomposition did not reached prescribed high numerical precision." << std::endl;
        print(sstream, 1);              
     }
-
+gcode_best_solution.print_matrix();
+exit(1);
 
     return construct_gate_structure_from_Gray_code( gcode_best_solution );
        
@@ -602,15 +604,259 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
 GrayCode 
 N_Qubit_Decomposition_Tree_Search::tabu_search_over_gate_structures( int levels ) {
 
-    GrayCode gcode;
+
+    double optimization_tolerance_loc;
+    if ( config.count("optimization_tolerance") > 0 ) {
+        config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
+    }
+    else {
+        optimization_tolerance_loc = optimization_tolerance;
+    }     
+
+    // set the limits for the N-ary Gray code
+    
+    int n_ary_limit_max = topology.size();
+    matrix_base<int> n_ary_limits( 1, levels ); //array containing the limits of the individual Gray code elements    
+    memset( n_ary_limits.get_data(), n_ary_limit_max, n_ary_limits.size()*sizeof(int) );
+    
+    for( int idx=0; idx<n_ary_limits.size(); idx++) {
+        n_ary_limits[idx] = n_ary_limit_max;
+    }
+
+
+    GrayCode gcode( n_ary_limits );
+
+    // initiate Gray code to structure containing no CNOT gates
+    for( int idx=0; idx<gcode.size(); idx++ ) {
+        gcode[idx] = -1;
+    }
+
     tested_gate_structures.insert( gcode );
 
-    return gcode;
+
+    GrayCode gcode_best_solution;
+ Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode );
+             
+N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( gate_structure_loc );
+                
+        delete( gate_structure_loc );
+        gate_structure_loc = NULL;
+        
+                
+        number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization  
+    
+        double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
+std::cout << current_minimum_tmp << std::endl;
+
+
+    std::uniform_real_distribution<double> unif(0.0,1.0);
+    std::default_random_engine re;
+    
+    double inverz_temperature = 0.1;
+
+    while( true ) {
+  
+        // determine possible gate structures that can be obtained with a single change (i.e. changing one two-qubit block)
+        std::vector<GrayCode>&& possible_gate_structures = determine_derived_structures( gcode );
+/*
+        std::cout << "uuuuuuuuuuuuuuuuuuuuuuuu " << std::endl;
+        for(  int idx=0; idx<possible_gate_structures.size(); idx++ ) {
+
+            GrayCode& gcode = possible_gate_structures[ idx ];
+
+            gcode.print_matrix();
+
+        }
+*/
+//std::cout << "uuuuuuuuuuuuuuuuuuuuuuuu 2" << std::endl;
+
+        if( possible_gate_structures.size() == 0 ) {
+            break;
+        }
+
+        gcode = draw_gate_structure_from_list( possible_gate_structures );
+
+        tested_gate_structures.insert( gcode ); 
+
+        Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode );
+             
+
+        // ----------- start the decomposition ----------- 
+        
+        std::stringstream sstream;
+        sstream << "Starting optimization with " << gate_structure_loc->get_gate_num() << " decomposing layers." << std::endl;
+        print(sstream, 1);
+                
+        N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( gate_structure_loc );
+                
+        delete( gate_structure_loc );
+        gate_structure_loc = NULL;
+        
+                
+        number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization  
+    
+        double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
+        sstream.str("");
+        sstream << "Optimization with " << levels << " levels converged to " << current_minimum_tmp;
+        print(sstream, 1);
+
+/*
+        std::cout << current_minimum << " " << current_minimum_tmp << std::endl;
+        gcode.print_matrix();
+*/
+
+        
+
+        if( current_minimum_tmp < current_minimum ) {
+            // accept the current gate structure in tabu search
+                   
+            current_minimum     = current_minimum_tmp;                        
+            gcode_best_solution = gcode;
+            optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+
+        }
+        else {
+            // accept the current gate structure in tabu search with a given probability
+
+            double random_double = unif(re);            
+            double number_to_test = exp( -inverz_temperature*(current_minimum_tmp-current_minimum) );
+
+            if( random_double < number_to_test ) {
+                // accept the intermediate solution
+                current_minimum     = current_minimum_tmp;                        
+                gcode_best_solution = gcode;
+                optimized_parameters_mtx = cDecomp_custom_random.get_optimized_parameters();
+            }
+
+        }
+          
+        if ( current_minimum < optimization_tolerance_loc )  {  
+gcode_best_solution.print_matrix();          
+            break;
+        }           
+           
+    
+
+    }
+
+
+    return gcode_best_solution;
 
 }
 
 
 
+
+/** 
+@brief ????
+@param ????
+@return Returns with the ????
+*/
+std::vector<GrayCode> 
+N_Qubit_Decomposition_Tree_Search::determine_derived_structures( const GrayCode& gcode ) {
+
+
+    std::vector<GrayCode> possible_structures_list;
+    int n_ary_limit_max = topology.size();
+/*
+    std::cout << "ooooooooooooo " << n_ary_limit_max << std::endl;
+    for( int idx=0; idx<topology.size(); idx++ ) {
+        topology[idx].print_matrix();
+    }
+*/
+    for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
+
+        for( int gcode_element=-1; gcode_element<n_ary_limit_max; gcode_element++ ) {
+
+            GrayCode gcode_modified = gcode.copy();
+            gcode_modified[gcode_idx] = gcode_element;
+
+            // add the modified Gray code if not present in the list of visited gate structures
+            if( tested_gate_structures.count( gcode_modified ) == 0 ) {
+                possible_structures_list.push_back( gcode_modified );
+            }
+
+        }
+ 
+    }
+
+
+    return possible_structures_list;
+
+}
+
+
+
+/** 
+@brief ????
+@param ????
+@return Returns with the ????
+*/
+GrayCode
+N_Qubit_Decomposition_Tree_Search::draw_gate_structure_from_list( const std::vector<GrayCode>& gcodes ) {
+
+    if ( gcodes.size() == 0 ) {
+	std::string err("N_Qubit_Decomposition_Tree_Search::draw_gate_structure_from_list: The list of gates structure is empty." );
+        throw( err );
+    }
+
+    GrayCode gcode = gcodes[0];
+
+    int levels = gcode.size();
+
+    // the probability distribution is weighted by the number of two-qubit gates in the gate structure
+    // the probability weights should be smaller if containing more two-qubit gates
+    matrix_base<int> weights( gcodes.size(), 1 );
+
+    for( int gcode_idx=0; gcode_idx<gcodes.size(); gcode_idx++ ) {
+
+        gcode = gcodes[ gcode_idx ];
+        weights[ gcode_idx ] = 2*(levels+1);
+
+        for( int gcode_element_idx=0; gcode_element_idx<gcode.size(); gcode_element_idx++ ) {
+            if( gcode[gcode_element_idx] > -1 ) {
+                weights[ gcode_idx ] = weights[ gcode_idx ] - 2;
+            }
+        }
+    
+    }
+
+/*
+    std::cout << "weights" << std::endl;
+    weights.print_matrix();
+*/
+    // calculate the sum of weights to normalize for the probability distribution
+    int weight_sum = 0;
+    for( int idx=0; idx<weights.size(); idx++ ) {
+        weight_sum = weight_sum + weights[idx];
+    }
+
+
+    std::random_device dev;
+    std::mt19937 rng(dev());
+    std::uniform_int_distribution<std::mt19937::result_type> dist(0,weight_sum); // distribution in range [0, weight_sum]
+
+    int random_num = dist(rng);
+    int weight_sum_partial = 0;
+    int chosen_idx = 0;
+    for( int idx=0; idx<weights.size(); idx++ ) {
+
+        weight_sum_partial = weight_sum_partial + weights[idx];
+
+        if( random_num < weight_sum_partial ) {
+            chosen_idx = idx;
+            break;
+        }
+
+    }
+
+   
+
+    GrayCode chosen_gcode = gcodes[ chosen_idx ];
+
+    return chosen_gcode;
+
+}
 
 
 /**
@@ -686,7 +932,12 @@ N_Qubit_Decomposition_Tree_Search::construct_gate_structure_from_Gray_code( cons
         
     for( int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++ ) {
         
-        // gcode[idx] = target_qbit[idx] * n_ary_limit_max + control_qbit[idx], where control_qbit > target_qbit
+        // inspecting for no CNOT block setting
+        if( gcode[gcode.size()-gcode_idx-1] == -1 ) {
+            target_qbits[gcode_idx] = 0;
+            control_qbits[gcode_idx] = 0;  
+            continue;
+        }        
             
         int target_qbit = possible_target_qbits[ gcode[gcode.size()-gcode_idx-1] ];            
         int control_qbit = possible_control_qbits[ gcode[gcode.size()-gcode_idx-1] ];
@@ -696,7 +947,7 @@ N_Qubit_Decomposition_Tree_Search::construct_gate_structure_from_Gray_code( cons
         control_qbits[gcode_idx] = control_qbit;  
             
             
-                    //std::cout <<   target_qbit << " " << control_qbit << std::endl;        
+        //std::cout <<   target_qbit << " " << control_qbit << std::endl;        
     }
 
         
@@ -705,11 +956,16 @@ N_Qubit_Decomposition_Tree_Search::construct_gate_structure_from_Gray_code( cons
 
                             
     for (int gcode_idx=0; gcode_idx<gcode.size(); gcode_idx++) {
+
+        // inspecting for no CNOT block setting
+        if( gcode[gcode.size()-gcode_idx-1] == -1 ) {
+            continue;
+        }       
             
         // add new 2-qbit block to the circuit
         add_two_qubit_block( gate_structure_loc, target_qbits[gcode_idx], control_qbits[gcode_idx]  );
     }
-               
+         
     // add finalyzing layer to the the gate structure
     add_finalyzing_layer( gate_structure_loc );
                 
@@ -753,10 +1009,10 @@ layer->add_rz(control_qbit);
 layer->add_ry(control_qbit);
 layer->add_rz(control_qbit);     
 */
-        layer->add_u3(target_qbit, Theta, Phi, Lambda);
-        layer->add_u3(control_qbit, Theta, Phi, Lambda); 
-        layer->add_cnot(target_qbit, control_qbit); // véletszerüen vagy cz_nu-t vagy cnot, vagy egy teljes layer
 
+        layer->add_u3(target_qbit, Theta, Phi, Lambda);
+        layer->add_u3(control_qbit, Theta, Phi, Lambda);
+        layer->add_cnot(target_qbit, control_qbit); 
         gate_structure->add_gate(layer);
 
 }
