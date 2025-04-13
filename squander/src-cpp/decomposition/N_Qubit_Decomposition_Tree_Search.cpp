@@ -358,7 +358,8 @@ N_Qubit_Decomposition_Tree_Search::determine_initial_gate_structure(Matrix_real&
     }
     
     int levels = 5;
-    matrix_base<int>&& gcode_best_solution3 = tabu_search_over_gate_structures( levels );
+    GrayCode gcode_best_solution3 = tabu_search_over_gate_structures( levels );
+return construct_gate_structure_from_Gray_code( gcode_best_solution3 );
 current_minimum = std::numeric_limits<double>::max();
     //exit(1);
     
@@ -391,7 +392,7 @@ current_minimum = std::numeric_limits<double>::max();
        print(sstream, 1);              
     }
 gcode_best_solution.print_matrix();
-exit(1);
+//exit(1);
 
     return construct_gate_structure_from_Gray_code( gcode_best_solution );
        
