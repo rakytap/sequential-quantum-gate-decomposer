@@ -96,6 +96,8 @@ protected:
     /// the set of already examined gate structures (mapped to n-ary Gray codes)
     std::unordered_set<GrayCode, GrayCodeHash> tested_gate_structures;
     
+    std::vector< std::pair<GrayCode, double> > best_solutions;
+    
 
 public:
 
@@ -211,10 +213,9 @@ void set_unitary( Matrix& Umtx_new ) ;
 
 /** 
 @brief Perform tabu serach over gate structures
-@param levels The maximal number of decomposing layers
 @return Returns with the best Gray-code corresponding to the best circuit (The associated gate structure can be costructed by function construct_gate_structure_from_Gray_code)
 */
-GrayCode tabu_search_over_gate_structures( int levels );
+GrayCode tabu_search_over_gate_structures();
 
 
 /** 
@@ -222,7 +223,7 @@ GrayCode tabu_search_over_gate_structures( int levels );
 @param ????
 @return Returns with the ????
 */
-std::vector<GrayCode> determine_derived_structures( const GrayCode& gcode );
+std::vector<GrayCode> determine_muted_structures( const GrayCode& gcode );
 
 
 
@@ -233,6 +234,20 @@ std::vector<GrayCode> determine_derived_structures( const GrayCode& gcode );
 */
 GrayCode draw_gate_structure_from_list( const std::vector<GrayCode>& gcodes );
 
+
+/** 
+@brief ????
+@param ????
+@return Returns with the ????
+*/
+GrayCode mutate_gate_structure( const GrayCode& gcode );
+
+/** 
+@brief ????
+@param ????
+@return Returns with the ????
+*/
+void insert_into_best_solution( const GrayCode& gcode_, double minimum_ );
 
 
 };

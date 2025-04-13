@@ -215,6 +215,56 @@ get_Limits() const {
 
 
 
+/**
+@brief Call to add a new digit to the Gray code
+@param n_ary_limit The limit of the new digit
+@return Returns with the extended Gray code
+*/
+GrayCode_base
+add_Digit( const intType n_ary_limit) {
+
+    matrix_base<intType> n_ary_limits_new( 1, n_ary_limits.size() + 1 );
+    memcpy( n_ary_limits_new.get_data(), n_ary_limits.get_data(), n_ary_limits.size()*sizeof(intType) );
+    
+    n_ary_limits_new[ n_ary_limits_new.size() -1 ] = n_ary_limit;
+    
+    GrayCode_base<intType> gcode_ret( n_ary_limits_new );
+    
+    memcpy( gcode_ret.get_data(), this->data, this->size()*sizeof(intType) );
+    gcode_ret[ gcode_ret.size()-1 ] = 0;
+    
+    return gcode_ret;
+   
+
+}
+
+
+
+/**
+@brief Call to add a new digit to the Gray code
+@param idx the index of the digit to be removed
+@return Returns with the shrinked Gray code
+*/
+GrayCode_base
+remove_Digit( const int idx) {
+
+    matrix_base<intType> n_ary_limits_new( 1, n_ary_limits.size() - 1 );
+    memcpy( n_ary_limits_new.get_data(), n_ary_limits.get_data(), idx*sizeof(intType) );
+    memcpy( n_ary_limits_new.get_data()+idx, n_ary_limits.get_data()+idx+1, (n_ary_limits.size()-idx-1)*sizeof(intType) );
+    
+    
+    GrayCode_base<intType> gcode_ret( n_ary_limits_new );
+    
+    memcpy( gcode_ret.get_data(), this->data, idx*sizeof(intType) );
+    memcpy( gcode_ret.get_data()+idx, this->data+idx+1, (this->size()-idx-1)*sizeof(intType) );  
+    
+    return gcode_ret;
+   
+
+}
+
+
+
 
 
 };
