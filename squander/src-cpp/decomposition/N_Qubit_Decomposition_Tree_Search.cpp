@@ -632,22 +632,8 @@ N_Qubit_Decomposition_Tree_Search::tabu_search_over_gate_structures( int levels 
         gcode[idx] = -1;
     }
 
-    tested_gate_structures.insert( gcode );
-
 
     GrayCode gcode_best_solution;
- Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode );
-             
-N_Qubit_Decomposition_custom&& cDecomp_custom_random = perform_optimization( gate_structure_loc );
-                
-        delete( gate_structure_loc );
-        gate_structure_loc = NULL;
-        
-                
-        number_of_iters += cDecomp_custom_random.get_num_iters(); // retrive the number of iterations spent on optimization  
-    
-        double current_minimum_tmp         = cDecomp_custom_random.get_current_minimum();
-std::cout << current_minimum_tmp << std::endl;
 
 
     std::uniform_real_distribution<double> unif(0.0,1.0);
@@ -657,27 +643,9 @@ std::cout << current_minimum_tmp << std::endl;
 
     while( true ) {
   
-        // determine possible gate structures that can be obtained with a single change (i.e. changing one two-qubit block)
-        std::vector<GrayCode>&& possible_gate_structures = determine_derived_structures( gcode );
-/*
-        std::cout << "uuuuuuuuuuuuuuuuuuuuuuuu " << std::endl;
-        for(  int idx=0; idx<possible_gate_structures.size(); idx++ ) {
 
-            GrayCode& gcode = possible_gate_structures[ idx ];
 
-            gcode.print_matrix();
 
-        }
-*/
-//std::cout << "uuuuuuuuuuuuuuuuuuuuuuuu 2" << std::endl;
-
-        if( possible_gate_structures.size() == 0 ) {
-            break;
-        }
-
-        gcode = draw_gate_structure_from_list( possible_gate_structures );
-
-        tested_gate_structures.insert( gcode ); 
 
         Gates_block* gate_structure_loc = construct_gate_structure_from_Gray_code( gcode );
              
@@ -706,6 +674,8 @@ std::cout << current_minimum_tmp << std::endl;
         gcode.print_matrix();
 */
 
+
+        tested_gate_structures.insert( gcode ); 
         
 
         if( current_minimum_tmp < current_minimum ) {
@@ -734,7 +704,28 @@ std::cout << current_minimum_tmp << std::endl;
         if ( current_minimum < optimization_tolerance_loc )  {  
 gcode_best_solution.print_matrix();          
             break;
-        }           
+        } 
+        
+        
+        // determine possible gate structures that can be obtained with a single change (i.e. changing one two-qubit block)
+        std::vector<GrayCode>&& possible_gate_structures = determine_derived_structures( gcode );
+/*
+        std::cout << "uuuuuuuuuuuuuuuuuuuuuuuu " << std::endl;
+        for(  int idx=0; idx<possible_gate_structures.size(); idx++ ) {
+
+            GrayCode& gcode = possible_gate_structures[ idx ];
+
+            gcode.print_matrix();
+
+        }
+*/
+//std::cout << "uuuuuuuuuuuuuuuuuuuuuuuu 2" << std::endl;
+
+        if( possible_gate_structures.size() == 0 ) {
+            break;
+        }
+
+        gcode = draw_gate_structure_from_list( possible_gate_structures );          
            
     
 
