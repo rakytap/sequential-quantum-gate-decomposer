@@ -32,12 +32,14 @@ import numpy as np
 import qiskit
 qiskit_version = qiskit.version.get_version_info()
 
-if qiskit_version[0] == '1':
-    import qiskit_aer as Aer
-    from qiskit import transpile
-else :
+if qiskit_version[0] == '0':
     from qiskit import Aer
     from qiskit import execute
+else:
+    import qiskit_aer as Aer
+    from qiskit import transpile
+
+
 
 
 
@@ -46,19 +48,8 @@ else :
 # @brief Call to retrieve the unitary from QISKIT circuit
 def get_unitary_from_qiskit_circuit( circuit ):
 
-    
-    
-    if qiskit_version[0] == '1':
-
-        circuit.save_unitary()
-        backend = Aer.AerSimulator(method='unitary')
         
-        compiled_circuit = transpile(circuit, backend)
-        result = backend.run(compiled_circuit).result()
-        
-        return np.asarray( result.get_unitary(circuit) )    
-        
-    elif qiskit_version[0] == '0':
+    if qiskit_version[0] == '0':
         backend = Aer.get_backend('aer_simulator')
         circuit.save_unitary()
         
@@ -67,6 +58,16 @@ def get_unitary_from_qiskit_circuit( circuit ):
         
         # the result of the Qiskit job
         result=job.result()  
+ 
+    else :       
+        
+        circuit.save_unitary()
+        backend = Aer.AerSimulator(method='unitary')
+        
+        compiled_circuit = transpile(circuit, backend)
+        result = backend.run(compiled_circuit).result()
+        
+        return np.asarray( result.get_unitary(circuit) )    
 
 
         return np.asarray( result.get_unitary(circuit) )        
