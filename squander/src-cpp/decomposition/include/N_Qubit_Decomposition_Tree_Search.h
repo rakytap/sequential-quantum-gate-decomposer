@@ -28,40 +28,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 #include "N_Qubit_Decomposition_custom.h"
 #include "GrayCode.h"
-#include "GrayCodeHash.h"
-#include <unordered_set>
-
-#ifdef __cplusplus
-extern "C" 
-{
-#endif
-
-/// Definition of the zggev function from Lapacke to calculate the eigenvalues of a complex matrix
-int LAPACKE_zggev 	( 	int  	matrix_layout,
-		char  	jobvl,
-		char  	jobvr,
-		int  	n,
-		QGD_Complex16 *  	a,
-		int  	lda,
-		QGD_Complex16 *  	b,
-		int  	ldb,
-		QGD_Complex16 *  	alpha,
-		QGD_Complex16 *  	beta,
-		QGD_Complex16 *  	vl,
-		int  	ldvl,
-		QGD_Complex16 *  	vr,
-		int  	ldvr 
-	); 	
-
-#ifdef __cplusplus
-}
-#endif
-
-
-
-struct VectorHash {
-    size_t operator()(const matrix_base<int>& gcode) const;
-};
 
 
 
@@ -90,13 +56,6 @@ protected:
     /// List of possible control qubits according to the topology -- paired up with possible target qubits
     matrix_base<int> possible_control_qbits;   
     
-    
-    ////////// tabu serach specific attributes ///////////
-
-    /// the set of already examined gate structures (mapped to n-ary Gray codes)
-    std::unordered_set<GrayCode, GrayCodeHash> tested_gate_structures;
-    
-    std::vector< std::pair<GrayCode, double> > best_solutions;
     
 
 public:
@@ -149,17 +108,10 @@ virtual void start_decomposition();
 
 
 /**
-@brief Call to optimize an imported gate structure
-@param optimized_parameters_mtx_loc A matrix containing the initial parameters
-*/
-Gates_block* optimize_imported_gate_structure(Matrix_real& optimized_parameters_mtx_loc);
-
-
-/**
 @brief Call determine the gate structrue of the decomposing circuit. (quantum circuit with CRY gates)
 @param optimized_parameters_mtx_loc A matrix containing the initial parameters
 */
-Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_mtx);
+virtual Gates_block* determine_gate_structure(Matrix_real& optimized_parameters_mtx);
 
 
 
@@ -218,36 +170,6 @@ void set_unitary( Matrix& Umtx_new ) ;
 GrayCode tabu_search_over_gate_structures();
 
 
-/** 
-@brief ????
-@param ????
-@return Returns with the ????
-*/
-std::vector<GrayCode> determine_muted_structures( const GrayCode& gcode );
-
-
-
-/** 
-@brief ????
-@param ????
-@return Returns with the ????
-*/
-GrayCode draw_gate_structure_from_list( const std::vector<GrayCode>& gcodes );
-
-
-/** 
-@brief ????
-@param ????
-@return Returns with the ????
-*/
-GrayCode mutate_gate_structure( const GrayCode& gcode );
-
-/** 
-@brief ????
-@param ????
-@return Returns with the ????
-*/
-void insert_into_best_solution( const GrayCode& gcode_, double minimum_ );
 
 
 };
