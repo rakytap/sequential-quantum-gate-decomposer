@@ -62,24 +62,25 @@ N_Qubit_Decomposition_Tabu_Search();
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
-@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
-@param compression_enabled_in Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
+@param level_limit_in The maximal number of two-qubit gates in the decomposition
+@param config std::map conatining custom config parameters
+@param accelerator_num The number of DFE accelerators used in the calculations
 @return An instance of the class
 */
-N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
+N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
 
 
 /**
 @brief Constructor of the class.
 @param Umtx_in The unitary matrix to be decomposed
 @param qbit_num_in The number of qubits spanning the unitary Umtx
-@param optimize_layer_num_in Optional logical value. If true, then the optimization tries to determine the lowest number of the layers needed for the decomposition. If False (default), the optimization is performed for the maximal number of layers.
-@param initial_guess_in Enumeration element indicating the method to guess initial values for the optimization. Possible values: 'zeros=0' ,'random=1', 'close_to_zero=2'
-@param compression_enabled Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
+@param level_limit_in The maximal number of two-qubit gates in the decomposition
+@param topology_in A list of <target_qubit, control_qubit> pairs describing the connectivity between qubits.
+@param config std::map conatining custom config parameters
+@param accelerator_num The number of DFE accelerators used in the calculations
 @return An instance of the class
 */
-N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, int level_limit_in, int level_limit_min_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
+N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num=0 );
 
 
 
@@ -106,33 +107,27 @@ GrayCode tabu_search_over_gate_structures();
 
 
 /** 
-@brief ????
-@param ????
-@return Returns with the ????
+@brief Call to generate a list of mutated gate structures. In each mutation a sigle two-qubit gate block is changed, added or removed.
+@param gcode The Gray code encoding the gate structure around which we mutate the structure.
+@return Returns with the list of modified gray code encoding the gate structures
 */
 std::vector<GrayCode> determine_mutated_structures( const GrayCode& gcode );
 
 
 
 /** 
-@brief ????
-@param ????
-@return Returns with the ????
+@brief Call to sample a gate structure from a list of gate structures to test in the optimization process 
+@param gcodes The list of possible Gray codes encoding the gate structures.
+@return Returns with the sampled Gray code. The chosen Gray code is removed from the input list.
 */
 GrayCode draw_gate_structure_from_list( const std::vector<GrayCode>& gcodes );
 
 
-/** 
-@brief ????
-@param ????
-@return Returns with the ????
-*/
-GrayCode mutate_gate_structure( const GrayCode& gcode );
 
 /** 
-@brief ????
-@param ????
-@return Returns with the ????
+@brief Call to store a given solution among the best ones.
+@param gcode_ The Gray code encoding the gate structure
+@param minimum_ The achieved cost function minimum with the given gate structure
 */
 void insert_into_best_solution( const GrayCode& gcode_, double minimum_ );
 

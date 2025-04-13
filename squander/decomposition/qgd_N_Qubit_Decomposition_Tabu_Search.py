@@ -40,12 +40,14 @@ class qgd_N_Qubit_Decomposition_Tabu_Search(qgd_N_Qubit_Decomposition_Tabu_Searc
     
 ## 
 # @brief Constructor of the class.
-# @param Umtx The unitary matrix to be decomposed.
-# @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
-# @param initial_guess String indicating the method to guess initial values for the optimization. Possible values: "zeros" ,"random", "close_to_zero".
-# @param compression_enabled_in Optional logical value. If True(1) begin decomposition function will compress the circuit. If False(0) it will not. Compression can still be called in seperate wrapper function. 
+# @param Umtx_in The unitary matrix to be decomposed
+# @param qbit_num_in The number of qubits spanning the unitary Umtx
+# @param level_limit_max The maximal number of two-qubit gates in the decomposition
+# @param topology_in A list of <target_qubit, control_qubit> pairs describing the connectivity between qubits.
+# @param config std::map conatining custom config parameters
+# @param accelerator_num The number of DFE accelerators used in the calculations
 # @return An instance of the class
-    def __init__( self, Umtx, level_limit_max=8, level_limit_min=0, topology=None, config={}, accelerator_num=0 ):
+    def __init__( self, Umtx, level_limit_max=8, topology=None, config={}, accelerator_num=0 ):
 
         ## the number of qubits
         self.qbit_num = int(round( np.log2( len(Umtx) ) ))
@@ -74,7 +76,7 @@ class qgd_N_Qubit_Decomposition_Tabu_Search(qgd_N_Qubit_Decomposition_Tabu_Searc
             return
 
         # call the constructor of the wrapper class
-        super().__init__(Umtx, self.qbit_num, level_limit_max, level_limit_min, topology=topology_validated, config=config, accelerator_num=accelerator_num)
+        super().__init__(Umtx, self.qbit_num, level_limit_max, topology=topology_validated, config=config, accelerator_num=accelerator_num)
 
         
 ##
@@ -85,16 +87,6 @@ class qgd_N_Qubit_Decomposition_Tabu_Search(qgd_N_Qubit_Decomposition_Tabu_Searc
 	# call the C wrapper function
         super().Start_Decomposition()
         
-
-##
-# @brief Wrapper function to call the finalize_circuit method of C++ class N_Qubit_Decomposition
-# @param prepare_export Logical parameter. Set true to prepare the list of gates to be exported, or false otherwise.
-    def Finalize_Circuit(self):
-
-	# call the C wrapper function
-        super().Finalize_Circuit()
-
-
     
 ##
 # @brief Call to reorder the qubits in the matrix of the gate
@@ -125,181 +117,6 @@ class qgd_N_Qubit_Decomposition_Tabu_Search(qgd_N_Qubit_Decomposition_Tabu_Searc
         return Qiskit_IO.get_Qiskit_Circuit( squander_circuit, parameters )
 
 
-
-
-##
-# @brief Call to import initial quantum circuit in QISKIT format to be further comporessed
-# @param qc_in The quantum circuit to be imported
-    def import_Qiskit_Circuit( self, qc_in ):  
-
-        from qiskit import QuantumCircuit, transpile
-        from qiskit.circuit import ParameterExpression
-        from qgd_python.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
-
-        qc = transpile(qc_in, optimization_level=0, basis_gates=['cz', 'u3'], layout_method='sabre')
-        #print('Depth of imported Qiskit transpiled quantum circuit:', qc.depth())
-        print('Gate counts in the imported Qiskit transpiled quantum circuit:', qc.count_ops())
-        #print(qc)
-        
-
-        # get the register of qubits
-        q_register = qc.qubits
-
-        # get the size of the register
-        register_size = qc.num_qubits
-
-        # prepare dictionary for single qubit gates
-        single_qubit_gates = dict()
-        for idx in range(register_size):
-            single_qubit_gates[idx] = []
-
-        # prepare dictionary for two-qubit gates
-        two_qubit_gates = list()
-
-        # construct the qgd gate structure            
-        Circuit_ret = qgd_Circuit_Wrapper(register_size)
-        optimized_parameters = list()
-
-        for gate in qc.data:
-
-            name = gate[0].name
-            if name == 'u3':
-                # add u3 gate 
-                qubits = gate[1]
-
-                qubit = q_register.index( qubits[0] )   # qubits[0].index
-                single_qubit_gates[qubit].append( {'params': gate[0].params, 'type': 'u3'} )
-
-            elif name == 'cz':
-                # add cz gate 
-                qubits = gate[1]
-
-                qubit0 = q_register.index( qubits[0] ) #qubits[0].index
-                qubit1 = q_register.index( qubits[1] ) #qubits[1].index
-
-
-                two_qubit_gate = {'type': 'cz', 'qubits': [qubit0, qubit1]}
-
-
-
-                # creating an instance of the wrapper class qgd_Circuit_Wrapper
-                Layer = qgd_Circuit_Wrapper( register_size )
-
-                # retrive the corresponding single qubit gates and create layer from them
-                if len(single_qubit_gates[qubit0])>0:
-                    gate0 = single_qubit_gates[qubit0][0]
-                    single_qubit_gates[qubit0].pop(0)
-                    
-                    if gate0['type'] == 'u3':
-                        Layer.add_U3( qubit0, True, True, True )
-                        params = gate0['params']
-                        params.reverse()
-                        for param in params:
-                            optimized_parameters = optimized_parameters + [float(param)]
-                        optimized_parameters[-1] = optimized_parameters[-1]/2                            
-                        
-
-                if len(single_qubit_gates[qubit1])>0:
-                    gate1 = single_qubit_gates[qubit1][0]
-                    single_qubit_gates[qubit1].pop(0)
-                    
-                    if gate1['type'] == 'u3':
-                        Layer.add_U3( qubit1, True, True, True )
-                        params = gate1['params']
-                        params.reverse()                      
-                        for param in params:
-                            optimized_parameters = optimized_parameters + [float(param)]
-                        optimized_parameters[-1] = optimized_parameters[-1]/2
-
-                ## add cz gate to the layer  
-                #Layer.add_CZ( qubit1, qubit0 )
-
-                
-                Layer.add_RX( qubit0 )    
-                Layer.add_adaptive( qubit0, qubit1 )
-                Layer.add_RZ( qubit1 )
-                Layer.add_RX( qubit0 )
-                optimized_parameters = optimized_parameters + [np.pi/4, np.pi/2, -np.pi/2, -np.pi/4]
-                #optimized_parameters = optimized_parameters + [np.pi]
-
-                Circuit_ret.add_Circuit( Layer )
-   
-       
-
-        # add remaining single qubit gates
-        # creating an instance of the wrapper class qgd_Circuit
-        Layer = qgd_Circuit( register_size )
-
-        for qubit in range(register_size):
-
-            gates = single_qubit_gates[qubit]
-            for gate in gates:
-
-                if gate['type'] == 'u3':
-                    Layer.add_U3( qubit, True, True, True )
-                    params = gate['params']
-                    params.reverse()
-                    for param in params:
-                        optimized_parameters = optimized_parameters + [float(param)]
-                    optimized_parameters[-1] = optimized_parameters[-1]/2                        
-
-        Circuit_ret.add_Circuit( Layer )
-
-        optimized_parameters = np.asarray(optimized_parameters, dtype=np.float64)
-
-        # setting gate structure and optimized initial parameters
-        self.set_Gate_Structure(Circuit_ret)
-
-        self.set_Optimized_Parameters( np.flip(optimized_parameters,0) )
-        #self.set_Optimized_Parameters( optimized_parameters )
-
-
-##
-# @brief Call to set custom gate structure to used in the decomposition
-# @param Gate_structure An instance of SQUANDER Circuit
-    def set_Gate_Structure( self, Gate_structure ):  
-
-        if not isinstance(Gate_structure, qgd_Circuit) :
-            raise Exception("Input parameter Gate_structure should be a an instance of Circuit")
-                    
-                    
-        return super().set_Gate_Structure( Gate_structure )
-        
-        
-                  
-##
-# @brief Call to set custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
-# @param filename String containing the filename
-    def set_Gate_Structure_From_Binary( self, filename ):  
-
-        return super().set_Gate_Structure_From_Binary( filename )
-
-
-##
-# @brief Call to add an adaptive layer to the gate structure previously imported gate structure
-    def add_Layer_To_Imported_Gate_Structure( self ):  
-
-        return super().add_Layer_To_Imported_Gate_Structure()
-
-
-
-##
-# @brief Call to set the radius in which randomized parameters are generated around the current minimum duting the optimization process
-    def set_Randomized_Radius( self, radius ):  
-
-        return super().set_Randomized_Radius(radius)
-
-##
-# @brief Call to append custom layers to the gate structure that are intended to be used in the decomposition from a binary file created from SQUANDER
-    def add_Gate_Structure_From_Binary( self, filename ):  
-
-        return super().add_Gate_Structure_From_Binary( filename )
-        
-##
-# @brief Call to set unitary matrix from a binary file created from SQUANDER
-    def set_Unitary_From_Binary( self, filename ):  
-
-        return super().set_Unitary_From_Binary( filename )
  
 ##
 # @brief Call to set unitary matrix from a numpy array
@@ -366,24 +183,7 @@ class qgd_N_Qubit_Decomposition_Tabu_Search(qgd_N_Qubit_Decomposition_Tabu_Searc
 	
         return super().apply_Global_Phase_Factor()
 
-##
-# @brief Call to add adaptive layers to the gate structure stored by the class.
-    def add_Adaptive_Layers( self ):  
 
-        return super().add_Adaptive_Layers()
-
-##
-# @brief Call to add finalyzing layer (single qubit rotations on all of the qubits) to the gate structure.
-    def add_Finalyzing_Layer_To_Gate_Structure( self ):  
-
-        return super().add_Finalyzing_Layer_To_Gate_Structure()
-
-
-##
-# @brief Call to apply the imported gate structure on the unitary. The transformed unitary is to be decomposed in the calculations, and the imported gate structure is released.
-    def apply_Imported_Gate_Structure( self ):  
-
-        return super().apply_Imported_Gate_Structure()
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
 # @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2", "ADAM_BATCHED", "AGENTS", "COSINE", "AGENTS_COMBINED".
@@ -412,15 +212,6 @@ class qgd_N_Qubit_Decomposition_Tabu_Search(qgd_N_Qubit_Decomposition_Tabu_Searc
 
         # Set the optimizer
         super().set_Cost_Function_Variant(costfnc=costfnc)  
-
-
-## 
-# @brief Call to set the threshold value for the count of interations, above which the parameters are randomized if the cost function does not decreases fast enough.
-# @param threshold The value of the threshold
-    def set_Iteration_Threshold_of_Randomization( self, threshold=2500 ):
-
-        # Set the threshold
-        super().set_Iteration_Threshold_of_Randomization(threshold)  
 
 
 
@@ -506,13 +297,6 @@ class qgd_N_Qubit_Decomposition_Tabu_Search(qgd_N_Qubit_Decomposition_Tabu_Searc
         grad = grad.reshape( (-1,))
 
         return cost_function, grad
-
-## 
-# @brief Call to prepare the circuit to be exported into Qiskit format. (parameters and gates gets bound together, gate block structure is converted to plain structure).
-    def Prepare_Gates_To_Export(self):
-
-        # Set the optimizer
-        super().Prepare_Gates_To_Export()
 
 ##
 # @brief Call to get the number of iterations  
