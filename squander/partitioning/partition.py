@@ -48,15 +48,14 @@ def kahn_partition(c, max_qubit, preparts=None):
     curr_partition = set()
     curr_idx = 0
     total = 0
-    if not preparts is None: curpart = next(i for i in range(len(preparts)) if len(S & preparts[i]) != 0)
     parts = [[]]
 
     while S:
         if preparts is None:
             n = next(dropwhile(partition_condition, S), None)
         else:
-            n = next(iter(S & preparts[curpart]), None)
-            assert (n is None) == (len(preparts[curpart]) == len(parts[-1])) #sanity check valid partitioning
+            n = next(iter(S & preparts[len(parts)-1]), None)
+            assert (n is None) == (len(preparts[len(parts)-1]) == len(parts[-1])) #sanity check valid partitioning
 
         if n is None:  # partition cannot be expanded
             # Add partition to circuit
@@ -66,8 +65,7 @@ def kahn_partition(c, max_qubit, preparts=None):
             curr_partition = set()
             c = Circuit(c.get_Qbit_Num())
             parts.append([])
-            if not preparts is None: curpart = next(i for i in range(len(preparts)) if len(S & preparts[i]) != 0)
-            n = next(iter(S)) if preparts is None else next(iter(S & preparts[curpart]))
+            n = next(iter(S)) if preparts is None else next(iter(S & preparts[len(parts)-1]))
 
 
         # Add gate to current partition
