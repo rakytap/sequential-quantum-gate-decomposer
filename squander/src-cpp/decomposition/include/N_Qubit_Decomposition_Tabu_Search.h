@@ -120,7 +120,7 @@ std::vector<GrayCode> determine_mutated_structures( const GrayCode& gcode );
 @param gcodes The list of possible Gray codes encoding the gate structures.
 @return Returns with the sampled Gray code. The chosen Gray code is removed from the input list.
 */
-GrayCode draw_gate_structure_from_list( const std::vector<GrayCode>& gcodes );
+GrayCode draw_gate_structure_from_list( std::vector<GrayCode>& gcodes );
 
 
 

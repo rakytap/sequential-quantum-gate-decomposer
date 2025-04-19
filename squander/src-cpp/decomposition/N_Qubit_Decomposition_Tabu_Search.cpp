@@ -430,7 +430,7 @@ N_Qubit_Decomposition_Tabu_Search::determine_mutated_structures( const GrayCode&
 @return Returns with the sampled Gray code. The chosen Gray code is removed from the input list.
 */
 GrayCode
-N_Qubit_Decomposition_Tabu_Search::draw_gate_structure_from_list( const std::vector<GrayCode>& gcodes ) {
+N_Qubit_Decomposition_Tabu_Search::draw_gate_structure_from_list( std::vector<GrayCode>& gcodes ) {
 
     if ( gcodes.size() == 0 ) {
 	std::string err("N_Qubit_Decomposition_Tabu_Search::draw_gate_structure_from_list: The list of gates structure is empty." );
