@@ -4,9 +4,9 @@ from itertools import dropwhile
 import numpy as np
 
 
-#@brief Retrieves the set of qubits involved in a given gate
+#@brief Retrieves qubit indices used by a SQUANDER gate
 #@param gate The SQUANDER gate
-#@return A tuple of qubit indices used by the gate
+#@return Set of qubit indices used by the gate
 def get_qubits(gate):
     return ({gate.get_Target_Qbit(), gate.get_Control_Qbit()}
             if isinstance(gate, (CH, CRY, CNOT, CZ)) else {gate.get_Target_Qbit()})
@@ -14,7 +14,7 @@ def get_qubits(gate):
 
 #@brief Converts a QASM file to a SQUANDER circuit
 #@param filename The path to the QASM file
-#@return A tuple (the SQUANDER circuit, a list of circuit parameters)
+#@return Tuple: SQUANDER circuit, List of circuit parameters
 def qasm_to_squander(filename):
     from squander import Qiskit_IO
     qc = QuantumCircuit.from_qasm_file(filename)
@@ -24,8 +24,12 @@ def qasm_to_squander(filename):
 
 #@brief Partitions a flat circuit into subcircuits using Kahn's algorithm
 #@param c The SQUANDER circuit to be partitioned
-#param max_qubit The maximum number of qubits allowed in each partition
-#@return A tuple (the partitioned 2-level circuit, a list of tuples specifying new parameter positions)
+#@param max_qubit Maximum number of qubits allowed per partition
+#@param preparts Optional prefedefined partitioning scheme
+#@return Tuple: 
+#   - Partitioned 2-level circuit
+#   - Tuples specifying new parameter positions: source_idx, dest_idx, param_count
+#   - Partition assignments
 def kahn_partition(c, max_qubit, preparts=None):
     top_circuit = Circuit(c.get_Qbit_Num())
 
@@ -96,6 +100,11 @@ def kahn_partition(c, max_qubit, preparts=None):
     return top_circuit, param_order, parts
 
 
+#@brief Finds the next biggest optimal partition using ILP
+#@param c The SQUANDER circuit to be partitioned
+#@param max_qubits_per_partition Maximum qubits allowed per partition
+#@param prevparts Previously determined partitions to exclude
+#@return gates Set of gate indices forming next biggest partition
 def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
     import pulp
     gatedict = {i: gate for i, gate in enumerate(c.get_Gates())}
@@ -136,6 +145,13 @@ def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
     return gates
 
 
+#@brief Partitions a circuit using ILP to maximize gates per partition
+#@param c The SQUANDER circuit to be partitioned
+#@param max_qubits_per_partition Maximum qubits allowed per partition
+#@return Tuple: 
+#   - Partitioned 2-level circuit
+#   - Tuples specifying new parameter positions: source_idx, dest_idx, param_count
+#   - Partition assignments
 def ilp_max_partitions(c, max_qubits_per_partition):
     gatedict = {i: gate for i, gate in enumerate(c.get_Gates())}
     num_gates = len(gatedict)
@@ -163,9 +179,11 @@ def ilp_max_partitions(c, max_qubits_per_partition):
     assert len(L) == len(parts)
     return kahn_partition(c, max_qubits_per_partition, L)
 
-#@brief Reorders the circuit parameters according to the partitioned execution order
-#@param params The original parameter array
-#@param param_order The list of tuples specifying the new parameter positions
+
+#@brief Reorders circuit parameters based on partitioned execution order
+#@param params Original parameter array
+#@param param_order Tuples specifying new parameter positions: source_idx, dest_idx, param_count
+#@return reordered Reordered parameter array
 def translate_param_order(params, param_order):
     reordered = np.empty_like(params)
     for s_idx, n_idx, n_params in param_order:
@@ -174,13 +192,16 @@ def translate_param_order(params, param_order):
 
 
 #@brief Converts a QASM file to a partitioned SQUANDER circuit with reordered parameters
-#@param filename The path to the QASM file
-#@param max_qubit The maximum number of qubits allowed in each partition
-#@return A tuple (the partitioned SQUANDER circuit, the reordered parameter array)
+#@param filename Path to the QASM file
+#@param max_qubit Maximum qubits allowed per partition
+#@param use_ilp Flag to use ILP-based partitioning
+#@return Tuple: Partitioned SQUANDER circuit, Reordered parameter array
 def qasm_to_partitioned_circuit(filename, max_qubit, use_ilp=False):
     c, param = qasm_to_squander(filename)
     top_c, param_order, _ = ilp_max_partitions(c, max_qubit) if use_ilp else kahn_partition(c, max_qubit)
     param_reordered = translate_param_order(param, param_order)
     return top_c, param_reordered
 
-qasm_to_partitioned_circuit("heisenberg-16-20.qasm", 4, True)
+
+if __name__ == "__main__":
+    qasm_to_partitioned_circuit("examples/partitioning/qasm_samples/heisenberg-16-20.qasm", 4, True)
