@@ -420,7 +420,7 @@ void operator= (const matrix_base& mtx ) {
 @param idx the index of the element
 @return Returns with a reference to the idx-th element.
 */
-scalar& operator[](int idx)  {
+scalar& operator[](int idx) const {
 
 #ifdef DEBUG
     if ( idx >= rows*stride || idx < 0) {
