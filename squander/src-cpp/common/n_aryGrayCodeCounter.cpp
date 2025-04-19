@@ -124,7 +124,7 @@ n_aryGrayCodeCounter::initialize( int64_t initial_offset ) {
     }
 
     // determine the initial gray code corresponding to the given offset
-    gray_code = matrix_base<int>( 1, n_ary_limits.size() );
+    gray_code = GrayCode( n_ary_limits );
     int parity = 0;
     for (unsigned long long jdx = n_ary_limits.size()-1; jdx != ~0ULL; jdx--) {
         gray_code[jdx] = parity ? n_ary_limits[jdx] - 1 - counter_chain[jdx] : counter_chain[jdx];
@@ -141,11 +141,11 @@ n_aryGrayCodeCounter::initialize( int64_t initial_offset ) {
 @brief Get the current gray code counter value
 @return Returns with the current gray code associated with the current offset.
 */
-matrix_base<int>  
+GrayCode  
 n_aryGrayCodeCounter::get() {
 
 
-    return gray_code;
+    return gray_code.copy();
 
 }
 
