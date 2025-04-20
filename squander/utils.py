@@ -28,6 +28,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 import numpy as np
+from squander import Qiskit_IO
 
 import qiskit
 qiskit_version = qiskit.version.get_version_info()
@@ -38,7 +39,6 @@ if qiskit_version[0] == '0':
 else:
     import qiskit_aer as Aer
     from qiskit import transpile
-
 
 
 
@@ -74,6 +74,17 @@ def get_unitary_from_qiskit_circuit( circuit ):
 
 
 
+##
+#@brief Converts a QASM file to a SQUANDER circuit
+#@param filename The path to the QASM file
+#@return Tuple: SQUANDER circuit, List of circuit parameters
+def qasm_to_squander_circuit(filename):
+
+    
+    qc = qiskit.QuantumCircuit.from_qasm_file(filename)
+    circuit_squander, circut_parameters = Qiskit_IO.convert_Qiskit_to_Squander(qc)
+    
+    return circuit_squander, circut_parameters
                 
 
 

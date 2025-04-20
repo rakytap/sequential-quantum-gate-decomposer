@@ -144,10 +144,8 @@ void
 X::apply_to( Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in X gate apply" << std::endl;
-        print(sstream, 0);	       
-        exit(-1);
+        std::string err("X::apply_to: Wrong input size in X gate apply");     
+        throw(err);
     }
 
     Matrix u3_1qbit = calc_one_qubit_u3();

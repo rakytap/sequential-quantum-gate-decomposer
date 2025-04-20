@@ -135,6 +135,11 @@ CZ_NU::get_matrix( Matrix_real& parameters, int parallel) {
 void 
 CZ_NU::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
+    if (input.rows != matrix_size ) {
+        std::string err("CZ_NU::apply_to: Wrong matrix size in CZ_NU gate apply.");
+        throw err;    
+    }
+
     double param = parameters[0];
 
     Matrix u3_1qbit = calc_one_qubit_u3( param );

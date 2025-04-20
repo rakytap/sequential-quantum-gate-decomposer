@@ -225,7 +225,7 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
 
     if (input.rows != matrix_size ) {
-        std::string err("U3::apply_to: Wrong matrix size in U3 gate apply.");
+        std::string err("U3::apply_to: Wrong input size in U3 gate apply.");
         throw err;    
     }
 

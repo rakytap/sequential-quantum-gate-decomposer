@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file RY.cpp
-    \brief Class representing a U3 gate.
+    \brief Class representing a RY gate.
 */
 
 #include "RY.h"
@@ -133,10 +133,8 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, int parallel  ) {
 
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
+        std::string err("RY::apply_to: Wrong input size in RY gate apply.");
+        throw err;    
     }
 
 

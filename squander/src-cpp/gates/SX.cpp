@@ -144,10 +144,8 @@ void
 SX::apply_to( Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in X gate apply" << std::endl;
-        print(sstream, 0);	 
-        exit(-1);
+        std::string err("SX::apply_to: Wrong input size in SX gate apply.");
+        throw err;    
     }
 
 

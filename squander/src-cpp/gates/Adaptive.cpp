@@ -95,10 +95,8 @@ Adaptive::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in Adaptive gate apply" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
+        std::string err("Adaptive::apply_to: Wrong input size in Adaptive gate apply.");
+        throw err;    
     }
 
     double Phi = parameters[0];

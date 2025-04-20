@@ -180,6 +180,11 @@ Gate::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, i
 void 
 Gate::apply_to( Matrix& input, int parallel ) {
 
+   if (input.rows != matrix_size ) {
+        std::string err("Gate::apply_to: Wrong matrix size in Gate gate apply.");
+        throw err;    
+    }
+
     Matrix ret = dot(matrix_alloc, input);
     memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
     //input = ret;

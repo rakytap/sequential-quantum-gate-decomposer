@@ -140,8 +140,8 @@ RZ::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
 
     if (input.rows != matrix_size ) {
-        std::string err("Wrong matrix size in RZ gate apply");
-        throw err;
+        std::string err("RZ::apply_to: Wrong input size in RZ gate apply.");
+        throw err;    
     }
 
 

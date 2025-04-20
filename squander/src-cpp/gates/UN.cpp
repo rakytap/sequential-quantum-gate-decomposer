@@ -143,10 +143,8 @@ void
 UN::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in UN gate apply" << std::endl;
-        print(sstream, 0);	       
-        exit(-1);
+        std::string err("UN::apply_to: Wrong input size in UN gate apply");     
+        throw(err);
     }
 
     if (parameters.size() < parameter_num) {

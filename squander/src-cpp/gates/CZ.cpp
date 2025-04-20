@@ -133,6 +133,11 @@ CZ::get_matrix( int parallel) {
 void 
 CZ::apply_to( Matrix& input, int parallel ) {
 
+    if (input.rows != matrix_size ) {
+        std::string err("CZ::apply_to: Wrong matrix size in CZ gate apply.");
+        throw err;    
+    }
+
     Matrix u3_1qbit = calc_one_qubit_u3();
     apply_kernel_to(u3_1qbit, input, false, parallel);
 

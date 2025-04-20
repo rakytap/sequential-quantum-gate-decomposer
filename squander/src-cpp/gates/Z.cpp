@@ -122,7 +122,7 @@ Z::get_matrix( int parallel) {
 #ifdef DEBUG
         if (Z_matrix.isnan()) {
             std::stringstream sstream;
-	    sstream << "Z::get_matrix: Z_matrix contains NaN." << std::endl;
+	        sstream << "Z::get_matrix: Z_matrix contains NaN." << std::endl;
             print(sstream, 1);	          
         }
 #endif
@@ -143,10 +143,8 @@ void
 Z::apply_to( Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in Z gate apply" << std::endl;
-        print(sstream, 0);	       
-        exit(-1);
+        std::string err("Z::apply_to: Wrong input size in Z gate apply");     
+        throw(err);
     }
 
 

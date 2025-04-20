@@ -167,14 +167,9 @@ Y::apply_to( Matrix& input, int parallel ) {
 void 
 Y::apply_from_right( Matrix& input ) {
 
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
-
-    if (input.cols != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
-        print(sstream, 0);	  
-        exit(-1);
+    if (input.rows != matrix_size ) {
+        std::string err("Y::apply_to: Wrong input size in Y gate apply");     
+        throw(err);
     }
 
     Matrix u3_1qbit = calc_one_qubit_u3();   

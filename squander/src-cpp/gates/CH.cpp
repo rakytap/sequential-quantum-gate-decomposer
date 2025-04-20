@@ -132,6 +132,11 @@ CH::get_matrix(int parallel) {
 void 
 CH::apply_to( Matrix& input, int parallel ) {
 
+    if (input.rows != matrix_size ) {
+        std::string err("CH::apply_to: Wrong input size in CH gate apply.");
+        throw err;    
+    }
+
     Matrix u3_1qbit = calc_one_qubit_u3();
     apply_kernel_to(u3_1qbit, input, false, parallel);
 

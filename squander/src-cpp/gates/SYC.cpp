@@ -134,6 +134,11 @@ SYC::get_matrix( int parallel) {
 void 
 SYC::apply_to( Matrix& input, int parallel ) {
 
+    if (input.rows != matrix_size ) {
+        std::string err("SYC::apply_to: Wrong input size in SYC gate apply.");
+        throw err;    
+    }
+
     int index_step_target = Power_of_2(target_qbit);
     int index_step_control = Power_of_2(control_qbit);
 
