@@ -1026,6 +1026,20 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
         return Py_BuildValue("i", -1);
         
         
+
+    if ( unitary_arg == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+
+    if ( parameters_arr == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Parameters were not given");
+        return NULL;
+    }
+
+
+
     if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
         PyErr_SetString(PyExc_Exception, "Parameter vector should be real typed");
         return NULL;
@@ -1049,11 +1063,6 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
 
-    // convert python object array to numpy C API array
-    if ( unitary_arg == NULL ) {
-        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
-        return NULL;
-    }
 
     PyArrayObject* unitary = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
