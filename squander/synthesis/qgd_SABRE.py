@@ -35,7 +35,7 @@ class qgd_SABRE:
 # @param topology target topology for circuit to be routed to
 # @param max_E_size Maximum lookahead size for more see at:  https://arxiv.org/pdf/1809.02573
 # @param W lookahead cost function weight for more see at:  https://arxiv.org/pdf/1809.02573
-    def __init__(self,quantum_circuit,topology, max_lookahead=4, max_E_size=20,W=0.5):
+    def __init__(self,quantum_circuit,topology, max_lookahead=4, max_E_size=20,W=0.5,alpha=0.9):
         self.circuit_qbit_num = quantum_circuit.get_Qbit_Num() # number of qubits in circuit to be mapped and routed
         self.qbit_num = max(max(topology))+1 # number of qubits in system to be mapped to
         self.initial_circuit = quantum_circuit 
@@ -45,6 +45,7 @@ class qgd_SABRE:
         self.D = self.Floyd_Warshall()
         self.max_E_size = max_E_size
         self.W = W
+        self.alpha = alpha
         self.possible_connections_control,self.neighbours = self.geneterate_possible_connections()
         self.max_lookahead = max_lookahead
 
@@ -313,7 +314,7 @@ class qgd_SABRE:
                             for gate_idx in E:
                                 gate = DAG[gate_idx][0]
                                 q_target, q_control = gate.get_Target_Qbit(),gate.get_Control_Qbit()
-                                score_temp += self.H_basic(pi_temp,q_target, q_control)/self.calculate_gate_depth(gate_idx,IDAG,resolved_gates)
+                                score_temp += self.H_basic(pi_temp,q_target, q_control)*(self.alpha**self.calculate_gate_depth(gate_idx,IDAG,resolved_gates))
                             score_temp *= self.W/len(E)
                             score+=score_temp
                         scores.append(score)
