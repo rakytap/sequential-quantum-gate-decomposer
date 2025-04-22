@@ -122,7 +122,7 @@ operator==( const GrayCode_base &gcode) const {
     }
 
 
-    for (size_t idx=0; idx<this->cols; idx++) {
+    for (intType idx=0; idx<this->cols; idx++) {
         if ( this->data[idx] != gcode[idx] ) {
             return false;
         }
@@ -221,7 +221,7 @@ get_Limits() const {
 @return Returns with the extended Gray code
 */
 GrayCode_base
-add_Digit( const intType n_ary_limit) {
+add_Digit( const intType n_ary_limit) const {
 
     matrix_base<intType> n_ary_limits_new( 1, n_ary_limits.size() + 1 );
     memcpy( n_ary_limits_new.get_data(), n_ary_limits.get_data(), n_ary_limits.size()*sizeof(intType) );
@@ -246,7 +246,7 @@ add_Digit( const intType n_ary_limit) {
 @return Returns with the shrinked Gray code
 */
 GrayCode_base
-remove_Digit( const int idx) {
+remove_Digit( const int idx) const {
 
     matrix_base<intType> n_ary_limits_new( 1, n_ary_limits.size() - 1 );
     memcpy( n_ary_limits_new.get_data(), n_ary_limits.get_data(), idx*sizeof(intType) );
