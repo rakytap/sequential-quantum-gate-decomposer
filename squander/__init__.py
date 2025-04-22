@@ -2,7 +2,8 @@
 
 
 #decomposition classes
-from squander.decomposition.qgd_N_Qubit_Decomposition_non_unitary_adaptive import qgd_N_Qubit_Decomposition_non_unitary_adaptive as N_Qubit_Decomposition_non_unitary_adaptive
+from squander.decomposition.qgd_N_Qubit_Decomposition_Tree_Search import qgd_N_Qubit_Decomposition_Tree_Search as N_Qubit_Decomposition_Tree_Search
+from squander.decomposition.qgd_N_Qubit_Decomposition_Tabu_Search import qgd_N_Qubit_Decomposition_Tabu_Search as N_Qubit_Decomposition_Tabu_Search
 from squander.decomposition.qgd_N_Qubit_Decomposition_adaptive import qgd_N_Qubit_Decomposition_adaptive as N_Qubit_Decomposition_adaptive
 from squander.decomposition.qgd_N_Qubit_State_Preparation_adaptive import qgd_N_Qubit_State_Preparation_adaptive as N_Qubit_State_Preparation_adaptive
 from squander.decomposition.qgd_N_Qubit_Decomposition_custom import qgd_N_Qubit_Decomposition_custom as N_Qubit_Decomposition_custom
@@ -30,8 +31,14 @@ from squander.gates.qgd_CRY import qgd_CRY  as CRY
 # quantum circuit
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 
+#SABRE
+from squander.decomposition.qgd_SABRE import qgd_SABRE as SABRE
+
 # Qiskit IO
 from squander.IO_interfaces import Qiskit_IO
+
+import squander.utils
+
 
 ## NN component (experimental interface)
 from squander.nn.qgd_nn import qgd_nn as NN

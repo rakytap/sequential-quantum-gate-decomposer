@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10.2)
 # CMAKE to create the shared library of the quantum gate decomposition project
 
 # set the project name and version
-project(CQGD VERSION 1.9.0)
+project(CQGD VERSION 1.9.2)
 
 # reuse compilation time linking for use runtime linking 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -365,7 +365,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition_Cost_Function.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/Sub_Matrix_Decomposition.cpp
-    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_non_unitary_adaptive.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Tree_Search.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/decomposition/N_Qubit_Decomposition_Tabu_Search.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/variational_quantum_eigensolver/Variational_Quantum_Eigensolver_Base.cpp  
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Unitary.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/random_unitary/Random_Orthogonal.cpp

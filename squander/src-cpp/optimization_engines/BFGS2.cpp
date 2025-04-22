@@ -127,7 +127,26 @@ CPU_time = 0.0;
         }
         else {
             optimization_tolerance_loc = optimization_tolerance;
-        }       
+        }   
+
+
+        // The number if iterations after which the current results are displed/exported
+        int output_periodicity;
+        if ( config.count("output_periodicity_cosine") > 0 ) {
+             long long value = 1;
+             config["output_periodicity_cosine"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        if ( config.count("output_periodicity") > 0 ) {
+             long long value = 1;
+             config["output_periodicity"].get_property( value ); 
+             output_periodicity = (int) value;
+        }
+        else {
+            output_periodicity = 0;
+        }        
+
+    
 
         std::stringstream sstream;
         sstream << "max_inner_iterations: " << max_inner_iterations_loc  << std::endl;
@@ -196,6 +215,10 @@ CPU_time = 0.0;
                 for ( int jdx=0; jdx<num_of_parameters; jdx++) {
                     solution_guess[jdx] = optimized_parameters_mtx[jdx] + distrib_real(gen)*2*M_PI;
                 }
+            }
+
+            if ( output_periodicity>0 && iter_idx % output_periodicity == 0 ) {
+                export_current_cost_fnc(current_minimum);
             }
 
 #ifdef __MPI__        

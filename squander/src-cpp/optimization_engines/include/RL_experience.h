@@ -24,7 +24,6 @@ limitations under the License.
 #define RLEXPERIENCE_H
 
 #include "matrix_real.h"
-#include "matrix_base.h"
 #include "Gates_block.h"
 #include <map>
 #include <cstdlib>

@@ -25,7 +25,7 @@ limitations under the License.
 #ifndef matrix_real_H
 #define matrix_real_H
 
-#include "matrix_base.h"
+#include "matrix_base.hpp"
 #include <cmath>
 
 

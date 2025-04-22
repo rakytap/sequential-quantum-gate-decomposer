@@ -99,7 +99,19 @@ class qgd_CNOT(qgd_CNOT_Wrapper):
 	# call the C wrapper function
         return super().get_Target_Qbit()
 
+#@brief Call to set the target qbit.
+    def set_Target_Qbit( self, target_qbit_in ):
 
+	# call the C wrapper function
+        super().set_Target_Qbit(target_qbit_in)
+
+
+#@brief Call to set the control qbit (does nothing if no control qbit is used in the gate).
+    def set_Control_Qbit( self, control_qbit_in ):
+
+	# call the C wrapper function
+        super().set_Control_Qbit(control_qbit_in)
+        
 #@brief Call to get the control qbit (returns with -1 if no control qbit is used in the gate).
     def get_Control_Qbit( self ):
 
