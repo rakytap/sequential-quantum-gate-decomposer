@@ -328,6 +328,10 @@ class qgd_N_Qubit_Decomposition_Tree_Search(qgd_N_Qubit_Decomposition_Tree_Searc
     def get_Decomposition_Error(self):
     
         return super().get_Decomposition_Error()
+        
+    def set_Two_Qubit_Block_Template(self, template):
+    
+        super().set_Two_Qubit_Block_Template(template)
 
 
 
