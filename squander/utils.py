@@ -35,17 +35,12 @@ qiskit_version = qiskit.version.get_version_info()
 if qiskit_version[0] == '0':
     from qiskit import Aer
     from qiskit import execute
+    if int(qiskit_version[2])>3:
+        from qiskit.quantum_info import Operator
 else:
     import qiskit_aer as Aer
     from qiskit import transpile
     from qiskit.quantum_info import Operator
-else :
-    if int(qiskit_version[2])>3:
-        from qiskit.quantum_info import Operator
-    from qiskit import Aer
-    from qiskit import execute
-
-
 
 
 
@@ -73,10 +68,9 @@ def get_unitary_from_qiskit_circuit( circuit ):
         compiled_circuit = transpile(circuit, backend)
         result = backend.run(compiled_circuit).result()
         
-        return np.asarray( result.get_unitary(circuit) )    
 
 
-        return np.asarray( result.get_unitary(circuit) )        
+    return np.asarray( result.get_unitary(circuit) )        
 
 def get_unitary_from_qiskit_circuit_operator(circuit):
 

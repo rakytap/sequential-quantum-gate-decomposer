@@ -34,7 +34,7 @@ from squander.gates.qgd_R import qgd_R  as R
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 
 #SABRE
-from squander.decomposition.qgd_SABRE import qgd_SABRE as SABRE
+from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 
 # Qiskit IO
 from squander.IO_interfaces import Qiskit_IO
