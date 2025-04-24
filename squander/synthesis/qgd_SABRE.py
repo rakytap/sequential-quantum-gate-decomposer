@@ -72,7 +72,7 @@ class qgd_SABRE:
         neighbours = [ [] for _ in range(self.qbit_num) ]
         for connection in self.topology:
             qbit1,qbit2 = connection
-            possible_connections_control[qbit1].append(qbit2)
+            possible_connections_control[qbit2].append(qbit1)
             if qbit2 not in neighbours[qbit1]:
                 neighbours[qbit1].append(qbit2)
             if qbit1 not in neighbours[qbit2]:
