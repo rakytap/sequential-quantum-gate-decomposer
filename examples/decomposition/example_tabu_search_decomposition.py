@@ -20,12 +20,9 @@ limitations under the License.
 ## \file example.py
 ## \brief Simple example python code demonstrating the basic usage of the Python interface of the Quantum Gate Decomposer package
 
-## [import]
-from squander import N_Qubit_Decomposition 
-## [import]
-## [import adaptive]
-from squander import N_Qubit_Decomposition_non_unitary_adaptive       
-## [import adaptive]
+
+## [import Tabu search]
+from squander import N_Qubit_Decomposition_Tabu_Search       
 
 from squander import Qiskit_IO
 print(' ')
@@ -59,13 +56,12 @@ matrix_size = len(Umtx)
 
 ## [create decomposition class]
 ## creating a class to decompose the unitary
-cDecompose = N_Qubit_Decomposition_non_unitary_adaptive( Umtx.conj().T)
+cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T)
 ## [create decomposition class]
 
 
 cDecompose.set_Optimizer("BFGS")
 cDecompose.set_Cost_Function_Variant(3)
-#cDecompose.set_Ansatz("CROT_OPPOSITE")
 cDecompose.set_Verbose(3)
 ## [start decomposition]
 # starting the decomposition
