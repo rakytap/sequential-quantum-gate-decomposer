@@ -1916,10 +1916,98 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
 
 /**
-@brief Call to reorder the qubits in the matrix of the gate
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}.
+@return Returns with the remapped circuit
+*/
+Gates_block* 
+Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map ) {
+
+    return create_remapped_circuit( qbit_map, qbit_num );
+
+}
+
+
+/**
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}. . 
+@param qbit_num The number of qubits in the remapped circuit
+@return Returns with the remapped circuit
+*/
+Gates_block* 
+Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const int qbit_num_ ) {
+
+
+    Gates_block* ret = new Gates_block( qbit_num_ );
+    for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
+
+        Gate* op = *it;
+        switch (op->get_type()) {
+        case CNOT_OPERATION: case CZ_OPERATION:
+        case CH_OPERATION: case SYC_OPERATION:
+        case U3_OPERATION: case RY_OPERATION:
+        case CRY_OPERATION: case RX_OPERATION:
+        case RZ_OPERATION: case X_OPERATION:
+        case Y_OPERATION: case Z_OPERATION:
+        case SX_OPERATION: case BLOCK_OPERATION:
+        case GENERAL_OPERATION: case UN_OPERATION:
+        case ON_OPERATION: case COMPOSITE_OPERATION:
+        case ADAPTIVE_OPERATION:
+        case H_OPERATION:
+        case CZ_NU_OPERATION:
+        {
+            Gate* cloned_op = op->clone();
+
+            int target_qbit = cloned_op->get_target_qbit();
+            int control_qbit = cloned_op->get_control_qbit();
+
+            if ( qbit_num_ > qbit_num ) {
+                // qbit num needs to be set in prior to avoid conflict
+                cloned_op->set_qbit_num( qbit_num_ );
+            }
+
+            if (qbit_map.find( target_qbit ) != qbit_map.end()) {
+                cloned_op->set_target_qbit( qbit_map[ target_qbit ] );
+            } else {
+                std::string err("Gates_block::create_remapped_circuit: Missing target qubit from the qbit map."); 
+                throw err;
+            }
+
+
+            if ( control_qbit != -1 ) {
+                if ( qbit_map.find( control_qbit ) != qbit_map.end() ) {
+                    cloned_op->set_control_qbit( qbit_map[ control_qbit ] );
+                } else {
+                    std::string err("Gates_block::create_remapped_circuit: Missing control qubit from the qbit map."); 
+                    throw err;
+                }
+            }
+
+            if ( qbit_num_ < qbit_num ) {
+                // qbit num needs to be set post to avoid conflict
+                cloned_op->set_qbit_num( qbit_num_ );
+            }
+
+            ret->add_gate( cloned_op );
+
+            break;
+        }
+        default:
+            std::string err("Gates_block::create_remapped_circuit: unimplemented gate"); 
+            throw err;
+        }
+
+    }
+
+    return ret;
+}
+
+
+/**
+@brief Call to reorder the qubits in the matrix of the gate (OBSOLETE function)
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
+void Gates_block::reorder_qubits( std::vector<int>  qbit_list ) {
 
     for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
 
@@ -2055,8 +2143,8 @@ std::vector<Gate*> Gates_block::get_gates() {
 
 
 /**
-@brief Call to get the gates stored in the class.
-@return Return with a list of the gates.
+@brief Call to get a gate stored in the class.
+@return Return with a pointer to the gate. (Borrowed reference, dont free the memory)
 */
 Gate* Gates_block::get_gate(int idx) {
 

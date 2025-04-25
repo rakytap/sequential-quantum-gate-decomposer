@@ -235,7 +235,7 @@ qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_init(qgd_N_Qubit_Decomposition_Tre
     std::map<std::string, Config_Element> config;
 
 
-    // keys and values of the config dict
+    // keys and values of the config dict (borrowed references)
     PyObject *key, *value;
     Py_ssize_t pos = 0;
 

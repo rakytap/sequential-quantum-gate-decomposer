@@ -1075,7 +1075,6 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
     // create QGD version of the input matrix
     Matrix unitary_mtx = numpy2matrix(unitary);
-    std::cout << unitary_mtx.rows << " " << unitary_mtx.cols << std::endl;
 
     try {
         int parallel = 1;
@@ -1224,13 +1223,146 @@ qgd_Circuit_Wrapper_get_Qbit_Num( qgd_Circuit_Wrapper *self ) {
         return NULL;
     }
     catch(...) {
-        std::string err( "Invalid pointer to decomposition class");
+        std::string err( "Invalid pointer to circuit class");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
 
 
     return Py_BuildValue("i", qbit_num );
+    
+}
+
+
+
+/**
+@brief Call to retrieve the list of qubits involved in the circuit
+*/
+static PyObject *
+qgd_Circuit_Wrapper_get_Qbits( qgd_Circuit_Wrapper *self ) {
+
+    PyObject* ret = PyList_New(0);
+
+    try {
+        std::vector<int>&& qbits =  self->circuit->get_involved_qubits();
+        for (int idx = 0; idx < qbits.size(); idx++) {
+            PyList_Append(ret, Py_BuildValue("i", qbits[idx] ) );
+        }
+
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("O", ret );
+    
+}
+
+
+
+/**
+@brief Call to remap the qubits in the circuit.
+*/
+static PyObject *
+qgd_Circuit_Wrapper_Remap_Qbits( qgd_Circuit_Wrapper *self, PyObject *args ) {
+
+
+    PyObject* qbit_map_arg = NULL;
+    int qbit_num = 0;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|Oi", &qbit_map_arg, &qbit_num )) 
+        return Py_BuildValue("i", -1);
+
+
+    // parse qbit map and create C++ version of the map
+
+    bool is_dict = PyDict_Check( qbit_map_arg );
+    if (!is_dict) {
+        printf("Qubit map object must be a python dictionary!\n");
+        return -1;
+    }
+
+    // integer type config metadata utilized during the optimization
+    std::map<int, int> qbit_map;
+
+
+    // keys and values of the config dict (borrowed references)
+    PyObject *key, *value;
+    Py_ssize_t pos = 0;
+
+    while (PyDict_Next(qbit_map_arg, &pos, &key, &value)) {
+       
+
+        if ( PyLong_Check( value ) && PyLong_Check( key ) ) { 
+            int key_Cpp = (int)PyLong_AsLongLong( key );
+            qbit_map[ key_Cpp ] = (int)PyLong_AsLongLong( value );
+        }
+        else {
+            std::string err( "Key and value in the qbit_map should be integers");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+
+    }
+
+
+    Gates_block* remapped_circuit = NULL;
+
+    try {
+        remapped_circuit = self->circuit->create_remapped_circuit( qbit_map, qbit_num);
+
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+
+        // import gate operation modules
+        PyObject* qgd_circuit  = PyImport_ImportModule("squander.gates.qgd_Circuit");
+
+        if ( qgd_circuit == NULL ) {
+            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_Circuit" );
+            return NULL;
+        }
+
+        PyObject* qgd_circuit_Dict  = PyModule_GetDict( qgd_circuit );    
+
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_circuit_class = PyDict_GetItemString( qgd_circuit_Dict, "qgd_Circuit");
+
+        PyObject* circuit_input = Py_BuildValue("(O)", Py_BuildValue("i", qbit_num) );
+        PyObject* py_circuit    = PyObject_CallObject(py_circuit_class, circuit_input);
+
+
+        // replace dummy data with real gate data
+        qgd_Circuit_Wrapper* py_circuit_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_circuit );
+
+        delete( py_circuit_C->circuit );
+        py_circuit_C->circuit = remapped_circuit;
+
+        Py_DECREF( qgd_circuit );            
+        Py_DECREF( circuit_input );
+
+
+    return py_circuit;
     
 }
 
@@ -1679,7 +1811,8 @@ get_gate( Gates_block* circuit, int &idx ) {
         qgd_Circuit_Wrapper* py_gate_C = reinterpret_cast<qgd_Circuit_Wrapper*>( py_gate );
 
         Gates_block* circuit = reinterpret_cast<Gates_block*>( gate );
-        py_gate_C->circuit->combine( circuit );
+        delete( py_gate_C->circuit );
+        py_gate_C->circuit = circuit->clone();
 
         Py_DECREF( qgd_circuit );            
         Py_DECREF( circuit_input );
@@ -2079,6 +2212,12 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"get_Qbit_Num", (PyCFunction) qgd_Circuit_Wrapper_get_Qbit_Num, METH_NOARGS,
      "Call to get the number of qubits in the circuit"
+    },
+    {"get_Qbits", (PyCFunction) qgd_Circuit_Wrapper_get_Qbits, METH_NOARGS,
+     "Call to get the list of qubits involved in the circuit"
+    },
+    {"Remap_Qbits", (PyCFunction) qgd_Circuit_Wrapper_Remap_Qbits, METH_VARARGS,
+     "Call to remap the qubits in the circuit."
     },
     {"get_Gate", (PyCFunction) qgd_Circuit_Wrapper_get_gate, METH_VARARGS,
      "Method to get the i-th decomposing gates."

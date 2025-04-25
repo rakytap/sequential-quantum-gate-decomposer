@@ -24,6 +24,7 @@ limitations under the License.
 #define GATES_BLOCK_H
 
 #include <vector>
+#include <map>
 #include "common.h"
 #include "matrix_real.h"
 #include "Gate.h"
@@ -480,7 +481,24 @@ void list_gates( const Matrix_real &parameters, int start_index );
 
 
 /**
-@brief Call to reorder the qubits in the matrix of the gates
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}.
+@return Returns with the remapped circuit
+*/
+Gates_block* Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map );
+
+
+/**
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}. . 
+@param qbit_num The number of qubits in the remapped circuit
+@return Returns with the remapped circuit
+*/
+Gates_block* Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const int qbit_num_ );
+
+
+/**
+@brief Call to reorder the qubits in the matrix of the gates (Obsolete function)
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 virtual void reorder_qubits( std::vector<int> qbit_list );
