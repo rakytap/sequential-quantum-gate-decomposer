@@ -84,6 +84,7 @@ def decompose_partition( Umtx ):
 #  code for iterate over partitions and optimize them
 for subcircuit in subcircuits:
 
+    # isolate the parameters corresponding to the given sub-circuit
     start_idx = subcircuit.get_Parameter_Start_Index()
     end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
     subcircuit_parameters = parameters[ start_idx:end_idx ]
@@ -97,11 +98,13 @@ for subcircuit in subcircuits:
     for idx in range( len(involved_qbits) ):
         qbit_map[ involved_qbits[idx] ] = idx
 
+    # remap the subcircuit to a smaller qubit register
     remapped_subcircuit = subcircuit.Remap_Qbits( qbit_map, qbit_num )
 
     # get the unitary representing the circuit
     unitary = remapped_subcircuit.get_Matrix( subcircuit_parameters )
 
+    # decompose a small unitary into a new circuit
     decomposed_circuit, decomposed_parameters = decompose_partition( unitary )
 
 
@@ -110,9 +113,10 @@ for subcircuit in subcircuits:
     for key, value in qbit_map.items():
         inverse_qbit_map[ value ] = key
 
+    # remap the decomposed circuit in order to insert it into a large circuit
     inverse_remapped_subcircuit = decomposed_circuit.Remap_Qbits( inverse_qbit_map, qbit_num_orig_circuit )
 
-
+    ##################################xx
     # testing the correctness of the original sub circuit and remapped->decomposed->inverse remapped circuit
     matrix_size = 1 << qbit_num_orig_circuit
     initial_state_real = np.random.uniform(-1.0,1.0, (matrix_size,) )
@@ -130,4 +134,5 @@ for subcircuit in subcircuits:
     
     overlap = transformed_state_1.transpose().conj() @ transformed_state_2
     print( "overlap: ", np.abs(overlap) )
+    ##################################xx    
  
