@@ -120,7 +120,6 @@ N_Qubit_Decomposition_Tabu_Search::determine_gate_structure(Matrix_real& optimiz
 
     level_limit = (int)level_max;
    
-   
     GrayCode gcode_best_solution = tabu_search_over_gate_structures();
 
 

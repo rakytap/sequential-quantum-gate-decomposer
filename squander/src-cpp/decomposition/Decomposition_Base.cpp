@@ -46,7 +46,7 @@ Decomposition_Base::Decomposition_Base() {
     type = DECOMPOSITION_BASE_CLASS;
 
     // error of the unitarity of the final decomposition
-    decomposition_error = -1;
+    decomposition_error = DBL_MAX;
 
     // number of finalizing (deterministic) opertaions counted from the top of the array of gates
     finalizing_gates_num = 0;
@@ -128,7 +128,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::ma
     type = DECOMPOSITION_BASE_CLASS;
 
     // error of the unitarity of the final decomposition
-    decomposition_error = -1;
+    decomposition_error = DBL_MAX;
 
     // number of finalizing (deterministic) opertaions counted from the top of the array of gates
     finalizing_gates_num = 0;
