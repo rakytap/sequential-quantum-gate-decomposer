@@ -1475,152 +1475,49 @@ Gates_block::insert_gate( Gate* gate, int idx ) {
 }
 
 
+/**
+@brief Call to add the number of the individual gate types in the circuit to the map given in the argument
+@param A map<gate_name, gate_count> describing the number of the individual gate types
+*/
+void Gates_block::add_gate_nums( std::map<std::string, int>& gate_nums ) {
+
+    for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
+    
+        // get the specific gate in the circuit (might be a gate or another subcircuit)
+        Gate* gate = *it;
+            
+            
+        if (gate->get_type() == BLOCK_OPERATION) {
+            Gates_block* circuit = static_cast<Gates_block*>(gate);
+            circuit->add_gate_nums( gate_nums );
+        }
+        else {
+            std::string&& gate_name = gate->get_name();
+            
+            if( gate_nums.find(gate_name) == gate_nums.end() ) {
+                gate_nums[ gate_name ] = gate_nums[ gate_name ] + 1;
+            }
+            else {
+                gate_nums[ gate_name ] = 1;
+            }
+        }
+    
+    }
+    
+}
+
 
 /**
 @brief Call to get the number of the individual gate types in the list of gates
-@return Returns with an instance gates_num describing the number of the individual gate types
+@return Returns with a map<gate_name, gate_count> describing the number of the individual gate types
 */
-gates_num Gates_block::get_gate_nums() {
+std::map<std::string, int> Gates_block::get_gate_nums() {
 
-        gates_num gate_nums;
-
-        gate_nums.u3      = 0;
-        gate_nums.rx      = 0;
-        gate_nums.ry      = 0;
-        gate_nums.cry      = 0;
-        gate_nums.rz      = 0;
-        gate_nums.cnot    = 0;
-        gate_nums.cz      = 0;
-        gate_nums.ch      = 0;
-        gate_nums.x       = 0;
-        gate_nums.z       = 0;
-        gate_nums.y       = 0;
-        gate_nums.sx      = 0;
-        gate_nums.syc     = 0;
-        gate_nums.cz_nu   = 0;
-        gate_nums.un     = 0;
-        gate_nums.on     = 0;
-        gate_nums.com     = 0;
-        gate_nums.general = 0;
-        gate_nums.adap = 0;
-        gate_nums.total = 0;
-
-        for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
-            // get the specific gate or block of gates
-            Gate* gate = *it;
-
-            if (gate->get_type() == BLOCK_OPERATION) {
-
-                Gates_block* block_gate = static_cast<Gates_block*>(gate);
-                gates_num gate_nums_loc = block_gate->get_gate_nums();
-                gate_nums.u3   = gate_nums.u3 + gate_nums_loc.u3;
-                gate_nums.rx   = gate_nums.rx + gate_nums_loc.rx;
-                gate_nums.ry   = gate_nums.ry + gate_nums_loc.ry;
-                gate_nums.cry   = gate_nums.cry + gate_nums_loc.cry;
-                gate_nums.rz   = gate_nums.rz + gate_nums_loc.rz;
-                gate_nums.cnot = gate_nums.cnot + gate_nums_loc.cnot;
-                gate_nums.cz = gate_nums.cz + gate_nums_loc.cz;
-                gate_nums.ch = gate_nums.ch + gate_nums_loc.ch;
-                gate_nums.h  = gate_nums.h + gate_nums_loc.h;
-                gate_nums.x  = gate_nums.x + gate_nums_loc.x;
-                gate_nums.sx = gate_nums.sx + gate_nums_loc.sx;
-                gate_nums.syc   = gate_nums.syc + gate_nums_loc.syc;
-                gate_nums.un   = gate_nums.un + gate_nums_loc.un;
-                gate_nums.on   = gate_nums.on + gate_nums_loc.on;
-                gate_nums.com  = gate_nums.com + gate_nums_loc.com;
-                gate_nums.adap = gate_nums.adap + gate_nums_loc.adap;
-                gate_nums.total = gate_nums.total + gate_nums_loc.total;
-
-            }
-            else if (gate->get_type() == U3_OPERATION) {
-                gate_nums.u3   = gate_nums.u3 + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == RX_OPERATION) {
-                gate_nums.rx   = gate_nums.rx + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == RY_OPERATION) {
-                gate_nums.ry   = gate_nums.ry + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CRY_OPERATION) {
-                gate_nums.cry   = gate_nums.cry + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == RZ_OPERATION) {
-                gate_nums.rz   = gate_nums.rz + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CNOT_OPERATION) {
-                gate_nums.cnot   = gate_nums.cnot + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CZ_OPERATION) {
-                gate_nums.cz   = gate_nums.cz + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CH_OPERATION) {
-                gate_nums.ch   = gate_nums.ch + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == H_OPERATION) {
-                gate_nums.h   = gate_nums.h + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == X_OPERATION) {
-                gate_nums.x   = gate_nums.x + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == Y_OPERATION) {
-                gate_nums.y   = gate_nums.y + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == Z_OPERATION) {
-                gate_nums.z   = gate_nums.z + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == SX_OPERATION) {
-                gate_nums.sx   = gate_nums.sx + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == SYC_OPERATION) {
-                gate_nums.syc   = gate_nums.syc + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == GENERAL_OPERATION) {
-                gate_nums.general   = gate_nums.general + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == UN_OPERATION) {
-                gate_nums.un   = gate_nums.un + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == ON_OPERATION) {
-                gate_nums.on   = gate_nums.on + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == COMPOSITE_OPERATION) {
-                gate_nums.com   = gate_nums.com + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CZ_NU_OPERATION) {
-                gate_nums.cz_nu   = gate_nums.cz_nu + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }            
-            else if (gate->get_type() == ADAPTIVE_OPERATION) {
-                gate_nums.adap   = gate_nums.adap + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else {
-                std::string err("Gates_block::get_gate_nums: unimplemented gate"); 
-                throw err;
-            }
-
-        }
-
-
-        return gate_nums;
+    std::map<std::string, int> gate_nums;
+    
+    add_gate_nums( gate_nums );
+    
+    return gate_nums;
 
 }
 

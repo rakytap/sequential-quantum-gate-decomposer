@@ -449,12 +449,18 @@ void add_gate_to_front( Gate* gate );
 void insert_gate( Gate* gate, int idx );
 
 
+/**
+@brief Call to add the number of the individual gate types in the circuit to the map given in the argument
+@param A map<gate_name, gate_count> describing the number of the individual gate types
+*/
+void add_gate_nums( std::map<std::string, int>& gate_nums );
+
 
 /**
 @brief Call to get the number of the individual gate types in the list of gates
-@return Returns with an instance gates_num describing the number of the individual gate types
+@return Returns with a map<gate_name, gate_count> describing the number of the individual gate types
 */
-gates_num get_gate_nums();
+std::map<std::string, int> get_gate_nums();
 
 
 /**

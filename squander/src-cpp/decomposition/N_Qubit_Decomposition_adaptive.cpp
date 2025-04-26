@@ -575,30 +575,19 @@ void N_Qubit_Decomposition_adaptive::finalize_circuit() {
 
     decomposition_error = optimization_problem(optimized_parameters_mtx);
     
-    // get the number of gates used in the decomposition
-    gates_num gates_num = get_gate_nums();
-
     
     sstream.str("");
     sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " gates with:" << std::endl;
       
-        if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 gates," << std::endl;
-        if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX gates," << std::endl;
-        if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY gates," << std::endl;
-        if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ gates," << std::endl;
-        if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT gates," << std::endl;
-        if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ gates," << std::endl;
-        if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH gates," << std::endl;
-        if ( gates_num.x>0 ) sstream << gates_num.x << " X gates," << std::endl;
-        if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX gates," << std::endl; 
-        if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore gates," << std::endl;   
-        if ( gates_num.un>0 ) sstream << gates_num.un << " UN gates," << std::endl;
-        if ( gates_num.cry>0 ) sstream << gates_num.cry << " CRY gates," << std::endl;  
-        if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive gates," << std::endl;
-        if ( gates_num.cz_nu>0 ) sstream << gates_num.cz_nu << " CZ_NU gates," << std::endl;
+    // get the number of gates used in the decomposition
+    std::map<std::string, int>&& gate_nums = get_gate_nums();
+    	
+    for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+        sstream << it->second << " " << it->first << " gates" << std::endl;
+    } 
     
-        sstream << std::endl;
-    	print(sstream, 1);	    	
+    sstream << std::endl;
+    print(sstream, 1);	    	
     	
 #if BLAS==0 // undefined BLAS
     omp_set_num_threads(num_threads);
