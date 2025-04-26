@@ -57,6 +57,9 @@ limitations under the License.
 */
 Gates_block::Gates_block() : Gate() {
 
+    // A string labeling the gate operation
+    name = "Circuit";
+
     // A string describing the type of the operation
     type = BLOCK_OPERATION;
     // number of operation layers
@@ -70,6 +73,9 @@ Gates_block::Gates_block() : Gate() {
 @param qbit_num_in The number of qubits in the unitaries
 */
 Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
+
+    // A string labeling the gate operation
+    name = "Circuit";
 
     // A string describing the type of the operation
     type = BLOCK_OPERATION;
@@ -224,6 +230,11 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 
 
     std::vector<int> involved_qubits = get_involved_qubits();
+    
+    if (input.rows != matrix_size ) {
+        std::string err("Gates_block::apply_to: Wrong input size in Gates_block gate apply.");
+        throw err;    
+    }
        
     // TODO: GATE fusion has not been adopted to reversed parameter ordering!!!!!!!!!!!!!!!!!!!
     if(max_fusion !=-1 && ((qbit_num>max_fusion && input.cols == 1) && involved_qubits.size()>1)){
@@ -1464,152 +1475,49 @@ Gates_block::insert_gate( Gate* gate, int idx ) {
 }
 
 
+/**
+@brief Call to add the number of the individual gate types in the circuit to the map given in the argument
+@param A map<gate_name, gate_count> describing the number of the individual gate types
+*/
+void Gates_block::add_gate_nums( std::map<std::string, int>& gate_nums ) {
+
+    for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
+    
+        // get the specific gate in the circuit (might be a gate or another subcircuit)
+        Gate* gate = *it;
+            
+            
+        if (gate->get_type() == BLOCK_OPERATION) {
+            Gates_block* circuit = static_cast<Gates_block*>(gate);
+            circuit->add_gate_nums( gate_nums );
+        }
+        else {
+            std::string gate_name = gate->get_name();
+            
+            if( gate_nums.find(gate_name) == gate_nums.end() ) {
+                gate_nums[ gate_name ] = 1;
+            }
+            else {
+                gate_nums[ gate_name ] = gate_nums[ gate_name ] + 1;
+            }
+        }
+    
+    }
+    
+}
+
 
 /**
 @brief Call to get the number of the individual gate types in the list of gates
-@return Returns with an instance gates_num describing the number of the individual gate types
+@return Returns with a map<gate_name, gate_count> describing the number of the individual gate types
 */
-gates_num Gates_block::get_gate_nums() {
+std::map<std::string, int> Gates_block::get_gate_nums() {
 
-        gates_num gate_nums;
-
-        gate_nums.u3      = 0;
-        gate_nums.rx      = 0;
-        gate_nums.ry      = 0;
-        gate_nums.cry      = 0;
-        gate_nums.rz      = 0;
-        gate_nums.cnot    = 0;
-        gate_nums.cz      = 0;
-        gate_nums.ch      = 0;
-        gate_nums.x       = 0;
-        gate_nums.z       = 0;
-        gate_nums.y       = 0;
-        gate_nums.sx      = 0;
-        gate_nums.syc     = 0;
-        gate_nums.cz_nu   = 0;
-        gate_nums.un     = 0;
-        gate_nums.on     = 0;
-        gate_nums.com     = 0;
-        gate_nums.general = 0;
-        gate_nums.adap = 0;
-        gate_nums.total = 0;
-
-        for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
-            // get the specific gate or block of gates
-            Gate* gate = *it;
-
-            if (gate->get_type() == BLOCK_OPERATION) {
-
-                Gates_block* block_gate = static_cast<Gates_block*>(gate);
-                gates_num gate_nums_loc = block_gate->get_gate_nums();
-                gate_nums.u3   = gate_nums.u3 + gate_nums_loc.u3;
-                gate_nums.rx   = gate_nums.rx + gate_nums_loc.rx;
-                gate_nums.ry   = gate_nums.ry + gate_nums_loc.ry;
-                gate_nums.cry   = gate_nums.cry + gate_nums_loc.cry;
-                gate_nums.rz   = gate_nums.rz + gate_nums_loc.rz;
-                gate_nums.cnot = gate_nums.cnot + gate_nums_loc.cnot;
-                gate_nums.cz = gate_nums.cz + gate_nums_loc.cz;
-                gate_nums.ch = gate_nums.ch + gate_nums_loc.ch;
-                gate_nums.h  = gate_nums.h + gate_nums_loc.h;
-                gate_nums.x  = gate_nums.x + gate_nums_loc.x;
-                gate_nums.sx = gate_nums.sx + gate_nums_loc.sx;
-                gate_nums.syc   = gate_nums.syc + gate_nums_loc.syc;
-                gate_nums.un   = gate_nums.un + gate_nums_loc.un;
-                gate_nums.on   = gate_nums.on + gate_nums_loc.on;
-                gate_nums.com  = gate_nums.com + gate_nums_loc.com;
-                gate_nums.adap = gate_nums.adap + gate_nums_loc.adap;
-                gate_nums.total = gate_nums.total + gate_nums_loc.total;
-
-            }
-            else if (gate->get_type() == U3_OPERATION) {
-                gate_nums.u3   = gate_nums.u3 + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == RX_OPERATION) {
-                gate_nums.rx   = gate_nums.rx + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == RY_OPERATION) {
-                gate_nums.ry   = gate_nums.ry + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CRY_OPERATION) {
-                gate_nums.cry   = gate_nums.cry + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == RZ_OPERATION) {
-                gate_nums.rz   = gate_nums.rz + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CNOT_OPERATION) {
-                gate_nums.cnot   = gate_nums.cnot + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CZ_OPERATION) {
-                gate_nums.cz   = gate_nums.cz + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CH_OPERATION) {
-                gate_nums.ch   = gate_nums.ch + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == H_OPERATION) {
-                gate_nums.h   = gate_nums.h + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == X_OPERATION) {
-                gate_nums.x   = gate_nums.x + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == Y_OPERATION) {
-                gate_nums.y   = gate_nums.y + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == Z_OPERATION) {
-                gate_nums.z   = gate_nums.z + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == SX_OPERATION) {
-                gate_nums.sx   = gate_nums.sx + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == SYC_OPERATION) {
-                gate_nums.syc   = gate_nums.syc + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == GENERAL_OPERATION) {
-                gate_nums.general   = gate_nums.general + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == UN_OPERATION) {
-                gate_nums.un   = gate_nums.un + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == ON_OPERATION) {
-                gate_nums.on   = gate_nums.on + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == COMPOSITE_OPERATION) {
-                gate_nums.com   = gate_nums.com + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else if (gate->get_type() == CZ_NU_OPERATION) {
-                gate_nums.cz_nu   = gate_nums.cz_nu + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }            
-            else if (gate->get_type() == ADAPTIVE_OPERATION) {
-                gate_nums.adap   = gate_nums.adap + 1;
-                gate_nums.total = gate_nums.total + 1;
-            }
-            else {
-                std::string err("Gates_block::get_gate_nums: unimplemented gate"); 
-                throw err;
-            }
-
-        }
-
-
-        return gate_nums;
+    std::map<std::string, int> gate_nums;
+    
+    add_gate_nums( gate_nums );
+    
+    return gate_nums;
 
 }
 
@@ -1911,10 +1819,98 @@ void Gates_block::list_gates( const Matrix_real &parameters, int start_index ) {
 
 
 /**
-@brief Call to reorder the qubits in the matrix of the gate
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}.
+@return Returns with the remapped circuit
+*/
+Gates_block* 
+Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map ) {
+
+    return create_remapped_circuit( qbit_map, qbit_num );
+
+}
+
+
+/**
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}. . 
+@param qbit_num The number of qubits in the remapped circuit
+@return Returns with the remapped circuit
+*/
+Gates_block* 
+Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const int qbit_num_ ) {
+
+
+    Gates_block* ret = new Gates_block( qbit_num_ );
+    for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
+
+        Gate* op = *it;
+        switch (op->get_type()) {
+        case CNOT_OPERATION: case CZ_OPERATION:
+        case CH_OPERATION: case SYC_OPERATION:
+        case U3_OPERATION: case RY_OPERATION:
+        case CRY_OPERATION: case RX_OPERATION:
+        case RZ_OPERATION: case X_OPERATION:
+        case Y_OPERATION: case Z_OPERATION:
+        case SX_OPERATION: case BLOCK_OPERATION:
+        case GENERAL_OPERATION: case UN_OPERATION:
+        case ON_OPERATION: case COMPOSITE_OPERATION:
+        case ADAPTIVE_OPERATION:
+        case H_OPERATION:
+        case CZ_NU_OPERATION:
+        {
+            Gate* cloned_op = op->clone();
+
+            int target_qbit = cloned_op->get_target_qbit();
+            int control_qbit = cloned_op->get_control_qbit();
+
+            if ( qbit_num_ > qbit_num ) {
+                // qbit num needs to be set in prior to avoid conflict
+                cloned_op->set_qbit_num( qbit_num_ );
+            }
+
+            if (qbit_map.find( target_qbit ) != qbit_map.end()) {
+                cloned_op->set_target_qbit( qbit_map[ target_qbit ] );
+            } else {
+                std::string err("Gates_block::create_remapped_circuit: Missing target qubit from the qbit map."); 
+                throw err;
+            }
+
+
+            if ( control_qbit != -1 ) {
+                if ( qbit_map.find( control_qbit ) != qbit_map.end() ) {
+                    cloned_op->set_control_qbit( qbit_map[ control_qbit ] );
+                } else {
+                    std::string err("Gates_block::create_remapped_circuit: Missing control qubit from the qbit map."); 
+                    throw err;
+                }
+            }
+
+            if ( qbit_num_ < qbit_num ) {
+                // qbit num needs to be set post to avoid conflict
+                cloned_op->set_qbit_num( qbit_num_ );
+            }
+
+            ret->add_gate( cloned_op );
+
+            break;
+        }
+        default:
+            std::string err("Gates_block::create_remapped_circuit: unimplemented gate"); 
+            throw err;
+        }
+
+    }
+
+    return ret;
+}
+
+
+/**
+@brief Call to reorder the qubits in the matrix of the gate (OBSOLETE function)
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void Gates_block::reorder_qubits( std::vector<int>  qbit_list) {
+void Gates_block::reorder_qubits( std::vector<int>  qbit_list ) {
 
     for(std::vector<Gate*>::iterator it = gates.begin(); it != gates.end(); ++it) {
 
@@ -2050,8 +2046,8 @@ std::vector<Gate*> Gates_block::get_gates() {
 
 
 /**
-@brief Call to get the gates stored in the class.
-@return Return with a list of the gates.
+@brief Call to get a gate stored in the class.
+@return Return with a pointer to the gate. (Borrowed reference, dont free the memory)
 */
 Gate* Gates_block::get_gate(int idx) {
 

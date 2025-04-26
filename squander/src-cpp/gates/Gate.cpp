@@ -38,6 +38,8 @@ limitations under the License.
 */
 Gate::Gate() {
 
+    // A string labeling the gate operation
+    name = "Gate";
     // number of qubits spanning the matrix of the operation
     qbit_num = -1;
     // The size N of the NxN matrix associated with the operations.
@@ -68,6 +70,8 @@ Gate::Gate(int qbit_num_in) {
         throw err;        
     }
 
+    // A string labeling the gate operation
+    name = "Gate";
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix
@@ -100,6 +104,11 @@ void Gate::set_qbit_num( int qbit_num_in ) {
     if (qbit_num_in > 30) {
         std::string err("Gate::set_qbit_num: Number of qubits supported up to 30"); 
         throw err;        
+    }
+
+    if ( qbit_num_in <= target_qbit || qbit_num_in <= control_qbit ) {
+        std::string err("Gate::set_qbit_num: The number of qbits is too small, conflicting with either target_qbit os control_qbit"); 
+        throw err;   
     }
 
 
@@ -180,6 +189,11 @@ Gate::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, i
 void 
 Gate::apply_to( Matrix& input, int parallel ) {
 
+   if (input.rows != matrix_size ) {
+        std::string err("Gate::apply_to: Wrong matrix size in Gate gate apply.");
+        throw err;    
+    }
+
     Matrix ret = dot(matrix_alloc, input);
     memcpy( input.get_data(), ret.get_data(), ret.size()*sizeof(QGD_Complex16) );
     //input = ret;
@@ -245,6 +259,13 @@ Gate::set_matrix( Matrix input ) {
 @param control_qbit_in The control qubit. Should be: 0 <= control_qbit_in < qbit_num
 */
 void Gate::set_control_qbit(int control_qbit_in){
+
+    if ( control_qbit_in >= qbit_num ) {
+        std::string err("Gate::set_target_qbit: Wrong value of the control qbit: of out of the range given by qbit_num"); 
+        throw err;   
+    }
+
+
     control_qbit = control_qbit_in;
 }
 
@@ -254,6 +275,13 @@ void Gate::set_control_qbit(int control_qbit_in){
 @param target_qbit_in The target qubit on which the gate is applied. Should be: 0 <= target_qbit_in < qbit_num
 */
 void Gate::set_target_qbit(int target_qbit_in){
+
+    if ( target_qbit_in >= qbit_num  ) {
+        std::string err("Gate::set_target_qbit: Wrong value of the target qbit: out of the range given by qbit_num"); 
+        throw err;   
+    }
+
+
     target_qbit = target_qbit_in;
 }
 
@@ -749,6 +777,18 @@ Matrix_real
 Gate::extract_parameters( Matrix_real& parameters ) {
 
     return Matrix_real(0,0);
+
+}
+
+
+/**
+@brief Call to get the name label of the gate
+@return Returns with the name label of the gate
+*/
+std::string 
+Gate::get_name() {
+
+    return name;
 
 }
 

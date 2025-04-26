@@ -1,5 +1,7 @@
 import pytest
+import numpy as np
 from squander import Circuit, CNOT, CH, CZ, CRY, H
+from squander import utils
 from squander.partitioning.partition import (
     get_qubits,
     kahn_partition,
@@ -58,3 +60,43 @@ def test_Partition_Max_Qubits_Equals_Total_Qubits(max_qubits):
     c.add_CNOT(1, 2)
     top_c, _, _ = kahn_partition(c, max_qubits)
     assert len(top_c.get_Gates()) == 1
+    
+    
+    
+    
+def test_Correctness_of_Partitioned_Circuit():
+    filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
+    
+    initial_circuit, initial_parameters = utils.qasm_to_squander_circuit(filename)
+    
+    max_partition_size = 4
+    partitined_circuit, partitioned_parameters = qasm_to_partitioned_circuit( filename, max_partition_size )
+    
+    
+    # generate random initial state on which we test the circuits
+    qbit_num = initial_circuit.get_Qbit_Num()
+    
+    
+    matrix_size = 1 << qbit_num
+    initial_state_real = np.random.uniform(-1.0,1.0, (matrix_size,) )
+    initial_state_imag = np.random.uniform(-1.0,1.0, (matrix_size,) )
+    initial_state = initial_state_real + initial_state_imag*1j
+    initial_state = initial_state/np.linalg.norm(initial_state)
+    
+
+
+    transformed_state_1 = initial_state.copy()
+    transformed_state_2 = initial_state.copy()    
+    
+    initial_circuit.apply_to( initial_parameters, transformed_state_1 )
+    partitined_circuit.apply_to( partitioned_parameters, transformed_state_2)    
+    
+    diff = np.linalg.norm( transformed_state_1 - transformed_state_2 )
+    
+    assert( diff < 1e-10 )
+    
+    
+    
+    
+    
+

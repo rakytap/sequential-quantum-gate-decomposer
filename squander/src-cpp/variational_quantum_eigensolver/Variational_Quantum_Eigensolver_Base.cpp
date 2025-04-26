@@ -648,22 +648,15 @@ Variational_Quantum_Eigensolver_Base::set_gate_structure( std::string filename )
     else {
         combine( gate_structure_tmp );
         optimized_parameters_mtx = optimized_parameters_mtx_tmp;
-        gates_num gates_num = get_gate_nums();
-
-        if ( gates_num.u3>0 )  std::cout << gates_num.u3 << " U3 gates," << std::endl;
-        if ( gates_num.rx>0 )  std::cout << gates_num.rx << " RX gates," << std::endl;
-        if ( gates_num.ry>0 )  std::cout << gates_num.ry << " RY gates," << std::endl;
-        if ( gates_num.rz>0 )  std::cout << gates_num.rz << " RZ gates," << std::endl;
-        if ( gates_num.cnot>0 )  std::cout << gates_num.cnot << " CNOT gates," << std::endl;
-        if ( gates_num.cz>0 )  std::cout << gates_num.cz << " CZ gates," << std::endl;
-        if ( gates_num.ch>0 )  std::cout << gates_num.ch << " CH gates," << std::endl;
-        if ( gates_num.x>0 )  std::cout << gates_num.x << " X gates," << std::endl;
-        if ( gates_num.sx>0 )  std::cout << gates_num.sx << " SX gates," << std::endl; 
-        if ( gates_num.syc>0 )  std::cout << gates_num.syc << " Sycamore gates," << std::endl;   
-        if ( gates_num.un>0 )  std::cout << gates_num.un << " UN gates," << std::endl;
-        if ( gates_num.cry>0 )  std::cout << gates_num.cry << " CRY gates," << std::endl;  
-        if ( gates_num.adap>0 )  std::cout << gates_num.adap << " Adaptive gates," << std::endl;
-        if ( gates_num.cz_nu>0 )  std::cout << gates_num.cz_nu << " CZ_NU gates," << std::endl; 
+            
+        std::stringstream sstream;
+        // get the number of gates used in the decomposition
+        std::map<std::string, int>&& gate_nums = get_gate_nums();
+    	
+        for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+            sstream << it->second << " " << it->first << " gates" << std::endl;
+        } 
+        print(sstream, 1);	
     }
 
 }

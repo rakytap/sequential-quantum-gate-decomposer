@@ -136,28 +136,17 @@ N_Qubit_Decomposition_custom::start_decomposition() {
     apply_to(optimized_parameters_mtx, matrix_decomposed );
     calc_decomposition_error( matrix_decomposed );
 
-    // get the number of gates used in the decomposition
-    gates_num gates_num = get_gate_nums();
 
     sstream.str("");
     sstream << "In the decomposition with error = " << decomposition_error << " were used " << layer_num << " layers with:" << std::endl;
 
       
-    if ( gates_num.u3>0 ) sstream << gates_num.u3 << " U3 opeartions," << std::endl;
-    if ( gates_num.rx>0 ) sstream << gates_num.rx << " RX opeartions," << std::endl;
-    if ( gates_num.ry>0 ) sstream << gates_num.ry << " RY opeartions," << std::endl;
-    if ( gates_num.rz>0 ) sstream << gates_num.rz << " RZ opeartions," << std::endl;
-    if ( gates_num.cnot>0 ) sstream << gates_num.cnot << " CNOT opeartions," << std::endl;
-    if ( gates_num.cz>0 ) sstream << gates_num.cz << " CZ opeartions," << std::endl;
-    if ( gates_num.ch>0 ) sstream << gates_num.ch << " CH opeartions," << std::endl;
-    if ( gates_num.x>0 ) sstream << gates_num.x << " X opeartions," << std::endl;
-    if ( gates_num.y>0 ) sstream << gates_num.y << " Y opeartions," << std::endl;
-    if ( gates_num.z>0 ) sstream << gates_num.z << " Z opeartions," << std::endl;
-    if ( gates_num.sx>0 ) sstream << gates_num.sx << " SX opeartions," << std::endl;
-    if ( gates_num.syc>0 ) sstream << gates_num.syc << " Sycamore opeartions," << std::endl;
-    if ( gates_num.un>0 ) sstream << gates_num.un << " UN opeartions," << std::endl;
-    if ( gates_num.adap>0 ) sstream << gates_num.adap << " Adaptive opeartions," << std::endl;
-    if ( gates_num.cz_nu>0 ) sstream << gates_num.cz_nu << " CZ_NU opeartions," << std::endl;
+        // get the number of gates used in the decomposition
+    std::map<std::string, int>&& gate_nums = get_gate_nums();
+    	
+    for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+        sstream << it->second << " " << it->first << " gates" << std::endl;
+    } 
 
     	 
     sstream << std::endl;

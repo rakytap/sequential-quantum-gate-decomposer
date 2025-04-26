@@ -30,8 +30,11 @@ limitations under the License.
 */
 CRY::CRY() : RY() {
 
-        // A string describing the type of the gate
-        type = CRY_OPERATION;
+    // A string labeling the gate operation
+    name = "CRY";
+
+    // A string describing the type of the gate
+    type = CRY_OPERATION;
 
 }
 
@@ -47,20 +50,22 @@ CRY::CRY() : RY() {
 */
 CRY::CRY(int qbit_num_in, int target_qbit_in, int control_qbit_in) : RY(qbit_num_in, target_qbit_in) {
 
+    // A string labeling the gate operation
+    name = "CRY";
 
-        // A string describing the type of the gate
-        type = CRY_OPERATION;
+    // A string describing the type of the gate
+    type = CRY_OPERATION;
 
 
-        if (control_qbit_in >= qbit_num) {
-	    std::stringstream sstream;
-	    sstream << "The index of the control qubit is larger than the number of qubits in CRY gate." << std::endl;
-	    print(sstream, 0);	  
-            throw sstream.str();
-        }
+    if (control_qbit_in >= qbit_num) {
+       std::stringstream sstream;
+       sstream << "The index of the control qubit is larger than the number of qubits in CRY gate." << std::endl;
+       print(sstream, 0);	  
+        throw sstream.str();
+    }
 
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = control_qbit_in;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = control_qbit_in;
 
 
 }
@@ -86,10 +91,8 @@ CRY::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
 
     if (input.rows != matrix_size ) {
-	std::stringstream sstream;
-	sstream << "Wrong matrix size in CRY gate apply" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
+        std::string err("CRY::apply_to: Wrong matrix size in CRY gate apply.");
+        throw err;    
     }
 
 

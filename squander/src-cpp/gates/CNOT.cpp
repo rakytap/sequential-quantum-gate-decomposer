@@ -31,20 +31,26 @@ using namespace std;
 */
 CNOT::CNOT() {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = -1;
-        // the size of the matrix
-        matrix_size = -1;
-        // A string describing the type of the gate
-        type = CNOT_OPERATION;
-        // The number of free parameters
-        parameter_num = 0;
+    // A string labeling the gate operation
+    name = "CNOT";
 
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = -1;
+    // number of qubits spanning the matrix of the gate
+    qbit_num = -1;
 
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
-        control_qbit = -1;
+    // the size of the matrix
+    matrix_size = -1;
+
+    // A string describing the type of the gate
+    type = CNOT_OPERATION;
+
+    // The number of free parameters
+    parameter_num = 0;
+
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = -1;
+
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
+    control_qbit = -1;
 
 
 }
@@ -58,34 +64,42 @@ CNOT::CNOT() {
 */
 CNOT::CNOT(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
 
- 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = qbit_num_in;
-        // the size of the matrix
-        matrix_size = Power_of_2(qbit_num);
-        // A string describing the type of the gate
-        type = CNOT_OPERATION;
-        // The number of free parameters
-        parameter_num = 0;
 
-        if (target_qbit_in >= qbit_num) {
-            std::stringstream sstream;	   
-            sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-            print(sstream, 0);	    	
-            throw sstream.str();
-        }
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = target_qbit_in;
+    // A string labeling the gate operation
+    name = "CNOT";
+
+    // number of qubits spanning the matrix of the gate
+    qbit_num = qbit_num_in;
+
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+
+    // A string describing the type of the gate
+    type = CNOT_OPERATION;
+
+    // The number of free parameters
+    parameter_num = 0;
+
+    if (target_qbit_in >= qbit_num) {
+        std::stringstream sstream;	   
+        sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+        print(sstream, 0);	    	
+        throw sstream.str();
+    }
+
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = target_qbit_in;
 
 
-        if (control_qbit_in >= qbit_num) {
-	    std::stringstream sstream;
-            sstream << "The index of the control qubit is larger than the number of qubits" << std::endl;
-            print(sstream, 0);	    	
-            throw sstream.str();
-        }
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
-        control_qbit = control_qbit_in;
+    if (control_qbit_in >= qbit_num) {
+        std::stringstream sstream;
+        sstream << "The index of the control qubit is larger than the number of qubits" << std::endl;
+        print(sstream, 0);	    	
+        throw sstream.str();
+    }
+    
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
+    control_qbit = control_qbit_in;
 
 
 }
@@ -134,7 +148,12 @@ CNOT::get_matrix( int parallel) {
 void 
 CNOT::apply_to( Matrix& input, int parallel ) {
  
-
+    if (input.rows != matrix_size ) {
+        std::string err("CNOT::apply_to: Wrong input size in CNOT gate apply.");
+        throw err;    
+    }
+    
+    
     Matrix u3_1qbit = calc_one_qubit_u3();
     apply_kernel_to(u3_1qbit, input, false, parallel);
 

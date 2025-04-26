@@ -302,6 +302,8 @@ N_Qubit_Decomposition_Tree_Search::start_decomposition() {
     release_gates();
 	combine( gate_structure_loc );
 	delete( gate_structure_loc );
+
+    decomposition_error = current_minimum;
 	
 	
 #if BLAS==0 // undefined BLAS

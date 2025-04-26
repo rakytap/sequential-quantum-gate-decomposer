@@ -24,6 +24,7 @@ limitations under the License.
 #define GATES_BLOCK_H
 
 #include <vector>
+#include <map>
 #include "common.h"
 #include "matrix_real.h"
 #include "Gate.h"
@@ -448,12 +449,18 @@ void add_gate_to_front( Gate* gate );
 void insert_gate( Gate* gate, int idx );
 
 
+/**
+@brief Call to add the number of the individual gate types in the circuit to the map given in the argument
+@param A map<gate_name, gate_count> describing the number of the individual gate types
+*/
+void add_gate_nums( std::map<std::string, int>& gate_nums );
+
 
 /**
 @brief Call to get the number of the individual gate types in the list of gates
-@return Returns with an instance gates_num describing the number of the individual gate types
+@return Returns with a map<gate_name, gate_count> describing the number of the individual gate types
 */
-gates_num get_gate_nums();
+std::map<std::string, int> get_gate_nums();
 
 
 /**
@@ -480,7 +487,24 @@ void list_gates( const Matrix_real &parameters, int start_index );
 
 
 /**
-@brief Call to reorder the qubits in the matrix of the gates
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}.
+@return Returns with the remapped circuit
+*/
+Gates_block* Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map );
+
+
+/**
+@brief Call to create a new circuit with remapped qubits
+@param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}. . 
+@param qbit_num The number of qubits in the remapped circuit
+@return Returns with the remapped circuit
+*/
+Gates_block* Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const int qbit_num_ );
+
+
+/**
+@brief Call to reorder the qubits in the matrix of the gates (Obsolete function)
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 virtual void reorder_qubits( std::vector<int> qbit_list );

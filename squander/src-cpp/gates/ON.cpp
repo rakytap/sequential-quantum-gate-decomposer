@@ -34,6 +34,9 @@ limitations under the License.
 */
 ON::ON() {
 
+    // A string labeling the gate operation
+    name = "ON";
+
     // number of qubits spanning the matrix of the operation
     qbit_num = -1;
     // The size N of the NxN matrix associated with the operations.
@@ -57,6 +60,8 @@ ON::ON() {
 */
 ON::ON(int qbit_num_in) {
 
+    // A string labeling the gate operation
+    name = "ON";
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix
@@ -146,10 +151,8 @@ void
 ON::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in ON gate apply" << std::endl;
-        print(sstream, 1);	
-        exit(-1);
+        std::string err("ON::apply_to: Wrong input size in ON gate apply.");
+        throw err;    
     }
 
     if (parameters.size() < parameter_num) {

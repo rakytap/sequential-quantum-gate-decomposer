@@ -17,7 +17,7 @@ limitations under the License.
 @author: Peter Rakyta, Ph.D.
 */
 /*! \file RY.cpp
-    \brief Class representing a U3 gate.
+    \brief Class representing a RY gate.
 */
 
 #include "RY.h"
@@ -31,30 +31,33 @@ limitations under the License.
 */
 RY::RY() {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = -1;
-        // the size of the matrix
-        matrix_size = -1;
-        // A string describing the type of the gate
-        type = RY_OPERATION;
+    // A string labeling the gate operation
+    name = "RY";
 
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = -1;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // number of qubits spanning the matrix of the gate
+    qbit_num = -1;
+    // the size of the matrix
+    matrix_size = -1;
+    // A string describing the type of the gate
+    type = RY_OPERATION;
 
-        // logical value indicating whether the matrix creation takes an argument theta
-        theta = false;
-        // logical value indicating whether the matrix creation takes an argument phi
-        phi = false;
-        // logical value indicating whether the matrix creation takes an argument lambda
-        lambda = false;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = -1;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        // set static values for the angles
-        phi0 = 0.0;
-        lambda0 = 0.0;
+    // logical value indicating whether the matrix creation takes an argument theta
+    theta = false;
+    // logical value indicating whether the matrix creation takes an argument phi
+    phi = false;
+    // logical value indicating whether the matrix creation takes an argument lambda
+    lambda = false;
 
-        parameter_num = 0;
+    // set static values for the angles
+    phi0 = 0.0;
+    lambda0 = 0.0;
+
+    parameter_num = 0;
 
 
 
@@ -72,41 +75,43 @@ RY::RY() {
 */
 RY::RY(int qbit_num_in, int target_qbit_in) {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = qbit_num_in;
-        // the size of the matrix
-        matrix_size = Power_of_2(qbit_num);
-        // A string describing the type of the gate
-        type = RY_OPERATION;
+    // A string labeling the gate operation
+    name = "RY";
+    // number of qubits spanning the matrix of the gate
+    qbit_num = qbit_num_in;
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+    // A string describing the type of the gate
+    type = RY_OPERATION;
 
 
-        if (target_qbit_in >= qbit_num) {
-            std::stringstream sstream;
-	    sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-	    print(sstream, 0);	             
-	    throw "The index of the target qubit is larger than the number of qubits";
-        }
+    if (target_qbit_in >= qbit_num) {
+        std::stringstream sstream;
+        sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+	print(sstream, 0);	             
+	throw "The index of the target qubit is larger than the number of qubits";
+    }
 	
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = target_qbit_in;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = target_qbit_in;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        // logical value indicating whether the matrix creation takes an argument theta
-        theta = true;
-        // logical value indicating whether the matrix creation takes an argument phi
-        phi = false;
-        // logical value indicating whether the matrix creation takes an argument lambda
-        lambda = false;
+    // logical value indicating whether the matrix creation takes an argument theta
+    theta = true;
+    // logical value indicating whether the matrix creation takes an argument phi
+    phi = false;
+    // logical value indicating whether the matrix creation takes an argument lambda
+    lambda = false;
 
-        // set static values for the angles
-        phi0 = 0.0;
-        lambda0 = 0.0;
+    // set static values for the angles
+    phi0 = 0.0;
+    lambda0 = 0.0;
 
-        parameter_num = 1;
+    parameter_num = 1;
 
-        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
-        parameters = Matrix_real(1, parameter_num);
+    // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
+    parameters = Matrix_real(1, parameter_num);
 
 }
 
@@ -133,10 +138,8 @@ RY::apply_to( Matrix_real& parameters, Matrix& input, int parallel  ) {
 
 
     if (input.rows != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 gate apply" << std::endl;
-        print(sstream, 0);	
-        exit(-1);
+        std::string err("RY::apply_to: Wrong input size in RY gate apply.");
+        throw err;    
     }
 
 
