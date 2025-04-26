@@ -32,7 +32,7 @@ from squander.gates.qgd_CRY import qgd_CRY  as CRY
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 
 #SABRE
-from squander.decomposition.qgd_SABRE import qgd_SABRE as SABRE
+from squander.synthesis.qgd_SABRE import qgd_SABRE as SABRE
 
 # Qiskit IO
 from squander.IO_interfaces import Qiskit_IO
