@@ -34,6 +34,9 @@ limitations under the License.
 */
 ON::ON() {
 
+    // A string labeling the gate operation
+    name = "ON";
+
     // number of qubits spanning the matrix of the operation
     qbit_num = -1;
     // The size N of the NxN matrix associated with the operations.
@@ -57,6 +60,8 @@ ON::ON() {
 */
 ON::ON(int qbit_num_in) {
 
+    // A string labeling the gate operation
+    name = "ON";
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix

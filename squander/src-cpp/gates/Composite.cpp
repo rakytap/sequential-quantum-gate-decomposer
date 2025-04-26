@@ -34,6 +34,9 @@ limitations under the License.
 */
 Composite::Composite() {
 
+    // A string labeling the gate operation
+    name = "COMPOSITE";
+
     // number of qubits spanning the matrix of the operation
     qbit_num = -1;
     // The size N of the NxN matrix associated with the operations.
@@ -56,6 +59,9 @@ Composite::Composite() {
 @return An instance of the class
 */
 Composite::Composite(int qbit_num_in) {
+
+    // A string labeling the gate operation
+    name = "COMPOSITE";
 
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;

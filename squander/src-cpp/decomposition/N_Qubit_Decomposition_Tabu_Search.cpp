@@ -61,7 +61,6 @@ N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search() : N_Qubit
 N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Tree_Search( Umtx_in, qbit_num_in, level_limit_in, config, accelerator_num) {
 
 
-
 }
 
 
@@ -78,6 +77,8 @@ N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search( Matrix Umt
 */
 N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Tree_Search( Umtx_in, qbit_num_in, level_limit_in, topology_in, config, accelerator_num ) {
 
+    // A string labeling the gate operation
+    name = "Tabu_Search";
 
 }
 

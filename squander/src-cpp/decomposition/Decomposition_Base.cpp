@@ -34,7 +34,8 @@ std::map<int,int> Decomposition_Base::max_layer_num_def;
 Decomposition_Base::Decomposition_Base() {
 
 	
-
+    // A string labeling the gate operation
+    name = "Decomposition_Interface";
 
     Init_max_layer_num();
 
@@ -114,6 +115,9 @@ Decomposition_Base::Decomposition_Base() {
 @return An instance of the class
 */
 Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Gates_block(qbit_num_in) {
+
+    // A string labeling the gate operation
+    name = "Decomposition_Interface";
 
     Init_max_layer_num();
 

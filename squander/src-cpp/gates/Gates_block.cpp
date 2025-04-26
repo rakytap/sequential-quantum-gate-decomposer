@@ -57,6 +57,9 @@ limitations under the License.
 */
 Gates_block::Gates_block() : Gate() {
 
+    // A string labeling the gate operation
+    name = "Circuit";
+
     // A string describing the type of the operation
     type = BLOCK_OPERATION;
     // number of operation layers
@@ -70,6 +73,9 @@ Gates_block::Gates_block() : Gate() {
 @param qbit_num_in The number of qubits in the unitaries
 */
 Gates_block::Gates_block(int qbit_num_in) : Gate(qbit_num_in) {
+
+    // A string labeling the gate operation
+    name = "Circuit";
 
     // A string describing the type of the operation
     type = BLOCK_OPERATION;

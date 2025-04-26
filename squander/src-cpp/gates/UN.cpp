@@ -35,6 +35,9 @@ limitations under the License.
 */
 UN::UN() {
 
+    // A string labeling the gate operation
+    name = "UN";
+
     // number of qubits spanning the matrix of the operation
     qbit_num = -1;
     // The size N of the NxN matrix associated with the operations.
@@ -58,6 +61,8 @@ UN::UN() {
 */
 UN::UN(int qbit_num_in) {
 
+    // A string labeling the gate operation
+    name = "UN";
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix

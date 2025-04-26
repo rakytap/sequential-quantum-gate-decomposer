@@ -36,7 +36,7 @@ from squander.partitioning.partition import (
 
 
 squander_config = {  
-            'strategy': "Tree_search", 
+            'strategy': "Tabu_search", 
             'parallel': 1,
             'verbosity': 0, 
          }
@@ -83,6 +83,7 @@ def decompose_partition( Umtx ):
 
 #  code for iterate over partitions and optimize them
 for subcircuit in subcircuits:
+
 
     # isolate the parameters corresponding to the given sub-circuit
     start_idx = subcircuit.get_Parameter_Start_Index()

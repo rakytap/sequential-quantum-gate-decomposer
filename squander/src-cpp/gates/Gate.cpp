@@ -38,6 +38,8 @@ limitations under the License.
 */
 Gate::Gate() {
 
+    // A string labeling the gate operation
+    name = "Gate";
     // number of qubits spanning the matrix of the operation
     qbit_num = -1;
     // The size N of the NxN matrix associated with the operations.
@@ -68,6 +70,8 @@ Gate::Gate(int qbit_num_in) {
         throw err;        
     }
 
+    // A string labeling the gate operation
+    name = "Gate";
     // number of qubits spanning the matrix of the operation
     qbit_num = qbit_num_in;
     // the size of the matrix
@@ -773,6 +777,18 @@ Matrix_real
 Gate::extract_parameters( Matrix_real& parameters ) {
 
     return Matrix_real(0,0);
+
+}
+
+
+/**
+@brief Call to get the name label of the gate
+@return Returns with the name label of the gate
+*/
+std::string 
+Gate::get_name() {
+
+    return name;
 
 }
 

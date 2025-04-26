@@ -69,6 +69,8 @@ class Gate : public logging {
 
 protected:
 
+    /// A string labeling the gate operation
+    std::string name;
     /// number of qubits spanning the matrix of the operation
     int qbit_num;
     /// The type of the operation (see enumeration gate_type)
@@ -306,6 +308,13 @@ std::vector<Gate*> get_children();
 @param start_idx The starting index
 */
 int get_parameter_start_idx();
+
+
+/**
+@brief Call to get the name label of the gate
+@return Returns with the name label of the gate
+*/
+std::string get_name();
 
 /**
 @brief Call to create a clone of the present class

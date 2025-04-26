@@ -31,10 +31,13 @@ limitations under the License.
 */
 Adaptive::Adaptive() : CRY() {
 
-        // A string describing the type of the gate
-        type = ADAPTIVE_OPERATION;
+    // A string labeling the gate operation
+    name = "Adaptive";
 
-        limit = 1;
+    // A string describing the type of the gate
+    type = ADAPTIVE_OPERATION;
+
+    limit = 1;
 
 }
 
@@ -50,10 +53,13 @@ Adaptive::Adaptive() : CRY() {
 */
 Adaptive::Adaptive(int qbit_num_in, int target_qbit_in, int control_qbit_in) : CRY(qbit_num_in, target_qbit_in, control_qbit_in) {
 
-        // A string describing the type of the gate
-        type = ADAPTIVE_OPERATION;
+    // A string labeling the gate operation
+    name = "Adaptive";
 
-        limit = 1;
+    // A string describing the type of the gate
+    type = ADAPTIVE_OPERATION;
+
+    limit = 1;
 }
 
 
@@ -67,10 +73,13 @@ Adaptive::Adaptive(int qbit_num_in, int target_qbit_in, int control_qbit_in) : C
 */
 Adaptive::Adaptive(int qbit_num_in, int target_qbit_in, int control_qbit_in, int limit_in) : CRY(qbit_num_in, target_qbit_in, control_qbit_in) {
 
-        // A string describing the type of the gate
-        type = ADAPTIVE_OPERATION;
+    // A string labeling the gate operation
+    name = "Adaptive";
 
-        limit = limit_in;
+    // A string describing the type of the gate
+    type = ADAPTIVE_OPERATION;
+
+    limit = limit_in;
 }
 
 /**
