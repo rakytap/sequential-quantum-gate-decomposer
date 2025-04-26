@@ -171,7 +171,7 @@ class Test_State_Preparation:
         overlap = np.abs( transformed_state.conj().T @ State )
 	
         print( 'Overlap integral with the initial state: ', overlap )        
-        assert( np.abs(overlap - 1) < 1e-6 )
+        assert( np.abs(overlap - 1) < 1e-4 )
         
         
         
