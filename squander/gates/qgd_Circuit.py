@@ -295,6 +295,22 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
     def get_Qbits(self):
     
         return super().get_Qbits()
+        
+        
+##
+# @brief Call to get the list of gates (or subcircuits) in the circuit
+# @return Returns with the list of gates
+    def get_Gates(self):
+    
+        return super().get_Gates()  
+        
+        
+##
+# @brief Call to get statisctics on the gate counts in the circuit.
+# @return Returns with the dictionary containing the gate counts
+    def get_Gate_Nums(self):
+    
+        return super().get_Gate_Nums()                
 
 
 ##

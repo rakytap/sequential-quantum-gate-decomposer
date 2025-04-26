@@ -84,6 +84,7 @@ def decompose_partition( Umtx ):
 #  code for iterate over partitions and optimize them
 for subcircuit in subcircuits:
 
+    
 
     # isolate the parameters corresponding to the given sub-circuit
     start_idx = subcircuit.get_Parameter_Start_Index()
@@ -116,6 +117,9 @@ for subcircuit in subcircuits:
 
     # remap the decomposed circuit in order to insert it into a large circuit
     inverse_remapped_subcircuit = decomposed_circuit.Remap_Qbits( inverse_qbit_map, qbit_num_orig_circuit )
+    
+    print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
+    print( "reoptimized subcircuit: ", inverse_remapped_subcircuit.get_Gate_Nums()) 
 
     ##################################xx
     # testing the correctness of the original sub circuit and remapped->decomposed->inverse remapped circuit

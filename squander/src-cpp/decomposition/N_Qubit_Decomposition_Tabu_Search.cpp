@@ -129,7 +129,7 @@ N_Qubit_Decomposition_Tabu_Search::determine_gate_structure(Matrix_real& optimiz
        sstream << "Decomposition did not reached prescribed high numerical precision." << std::endl;
        print(sstream, 1);              
     }
-
+    
     return construct_gate_structure_from_Gray_code( gcode_best_solution );
 
 }

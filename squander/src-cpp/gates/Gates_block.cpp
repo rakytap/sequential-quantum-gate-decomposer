@@ -1492,13 +1492,13 @@ void Gates_block::add_gate_nums( std::map<std::string, int>& gate_nums ) {
             circuit->add_gate_nums( gate_nums );
         }
         else {
-            std::string&& gate_name = gate->get_name();
+            std::string gate_name = gate->get_name();
             
             if( gate_nums.find(gate_name) == gate_nums.end() ) {
-                gate_nums[ gate_name ] = gate_nums[ gate_name ] + 1;
+                gate_nums[ gate_name ] = 1;
             }
             else {
-                gate_nums[ gate_name ] = 1;
+                gate_nums[ gate_name ] = gate_nums[ gate_name ] + 1;
             }
         }
     

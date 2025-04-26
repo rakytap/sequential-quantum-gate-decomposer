@@ -1855,7 +1855,46 @@ qgd_Circuit_Wrapper_get_gate( qgd_Circuit_Wrapper *self, PyObject *args ) {
 }
 
 
+/**
+@brief Call to get the counts on the individual gates in the circuit
+*/
+static PyObject *
+qgd_Circuit_Wrapper_get_Gate_Nums( qgd_Circuit_Wrapper *self ) {
 
+    std::map< std::string, int > gate_nums;
+    
+    try {
+        gate_nums = self->circuit->get_gate_nums();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    PyObject* gate_nums_py = PyDict_New();
+    if( gate_nums_py == NULL ) {
+        std::string err( "Failed to create dictionary");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;    
+    }
+    
+    for( auto it = gate_nums.begin(); it != gate_nums.end(); it++ ) {
+    
+        PyObject* key = Py_BuildValue( "s", it->first.c_str() );
+        PyObject* val = Py_BuildValue("i", it->second );
+    
+        PyDict_SetItem(gate_nums_py, key, val);
+    }
+    
+    return gate_nums_py;
+
+}
 
 
 
@@ -2225,6 +2264,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"get_Gates", (PyCFunction) qgd_Circuit_Wrapper_get_gates, METH_NOARGS,
      "Method to get the tuple of decomposing gates."
     },
+    {"get_Gate_Nums", (PyCFunction) qgd_Circuit_Wrapper_get_Gate_Nums, METH_NOARGS,
+     "Method to get statisctics on the gate counts in the circuit."
+    },   
     {"get_Parameter_Start_Index", (PyCFunction) qgd_Circuit_Wrapper_get_Parameter_Start_Index, METH_NOARGS,
      "Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated."
     },
