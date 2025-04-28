@@ -25,6 +25,7 @@ from qiskit.visualization import plot_histogram
 
 from squander.utils import get_unitary_from_qiskit_circuit
 from squander.gates.qgd_CH import qgd_CH
+import squander.gates.qgd_CH_Wrapper
 import math
 from scipy.stats import unitary_group        
 
@@ -71,6 +72,9 @@ class Test_operations_squander:
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
+
+            print( dir(squander.gates.qgd_CH_Wrapper))
+            print( CH.get_Name() )
 
             #print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 )        
