@@ -30,13 +30,14 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include <Python.h>
 #include "structmember.h"
 #include "Gate.h"
+#include "CH.h"
 #include "numpy_interface.h"
 
 
 //////////////////////////////////////
 
 /**
-@brief Type definition of the  qgd_CH_Wrapper Python class of the  qgd_CH_Wrapper module
+@brief Type definition of the  Gate_Wrapper Python class of the  gates module
 */
 typedef struct {
     PyObject_HEAD
@@ -48,23 +49,25 @@ typedef struct {
 
 
 template<typename GateT>
-GateT* create_gate( int qbit_num, int target_qbit ) {
-    return new GateT( qbit_num, target_qbit );
+Gate* create_gate( int qbit_num, int target_qbit ) {
+    GateT* gate = new GateT( qbit_num, target_qbit );
+    return static_cast<Gate*>( gate );
 }
 
 
 template<typename GateT>
-GateT* create_controlled_gate( int qbit_num, int target_qbit, int control_qbit ) {
+Gate* create_controlled_gate( int qbit_num, int target_qbit, int control_qbit ) {
 
-    return new GateT( qbit_num, target_qbit, control_qbit );
+    GateT* gate = new GateT( qbit_num, target_qbit, control_qbit );
+    return static_cast<Gate*>( gate );
         
 }
 
 
 
 /**
-@brief Method called when a python instance of the class  qgd_CH_Wrapper is destroyed
-@param self A pointer pointing to an instance of class  qgd_CH_Wrapper.
+@brief Method called when a python instance of the class  Gate_Wrapper is destroyed
+@param self A pointer pointing to an instance of class  Gate_Wrapper.
 */
 static void
  Gate_Wrapper_dealloc(Gate_Wrapper *self)
@@ -92,6 +95,8 @@ static PyObject *
 }
 
 
+
+
 /**
 @brief Method called when a python instance of the class  qgd_CH_Wrapper is initialized
 @param self A pointer pointing to an instance of the class  qgd_CH_Wrapper.
@@ -100,6 +105,29 @@ static PyObject *
 */
 static int
  Gate_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {(char*)"qbit_num", NULL};
+    int  qbit_num = -1; 
+
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &qbit_num))
+        return -1;
+
+    self->gate = new Gate( qbit_num );
+    
+
+    return 0;
+}
+
+
+/**
+@brief Method called when a python instance of the class  qgd_CH_Wrapper is initialized
+@param self A pointer pointing to an instance of the class  qgd_CH_Wrapper.
+@param args A tuple of the input arguments: qbit_num (int), target_qbit (int), control_qbit (int)
+@param kwds A tuple of keywords
+*/
+static int
+ CH_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", (char*)"control_qbit", NULL};
     int  qbit_num = -1; 
@@ -111,12 +139,504 @@ static int
                                      &qbit_num, &target_qbit, &control_qbit))
         return -1;
 
-    if (qbit_num != -1 && target_qbit != -1) {
-        self->gate = new Gate( qbit_num );
-    }
+    self->gate = create_controlled_gate<CH>( qbit_num, target_qbit, control_qbit );
+    
 
     return 0;
 }
+
+
+/**
+@brief Call te extract t he matric representation of the gate
+@param start_index The index of the first inverse gate
+*/
+static PyObject *
+Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
+
+    static char *kwlist[] = {(char*)"parameters", NULL};
+
+    PyArrayObject * parameters_arr = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|O", kwlist, &parameters_arr )) {
+        std::string err( "Unable to parse keyword arguments");
+        return NULL;
+    }
+
+    Gate* gate = self->gate;
+
+    Matrix gate_mtx;
+
+    if( gate->get_parameter_num() == 0 ) {
+
+        if( parameters_arr != NULL ) {
+            std::string err( "The gate contains no parameters to set, but parameter array was given as input");
+            return NULL;
+        }
+
+        int parallel = 1;
+        gate_mtx = gate->get_matrix( parallel );
+
+    }
+    else if( gate->get_parameter_num() > 0 ) {
+
+        if( parameters_arr == NULL ) {
+            std::string err( "The gate has free parameters to set, but no parameter array was given as input");
+            return NULL;
+        }
+
+        if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
+            PyErr_SetString(PyExc_Exception, "Parameter vector should be real typed");
+            return NULL;
+        }
+
+        if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+            Py_INCREF(parameters_arr);
+        }
+        else {
+            parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        }
+
+
+        // get the C++ wrapper around the input data
+        Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+        int parallel = 1;
+        gate_mtx = self->gate->get_matrix( parameters_mtx, parallel );
+
+        Py_DECREF(parameters_arr);
+
+
+    }
+    else {
+        std::string err( "The number of parameters in a gate is set to a negative value");
+        return NULL;
+
+    }
+
+
+    // convert to numpy array
+    gate_mtx.set_owner(false);
+    PyObject *gate_mtx_py = matrix_to_numpy( gate_mtx );
+    
+
+    return gate_mtx_py;
+
+}
+
+
+
+/**
+@brief Call to apply the gate operation on an input state or matrix
+*/
+static PyObject *
+Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
+
+    static char *kwlist[] = {(char*)"unitary", (char*)"parameters", NULL};
+
+    PyArrayObject * parameters_arr = NULL;
+    PyArrayObject * input = NULL;
+
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist, &input, &parameters_arr )) {
+        std::string err( "Unable to parse keyword arguments");
+        return NULL;
+    }
+
+
+    if ( input == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Input matrix was not given");
+        return NULL;
+    }
+
+
+    if ( PyArray_TYPE(input) != NPY_COMPLEX128 ) {
+        PyErr_SetString(PyExc_Exception, "input matrix or state should be complex typed");
+        return NULL;
+    }    
+
+    // test C-style contiguous memory allocation of the array
+    if ( !PyArray_IS_C_CONTIGUOUS(input) ) {
+        PyErr_SetString(PyExc_Exception, "input state/matrix is not memory contiguous");
+        return NULL;
+    }
+
+    // create QGD version of the input matrix
+    Matrix input_mtx = numpy2matrix(input);
+
+    Gate* gate = self->gate;
+
+    if( gate->get_parameter_num() == 0 ) {
+
+        if( parameters_arr != NULL ) {
+            std::string err( "The gate contains no parameters to set, but parameter array was given as input");
+            return NULL;
+        }
+
+        try {
+            int parallel = 1;
+            gate->apply_to( input_mtx, parallel );
+        }
+        catch (std::string err) {
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+        catch(...) {
+            std::string err( "Invalid pointer to gate class");
+            PyErr_SetString(PyExc_Exception, err.c_str());
+            return NULL;
+        }
+            
+
+    }
+    else if( gate->get_parameter_num() > 0 ) {
+
+        if( parameters_arr == NULL ) {
+            std::string err( "The gate has free parameters to set, but no parameter array was given as input");
+            return NULL;
+        }
+
+        if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
+            PyErr_SetString(PyExc_Exception, "Parameter vector should be real typed");
+            return NULL;
+        }
+
+        if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+            Py_INCREF(parameters_arr);
+        }
+        else {
+            parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+        }
+
+
+        // get the C++ wrapper around the input data
+        Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+/*
+        int parallel = 1;
+        gate_mtx = self->gate->get_matrix( parameters_mtx, parallel );
+*/
+        Py_DECREF(parameters_arr);
+
+
+    }
+    else {
+        std::string err( "The number of parameters in a gate is set to a negative value");
+        return NULL;
+
+    }
+
+    // if numpy array was not aligned to memory boundaries, the input is reallocated on the C++ side
+    if (input_mtx.data != PyArray_DATA(input)) {
+        memcpy(PyArray_DATA(input), input_mtx.data, input_mtx.size() * sizeof(QGD_Complex16));
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+/**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param ThetaOver2 Real parameter standing for the parameter theta (optional).
+@param Phi Real parameter standing for the parameter phi (optional).
+@param Lambda Real parameter standing for the parameter lambda (optional).
+@return Returns with the matrix of the one-qubit matrix.
+*/
+
+static PyObject *
+Gate_Wrapper_get_Gate_Kernel( Gate_Wrapper *self, PyObject *args, PyObject *kwds) {
+
+
+    static char *kwlist[] = {(char*)"ThetaOver2", (char*)"Phi", (char*)"Lambda", NULL};
+
+    double ThetaOver2;
+    double Phi; 
+    double Lambda; 
+
+
+    try {
+        self->gate->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+    }
+    catch (std::string err) {    
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to gate class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ddd", kwlist, &ThetaOver2, &Phi, &Lambda ))  {
+        std::string err( "Unable to parse keyword arguments");
+        return NULL;
+    }
+
+
+    Matrix CH_1qbit_;
+
+    // create QGD version of the input matrix
+    Gate* gate = self->gate;
+
+    if( gate->get_parameter_num() == 0 ) {
+       CH_1qbit_ = self->gate->calc_one_qubit_u3( );
+    }
+    else if( gate->get_parameter_num() > 0 ) {
+       CH_1qbit_ = self->gate->calc_one_qubit_u3( ThetaOver2, Phi, Lambda );
+    }
+    else {
+        std::string err( "The number of parameters in a gate is set to a negative value");
+        return NULL;
+
+    }
+
+ 
+    PyObject *CH_1qbit = matrix_to_numpy( CH_1qbit_ );
+
+    return CH_1qbit;
+
+
+}
+
+
+
+/**
+@brief Call to get the number of free parameters in the gate
+@return Returns with the number of parameters
+*/
+static PyObject *
+Gate_Wrapper_get_Parameter_Num( Gate_Wrapper *self ) {
+
+    int parameter_num;
+
+    try {
+        parameter_num = self->gate->get_parameter_num();
+    }
+    catch (std::string err) {    
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to gate class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("i", parameter_num);
+
+}
+
+
+
+/**
+@brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
+@return Returns with the starting index
+*/
+static PyObject *
+Gate_Wrapper_get_Parameter_Start_Index( Gate_Wrapper *self ) {
+
+    int start_index;
+
+    try {
+        start_index = self->gate->get_parameter_start_idx();
+    }
+    catch (std::string err) {    
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to gate class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    return Py_BuildValue("i", start_index);
+
+}
+
+
+
+
+/**
+@brief Call to get the target qbit
+@return Returns with the target qbit
+*/
+static PyObject *
+Gate_Wrapper_get_Target_Qbit( Gate_Wrapper *self ) {
+
+    int target_qbit;
+
+    try {
+        target_qbit = self->gate->get_target_qbit();
+    }
+    catch (std::string err) {    
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to gate class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    return Py_BuildValue("i", target_qbit);
+
+}
+
+/**
+@brief Call to get the control qbit (returns with -1 if no control qbit is used in the gate)
+@return Returns with the control qbit
+*/
+static PyObject *
+Gate_Wrapper_get_Control_Qbit( Gate_Wrapper *self ) {
+
+    int control_qbit;
+
+    try {
+        control_qbit = self->gate->get_control_qbit();
+    }
+    catch (std::string err) {    
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to gate class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+    return Py_BuildValue("i", control_qbit);
+
+} 
+
+
+
+/**
+@brief Call to set the target qbit
+*/
+static PyObject *
+Gate_Wrapper_set_Target_Qbit( Gate_Wrapper *self, PyObject *args ) {
+
+    int target_qbit_in = -1;
+    if (!PyArg_ParseTuple(args, "|i", &target_qbit_in ))   {
+        std::string err( "Unable to parse arguments");
+        return NULL;
+    }
+        
+    try{
+        self->gate->set_target_qbit(target_qbit_in);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_BuildValue("i", 0);
+
+}
+
+/**
+@brief Call to set the target qbit
+*/
+static PyObject *
+Gate_Wrapper_set_Control_Qbit( Gate_Wrapper *self, PyObject *args ) {
+
+    int control_qbit_in = -1;
+    if (!PyArg_ParseTuple(args, "|i", &control_qbit_in ))    {
+        std::string err( "Unable to parse arguments");
+        return NULL;
+    }
+        
+    try{
+        self->gate->set_control_qbit(control_qbit_in);
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+
+/**
+@brief Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded.
+@return Returns with he extracted parameters
+*/
+static PyObject *
+Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
+
+    PyArrayObject * parameters_arr = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) {
+        std::string err( "Unable to parse arguments");
+        return NULL;
+    }
+
+    if( parameters_arr != NULL ) {
+        std::string err( "Missing input parameter array");
+        return NULL;
+    }
+    
+    if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+        Py_INCREF(parameters_arr);
+    }
+    else {
+        parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+    }
+
+    // get the C++ wrapper around the data
+    Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
+
+
+    
+    Matrix_real extracted_parameters;
+
+    try {
+        extracted_parameters = self->gate->extract_parameters( parameters_mtx );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    // convert to numpy array
+    extracted_parameters.set_owner(false);
+    PyObject *extracted_parameters_py = matrix_real_to_numpy( extracted_parameters );
+   
+
+    return extracted_parameters_py;
+}
+
+
 
 
 /**
@@ -126,7 +646,6 @@ static int
 static PyObject *
 Gate_Wrapper_get_Name( Gate_Wrapper *self ) {
 
-    
 
     return Py_BuildValue("i", -1);
 }
@@ -147,6 +666,36 @@ extern "C"
 @brief Structure containing metadata about the methods of class qgd_U3.
 */
 static PyMethodDef Gate_Wrapper_methods[] = {
+    {"get_Matrix", (PyCFunction) Gate_Wrapper_get_Matrix, METH_VARARGS | METH_KEYWORDS,
+     "Method to get the matrix representation of the gate."
+    },
+    {"apply_to", (PyCFunction) Gate_Wrapper_Wrapper_apply_to, METH_VARARGS | METH_KEYWORDS,
+     "Call to apply the gate on an input state/matrix."
+    },
+    {"get_Gate_Kernel", (PyCFunction) Gate_Wrapper_get_Gate_Kernel, METH_VARARGS | METH_KEYWORDS,
+     "Call to calculate the gate matrix acting on a single qbit space."
+    },
+    {"get_Parameter_Num", (PyCFunction) Gate_Wrapper_get_Parameter_Num, METH_NOARGS,
+     "Call to get the number of free parameters in the gate."
+    },
+    {"get_Parameter_Start_Index", (PyCFunction) Gate_Wrapper_get_Parameter_Start_Index, METH_NOARGS,
+     "Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated."
+    },
+    {"get_Target_Qbit", (PyCFunction) Gate_Wrapper_get_Target_Qbit, METH_NOARGS,
+     "Call to get the target qbit."
+    },
+    {"get_Control_Qbit", (PyCFunction) Gate_Wrapper_get_Control_Qbit, METH_NOARGS,
+     "Call to get the control qbit (returns with -1 if no control qbit is used in the gate)."
+    },
+    {"set_Target_Qbit", (PyCFunction) Gate_Wrapper_set_Target_Qbit, METH_VARARGS,
+     "Call to set the target qbit."
+    },
+    {"set_Control_Qbit", (PyCFunction) Gate_Wrapper_set_Control_Qbit, METH_VARARGS,
+     "Call to set the control qbit."
+    },
+    {"Extract_Parameters", (PyCFunction) Gate_Wrapper_Extract_Parameters, METH_VARARGS,
+     "Call to extract the paramaters corresponding to the gate, from a parameter array associated to the circuit in which the gate is embedded."
+    },
     {"get_Name", (PyCFunction) Gate_Wrapper_get_Name, METH_NOARGS,
      "Method to get the name label of the gate"
     },
@@ -170,7 +719,7 @@ struct Gate_Wrapper_Type_tmp : PyTypeObject {
         //PyVarObject tt = { PyVarObject_HEAD_INIT(NULL, 0) };
     
         ob_base.ob_size = 0;
-        tp_name      = "qgd_CH_Wrapper.Gate_Wrapper";
+        tp_name      = "Gate_Wrapper";
         tp_basicsize = sizeof(Gate_Wrapper);
         tp_dealloc   = (destructor)  Gate_Wrapper_dealloc;
         tp_flags     = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE;
@@ -185,7 +734,25 @@ struct Gate_Wrapper_Type_tmp : PyTypeObject {
 };
 
 
+struct CH_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+
+    CH_Wrapper_Type() {
+    
+        tp_name      = "CH_Wrapper";
+        //tp_dealloc   = (destructor)  Gate_Wrapper_dealloc;
+        tp_doc       = "Object to represent python bindig for a CH gate of the Squander package.";
+        tp_init      = (initproc)  CH_Wrapper_init;
+        //tp_new       = Gate_Wrapper_new;
+    }
+    
+
+};
+
+
 static Gate_Wrapper_Type_tmp Gate_Wrapper_Type;
+static CH_Wrapper_Type CH_Wrapper_Type_ins;
+
 
 
 
@@ -231,6 +798,17 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&Gate_Wrapper_Type);
     if (PyModule_AddObject(m, "Gate_Wrapper", (PyObject *) & Gate_Wrapper_Type) < 0) {
         Py_DECREF(& Gate_Wrapper_Type);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    if (PyType_Ready(& CH_Wrapper_Type_ins) < 0)
+        return NULL;
+
+
+    Py_INCREF(&CH_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CH", (PyObject *) & CH_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& CH_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }

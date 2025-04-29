@@ -120,7 +120,32 @@ Gate(int qbit_num_in);
 @brief Call to retrieve the operation matrix
 @return Returns with a matrix of the operation
 */
-Matrix get_matrix();
+virtual Matrix get_matrix();
+
+/**
+@brief Call to retrieve the operation matrix
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+@return Returns with the matrix of the operation
+*/
+virtual Matrix get_matrix(int parallel);
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@return Returns with a matrix of the gate
+*/
+virtual Matrix get_matrix( Matrix_real& parameters  );
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+@return Returns with a matrix of the gate
+*/
+virtual Matrix get_matrix( Matrix_real& parameters, int parallel  );
+
 
 /**
 @brief Call to apply the gate on a list of inputs
@@ -329,7 +354,7 @@ virtual Gate* clone();
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
+virtual Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda );
 
 /**
 @brief Calculate the matrix of the constans gates.

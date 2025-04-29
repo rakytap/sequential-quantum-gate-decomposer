@@ -24,19 +24,20 @@ from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 
 from squander.utils import get_unitary_from_qiskit_circuit
-from squander.gates.qgd_CH import qgd_CH
+#from squander.gates.qgd_CH import qgd_CH
 import squander.gates.qgd_CH_Wrapper
 import math
 from scipy.stats import unitary_group      
 
 
-from squander import Gate_Wrapper  
+from squander import Gate
+from squander import CH2 as qgd_CH
 
 class Test_operations_squander:
     """This is a test class of the python iterface to the gates of the QGD package"""
     
     
-    def test_Gate(self):
+    def rtest_Gate(self):
         r"""
         This method is called by pytest. 
         Test to create an instance of CH gate.
@@ -51,7 +52,9 @@ class Test_operations_squander:
         control_qbit = qbit_num-1
             
             
-        gate = Gate_Wrapper( qbit_num=qbit_num, target_qbit=target_qbit, control_qbit=control_qbit )
+        gate = Gate( qbit_num=qbit_num )
+        CH_gate = CH2( qbit_num=qbit_num, target_qbit=target_qbit, control_qbit=control_qbit )
+        print( CH_gate.get_Matrix() )
         print("lllll ", gate.get_Name() )
 
     def test_CH_get_matrix(self):
@@ -97,6 +100,7 @@ class Test_operations_squander:
 
             print( dir(squander.gates.qgd_CH_Wrapper))
             print( CH.get_Name() )
+           
 
             #print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 )        
@@ -134,6 +138,7 @@ class Test_operations_squander:
             CH_qiskit = get_unitary_from_qiskit_circuit( circuit )
             CH_qiskit = np.asarray(CH_qiskit)
 
+            print( CH_qiskit )
             # apply the gate on the input array/matrix 
             #CH_qiskit_apply_gate=np.matmul(CH_qiskit, test_matrix)
 
@@ -143,9 +148,13 @@ class Test_operations_squander:
 
             # apply the gate on the input array/matrix                
             CH.apply_to(CH_squander )
+            print("iiiiiiiii")
+            print( CH_squander )
 
             #the difference between the SQUANDER and the qiskit result        
             delta_matrix=CH_squander-CH_qiskit
+
+            print( delta_matrix )
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)

@@ -47,4 +47,5 @@ import squander.utils
 from squander.nn.qgd_nn import qgd_nn as NN
 
 
-from squander.gates_Wrapper import Gate_Wrapper
+from squander.gates_Wrapper import Gate_Wrapper as Gate
+from squander.gates_Wrapper import CH as CH2

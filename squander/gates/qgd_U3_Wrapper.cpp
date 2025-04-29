@@ -295,6 +295,19 @@ qgd_U3_Wrapper_get_Gate_Kernel( qgd_U3_Wrapper *self, PyObject *args ) {
     double Phi; 
     double Lambda; 
 
+    try {
+        self->gate->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+    }
+    catch (std::string err) {    
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to gate class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
     // parsing input arguments
     if (!PyArg_ParseTuple(args, "|ddd", &ThetaOver2, &Phi, &Lambda )) 
         return Py_BuildValue("i", -1);
