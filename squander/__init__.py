@@ -45,3 +45,6 @@ import squander.utils
 
 ## NN component (experimental interface)
 from squander.nn.qgd_nn import qgd_nn as NN
+
+
+from squander.gates_Wrapper import Gate_Wrapper

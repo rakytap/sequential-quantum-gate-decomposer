@@ -27,10 +27,32 @@ from squander.utils import get_unitary_from_qiskit_circuit
 from squander.gates.qgd_CH import qgd_CH
 import squander.gates.qgd_CH_Wrapper
 import math
-from scipy.stats import unitary_group        
+from scipy.stats import unitary_group      
+
+
+from squander import Gate_Wrapper  
 
 class Test_operations_squander:
     """This is a test class of the python iterface to the gates of the QGD package"""
+    
+    
+    def test_Gate(self):
+        r"""
+        This method is called by pytest. 
+        Test to create an instance of CH gate.
+        """
+        
+        qbit_num = 4;
+        
+        # target qbit
+        target_qbit = qbit_num-2
+
+        # control qbit
+        control_qbit = qbit_num-1
+            
+            
+        gate = Gate_Wrapper( qbit_num=qbit_num, target_qbit=target_qbit, control_qbit=control_qbit )
+        print("lllll ", gate.get_Name() )
 
     def test_CH_get_matrix(self):
         r"""
