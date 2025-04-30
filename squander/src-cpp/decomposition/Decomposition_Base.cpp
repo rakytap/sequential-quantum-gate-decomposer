@@ -34,7 +34,8 @@ std::map<int,int> Decomposition_Base::max_layer_num_def;
 Decomposition_Base::Decomposition_Base() {
 
 	
-
+    // A string labeling the gate operation
+    name = "Decomposition_Interface";
 
     Init_max_layer_num();
 
@@ -46,7 +47,7 @@ Decomposition_Base::Decomposition_Base() {
     type = DECOMPOSITION_BASE_CLASS;
 
     // error of the unitarity of the final decomposition
-    decomposition_error = -1;
+    decomposition_error = DBL_MAX;
 
     // number of finalizing (deterministic) opertaions counted from the top of the array of gates
     finalizing_gates_num = 0;
@@ -115,6 +116,9 @@ Decomposition_Base::Decomposition_Base() {
 */
 Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, guess_type initial_guess_in= CLOSE_TO_ZERO ) : Gates_block(qbit_num_in) {
 
+    // A string labeling the gate operation
+    name = "Decomposition_Interface";
+
     Init_max_layer_num();
 
    
@@ -128,7 +132,7 @@ Decomposition_Base::Decomposition_Base( Matrix Umtx_in, int qbit_num_in, std::ma
     type = DECOMPOSITION_BASE_CLASS;
 
     // error of the unitarity of the final decomposition
-    decomposition_error = -1;
+    decomposition_error = DBL_MAX;
 
     // number of finalizing (deterministic) opertaions counted from the top of the array of gates
     finalizing_gates_num = 0;

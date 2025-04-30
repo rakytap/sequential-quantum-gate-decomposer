@@ -30,19 +30,22 @@ limitations under the License.
 */
 Y::Y() {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = -1;
-        // the size of the matrix
-        matrix_size = -1;
-        // A string describing the type of the gate
-        type = Y_OPERATION;
+    // A string labeling the gate operation
+    name = "Y";
 
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = -1;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // number of qubits spanning the matrix of the gate
+    qbit_num = -1;
+    // the size of the matrix
+    matrix_size = -1;
+    // A string describing the type of the gate
+    type = Y_OPERATION;
 
-        parameter_num = 0;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = -1;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
+
+    parameter_num = 0;
 
 
 
@@ -60,28 +63,30 @@ Y::Y() {
 */
 Y::Y(int qbit_num_in, int target_qbit_in) {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = qbit_num_in;
-        // the size of the matrix
-        matrix_size = Power_of_2(qbit_num);
-        // A string describing the type of the gate
-        type = Y_OPERATION;
+    // A string labeling the gate operation
+    name = "Y";
+    // number of qubits spanning the matrix of the gate
+    qbit_num = qbit_num_in;
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+    // A string describing the type of the gate
+    type = Y_OPERATION;
 
 
-        if (target_qbit_in >= qbit_num) {
-           std::stringstream sstream;
-	   sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-	   print(sstream, 0);
+    if (target_qbit_in >= qbit_num) {
+       std::stringstream sstream;
+       sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+       print(sstream, 0);
 	   
-           throw "The index of the target qubit is larger than the number of qubits";
-        }
+       throw "The index of the target qubit is larger than the number of qubits";
+    }
 	
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = target_qbit_in;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = target_qbit_in;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        parameter_num = 0;
+    parameter_num = 0;
 
 
 }
@@ -167,14 +172,9 @@ Y::apply_to( Matrix& input, int parallel ) {
 void 
 Y::apply_from_right( Matrix& input ) {
 
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
-
-    if (input.cols != matrix_size ) {
-        std::stringstream sstream;
-	sstream << "Wrong matrix size in U3 apply_from_right" << std::endl;
-        print(sstream, 0);	  
-        exit(-1);
+    if (input.rows != matrix_size ) {
+        std::string err("Y::apply_to: Wrong input size in Y gate apply");     
+        throw(err);
     }
 
     Matrix u3_1qbit = calc_one_qubit_u3();   

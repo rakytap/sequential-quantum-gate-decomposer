@@ -170,11 +170,16 @@ qgd_X_Wrapper_apply_to( qgd_X_Wrapper *self, PyObject *args ) {
         return Py_BuildValue("i", -1);
 
 
-    // convert python object array to numpy C API array
     if ( unitary_arg == NULL ) {
         PyErr_SetString(PyExc_Exception, "Input matrix was not given");
         return NULL;
     }
+
+    
+    if ( PyArray_TYPE(unitary_arg) != NPY_COMPLEX128 ) {
+        PyErr_SetString(PyExc_Exception, "input matrix or state should be complex typed");
+        return NULL;
+    }    
 
     PyArrayObject* unitary = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)unitary_arg, NPY_COMPLEX128, NPY_ARRAY_IN_ARRAY);
 
@@ -188,8 +193,25 @@ qgd_X_Wrapper_apply_to( qgd_X_Wrapper *self, PyObject *args ) {
     // create QGD version of the input matrix
     Matrix unitary_mtx = numpy2matrix(unitary);
 
-    int parallel = 1;
-    self->gate->apply_to( unitary_mtx, parallel );
+    try {
+        int parallel = 1;
+        self->gate->apply_to( unitary_mtx, parallel );
+    }
+    catch (std::string err) {
+    
+        Py_DECREF(unitary);
+    
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+    
+        Py_DECREF(unitary);
+    
+        std::string err( "Invalid pointer to gate class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
     
     if (unitary_mtx.data != PyArray_DATA(unitary)) {
         memcpy(PyArray_DATA(unitary), unitary_mtx.data, unitary_mtx.size() * sizeof(QGD_Complex16));

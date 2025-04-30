@@ -32,20 +32,23 @@ using namespace std;
 */
 SYC::SYC() {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = -1;
-        // the size of the matrix
-        matrix_size = -1;
-        // A string describing the type of the gate
-        type = SYC_OPERATION;
-        // The number of free parameters
-        parameter_num = 0;
+    // A string labeling the gate operation
+    name = "SYC";
 
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = -1;
+    // number of qubits spanning the matrix of the gate
+    qbit_num = -1;
+    // the size of the matrix
+    matrix_size = -1;
+    // A string describing the type of the gate
+    type = SYC_OPERATION;
+    // The number of free parameters
+    parameter_num = 0;
 
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
-        control_qbit = -1;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = -1;
+
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
+    control_qbit = -1;
 
 
 }
@@ -59,35 +62,38 @@ SYC::SYC() {
 */
 SYC::SYC(int qbit_num_in,  int target_qbit_in, int control_qbit_in) {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = qbit_num_in;
-        // the size of the matrix
-        matrix_size = Power_of_2(qbit_num);
-        // A string describing the type of the gate
-        type = SYC_OPERATION;
-        // The number of free parameters
-        parameter_num = 0;
+    // A string labeling the gate operation
+    name = "SYC";
 
-        if (target_qbit_in >= qbit_num) {
-            std::stringstream sstream;
-	    sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-	    print(sstream, 0);
-	    throw "The index of the target qubit is larger than the number of qubits";
-        }
+    // number of qubits spanning the matrix of the gate
+    qbit_num = qbit_num_in;
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+    // A string describing the type of the gate
+    type = SYC_OPERATION;
+    // The number of free parameters
+    parameter_num = 0;
+
+    if (target_qbit_in >= qbit_num) {
+        std::stringstream sstream;
+        sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+        print(sstream, 0);
+	throw "The index of the target qubit is larger than the number of qubits";
+    }
 	
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = target_qbit_in;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = target_qbit_in;
 
 
-        if (control_qbit_in >= qbit_num) {
-            std::stringstream sstream;
-	    sstream << "The index of the control qubit is larger than the number of qubits" << std::endl;
-	    print(sstream, 0);	
-	    throw "The index of the control qubit is larger than the number of qubits";
-        }
+    if (control_qbit_in >= qbit_num) {
+        std::stringstream sstream;
+        sstream << "The index of the control qubit is larger than the number of qubits" << std::endl;
+        print(sstream, 0);	
+	throw "The index of the control qubit is larger than the number of qubits";
+    }
 	
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
-        control_qbit = control_qbit_in;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gate
+    control_qbit = control_qbit_in;
 
 }
 
@@ -133,6 +139,11 @@ SYC::get_matrix( int parallel) {
 */
 void 
 SYC::apply_to( Matrix& input, int parallel ) {
+
+    if (input.rows != matrix_size ) {
+        std::string err("SYC::apply_to: Wrong input size in SYC gate apply.");
+        throw err;    
+    }
 
     int index_step_target = Power_of_2(target_qbit);
     int index_step_control = Power_of_2(control_qbit);

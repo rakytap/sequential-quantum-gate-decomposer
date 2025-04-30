@@ -61,7 +61,6 @@ N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search() : N_Qubit
 N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Tree_Search( Umtx_in, qbit_num_in, level_limit_in, config, accelerator_num) {
 
 
-
 }
 
 
@@ -78,6 +77,8 @@ N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search( Matrix Umt
 */
 N_Qubit_Decomposition_Tabu_Search::N_Qubit_Decomposition_Tabu_Search( Matrix Umtx_in, int qbit_num_in, int level_limit_in, std::vector<matrix_base<int>> topology_in, std::map<std::string, Config_Element>& config, int accelerator_num ) : N_Qubit_Decomposition_Tree_Search( Umtx_in, qbit_num_in, level_limit_in, topology_in, config, accelerator_num ) {
 
+    // A string labeling the gate operation
+    name = "Tabu_Search";
 
 }
 
@@ -120,7 +121,6 @@ N_Qubit_Decomposition_Tabu_Search::determine_gate_structure(Matrix_real& optimiz
 
     level_limit = (int)level_max;
    
-   
     GrayCode gcode_best_solution = tabu_search_over_gate_structures();
 
 
@@ -129,7 +129,7 @@ N_Qubit_Decomposition_Tabu_Search::determine_gate_structure(Matrix_real& optimiz
        sstream << "Decomposition did not reached prescribed high numerical precision." << std::endl;
        print(sstream, 1);              
     }
-
+    
     return construct_gate_structure_from_Gray_code( gcode_best_solution );
 
 }
@@ -221,7 +221,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
              
         
 
-        if( current_minimum_tmp < current_minimum || possible_gate_structures.size() == 1) {
+        if( current_minimum_tmp < current_minimum) {
             // accept the current gate structure in tabu search
                    
             current_minimum     = current_minimum_tmp;                        
@@ -267,17 +267,18 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
        
         
         if( possible_gate_structures.size() == 0 ) {
-        
+
             while( best_solutions.size() > 0 ) {
             
                 auto pair = best_solutions[0];
+                best_solutions.erase( best_solutions.begin() );
                 
                 gcode_best_solution = std::get<0>(pair);
                 current_minimum     = std::get<1>(pair);
                 
                 possible_gate_structures = determine_mutated_structures( gcode_best_solution );
-                
-                if( possible_gate_structures.size() > 0 ) {
+          
+                if( possible_gate_structures.size() > 0 || best_solutions.size() == 0 ) {
                     break;
                 }
             
@@ -286,6 +287,7 @@ N_Qubit_Decomposition_Tabu_Search::tabu_search_over_gate_structures() {
         }
         
         if ( possible_gate_structures.size() == 0 ) {
+            std::cout << "tttttttttttttttttttttttttttttt " << best_solutions.size() <<  std::endl;
             break;
         }
         
@@ -303,6 +305,7 @@ std::cout << "uuuuuuuuuuuuuuuuuuuuuuuu 2" << std::endl;
 */
 //int levels_current = gcode.size();
         gcode = draw_gate_structure_from_list( possible_gate_structures );   
+
 /*
 if ( levels_current < gcode.size() ) {
 std::cout << " increasing the gate structure" << std::endl;
@@ -328,22 +331,28 @@ std::cout << " decreasing the gate structure" << std::endl;
 void 
 N_Qubit_Decomposition_Tabu_Search::insert_into_best_solution( const GrayCode& gcode_, double minimum_ ) {
 
+//std::cout << "N_Qubit_Decomposition_Tabu_Search::insert_into_best_solution a " << best_solutions.size()  << " " << minimum_ << std::endl;
+
+    if ( best_solutions.size() == 0 ) {
+        best_solutions.insert( best_solutions.begin(), std::make_pair(gcode_, minimum_) );
+    }
 
     for( auto it=best_solutions.begin(); it!=best_solutions.end(); it++ ) {
     
         double minimum = std::get<1>( *it );
         
         if( minimum > minimum_) {
-            best_solutions.insert( it, std::make_pair(gcode_, minimum_) );
-            
-            if( best_solutions.size() > 5 ) {
-                best_solutions.erase( best_solutions.end() - 1 );
-            }
+            best_solutions.insert( it, std::make_pair(gcode_, minimum_) );            
+            break;
         }
     
     }
 
+    if( best_solutions.size() > 40 ) {
+        best_solutions.erase( best_solutions.end() - 1 );
+    }
 
+//std::cout << "N_Qubit_Decomposition_Tabu_Search::insert_into_best_solution b " << best_solutions.size()  <<  std::endl;
 
 }
 

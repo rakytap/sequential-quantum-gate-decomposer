@@ -32,26 +32,29 @@ static double M_PIOver2 = M_PI/2;
 */
 U3::U3() {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = -1;
-        // the size of the matrix
-        matrix_size = -1;
-        // A string describing the type of the gate
-        type = U3_OPERATION;
+    // A string labeling the gate operation
+    name = "U3";
 
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = -1;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // number of qubits spanning the matrix of the gate
+    qbit_num = -1;
+    // the size of the matrix
+    matrix_size = -1;
+    // A string describing the type of the gate
+    type = U3_OPERATION;
 
-        // logical value indicating whether the matrix creation takes an argument theta
-        theta = false;
-        // logical value indicating whether the matrix creation takes an argument phi
-        phi = false;
-        // logical value indicating whether the matrix creation takes an argument lambda
-        lambda = false;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = -1;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        parameter_num = 0;
+    // logical value indicating whether the matrix creation takes an argument theta
+    theta = false;
+    // logical value indicating whether the matrix creation takes an argument phi
+    phi = false;
+    // logical value indicating whether the matrix creation takes an argument lambda
+    lambda = false;
+
+    parameter_num = 0;
 
 
 
@@ -69,69 +72,72 @@ U3::U3() {
 */
 U3::U3(int qbit_num_in, int target_qbit_in, bool theta_in, bool phi_in, bool lambda_in) {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = qbit_num_in;
-        // the size of the matrix
-        matrix_size = Power_of_2(qbit_num);
-        // A string describing the type of the gate
-        type = U3_OPERATION;
+    // A string labeling the gate operation
+    name = "U3";
+
+    // number of qubits spanning the matrix of the gate
+    qbit_num = qbit_num_in;
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+    // A string describing the type of the gate
+    type = U3_OPERATION;
 
 
-        if (target_qbit_in >= qbit_num) {
-            std::stringstream sstream;
-            sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-	    print(sstream, 0);	             
-            throw "The index of the target qubit is larger than the number of qubits";
-        }
+    if (target_qbit_in >= qbit_num) {
+        std::stringstream sstream;
+        sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+        print(sstream, 0);	             
+        throw "The index of the target qubit is larger than the number of qubits";
+    }
 	
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = target_qbit_in;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = target_qbit_in;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        // logical value indicating whether the matrix creation takes an argument theta
-        theta = theta_in;
-        // logical value indicating whether the matrix creation takes an argument phi
-        phi = phi_in;
-        // logical value indicating whether the matrix creation takes an argument lambda
-        lambda = lambda_in;
+    // logical value indicating whether the matrix creation takes an argument theta
+    theta = theta_in;
+    // logical value indicating whether the matrix creation takes an argument phi
+    phi = phi_in;
+    // logical value indicating whether the matrix creation takes an argument lambda
+    lambda = lambda_in;
 
 
-        // The number of free parameters
-        if (theta && !phi && lambda) {
-            parameter_num = 2;
-        }
+    // The number of free parameters
+    if (theta && !phi && lambda) {
+        parameter_num = 2;
+    }
 
-        else if (theta && phi && lambda) {
-            parameter_num = 3;
-        }
+    else if (theta && phi && lambda) {
+        parameter_num = 3;
+    }
 
-        else if (!theta && phi && lambda) {
-            parameter_num = 2;
-        }
+    else if (!theta && phi && lambda) {
+        parameter_num = 2;
+    }
 
-        else if (theta && phi && !lambda) {
-            parameter_num = 2;
-        }
+    else if (theta && phi && !lambda) {
+        parameter_num = 2;
+    }
 
-        else if (!theta && !phi && lambda) {
-            parameter_num = 1;
-        }
+    else if (!theta && !phi && lambda) {
+        parameter_num = 1;
+    }
 
-        else if (!theta && phi && !lambda) {
-            parameter_num = 1;
-        }
+    else if (!theta && phi && !lambda) {
+        parameter_num = 1;
+    }
 
-        else if (theta && !phi && !lambda) {
-            parameter_num = 1;
-        }
+    else if (theta && !phi && !lambda) {
+        parameter_num = 1;
+    }
 
-        else {
-            parameter_num = 0;
-        }
+    else {
+        parameter_num = 0;
+    }
 
-        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
-        parameters = Matrix_real(1, parameter_num);
+    // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
+    parameters = Matrix_real(1, parameter_num);
 
 }
 
@@ -225,7 +231,7 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
 
     if (input.rows != matrix_size ) {
-        std::string err("U3::apply_to: Wrong matrix size in U3 gate apply.");
+        std::string err("U3::apply_to: Wrong input size in U3 gate apply.");
         throw err;    
     }
 

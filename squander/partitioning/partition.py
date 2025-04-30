@@ -1,5 +1,5 @@
-from qiskit import QuantumCircuit
 from squander import Circuit, CNOT, CH, CZ, CRY
+from squander import utils
 from itertools import dropwhile
 import numpy as np
 
@@ -12,14 +12,7 @@ def get_qubits(gate):
             if isinstance(gate, (CH, CRY, CNOT, CZ)) else {gate.get_Target_Qbit()})
 
 
-#@brief Converts a QASM file to a SQUANDER circuit
-#@param filename The path to the QASM file
-#@return Tuple: SQUANDER circuit, List of circuit parameters
-def qasm_to_squander(filename):
-    from squander import Qiskit_IO
-    qc = QuantumCircuit.from_qasm_file(filename)
-    circuit_squander, circut_parameters = Qiskit_IO.convert_Qiskit_to_Squander(qc)
-    return circuit_squander, circut_parameters
+
 
 
 #@brief Partitions a flat circuit into subcircuits using Kahn's algorithm
@@ -197,7 +190,8 @@ def translate_param_order(params, param_order):
 #@param use_ilp Flag to use ILP-based partitioning
 #@return Tuple: Partitioned SQUANDER circuit, Reordered parameter array
 def qasm_to_partitioned_circuit(filename, max_qubit, use_ilp=False):
-    c, param = qasm_to_squander(filename)
+
+    c, param = utils.qasm_to_squander_circuit(filename)
     top_c, param_order, _ = ilp_max_partitions(c, max_qubit) if use_ilp else kahn_partition(c, max_qubit)
     param_reordered = translate_param_order(param, param_order)
     return top_c, param_reordered

@@ -30,31 +30,34 @@ limitations under the License.
 */
 RZ_P::RZ_P() {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = -1;
-        // the size of the matrix
-        matrix_size = -1;
-        // A string describing the type of the gate
-        type = RZ_P_OPERATION;
+    // A string labeling the gate operation
+    name = "RZ_P";
 
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = -1;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // number of qubits spanning the matrix of the gate
+    qbit_num = -1;
+    // the size of the matrix
+    matrix_size = -1;
+    // A string describing the type of the gate
+    type = RZ_P_OPERATION;
 
-        // logical value indicating whether the matrix creation takes an argument theta
-        theta = false;
-        // logical value indicating whether the matrix creation takes an argument phi
-        phi = false;
-        // logical value indicating whether the matrix creation takes an argument lambda
-        lambda = false;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = -1;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        // set static values for the angles
-        theta0 = 0.0;
-        lambda0 = 0.0;
+    // logical value indicating whether the matrix creation takes an argument theta
+    theta = false;
+    // logical value indicating whether the matrix creation takes an argument phi
+    phi = false;
+    // logical value indicating whether the matrix creation takes an argument lambda
+    lambda = false;
+
+    // set static values for the angles
+    theta0 = 0.0;
+    lambda0 = 0.0;
 
 
-        parameter_num = 0;
+    parameter_num = 0;
 
 
 
@@ -72,48 +75,51 @@ RZ_P::RZ_P() {
 */
 RZ_P::RZ_P(int qbit_num_in, int target_qbit_in) {
 
-	//The stringstream input to store the output messages.
-	std::stringstream sstream;
+    // A string labeling the gate operation
+    name = "RZ_P";
 
-	//Integer value to set the verbosity level of the output messages.
-	int verbose_level;
+    //The stringstream input to store the output messages.
+    std::stringstream sstream;
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = qbit_num_in;
-        // the size of the matrix
-        matrix_size = Power_of_2(qbit_num);
-        // A string describing the type of the gate
-        type = RZ_P_OPERATION;
+    //Integer value to set the verbosity level of the output messages.
+    int verbose_level;
+
+    // number of qubits spanning the matrix of the gate
+    qbit_num = qbit_num_in;
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+    // A string describing the type of the gate
+    type = RZ_P_OPERATION;
 
 
-        if (target_qbit_in >= qbit_num) {
-	   verbose_level=1;
-	   sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-	   print(sstream,verbose_level);	    	
+    if (target_qbit_in >= qbit_num) {
+        verbose_level=1;
+        sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+        print(sstream,verbose_level);	    	
 	            
-	   throw "The index of the target qubit is larger than the number of qubits";
-        }
+        throw "The index of the target qubit is larger than the number of qubits";
+    }
 	
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = target_qbit_in;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = target_qbit_in;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        // logical value indicating whether the matrix creation takes an argument theta
-        theta = false;
-        // logical value indicating whether the matrix creation takes an argument phi
-        phi = true;
-        // logical value indicating whether the matrix creation takes an argument lambda
-        lambda = false;
+    // logical value indicating whether the matrix creation takes an argument theta
+    theta = false;
+    // logical value indicating whether the matrix creation takes an argument phi
+    phi = true;
+    // logical value indicating whether the matrix creation takes an argument lambda
+    lambda = false;
 
-        // set static values for the angles
-        theta0 = 0.0;
-        lambda0 = 0.0;
+    // set static values for the angles
+    theta0 = 0.0;
+    lambda0 = 0.0;
 
-        parameter_num = 1;
+    parameter_num = 1;
 
-        // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitay is done
-        parameters = Matrix_real(1, parameter_num);
+    // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitay is done
+    parameters = Matrix_real(1, parameter_num);
 
 }
 
@@ -140,8 +146,8 @@ RZ_P::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
 
     if (input.rows != matrix_size ) {
-        std::string err("Wrong matrix size in RZ_P gate apply");
-        throw err;
+        std::string err("RZ_P::apply_to: Wrong input size in RZ_P gate apply.");
+        throw err;    
     }
 
 
