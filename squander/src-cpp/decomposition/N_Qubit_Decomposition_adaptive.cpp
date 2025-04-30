@@ -354,10 +354,9 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
         sstream.str("");
         sstream << "iteration " << iter+1 << ": ";
         print(sstream, 1);	
+        Gates_block* gate_structure_compressed;
 
-       
-        Gates_block* gate_structure_compressed = compress_gate_structure( gate_structure_loc );
-
+        gate_structure_compressed = compress_gate_structure( gate_structure_loc,uncompressed_iter_num );
         if ( gate_structure_compressed->get_gate_num() < gate_structure_loc->get_gate_num() ) {
             uncompressed_iter_num = 0;
         }
@@ -393,7 +392,7 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
 
         iter++;
 
-        if (uncompressed_iter_num>10) break;
+        if (uncompressed_iter_num>1) break;
             // store the decomposing gate structure
     }
 
@@ -953,24 +952,15 @@ return NULL;
 @param gate_structure The gate structure to be optimized
 */
 Gates_block*
-N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure ) {
+N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure, int uncompressed_iter_num ) {
 
 
 
     int layer_num_max;
     int layer_num_orig = gate_structure->get_gate_num()-1; // TODO: see line 1558 to explain the -1: the last finalyzing layer of U3 gates is not tested for removal
-    if ( layer_num_orig < 50 ) layer_num_max = 10;
+    if ( layer_num_orig < 50 ) layer_num_max = layer_num_orig;
     else if ( layer_num_orig < 60 ) layer_num_max = 4;
     else layer_num_max = 2;
-
-    // create a list of layers to be tested for removal.
-    std::vector<int> layers_to_remove;
-    layers_to_remove.reserve(layer_num_orig); 
-    for (int idx=0; idx<layer_num_orig; idx++ ) { // TODO: see line 1558 to explain the -1
-        layers_to_remove.push_back(idx);
-    }   
-    
-    
     double optimization_tolerance_loc;
     if ( config.count("optimization_tolerance") > 0 ) {
         config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
@@ -981,12 +971,40 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 
     // random generator of integers   
     std::uniform_int_distribution<> distrib_int(0, 5000);  
+    // create a list of layers to be tested for removal.
+    std::vector<int> layers_to_remove;
+    if (uncompressed_iter_num==0){
+    layer_num_max = 5<layer_num_orig ? 5 : layer_num_orig;
+    // create a list of layers to be tested for removal.
+    std::vector<double> layers_parameters(layer_num_orig,15.0);
+    std::vector<int> layers_idx_sorted(layer_num_orig,0);
+    //layers_to_remove.reserve(layer_num_orig);
+    for (int idx=0; idx<layer_num_orig;idx++){
+        layers_parameters[idx] = extract_theta_from_layer(gate_structure,idx,optimized_parameters_mtx);
+        layers_idx_sorted[idx] = idx;
+    }
+    
+     std::iota(layers_idx_sorted.begin(),layers_idx_sorted.end(),0); //Initializing
+     sort( layers_idx_sorted.begin(),layers_idx_sorted.end(), [&](int i,int j){return layers_parameters[i]<layers_parameters[j];} );
+    
+    for (int idx=0; idx<layer_num_max; idx++ ) { // TODO: see line 1558 to explain the -1
+        layers_to_remove.push_back( layers_idx_sorted[idx]);
+    }   
+    }
+    else{
+    layers_to_remove.reserve(layer_num_orig); 
+    for (int idx=0; idx<layer_num_orig; idx++ ) { // TODO: see line 1558 to explain the -1
+        layers_to_remove.push_back(idx);
+    }   
+    
 
     while ( (int)layers_to_remove.size() > layer_num_max ) {
         int remove_idx = distrib_int(gen) % layers_to_remove.size();
        
         layers_to_remove.erase( layers_to_remove.begin() + remove_idx );
     }
+    }
+    
     
 #ifdef __MPI__        
     MPI_Bcast( &layers_to_remove[0], layers_to_remove.size(), MPI_INT, 0, MPI_COMM_WORLD);
@@ -2008,7 +2026,23 @@ N_Qubit_Decomposition_adaptive::add_layer_to_imported_gate_structure() {
 
 }
 
+double 
+N_Qubit_Decomposition_adaptive::extract_theta_from_layer( Gates_block* gate_structure, int layer_idx, Matrix_real& optimized_parameters){
 
+    Gates_block* layer = static_cast<Gates_block*>( gate_structure->get_gate(layer_idx) );
+    int layer_start_idx = layer->get_parameter_start_idx();
+    int layer_gate_num = layer->get_gate_num();
+    double ThetaOver2=0.;
+    for (int gate_idx=0; gate_idx<layer_gate_num; gate_idx++){
+        Gate* gate_tmp = layer->get_gate(gate_idx);
+        double parameter = optimized_parameters[layer_start_idx+gate_tmp->get_parameter_start_idx()];
+        if (gate_tmp->get_type() == CRY_OPERATION || gate_tmp->get_type() == CROT_OPERATION){
+            ThetaOver2 = std::sin(parameter)*std::sin(parameter);
+            break;
+        }
+    }
+    return ThetaOver2;
+}
 
 
 
