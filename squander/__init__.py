@@ -21,9 +21,9 @@ from squander.gates.qgd_H import qgd_H  as H
 from squander.gates.qgd_X import qgd_X  as X
 from squander.gates.qgd_Y import qgd_Y  as Y
 from squander.gates.qgd_Z import qgd_Z  as Z 
-from squander.gates.qgd_CH import qgd_CH  as CH 
-from squander.gates.qgd_CNOT import qgd_CNOT  as CNOT
-from squander.gates.qgd_CZ import qgd_CZ  as CZ 
+#from squander.gates.qgd_CH import qgd_CH  as CH 
+#from squander.gates.qgd_CNOT import qgd_CNOT  as CNOT
+#from squander.gates.qgd_CZ import qgd_CZ  as CZ 
 from squander.gates.qgd_RX import qgd_RX  as RX 
 from squander.gates.qgd_RY import qgd_RY  as RY 
 from squander.gates.qgd_RZ import qgd_RZ  as RZ 
@@ -48,4 +48,8 @@ from squander.nn.qgd_nn import qgd_nn as NN
 
 
 from squander.gates_Wrapper import Gate_Wrapper as Gate
-from squander.gates_Wrapper import CH as CH2
+from squander.gates_Wrapper import (
+    CH,
+    CNOT,
+    CZ,
+)

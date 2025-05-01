@@ -22,8 +22,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 @author: Peter Rakyta, Ph.D.
 """
 
-## \file qgd_N_Qubit_Decomposition.py
-##    \brief A QGD Python interface class for the decomposition of N-qubit unitaries into a set of two-qubit and one-qubit gates.
+## \file qgd_Circuit.py
+##    \brief A Python interface class representing  Squander circuit.
 
 
 import numpy as np
@@ -34,9 +34,9 @@ from squander.gates.qgd_H import qgd_H
 from squander.gates.qgd_X import qgd_X  
 from squander.gates.qgd_Y import qgd_Y  
 from squander.gates.qgd_Z import qgd_Z  
-from squander.gates.qgd_CH import qgd_CH   
-from squander.gates.qgd_CNOT import qgd_CNOT  
-from squander.gates.qgd_CZ import qgd_CZ  
+#from squander.gates.qgd_CH import qgd_CH   
+#from squander.gates.qgd_CNOT import qgd_CNOT  
+#from squander.gates.qgd_CZ import qgd_CZ  
 from squander.gates.qgd_RX import qgd_RX  
 from squander.gates.qgd_RY import qgd_RY  
 from squander.gates.qgd_RZ import qgd_RZ   
@@ -44,7 +44,9 @@ from squander.gates.qgd_SX import qgd_SX
 from squander.gates.qgd_SYC import qgd_SYC   
 from squander.gates.qgd_CRY import qgd_CRY 
 
-
+from squander.gates_Wrapper import CH
+from squander.gates_Wrapper import CNOT
+from squander.gates_Wrapper import CZ
 
 
 ##
@@ -360,9 +362,9 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_Y(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,qgd_Z):
             self.add_Z(qgd_gate.get_Target_Qbit())
-        elif isinstance(qgd_gate,qgd_CH):
+        elif isinstance(qgd_gate,CH):
             self.add_CH(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
-        elif isinstance(qgd_gate,qgd_CZ):
+        elif isinstance(qgd_gate,CZ):
             self.add_CZ(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate,qgd_RX):
             self.add_RX(qgd_gate.get_Target_Qbit())
@@ -376,7 +378,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_U3(qgd_gate.get_Target_Qbit(),qgd_gate.Theta,qgd_gate.Phi,qgd_gate.Lambda)
         elif isinstance(qgd_gate,qgd_CRY):
             self.add_CRY(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
-        elif isinstance(qgd_gate,qgd_CNOT):
+        elif isinstance(qgd_gate,CNOT):
             self.add_CNOT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
         else:
             raise Exception("Cannot add gate: unimplemented gate type")

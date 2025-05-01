@@ -31,6 +31,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "structmember.h"
 #include "Gate.h"
 #include "CH.h"
+#include "CNOT.h"
+#include "CZ.h"
 #include "numpy_interface.h"
 
 
@@ -121,13 +123,14 @@ static int
 
 
 /**
-@brief Method called when a python instance of the class  qgd_CH_Wrapper is initialized
-@param self A pointer pointing to an instance of the class  qgd_CH_Wrapper.
+@brief Method called when a python instance of a controlled gate class  is initialized
+@param self A pointer pointing to an instance of the class  Gate_Wrapper.
 @param args A tuple of the input arguments: qbit_num (int), target_qbit (int), control_qbit (int)
 @param kwds A tuple of keywords
 */
+template<typename GateT>
 static int
- CH_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
+ controlled_gate_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", (char*)"control_qbit", NULL};
     int  qbit_num = -1; 
@@ -139,7 +142,7 @@ static int
                                      &qbit_num, &target_qbit, &control_qbit))
         return -1;
 
-    self->gate = create_controlled_gate<CH>( qbit_num, target_qbit, control_qbit );
+    self->gate = create_controlled_gate<GateT>( qbit_num, target_qbit, control_qbit );
     
 
     return 0;
@@ -646,8 +649,21 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
 static PyObject *
 Gate_Wrapper_get_Name( Gate_Wrapper *self ) {
 
+    std::string name;
+    try {
+        name = self->gate->get_name();
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
 
-    return Py_BuildValue("i", -1);
+    return Py_BuildValue("s", name);
 }
 
 
@@ -736,23 +752,40 @@ struct Gate_Wrapper_Type_tmp : PyTypeObject {
 
 struct CH_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
-
     CH_Wrapper_Type() {
     
         tp_name      = "CH_Wrapper";
         //tp_dealloc   = (destructor)  Gate_Wrapper_dealloc;
         tp_doc       = "Object to represent python bindig for a CH gate of the Squander package.";
-        tp_init      = (initproc)  CH_Wrapper_init;
+        tp_init      = (initproc)  controlled_gate_Wrapper_init<CH>;
         //tp_new       = Gate_Wrapper_new;
     }
-    
+};
 
+struct CNOT_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    CNOT_Wrapper_Type() {    
+        tp_name      = "CNOT_Wrapper";
+        tp_doc       = "Object to represent python bindig for a CNOT gate of the Squander package.";
+        tp_init      = (initproc)  controlled_gate_Wrapper_init<CNOT>;
+    }
+};
+
+
+struct CZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    CZ_Wrapper_Type() {    
+        tp_name      = "CZ_Wrapper";
+        tp_doc       = "Object to represent python bindig for a CZ gate of the Squander package.";
+        tp_init      = (initproc)  controlled_gate_Wrapper_init<CZ>;
+    }
 };
 
 
 static Gate_Wrapper_Type_tmp Gate_Wrapper_Type;
 static CH_Wrapper_Type CH_Wrapper_Type_ins;
-
+static CNOT_Wrapper_Type CNOT_Wrapper_Type_ins;
+static CZ_Wrapper_Type CZ_Wrapper_Type_ins;
 
 
 
@@ -809,6 +842,29 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&CH_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "CH", (PyObject *) & CH_Wrapper_Type_ins) < 0) {
         Py_DECREF(& CH_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    if (PyType_Ready(& CNOT_Wrapper_Type_ins) < 0)
+        return NULL;
+
+
+    Py_INCREF(&CNOT_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CNOT", (PyObject *) & CNOT_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& CNOT_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+
+    if (PyType_Ready(& CZ_Wrapper_Type_ins) < 0)
+        return NULL;
+
+
+    Py_INCREF(&CZ_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CZ", (PyObject *) & CZ_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& CZ_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }

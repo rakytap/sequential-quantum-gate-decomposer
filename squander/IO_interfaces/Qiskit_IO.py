@@ -29,10 +29,10 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from squander import Circuit
 
-from squander import CNOT
 from squander import CRY
-from squander import CZ
-from squander import CH
+from squander.gates_Wrapper import CH
+from squander.gates_Wrapper import CNOT
+from squander.gates_Wrapper import CZ
 from squander import SYC
 from squander import U3
 from squander import RX
