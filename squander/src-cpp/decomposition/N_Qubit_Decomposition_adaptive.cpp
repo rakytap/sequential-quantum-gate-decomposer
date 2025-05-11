@@ -349,6 +349,7 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
         export_circuit_2_binary_loc = 0;
     }      
     
+    
     while ( iter<25 || uncompressed_iter_num <= 5 ) {
         std::stringstream sstream;
         sstream.str("");
@@ -2036,7 +2037,7 @@ N_Qubit_Decomposition_adaptive::extract_theta_from_layer( Gates_block* gate_stru
     for (int gate_idx=0; gate_idx<layer_gate_num; gate_idx++){
         Gate* gate_tmp = layer->get_gate(gate_idx);
         double parameter = optimized_parameters[layer_start_idx+gate_tmp->get_parameter_start_idx()];
-        if (gate_tmp->get_type() == CRY_OPERATION || gate_tmp->get_type() == CROT_OPERATION){
+        if (gate_tmp->get_type() == ADAPTIVE_OPERATION || gate_tmp->get_type() == CROT_OPERATION){
             ThetaOver2 = std::sin(parameter)*std::sin(parameter);
             break;
         }
