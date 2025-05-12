@@ -28,8 +28,6 @@ limitations under the License.
 #include "Bayes_Opt.h"
 #include "Powells_method.h"
 
-extern tbb::spin_mutex my_mutex;
-
 #ifdef __DFE__
 #include "common_DFE.h"
 #endif
@@ -37,7 +35,7 @@ extern tbb::spin_mutex my_mutex;
 /// @brief Type definition of the fifferent types of the cost function
 typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
     HILBERT_SCHMIDT_TEST, HILBERT_SCHMIDT_TEST_CORRECTION1, HILBERT_SCHMIDT_TEST_CORRECTION2,
-    SUM_OF_SQUARES, VQE} cost_function_type;
+    SUM_OF_SQUARES, VQE, GQML} cost_function_type;
 
 
 

@@ -21,6 +21,7 @@ limitations under the License.
 */
 #include "Generative_Quantum_Machine_Learning_Base.h"
 
+static tbb::spin_mutex my_mutex;
 
 /**
 @brief A base class to solve VQE problems
@@ -58,7 +59,7 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     
     adaptive_eta = false;
     
-    cost_fnc = VQE;
+    cost_fnc = GQML;
     
     ansatz = HEA;
 
@@ -118,7 +119,7 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     
     alg = BAYES_OPT;
     
-    cost_fnc = VQE;
+    cost_fnc = GQML;
     
     ansatz = HEA;
     
@@ -176,6 +177,25 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
     return;
 }
 
+double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(std::vector<int> x, std::vector<int> y) {
+    double norm=0.0;
+    tbb::combinable<double> priv_partial_norm{[](){return 0.0;}};
+    tbb::parallel_for(tbb::blocked_range<int>(0, x.size(), 1024), [&](tbb::blocked_range<int> r) {
+        double& norm_local = priv_partial_norm.local();
+        for (int idx1=r.begin(); idx1<r.end(); idx1++) {
+            for (int idx2=0; idx2<y.size(); idx2++) {
+                if (x[idx1] == y[idx2])
+                    norm_local += 1.0;
+            }
+        }
+    });
+    priv_partial_norm.combine_each([&norm](double a) {
+        norm += a;
+    });
+    double result = exp(-norm*norm);
+    return result;
+}
+
 double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star() {
     double ev=0.0;
     tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
@@ -183,7 +203,8 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
         double& ev_local = priv_partial_ev.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
             for (int idx2=0; idx2<P_star.rows; idx2++) {
-                if (idx1 != idx2) ev_local += exp((P_star[idx1]-P_star[idx2]));
+                if (idx1 != idx2)
+                    ev_local += P_star[idx1]*P_star[idx2]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2]);
             }
         }
     });
@@ -245,7 +266,6 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
                 state_times_x.real += a.real;
                 state_times_x.imag += a.imag;
         });
-
         P_theta.push_back(x_times_state.real*state_times_x.real - x_times_state.imag*state_times_x.imag);
     }
 
@@ -258,10 +278,17 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
             for (int idx2=0; idx2 < P_star.rows; idx2++) {
-                if (idx1 != idx2) ev_P_theta_P_theta_local += exp((P_theta[idx1]-P_theta[idx2])*(P_theta[idx1]-P_theta[idx2]));
-                ev_P_theta_P_star_local += exp((P_theta[idx1]-P_star[idx2])*(P_theta[idx1]-P_star[idx2]));
+                if(idx1 != idx2)
+                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2]);
+                ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2]);
             }
         }
+    });
+    priv_partial_ev_P_theta_P_theta.combine_each([&ev_P_theta_P_theta](double a) {
+        ev_P_theta_P_theta += a;
+    });
+    priv_partial_ev_P_theta_P_star.combine_each([&ev_P_theta_P_star](double a) {
+        ev_P_theta_P_star += a;
     });
 
     ev_P_theta_P_theta /= P_theta.size()*(P_theta.size()-1);
@@ -317,7 +344,6 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem(Matrix_rea
 	
     apply_to(parameters, State);
 	
-    //State.print_matrix();
 	
     double MMD = MMD_of_the_distributions(State, State);
 	

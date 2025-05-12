@@ -21,7 +21,7 @@ limitations under the License.
 */
 #include "Variational_Quantum_Eigensolver_Base.h"
 
-tbb::spin_mutex my_mutex;
+static tbb::spin_mutex my_mutex;
 
 /**
 @brief A base class to solve VQE problems

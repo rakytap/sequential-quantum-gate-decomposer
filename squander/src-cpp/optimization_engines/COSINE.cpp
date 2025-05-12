@@ -43,7 +43,7 @@ limitations under the License.
 void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of_parameters, Matrix_real& solution_guess) {
 
 
-        if ( cost_fnc != FROBENIUS_NORM && cost_fnc != VQE ) {
+        if ( cost_fnc != FROBENIUS_NORM && cost_fnc != VQE  && cost_fnc != GQML) {
             std::string err("Optimization_Interface::solve_layer_optimization_problem_COSINE: Only cost functions FROBENIUS_NORM and VQE are implemented for this strategy");
             throw err;
         }
@@ -200,6 +200,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
         bool three_point_line_search               =    cost_fnc == FROBENIUS_NORM;
         bool three_point_line_search_double_period =    cost_fnc == VQE;
+        bool five_point_line_search_double_period  =    cost_fnc == GQML;
 
 
         for (unsigned long long iter_idx=0; iter_idx<max_inner_iterations_loc; iter_idx++) {
@@ -314,9 +315,10 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                     solution_guess_mtx_idx[ param_idx_agents[idx] ] = solution_guess_tmp_mtx[ param_idx_agents[idx] ];  	
 
                 }
-
-
-
+            }
+            else if (five_point_line_search_double_period) {
+                std::string err("solve_layer_optimization_problem_COSINE: Not implemented method.");
+                throw err;
             }
             else {
                 std::string err("solve_layer_optimization_problem_COSINE: Not implemented method.");

@@ -104,6 +104,7 @@ Generative_Quantum_Machine_Learning_Base( std::vector<std::vector<int>> x_vector
 */
 virtual ~Generative_Quantum_Machine_Learning_Base();
 
+double Gaussian_kernel(std::vector<int> x, std::vector<int> y);
 
 double expectation_value_P_star_P_star();
 
