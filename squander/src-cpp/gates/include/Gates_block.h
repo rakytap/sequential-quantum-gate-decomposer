@@ -27,6 +27,7 @@ limitations under the License.
 #include <map>
 #include "common.h"
 #include "matrix_real.h"
+#include "CROT.h"
 #include "Gate.h"
 
 #ifdef __DFE__

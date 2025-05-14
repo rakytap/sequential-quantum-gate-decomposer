@@ -71,8 +71,6 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search() : Optimiz
         max_outer_iterations = 1;
     }
     
-    custom_blocks = false;
-    
 
 
 
@@ -122,7 +120,7 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search( Matrix Umt
             }
         }
     }
-    custom_blocks = false;
+    
     // construct the possible CNOT combinations within a single level
     // the number of possible CNOT connections netween the qubits (including topology constraints)
     int n_ary_limit_max = topology.size();
@@ -213,7 +211,7 @@ N_Qubit_Decomposition_Tree_Search::N_Qubit_Decomposition_Tree_Search( Matrix Umt
         // Maximal number of iteartions in the optimization process
         max_outer_iterations = 1;
     }
-    custom_blocks = false;
+
 
 }
 
@@ -707,25 +705,7 @@ N_Qubit_Decomposition_Tree_Search::add_two_qubit_block(Gates_block* gate_structu
             throw error;         
         }        
 
-        if (custom_blocks){
-        
-            Gates_block* layer = two_qubit_block_template->clone();
-            
-            layer->set_qbit_num(qbit_num);
-            
-            std::vector<int> qbit_order(qbit_num,-2);
-            
-            int target_qbit_idx = qbit_num -1 -target_qbit;
-            int control_qbit_idx = qbit_num -1 -control_qbit;
-            qbit_order[target_qbit_idx] = 0;
-            qbit_order[control_qbit_idx] = 1;
-            layer->reorder_qubits(qbit_order);
-            
-            gate_structure->add_gate(layer);
-        
-        }
-    else{
-            Gates_block* layer = new Gates_block( qbit_num );
+        Gates_block* layer = new Gates_block( qbit_num );
 
         bool Theta = true;
         bool Phi = true;
@@ -744,8 +724,6 @@ layer->add_rz(control_qbit);
         layer->add_u3(control_qbit, Theta, Phi, Lambda);
         layer->add_cnot(target_qbit, control_qbit); 
         gate_structure->add_gate(layer);
-    }
-
 
 }
 
@@ -807,18 +785,6 @@ N_Qubit_Decomposition_Tree_Search::set_unitary( Matrix& Umtx_new ) {
         upload_Umtx_to_DFE();
     }
 #endif
-
-}
-
-/**
-@brief call to set two_qubit_block_template
-@param template to set over
-*/
-void 
-N_Qubit_Decomposition_Tree_Search::set_two_qubit_block_template( Gates_block* template_new ) {
-
-    two_qubit_block_template = template_new;
-    custom_blocks = true;
 
 }
 

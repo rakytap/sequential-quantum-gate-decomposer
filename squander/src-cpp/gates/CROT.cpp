@@ -547,16 +547,6 @@ void CROT::reorder_qubits( std::vector<int> qbit_list) {
 }
 
 /**
-@brief Call to map the qubits in the matrix of the gate
-@param qbit_list The map of qubits spanning the matrix
-*/
-void CROT::map_qubits( std::vector<int> qbit_map) {
-
-        Gate::map_qubits(qbit_map);
-
-}
-
-/**
 @brief Call to set the final optimized parameters of the gate.
 @param ThetaOver2 Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.
