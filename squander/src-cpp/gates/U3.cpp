@@ -514,15 +514,7 @@ void U3::reorder_qubits( std::vector<int> qbit_list) {
 
 }
 
-/**
-@brief Call to map the qubits in the matrix of the gate
-@param qbit_list The map of qubits spanning the matrix
-*/
-void U3::map_qubits( std::vector<int> qbit_map) {
 
-        Gate::map_qubits(qbit_map);
-
-}
 
 /**
 @brief Call to check whether theta is a free parameter of the gate

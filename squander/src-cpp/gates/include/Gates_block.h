@@ -28,7 +28,7 @@ limitations under the License.
 #include "common.h"
 #include "matrix_real.h"
 #include "Gate.h"
-#include "CROT.h"
+
 #ifdef __DFE__
 #include "common_DFE.h"
 #endif
@@ -536,11 +536,6 @@ Gates_block* Gates_block::create_remapped_circuit( const std::map<int, int>& qbi
 */
 virtual void reorder_qubits( std::vector<int> qbit_list );
 
-/**
-@brief Call to map the qubits in the matrix of the operation
-@param qbit_list The map list of qubits spanning the matrix
-*/
-virtual void map_qubits( std::vector<int> qbit_map);
 
 /**
 @brief Call to get the qubits involved in the gates stored in the block of gates.

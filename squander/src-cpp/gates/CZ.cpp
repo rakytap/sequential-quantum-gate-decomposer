@@ -186,15 +186,7 @@ void CZ::reorder_qubits( vector<int> qbit_list) {
         Gate::reorder_qubits(qbit_list);
 
 }
-/**
-@brief Call to map the qubits in the matrix of the gate
-@param qbit_list The map of qubits spanning the matrix
-*/
-void CZ::map_qubits( vector<int> qbit_map) {
 
-        Gate::map_qubits(qbit_map);
-
-}
 /**
 @brief Set static values for matrix of the gates.
 @param u3_1qbit Matrix parameter for the gate.

@@ -84,6 +84,9 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 	# call the C wrapper function
         super().add_RX(target_qbit)
 
+#@brief Call to add a R gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int).
     def add_R( self, target_qbit):
 
 	# call the C wrapper function
@@ -198,7 +201,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 	# call the C wrapper function
         super().add_adaptive(target_qbit, control_qbit)
         
-#@brief Call to add a SX gate to the front of the gate structure.
+#@brief Call to add a CROT gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: target_qbit (int).
 
@@ -361,72 +364,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 	# call the C wrapper function
         return super().get_Children( gate )
-#@brief Method to get the list of parent gate indices. Then the parent gates can be obtained from the list of gates involved in the circuit.
-    def reorder_qubits( self, qbit_order):
 
-	# call the C wrapper function
-        super().reorder_qubits( qbit_order )
-        
-#@brief Method to get the list of parent gate indices. Then the parent gates can be obtained from the list of gates involved in the circuit.
-    def map_qubits( self, qbit_map):
-
-	# call the C wrapper function
-        super().map_qubits( qbit_map )
-
-    def get_Gate_Nums(self):
-        number_of_gates = {}
-        gates = self.get_Gates()
-        for gate in gates:
-            if isinstance( gate, qgd_CNOT ):
-                # adding CNOT gate to the quantum circuit
-                if "CNOT" not in number_of_gates.keys():
-                    number_of_gates['CNOT'] = 1
-                else:
-                    number_of_gates['CNOT']+=1
-            elif isinstance( gate, qgd_CROT ):
-                # adding CNOT gate to the quantum circuit
-                if "CROT" not in number_of_gates.keys():
-                    number_of_gates['CROT'] = 1
-                else:
-                    number_of_gates['CROT']+=1
-            elif isinstance( gate, qgd_CRY ):
-                # adding CNOT gate to the quantum circuit
-                if "CRY" not in number_of_gates.keys():
-                    number_of_gates['CRY'] = 1
-                else:
-                    number_of_gates['CRY']+=1
-            elif isinstance( gate, qgd_RY ):
-                # adding CNOT gate to the quantum circuit
-                if "RY" not in number_of_gates.keys():
-                    number_of_gates['RY'] = 1
-                else:
-                    number_of_gates['RY']+=1
-            elif isinstance( gate, qgd_RX ):
-                # adding CNOT gate to the quantum circuit
-                if "RX" not in number_of_gates.keys():
-                    number_of_gates['RX'] = 1
-                else:
-                    number_of_gates['RX']+=1
-            elif isinstance( gate, qgd_R ):
-                # adding CNOT gate to the quantum circuit
-                if "R" not in number_of_gates.keys():
-                    number_of_gates['R'] = 1
-                else:
-                    number_of_gates['R']+=1
-            elif isinstance( gate, qgd_RZ ):
-                # adding CNOT gate to the quantum circuit
-                if "RZ" not in number_of_gates.keys():
-                    number_of_gates['RZ'] = 1
-                else:
-                    number_of_gates['RZ']+=1
-            elif isinstance( gate, qgd_U3 ):
-                # adding CNOT gate to the quantum circuit
-                if "U3" not in number_of_gates.keys():
-                    number_of_gates['U3'] = 1
-                else:
-                    number_of_gates['U3']+=1
-        return number_of_gates
-        
     def get_Circuit_Depth(self):
         used_gates_idx = []
         gates = self.get_Gates()

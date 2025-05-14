@@ -587,42 +587,6 @@ qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_set_Max_Layer_Num(qgd_N_Qubit_Deco
 }
 
 
-/**
-@brief Wrapper function to set custom gate structure for the decomposition.
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_adaptive_Wrapper.
-@return Returns with zero on success.
-*/
-static PyObject *
-qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_set_Two_Qubit_Block_Template( qgd_N_Qubit_Decomposition_Tree_Search_Wrapper *self, PyObject *args ) {
-
-    // initiate variables for input arguments
-    PyObject* gate_structure_py; 
-
-    // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &gate_structure_py )) return Py_BuildValue("i", -1);
-
-
-    // convert gate structure from PyObject to qgd_Circuit_Wrapper
-    qgd_Circuit_Wrapper* qgd_op_block = (qgd_Circuit_Wrapper*) gate_structure_py;
-
-    try {
-        self->decomp->set_two_qubit_block_template( qgd_op_block->gate );
-    }
-    catch (std::string err ) {
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;
-    }
-    catch(...) {
-        std::string err( "Invalid pointer to decomposition class");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;
-    }
-    
-
-    return Py_BuildValue("i", 0);
-
-
-}
 
 
 
@@ -1853,10 +1817,7 @@ static PyMethodDef qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_methods[] = {
     {"get_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_get_Global_Phase, METH_NOARGS,
      "Call to get global phase"
     },
-    {"set_Two_Qubit_Block_Template", (PyCFunction) qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_set_Two_Qubit_Block_Template, METH_VARARGS,
-     "Call to set two qubit block template"
-    },
-        {"set_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_set_Global_Phase, METH_VARARGS,
+    {"set_Global_Phase", (PyCFunction) qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_set_Global_Phase, METH_VARARGS,
      "Call to set global phase"
     },
     {"apply_Global_Phase_Factor", (PyCFunction) qgd_N_Qubit_Decomposition_Tree_Search_Wrapper_apply_Global_Phase_Factor, METH_NOARGS, 

@@ -912,6 +912,7 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_set_Gate_Structure( qgd_N_Qubit_Decom
 }
 
 
+
 /**
 @brief Wrapper function to append custom layers to the gate structure that are intended to be used in the decomposition.
 */
@@ -1612,7 +1613,6 @@ qgd_N_Qubit_Decomposition_adaptive_Wrapper_add_Adaptive_Layers(qgd_N_Qubit_Decom
 
     return Py_BuildValue("i", 0);
 }
-
 
 
 

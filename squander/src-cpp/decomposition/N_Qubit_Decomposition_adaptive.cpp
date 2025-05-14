@@ -50,6 +50,8 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive() : Optimization_
     // set the level limit
     level_limit = 0;
 
+
+
     // BFGS is better for smaller problems, while ADAM for larger ones
     if ( qbit_num <= 5 ) {
         set_optimizer( BFGS );
@@ -108,6 +110,7 @@ N_Qubit_Decomposition_adaptive::N_Qubit_Decomposition_adaptive( Matrix Umtx_in, 
 
     // Boolean variable to determine whether randomized adaptive layers are used or not
     randomized_adaptive_layers = false;
+
 
 }
 
@@ -733,9 +736,8 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
         for (int idx=0; idx<level; idx++) {
 
             // create the new decomposing layer and add to the gate staructure
-
             add_adaptive_layers( gate_structure_loc );
-            
+
         }
            
         // add finalyzing layer to the top of the gate structure
@@ -761,7 +763,7 @@ N_Qubit_Decomposition_adaptive::determine_initial_gate_structure(Matrix_real& op
 #endif
 */
                 // solve the optimization problem in isolated optimization process
-                cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, CLOSE_TO_ZERO, accelerator_num);
+                cDecomp_custom_random = N_Qubit_Decomposition_custom( Umtx.copy(), qbit_num, false, config, RANDOM, accelerator_num);
                 cDecomp_custom_random.set_custom_gate_structure( gate_structure_loc );
                 cDecomp_custom_random.set_optimization_blocks( gate_structure_loc->get_gate_num() );
                 cDecomp_custom_random.set_max_iteration( max_outer_iterations_loc );
@@ -1715,6 +1717,8 @@ N_Qubit_Decomposition_adaptive::add_adaptive_layers( Gates_block* gate_structure
 }
 
 
+
+
 /**
 @brief Call to construct adaptive layers.
 */
@@ -1754,7 +1758,7 @@ N_Qubit_Decomposition_adaptive::construct_adaptive_gate_layers() {
             bool Lambda = true;
             layer->add_u3(target_qbit_loc, Theta, Phi, Lambda);
             layer->add_u3(control_qbit_loc, Theta, Phi, Lambda); 
-            layer->add_cry(target_qbit_loc, control_qbit_loc);
+            layer->add_adaptive(target_qbit_loc, control_qbit_loc);
 
             layers.push_back(layer);
 
@@ -1774,7 +1778,7 @@ N_Qubit_Decomposition_adaptive::construct_adaptive_gate_layers() {
                 bool Lambda = true;
                 layer->add_u3(target_qbit_loc, Theta, Phi, Lambda);
                 layer->add_u3(control_qbit_loc, Theta, Phi, Lambda); 
-                layer->add_cry(target_qbit_loc, control_qbit_loc);
+                layer->add_adaptive(target_qbit_loc, control_qbit_loc);
 
                 layers.push_back(layer);
             }
@@ -1857,8 +1861,8 @@ N_Qubit_Decomposition_adaptive::add_finalyzing_layer( Gates_block* gate_structur
             bool Theta = true;
             bool Phi = true;
             bool Lambda = true;
-            block->add_u3(idx, Theta, Phi, Lambda);
-
+             block->add_u3(idx, Theta, Phi, Lambda);
+//        block->add_ry(idx);
     }
 
 
@@ -2013,6 +2017,7 @@ N_Qubit_Decomposition_adaptive::add_layer_to_imported_gate_structure() {
     optimized_parameters_mtx = tmp;    
 
 }
+
 
 
 

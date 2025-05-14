@@ -315,29 +315,6 @@ void Gate::reorder_qubits( std::vector<int> qbit_list ) {
     target_qbit = target_qbit_new;
 }
 
-/**
-@brief Call to map the qubits in the matrix of the operation
-@param qbit_list The list of qubits spanning the matrix
-*/
-void Gate::map_qubits( std::vector<int> qbit_map ) {
-
-    // check the number of qubits
-    if ((int)qbit_map.size() != qbit_num ) {
-	std::stringstream sstream;
-	sstream << "Wrong number of qubits" << std::endl;
-	print(sstream, 0);	    	
-       
-        exit(-1);
-    }
-    int control_qbit_new = -1;
-    int target_qbit_new = qbit_map[target_qbit];
-    if (control_qbit != -1){
-        control_qbit_new = qbit_map[control_qbit];
-    }
-
-    control_qbit = control_qbit_new;
-    target_qbit = target_qbit_new;
-}
 
 /**
 @brief Call to get the index of the target qubit

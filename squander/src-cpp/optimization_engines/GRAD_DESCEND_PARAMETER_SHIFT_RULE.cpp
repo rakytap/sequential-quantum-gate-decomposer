@@ -91,7 +91,7 @@ void Optimization_Interface::solve_layer_optimization_problem_GRAD_DESCEND_PARAM
 
         // the current result
         current_minimum = optimization_problem( optimized_parameters_mtx );
-        //export_current_cost_fnc(current_minimum);
+        export_current_cost_fnc(current_minimum);
         
 
         // the array storing the optimized parameters

@@ -183,9 +183,7 @@ class qgd_N_Qubit_Decomposition_Tabu_Search(qgd_N_Qubit_Decomposition_Tabu_Searc
 	
         return super().apply_Global_Phase_Factor()
 
-    def set_Two_Qubit_Block_Template(self, template):
-    
-        super().set_Two_Qubit_Block_Template(template)
+
 ## 
 # @brief Call to set the optimizer used in the gate synthesis process
 # @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2", "ADAM_BATCHED", "AGENTS", "COSINE", "AGENTS_COMBINED".

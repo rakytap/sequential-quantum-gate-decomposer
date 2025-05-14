@@ -43,7 +43,6 @@ from squander import X
 from squander import Y
 from squander import Z
 from squander import SX
-from squander import CROT
 from squander import R 
 
 
@@ -72,10 +71,6 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             circuit.cx( gate.get_Control_Qbit(), gate.get_Target_Qbit() )
             
         elif isinstance( gate, CRY ):
-            # adding CNOT gate to the quantum circuit
-            parameters_gate = gate.Extract_Parameters( parameters )
-            circuit.cry( parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
-        elif isinstance( gate, CROT ):
             # adding CNOT gate to the quantum circuit
             parameters_gate = gate.Extract_Parameters( parameters )
             circuit.cry( parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
@@ -174,10 +169,10 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
             # adding CNOT gate to the quantum circuit
             parameters_gate = gate.Extract_Parameters( parameters )
             circuit.cry( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
-        elif isinstance( gate, CROT ):
-            # adding CNOT gate to the quantum circuit
+        elif isinstance( gate, R ):
+            # R gate
             parameters_gate = gate.Extract_Parameters( parameters )
-            circuit.cry( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+            circuit.r( -parameters_gate[0],parameters_gate[1], gate.get_Target_Qbit() )    
         elif isinstance( gate, CZ ):
             # adding CZ gate to the quantum circuit
             circuit.cz( gate.get_Control_Qbit(), gate.get_Target_Qbit() )

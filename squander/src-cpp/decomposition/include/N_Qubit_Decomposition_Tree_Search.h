@@ -54,11 +54,7 @@ protected:
     /// List of possible target qubits according to the topology -- paired up with possible control qubits
     matrix_base<int> possible_target_qbits;
     /// List of possible control qubits according to the topology -- paired up with possible target qubits
-    matrix_base<int> possible_control_qbits;
-    
-    bool custom_blocks;
-    
-    Gates_block* two_qubit_block_template;
+    matrix_base<int> possible_control_qbits;   
     
     
 
@@ -166,13 +162,6 @@ void add_finalyzing_layer( Gates_block* gate_structure );
 @param matrix to set unitary to
 */
 void set_unitary( Matrix& Umtx_new ) ;
-
-/**
-@brief call to set two_qubit_block_template
-@param template to set over
-*/
-void 
-set_two_qubit_block_template( Gates_block* template_new );
 
 
 /** 
