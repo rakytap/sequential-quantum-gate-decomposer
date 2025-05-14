@@ -1482,7 +1482,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
 
 
         Gate* gate_adaptive = layer->get_gate(2);
-        double parameter = optimized_parameters_loc[gate_adaptive->get_parameter_start_idx()]; // parameter for adaptive gate        
+        double parameter = optimized_parameters_loc[layer->get_parameter_start_idx() + gate_adaptive->get_parameter_start_idx()]; // parameter for adaptive gate        
         parameter = activation_function(parameter, 1);//limit_max);
        
         if ( (gate_adaptive->get_type() == ADAPTIVE_OPERATION || gate_adaptive->get_type() == CROT_OPERATION) &&  std::abs(std::sin(parameter)) < 1e-3 && std::abs(1-std::cos(parameter)) < 1e-3  ) {
@@ -1527,7 +1527,7 @@ N_Qubit_Decomposition_adaptive::remove_trivial_gates( Gates_block* gate_structur
                             if ( qbit_to_be_matched == target_qbit_loc ) {
                                 found_match = true;
                                 matching_gate = static_cast<U3*>(gate_test);
-                                parameter_idx_loc = matching_gate->get_parameter_start_idx();
+                                parameter_idx_loc = layer_test->get_parameter_start_idx()+matching_gate->get_parameter_start_idx();
                                 break;                             
                             }
 
