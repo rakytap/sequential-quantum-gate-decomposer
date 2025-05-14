@@ -62,6 +62,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         }
 
 
+        double M_PI_eight = M_PI/8;
         double M_PI_quarter = M_PI/4;
         double M_PI_half    = M_PI/2;
         double M_PI_double  = M_PI*2;
@@ -195,7 +196,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         std::vector<Matrix_real> parameters_mtx_vec(batch_size);
         parameters_mtx_vec.reserve(batch_size); 
 
-                 
+        Matrix_real parameter_value_save_agents( batch_size, 1 ); 
              
 
         bool three_point_line_search               =    cost_fnc == FROBENIUS_NORM;
@@ -221,6 +222,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 // The index array of the chosen parameters
                 int chosen_idx = distrib_int(gen);
                 param_idx_agents[ idx ] = indices[ chosen_idx ];
+                parameter_value_save_agents[idx] = indices[chosen_idx];
                 indices.erase( indices.begin()+chosen_idx ); 
             }
 
@@ -317,8 +319,86 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 }
             }
             else if (five_point_line_search_double_period) {
-                std::string err("solve_layer_optimization_problem_COSINE: Not implemented method.");
-                throw err;
+                for (int idx=0; idx<batch_size; idx++) {
+                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[idx];
+                    solution_guess_mtx_idx[param_idx_agents[idx]] += M_PI_eight;
+                }
+
+                Matrix_real f0_shifted_pi8_agents = optimization_problem_batched(parameters_mtx_vec);
+
+                for (int idx=0; idx<batch_size; idx++) {
+                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[idx];
+                    solution_guess_mtx_idx[param_idx_agents[idx]] += M_PI_eight;
+                }
+
+                Matrix_real f0_shifted_pi4_agents = optimization_problem_batched(parameters_mtx_vec);
+
+                for (int idx=0; idx<batch_size; idx++) {
+                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[idx];
+                    solution_guess_mtx_idx[param_idx_agents[idx]] += M_PI_quarter;
+                }
+
+                Matrix_real f0_shifted_pi2_agents = optimization_problem_batched(parameters_mtx_vec);
+
+                for (int idx=0; idx<batch_size; idx++) {
+                    Matrix_real& solution_guess_mtx_idx = parameters_mtx_vec[idx];
+                    solution_guess_mtx_idx[param_idx_agents[idx]] += M_PI_quarter;
+                }
+
+                Matrix_real f0_shifted_3pi4_agents = optimization_problem_batched(parameters_mtx_vec);
+                /*
+                f(p) = A*cos(4*p+phi)+B*cos(2*p+delta)+C
+                 */
+                for (int idx=0; idx<batch_size; idx++) {
+                    double f0_shifted_pi8 = f0_shifted_pi8_agents[idx];
+                    double f0_shifted_pi4 = f0_shifted_pi4_agents[idx];
+                    double f0_shifted_pi2 = f0_shifted_pi2_agents[idx];
+                    double f0_shifted_3pi4 = f0_shifted_3pi4_agents[idx];
+
+                    double f1 = current_minimum -f0_shifted_pi2;
+                    double f2  = f0_shifted_pi4 - f0_shifted_3pi4;
+
+                    double B = 0.5*sqrt(f1*f1+f2*f2);
+
+                    double delta = atan2(f1, f2) - 2*parameter_value_save_agents[idx];
+
+                    double C = 0.25*(current_minimum + f0_shifted_pi2 + f0_shifted_pi4 + f0_shifted_3pi4);
+
+                    double f3 = 0.5*(current_minimum + f0_shifted_pi2 - 2*C);
+                    double f4 = f0_shifted_pi8 - C - B*cos(2*parameter_value_save_agents[idx] + M_PI_eight+delta);
+
+                    double A = sqrt(f3*f4 + f4*f4);
+
+                    double phi = atan2(f3, f4) - 4*parameter_value_save_agents[idx];
+
+                    double f; 
+                    double params[5];
+                    params[0] = A;
+                    params[1] = phi + 4*parameter_value_save_agents[ idx ];
+                    params[2] = B;
+                    params[3] = delta + 2*parameter_value_save_agents[ idx ];
+                    params[4] = C;
+
+                    Matrix_real parameter_shift(1, 1);
+                    if (abs(B) > abs(A)) {
+                        parameter_shift[0] = 3*M_PI_quarter - delta/2 - parameter_value_save_agents[idx]/2 ;
+                    }
+                    else {
+                        parameter_shift[0] = 3*M_PI_eight - phi/4 - parameter_value_save_agents[idx]/4;
+                    }
+                    parameter_shift[0] = std::fmod(parameter_shift[0], M_PI_double);
+
+                    BFGS_Powell cBFGS_Powell(HS_partial_optimization_problem_combined,(void*)&params);
+                    f = cBFGS_Powell.Start_Optimization(parameter_shift, 10);
+
+                    param_update_mtx[ idx ] = parameter_shift[0];
+
+                    //revert the changed parameters
+                    Matrix_real& solution_guess_mtx_idx             = parameters_mtx_vec[idx];  
+                    solution_guess_mtx_idx[ param_idx_agents[idx] ] = solution_guess_tmp_mtx[ param_idx_agents[idx] ];  	
+                }
+
+
             }
             else {
                 std::string err("solve_layer_optimization_problem_COSINE: Not implemented method.");
@@ -428,7 +508,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 }
             }
        
-            std::cout << "number of costfunction evaluations : " << iter+1 << " " << interval_coeff << std::endl;
+            // std::cout << "number of costfunction evaluations : " << iter+1 << " " << interval_coeff << std::endl;
 
             current_minimum = current_best_value;
 
