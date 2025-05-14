@@ -47,6 +47,8 @@ CROT::CROT(){
         control_qbit = -1;
         parameter_num = 0;
 
+        name = "CROT";
+
 }
 
 
@@ -60,6 +62,8 @@ CROT::CROT(){
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
 CROT::CROT(int qbit_num_in, int target_qbit_in, int control_qbit_in, crot_type subtype_in) {
+
+        name = "CROT";
 
         // number of qubits spanning the matrix of the gate
         qbit_num = qbit_num_in;

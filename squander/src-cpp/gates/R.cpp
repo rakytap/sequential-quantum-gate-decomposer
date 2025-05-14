@@ -55,6 +55,7 @@ R::R() {
 
         parameter_num = 0;
 
+        name = "R";
 
 
 }
@@ -106,6 +107,8 @@ R::R(int qbit_num_in, int target_qbit_in) {
 
         // Parameter theta of the RX gate after the decomposition of the unitary is done
         parameters = Matrix_real(1, parameter_num);
+        
+        name = "R";
 
 }
 
