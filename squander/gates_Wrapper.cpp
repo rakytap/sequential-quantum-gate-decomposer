@@ -663,7 +663,7 @@ Gate_Wrapper_get_Name( Gate_Wrapper *self ) {
         return NULL;
     }
 
-    return Py_BuildValue("s", name);
+    return PyUnicode_FromString(name.c_str());
 }
 
 
@@ -759,6 +759,7 @@ struct CH_Wrapper_Type : Gate_Wrapper_Type_tmp {
         tp_doc       = "Object to represent python bindig for a CH gate of the Squander package.";
         tp_init      = (initproc)  controlled_gate_Wrapper_init<CH>;
         //tp_new       = Gate_Wrapper_new;
+        tp_base      = NULL;
     }
 };
 
@@ -768,6 +769,7 @@ struct CNOT_Wrapper_Type : Gate_Wrapper_Type_tmp {
         tp_name      = "CNOT_Wrapper";
         tp_doc       = "Object to represent python bindig for a CNOT gate of the Squander package.";
         tp_init      = (initproc)  controlled_gate_Wrapper_init<CNOT>;
+        tp_base      = NULL;
     }
 };
 
@@ -778,6 +780,7 @@ struct CZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
         tp_name      = "CZ_Wrapper";
         tp_doc       = "Object to represent python bindig for a CZ gate of the Squander package.";
         tp_init      = (initproc)  controlled_gate_Wrapper_init<CZ>;
+        tp_base      = NULL;
     }
 };
 
@@ -788,7 +791,9 @@ static CNOT_Wrapper_Type CNOT_Wrapper_Type_ins;
 static CZ_Wrapper_Type CZ_Wrapper_Type_ins;
 
 
-
+PyTypeObject* get_Gate_Wrapper_Type() {
+    return &Gate_Wrapper_Type;
+}
 
 
 
@@ -834,6 +839,10 @@ PyInit_gates_Wrapper(void)
         Py_DECREF(m);
         return NULL;
     }
+
+    CH_Wrapper_Type_ins.tp_base = &Gate_Wrapper_Type;
+    CNOT_Wrapper_Type_ins.tp_base = &Gate_Wrapper_Type;
+    CZ_Wrapper_Type_ins.tp_base = &Gate_Wrapper_Type;
 
     if (PyType_Ready(& CH_Wrapper_Type_ins) < 0)
         return NULL;

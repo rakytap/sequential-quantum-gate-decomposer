@@ -1289,7 +1289,7 @@ qgd_Circuit_Wrapper_Remap_Qbits( qgd_Circuit_Wrapper *self, PyObject *args ) {
     bool is_dict = PyDict_Check( qbit_map_arg );
     if (!is_dict) {
         printf("Qubit map object must be a python dictionary!\n");
-        return -1;
+        return Py_BuildValue("i", -1);
     }
 
     // integer type config metadata utilized during the optimization
