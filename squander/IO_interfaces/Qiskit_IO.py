@@ -29,20 +29,20 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from squander import Circuit
 
-from squander import CRY
+from squander.gates_Wrapper import CRY
 from squander.gates_Wrapper import CH
 from squander.gates_Wrapper import CNOT
 from squander.gates_Wrapper import CZ
-from squander import SYC
+from squander.gates_Wrapper import SYC
 from squander import U3
-from squander import RX
-from squander import RY
-from squander import RZ
-from squander import H
-from squander import X
-from squander import Y
-from squander import Z
-from squander import SX
+from squander.gates_Wrapper import RX
+from squander.gates_Wrapper import RY
+from squander.gates_Wrapper import RZ
+from squander.gates_Wrapper import H
+from squander.gates_Wrapper import X
+from squander.gates_Wrapper import Y
+from squander.gates_Wrapper import Z
+from squander.gates_Wrapper import SX
 
 
 
@@ -73,7 +73,7 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
         elif isinstance( gate, CRY ):
             # adding CNOT gate to the quantum circuit
             parameters_gate = gate.Extract_Parameters( parameters )
-            circuits.cry( parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
+            circuit.cry( parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
             
         elif isinstance( gate, CZ ):
             # adding CZ gate to the quantum circuit

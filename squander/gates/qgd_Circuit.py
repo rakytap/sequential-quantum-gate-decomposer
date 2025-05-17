@@ -30,23 +30,34 @@ import numpy as np
 from os import path
 from squander.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
 from squander.gates.qgd_U3 import qgd_U3 
-from squander.gates.qgd_H import qgd_H 
-from squander.gates.qgd_X import qgd_X  
-from squander.gates.qgd_Y import qgd_Y  
-from squander.gates.qgd_Z import qgd_Z  
+# from squander.gates.qgd_H import qgd_H 
+# from squander.gates.qgd_X import qgd_X  
+# from squander.gates.qgd_Y import qgd_Y  
+# from squander.gates.qgd_Z import qgd_Z  
 #from squander.gates.qgd_CH import qgd_CH   
 #from squander.gates.qgd_CNOT import qgd_CNOT  
 #from squander.gates.qgd_CZ import qgd_CZ  
-from squander.gates.qgd_RX import qgd_RX  
-from squander.gates.qgd_RY import qgd_RY  
-from squander.gates.qgd_RZ import qgd_RZ   
-from squander.gates.qgd_SX import qgd_SX  
-from squander.gates.qgd_SYC import qgd_SYC   
-from squander.gates.qgd_CRY import qgd_CRY 
+# from squander.gates.qgd_RX import qgd_RX  
+# from squander.gates.qgd_RY import qgd_RY  
+# from squander.gates.qgd_RZ import qgd_RZ   
+# from squander.gates.qgd_SX import qgd_SX  
+# from squander.gates.qgd_SYC import qgd_SYC   
+# from squander.gates.qgd_CRY import qgd_CRY 
 
+# from squander.gates_Wrapper import U3
+from squander.gates_Wrapper import H
+from squander.gates_Wrapper import X
+from squander.gates_Wrapper import Y
+from squander.gates_Wrapper import Z
 from squander.gates_Wrapper import CH
 from squander.gates_Wrapper import CNOT
 from squander.gates_Wrapper import CZ
+from squander.gates_Wrapper import RX
+from squander.gates_Wrapper import RY
+from squander.gates_Wrapper import RZ
+from squander.gates_Wrapper import SX
+from squander.gates_Wrapper import SYC
+from squander.gates_Wrapper import CRY
 
 
 ##
@@ -354,29 +365,29 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 #@brief Method to get add a generic gate to the circuit 
     def add_Gate(self,qgd_gate):
         gate_type = qgd_gate
-        if isinstance(qgd_gate,qgd_H):
+        if isinstance(qgd_gate,H):
             self.add_H(qgd_gate.get_Target_Qbit())
-        elif isinstance(qgd_gate,qgd_X):
+        elif isinstance(qgd_gate,X):
             self.add_X(qgd_gate.get_Target_Qbit())
-        elif isinstance(qgd_gate,qgd_Y):
+        elif isinstance(qgd_gate,Y):
             self.add_Y(qgd_gate.get_Target_Qbit())
-        elif isinstance(qgd_gate,qgd_Z):
+        elif isinstance(qgd_gate,Z):
             self.add_Z(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,CH):
             self.add_CH(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate,CZ):
             self.add_CZ(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
-        elif isinstance(qgd_gate,qgd_RX):
+        elif isinstance(qgd_gate,RX):
             self.add_RX(qgd_gate.get_Target_Qbit())
-        elif isinstance(qgd_gate,qgd_RY):
+        elif isinstance(qgd_gate,RY):
             self.add_RY(qgd_gate.get_Target_Qbit())
-        elif isinstance(qgd_gate,qgd_RZ):
+        elif isinstance(qgd_gate,RZ):
             self.add_RZ(qgd_gate.get_Target_Qbit())
-        elif isinstance(qgd_gate,qgd_SX):
+        elif isinstance(qgd_gate,SX):
             self.add_SX(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,qgd_U3):
             self.add_U3(qgd_gate.get_Target_Qbit(),qgd_gate.Theta,qgd_gate.Phi,qgd_gate.Lambda)
-        elif isinstance(qgd_gate,qgd_CRY):
+        elif isinstance(qgd_gate,CRY):
             self.add_CRY(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate,CNOT):
             self.add_CNOT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())

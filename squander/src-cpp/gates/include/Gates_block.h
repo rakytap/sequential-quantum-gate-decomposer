@@ -491,7 +491,7 @@ void list_gates( const Matrix_real &parameters, int start_index );
 @param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}.
 @return Returns with the remapped circuit
 */
-Gates_block* Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map );
+Gates_block* create_remapped_circuit( const std::map<int, int>& qbit_map );
 
 
 /**
@@ -500,7 +500,7 @@ Gates_block* Gates_block::create_remapped_circuit( const std::map<int, int>& qbi
 @param qbit_num The number of qubits in the remapped circuit
 @return Returns with the remapped circuit
 */
-Gates_block* Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const int qbit_num_ );
+Gates_block* create_remapped_circuit( const std::map<int, int>& qbit_map, const int qbit_num_ );
 
 
 /**

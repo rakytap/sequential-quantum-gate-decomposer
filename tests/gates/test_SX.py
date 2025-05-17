@@ -25,7 +25,7 @@ from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 
 from squander.utils import get_unitary_from_qiskit_circuit
-from squander.gates.qgd_SX import qgd_SX
+from squander import SX
 from scipy.stats import unitary_group
       
 
@@ -49,12 +49,12 @@ class Test_operations_squander:
             target_qbit = qbit_num-1
 
             # creating an instance of the C++ class
-            SX = qgd_SX( qbit_num, target_qbit )
+            SX_gate = SX( qbit_num, target_qbit )
 
 	    #SQUANDER#
 
             # get the matrix                       
-            SX_squander = SX.get_Matrix( )
+            SX_squander = SX_gate.get_Matrix( )
       
 	    #QISKIT
 
@@ -92,7 +92,7 @@ class Test_operations_squander:
             target_qbit = qbit_num-1
 
             # creating an instance of the C++ class
-            SX = qgd_SX( qbit_num, target_qbit )
+            SX_gate = SX( qbit_num, target_qbit )
         
             #create text matrix 
             test_matrix= np.identity( 2**qbit_num, dtype=complex )
@@ -117,7 +117,7 @@ class Test_operations_squander:
             SX_squander = test_matrix
 
             # apply the gate on the input array/matrix                
-            SX.apply_to(SX_squander)       
+            SX_gate.apply_to(SX_squander)       
 
             #the difference between the SQUANDER and the qiskit result        
             delta_matrix=SX_squander-SX_qiskit
