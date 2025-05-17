@@ -32,7 +32,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CH.h"
 #include "numpy_interface.h"
 
-extern "C" PyTypeObject* get_Gate_Wrapper_Type();
 
 //////////////////////////////////////
 
@@ -176,7 +175,7 @@ PyVarObject_HEAD_INIT(NULL, 0)
    qgd_Gate_Wrapper_methods, /*tp_methods*/
    qgd_Gate_Wrapper_members, /*tp_members*/
   0, /*tp_getset*/
-  get_Gate_Wrapper_Type(), /*tp_base*/
+  0, /*tp_base*/
   0, /*tp_dict*/
   0, /*tp_descr_get*/
   0, /*tp_descr_set*/
@@ -744,10 +743,10 @@ PyInit_qgd_CH_Wrapper(void)
 
 
     PyObject *m;
-    if (PyType_Ready(& qgd_Gate_Wrapper_Type) < 0)
+    if (PyType_Ready(& qgd_CH_Wrapper_Type) < 0)
         return NULL;
 
-    if (PyType_Ready(& qgd_CH_Wrapper_Type) < 0)
+    if (PyType_Ready(& qgd_Gate_Wrapper_Type) < 0)
         return NULL;
 
     m = PyModule_Create(& qgd_CH_Wrapper_Module);
@@ -755,15 +754,15 @@ PyInit_qgd_CH_Wrapper(void)
         return NULL;
 
     Py_INCREF(& qgd_CH_Wrapper_Type);
-    if (PyModule_AddObject(m, "qgd_Gate_Wrapper", (PyObject *) & qgd_Gate_Wrapper_Type) < 0) {
-        Py_DECREF(& qgd_Gate_Wrapper_Type);
+    if (PyModule_AddObject(m, "qgd_CH_Wrapper", (PyObject *) & qgd_CH_Wrapper_Type) < 0) {
+        Py_DECREF(& qgd_CH_Wrapper_Type);
         Py_DECREF(m);
         return NULL;
     }
 
 
-    if (PyModule_AddObject(m, "qgd_CH_Wrapper", (PyObject *) & qgd_CH_Wrapper_Type) < 0) {
-        Py_DECREF(& qgd_CH_Wrapper_Type);
+    if (PyModule_AddObject(m, "qgd_Gate_Wrapper", (PyObject *) & qgd_Gate_Wrapper_Type) < 0) {
+        Py_DECREF(& qgd_Gate_Wrapper_Type);
         Py_DECREF(m);
         return NULL;
     }
