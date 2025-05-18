@@ -16,7 +16,7 @@ from squander.decomposition.qgd_Wide_Circuit_Optimization import qgd_Wide_Circui
 from squander.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolver_Base import qgd_Variational_Quantum_Eigensolver_Base as Variational_Quantum_Eigensolver
 
 #gates
-from squander.gates.qgd_U3 import qgd_U3 as U3
+# from squander.gates.qgd_U3 import qgd_U3 as U3
 # from squander.gates.qgd_H import qgd_H  as H
 # from squander.gates.qgd_X import qgd_X  as X
 # from squander.gates.qgd_Y import qgd_Y  as Y
@@ -48,8 +48,8 @@ from squander.nn.qgd_nn import qgd_nn as NN
 
 
 from squander.gates_Wrapper import Gate_Wrapper as Gate
-# U3,
 from squander.gates_Wrapper import (
+    U3,
     H,
     X,
     Y,

@@ -18,6 +18,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 '''
 
 import pytest
+import inspect
 
 class Test_Gate_inheritance:
     """Tests for the inheritance structure of the CH gate in the Squander package"""
@@ -33,7 +34,7 @@ class Test_Gate_inheritance:
         "RZ",
         "SX",
         "SYC",
-        # "U3",
+        "U3",
         "X",
         "Y",
         "Z"
@@ -57,28 +58,52 @@ class Test_Gate_inheritance:
             gate_ins = gate_cls(3, 0)
         assert isinstance(gate_ins, Gate)
 
-    # def test_CH_gate_methods(self):
-    #     r"""
-    #     Test that CH gate inherits methods from the base Gate class.
-    #     """
+    @pytest.mark.parametrize("gate_class", [
+        "CH",
+        "CNOT",
+        "CRY",
+        "CZ",
+        "H",
+        "RX",
+        "RY",
+        "RZ",
+        "SX",
+        "SYC",
+        "U3",
+        "X",
+        "Y",
+        "Z"
+    ])
+    def test_gate_methods(self, gate_class):
+        r"""
+        Test that gate inherits methods from the base Gate class.
+        """
 
-    #     from squander import CH
+        from squander import Gate
+        exec(f"from squander import {gate_class}")
         
-    #     # Create a CH gate
-    #     ch_gate = CH(3, 0, 1)
+        # Create an instance of the base Gate class to get its methods
+        base_gate       = Gate(3)
+        base_methods    = [name for name, obj in inspect.getmembers(base_gate) 
+                           if (callable(obj) and not name.startswith('_'))]
         
-    #     # Test availability of inherited methods
-    #     assert hasattr(ch_gate, 'get_Matrix')
-    #     assert hasattr(ch_gate, 'apply_to')
-    #     assert hasattr(ch_gate, 'get_Target_Qbit')
-    #     assert hasattr(ch_gate, 'get_Control_Qbit')
-    #     assert hasattr(ch_gate, 'set_Target_Qbit')
-    #     assert hasattr(ch_gate, 'set_Control_Qbit')
-    #     assert hasattr(ch_gate, 'get_Name')
+        gate_cls = eval(gate_class)
+
+        # Create an instance
+        if hasattr(gate_cls, "control_qbit"):    
+            gate_ins = gate_cls(3, 0, 1) # 3 qubits, target 0, control 1
+        else:
+            gate_ins = gate_cls(3, 0)
+
+        # Check that each method from the base class is available in the specific gate
+        for method_name in base_methods:
+            assert hasattr(gate_ins, method_name), f"{gate_class} is missing method {method_name}"
+
+        # Test method results
+        assert gate_ins.get_Target_Qbit() == 0
+        if hasattr(gate_cls, "control_qbit"):
+            assert gate_ins.get_Control_Qbit() == 1
         
-    #     # Test method results
-    #     assert ch_gate.get_Target_Qbit() == 0
-    #     assert ch_gate.get_Control_Qbit() == 1
-    #     name = ch_gate.get_Name()
-    #     assert isinstance(name, str)
-    #     assert name == "CH"
+        name = gate_ins.get_Name()
+        assert isinstance(name, str)
+        assert len(name) > 0

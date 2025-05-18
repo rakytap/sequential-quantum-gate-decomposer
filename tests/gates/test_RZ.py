@@ -124,7 +124,7 @@ class Test_operations_squander:
             RZ_squander=test_matrix
 
             # apply the gate on the input array/matrix                
-            RZ_gate.apply_to(parameters, RZ_squander )
+            RZ_gate.apply_to(RZ_squander, parameters)
 
             # the unitary matrix from the result object
             product_matrix = np.dot(RZ_squander, RZ_qiskit.conj().T)

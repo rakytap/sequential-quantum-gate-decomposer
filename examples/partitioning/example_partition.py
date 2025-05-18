@@ -12,7 +12,7 @@ def example_partition():
 
     print("Partitions (#id: num_gates {qubits}):")
     total = 0
-    for i, partition in enumerate(top_c.get_Gates()):
+    for i, partition in enumerate(partitined_circuit.get_Gates()):
         num_gates = len(partition.get_Gates())
         qubits = set.union(*(get_qubits(gate) for gate in partition.get_Gates()))
         total += num_gates

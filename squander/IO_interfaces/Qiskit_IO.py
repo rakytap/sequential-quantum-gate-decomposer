@@ -34,7 +34,7 @@ from squander.gates_Wrapper import CH
 from squander.gates_Wrapper import CNOT
 from squander.gates_Wrapper import CZ
 from squander.gates_Wrapper import SYC
-from squander import U3
+from squander.gates_Wrapper import U3
 from squander.gates_Wrapper import RX
 from squander.gates_Wrapper import RY
 from squander.gates_Wrapper import RZ
@@ -46,8 +46,9 @@ from squander.gates_Wrapper import SX
 
 
 
-
-
+def scalar(param):
+    """Extract scalar value from array or return as is"""
+    return param.item() if hasattr(param, 'item') else param
 
 
 ##
@@ -72,7 +73,7 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
             
         elif isinstance( gate, CRY ):
             # adding CNOT gate to the quantum circuit
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.cry( parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
             
         elif isinstance( gate, CZ ):
@@ -90,22 +91,22 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
 
         elif isinstance( gate, U3 ):
             # adding U3 gate to the quantum circuit
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.u( parameters_gate[0], parameters_gate[1], parameters_gate[2], gate.get_Target_Qbit() )    
 
         elif isinstance( gate, RX ):
             # RX gate
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.rx( parameters_gate[0], gate.get_Target_Qbit() )    
             
         elif isinstance( gate, RY ):
             # RY gate
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.ry( parameters_gate[0], gate.get_Target_Qbit() )    
 
         elif isinstance( gate, RZ ):
             # RZ gate
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.rz( parameters_gate[0], gate.get_Target_Qbit() )    
             
         elif isinstance( gate, H ):
@@ -163,7 +164,7 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
             
         elif isinstance( gate, CRY ):
             # adding CNOT gate to the quantum circuit
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.cry( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
             
         elif isinstance( gate, CZ ):
@@ -181,22 +182,22 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
 
         elif isinstance( gate, U3 ):
             # adding U3 gate to the quantum circuit
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.u( -parameters_gate[0], -parameters_gate[2], -parameters_gate[1], gate.get_Target_Qbit() )   
 
         elif isinstance( gate, RX ):
             # RX gate
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.rx( -parameters_gate[0], gate.get_Target_Qbit() )    
             
         elif isinstance( gate, RY ):
             # RY gate
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.ry( -parameters_gate[0], gate.get_Target_Qbit() )    
 
         elif isinstance( gate, RZ ):
             # RZ gate
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.rz( -parameters_gate[0], gate.get_Target_Qbit() )    
             
         elif isinstance( gate, H ):

@@ -40,7 +40,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "RZ.h"
 #include "SX.h"
 #include "SYC.h"
-// #include "U3.h"
+#include "U3.h"
 #include "X.h"
 #include "Y.h"
 #include "Z.h"
@@ -164,6 +164,40 @@ static int
 
 
 /**
+@brief Method called when a python instance of a U3 gate is initialized
+@param self A pointer pointing to an instance of the class  Gate_Wrapper.
+@param args A tuple of the input arguments: qbit_num (int), target_qbit (int), Theta (bool), Phi (bool), Lambda (bool)
+@param kwds A tuple of keywords
+*/
+static int
+ U3_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", (char*)"Theta", (char*)"Phi", (char*)"Lambda", NULL};
+    int qbit_num = -1; 
+    int target_qbit = -1;
+    int control_qbit = -1;
+    int Theta = 1;
+    int Phi = 1;
+    int Lambda = 1;
+
+    
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iiiii", kwlist,
+                                     &qbit_num, &target_qbit, &Theta, &Phi, &Lambda))
+        return -1;
+    
+    auto create_U3_gate = [](int qbit_num, int target_qbit, bool Theta, bool Phi, bool Lambda) -> Gate* {
+       U3* gate =  new U3(qbit_num, target_qbit, Theta, Phi, Lambda);
+       return static_cast<Gate*>(gate);
+    };
+    
+    self->gate = create_U3_gate(qbit_num, target_qbit, (bool)Theta, (bool)Phi, (bool)Lambda);
+
+
+    return 0;
+}
+
+
+/**
 @brief Call te extract t he matric representation of the gate
 @param start_index The index of the first inverse gate
 */
@@ -252,10 +286,9 @@ Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwd
 
     static char *kwlist[] = {(char*)"unitary", (char*)"parameters", NULL};
 
-    PyArrayObject * parameters_arr = NULL;
     PyArrayObject * input = NULL;
-
-
+    PyArrayObject * parameters_arr = NULL;
+    int parallel = 1;
 
     // parsing input arguments
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist, &input, &parameters_arr )) {
@@ -263,12 +296,11 @@ Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwd
         return NULL;
     }
 
-
+    // Check if input matrix is provided
     if ( input == NULL ) {
         PyErr_SetString(PyExc_Exception, "Input matrix was not given");
         return NULL;
     }
-
 
     if ( PyArray_TYPE(input) != NPY_COMPLEX128 ) {
         PyErr_SetString(PyExc_Exception, "input matrix or state should be complex typed");
@@ -286,64 +318,50 @@ Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwd
 
     Gate* gate = self->gate;
 
-    if( gate->get_parameter_num() == 0 ) {
+    const int param_count = gate->get_parameter_num();
 
-        if( parameters_arr != NULL ) {
-            std::string err( "The gate contains no parameters to set, but parameter array was given as input");
-            return NULL;
-        }
+    try {
+        if (param_count == 0) {
+            // Non-parameterized gate
+            gate->apply_to(input_mtx, parallel);
+        } 
+        else if (param_count > 0) {
+            // Parameterized gate
+            if( parameters_arr == NULL ) {
+                std::string err( "The gate has free parameters to set, but no parameter array was given as input");
+                return NULL;
+            }
 
-        try {
-            int parallel = 1;
-            gate->apply_to( input_mtx, parallel );
-        }
-        catch (std::string err) {
-            PyErr_SetString(PyExc_Exception, err.c_str());
-            return NULL;
-        }
-        catch(...) {
-            std::string err( "Invalid pointer to gate class");
-            PyErr_SetString(PyExc_Exception, err.c_str());
-            return NULL;
-        }
+            if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
+                PyErr_SetString(PyExc_TypeError, "Parameter vector should be real typed");
+                return NULL;
+            }
+
+            // Convert parameters to C++ matrix
+            PyArrayObject *param_contiguous = PyArray_IS_C_CONTIGUOUS(parameters_arr) ?
+                static_cast<PyArrayObject*>(Py_INCREF(parameters_arr), parameters_arr) :
+                (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
             
+            Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
-    }
-    else if( gate->get_parameter_num() > 0 ) {
+            gate->apply_to(parameters_mtx, input_mtx, parallel);
 
-        if( parameters_arr == NULL ) {
-            std::string err( "The gate has free parameters to set, but no parameter array was given as input");
-            return NULL;
-        }
-
-        if ( PyArray_TYPE(parameters_arr) != NPY_DOUBLE ) {
-            PyErr_SetString(PyExc_Exception, "Parameter vector should be real typed");
-            return NULL;
-        }
-
-        if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
-            Py_INCREF(parameters_arr);
+            Py_DECREF(param_contiguous);
         }
         else {
-            parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+            PyErr_SetString(PyExc_ValueError, "The number of parameters in a gate is set to a negative value");
+            return NULL;
         }
-
-
-        // get the C++ wrapper around the input data
-        Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
-/*
-        int parallel = 1;
-        gate_mtx = self->gate->get_matrix( parameters_mtx, parallel );
-*/
-        Py_DECREF(parameters_arr);
-
-
     }
-    else {
-        std::string err( "The number of parameters in a gate is set to a negative value");
+    catch (const std::string& err) {
+        PyErr_SetString(PyExc_RuntimeError, err.c_str());
         return NULL;
-
     }
+    catch(...) {
+        PyErr_SetString(PyExc_RuntimeError, "Unknown error in gate operation");
+        return NULL;
+    }
+
 
     // if numpy array was not aligned to memory boundaries, the input is reallocated on the C++ side
     if (input_mtx.data != PyArray_DATA(input)) {
@@ -607,13 +625,13 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|O", &parameters_arr )) {
-        std::string err( "Unable to parse arguments");
+    if (!PyArg_ParseTuple(args, "O", &parameters_arr )) {
+        PyErr_SetString(PyExc_ValueError, "Unable to parse arguments");
         return NULL;
     }
 
-    if( parameters_arr != NULL ) {
-        std::string err( "Missing input parameter array");
+    if( parameters_arr == NULL ) {
+        PyErr_SetString(PyExc_ValueError, "Missing input parameter array");
         return NULL;
     }
     
@@ -635,10 +653,12 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
         extracted_parameters = self->gate->extract_parameters( parameters_mtx );
     }
     catch (std::string err) {
+        Py_DECREF(parameters_arr);
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
     }
     catch(...) {
+        Py_DECREF(parameters_arr);
         std::string err( "Invalid pointer to circuit class");
         PyErr_SetString(PyExc_Exception, err.c_str());
         return NULL;
@@ -649,7 +669,7 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
     extracted_parameters.set_owner(false);
     PyObject *extracted_parameters_py = matrix_real_to_numpy( extracted_parameters );
    
-
+    Py_DECREF(parameters_arr);
     return extracted_parameters_py;
 }
 
@@ -870,15 +890,15 @@ struct SYC_Wrapper_Type : Gate_Wrapper_Type_tmp {
     }
 };
 
-// struct U3_Wrapper_Type : Gate_Wrapper_Type_tmp {
+struct U3_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
-//     U3_Wrapper_Type() {    
-//         tp_name      = "U3_Wrapper";
-//         tp_doc       = "Object to represent python binding for a U3 gate of the Squander package.";
-//         tp_init      = (initproc)  Gate_Wrapper_init<U3>;
-//         tp_base      = &Gate_Wrapper_Type;
-//     }
-// };
+    U3_Wrapper_Type() {    
+        tp_name      = "U3_Wrapper";
+        tp_doc       = "Object to represent python binding for a U3 gate of the Squander package.";
+        tp_init      = (initproc)  U3_Wrapper_init;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
 
 struct X_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
@@ -921,7 +941,7 @@ static RY_Wrapper_Type RY_Wrapper_Type_ins;
 static RZ_Wrapper_Type RZ_Wrapper_Type_ins;
 static SX_Wrapper_Type SX_Wrapper_Type_ins;
 static SYC_Wrapper_Type SYC_Wrapper_Type_ins;
-// static U3_Wrapper_Type U3_Wrapper_Type_ins;
+static U3_Wrapper_Type U3_Wrapper_Type_ins;
 static X_Wrapper_Type X_Wrapper_Type_ins;
 static Y_Wrapper_Type Y_Wrapper_Type_ins;
 static Z_Wrapper_Type Z_Wrapper_Type_ins;
@@ -974,7 +994,7 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&RZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SX_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SYC_Wrapper_Type_ins) < 0 ||
-        // PyType_Ready(&U3_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&U3_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&X_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Y_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Z_Wrapper_Type_ins) < 0) {
@@ -1063,12 +1083,12 @@ PyInit_gates_Wrapper(void)
         return NULL;
     }
 
-    // Py_INCREF(&U3_Wrapper_Type_ins);
-    // if (PyModule_AddObject(m, "U3", (PyObject *) & U3_Wrapper_Type_ins) < 0) {
-    //     Py_DECREF(& U3_Wrapper_Type_ins);
-    //     Py_DECREF(m);
-    //     return NULL;
-    // }
+    Py_INCREF(&U3_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "U3", (PyObject *) & U3_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& U3_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
 
     Py_INCREF(&X_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "X", (PyObject *) & X_Wrapper_Type_ins) < 0) {

@@ -118,7 +118,7 @@ class Test_operations_squander:
             CH_squander=test_matrix
 
             # apply the gate on the input array/matrix                
-            CH_gate.apply_to(CH_squander )
+            CH_gate.apply_to(CH_squander)
 
             #the difference between the SQUANDER and the qiskit result        
             delta_matrix=CH_squander-CH_qiskit

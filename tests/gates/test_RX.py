@@ -123,7 +123,7 @@ class Test_operations_squander:
             RX_squander=test_matrix
 
             # apply the gate on the input array/matrix                
-            RX_gate.apply_to(parameters, RX_squander )
+            RX_gate.apply_to(RX_squander, parameters)
 
             #the difference between the SQUANDER and the qiskit result        
             delta_matrix=RX_squander-RX_qiskit

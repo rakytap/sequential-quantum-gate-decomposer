@@ -29,7 +29,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from os import path
 from squander.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
-from squander.gates.qgd_U3 import qgd_U3 
+# from squander.gates.qgd_U3 import qgd_U3 
 # from squander.gates.qgd_H import qgd_H 
 # from squander.gates.qgd_X import qgd_X  
 # from squander.gates.qgd_Y import qgd_Y  
@@ -44,7 +44,7 @@ from squander.gates.qgd_U3 import qgd_U3
 # from squander.gates.qgd_SYC import qgd_SYC   
 # from squander.gates.qgd_CRY import qgd_CRY 
 
-# from squander.gates_Wrapper import U3
+from squander.gates_Wrapper import U3
 from squander.gates_Wrapper import H
 from squander.gates_Wrapper import X
 from squander.gates_Wrapper import Y
@@ -385,7 +385,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_RZ(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,SX):
             self.add_SX(qgd_gate.get_Target_Qbit())
-        elif isinstance(qgd_gate,qgd_U3):
+        elif isinstance(qgd_gate,U3):
             self.add_U3(qgd_gate.get_Target_Qbit(),qgd_gate.Theta,qgd_gate.Phi,qgd_gate.Lambda)
         elif isinstance(qgd_gate,CRY):
             self.add_CRY(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
