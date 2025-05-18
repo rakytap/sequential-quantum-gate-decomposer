@@ -175,7 +175,6 @@ static int
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", (char*)"Theta", (char*)"Phi", (char*)"Lambda", NULL};
     int qbit_num = -1; 
     int target_qbit = -1;
-    int control_qbit = -1;
     int Theta = 1;
     int Phi = 1;
     int Lambda = 1;
@@ -184,13 +183,9 @@ static int
     if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iiiii", kwlist,
                                      &qbit_num, &target_qbit, &Theta, &Phi, &Lambda))
         return -1;
+
     
-    auto create_U3_gate = [](int qbit_num, int target_qbit, bool Theta, bool Phi, bool Lambda) -> Gate* {
-       U3* gate =  new U3(qbit_num, target_qbit, Theta, Phi, Lambda);
-       return static_cast<Gate*>(gate);
-    };
-    
-    self->gate = create_U3_gate(qbit_num, target_qbit, (bool)Theta, (bool)Phi, (bool)Lambda);
+    self->gate = static_cast<Gate*>(new U3(qbit_num, target_qbit, (bool)Theta, (bool)Phi, (bool)Lambda));
 
 
     return 0;
@@ -338,15 +333,18 @@ Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwd
             }
 
             // Convert parameters to C++ matrix
-            PyArrayObject *param_contiguous = PyArray_IS_C_CONTIGUOUS(parameters_arr) ?
-                static_cast<PyArrayObject*>(Py_INCREF(parameters_arr), parameters_arr) :
-                (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+            if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
+                Py_INCREF(parameters_arr);
+            }
+            else {
+                parameters_arr = (PyArrayObject*)PyArray_FROM_OTF( (PyObject*)parameters_arr, NPY_DOUBLE, NPY_ARRAY_IN_ARRAY);
+            }
             
             Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
             gate->apply_to(parameters_mtx, input_mtx, parallel);
 
-            Py_DECREF(param_contiguous);
+            Py_DECREF(parameters_arr);
         }
         else {
             PyErr_SetString(PyExc_ValueError, "The number of parameters in a gate is set to a negative value");
@@ -634,6 +632,11 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
         PyErr_SetString(PyExc_ValueError, "Missing input parameter array");
         return NULL;
     }
+
+    if (PyArray_TYPE(parameters_arr) != NPY_DOUBLE) {
+        PyErr_SetString(PyExc_TypeError, "Parameter array must contain double values");
+        return NULL;
+    }
     
     if ( PyArray_IS_C_CONTIGUOUS(parameters_arr) ) {
         Py_INCREF(parameters_arr);
@@ -645,8 +648,6 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
     // get the C++ wrapper around the data
     Matrix_real&& parameters_mtx = numpy2matrix_real( parameters_arr );
 
-
-    
     Matrix_real extracted_parameters;
 
     try {
