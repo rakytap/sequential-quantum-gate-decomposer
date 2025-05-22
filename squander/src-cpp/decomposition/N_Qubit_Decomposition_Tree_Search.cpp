@@ -771,11 +771,11 @@ N_Qubit_Decomposition_Tree_Search::add_finalyzing_layer( Gates_block* gate_struc
             bool Theta = true;
             bool Phi = true;
             bool Lambda = true;
-block->add_rz(idx);
+/*block->add_rz(idx);
 block->add_ry(idx);
-block->add_rz(idx); 
+block->add_rz(idx); */
 
-             //block->add_u3(idx, Theta, Phi, Lambda);
+            block->add_u3(idx, Theta, Phi, Lambda);
 //        block->add_ry(idx);
     }
 
