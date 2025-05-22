@@ -135,7 +135,7 @@ void add_two_qubit_block(Gates_block* gate_structure, int target_qbit, int contr
 @param gcode The N-ary Gray code describing the configuration of the two-qubit gates.
 @return Returns with the generated circuit
 */
-Gates_block* 
+virtual Gates_block* 
 construct_gate_structure_from_Gray_code( const GrayCode& gcode );
 
 /**
