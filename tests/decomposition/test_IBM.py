@@ -328,3 +328,59 @@ class Test_Decomposition:
 
         assert( decomposition_error < 1e-3 )
 
+    def test_IBM_Chellenge_tabu_search_custom_blocks(self):
+        r"""
+        This method is called by pytest. 
+        Test to decompose a 4-qubit unitary of the IBM chellenge
+
+        """
+
+        from squander import N_Qubit_Decomposition_Tabu_Search, Circuit       
+        from scipy.io import loadmat
+    
+        # load the unitary from file
+        data = loadmat('data/Umtx.mat')  
+        # The unitary to be decomposed  
+        Umtx = data['Umtx']
+        
+        template = Circuit (2)
+        template.add_U3(0)
+        template.add_U3(1)
+        template.add_CZ(0,1)
+        topology = [(1,0),(2,0),(3,0)]
+
+        # creating a class to decompose the unitary
+        cDecompose = N_Qubit_Decomposition_Tabu_Search( Umtx.conj().T, topology=topology )
+        cDecompose.set_Two_Qubit_Block_Template(template)
+
+        # setting the verbosity of the decomposition
+        cDecompose.set_Verbose( 3 )
+
+        # starting the decomposition
+        cDecompose.Start_Decomposition()
+
+        # list the decomposing operations
+        cDecompose.List_Gates()
+
+        # get the decomposing operations
+        quantum_circuit = cDecompose.get_Qiskit_Circuit()
+
+        # print the quantum circuit
+        print(quantum_circuit)
+
+        import numpy.linalg as LA
+    
+        # the unitary matrix from the result object
+        decomposed_matrix = utils.get_unitary_from_qiskit_circuit( quantum_circuit )
+        product_matrix = np.dot(Umtx,decomposed_matrix.conj().T)
+        phase = np.angle(product_matrix[0,0])
+        product_matrix = product_matrix*np.exp(-1j*phase)
+    
+        product_matrix = np.eye(16)*2 - product_matrix - product_matrix.conj().T
+        # the error of the decomposition
+        decomposition_error = (np.real(np.trace(product_matrix)))/2
+       
+        print('The error of the decomposition is ' + str(decomposition_error))
+
+        assert( decomposition_error < 1e-3 )
+
