@@ -176,63 +176,20 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
         int max_inner_iterations_loc = 10000;
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
     }
-    int iter = 0;
-    int uncompressed_iter_num = 0;
-    
-    
-    while ( iter<25 || uncompressed_iter_num <= 5 ) {
-        std::stringstream sstream;
-        sstream.str("");
-        sstream << "iteration " << iter+1 << ": ";
-        print(sstream, 1);	
-        Gates_block* gate_structure_compressed;
-
-        gate_structure_compressed = cDecomp_custom.compress_gate_structure( gate_structure_loc,uncompressed_iter_num );
-        if ( gate_structure_compressed->get_gate_num() < gate_structure_loc->get_gate_num() ) {
-            uncompressed_iter_num = 0;
-        }
-        else {
-            uncompressed_iter_num++;
-        }
-
-        if ( gate_structure_compressed != gate_structure_loc ) {
-
-            delete( gate_structure_loc );
-            gate_structure_loc = gate_structure_compressed;
-            gate_structure_compressed = NULL;
-            
-        }
-
-        iter++;
-
-        if (uncompressed_iter_num>1) break;
-            // store the decomposing gate structure
+    cDecomp_custom.compress_circuit();
+    std::map<std::string, int>&& gate_nums = cDecomp_custom.get_gate_nums();
+	bool Adaptives = false;
+    for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+        if (it->first == "Adaptive"){Adaptives=true; break;}
+    } 
+    if (Adaptives==true){
+        cDecomp_custom.finalize_circuit();
     }
-
-    long long export_circuit_2_binary_loc;
-    if ( config.count("export_circuit_2_binary") > 0 ) {
-        config["export_circuit_2_binary"].get_property( export_circuit_2_binary_loc );  
-    }
-    else {
-        export_circuit_2_binary_loc = 0;
-    }     
-        
-        
-    if ( export_circuit_2_binary_loc > 0 ) {
-        std::string filename("circuit_squander.binary");
-        if (project_name != "") {
-            filename = project_name+ "_" +filename;
-        }
-        export_gate_list_to_binary(optimized_parameters_mtx, gate_structure_loc, filename, verbose);
-        
-        std::string unitaryname("unitary_squander.binary");
-        if (project_name != "") {
-            filename = project_name+ "_" +unitaryname;
-        }
-        export_unitary(unitaryname);
-        
-    }
-    
+    optimized_parameters_mtx = cDecomp_custom.get_optimized_parameters();
+    gate_structure_loc = NULL;
+    gate_structure_loc =  (static_cast<Gates_block*>(&cDecomp_custom))->clone();
+    sstream << std::endl;
+    print(sstream, 1);	    	
     // store the created gate structure
     release_gates();
 	combine( gate_structure_loc );
