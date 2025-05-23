@@ -20,6 +20,7 @@ limitations under the License.
     \brief Class to solve VQE problems
 */
 #include "Generative_Quantum_Machine_Learning_Base.h"
+#include <iostream>
 
 static tbb::spin_mutex my_mutex;
 
@@ -63,7 +64,8 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     
     ansatz = HEA;
 
-    ev_P_star_P_star = 0.0;
+    ev_P_star_P_star = -1.0;
+    
 }
 
 
@@ -76,7 +78,7 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<std::vector<int>> x_vectors_in, Matrix_real P_star_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
 	x_vectors = x_vectors_in;
 
@@ -123,7 +125,11 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     
     ansatz = HEA;
     
-    ev_P_star_P_star = 0.0;
+    ev_P_star_P_star = -1.0;
+
+    sigma = sigma_in;
+
+    x_bitstrings = x_bitstrings_in;
 }
 
 
@@ -177,41 +183,33 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
     return;
 }
 
-double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(std::vector<int> x, std::vector<int> y) {
-    double norm=0.0;
-    tbb::combinable<double> priv_partial_norm{[](){return 0.0;}};
-    tbb::parallel_for(tbb::blocked_range<int>(0, x.size(), 1024), [&](tbb::blocked_range<int> r) {
-        double& norm_local = priv_partial_norm.local();
-        for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            for (int idx2=0; idx2<y.size(); idx2++) {
-                if (x[idx1] == y[idx2])
-                    norm_local += 1.0;
-            }
-        }
-    });
-    priv_partial_norm.combine_each([&norm](double a) {
-        norm += a;
-    });
-    double result = exp(-norm*norm);
+double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y, double sigma) {
+    double norm=0;
+    for (int idx=0; idx<x_bitstrings[x].size(); idx++) {
+        norm += (x_bitstrings[x][idx] - x_bitstrings[y][idx])*(x_bitstrings[x][idx]-x_bitstrings[y][idx]);
+    }
+    double norm2 = norm*norm;
+    double result = (exp(-norm*norm/2/0.25)+ exp(-norm*norm/2/10)+ exp(-norm*norm/2/1000))/3;
     return result;
 }
 
 double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star() {
     double ev=0.0;
     tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(0, P_star.size(), 1024), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(0, x_vectors.size(), 1024), [&](tbb::blocked_range<int> r) {
         double& ev_local = priv_partial_ev.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            for (int idx2=0; idx2<P_star.rows; idx2++) {
-                if (idx1 != idx2)
-                    ev_local += P_star[idx1]*P_star[idx2]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2]);
+            for (int idx2=0; idx2<x_vectors.size(); idx2++) {
+                // if (idx1 != idx2) {
+                    ev_local += P_star[x_vectors[idx1]]*P_star[x_vectors[idx2]]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2], sigma);
+                // }
             }
         }
     });
     priv_partial_ev.combine_each([&ev](double a) {
         ev += a;
     });
-    ev /= P_star.size()*(P_star.size()-1);
+    ev /= x_vectors.size()*x_vectors.size();
     return ev;
 }
 
@@ -228,59 +226,31 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
         throw error;
     }
 
+    if (ev_P_star_P_star < 0 ) {
+        ev_P_star_P_star = expectation_value_P_star_P_star();
+    }
+
     std::vector<double> P_theta;
 
     for (size_t x_idx=0; x_idx<x_vectors.size(); x_idx++){
-        tbb::combinable<QGD_Complex16> priv_partial_x_times_state{[](){QGD_Complex16 init;
-                                                          init.real=0.0; init.imag=0.0;
-                                                          return init;}};
-        tbb::combinable<QGD_Complex16> priv_partial_state_times_x{[](){QGD_Complex16 init;
-                                                          init.real=0.0; init.imag=0.0;
-                                                          return init;}};
+        QGD_Complex16 x_times_state = State_right[x_vectors[x_idx]];
 
-        tbb::parallel_for( tbb::blocked_range<int>(0, x_vectors[x_idx].size(), 1024), [&](tbb::blocked_range<int> r){
-                QGD_Complex16& x_times_state_local = priv_partial_x_times_state.local();
-                QGD_Complex16& state_times_x_local = priv_partial_state_times_x.local();
-                for (int idx=r.begin(); idx<r.end(); idx++){
-                    x_times_state_local.real += State_right[x_vectors[x_idx][idx]].real;
-                    x_times_state_local.imag += State_right[x_vectors[x_idx][idx]].imag;
-                    state_times_x_local.real += State_right[x_vectors[x_idx][idx]].real;
-                    state_times_x_local.imag -= State_right[x_vectors[x_idx][idx]].imag;
-                }
-        });
-
-        QGD_Complex16 x_times_state;
-        x_times_state.real = 0.0;
-        x_times_state.imag = 0.0;
-        QGD_Complex16 state_times_x;
-        state_times_x.real = 0.0;
-        state_times_x.imag = 0.0;
-
-
-        priv_partial_x_times_state.combine_each([&x_times_state](QGD_Complex16 a) {
-                x_times_state.real += a.real;
-                x_times_state.imag += a.imag;
-        });
-
-        priv_partial_state_times_x.combine_each([&state_times_x](QGD_Complex16 a) {
-                state_times_x.real += a.real;
-                state_times_x.imag += a.imag;
-        });
-        P_theta.push_back(x_times_state.real*state_times_x.real - x_times_state.imag*state_times_x.imag);
+        P_theta.push_back(x_times_state.real*x_times_state.real + x_times_state.imag*x_times_state.imag);
     }
+
 
     double ev_P_theta_P_theta   = 0.0;
     double ev_P_theta_P_star    = 0.0;
     tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[](){return 0.0;}};
     tbb::combinable<double> priv_partial_ev_P_theta_P_star{[](){return 0.0;}};
-    tbb::parallel_for( tbb::blocked_range<int>(0, P_theta.size(), 1024), [&](tbb::blocked_range<int> r) {
+    tbb::parallel_for( tbb::blocked_range<int>(0, x_vectors.size(), 1024), [&](tbb::blocked_range<int> r) {
         double& ev_P_theta_P_theta_local = priv_partial_ev_P_theta_P_theta.local();
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
-            for (int idx2=0; idx2 < P_star.rows; idx2++) {
-                if(idx1 != idx2)
-                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2]);
-                ev_P_theta_P_star_local += P_theta[idx1]*P_star[idx2]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2]);
+            for (int idx2=0; idx2 < x_vectors.size(); idx2++) {
+                // if(idx1 != idx2)
+                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2], sigma);
+                ev_P_theta_P_star_local += P_theta[idx1]*P_star[x_vectors[idx2]]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2], sigma);
             }
         }
     });
@@ -291,8 +261,8 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
         ev_P_theta_P_star += a;
     });
 
-    ev_P_theta_P_theta /= P_theta.size()*(P_theta.size()-1);
-    ev_P_theta_P_star /= P_theta.size()*P_star.size();
+    ev_P_theta_P_theta /= x_vectors.size()*x_vectors.size();
+    ev_P_theta_P_star /= x_vectors.size()*x_vectors.size();
 
     {
         tbb::spin_mutex::scoped_lock my_lock{my_mutex};
@@ -300,8 +270,9 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
         number_of_iters++;
         
     }
-
-    return ev_P_theta_P_theta + ev_P_star_P_star - 2*ev_P_theta_P_star;
+    // std::cout << ev_P_theta_P_theta << " " << ev_P_star_P_star << " " << ev_P_theta_P_star << std::endl;
+    double result = ev_P_theta_P_theta + ev_P_star_P_star - 2*ev_P_theta_P_star;
+    return result;
 }
 
 

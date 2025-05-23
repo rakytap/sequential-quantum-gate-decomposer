@@ -43,10 +43,10 @@ class qgd_Generative_Quantum_Machine_Learning_Base(qgd_Generative_Quantum_Machin
 # @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
 # @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
 # @return An instance of the class
-    def __init__( self, x_bitstrings, p_stars, qbit_num, config):
+    def __init__( self, x_bitstrings, p_stars, sigma, qbit_num, config):
     
         # call the constructor of the wrapper class
-        super(qgd_Generative_Quantum_Machine_Learning_Base, self).__init__(x_bitstrings.data, p_stars.data, qbit_num, config)
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).__init__(x_bitstrings.data, p_stars.data, sigma, qbit_num, config)
         self.qbit_num = qbit_num
 
 

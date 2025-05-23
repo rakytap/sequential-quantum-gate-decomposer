@@ -196,7 +196,6 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         std::vector<Matrix_real> parameters_mtx_vec(batch_size);
         parameters_mtx_vec.reserve(batch_size); 
 
-        Matrix_real parameter_value_save_agents( batch_size, 1 ); 
              
 
         bool three_point_line_search               =    cost_fnc == FROBENIUS_NORM;
@@ -222,7 +221,6 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 // The index array of the chosen parameters
                 int chosen_idx = distrib_int(gen);
                 param_idx_agents[ idx ] = indices[ chosen_idx ];
-                parameter_value_save_agents[idx] = indices[chosen_idx];
                 indices.erase( indices.begin()+chosen_idx ); 
             }
 
@@ -346,9 +344,6 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                 }
 
                 Matrix_real f0_shifted_3pi4_agents = optimization_problem_batched(parameters_mtx_vec);
-                /*
-                f(p) = A*cos(4*p+phi)+B*cos(2*p+delta)+C
-                 */
                 for (int idx=0; idx<batch_size; idx++) {
                     double f0_shifted_pi8 = f0_shifted_pi8_agents[idx];
                     double f0_shifted_pi4 = f0_shifted_pi4_agents[idx];
@@ -356,39 +351,39 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                     double f0_shifted_3pi4 = f0_shifted_3pi4_agents[idx];
 
                     double f1 = current_minimum -f0_shifted_pi2;
-                    double f2  = f0_shifted_pi4 - f0_shifted_3pi4;
+                    double f2  = -f0_shifted_pi4 + f0_shifted_3pi4;
 
                     double B = 0.5*sqrt(f1*f1+f2*f2);
 
-                    double delta = atan2(f1, f2) - 2*parameter_value_save_agents[idx];
+                    double delta = atan2(f1, f2) - 2*solution_guess_tmp_mtx[param_idx_agents[idx]];
 
                     double C = 0.25*(current_minimum + f0_shifted_pi2 + f0_shifted_pi4 + f0_shifted_3pi4);
 
                     double f3 = 0.5*(current_minimum + f0_shifted_pi2 - 2*C);
-                    double f4 = f0_shifted_pi8 - C - B*cos(2*parameter_value_save_agents[idx] + M_PI_eight+delta);
+                    double f4 = f0_shifted_pi8 - C - B*cos(2*solution_guess_tmp_mtx[param_idx_agents[idx]] + M_PI_quarter +delta);
 
-                    double A = sqrt(f3*f4 + f4*f4);
+                    double A = sqrt(f3*f3 + f4*f4);
 
-                    double phi = atan2(f3, f4) - 4*parameter_value_save_agents[idx];
+                    double phi = atan2(f3, f4) - 4*solution_guess_tmp_mtx[param_idx_agents[idx]];
 
                     double f; 
                     double params[5];
                     params[0] = A;
-                    params[1] = phi + 4*parameter_value_save_agents[ idx ];
+                    params[1] = phi + 4*solution_guess_tmp_mtx[param_idx_agents[idx]];
                     params[2] = B;
-                    params[3] = delta + 2*parameter_value_save_agents[ idx ];
+                    params[3] = delta + 2*solution_guess_tmp_mtx[param_idx_agents[idx]];
                     params[4] = C;
 
                     Matrix_real parameter_shift(1, 1);
                     if (abs(B) > abs(A)) {
-                        parameter_shift[0] = 3*M_PI_quarter - delta/2 - parameter_value_save_agents[idx]/2 ;
+                        parameter_shift[0] = M_PI_half - delta/2 -solution_guess_tmp_mtx[param_idx_agents[idx]]/2 ;
                     }
                     else {
-                        parameter_shift[0] = 3*M_PI_eight - phi/4 - parameter_value_save_agents[idx]/4;
+                        parameter_shift[0] = M_PI_quarter - phi/4 -solution_guess_tmp_mtx[param_idx_agents[idx]]/4;
                     }
                     parameter_shift[0] = std::fmod(parameter_shift[0], M_PI_double);
 
-                    BFGS_Powell cBFGS_Powell(HS_partial_optimization_problem_combined,(void*)&params);
+                    BFGS_Powell cBFGS_Powell(HS_partial_optimization_problem_cos_combined,(void*)&params);
                     f = cBFGS_Powell.Start_Optimization(parameter_shift, 10);
 
                     param_update_mtx[ idx ] = parameter_shift[0];
@@ -515,7 +510,8 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
             // update parameters
             for (int param_idx=0; param_idx<batch_size; param_idx++) {
                 solution_guess_tmp_mtx[ param_idx_agents[param_idx] ] += param_update_mtx[ param_idx ]*current_best_point;
-            } 
+            }
+
 
 ////////////////////////////////////////////////////////////////////////////////
 /*
@@ -624,8 +620,6 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
         }
         
-       
-
         memcpy( optimized_parameters_mtx.get_data(),  solution_guess_tmp_mtx.get_data(), num_of_parameters*sizeof(double) );
         
         // CPU time

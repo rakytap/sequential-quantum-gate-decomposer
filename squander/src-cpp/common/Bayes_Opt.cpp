@@ -43,6 +43,18 @@ double HS_partial_optimization_problem( Matrix_real parameters, void* void_param
 @brief ???????????????
 @return ???????????
 */
+double HS_partial_optimization_problem_cos( Matrix_real parameters, void* void_params) {
+
+    double* params = (double*)void_params;
+
+    return params[0]*cos(4*parameters[0] + params[1]) + params[2]*cos(2*parameters[0] + params[3] ) + params[4];
+}
+
+
+/**
+@brief ???????????????
+@return ???????????
+*/
 void HS_partial_optimization_problem_grad( Matrix_real parameters, void* void_params, Matrix_real& grad) {
 
 
@@ -56,6 +68,18 @@ void HS_partial_optimization_problem_grad( Matrix_real parameters, void* void_pa
 @brief ???????????????
 @return ???????????
 */
+void HS_partial_optimization_problem_cos_grad( Matrix_real parameters, void* void_params, Matrix_real& grad) {
+
+
+    double* params = (double*)void_params;
+    grad[0] = -4*params[0]*sin(4*parameters[0] + params[1]) - 2*params[2]*sin(2*parameters[0] + params[3] );
+
+}
+
+/**
+@brief ???????????????
+@return ???????????
+*/
 void HS_partial_optimization_problem_combined( Matrix_real parameters, void* void_params, double* f0, Matrix_real& grad) {
 
     *f0 = HS_partial_optimization_problem( parameters, void_params );
@@ -64,6 +88,17 @@ void HS_partial_optimization_problem_combined( Matrix_real parameters, void* voi
 
 }
 
+/**
+@brief ???????????????
+@return ???????????
+*/
+void HS_partial_optimization_problem_cos_combined( Matrix_real parameters, void* void_params, double* f0, Matrix_real& grad) {
+
+    *f0 = HS_partial_optimization_problem_cos( parameters, void_params );
+    HS_partial_optimization_problem_cos_grad( parameters, void_params, grad);
+
+
+}
 
 
 

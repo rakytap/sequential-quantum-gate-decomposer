@@ -68,7 +68,7 @@ public:
 private:
 
     /// The Hamiltonian of the system
-    std::vector<std::vector<int>> x_vectors;
+    std::vector<int> x_vectors;
 
     Matrix_real P_star;
     
@@ -79,6 +79,10 @@ private:
     ansatz_type ansatz;
 
     double ev_P_star_P_star;
+
+    double sigma;
+
+    std::vector<std::vector<int>> x_bitstrings;
 
 public:
 
@@ -97,14 +101,14 @@ Generative_Quantum_Machine_Learning_Base();
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base( std::vector<std::vector<int>> x_vectors_in, Matrix_real P_star_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in);
+Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings, Matrix_real P_star_in, double sigma_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in);
 
 /**
 @brief Destructor of the class
 */
 virtual ~Generative_Quantum_Machine_Learning_Base();
 
-double Gaussian_kernel(std::vector<int> x, std::vector<int> y);
+double Gaussian_kernel(int x, int y, double sigma);
 
 double expectation_value_P_star_P_star();
 

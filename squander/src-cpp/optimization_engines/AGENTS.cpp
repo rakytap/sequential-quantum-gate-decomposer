@@ -645,10 +645,7 @@ exit(-1);
                     }
                     else {
                         parameter_shift[0] = 3*M_PI/4 - xi/2 - parameter_value_save_agents[ agent_idx ]/2;
-                        
-
                     }
-                   
                     parameter_shift[0] = std::fmod( parameter_shift[0], M_PI_double);    
                                                  
                     BFGS_Powell cBFGS_Powell(HS_partial_optimization_problem_combined,(void*)&params);

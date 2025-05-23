@@ -68,9 +68,9 @@ typedef struct qgd_Generative_Quantum_Machine_Learning_Base_Wrapper{
 @return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
 */
 Generative_Quantum_Machine_Learning_Base* 
-create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<std::vector<int>> x_vectors, Matrix_real P_star, int qbit_num, std::map<std::string, Config_Element>& config) {
+create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, std::vector<std::vector<int>> x_bitstrings, Matrix_real P_star, double sigma, int qbit_num, std::map<std::string, Config_Element>& config) {
 
-    return new Generative_Quantum_Machine_Learning_Base( x_vectors, P_star, qbit_num, config);
+    return new Generative_Quantum_Machine_Learning_Base( x_vectors, x_bitstrings, P_star, sigma, qbit_num, config);
 }
 
 
@@ -152,17 +152,18 @@ static int
 qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum_Machine_Learning_Base_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"x_bitstring_data", (char*)"p_star_data", (char*)"qbit_num", (char*)"config", NULL};
+    static char *kwlist[] = {(char*)"x_bitstring_data", (char*)"p_star_data", (char*) "sigma", (char*)"qbit_num", (char*)"config", NULL};
  
     // initiate variables for input arguments
     PyArrayObject *x_bitstring_data_arg = NULL;
     PyArrayObject *p_star_data_arg = NULL;
+    double sigma=1.0;
     int  qbit_num = -1; 
     PyObject *config_arg = NULL;
     
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOiO", kwlist,
-                                   &x_bitstring_data_arg, &p_star_data_arg, &qbit_num, &config_arg))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOdiO", kwlist,
+                                   &x_bitstring_data_arg, &p_star_data_arg, &sigma, &qbit_num, &config_arg))
         return -1;
     
     int shape = Power_of_2(qbit_num);
@@ -178,8 +179,9 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     int* x_bitsring_data    = (int*)PyArray_DATA(x_bitstring_data_arg);
     npy_intp* x_bistring_shape   = PyArray_DIMS(x_bitstring_data_arg);
 
-    if (x_bistring_shape[1] != shape) {
-        PyErr_SetString(PyExc_ValueError, "Each vector in x_bitsring_data should be 2^qbit_num length!");
+    if (x_bistring_shape[1] != qbit_num) {
+        std::cout<< shape << " " << x_bistring_shape[1] << std::endl;
+        PyErr_SetString(PyExc_ValueError, "Each vector in x_bitsring_data should be qbit_num length!");
         return -1;
     }
     
@@ -190,21 +192,19 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     int p_star_ndim = PyArray_NDIM(p_star_data_arg);
     int p_star_shape = PyArray_DIMS(p_star_data_arg)[0];
 
-    if (x_bistring_shape[0] != p_star_shape) {
-        PyErr_SetString(PyExc_ValueError, "x_bitsring_data and p_star_data should the same length!");
-        return -1;
-    }
     if ( p_star_ndim != 1 ) {
         PyErr_SetString(PyExc_ValueError, "p_star_data should be 1D array!");
         return -1;
     }
     
-    std::vector<int> x_bitstrings(x_bitsring_data, x_bitsring_data+(x_bistring_shape[0]*x_bistring_shape[1]));
-    std::vector<std::vector<int>> x_nnz_indices(p_star_shape, std::vector<int>());
+    std::vector<int> x_bitstrings_continous(x_bitsring_data, x_bitsring_data+(x_bistring_shape[0]*x_bistring_shape[1]));
+    std::vector<std::vector<int>> x_bitstrings(x_bistring_shape[0], std::vector<int>(x_bistring_shape[0]));
+    std::vector<int> x_indices(x_bistring_shape[0], 0);
     for (int idx_data=0; idx_data < x_bistring_shape[0]; idx_data++) {
         for (int idx=0; idx < x_bistring_shape[1]; idx++) {
-            if (x_bitstrings[idx_data*x_bistring_shape[1]+idx] == 1) {
-                x_nnz_indices[idx_data].push_back(idx);
+            x_bitstrings[idx_data][idx] = x_bitstrings_continous[idx_data*x_bistring_shape[1]+idx];
+            if (x_bitstrings_continous[idx_data*x_bistring_shape[1]+idx] == 1) {
+                x_indices[idx_data] += Power_of_2(qbit_num-idx-1);
             }
         }
     }
@@ -243,10 +243,14 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
 
     }
 
+    if (sigma < 0) {
+        std::cout << "Sigma should be given as a positive number, " << sigma << "  was given" << std::endl;
+        return -1;
+    }
 
     // create an instance of the class N_Qubit_Decomposition
     if (qbit_num > 0 ) {
-        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_nnz_indices, p_stars, qbit_num, config);
+        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices, x_bitstrings, p_stars, sigma, qbit_num, config);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;
