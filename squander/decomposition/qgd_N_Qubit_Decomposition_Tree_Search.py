@@ -87,7 +87,13 @@ class qgd_N_Qubit_Decomposition_Tree_Search(qgd_N_Qubit_Decomposition_Tree_Searc
         super().Start_Decomposition()
         
 
-
+##
+# @brief Call to retrieve the incorporated quantum circuit (Squander format)
+# @return Return with a Qiskit compatible quantum circuit.
+    def get_Circuit( self ):
+        
+        # call the C wrapper function
+        return super().get_Circuit()
     
 ##
 # @brief Call to reorder the qubits in the matrix of the gate

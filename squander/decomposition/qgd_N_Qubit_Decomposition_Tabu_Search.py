@@ -96,7 +96,13 @@ class qgd_N_Qubit_Decomposition_Tabu_Search(qgd_N_Qubit_Decomposition_Tabu_Searc
 	# call the C wrapper function
         super().Reorder_Qubits(qbit_list)
 
-
+##
+# @brief Call to retrieve the incorporated quantum circuit (Squander format)
+# @return Return with a Qiskit compatible quantum circuit.
+    def get_Circuit( self ):
+        
+        # call the C wrapper function
+        return super().get_Circuit()
 ##
 # @brief @brief Call to print the gates decomposing the initial unitary. These gates brings the intial matrix into unity.
     def List_Gates(self):
