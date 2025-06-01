@@ -669,9 +669,17 @@ Gate_Wrapper_Extract_Parameters( Gate_Wrapper *self, PyObject *args ) {
     // convert to numpy array
     extracted_parameters.set_owner(false);
     PyObject *extracted_parameters_py = matrix_real_to_numpy( extracted_parameters );
+
+    // flatten the extracted array
+    long int param_num = (long int)extracted_parameters.size();
+    PyArray_Dims new_shape;
+    new_shape.ptr = &param_num;
+    new_shape.len = 1;
+
+    PyObject *extracted_parameters_py_flatten = PyArray_Newshape( (PyArrayObject*)extracted_parameters_py, &new_shape, NPY_CORDER);
    
     Py_DECREF(parameters_arr);
-    return extracted_parameters_py;
+    return extracted_parameters_py_flatten;
 }
 
 

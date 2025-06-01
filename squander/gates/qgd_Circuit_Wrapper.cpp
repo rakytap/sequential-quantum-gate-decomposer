@@ -1479,30 +1479,20 @@ get_gate( Gates_block* circuit, int &idx ) {
     }
     else if (gate->get_type() == U3_OPERATION) {
 
-        // import gate operation modules
-        PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.qgd_U3");
-
-        if ( qgd_gate == NULL ) {
-            PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.qgd_U3" );
-            return NULL;
-        }
-
         PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
         // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
-        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "qgd_U3");
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "U3");
 
-        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit );
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
         py_gate              = PyObject_CallObject(py_gate_class, gate_input);
 
         // replace dummy data with real gate data
-        qgd_U3_Wrapper* py_gate_C = reinterpret_cast<qgd_U3_Wrapper*>( py_gate );
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
         delete( py_gate_C->gate );
-        py_gate_C->gate = static_cast<U3*>( gate->clone() );
-
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
 
         Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
-
 
     }
     else if (gate->get_type() == RX_OPERATION) {
