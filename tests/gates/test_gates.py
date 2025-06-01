@@ -98,7 +98,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_U3 import qgd_U3
+        from squander import U3
 
         # number of qubits
         qbit_num = 3
@@ -112,7 +112,7 @@ class Test_operations:
         Lambda = True        
 
         # creating an instance of the C++ class
-        U3 = qgd_U3( qbit_num, target_qbit, Theta, Phi, Lambda )
+        U3 = U3( qbit_num, target_qbit, Theta, Phi, Lambda )
 
 
 

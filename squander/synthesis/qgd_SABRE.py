@@ -22,7 +22,7 @@ limitations under the License.
 from os import path
 import numpy as np 
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
-from squander.gates.qgd_CNOT import qgd_CNOT as CNOT
+from squander.gates_Wrapper import CNOT
 
 ## \file qgd_SABRE.py
 ##    \brief A QGD Python class for mapping and routing circuits to different topologies.
