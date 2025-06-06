@@ -23,7 +23,7 @@ async def test_partitions():
         num_gates = len(qc.data)
         fname = os.path.basename(filename)      
         print(f"{fname} qubits {qc.num_qubits} gates {num_gates}")
-        if num_gates > 4096:
+        if num_gates > 1024:
             continue
         res = {}
         partitioned_circuit, parameters = qasm_to_partitioned_circuit( filename, max_partition_size )
@@ -72,7 +72,7 @@ async def test_partitions():
     plt.legend()
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig("partition_counts.svg", format="svg")
+    plt.savefig("partition_counts.svg", format="svg", transparent=True)
 
 if __name__ == "__main__":
     asyncio.run(test_partitions())
