@@ -2827,8 +2827,12 @@ DFEgate_kernel_type* Gates_block::convert_to_DFE_gates_with_derivates( Matrix_re
         throw error;
     }
 
-    gates_num gate_nums   = get_gate_nums();
-    int gates_total_num   = gate_nums.total; 
+    std::map<std::string, int> gate_nums  = get_gate_nums();
+    int gates_total_num = 0;
+    for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+        gates_total_num = gates_total_num + it->second;
+    }
+
     int chained_gates_num = get_chained_gates_num();
     int gate_padding      = gates_total_num % chained_gates_num == 0 ? 0 : chained_gates_num - (gates_total_num % chained_gates_num);
     gatesNum              = gates_total_num+gate_padding;
@@ -3180,8 +3184,12 @@ DFEgate_kernel_type*
 Gates_block::convert_to_batched_DFE_gates( std::vector<Matrix_real>& parameters_mtx_vec, int& gatesNum, int& gateSetNum, int& redundantGateSets ) {
 
 
-    gates_num gate_nums   = get_gate_nums();
-    int gates_total_num   = gate_nums.total; 
+    std::map<std::string, int> gate_nums  = get_gate_nums();
+    int gates_total_num = 0;
+    for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+        gates_total_num = gates_total_num + it->second;
+    }
+
     int chained_gates_num = get_chained_gates_num();
     int gate_padding      = gates_total_num % chained_gates_num == 0 ? 0 : chained_gates_num - (gates_total_num % chained_gates_num);
     gatesNum              = gates_total_num+gate_padding;
@@ -3263,8 +3271,12 @@ DFEgate_kernel_type* Gates_block::convert_to_DFE_gates( Matrix_real& parameters_
     }
 
 
-    gates_num gate_nums   = get_gate_nums();
-    int gates_total_num   = gate_nums.total; 
+    std::map<std::string, int> gate_nums  = get_gate_nums();
+    int gates_total_num = 0;
+    for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+        gates_total_num = gates_total_num + it->second;
+    }
+
     int chained_gates_num = get_chained_gates_num();
     int gate_padding      = chained_gates_num - (gates_total_num % chained_gates_num);
     gatesNum              = gates_total_num+gate_padding;
@@ -3690,6 +3702,7 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
             u3_qbit.push_back(rz_operation->calc_one_qubit_u3(params_mtx[0]));
             break;
         }
+/*
         case RZ_P_OPERATION: {
             RZ_P* rz_p_operation = static_cast<RZ_P*>(operation);
             double ThetaOver2, Phi, Lambda;
@@ -3698,6 +3711,7 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
             u3_qbit.push_back(rz_p_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
             break;
         }
+*/
         case BLOCK_OPERATION: {
             Gates_block* block_operation = static_cast<Gates_block*>(operation);
             block_operation->get_matrices_target_control(u3_qbit, target_qbit, control_qbit, params_mtx);

@@ -1464,5 +1464,27 @@ Optimization_Interface::get_accelerator_num() {
 }
 
 
+
+/**
+@brief Override funcionality apply_to use Groq accelerator
+*/
+void 
+Optimization_Interface::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel )
+{
+
+    if (ctz(input.rows) == 17) {
+        std::vector<int> target_qbit;
+        std::vector<int> control_qbit;
+        std::vector<Matrix> u3_qbit;
+        get_matrices_target_control(u3_qbit, target_qbit, control_qbit, parameters_mtx);
+        const int device_num = 0;
+        apply_to_groq_sv(device_num, u3_qbit, input, target_qbit, control_qbit);
+        return;
+    }
+
+    Decomposition_Base::apply_to(parameters_mtx, input, parallel);
+}
+
+
 #endif
 

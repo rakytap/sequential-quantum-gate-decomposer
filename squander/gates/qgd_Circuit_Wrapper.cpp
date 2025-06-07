@@ -961,13 +961,17 @@ static PyObject *
 qgd_Circuit_Wrapper_convert_to_DFE_gates_with_derivates(qgd_Circuit_Wrapper *self, PyObject *args)
 {
     bool only_derivates = false;
-    PyObject* parameters_mtx_np = NULL;
+    PyArrayObject* parameters_mtx_np = NULL;
+
     if (!PyArg_ParseTuple(args, "|Ob",
                                      &parameters_mtx_np, &only_derivates))
         return Py_BuildValue("");
 
-    if ( parameters_mtx_np == NULL ) return Py_BuildValue("");
-    PyObject* parameters_mtx = PyArray_FROM_OTF(parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    if ( parameters_mtx_np == NULL ) {
+        return Py_BuildValue("");
+    }
+
+    PyArrayObject* parameters_mtx = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(parameters_mtx) ) {
@@ -1024,13 +1028,18 @@ static PyObject *
 qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *args)
 {
     int start_index = -1;
-    PyObject* parameters_mtx_np = NULL, *dfegates = NULL;
+    PyArrayObject* parameters_mtx_np = NULL;
+    PyObject* dfegates = NULL;
+
     if (!PyArg_ParseTuple(args, "|OOi",
                                      &parameters_mtx_np, &dfegates, &start_index))
         return Py_BuildValue("");
 
-    if ( parameters_mtx_np == NULL ) return Py_BuildValue("");
-    PyObject* parameters_mtx = PyArray_FROM_OTF(parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
+    if ( parameters_mtx_np == NULL ) {
+        return Py_BuildValue("");
+    }
+
+    PyArrayObject* parameters_mtx = (PyArrayObject*)PyArray_FROM_OTF((PyObject*)parameters_mtx_np, NPY_FLOAT64, NPY_ARRAY_IN_ARRAY);
 
     // test C-style contiguous memory allocation of the array
     if ( !PyArray_IS_C_CONTIGUOUS(parameters_mtx) ) {
@@ -1040,8 +1049,11 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *ar
     // create QGD version of the parameters_mtx
     Matrix_real parameters_mtx_mtx = numpy2matrix_real(parameters_mtx);
     DFEgate_kernel_type* dfegates_qgd = DFEgatePython_to_QGD(dfegates);
+
     Py_ssize_t gatesNum = PyList_Size(dfegates);
+
     self->circuit->convert_to_DFE_gates(parameters_mtx_mtx, dfegates_qgd, start_index);
+
     return DFEgateQGD_to_Python(dfegates_qgd, gatesNum);
 }
 
