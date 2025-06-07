@@ -474,6 +474,7 @@ set_target_properties(
 # adding CMAKE files for Python extensions
 add_subdirectory (squander/decomposition)
 add_subdirectory (squander/gates)
+add_subdirectory (squander)
 add_subdirectory (squander/nn)
 add_subdirectory (squander/variational_quantum_eigensolver)
 

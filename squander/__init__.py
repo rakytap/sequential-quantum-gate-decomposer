@@ -16,22 +16,9 @@ from squander.decomposition.qgd_Wide_Circuit_Optimization import qgd_Wide_Circui
 from squander.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolver_Base import qgd_Variational_Quantum_Eigensolver_Base as Variational_Quantum_Eigensolver
 
 #gates
-from squander.gates.qgd_U3 import qgd_U3 as U3
-from squander.gates.qgd_H import qgd_H  as H
-from squander.gates.qgd_X import qgd_X  as X
-from squander.gates.qgd_Y import qgd_Y  as Y
-from squander.gates.qgd_Z import qgd_Z  as Z 
-from squander.gates.qgd_CH import qgd_CH  as CH 
-from squander.gates.qgd_CNOT import qgd_CNOT  as CNOT
-from squander.gates.qgd_CZ import qgd_CZ  as CZ 
-from squander.gates.qgd_RX import qgd_RX  as RX 
-from squander.gates.qgd_RY import qgd_RY  as RY 
-from squander.gates.qgd_RZ import qgd_RZ  as RZ 
-from squander.gates.qgd_SX import qgd_SX  as SX 
-from squander.gates.qgd_SYC import qgd_SYC  as SYC 
-from squander.gates.qgd_CRY import qgd_CRY  as CRY 
 from squander.gates.qgd_CROT import qgd_CROT  as CROT 
 from squander.gates.qgd_R import qgd_R  as R 
+
 
 # quantum circuit
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
@@ -47,3 +34,22 @@ import squander.utils
 
 ## NN component (experimental interface)
 from squander.nn.qgd_nn import qgd_nn as NN
+
+
+from squander.gates_Wrapper import Gate_Wrapper as Gate
+from squander.gates_Wrapper import (
+    U3,
+    H,
+    X,
+    Y,
+    Z,
+    CH,
+    CNOT,
+    CZ,
+    RX,
+    RY,
+    RZ,
+    SX,
+    SYC,
+    CRY
+)

@@ -131,6 +131,53 @@ Gate::get_matrix() {
     return matrix_alloc;
 }
 
+
+/**
+@brief Call to retrieve the operation matrix
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+@return Returns with the matrix of the operation
+*/
+Matrix
+Gate::get_matrix(int parallel) {
+
+    std::string err("Gate::get_matrix: Unimplemented function");
+    throw err;     
+
+}
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@return Returns with a matrix of the gate
+*/
+Matrix
+Gate::get_matrix(Matrix_real& parameters ) {
+
+    std::string err("Gate::get_matrix: Unimplemented function");
+    throw err;  
+   
+}
+
+
+
+/**
+@brief Call to retrieve the gate matrix
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
+@return Returns with a matrix of the gate
+*/
+Matrix
+Gate::get_matrix( Matrix_real& parameters, int parallel ) {
+
+    std::string err("Gate::get_matrix: Unimplemented function");
+    throw err;     
+
+}
+
+
+
+
 /**
 @brief Call to apply the gate on a list of inputs
 @param inputs The input array on which the gate is applied
@@ -702,8 +749,11 @@ Matrix Gate::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda ) {
 */
 Matrix Gate::calc_one_qubit_u3( ) {
 
-  Matrix u3_1qbit = Matrix(2,2); 
-  return u3_1qbit;
+    std::string err("Gate::calc_one_qubit_u3: Unimplemented abstract function"); 
+    throw err;   
+
+    Matrix u3_1qbit = Matrix(2,2); 
+    return u3_1qbit;
 
 }
 

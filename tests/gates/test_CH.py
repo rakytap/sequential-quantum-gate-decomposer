@@ -24,12 +24,13 @@ from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 
 from squander.utils import get_unitary_from_qiskit_circuit
-from squander.gates.qgd_CH import qgd_CH
 import math
-from scipy.stats import unitary_group        
+from scipy.stats import unitary_group      
+
+from squander import CH
 
 class Test_operations_squander:
-    """This is a test class of the python iterface to the gates of the QGD package"""
+    """This is a test class of the python iterface to the gates of the Squander package"""
 
     def test_CH_get_matrix(self):
         r"""
@@ -47,12 +48,12 @@ class Test_operations_squander:
             control_qbit = qbit_num-1
 
             # creating an instance of the C++ class
-            CH = qgd_CH( qbit_num, target_qbit, control_qbit )
+            CH_gate = CH( qbit_num, target_qbit, control_qbit )
 
 	    #SQUANDER
 
             # get the matrix              
-            CH_squander = CH.get_Matrix(  )
+            CH_squander = CH_gate.get_Matrix(  )
 
 	    #QISKIT
 
@@ -71,6 +72,7 @@ class Test_operations_squander:
 
             # compute norm of matrix
             error=np.linalg.norm(delta_matrix)
+          
 
             #print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
             assert( error < 1e-3 )        
@@ -91,7 +93,7 @@ class Test_operations_squander:
             control_qbit = qbit_num-1
 
             # creating an instance of the C++ class
-            CH = qgd_CH( qbit_num, target_qbit, control_qbit )
+            CH_gate = CH( qbit_num, target_qbit, control_qbit )
 
             #create text matrix 
             test_matrix= np.identity( 2**qbit_num, dtype=complex )    
@@ -116,7 +118,7 @@ class Test_operations_squander:
             CH_squander=test_matrix
 
             # apply the gate on the input array/matrix                
-            CH.apply_to(CH_squander )
+            CH_gate.apply_to(CH_squander)
 
             #the difference between the SQUANDER and the qiskit result        
             delta_matrix=CH_squander-CH_qiskit

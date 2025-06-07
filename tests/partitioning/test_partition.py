@@ -1,6 +1,6 @@
 import pytest
 import numpy as np
-from squander import Circuit, CNOT, CH, CZ, CRY, H
+from squander import Circuit
 from squander import utils
 from squander.partitioning.partition import (
     get_qubits,

@@ -24,7 +24,7 @@ from qiskit import QuantumCircuit
 from qiskit.visualization import plot_histogram
 
 from squander.utils import get_unitary_from_qiskit_circuit
-from squander.gates.qgd_U3 import qgd_U3
+from squander import U3
 import math
 from scipy.stats import unitary_group
 
@@ -53,12 +53,12 @@ class Test_operations_squander:
             target_qbit = qbit_num-1
 
             # creating an instance of the C++ class
-            U3 = qgd_U3( qbit_num, target_qbit, Theta, Phi, Lambda )
+            U3_gate = U3( qbit_num, target_qbit, Theta, Phi, Lambda )
 
 	    #SQUANDER
 
             # get the matrix              
-            U3_squander = U3.get_Matrix( parameters )
+            U3_squander = U3_gate.get_Matrix( parameters )
 
 	    #QISKIT
 
@@ -103,7 +103,7 @@ class Test_operations_squander:
             target_qbit = qbit_num-1
 
             # creating an instance of the C++ class
-            U3 = qgd_U3( qbit_num, target_qbit, Theta, Phi, Lambda )
+            U3_gate = U3( qbit_num, target_qbit, Theta, Phi, Lambda )
 
             #create text matrix 
             test_matrix= np.identity( 2**qbit_num, dtype=complex )
@@ -128,7 +128,7 @@ class Test_operations_squander:
             U3_squander=test_matrix
 
             # apply the gate on the input array/matrix                
-            U3.apply_to(parameters, U3_squander )        
+            U3_gate.apply_to(U3_squander, parameters)        
 
             #the difference between the SQUANDER and the qiskit result        
             delta_matrix=U3_squander-U3_qiskit

@@ -28,7 +28,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_CNOT import qgd_CNOT
+        from squander import CNOT
 
 
         # number of qubits
@@ -41,7 +41,7 @@ class Test_operations:
         control_qbit = 1        
 
         # creating an instance of the C++ class
-        CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
+        CNOT_gate = CNOT( qbit_num, target_qbit, control_qbit )
 
 
     def test_CZ_creation(self):
@@ -51,7 +51,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_CZ import qgd_CZ
+        from squander import CZ
 
 
         # number of qubits
@@ -64,7 +64,7 @@ class Test_operations:
         control_qbit = 1        
 
         # creating an instance of the C++ class
-        CZ = qgd_CZ( qbit_num, target_qbit, control_qbit )
+        CZ_gate = CZ( qbit_num, target_qbit, control_qbit )
 
 
 
@@ -75,7 +75,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_CH import qgd_CH
+        from squander import CH
 
 
         # number of qubits
@@ -88,7 +88,7 @@ class Test_operations:
         control_qbit = 1        
 
         # creating an instance of the C++ class
-        CH = qgd_CH( qbit_num, target_qbit, control_qbit )
+        CH_gate = CH( qbit_num, target_qbit, control_qbit )
 
 
     def test_U3_creation(self):
@@ -98,7 +98,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_U3 import qgd_U3
+        from squander import U3
 
         # number of qubits
         qbit_num = 3
@@ -112,7 +112,7 @@ class Test_operations:
         Lambda = True        
 
         # creating an instance of the C++ class
-        U3 = qgd_U3( qbit_num, target_qbit, Theta, Phi, Lambda )
+        U3 = U3( qbit_num, target_qbit, Theta, Phi, Lambda )
 
 
 
@@ -123,7 +123,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_RY import qgd_RY
+        from squander import RY
 
         # number of qubits
         qbit_num = 3
@@ -133,7 +133,7 @@ class Test_operations:
     
 
         # creating an instance of the C++ class
-        RY = qgd_RY( qbit_num, target_qbit )
+        RY_gate = RY( qbit_num, target_qbit )
 
 
 
@@ -144,7 +144,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_RX import qgd_RX
+        from squander import RX
 
         # number of qubits
         qbit_num = 3
@@ -154,7 +154,7 @@ class Test_operations:
     
 
         # creating an instance of the C++ class
-        RX = qgd_RX( qbit_num, target_qbit )
+        RX_gate = RX( qbit_num, target_qbit )
 
 
 
@@ -165,7 +165,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_RZ import qgd_RZ
+        from squander import RZ
 
         # number of qubits
         qbit_num = 3
@@ -175,7 +175,7 @@ class Test_operations:
     
 
         # creating an instance of the C++ class
-        RZ = qgd_RZ( qbit_num, target_qbit )
+        RZ_gate = RZ( qbit_num, target_qbit )
 
 
     def test_X_creation(self):
@@ -185,7 +185,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_X import qgd_X
+        from squander import X
 
         # number of qubits
         qbit_num = 3
@@ -195,7 +195,7 @@ class Test_operations:
     
 
         # creating an instance of the C++ class
-        X = qgd_X( qbit_num, target_qbit )
+        X_gate = X( qbit_num, target_qbit )
 
 
 
@@ -206,7 +206,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_SX import qgd_SX
+        from squander import SX
 
         # number of qubits
         qbit_num = 3
@@ -216,7 +216,7 @@ class Test_operations:
     
 
         # creating an instance of the C++ class
-        SX = qgd_SX( qbit_num, target_qbit )
+        SX_gate = SX( qbit_num, target_qbit )
 
 
     def test_SYC_creation(self):
@@ -226,7 +226,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_SYC import qgd_SYC
+        from squander import SYC
 
 
         # number of qubits
@@ -239,7 +239,7 @@ class Test_operations:
         control_qbit = 1       
 
         # creating an instance of the C++ class
-        SYC = qgd_SYC( qbit_num, target_qbit, control_qbit )
+        SYC_gate = SYC( qbit_num, target_qbit, control_qbit )
 
 
     def test_Operation_Block_creation(self):
