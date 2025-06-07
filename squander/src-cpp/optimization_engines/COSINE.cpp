@@ -91,8 +91,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
         // the current result
         current_minimum = optimization_problem( optimized_parameters_mtx );
-
-exit(1);        
+    
 
         // the array storing the optimized parameters
         Matrix_real solution_guess_tmp_mtx = Matrix_real( num_of_parameters, 1 );
