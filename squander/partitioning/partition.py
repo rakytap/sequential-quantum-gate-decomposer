@@ -2,6 +2,7 @@ from squander import Circuit, CNOT, CH, CZ, CRY
 from squander import utils
 from itertools import dropwhile
 import numpy as np
+import os
 
 
 #@brief Retrieves qubit indices used by a SQUANDER gate
@@ -129,12 +130,13 @@ def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
             prob += a[j] >= a[i]
             prob += x[j] + a[j] >= x[i]
     prob.setObjective(-pulp.lpSum(x[i] for i in range(num_gates)))
-    from gurobilic import get_gurobi_options
-    prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
+    #from gurobilic import get_gurobi_options
+    #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
+    prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
     #prob.solve(pulp.PULP_CBC_CMD(msg=False))
     gates = {i for i in range(num_gates) if int(pulp.value(x[i]))}
     qubits = set.union(*(get_qubits(gatedict[i]) for i in gates))
-    print(f"Status: {pulp.LpStatus[prob.status]}  Found partition with {len(gates)} gates: {gates} and {len(qubits)} qubits: {qubits}")
+    #print(f"Status: {pulp.LpStatus[prob.status]}  Found partition with {len(gates)} gates: {gates} and {len(qubits)} qubits: {qubits}")
     return gates
 
 

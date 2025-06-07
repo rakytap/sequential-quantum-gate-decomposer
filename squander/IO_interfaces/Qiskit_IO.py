@@ -382,7 +382,7 @@ def convert_Qiskit_to_Squander( qc_in ):
 
             Circuit_Squander.add_SX( qubit )
         else:
-            print("convert_Qiskit_to_Squander: Unimplemented gate: ", name )
+            print(f"convert_Qiskit_to_Squander: Unimplemented gate: {name}")
 
 
     parameters = np.asarray(parameters, dtype=np.float64)
