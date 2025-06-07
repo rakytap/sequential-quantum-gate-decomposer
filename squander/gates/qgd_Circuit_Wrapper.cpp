@@ -1035,6 +1035,7 @@ qgd_Circuit_Wrapper_convert_to_DFE_gates(qgd_Circuit_Wrapper *self, PyObject *ar
                                      &parameters_mtx_np, &dfegates, &start_index))
         return Py_BuildValue("");
 
+
     if ( parameters_mtx_np == NULL ) {
         return Py_BuildValue("");
     }

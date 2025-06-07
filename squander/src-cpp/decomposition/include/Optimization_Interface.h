@@ -526,11 +526,6 @@ void upload_Umtx_to_DFE();
 int get_accelerator_num();
 
 
-/**
-@brief Override funcionality apply_to use Groq accelerator
-*/
-virtual void apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel=0 );
-
 #endif
 
 };

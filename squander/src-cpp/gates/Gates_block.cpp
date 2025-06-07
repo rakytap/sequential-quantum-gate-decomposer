@@ -230,7 +230,6 @@ Gates_block::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& in
 void 
 Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parallel ) {
 
-
     std::vector<int> involved_qubits = get_involved_qubits();
     
     if (input.rows != matrix_size ) {
@@ -259,7 +258,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
                 Gates_block gates_block_mini = Gates_block(block_type[block_idx]);
                 std::vector<int> qbits = involved_qbits[block_idx];
 #ifdef _WIN32
-				int* indices = (int*)_malloca(qbit_num*sizeof(int));
+                int* indices = (int*)_malloca(qbit_num*sizeof(int));
 #else
                 int indices[qbit_num];
 #endif
@@ -2538,8 +2537,9 @@ Gates_block::get_reduced_density_matrix( Matrix_real& parameters_mtx, Matrix& in
     }
 
     if ( abs( trace-1.0 ) > 1e-6 ) {
-        std::string error("Gates_block::get_reduced_density_matrix: The trace of the reduced density matrix is not unity");
-        throw error;
+        std::stringstream sstream;
+     	sstream << "Warning: Gates_block::get_reduced_density_matrix: The error of the trace of the reduced density matrix is " << abs( trace-1.0 ) << std::endl;
+	    print(sstream, 1);	 
     }
 
     return rho;
@@ -3627,15 +3627,39 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
 
 }
 
-void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx)
-{   u3_qbit.reserve(u3_qbit.capacity() + gates.size());
+
+
+
+//TODO docstring
+void 
+Gates_block::extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx)
+{   
+
+    if ( u3_qbit.size() == 0 ) {
+        std::map<std::string, int> gate_nums  = get_gate_nums();
+        int gates_total_num = 0;
+        for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
+            gates_total_num = gates_total_num + it->second;
+        }
+
+        u3_qbit.reserve( gates_total_num );
+        target_qbit.reserve( gates_total_num );
+        control_qbit.reserve( gates_total_num );
+    }
+/*
+    u3_qbit.reserve(u3_qbit.capacity() + gates.size());
     target_qbit.reserve(target_qbit.capacity() + gates.size());
     control_qbit.reserve(control_qbit.capacity() + gates.size());
+*/
     double* parameters = parameters_mtx.get_data();
+
+
     for( int idx=0; idx<gates.size(); idx++) {
         Gate* operation = gates[idx];
-        parameters = parameters + operation->get_parameter_num();
-        Matrix_real params_mtx(parameters, 1, operation->get_parameter_num());
+        //parameters = parameters + operation->get_parameter_num();
+
+        Matrix_real params_mtx(parameters + operation->get_parameter_start_idx(), 1, operation->get_parameter_num());
+
         switch (operation->get_type()) {
         case CNOT_OPERATION: case CZ_OPERATION:
         case CH_OPERATION: {
@@ -3675,16 +3699,19 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
         }
         case RX_OPERATION: {
             RX* rx_operation = static_cast<RX*>(operation);
-            double ThetaOver2, Phi, Lambda;
-            ThetaOver2 = params_mtx[0];
+            // set static values for the angles
+            double ThetaOver2 = params_mtx[0];
+            double Phi    = -M_PI/2;
+            double Lambda = M_PI/2;
             rx_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
             u3_qbit.push_back(rx_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
             break;
         }
         case RY_OPERATION: {
             RY* ry_operation = static_cast<RY*>(operation);
-            double ThetaOver2, Phi, Lambda;
-            ThetaOver2 = params_mtx[0];
+            double ThetaOver2 = params_mtx[0];
+            double Phi    = 0.0;
+            double Lambda = 0.0;
             ry_operation->parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
             u3_qbit.push_back(ry_operation->calc_one_qubit_u3(ThetaOver2, Phi, Lambda));
             break;
@@ -3713,8 +3740,37 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
         }
 */
         case BLOCK_OPERATION: {
+        
             Gates_block* block_operation = static_cast<Gates_block*>(operation);
-            block_operation->get_matrices_target_control(u3_qbit, target_qbit, control_qbit, params_mtx);
+            //std::vector<Gate*> involved_gates = block_operation->get_gates();
+
+            std::vector<int>&& involved_qubits = block_operation->get_involved_qubits();
+            
+            if  ( involved_qubits.size() == 1 && block_operation->gates.size() > 1 && block_operation->get_qbit_num() > 1 ) {           
+                // possibly merge successive single qubit gates        
+    
+                Gates_block gates_block_mini = Gates_block(1);
+  
+                for (int idx=0; idx<block_operation->gates.size(); idx++){
+                    Gate* gate = block_operation->gates[idx]->clone();
+                    gate->set_target_qbit(0);
+                    gate->set_qbit_num(1);
+
+                    gates_block_mini.add_gate(gate);
+                }
+                
+                Matrix merged_kernel = create_identity(2);
+             
+                gates_block_mini.apply_to(params_mtx, merged_kernel);
+                
+                u3_qbit.push_back( merged_kernel );
+                target_qbit.push_back( involved_qubits[0] );
+                control_qbit.push_back( -1 );
+
+            }
+            else {                
+                block_operation->extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, params_mtx);
+            }
             continue;
         }
         //case ADAPTIVE_OPERATION:
@@ -3727,9 +3783,13 @@ void Gates_block::get_matrices_target_control(std::vector<Matrix> &u3_qbit, std:
             std::string err("Optimization_Interface::apply_to: unimplemented gate (" + std::to_string(operation->get_type()) + ")"); 
             throw err;
         }
+
         target_qbit.push_back(operation->get_target_qbit());
         control_qbit.push_back(operation->get_control_qbit());
     }    
+
+
+
 }
 #endif
 
@@ -4261,11 +4321,11 @@ Matrix_real reverse_parameters( const Matrix_real& parameters_in, std::vector<Ga
            
         else if (gate->get_type() == BLOCK_OPERATION ) {
         
-	        //std::cout << "block: " << parameter_num_gate << " " << parameters_num_total << std::endl;
+	    //std::cout << "block: " << parameter_num_gate << " " << parameters_num_total << std::endl;
        	    parameters_num_total = parameters_num_total - gate->get_parameter_num();
 	                
-        	Matrix_real parameters_of_block( parameters_in.get_data()+parameters_num_total, 1, parameter_num_gate );
-        	//parameters_of_block.print_matrix();
+            Matrix_real parameters_of_block( parameters_in.get_data()+parameters_num_total, 1, parameter_num_gate );
+            //parameters_of_block.print_matrix();
         	
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
             
@@ -4275,10 +4335,10 @@ Matrix_real reverse_parameters( const Matrix_real& parameters_in, std::vector<Ga
             
             //parameters_of_block_reversed.print_matrix();
             
-			memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_of_block_reversed.get_data(), parameters_of_block_reversed.size()*sizeof(double) );
-			parameter_num_copied = parameter_num_copied + parameters_of_block_reversed.size();
+            memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_of_block_reversed.get_data(), parameters_of_block_reversed.size()*sizeof(double) );
+            parameter_num_copied = parameter_num_copied + parameters_of_block_reversed.size();
 			
-			//parameters_ret.print_matrix();
+            //parameters_ret.print_matrix();
 			
         }
         
@@ -4287,10 +4347,10 @@ Matrix_real reverse_parameters( const Matrix_real& parameters_in, std::vector<Ga
 	        //std::cout << parameter_num_gate << std::endl;
         
     	    parameters_num_total = parameters_num_total - gate->get_parameter_num();
-			memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_in.get_data()+parameters_num_total, gate->get_parameter_num()*sizeof(double) );
-			parameter_num_copied = parameter_num_copied + gate->get_parameter_num();
+            memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_in.get_data()+parameters_num_total, gate->get_parameter_num()*sizeof(double) );
+            parameter_num_copied = parameter_num_copied + gate->get_parameter_num();
 			
-		}
+       }
 
 
     }
@@ -4358,11 +4418,11 @@ Matrix_real inverse_reverse_parameters( const Matrix_real& parameters_in, std::v
          
         else if (gate->get_type() == BLOCK_OPERATION ) {
         
-	        //std::cout << "block: " << parameter_num_gate << " " << parameters_num_total << std::endl;
+            //std::cout << "block: " << parameter_num_gate << " " << parameters_num_total << std::endl;
        	    parameters_num_total = parameters_num_total - gate->get_parameter_num();
 	                
-        	Matrix_real parameters_of_block( parameters_in.get_data()+parameters_num_total, 1, parameter_num_gate );
-        	//parameters_of_block.print_matrix();
+            Matrix_real parameters_of_block( parameters_in.get_data()+parameters_num_total, 1, parameter_num_gate );
+            //parameters_of_block.print_matrix();
         	
             Gates_block* block_gate = static_cast<Gates_block*>( gate );
             
@@ -4372,10 +4432,10 @@ Matrix_real inverse_reverse_parameters( const Matrix_real& parameters_in, std::v
             
             //parameters_of_block_reversed.print_matrix();
             
-			memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_of_block_reversed.get_data(), parameters_of_block_reversed.size()*sizeof(double) );
-			parameter_num_copied = parameter_num_copied + parameters_of_block_reversed.size();
+            memcpy( parameters_ret.get_data()+parameter_num_copied, parameters_of_block_reversed.get_data(), parameters_of_block_reversed.size()*sizeof(double) );
+            parameter_num_copied = parameter_num_copied + parameters_of_block_reversed.size();
 			
-			//parameters_ret.print_matrix();
+           //parameters_ret.print_matrix();
 			
         }
         
