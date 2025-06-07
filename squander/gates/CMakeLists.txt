@@ -82,7 +82,7 @@ set_target_properties( gates_Wrapper PROPERTIES
 )
 
 install(TARGETS gates_Wrapper LIBRARY 
-         DESTINATION squander)
+         DESTINATION squander/gates)
 
 ###################################################################
 

@@ -31,20 +31,22 @@ from squander import Circuit
 
 from squander import R 
 
-from squander.gates_Wrapper import CRY
-from squander.gates_Wrapper import CH
-from squander.gates_Wrapper import CNOT
-from squander.gates_Wrapper import CZ
-from squander.gates_Wrapper import SYC
-from squander.gates_Wrapper import U3
-from squander.gates_Wrapper import RX
-from squander.gates_Wrapper import RY
-from squander.gates_Wrapper import RZ
-from squander.gates_Wrapper import H
-from squander.gates_Wrapper import X
-from squander.gates_Wrapper import Y
-from squander.gates_Wrapper import Z
-from squander.gates_Wrapper import SX
+from squander.gates.gates_Wrapper import (
+    U3,
+    H,
+    X,
+    Y,
+    Z,
+    CH,
+    CNOT,
+    CZ,
+    RX,
+    RY,
+    RZ,
+    SX,
+    SYC,
+    CRY )
+
 
 
 

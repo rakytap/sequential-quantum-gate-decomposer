@@ -19,6 +19,24 @@ from squander.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolve
 from squander.gates.qgd_CROT import qgd_CROT  as CROT 
 from squander.gates.qgd_R import qgd_R  as R 
 
+from squander.gates.gates_Wrapper import (
+    Gate,
+    U3,
+    H,
+    X,
+    Y,
+    Z,
+    CH,
+    CNOT,
+    CZ,
+    RX,
+    RY,
+    RZ,
+    SX,
+    SYC,
+    CRY
+)
+
 
 # quantum circuit
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
@@ -36,20 +54,4 @@ import squander.utils
 from squander.nn.qgd_nn import qgd_nn as NN
 
 
-from squander.gates_Wrapper import Gate_Wrapper as Gate
-from squander.gates_Wrapper import (
-    U3,
-    H,
-    X,
-    Y,
-    Z,
-    CH,
-    CNOT,
-    CZ,
-    RX,
-    RY,
-    RZ,
-    SX,
-    SYC,
-    CRY
-)
+

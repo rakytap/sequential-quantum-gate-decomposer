@@ -21,7 +21,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 */
 /*
 \file gates_Wrapper.cpp
-\brief Python interface for the CH (i.e. controlled Hadamard) gate class
+\brief Python interface to expose Squander gates to Python
 */
 
 #define PY_SSIZE_T_CLEAN
@@ -1013,7 +1013,7 @@ PyInit_gates_Wrapper(void)
 
 
     Py_INCREF(&Gate_Wrapper_Type);
-    if (PyModule_AddObject(m, "Gate_Wrapper", (PyObject *) & Gate_Wrapper_Type) < 0) {
+    if (PyModule_AddObject(m, "Gate", (PyObject *) & Gate_Wrapper_Type) < 0) {
         Py_DECREF(& Gate_Wrapper_Type);
         Py_DECREF(m);
         return NULL;

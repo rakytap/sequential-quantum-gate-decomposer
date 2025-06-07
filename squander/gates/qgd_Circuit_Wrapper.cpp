@@ -1480,10 +1480,10 @@ get_gate( Gates_block* circuit, int &idx ) {
     PyObject* py_gate = NULL;
 
     // import gate operation modules
-    PyObject* qgd_gate  = PyImport_ImportModule("squander.gates_Wrapper");
+    PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.gates_Wrapper");
 
     if ( qgd_gate == NULL ) {
-        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates_Wrapper" );
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.gates_Wrapper" );
         return NULL;
     }
 
