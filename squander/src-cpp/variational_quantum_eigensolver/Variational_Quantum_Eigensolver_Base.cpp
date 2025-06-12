@@ -316,7 +316,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 #ifdef __DFE__
     if ( get_accelerator_num() > 0 ) {
 
-// initialize the initial state if it was not given
+        // initialize the initial state if it was not given
         if ( initial_state.size() == 0 ) {
             initialize_zero_state();
         }
@@ -328,14 +328,14 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
         Matrix State_copy = State.copy();
 
 
-tbb::tick_count t0_DFE = tbb::tick_count::now();
-tbb::tick_count t0_data_extraction = tbb::tick_count::now();
+//tbb::tick_count t0_DFE = tbb::tick_count::now();
+//tbb::tick_count t0_data_extraction = tbb::tick_count::now();
         std::vector<int> target_qbit;
         std::vector<int> control_qbit;
         std::vector<Matrix> u3_qbit;
         extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, parameters);
-tbb::tick_count t1_data_extraction = tbb::tick_count::now();
-std::cout << "Time elapsed with extracting gate kernels: " << (t1_data_extraction-t0_data_extraction).seconds() << std::endl;
+//tbb::tick_count t1_data_extraction = tbb::tick_count::now();
+//std::cout << "Time elapsed with extracting gate kernels: " << (t1_data_extraction-t0_data_extraction).seconds() << std::endl;
 
         // starting logical index of the device to bu used to run the IOP
         const int device_num = 0;
@@ -346,10 +346,10 @@ std::cout << "Time elapsed with extracting gate kernels: " << (t1_data_extractio
         apply_to_groq_sv(device_num, qbit_num, u3_qbit, State_zero, target_qbit, control_qbit); 
         State = State_zero;
 
-tbb::tick_count t1_DFE = tbb::tick_count::now();
-std::cout << "Time elapsed with Groq: " << (t1_DFE-t0_DFE).seconds() << std::endl;
+//tbb::tick_count t1_DFE = tbb::tick_count::now();
+//std::cout << "Time elapsed with Groq: " << (t1_DFE-t0_DFE).seconds() << std::endl;
 
-
+/*
         ///////////////////////////////
 tbb::tick_count t0_CPU = tbb::tick_count::now();
         Decomposition_Base::apply_to(parameters, State_copy );
@@ -374,7 +374,7 @@ std::cout << State[0].real <<  " " << State_copy[0].real << " " << initial_state
 std::cout << State[1].real <<  " " << State_copy[1].real << " " << initial_state[1].real << std::endl;
 
         //////////////////////////////
-
+*/
 
     }
     else {
