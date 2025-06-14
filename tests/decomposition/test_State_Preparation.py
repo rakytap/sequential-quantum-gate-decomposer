@@ -147,7 +147,7 @@ class Test_State_Preparation:
         print(f"DECOMPOSITION ERROR: {decomp_error} ")
         
         # Execute and get the state vector
-        if qiskit_version[0] == '1':
+        if qiskit_version[0] == '1' or qiskit_version[0] == '2':
 	
             circuit_qiskit.save_statevector()
 	
