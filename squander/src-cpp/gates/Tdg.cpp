@@ -16,11 +16,11 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file T.cpp
-    \brief Class representing a T gate.
+/*! \file Tdg.cpp
+    \brief Class representing a Tdg gate.
 */
 
-#include "T.h"
+#include "Tdg.h"
 
 static double invsqrt2 = 1.0 / std::sqrt(2.0);
 
@@ -28,17 +28,17 @@ static double invsqrt2 = 1.0 / std::sqrt(2.0);
 /**
 @brief NullaRX constructor of the class.
 */
-T::T() {
+Tdg::Tdg() {
 
     // A string labeling the gate operation
-    name = "T";
+    name = "Tdg";
 
     // number of qubits spanning the matrix of the gate
     qbit_num = -1;
     // the size of the matrix
     matrix_size = -1;
     // A string describing the type of the gate
-    type = T_OPERATION;
+    type = TDG_OPERATION;
 
     // The index of the qubit on which the gate acts (target_qbit >= 0)
     target_qbit = -1;
@@ -61,7 +61,7 @@ T::T() {
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-T::T(int qbit_num_in, int target_qbit_in) {
+Tdg::Tdg(int qbit_num_in, int target_qbit_in) {
 
     // A string labeling the gate operation
     name = "Z";
@@ -95,7 +95,7 @@ T::T(int qbit_num_in, int target_qbit_in) {
 /**
 @brief Destructor of the class
 */
-T::~T() {
+Tdg::~Tdg() {
 
 }
 
@@ -105,7 +105,7 @@ T::~T() {
 @return Returns with a matrix of the gate
 */
 Matrix
-T::get_matrix() {
+Tdg::get_matrix() {
 
         return get_matrix( false );
 
@@ -119,7 +119,7 @@ T::get_matrix() {
 @return Returns with a matrix of the gate
 */
 Matrix
-T::get_matrix( int parallel) {
+Tdg::get_matrix( int parallel) {
 
         Matrix Z_matrix = create_identity(matrix_size);
         apply_to(Z_matrix, parallel);
@@ -127,7 +127,7 @@ T::get_matrix( int parallel) {
 #ifdef DEBUG
         if (Z_matrix.isnan()) {
             std::stringstream sstream;
-	        sstream << "T::get_matrix: Z_matrix contains NaN." << std::endl;
+	        sstream << "Tdg::get_matrix: Z_matrix contains NaN." << std::endl;
             print(sstream, 1);	          
         }
 #endif
@@ -145,10 +145,10 @@ T::get_matrix( int parallel) {
 @param parallel Set 0 for sequential execution (default), 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-T::apply_to( Matrix& input, int parallel ) {
+Tdg::apply_to( Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::string err("T::apply_to: Wrong input size in Z gate apply");     
+        std::string err("Tdg::apply_to: Wrong input size in Z gate apply");     
         throw(err);
     }
 
@@ -170,7 +170,7 @@ T::apply_to( Matrix& input, int parallel ) {
 @param input The input array on which the gate is applied
 */
 void 
-T::apply_from_right( Matrix& input ) {
+Tdg::apply_from_right( Matrix& input ) {
 
     //The stringstream input to store the output messages.
     std::stringstream sstream;
@@ -197,9 +197,9 @@ T::apply_from_right( Matrix& input ) {
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-T* T::clone() {
+Tdg* Tdg::clone() {
 
-    T* ret = new T(qbit_num, target_qbit);
+    Tdg* ret = new Tdg(qbit_num, target_qbit);
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
@@ -216,7 +216,7 @@ T* T::clone() {
 @brief Call to reorder the qubits in the matrix of the gate
 @param qbit_list The reordered list of qubits spanning the matrix
 */
-void T::reorder_qubits( std::vector<int> qbit_list) {
+void Tdg::reorder_qubits( std::vector<int> qbit_list) {
 
     Gate::reorder_qubits(qbit_list);
 
@@ -227,7 +227,7 @@ void T::reorder_qubits( std::vector<int> qbit_list) {
 @brief Call to set the number of qubits spanning the matrix of the gate
 @param qbit_num_in The number of qubits
 */
-void T::set_qbit_num(int qbit_num_in) {
+void Tdg::set_qbit_num(int qbit_num_in) {
 
         // setting the number of qubits
         Gate::set_qbit_num(qbit_num_in);
@@ -238,14 +238,14 @@ void T::set_qbit_num(int qbit_num_in) {
 @param u3_1qbit Matrix parameter for the gate.
 */
 Matrix 
-T::calc_one_qubit_u3( ){
+Tdg::calc_one_qubit_u3( ){
 
 
     Matrix u3_1qbit = Matrix(2,2); 
     u3_1qbit[0].real = 1.0; u3_1qbit[0].imag = 0.0; 
     u3_1qbit[1].real = 0.0; u3_1qbit[1].imag = 0.0;
     u3_1qbit[2].real = 0.0; u3_1qbit[2].imag = 0.0;
-    u3_1qbit[3].real = invsqrt2; u3_1qbit[3].imag = invsqrt2;
+    u3_1qbit[3].real = invsqrt2; u3_1qbit[3].imag = -invsqrt2;
     return u3_1qbit;
 
 }

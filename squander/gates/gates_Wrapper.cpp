@@ -45,6 +45,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Y.h"
 #include "Z.h"
 #include "T.h"
+#include "Tdg.h"
 #include "numpy_interface.h"
 
 
@@ -952,6 +953,17 @@ struct T_Wrapper_Type : Gate_Wrapper_Type_tmp {
 };
 
 
+struct Tdg_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    T_Wrapper_Type() {    
+        tp_name      = "Tdg";
+        tp_doc       = "Object to represent python binding for a T gate of the Squander package.";
+        tp_init      = (initproc)  Gate_Wrapper_init<Tdg>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
+
 static CH_Wrapper_Type CH_Wrapper_Type_ins;
 static CNOT_Wrapper_Type CNOT_Wrapper_Type_ins;
 static CZ_Wrapper_Type CZ_Wrapper_Type_ins;
@@ -967,6 +979,7 @@ static X_Wrapper_Type X_Wrapper_Type_ins;
 static Y_Wrapper_Type Y_Wrapper_Type_ins;
 static Z_Wrapper_Type Z_Wrapper_Type_ins;
 static T_Wrapper_Type T_Wrapper_Type_ins;
+static Tdg_Wrapper_Type Tdg_Wrapper_Type_ins;
 
 
 
@@ -1019,7 +1032,8 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&X_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Y_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Z_Wrapper_Type_ins) < 0 || 
-        PyType_Ready(&T_Wrapper_Type_ins) < 0) {
+        PyType_Ready(&T_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 || ) {
 
         Py_DECREF(m);
         return NULL;
@@ -1137,6 +1151,14 @@ PyInit_gates_Wrapper(void)
 
     Py_INCREF(&T_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "T", (PyObject *) & T_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& T_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+
+    Py_INCREF(&T_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "Tdg", (PyObject *) & T_Wrapper_Type_ins) < 0) {
         Py_DECREF(& T_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
