@@ -26,6 +26,7 @@ from squander.gates.gates_Wrapper import (
     X,
     Y,
     Z,
+    T,
     CH,
     CNOT,
     CZ,

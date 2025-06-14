@@ -343,6 +343,7 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/X.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Y.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Z.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/T.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SX.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RY.cpp

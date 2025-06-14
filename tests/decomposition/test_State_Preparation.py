@@ -44,7 +44,7 @@ qiskit_version = qiskit.version.get_version_info()
 from qiskit import QuantumCircuit
 
     
-if qiskit_version[0] == '1':
+if qiskit_version[0] == '1' or qiskit_version[0] == '2':
     from qiskit import transpile
     import qiskit_aer as Aer    
 else :

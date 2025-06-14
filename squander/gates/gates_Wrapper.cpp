@@ -44,6 +44,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "X.h"
 #include "Y.h"
 #include "Z.h"
+#include "T.h"
 #include "numpy_interface.h"
 
 
@@ -800,7 +801,7 @@ struct CH_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     CH_Wrapper_Type() {
     
-        tp_name      = "CH_Wrapper";
+        tp_name      = "CH";
         //tp_dealloc   = (destructor)  Gate_Wrapper_dealloc;
         tp_doc       = "Object to represent python binding for a CH gate of the Squander package.";
         tp_init      = (initproc)  controlled_gate_Wrapper_init<CH>;
@@ -812,7 +813,7 @@ struct CH_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct CNOT_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     CNOT_Wrapper_Type() {    
-        tp_name      = "CNOT_Wrapper";
+        tp_name      = "CNOT";
         tp_doc       = "Object to represent python binding for a CNOT gate of the Squander package.";
         tp_init      = (initproc)  controlled_gate_Wrapper_init<CNOT>;
         tp_base      = &Gate_Wrapper_Type;
@@ -822,7 +823,7 @@ struct CNOT_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct CZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     CZ_Wrapper_Type() {    
-        tp_name      = "CZ_Wrapper";
+        tp_name      = "CZ";
         tp_doc       = "Object to represent python binding for a CZ gate of the Squander package.";
         tp_init      = (initproc)  controlled_gate_Wrapper_init<CZ>;
         tp_base      = &Gate_Wrapper_Type;
@@ -832,7 +833,7 @@ struct CZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct CRY_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     CRY_Wrapper_Type() {    
-        tp_name      = "CRY_Wrapper";
+        tp_name      = "CRY";
         tp_doc       = "Object to represent python binding for a CRY gate of the Squander package.";
         tp_init      = (initproc)  controlled_gate_Wrapper_init<CRY>;
         tp_base      = &Gate_Wrapper_Type;
@@ -842,7 +843,7 @@ struct CRY_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct H_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     H_Wrapper_Type() {    
-        tp_name      = "H_Wrapper";
+        tp_name      = "H";
         tp_doc       = "Object to represent python binding for a H gate of the Squander package.";
         tp_init      = (initproc)  Gate_Wrapper_init<H>;
         tp_base      = &Gate_Wrapper_Type;
@@ -852,7 +853,7 @@ struct H_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct RX_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     RX_Wrapper_Type() {    
-        tp_name      = "RX_Wrapper";
+        tp_name      = "RX";
         tp_doc       = "Object to represent python binding for a RX gate of the Squander package.";
         tp_init      = (initproc)  Gate_Wrapper_init<RX>;
         tp_base      = &Gate_Wrapper_Type;
@@ -862,7 +863,7 @@ struct RX_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct RY_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     RY_Wrapper_Type() {    
-        tp_name      = "RY_Wrapper";
+        tp_name      = "RY";
         tp_doc       = "Object to represent python binding for a RY gate of the Squander package.";
         tp_init      = (initproc)  Gate_Wrapper_init<RY>;
         tp_base      = &Gate_Wrapper_Type;
@@ -872,7 +873,7 @@ struct RY_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct RZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     RZ_Wrapper_Type() {    
-        tp_name      = "RZ_Wrapper";
+        tp_name      = "RZ";
         tp_doc       = "Object to represent python binding for a RZ gate of the Squander package.";
         tp_init      = (initproc)  Gate_Wrapper_init<RZ>;
         tp_base      = &Gate_Wrapper_Type;
@@ -882,7 +883,7 @@ struct RZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct SX_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     SX_Wrapper_Type() {    
-        tp_name      = "SX_Wrapper";
+        tp_name      = "SX";
         tp_doc       = "Object to represent python binding for a SX gate of the Squander package.";
         tp_init      = (initproc)  Gate_Wrapper_init<SX>;
         tp_base      = &Gate_Wrapper_Type;
@@ -892,7 +893,7 @@ struct SX_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct SYC_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     SYC_Wrapper_Type() {    
-        tp_name      = "SYC_Wrapper";
+        tp_name      = "SYC";
         tp_doc       = "Object to represent python binding for a SYC gate of the Squander package.";
         tp_init      = (initproc)  controlled_gate_Wrapper_init<SYC>;
         tp_base      = &Gate_Wrapper_Type;
@@ -902,7 +903,7 @@ struct SYC_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct U3_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     U3_Wrapper_Type() {    
-        tp_name      = "U3_Wrapper";
+        tp_name      = "U3";
         tp_doc       = "Object to represent python binding for a U3 gate of the Squander package.";
         tp_init      = (initproc)  U3_Wrapper_init;
         tp_base      = &Gate_Wrapper_Type;
@@ -912,7 +913,7 @@ struct U3_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct X_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     X_Wrapper_Type() {    
-        tp_name      = "X_Wrapper";
+        tp_name      = "X";
         tp_doc       = "Object to represent python binding for a X gate of the Squander package.";
         tp_init      = (initproc)  Gate_Wrapper_init<X>;
         tp_base      = &Gate_Wrapper_Type;
@@ -922,7 +923,7 @@ struct X_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct Y_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     Y_Wrapper_Type() {    
-        tp_name      = "Y_Wrapper";
+        tp_name      = "Y";
         tp_doc       = "Object to represent python binding for a Y gate of the Squander package.";
         tp_init      = (initproc)  Gate_Wrapper_init<Y>;
         tp_base      = &Gate_Wrapper_Type;
@@ -932,9 +933,20 @@ struct Y_Wrapper_Type : Gate_Wrapper_Type_tmp {
 struct Z_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     Z_Wrapper_Type() {    
-        tp_name      = "Z_Wrapper";
+        tp_name      = "Z";
         tp_doc       = "Object to represent python binding for a Z gate of the Squander package.";
         tp_init      = (initproc)  Gate_Wrapper_init<Z>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
+
+struct T_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    T_Wrapper_Type() {    
+        tp_name      = "T";
+        tp_doc       = "Object to represent python binding for a T gate of the Squander package.";
+        tp_init      = (initproc)  Gate_Wrapper_init<T>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -954,7 +966,7 @@ static U3_Wrapper_Type U3_Wrapper_Type_ins;
 static X_Wrapper_Type X_Wrapper_Type_ins;
 static Y_Wrapper_Type Y_Wrapper_Type_ins;
 static Z_Wrapper_Type Z_Wrapper_Type_ins;
-
+static T_Wrapper_Type T_Wrapper_Type_ins;
 
 
 
@@ -1006,7 +1018,9 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&U3_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&X_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Y_Wrapper_Type_ins) < 0 ||
-        PyType_Ready(&Z_Wrapper_Type_ins) < 0) {
+        PyType_Ready(&Z_Wrapper_Type_ins) < 0 || 
+        PyType_Ready(&T_Wrapper_Type_ins) < 0) {
+
         Py_DECREF(m);
         return NULL;
     }
@@ -1116,6 +1130,14 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&Z_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "Z", (PyObject *) & Z_Wrapper_Type_ins) < 0) {
         Py_DECREF(& Z_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+
+    Py_INCREF(&T_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "T", (PyObject *) & T_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& T_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }

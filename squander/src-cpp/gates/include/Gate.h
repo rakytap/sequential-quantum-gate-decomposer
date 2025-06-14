@@ -59,7 +59,8 @@ typedef enum gate_type {GENERAL_OPERATION=1,
                         CZ_NU_OPERATION=26,
                         CROT_OPERATION=27,
                         R_OPERATION=28,
-                        CUSTOM_KERNEL_1QUBIT_GATE_OPERATION=29} gate_type;
+                        T_OPERATION=29,
+                        CUSTOM_KERNEL_1QUBIT_GATE_OPERATION=30} gate_type;
 
 
 
@@ -348,6 +349,7 @@ std::string get_name();
 @return Return with a pointer pointing to the cloned object
 */
 virtual Gate* clone();
+
 
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.

@@ -33,6 +33,7 @@ limitations under the License.
 #include "X.h"
 #include "Y.h"
 #include "Z.h"
+#include "T.h"
 #include "SX.h"
 #include "SYC.h"
 #include "UN.h"
@@ -1231,6 +1232,38 @@ void Gates_block::add_z_to_front(int target_qbit ) {
 
 
 /**
+@brief Append a T gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_t(int target_qbit) {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new T( qbit_num, target_qbit));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a Z gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void Gates_block::add_t_to_front(int target_qbit ) {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new T( qbit_num, target_qbit ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+
+
+
+
+
+/**
 @brief Append a SX gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 */
@@ -2244,7 +2277,7 @@ void Gates_block::set_qbit_num( int qbit_num_in ) {
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: case CROT_OPERATION:
         case H_OPERATION: case R_OPERATION:
-        case CZ_NU_OPERATION:
+        case CZ_NU_OPERATION: case T_OPERATION:
             op->set_qbit_num( qbit_num_in );
             break;
         default:
@@ -2302,7 +2335,7 @@ int Gates_block::extract_gates( Gates_block* op_block ) {
         case ON_OPERATION: case COMPOSITE_OPERATION:
         case ADAPTIVE_OPERATION: case CROT_OPERATION:
         case H_OPERATION:  case R_OPERATION:
-        case CZ_NU_OPERATION:
+        case CZ_NU_OPERATION: case T_OPERATION:
         {
             Gate* op_cloned = op->clone();
             op_block->add_gate( op_cloned );
@@ -4178,6 +4211,18 @@ Gates_block* import_gate_list_from_binary(Matrix_real& parameters, FILE* pFile, 
             sstream << "target_qbit: " << target_qbit << std::endl;
 
             gate_block_levels[current_level]->add_z(target_qbit);
+            gate_block_level_gates_num[current_level]--;
+
+        }
+        else if (gt_type == T_OPERATION) {
+
+            sstream << "importing T gate" << std::endl;
+
+            int target_qbit;
+            fread(&target_qbit, sizeof(int), 1, pFile);
+            sstream << "target_qbit: " << target_qbit << std::endl;
+
+            gate_block_levels[current_level]->add_t(target_qbit);
             gate_block_level_gates_num[current_level]--;
 
         }
