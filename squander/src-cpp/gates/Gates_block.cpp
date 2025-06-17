@@ -2173,7 +2173,7 @@ void Gates_block::reorder_qubits( std::vector<int>  qbit_list ) {
              t_gate->reorder_qubits( qbit_list );
          }
          else if (gate->get_type() == TDG_OPERATION) {
-             TDG* tdg_gate = static_cast<Tdg*>(gate);
+             Tdg* tdg_gate = static_cast<Tdg*>(gate);
              tdg_gate->reorder_qubits( qbit_list );
          }
          else if (gate->get_type() == SX_OPERATION) {

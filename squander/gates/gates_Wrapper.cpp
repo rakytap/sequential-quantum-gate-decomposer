@@ -955,7 +955,7 @@ struct T_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
 struct Tdg_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
-    T_Wrapper_Type() {    
+    Tdg_Wrapper_Type() {    
         tp_name      = "Tdg";
         tp_doc       = "Object to represent python binding for a T gate of the Squander package.";
         tp_init      = (initproc)  Gate_Wrapper_init<Tdg>;
@@ -1033,7 +1033,7 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&Y_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Z_Wrapper_Type_ins) < 0 || 
         PyType_Ready(&T_Wrapper_Type_ins) < 0 ||
-        PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 || ) {
+        PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ) {
 
         Py_DECREF(m);
         return NULL;
