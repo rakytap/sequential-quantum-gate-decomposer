@@ -51,13 +51,7 @@ squander_config = {
 filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
 
 max_partition_size = 3
-partitined_circuit, parameters = qasm_to_partitioned_circuit( filename, max_partition_size )
-print( parameters.shape )
 
-qbit_num_orig_circuit = partitined_circuit.get_Qbit_Num()
-
-
-subcircuits = partitined_circuit.get_Gates()
 
 # method to do the decomposition of the partitions
 def DecomposePartition( Umtx: np.ndarray ) -> Circuit:
@@ -178,7 +172,7 @@ def CompareAndPickCircuits( circs: List[Circuit], parameter_arrs: [List[np.ndarr
     
 
 
-def ConstructCircuitFromPartitions( circs: List[Circuit], parameter_arrs: [List[np.ndarray]] ) -> Circuit:
+def ConstructCircuitFromPartitions( circs: List[Circuit], parameter_arrs: [List[np.ndarray]] ) -> (Circuit, np.ndarray):
     """
     Call to construct the wide quantum circuit from the partitions.
 
@@ -225,26 +219,26 @@ def ConstructCircuitFromPartitions( circs: List[Circuit], parameter_arrs: [List[
 
 
     return wide_circuit, wide_parameters
+
+
+
+def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: np.ndarray ) -> (Circuit, np.ndarray):
+    """
+    Implements an asynchronous process to decompose a unitary associated with a partition in a large 
+    quantum circuit
+
     
+    Args:
+
+        circ ( Circuit ) A subcircuit representing a partition
+
+        parameters ( np.ndarray ) A parameter array associated with the input circuit
+
+    
+    """ 
 
 
-
-# the list of optimized subcircuits
-optimized_subcircuits = []
-
-# the list of parameters associated with the optimized subcircuits
-optimized_parameter_list = []
-
-
-#  code for iterate over partitions and optimize them
-for subcircuit in subcircuits:
-
-
-    # isolate the parameters corresponding to the given sub-circuit
-    start_idx = subcircuit.get_Parameter_Start_Index()
-    end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
-    subcircuit_parameters = parameters[ start_idx:end_idx ]
-
+    qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
     involved_qbits = subcircuit.get_Qbits()
     qbit_num = len( involved_qbits )
 
@@ -297,46 +291,111 @@ for subcircuit in subcircuits:
 
         assert( (np.abs(overlap)-1) < 1e-3 )
 
+    return new_subcircuit, decomposed_parameters
+    
+
+def OptimizeWideCircuit() -> (Circuit, np.ndarray):
+
+    partitined_circuit, parameters = qasm_to_partitioned_circuit( filename, max_partition_size )
+
+
+    qbit_num_orig_circuit = partitined_circuit.get_Qbit_Num()
+
+
+    subcircuits = partitined_circuit.get_Gates()
+
+
+
+
+    # the list of optimized subcircuits
+    optimized_subcircuits = [None] * len(subcircuits)
+
+    # the list of parameters associated with the optimized subcircuits
+    optimized_parameter_list = [None] * len(subcircuits)
+
+
+    #  code for iterate over partitions and optimize them
+    for partition_idx, subcircuit in enumerate( subcircuits ):
+
+
+        # isolate the parameters corresponding to the given sub-circuit
+        start_idx = subcircuit.get_Parameter_Start_Index()
+        end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
+        subcircuit_parameters = parameters[ start_idx:end_idx ]
+
+        new_subcircuit, decomposed_parameters = PartitionDecompositionProcess( subcircuit, subcircuit_parameters )
+
  
-    # pick up the better decomposition of the partition
-    new_subcircuit, new_parameters = CompareAndPickCircuits( [subcircuit, new_subcircuit], [subcircuit_parameters, decomposed_parameters] )
+        # pick up the better decomposition of the partition
+        new_subcircuit, new_parameters = CompareAndPickCircuits( [subcircuit, new_subcircuit], [subcircuit_parameters, decomposed_parameters] )
 
 
-    if subcircuit != new_subcircuit:
+        if subcircuit != new_subcircuit:
 
-        print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
-        print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
-
-
-    optimized_subcircuits.append( new_subcircuit )
-    optimized_parameter_list.append( new_parameters )
+            print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
+            print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
 
 
-# construct the wide circuit from the optimized suncircuits
-wide_circuit, wide_parameters = ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )
+        optimized_subcircuits[ partition_idx ] = new_subcircuit
+        optimized_parameter_list[ partition_idx ] = new_parameters
+
+
+    # construct the wide circuit from the optimized suncircuits
+    wide_circuit, wide_parameters = ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )
+
+
+    print( "original circuit:    ", partitined_circuit.get_Gate_Nums()) 
+    print( "reoptimized circuit: ", wide_circuit.get_Gate_Nums()) 
 
 
 
-if test_subcircuit_decomposition:
-    # testing the correctness of the original sub circuit and decomposed circuit
-    matrix_size = 1 << qbit_num_orig_circuit
-    initial_state_real = np.random.uniform(-1.0,1.0, (matrix_size,) )
-    initial_state_imag = np.random.uniform(-1.0,1.0, (matrix_size,) )
-    initial_state = initial_state_real + initial_state_imag*1j
-    initial_state = initial_state/np.linalg.norm(initial_state)
+    if test_subcircuit_decomposition:
+        # testing the correctness of the original sub circuit and decomposed circuit
+        matrix_size = 1 << qbit_num_orig_circuit
+        initial_state_real = np.random.uniform(-1.0,1.0, (matrix_size,) )
+        initial_state_imag = np.random.uniform(-1.0,1.0, (matrix_size,) )
+        initial_state = initial_state_real + initial_state_imag*1j
+        initial_state = initial_state/np.linalg.norm(initial_state)
     
 
 
-    transformed_state_1 = initial_state.copy()
-    transformed_state_2 = initial_state.copy()    
+        transformed_state_1 = initial_state.copy()
+        transformed_state_2 = initial_state.copy()    
     
-    partitined_circuit.apply_to( parameters, transformed_state_1 )
-    wide_circuit.apply_to( wide_parameters, transformed_state_2)    
+        partitined_circuit.apply_to( parameters, transformed_state_1 )
+        wide_circuit.apply_to( wide_parameters, transformed_state_2)    
     
-    overlap = transformed_state_1.transpose().conj() @ transformed_state_2
-    print( "overlap: ", np.abs(overlap) )
+        overlap = transformed_state_1.transpose().conj() @ transformed_state_2
+        print( "overlap: ", np.abs(overlap) )
 
-    assert( (np.abs(overlap)-1) < 1e-3 )
+        assert( (np.abs(overlap)-1) < 1e-3 )
+
+
+import multiprocessing as mp
+from multiprocessing import Process
+import os
+
+def info(title):
+    print(title)
+    print('module name:', __name__)
+    print('parent process:', os.getppid())
+    print('process id:', os.getpid())
+
+def f(name):
+    info('function f')
+    print('hello', name)
+
+
+if __name__ == '__main__':
+
+    OptimizeWideCircuit()
+
+    info('main line')
+    p = Process(target=f, args=('bob',))
+    p.start()
+    p.join()
+
+    print( f"hhhhhhhhhhhhhh {os.cpu_count()}" )
 
 
 
