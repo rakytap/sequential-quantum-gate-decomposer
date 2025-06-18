@@ -31,6 +31,10 @@ from qiskit import QuantumCircuit
 from typing import List
 from collections.abc import Callable
 
+import multiprocessing as mp
+from multiprocessing import Process, Pool
+import os
+
 
 from squander.partitioning.partition import (
     get_qubits,
@@ -237,6 +241,11 @@ def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: n
     
     """ 
 
+    print( Circuit )
+
+
+    return 6
+
 
     qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
     involved_qbits = subcircuit.get_Qbits()
@@ -291,7 +300,8 @@ def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: n
 
         assert( (np.abs(overlap)-1) < 1e-3 )
 
-    return new_subcircuit, decomposed_parameters
+    #return new_subcircuit, decomposed_parameters
+    return 444
     
 
 def OptimizeWideCircuit() -> (Circuit, np.ndarray):
@@ -314,31 +324,46 @@ def OptimizeWideCircuit() -> (Circuit, np.ndarray):
     optimized_parameter_list = [None] * len(subcircuits)
 
 
-    #  code for iterate over partitions and optimize them
-    for partition_idx, subcircuit in enumerate( subcircuits ):
+    with Pool(processes=4) as pool:
+
+        #  code for iterate over partitions and optimize them
+        for partition_idx, subcircuit in enumerate( subcircuits ):
 
 
-        # isolate the parameters corresponding to the given sub-circuit
-        start_idx = subcircuit.get_Parameter_Start_Index()
-        end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
-        subcircuit_parameters = parameters[ start_idx:end_idx ]
+            # isolate the parameters corresponding to the given sub-circuit
+            start_idx = subcircuit.get_Parameter_Start_Index()
+            end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
+            subcircuit_parameters = parameters[ start_idx:end_idx ]
 
-        new_subcircuit, decomposed_parameters = PartitionDecompositionProcess( subcircuit, subcircuit_parameters )
+            print("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq")
+            # call a process to decompose a subcircuit
+            state = subcircuit.__getstate__()
+            crc = Circuit(0)
+            crc.__setstate__(state)
+            PartitionDecompositionProcess( subcircuit, subcircuit_parameters )
+
+            continue
+            res = pool.apply_async( PartitionDecompositionProcess, (subcircuit, subcircuit_parameters,) )
+            t = res.get( timeout = 1800 )
+
+            continue
+            new_subcircuit, decomposed_parameters = PartitionDecompositionProcess( subcircuit, subcircuit_parameters )
 
  
-        # pick up the better decomposition of the partition
-        new_subcircuit, new_parameters = CompareAndPickCircuits( [subcircuit, new_subcircuit], [subcircuit_parameters, decomposed_parameters] )
+            # pick up the better decomposition of the partition
+            new_subcircuit, new_parameters = CompareAndPickCircuits( [subcircuit, new_subcircuit], [subcircuit_parameters, decomposed_parameters] )
 
 
-        if subcircuit != new_subcircuit:
+            if subcircuit != new_subcircuit:
 
-            print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
-            print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
+                print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
+                print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
 
 
-        optimized_subcircuits[ partition_idx ] = new_subcircuit
-        optimized_parameter_list[ partition_idx ] = new_parameters
+            optimized_subcircuits[ partition_idx ] = new_subcircuit
+            optimized_parameter_list[ partition_idx ] = new_parameters
 
+    return
 
     # construct the wide circuit from the optimized suncircuits
     wide_circuit, wide_parameters = ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )

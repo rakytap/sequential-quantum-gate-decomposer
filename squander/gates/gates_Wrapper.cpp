@@ -713,6 +713,60 @@ Gate_Wrapper_get_Name( Gate_Wrapper *self ) {
 
 
 
+/**
+@brief Method to extract the stored quantum gate in a human-readable data serialized and pickle-able format
+*/
+static PyObject * 
+Gate_Wrapper_getstate( Gate_Wrapper *self ) {
+
+    PyObject* gate_state = PyDict_New();
+
+    if( gate_state == NULL ) {
+        std::string err( "Failed to create dictionary");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;    
+    }
+    
+
+    PyObject* key = Py_BuildValue( "s", "type" );
+    PyObject* val = Py_BuildValue("i", self->gate->get_type() );    
+    PyDict_SetItem(gate_state, key, val);
+
+    key = Py_BuildValue( "s", "qbit_num" );
+    val = Py_BuildValue("i", self->gate->get_qbit_num() );    
+    PyDict_SetItem(gate_state, key, val);
+
+    key = Py_BuildValue( "s", "target_qbit" );
+    val = Py_BuildValue("i", self->gate->get_target_qbit() );    
+    PyDict_SetItem(gate_state, key, val);
+
+    key = Py_BuildValue( "s", "control_qbit" );
+    val = Py_BuildValue("i", self->gate->get_control_qbit() );    
+    PyDict_SetItem(gate_state, key, val);
+
+
+    return gate_state;
+
+}
+
+
+
+
+
+/**
+@brief Call to set the state of quantum gate from a human-readable data serialized and pickle-able format
+*/
+static PyObject * 
+Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
+
+    
+    return Py_None;
+
+}
+
+
+
+
 
 extern "C"
 {
@@ -760,6 +814,12 @@ static PyMethodDef Gate_Wrapper_methods[] = {
     {"get_Name", (PyCFunction) Gate_Wrapper_get_Name, METH_NOARGS,
      "Method to get the name label of the gate"
     },
+    {"__getstate__", (PyCFunction) Gate_Wrapper_getstate, METH_NOARGS,
+     "Method to extract the stored quantum gate in a human-readable data serialized and pickle-able format"
+    },
+    {"__setstate__", (PyCFunction) Gate_Wrapper_getstate, METH_VARARGS,
+     "Call to set the state of quantum gate from a human-readable data serialized and pickle-able format"
+    },
     {NULL}  /* Sentinel */
 };
 
@@ -780,7 +840,7 @@ struct Gate_Wrapper_Type_tmp : PyTypeObject {
         //PyVarObject tt = { PyVarObject_HEAD_INIT(NULL, 0) };
     
         ob_base.ob_size = 0;
-        tp_name      = "Gate_Wrapper";
+        tp_name      = "Gate";
         tp_basicsize = sizeof(Gate_Wrapper);
         tp_dealloc   = (destructor)  Gate_Wrapper_dealloc;
         tp_flags     = Py_TPFLAGS_DEFAULT | Py_TPFLAGS_BASETYPE;

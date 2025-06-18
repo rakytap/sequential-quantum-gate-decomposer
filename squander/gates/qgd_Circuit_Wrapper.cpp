@@ -283,9 +283,27 @@ qgd_Circuit_Wrapper_dealloc(qgd_Circuit_Wrapper *self)
 static PyObject *
 qgd_Circuit_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
+
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"qbit_num", NULL};
+
+    // initiate variables for input arguments
+    int  qbit_num = 0; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &qbit_num)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
+
     qgd_Circuit_Wrapper *self;
     self = (qgd_Circuit_Wrapper *) type->tp_alloc(type, 0);
-    if (self != NULL) {}
+
+    if (self != NULL) {
+        self->circuit = create_Circuit( qbit_num );
+    }
+
     return (PyObject *) self;
 }
 
@@ -300,21 +318,6 @@ qbit_num: the number of qubits spanning the operations
 static int
 qgd_Circuit_Wrapper_init(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
 {
-    // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"qbit_num", NULL};
-
-    // initiate variables for input arguments
-    int  qbit_num = -1; 
-
-    // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
-                                     &qbit_num))
-        return -1;
-
-    // create instance of class Circuit
-    if (qbit_num > 0 ) {
-        self->circuit = create_Circuit( qbit_num );
-    }
     return 0;
 }
 
@@ -1316,6 +1319,7 @@ static PyObject *
 qgd_Circuit_Wrapper_get_Qbit_Num( qgd_Circuit_Wrapper *self ) {
 
     int qbit_num = 0;
+std::cout << "qqq " << self->circuit << std::endl;
 
     try {
         qbit_num = self->circuit->get_qbit_num();
@@ -1333,6 +1337,44 @@ qgd_Circuit_Wrapper_get_Qbit_Num( qgd_Circuit_Wrapper *self ) {
 
 
     return Py_BuildValue("i", qbit_num );
+    
+}
+
+
+
+
+/**
+@brief Call to set the number of qubits in the circuit
+*/
+static PyObject *
+qgd_Circuit_Wrapper_set_Qbit_Num( qgd_Circuit_Wrapper *self,  PyObject *args ) {
+
+    int qbit_num = 0;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|i", &qbit_num )) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    try {
+        self->circuit->set_qbit_num( qbit_num );
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        std::cout << err << std::endl;
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+    return Py_None;
     
 }
 
@@ -2227,6 +2269,231 @@ qgd_Circuit_Wrapper_get_Flat_Circuit( qgd_Circuit_Wrapper *self ) {
     return py_circuit;
 }
 
+
+
+
+/**
+@brief Method to extract the stored quantum circuit in a human-readable data serialized and pickle-able format
+*/
+static PyObject *
+qgd_Circuit_Wrapper_getstate( qgd_Circuit_Wrapper *self ) {
+
+
+    // get the number of gates
+    int op_num = self->circuit->get_gate_num();
+
+    // preallocate Python tuple for the output
+    PyObject* ret = PyTuple_New( (Py_ssize_t) op_num+1 );
+
+
+
+
+    // add qbit num value to the return tuple
+    PyObject* qbit_num_dict = PyDict_New();
+
+    if( qbit_num_dict == NULL ) {
+        std::string err( "Failed to create dictionary");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;    
+    }
+    
+    int qbit_num = self->circuit->get_qbit_num();
+    PyObject* qbit_num_key = Py_BuildValue( "s", "qbit_num" );
+    PyObject* qbit_num_val = Py_BuildValue("i", qbit_num );    
+
+    PyDict_SetItem(qbit_num_dict, qbit_num_key, qbit_num_val);
+
+    PyTuple_SetItem( ret, 0, qbit_num_dict );
+
+    Py_DECREF( qbit_num_key );
+    Py_DECREF( qbit_num_val );
+    //Py_DECREF( qbit_num_dict );
+
+
+    PyObject* method_name = Py_BuildValue("s", "__getstate__");
+
+    // iterate over the gates to get the gate list
+    for (int idx = 0; idx < op_num; idx++ ) {
+
+        // get metadata about the idx-th gate
+        PyObject* gate = get_gate( self->circuit, idx );
+
+        PyObject* gate_state  = PyObject_CallMethodNoArgs( gate, method_name );   
+
+
+        // remove the field qbit_num from gate dict sice this will be redundant information
+        if ( PyDict_Contains(gate_state, qbit_num_key) == 1 ) {
+
+            if ( PyDict_DelItem(gate_state, qbit_num_key) != 0 ) {
+                std::string err( "Failed to delete item qbit_num from gate state");
+                PyErr_SetString(PyExc_Exception, err.c_str());
+                return NULL;    
+            }
+
+        }
+
+
+        // adding gate information to the tuple
+        PyTuple_SetItem( ret, (Py_ssize_t) idx+1, gate_state );
+
+
+        
+        Py_DECREF( gate );
+        //Py_DECREF( gate_state );
+
+    }
+
+    Py_DECREF( method_name );
+    
+    return ret;
+}
+
+
+
+/**
+@brief Call to set the state of a quantum circuit from a human-readable data serialized and pickle-able format
+*/
+static PyObject *
+qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
+
+    PyObject* state = NULL;
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "|O", &state )) {
+        std::string err( "Unable to parse state argument");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;    
+    }
+
+    if ( PyTuple_Size(state) == 0 ) {
+        std::string err( "State should contain at least one element");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( state );
+        return NULL;
+    }
+
+    PyObject* qbit_num_dict = PyTuple_GetItem( state, 0); // borrowed reference
+
+    
+    PyObject* qbit_num_key = Py_BuildValue( "s", "qbit_num" );
+
+    if ( PyDict_Contains(qbit_num_dict, qbit_num_key) == 0 ) {
+        std::string err( "The first entry of the circuit state should be the number of qubits");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( qbit_num_key );
+        Py_DECREF( state );
+        return NULL;
+    }
+
+    PyObject* qbit_num_py = PyDict_GetItem(qbit_num_dict, qbit_num_key); // borrowed reference
+
+    if( !PyLong_Check(qbit_num_py) ) {
+        std::string err( "The number of qubits should be an integer value");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( qbit_num_key );
+        Py_DECREF( state );
+        return NULL;
+    } 
+
+
+    int qbit_num = (int)PyLong_AsLong( qbit_num_py );
+
+    std::cout << "lllll " << PyDict_Contains(qbit_num_dict, qbit_num_key) << " " << qbit_num << std::endl;
+
+
+    // import gate operation modules
+    PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.gates_Wrapper");
+
+    if ( qgd_gate == NULL ) {
+        PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.gates_Wrapper" );
+        Py_DECREF( qbit_num_key );
+        Py_DECREF( state );
+        return NULL;
+    }
+
+    PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+    PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "X");  // borrowed reference 
+    PyObject* setstate_name = Py_BuildValue( "s", "__setstate__" );
+
+    // now build up the quantum circuit
+    try {
+
+        self->circuit->release_gates();
+        self->circuit->set_qbit_num( qbit_num );
+
+        int gates_idx_max = (int) PyTuple_Size(state);
+
+        for( int gate_idx=1; gate_idx < gates_idx_max; gate_idx++ ) {
+
+ std::cout << "eeeeeeeeeeee "  << std::endl;
+
+            // get gate state as python dictionary
+            PyObject* gate_state_dict = PyTuple_GetItem( state, gate_idx); // borrowed reference 
+
+            if( !PyDict_Check( gate_state_dict ) ) {
+                std::string err( "Gate state should be given by a dictionary");
+                PyErr_SetString(PyExc_Exception, err.c_str());
+
+                Py_DECREF( qgd_gate );
+                Py_DECREF( qgd_gate_Dict );
+                Py_DECREF( qbit_num_key );
+                Py_DECREF( state );
+                Py_DECREF( setstate_name );
+                return NULL;
+            }   
+
+            //PyDict_SetItem(gate_state_dict, qbit_num_key, qbit_num_py);  
+
+            
+            PyObject* target_qbit_py = PyDict_GetItemString(gate_state_dict, "target_qbit"); // borrowed reference
+            int target_qbit = (int)PyLong_AsLong( target_qbit_py );
+
+             std::cout << "Target:qbit: " << target_qbit << std::endl;
+    
+
+
+            PyObject* gate_input = Py_BuildValue( "(OO)", qbit_num_py, target_qbit_py ); //PyTuple_Pack(2, qbit_num_py, target_qbit_py);
+            PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
+
+            // turn the generic gate into a specific gate
+            //PyObject_CallMethodOneArg( py_gate, setstate_name, gate_state_dict );
+            
+            Py_DECREF( gate_input );
+            //Py_DECREF( py_gate );
+
+
+
+        }
+
+
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
+
+
+    Py_DECREF( qgd_gate );    
+    Py_DECREF( qgd_gate_Dict );
+    Py_DECREF( qbit_num_key );
+    Py_DECREF( state ); 
+    Py_DECREF( setstate_name );
+    
+
+    return Py_None;
+}
+
+
+
 /**
 @brief Call to get the starting index of the parameters in the parameter array corresponding to the circuit in which the current gate is incorporated
 @return Returns with the starting index
@@ -2327,6 +2594,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"get_Qbit_Num", (PyCFunction) qgd_Circuit_Wrapper_get_Qbit_Num, METH_NOARGS,
      "Call to get the number of qubits in the circuit"
     },
+    {"set_Qbit_Num", (PyCFunction) qgd_Circuit_Wrapper_set_Qbit_Num, METH_VARARGS,
+     "Call to set the number of qubits in the circuit"
+    },
     {"get_Qbits", (PyCFunction) qgd_Circuit_Wrapper_get_Qbits, METH_NOARGS,
      "Call to get the list of qubits involved in the circuit"
     },
@@ -2357,6 +2627,14 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"get_Children", (PyCFunction) qgd_Circuit_Wrapper_get_children, METH_VARARGS,
      "Method to get the list of child gate indices. Then the children gates can be obtained from the list of gates involved in the circuit."
     },
+    {"__getstate__", (PyCFunction) qgd_Circuit_Wrapper_getstate, METH_NOARGS,
+     "Method to extract the stored quantum circuit in a human-readable data serialized and pickle-able format."
+    },
+    {"__setstate__", (PyCFunction) qgd_Circuit_Wrapper_setstate, METH_VARARGS,
+     "Call to set the state of a quantum circuit from a human-readable data serialized and pickle-able format."
+    },
+
+
     {NULL}  /* Sentinel */
 };
 
