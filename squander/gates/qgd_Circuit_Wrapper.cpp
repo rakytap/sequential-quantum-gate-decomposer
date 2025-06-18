@@ -1319,7 +1319,6 @@ static PyObject *
 qgd_Circuit_Wrapper_get_Qbit_Num( qgd_Circuit_Wrapper *self ) {
 
     int qbit_num = 0;
-std::cout << "qqq " << self->circuit << std::endl;
 
     try {
         qbit_num = self->circuit->get_qbit_num();
@@ -2401,8 +2400,6 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
     int qbit_num = (int)PyLong_AsLong( qbit_num_py );
 
-    std::cout << "lllll " << PyDict_Contains(qbit_num_dict, qbit_num_key) << " " << qbit_num << std::endl;
-
 
     // import gate operation modules
     PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.gates_Wrapper");
@@ -2414,9 +2411,10 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
         return NULL;
     }
 
-    PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
-    PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "X");  // borrowed reference 
+    PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate ); // borrowed reference ???
+    PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "Gate");  // borrowed reference 
     PyObject* setstate_name = Py_BuildValue( "s", "__setstate__" );
+    PyObject* dummy_target_qbit = Py_BuildValue( "i", 0 );
 
     // now build up the quantum circuit
     try {
@@ -2428,7 +2426,6 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
         for( int gate_idx=1; gate_idx < gates_idx_max; gate_idx++ ) {
 
- std::cout << "eeeeeeeeeeee "  << std::endl;
 
             // get gate state as python dictionary
             PyObject* gate_state_dict = PyTuple_GetItem( state, gate_idx); // borrowed reference 
@@ -2442,27 +2439,23 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
                 Py_DECREF( qbit_num_key );
                 Py_DECREF( state );
                 Py_DECREF( setstate_name );
+                Py_DECREF( dummy_target_qbit );
                 return NULL;
             }   
 
-            //PyDict_SetItem(gate_state_dict, qbit_num_key, qbit_num_py);  
+            PyDict_SetItem(gate_state_dict, qbit_num_key, qbit_num_py);  
 
-            
-            PyObject* target_qbit_py = PyDict_GetItemString(gate_state_dict, "target_qbit"); // borrowed reference
-            int target_qbit = (int)PyLong_AsLong( target_qbit_py );
-
-             std::cout << "Target:qbit: " << target_qbit << std::endl;
-    
-
-
-            PyObject* gate_input = Py_BuildValue( "(OO)", qbit_num_py, target_qbit_py ); //PyTuple_Pack(2, qbit_num_py, target_qbit_py);
+            PyObject* gate_input = Py_BuildValue( "(O)", qbit_num_py );
             PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
             // turn the generic gate into a specific gate
-            //PyObject_CallMethodOneArg( py_gate, setstate_name, gate_state_dict );
+            PyObject_CallMethodOneArg( py_gate, setstate_name, gate_state_dict );
+            
+            self->circuit->add_gate( ((qgd_Gate*)py_gate)->gate->clone() );
+            
             
             Py_DECREF( gate_input );
-            //Py_DECREF( py_gate );
+            Py_DECREF( py_gate );
 
 
 
@@ -2482,11 +2475,12 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
 
 
+
     Py_DECREF( qgd_gate );    
-    Py_DECREF( qgd_gate_Dict );
+    //Py_DECREF( qgd_gate_Dict );
     Py_DECREF( qbit_num_key );
-    Py_DECREF( state ); 
     Py_DECREF( setstate_name );
+    Py_DECREF( dummy_target_qbit );
     
 
     return Py_None;

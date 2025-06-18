@@ -111,6 +111,29 @@ static PyObject *
 
 
 
+/**
+@brief Method called when a python instance of a non-controlled gate class is initialized
+@param self A pointer pointing to an instance of the class  Gate_Wrapper.
+@param args A tuple of the input arguments: qbit_num (int), target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static int
+ generic_Gate_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    static char *kwlist[] = {(char*)"qbit_num", NULL};
+    int qbit_num = -1; 
+
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, 
+                                     &qbit_num))
+        return -1;
+
+    self->gate = new Gate( qbit_num );
+    
+
+    return 0;
+}
+
 
 /**
 @brief Method called when a python instance of a non-controlled gate class is initialized
@@ -759,6 +782,184 @@ Gate_Wrapper_getstate( Gate_Wrapper *self ) {
 static PyObject * 
 Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
 
+
+    PyObject* gate_state = NULL;
+
+
+    // parsing input arguments
+    if (!PyArg_ParseTuple(args, "O", &gate_state )) {
+        PyErr_SetString(PyExc_ValueError, "Unable to parse arguments");
+        return NULL;
+    }
+    
+    if( !PyDict_Check( gate_state ) ) {
+        std::string err( "Gate state should be given by a dictionary");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }   
+    
+    PyObject* qbit_num_key = Py_BuildValue( "s", "qbit_num" );    
+    if ( PyDict_Contains(gate_state, qbit_num_key) == 0 ) {
+        std::string err( "Gate state should contain the number of qubits");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( qbit_num_key );
+        return NULL;
+    }    
+    PyObject* qbit_num_py = PyDict_GetItem(gate_state, qbit_num_key); // borrowed reference
+    Py_DECREF( qbit_num_key );
+    
+    
+    PyObject* target_qbit_key = Py_BuildValue( "s", "target_qbit" );
+    if ( PyDict_Contains(gate_state, target_qbit_key) == 0 ) {
+        std::string err( "Gate state should contain a target qubit");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( target_qbit_key );
+        return NULL;
+    }    
+    PyObject* target_qbit_py = PyDict_GetItem(gate_state, target_qbit_key); // borrowed reference
+    Py_DECREF( target_qbit_key );
+    
+    
+    PyObject* control_qbit_key = Py_BuildValue( "s", "control_qbit" );
+    if ( PyDict_Contains(gate_state, control_qbit_key) == 0 ) {
+        std::string err( "Gate state should contain a control qubit (-1 for gates with no control qubits)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( control_qbit_key );
+        return NULL;
+    }    
+    PyObject* control_qbit_py = PyDict_GetItem(gate_state, control_qbit_key); // borrowed reference
+    Py_DECREF( control_qbit_key );
+
+
+
+
+
+    PyObject* type_key = Py_BuildValue( "s", "type" );
+    if ( PyDict_Contains(gate_state, type_key) == 0 ) {
+        std::string err( "Gate state should contain a type ID (see gate.h for the gate type IDs)");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( type_key );
+        return NULL;
+    }    
+    PyObject* type_py = PyDict_GetItem(gate_state, control_qbit_key); // borrowed reference
+    Py_DECREF( type_key );
+
+
+
+    int qbit_num = (int)PyLong_AsLong( qbit_num_py );
+    int target_qbit = (int)PyLong_AsLong( target_qbit_py );
+    int control_qbit = (int)PyLong_AsLong( control_qbit_py );    
+    int gate_type = (int)PyLong_AsLong( type_py );    
+    
+    std::cout << gate_type << std::endl;
+    Gate* gate = NULL;
+    
+    switch (gate_type) {
+    case CNOT_OPERATION: {
+        gate = create_controlled_gate<CNOT>( qbit_num, target_qbit, control_qbit );
+        break;
+    }    
+    case CZ_OPERATION:
+    {
+        gate = create_controlled_gate<CZ>( qbit_num, target_qbit, control_qbit );
+        break;
+    }    
+    case CH_OPERATION: {
+        gate = create_controlled_gate<CH>( qbit_num, target_qbit, control_qbit );
+        break;
+    }     
+    case SYC_OPERATION: {
+        gate = create_controlled_gate<SYC>( qbit_num, target_qbit, control_qbit );
+        break;
+    }    
+    case X_OPERATION: {
+        gate = create_gate<X>( qbit_num, target_qbit );
+        break;
+    }    
+    case Y_OPERATION: {
+        gate = create_gate<Y>( qbit_num, target_qbit );
+        break;
+    }    
+    case Z_OPERATION: {
+        gate = create_gate<Z>( qbit_num, target_qbit );
+        break;
+    }    
+    case SX_OPERATION: {
+        gate = create_gate<SX>( qbit_num, target_qbit );
+        break;
+    }    
+    case T_OPERATION: {
+        gate = create_gate<T>( qbit_num, target_qbit );
+        break;
+    }    
+    case TDG_OPERATION: {
+        gate = create_gate<Tdg>( qbit_num, target_qbit );
+        break;
+    }    
+    case H_OPERATION: {
+        gate = create_gate<H>( qbit_num, target_qbit );
+        break;
+    }    
+    case U3_OPERATION: {
+        gate = static_cast<Gate*>( new U3(qbit_num, target_qbit, true, true, true));
+        break; 
+    }
+    case R_OPERATION: {
+        gate = create_gate<X>( qbit_num, target_qbit );
+        break;
+    }    
+    case RX_OPERATION: {
+        gate = create_gate<RX>( qbit_num, target_qbit );
+        break;
+    }    
+    case RY_OPERATION: {
+        gate = create_gate<RY>( qbit_num, target_qbit );
+        break;
+    }    
+    case CRY_OPERATION: {
+        gate = create_controlled_gate<CRY>( qbit_num, target_qbit, control_qbit );
+        break;
+    }    
+    case RZ_OPERATION: {
+        gate = create_gate<RZ>( qbit_num, target_qbit );
+        break;
+    }    
+    case BLOCK_OPERATION: {
+        std::string err( "Unsoppurted gate tye: block operation");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( control_qbit_key );
+        return NULL;  
+        break;
+    }
+    default:
+        std::string err( "Unsoppurted gate tye");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+
+        Py_DECREF( control_qbit_key );
+        return NULL;  
+    }
+
+
+
+    try {
+        delete( self->gate );
+        self->gate = gate;
+    }
+    catch (std::string err) {
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+    catch(...) {
+        std::string err( "Invalid pointer to circuit class");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;
+    }
+
     
     return Py_None;
 
@@ -847,7 +1048,7 @@ struct Gate_Wrapper_Type_tmp : PyTypeObject {
         tp_doc       = "Object to represent python binding for a generic base gate of the Squander package.";
         tp_methods   = Gate_Wrapper_methods;
         tp_members   = Gate_Wrapper_members;
-        // tp_init      = (initproc)  Gate_Wrapper_init;
+        tp_init      = (initproc)  generic_Gate_Wrapper_init;
         tp_new       = Gate_Wrapper_new;
     }
     

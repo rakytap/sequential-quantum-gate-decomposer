@@ -241,8 +241,9 @@ def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: n
     
     """ 
 
-    print( Circuit )
-
+    print( subcircuit )
+    gates = subcircuit.get_Gates()
+    print( gates )
 
     return 6
 
@@ -328,6 +329,7 @@ def OptimizeWideCircuit() -> (Circuit, np.ndarray):
 
         #  code for iterate over partitions and optimize them
         for partition_idx, subcircuit in enumerate( subcircuits ):
+        
 
 
             # isolate the parameters corresponding to the given sub-circuit
@@ -336,13 +338,11 @@ def OptimizeWideCircuit() -> (Circuit, np.ndarray):
             subcircuit_parameters = parameters[ start_idx:end_idx ]
 
             print("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq")
+            gates = subcircuit.get_Gates()
+            print( gates )
+    
+    
             # call a process to decompose a subcircuit
-            state = subcircuit.__getstate__()
-            crc = Circuit(0)
-            crc.__setstate__(state)
-            PartitionDecompositionProcess( subcircuit, subcircuit_parameters )
-
-            continue
             res = pool.apply_async( PartitionDecompositionProcess, (subcircuit, subcircuit_parameters,) )
             t = res.get( timeout = 1800 )
 

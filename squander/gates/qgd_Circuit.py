@@ -63,12 +63,10 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
     def __init__( self, qbit_num ):
 
-        print("kkkkkkkkkkkkkkk ", qbit_num )
-
         # call the constructor of the wrapper class
         super().__init__( qbit_num )
 
-
+    
     def __getstate__(self):
         # Return a dictionary of the object's state
 
@@ -78,18 +76,13 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
         print( state )
         super().__setstate__( state )
-        print( "dddddd" )
-        print( self.get_Qbit_Num() )
-        pass
-        # Update the object's state from the dictionary
-        #self.attr1 = state['attr1']
-        #self.attr2 = state['attr2']
-
+    """
 
     def __new__(cls, *args, **kwargs):
 
         print( "NEEEEEEEEEEEEEW", args)
         return super().__new__(cls, *args, **kwargs)
+    """
 
 #@brief Call to add a U3 gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
