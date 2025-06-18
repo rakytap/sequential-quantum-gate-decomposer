@@ -1560,6 +1560,8 @@ void Gates_block::add_gate( Gate* gate ) {
 
 }
 
+
+
 /**
 @brief Add a gate to the front of the list of gates
 @param gate A pointer to a class Gate describing a gate.

@@ -1929,6 +1929,11 @@ get_gate( Gates_block* circuit, int &idx ) {
 
     }
     else {
+
+            Py_DECREF( qgd_gate );    
+            Py_XDECREF(qbit_num);
+            Py_XDECREF(target_qbit);
+            Py_XDECREF(control_qbit);
             PyErr_SetString(PyExc_Exception, "qgd_Circuit_Wrapper::get_gate: unimplemented gate type" );
             return NULL;
     }
@@ -2403,7 +2408,7 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
 
     // import gate operation modules
     PyObject* qgd_gate  = PyImport_ImportModule("squander.gates.gates_Wrapper");
-
+    
     if ( qgd_gate == NULL ) {
         PyErr_SetString(PyExc_Exception, "Module import error: squander.gates.gates_Wrapper" );
         Py_DECREF( qbit_num_key );
@@ -2451,7 +2456,8 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
             // turn the generic gate into a specific gate
             PyObject_CallMethodOneArg( py_gate, setstate_name, gate_state_dict );
             
-            self->circuit->add_gate( ((qgd_Gate*)py_gate)->gate->clone() );
+            Gate* gate_loc = static_cast<Gate*>( ((qgd_Gate*)py_gate)->gate->clone() );
+            self->circuit->add_gate( gate_loc );
             
             
             Py_DECREF( gate_input );

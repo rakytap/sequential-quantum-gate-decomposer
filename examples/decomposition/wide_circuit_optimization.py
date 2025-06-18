@@ -48,7 +48,7 @@ test_subcircuit_decomposition = True
 
 squander_config = {  
             'strategy': "Tabu_search", 
-            'parallel': 1,
+            'parallel': 0,
             'verbosity': 0, 
          }
 
@@ -241,12 +241,6 @@ def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: n
     
     """ 
 
-    print( subcircuit )
-    gates = subcircuit.get_Gates()
-    print( gates )
-
-    return 6
-
 
     qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
     involved_qbits = subcircuit.get_Qbits()
@@ -301,8 +295,7 @@ def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: n
 
         assert( (np.abs(overlap)-1) < 1e-3 )
 
-    #return new_subcircuit, decomposed_parameters
-    return 444
+    return new_subcircuit, decomposed_parameters
     
 
 def OptimizeWideCircuit() -> (Circuit, np.ndarray):
@@ -325,7 +318,7 @@ def OptimizeWideCircuit() -> (Circuit, np.ndarray):
     optimized_parameter_list = [None] * len(subcircuits)
 
 
-    with Pool(processes=4) as pool:
+    with Pool(processes=1) as pool:
 
         #  code for iterate over partitions and optimize them
         for partition_idx, subcircuit in enumerate( subcircuits ):
@@ -340,13 +333,15 @@ def OptimizeWideCircuit() -> (Circuit, np.ndarray):
             print("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq")
             gates = subcircuit.get_Gates()
             print( gates )
+
+   
     
     
             # call a process to decompose a subcircuit
-            res = pool.apply_async( PartitionDecompositionProcess, (subcircuit, subcircuit_parameters,) )
-            t = res.get( timeout = 1800 )
+            #res = pool.apply_async( PartitionDecompositionProcess, (subcircuit, subcircuit_parameters,) )
+            #new_subcircuit, decomposed_parameters = res.get( timeout = 1800 )
 
-            continue
+            #continue
             new_subcircuit, decomposed_parameters = PartitionDecompositionProcess( subcircuit, subcircuit_parameters )
 
  
@@ -363,7 +358,6 @@ def OptimizeWideCircuit() -> (Circuit, np.ndarray):
             optimized_subcircuits[ partition_idx ] = new_subcircuit
             optimized_parameter_list[ partition_idx ] = new_parameters
 
-    return
 
     # construct the wide circuit from the optimized suncircuits
     wide_circuit, wide_parameters = ConstructCircuitFromPartitions( optimized_subcircuits, optimized_parameter_list )

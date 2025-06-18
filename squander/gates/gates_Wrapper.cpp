@@ -855,7 +855,7 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
     int control_qbit = (int)PyLong_AsLong( control_qbit_py );    
     int gate_type = (int)PyLong_AsLong( type_py );    
     
-    std::cout << gate_type << std::endl;
+
     Gate* gate = NULL;
     
     switch (gate_type) {
@@ -1018,7 +1018,7 @@ static PyMethodDef Gate_Wrapper_methods[] = {
     {"__getstate__", (PyCFunction) Gate_Wrapper_getstate, METH_NOARGS,
      "Method to extract the stored quantum gate in a human-readable data serialized and pickle-able format"
     },
-    {"__setstate__", (PyCFunction) Gate_Wrapper_getstate, METH_VARARGS,
+    {"__setstate__", (PyCFunction) Gate_Wrapper_setstate, METH_VARARGS,
      "Call to set the state of quantum gate from a human-readable data serialized and pickle-able format"
     },
     {NULL}  /* Sentinel */
