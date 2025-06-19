@@ -1121,15 +1121,21 @@ qgd_Circuit_Wrapper_get_Parameter_Num( qgd_Circuit_Wrapper *self ) {
 @brief Call to apply the gate operation on the inut matrix
 */
 static PyObject *
-qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
+qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
     PyArrayObject * parameters_arr = NULL;
     PyArrayObject * unitary_arg = NULL;
+    
+    int parallel = 1;
+    
+    const char *kwlist[] = {(char*)"", (char*)"", (char*)"parallel", NULL};
 
 
     // parsing input arguments
-    if (!PyArg_ParseTuple(args, "|OO", &parameters_arr, &unitary_arg )) 
-        return Py_BuildValue("i", -1);
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "OO|i", kwlist, &parameters_arr, &unitary_arg, &parallel )) {
+        PyErr_SetString(PyExc_Exception, "Unable to parse input");
+        return NULL;
+    } 
         
         
 
@@ -1183,7 +1189,6 @@ qgd_Circuit_Wrapper_apply_to( qgd_Circuit_Wrapper *self, PyObject *args ) {
     Matrix unitary_mtx = numpy2matrix(unitary);
 
     try {
-        int parallel = 1;
         self->circuit->apply_to( parameters_mtx, unitary_mtx, parallel );
     }
     catch (std::string err) {
@@ -2585,8 +2590,8 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     {"get_Parameter_Num", (PyCFunction) qgd_Circuit_Wrapper_get_Parameter_Num, METH_NOARGS,
      "Call to get the number of free parameters in the circuit"
     },
-    {"apply_to", (PyCFunction) qgd_Circuit_Wrapper_apply_to, METH_VARARGS,
-     "Call to apply the gate on the input matrix."
+    {"apply_to", (PyCFunction) qgd_Circuit_Wrapper_apply_to, METH_VARARGS | METH_KEYWORDS,
+     "Call to apply the gate on the input matrix (or state)."
     },
     {"get_Second_Renyi_Entropy", (PyCFunction) qgd_Circuit_Wrapper_get_Second_Renyi_Entropy, METH_VARARGS,
      "Wrapper function to evaluate the second Rényi entropy of a quantum circuit at a specific parameter set."

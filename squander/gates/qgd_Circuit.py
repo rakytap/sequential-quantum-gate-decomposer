@@ -66,7 +66,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         # call the constructor of the wrapper class
         super().__init__( qbit_num )
 
-    
+    """
     def __getstate__(self):
         # Return a dictionary of the object's state
 
@@ -76,7 +76,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
         print( state )
         super().__setstate__( state )
-    """
+    
 
     def __new__(cls, *args, **kwargs):
 
@@ -259,13 +259,11 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 
 #@brief Call to apply the gate operation on the input matrix
-#@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: parameters_mtx, unitary_mtx.
-
-    def apply_to( self, parameters_mtx, unitary_mtx):
+    def apply_to( self, parameters_mtx, unitary_mtx, parallel=1):
 
 	# call the C wrapper function
-        super().apply_to( parameters_mtx, unitary_mtx )
+        super().apply_to( parameters_mtx, unitary_mtx, parallel=parallel )
 
 
 

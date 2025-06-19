@@ -101,11 +101,27 @@ static void
 @param type A pointer pointing to a structure describing the type of the class  qgd_CH_Wrapper.
 */
 static PyObject *
- Gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
+ generic_Gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
+
+    static char *kwlist[] = {(char*)"qbit_num", NULL};
+    int qbit_num = -1; 
+
+
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, &qbit_num)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
+
+
     Gate_Wrapper *self;
     self = (Gate_Wrapper *) type->tp_alloc(type, 0);
-    if (self != NULL) {}
+    if (self != NULL) {
+        self->gate = new Gate( qbit_num );
+    }
+
+
     return (PyObject *) self;
 }
 
@@ -117,47 +133,30 @@ static PyObject *
 @param args A tuple of the input arguments: qbit_num (int), target_qbit (int)
 @param kwds A tuple of keywords
 */
-static int
- generic_Gate_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {(char*)"qbit_num", NULL};
-    int qbit_num = -1; 
-
-
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist, 
-                                     &qbit_num))
-        return -1;
-
-    self->gate = new Gate( qbit_num );
-    
-
-    return 0;
-}
-
-
-/**
-@brief Method called when a python instance of a non-controlled gate class is initialized
-@param self A pointer pointing to an instance of the class  Gate_Wrapper.
-@param args A tuple of the input arguments: qbit_num (int), target_qbit (int)
-@param kwds A tuple of keywords
-*/
 template<typename GateT>
-static int
- Gate_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
+static PyObject *
+ Gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
+
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", NULL};
     int qbit_num = -1; 
     int target_qbit = -1;
 
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist, &qbit_num, &target_qbit)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ii", kwlist, 
-                                     &qbit_num, &target_qbit))
-        return -1;
 
-    self->gate = create_gate<GateT>( qbit_num, target_qbit );
-    
+    Gate_Wrapper *self;
+    self = (Gate_Wrapper *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->gate = create_gate<GateT>( qbit_num, target_qbit );
+    }
 
-    return 0;
+
+    return (PyObject *) self;
 }
 
 
@@ -168,8 +167,8 @@ static int
 @param kwds A tuple of keywords
 */
 template<typename GateT>
-static int
- controlled_gate_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
+static PyObject *
+ controlled_gate_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", (char*)"control_qbit", NULL};
     int qbit_num = -1; 
@@ -177,14 +176,21 @@ static int
     int control_qbit = -1;
 
 
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iii", kwlist,
-                                     &qbit_num, &target_qbit, &control_qbit))
-        return -1;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iii", kwlist, &qbit_num, &target_qbit, &control_qbit)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
 
-    self->gate = create_controlled_gate<GateT>( qbit_num, target_qbit, control_qbit );
+
+    Gate_Wrapper *self;
+    self = (Gate_Wrapper *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->gate = create_controlled_gate<GateT>( qbit_num, target_qbit, control_qbit );
+    }
+
+    return (PyObject *) self;
     
-
-    return 0;
 }
 
 
@@ -194,8 +200,8 @@ static int
 @param args A tuple of the input arguments: qbit_num (int), target_qbit (int), Theta (bool), Phi (bool), Lambda (bool)
 @param kwds A tuple of keywords
 */
-static int
- U3_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
+static PyObject *
+ U3_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
 {
     static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", (char*)"Theta", (char*)"Phi", (char*)"Lambda", NULL};
     int qbit_num = -1; 
@@ -205,16 +211,44 @@ static int
     int Lambda = 1;
 
     
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iiiii", kwlist,
-                                     &qbit_num, &target_qbit, &Theta, &Phi, &Lambda))
-        return -1;
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iiiiii", kwlist, &qbit_num, &target_qbit, &Theta, &Phi, &Lambda)) {
+        std::string err( "Unable to parse arguments");
+        PyErr_SetString(PyExc_Exception, err.c_str());
+        return NULL;   
+    }
+
+
+    Gate_Wrapper *self;
+    self = (Gate_Wrapper *) type->tp_alloc(type, 0);
+    if (self != NULL) {
+        self->gate = static_cast<Gate*>(new U3(qbit_num, target_qbit, (bool)Theta, (bool)Phi, (bool)Lambda));
+    }
 
     
-    self->gate = static_cast<Gate*>(new U3(qbit_num, target_qbit, (bool)Theta, (bool)Phi, (bool)Lambda));
 
+
+    return (PyObject *) self;
+}
+
+/**
+@brief Method called when a python instance of a non-controlled gate class is initialized
+@param self A pointer pointing to an instance of the class  Gate_Wrapper.
+@param args A tuple of the input arguments: qbit_num (int), target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static int
+ Gate_Wrapper_init(Gate_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+
+    
 
     return 0;
 }
+
+
+
+
+
 
 
 /**
@@ -304,14 +338,14 @@ Gate_Wrapper_get_Matrix( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
 static PyObject *
 Gate_Wrapper_Wrapper_apply_to( Gate_Wrapper *self, PyObject *args, PyObject *kwds ) {
 
-    static char *kwlist[] = {(char*)"unitary", (char*)"parameters", NULL};
+    static char *kwlist[] = {(char*)"unitary", (char*)"parameters", (char*)"parallel", NULL};
 
     PyArrayObject * input = NULL;
     PyArrayObject * parameters_arr = NULL;
     int parallel = 1;
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|O", kwlist, &input, &parameters_arr )) {
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "O|Oi", kwlist, &input, &parameters_arr, &parallel )) {
         std::string err( "Unable to parse keyword arguments");
         return NULL;
     }
@@ -1048,8 +1082,8 @@ struct Gate_Wrapper_Type_tmp : PyTypeObject {
         tp_doc       = "Object to represent python binding for a generic base gate of the Squander package.";
         tp_methods   = Gate_Wrapper_methods;
         tp_members   = Gate_Wrapper_members;
-        tp_init      = (initproc)  generic_Gate_Wrapper_init;
-        tp_new       = Gate_Wrapper_new;
+        tp_init      = (initproc)  Gate_Wrapper_init;
+        tp_new       = generic_Gate_Wrapper_new;
     }
     
 
@@ -1062,12 +1096,9 @@ static Gate_Wrapper_Type_tmp Gate_Wrapper_Type;
 struct CH_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     CH_Wrapper_Type() {
-    
         tp_name      = "CH";
-        //tp_dealloc   = (destructor)  Gate_Wrapper_dealloc;
         tp_doc       = "Object to represent python binding for a CH gate of the Squander package.";
-        tp_init      = (initproc)  controlled_gate_Wrapper_init<CH>;
-        //tp_new       = Gate_Wrapper_new;
+        tp_new      = (newfunc) controlled_gate_Wrapper_new<CH>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1077,7 +1108,7 @@ struct CNOT_Wrapper_Type : Gate_Wrapper_Type_tmp {
     CNOT_Wrapper_Type() {    
         tp_name      = "CNOT";
         tp_doc       = "Object to represent python binding for a CNOT gate of the Squander package.";
-        tp_init      = (initproc)  controlled_gate_Wrapper_init<CNOT>;
+        tp_new      = (newfunc) controlled_gate_Wrapper_new<CNOT>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1087,7 +1118,7 @@ struct CZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
     CZ_Wrapper_Type() {    
         tp_name      = "CZ";
         tp_doc       = "Object to represent python binding for a CZ gate of the Squander package.";
-        tp_init      = (initproc)  controlled_gate_Wrapper_init<CZ>;
+        tp_new      = (newfunc) controlled_gate_Wrapper_new<CZ>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1097,7 +1128,7 @@ struct CRY_Wrapper_Type : Gate_Wrapper_Type_tmp {
     CRY_Wrapper_Type() {    
         tp_name      = "CRY";
         tp_doc       = "Object to represent python binding for a CRY gate of the Squander package.";
-        tp_init      = (initproc)  controlled_gate_Wrapper_init<CRY>;
+        tp_new      = (newfunc) controlled_gate_Wrapper_new<CRY>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1107,7 +1138,7 @@ struct H_Wrapper_Type : Gate_Wrapper_Type_tmp {
     H_Wrapper_Type() {    
         tp_name      = "H";
         tp_doc       = "Object to represent python binding for a H gate of the Squander package.";
-        tp_init      = (initproc)  Gate_Wrapper_init<H>;
+        tp_new      = (newfunc) Gate_Wrapper_new<H>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1117,7 +1148,7 @@ struct RX_Wrapper_Type : Gate_Wrapper_Type_tmp {
     RX_Wrapper_Type() {    
         tp_name      = "RX";
         tp_doc       = "Object to represent python binding for a RX gate of the Squander package.";
-        tp_init      = (initproc)  Gate_Wrapper_init<RX>;
+        tp_new      = (newfunc) Gate_Wrapper_new<RX>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1127,7 +1158,7 @@ struct RY_Wrapper_Type : Gate_Wrapper_Type_tmp {
     RY_Wrapper_Type() {    
         tp_name      = "RY";
         tp_doc       = "Object to represent python binding for a RY gate of the Squander package.";
-        tp_init      = (initproc)  Gate_Wrapper_init<RY>;
+        tp_new      = (newfunc) Gate_Wrapper_new<RY>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1137,7 +1168,7 @@ struct RZ_Wrapper_Type : Gate_Wrapper_Type_tmp {
     RZ_Wrapper_Type() {    
         tp_name      = "RZ";
         tp_doc       = "Object to represent python binding for a RZ gate of the Squander package.";
-        tp_init      = (initproc)  Gate_Wrapper_init<RZ>;
+        tp_new      = (newfunc) Gate_Wrapper_new<RZ>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1147,7 +1178,7 @@ struct SX_Wrapper_Type : Gate_Wrapper_Type_tmp {
     SX_Wrapper_Type() {    
         tp_name      = "SX";
         tp_doc       = "Object to represent python binding for a SX gate of the Squander package.";
-        tp_init      = (initproc)  Gate_Wrapper_init<SX>;
+        tp_new      = (newfunc) Gate_Wrapper_new<SX>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1157,7 +1188,7 @@ struct SYC_Wrapper_Type : Gate_Wrapper_Type_tmp {
     SYC_Wrapper_Type() {    
         tp_name      = "SYC";
         tp_doc       = "Object to represent python binding for a SYC gate of the Squander package.";
-        tp_init      = (initproc)  controlled_gate_Wrapper_init<SYC>;
+        tp_new      = (newfunc) controlled_gate_Wrapper_new<SYC>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1167,7 +1198,7 @@ struct U3_Wrapper_Type : Gate_Wrapper_Type_tmp {
     U3_Wrapper_Type() {    
         tp_name      = "U3";
         tp_doc       = "Object to represent python binding for a U3 gate of the Squander package.";
-        tp_init      = (initproc)  U3_Wrapper_init;
+        tp_new      = (newfunc) U3_Wrapper_new;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1177,7 +1208,7 @@ struct X_Wrapper_Type : Gate_Wrapper_Type_tmp {
     X_Wrapper_Type() {    
         tp_name      = "X";
         tp_doc       = "Object to represent python binding for a X gate of the Squander package.";
-        tp_init      = (initproc)  Gate_Wrapper_init<X>;
+        tp_new      = (newfunc) Gate_Wrapper_new<X>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1187,7 +1218,7 @@ struct Y_Wrapper_Type : Gate_Wrapper_Type_tmp {
     Y_Wrapper_Type() {    
         tp_name      = "Y";
         tp_doc       = "Object to represent python binding for a Y gate of the Squander package.";
-        tp_init      = (initproc)  Gate_Wrapper_init<Y>;
+        tp_new      = (newfunc) Gate_Wrapper_new<Y>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1197,7 +1228,7 @@ struct Z_Wrapper_Type : Gate_Wrapper_Type_tmp {
     Z_Wrapper_Type() {    
         tp_name      = "Z";
         tp_doc       = "Object to represent python binding for a Z gate of the Squander package.";
-        tp_init      = (initproc)  Gate_Wrapper_init<Z>;
+        tp_new      = (newfunc) Gate_Wrapper_new<Z>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1208,7 +1239,7 @@ struct T_Wrapper_Type : Gate_Wrapper_Type_tmp {
     T_Wrapper_Type() {    
         tp_name      = "T";
         tp_doc       = "Object to represent python binding for a T gate of the Squander package.";
-        tp_init      = (initproc)  Gate_Wrapper_init<T>;
+        tp_new      = (newfunc) Gate_Wrapper_new<T>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1219,7 +1250,7 @@ struct Tdg_Wrapper_Type : Gate_Wrapper_Type_tmp {
     Tdg_Wrapper_Type() {    
         tp_name      = "Tdg";
         tp_doc       = "Object to represent python binding for a T gate of the Squander package.";
-        tp_init      = (initproc)  Gate_Wrapper_init<Tdg>;
+        tp_new      = (newfunc) Gate_Wrapper_new<Tdg>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };

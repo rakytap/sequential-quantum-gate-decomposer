@@ -240,7 +240,7 @@ def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: n
 
     
     """ 
-
+    
 
     qbit_num_orig_circuit = subcircuit.get_Qbit_Num()
     involved_qbits = subcircuit.get_Qbits()
@@ -287,13 +287,23 @@ def PartitionDecompositionProcess( subcircuit: Circuit, subcircuit_parameters: n
         transformed_state_1 = initial_state.copy()
         transformed_state_2 = initial_state.copy()    
     
-        subcircuit.apply_to( subcircuit_parameters, transformed_state_1 )
-        new_subcircuit.apply_to( decomposed_parameters, transformed_state_2)    
+        subcircuit.apply_to( subcircuit_parameters, transformed_state_1, parallel=0 )
+        new_subcircuit.apply_to( decomposed_parameters, transformed_state_2, parallel=0)    
     
         overlap = transformed_state_1.transpose().conj() @ transformed_state_2
         print( "overlap: ", np.abs(overlap) )
 
         assert( (np.abs(overlap)-1) < 1e-3 )
+
+
+
+    new_subcircuit = new_subcircuit.get_Flat_Circuit()
+
+    gates = new_subcircuit.get_Gates()
+    print( gates )
+
+
+    print( "ccccc ", new_subcircuit.get_Parameter_Num() == decomposed_parameters.size, decomposed_parameters.size, new_subcircuit.get_Parameter_Num() )
 
     return new_subcircuit, decomposed_parameters
     
@@ -318,45 +328,50 @@ def OptimizeWideCircuit() -> (Circuit, np.ndarray):
     optimized_parameter_list = [None] * len(subcircuits)
 
 
-    with Pool(processes=1) as pool:
+    #with Pool(processes=1) as pool:
 
-        #  code for iterate over partitions and optimize them
-        for partition_idx, subcircuit in enumerate( subcircuits ):
+    #  code for iterate over partitions and optimize them
+    for partition_idx, subcircuit in enumerate( subcircuits ):
         
+        print( partition_idx )
 
+        # isolate the parameters corresponding to the given sub-circuit
+        start_idx = subcircuit.get_Parameter_Start_Index()
+        end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
+        subcircuit_parameters = parameters[ start_idx:end_idx ]
 
-            # isolate the parameters corresponding to the given sub-circuit
-            start_idx = subcircuit.get_Parameter_Start_Index()
-            end_idx   = subcircuit.get_Parameter_Start_Index() + subcircuit.get_Parameter_Num()
-            subcircuit_parameters = parameters[ start_idx:end_idx ]
-
-            print("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq")
-            gates = subcircuit.get_Gates()
-            print( gates )
+        print("qqqqqqqqqqqqqqqqqqqqqqqqqqqqqq ")
+            #gates = subcircuit.get_Gates()
+            #print( gates )
 
    
     
-    
+        '''
             # call a process to decompose a subcircuit
-            #res = pool.apply_async( PartitionDecompositionProcess, (subcircuit, subcircuit_parameters,) )
-            #new_subcircuit, decomposed_parameters = res.get( timeout = 1800 )
+            res = pool.apply_async( PartitionDecompositionProcess, (subcircuit, subcircuit_parameters,) )
+            new_subcircuit, decomposed_parameters = res.get( timeout = 1800 )
 
+            print( "ppppp ", new_subcircuit.get_Parameter_Num() == decomposed_parameters.size, decomposed_parameters.size, new_subcircuit.get_Parameter_Num() )
+
+            gates = new_subcircuit.get_Gates()
+            print( gates )
+        '''
             #continue
-            new_subcircuit, decomposed_parameters = PartitionDecompositionProcess( subcircuit, subcircuit_parameters )
+        new_subcircuit, decomposed_parameters = PartitionDecompositionProcess( subcircuit, subcircuit_parameters )
 
  
-            # pick up the better decomposition of the partition
-            new_subcircuit, new_parameters = CompareAndPickCircuits( [subcircuit, new_subcircuit], [subcircuit_parameters, decomposed_parameters] )
+        # pick up the better decomposition of the partition
+        new_subcircuit, new_parameters = CompareAndPickCircuits( [subcircuit, new_subcircuit], [subcircuit_parameters, decomposed_parameters] )
 
 
-            if subcircuit != new_subcircuit:
+        if subcircuit != new_subcircuit:
 
-                print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
-                print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
+            print( "original subcircuit:    ", subcircuit.get_Gate_Nums()) 
+            print( "reoptimized subcircuit: ", new_subcircuit.get_Gate_Nums()) 
 
 
-            optimized_subcircuits[ partition_idx ] = new_subcircuit
-            optimized_parameter_list[ partition_idx ] = new_parameters
+        optimized_subcircuits[ partition_idx ] = new_subcircuit
+        optimized_parameter_list[ partition_idx ] = new_parameters
 
 
     # construct the wide circuit from the optimized suncircuits
