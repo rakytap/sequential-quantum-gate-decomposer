@@ -1,5 +1,6 @@
-
-
+"""
+Implementation to optimize wide circuits (i.e. circuits with many qubits) by    partitioning the circuit into smaller partitions and redecompose the smaller partitions
+"""
 
 from squander.decomposition.qgd_N_Qubit_Decomposition_Tree_Search import qgd_N_Qubit_Decomposition_Tree_Search as N_Qubit_Decomposition_Tree_Search
 from squander.decomposition.qgd_N_Qubit_Decomposition_Tabu_Search import qgd_N_Qubit_Decomposition_Tabu_Search as N_Qubit_Decomposition_Tabu_Search
@@ -19,12 +20,8 @@ import os
 
 from squander.partitioning.partition import (
     get_qubits,
-    qasm_to_partitioned_circuit
+    PartitionCircuit
 )
-
-
-filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
-
 
 
 
@@ -333,19 +330,25 @@ class qgd_Wide_Circuit_Optimization:
 
 
 
-    def OptimizeWideCircuit( self ) -> (Circuit, np.ndarray):
+    def OptimizeWideCircuit( self, circ: Circuit, parameters: np.ndarray ) -> (Circuit, np.ndarray):
         """
         Call to optimize a wide circuit (i.e. circuits with many qubits) by
         partitioning the circuit into smaller partitions and redecompose the smaller partitions
 
 
-        Return
+        Args: 
+
+            circ ( Circuit ) A circuit to be partitioned
+
+            parameters ( np.ndarray ) A parameter array associated with the input circuit
+
+        Return:
 
             Returns with the optimized circuit and the corresponding parameter array
 
         """
 
-        partitined_circuit, parameters = qasm_to_partitioned_circuit( filename, self.max_partition_size )
+        partitined_circuit, parameters = PartitionCircuit( circ, parameters, self.max_partition_size )
 
 
         qbit_num_orig_circuit = partitined_circuit.get_Qbit_Num()

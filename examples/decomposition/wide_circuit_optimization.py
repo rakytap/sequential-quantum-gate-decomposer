@@ -21,28 +21,32 @@ limitations under the License.
 ## \brief Simple example python code demonstrating a wide circuit optimization
 
 import squander.decomposition.qgd_Wide_Circuit_Optimization as Wide_Circuit_Optimization
-
-
-
-
+from squander import utils
 import time
     
 
 if __name__ == '__main__':
 
 
-    squander_config = {  
+    config = {  
             'strategy': "TreeSearch", 
             'test_subcircuits': True,
             'test_final_circuit': True,
             'max_partition_size': 3
     }
 
+    filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
+
     start_time = time.time()
 
-    wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( squander_config )
+    # load the circuit from a file
+    circ, parameters = utils.qasm_to_squander_circuit(filename)
 
-    wide_circuit_optimizer.OptimizeWideCircuit()
+    # instantiate the object for optimizing wide circuits
+    wide_circuit_optimizer = Wide_Circuit_Optimization.qgd_Wide_Circuit_Optimization( config )
+
+    # run circuti optimization
+    wide_circuit_optimizer.OptimizeWideCircuit( circ, parameters )
 
     print("--- %s seconds elapsed during optimization ---" % (time.time() - start_time))
 
