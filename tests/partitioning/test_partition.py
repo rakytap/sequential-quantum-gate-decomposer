@@ -70,7 +70,7 @@ def test_CorrectnessOfPartitionedCircuit():
     initial_circuit, initial_parameters = utils.qasm_to_squander_circuit(filename)
     
     max_partition_size = 4
-    partitined_circuit, partitioned_parameters = qasm_to_parPartitionCircuitQasmtitioned_circuit( filename, max_partition_size )
+    partitined_circuit, partitioned_parameters = PartitionCircuitQasm( filename, max_partition_size )
     
     
     # generate random initial state on which we test the circuits
