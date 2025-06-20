@@ -1,4 +1,5 @@
-from squander import Circuit, CNOT, CH, CZ, CRY
+from squander.gates.gates_Wrapper import CNOT, CH, CZ, CRY
+from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander import utils
 from itertools import dropwhile
 import numpy as np

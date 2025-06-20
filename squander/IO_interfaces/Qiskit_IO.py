@@ -27,9 +27,9 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 import numpy as np
-from squander import Circuit
+from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 
-from squander import R 
+from squander.gates.qgd_R import qgd_R as R 
 
 from squander.gates.gates_Wrapper import (
     U3,
