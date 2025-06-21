@@ -32,8 +32,10 @@ limitations under the License.
 #include <fstream>
 
 
-#ifdef __DFE__
-#include "common_DFE.h"
+#if defined __DFE__
+    #include "common_DFE.h"
+#elif defined __GROQ__
+    #include "common_DFE.h"
 #endif
 
 
@@ -161,8 +163,10 @@ Optimization_Interface::Optimization_Interface( Matrix Umtx_in, int qbit_num_in,
     // time spent on optimization
     CPU_time = 0.0;
 
-#ifdef __DFE__
-
+#if defined __DFE__
+    // number of utilized accelerators
+    accelerator_num = accelerator_num_in;
+#elif defined __GROQ__
     // number of utilized accelerators
     accelerator_num = accelerator_num_in;
 #else
@@ -1452,6 +1456,8 @@ Optimization_Interface::upload_Umtx_to_DFE() {
 }
 
 
+#endif
+
 /**
 @brief Get the number of accelerators to be reserved on DFEs on users demand. 
 */
@@ -1464,5 +1470,5 @@ Optimization_Interface::get_accelerator_num() {
 
 
 
-#endif
+
 

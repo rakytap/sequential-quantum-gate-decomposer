@@ -28,9 +28,14 @@ limitations under the License.
 #include "Bayes_Opt.h"
 #include "Powells_method.h"
 
-#ifdef __DFE__
-#include "common_DFE.h"
+
+#if defined __DFE__
+    #include "common_DFE.h"
+#elif defined __GROQ__
+    #include "common_DFE.h"
 #endif
+
+
 
 /// @brief Type definition of the fifferent types of the cost function
 typedef enum cost_function_type {FROBENIUS_NORM, FROBENIUS_NORM_CORRECTION1, FROBENIUS_NORM_CORRECTION2,
@@ -520,13 +525,16 @@ void set_custom_gate_structure( Gates_block* gate_structure_in );
 void upload_Umtx_to_DFE();
 
 
+#endif
+
+
 /**
 @brief Get the number of accelerators to be reserved on DFEs on users demand.
 */
 int get_accelerator_num();
 
 
-#endif
+
 
 };
 

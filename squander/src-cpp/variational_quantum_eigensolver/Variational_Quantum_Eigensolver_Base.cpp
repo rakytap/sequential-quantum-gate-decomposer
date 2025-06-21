@@ -325,8 +325,8 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 
 
         //////////////////////////////
-        //Matrix State_copy = State.copy();
-
+        Matrix State_copy = State.copy();
+Matrix State_copy2 = State.copy();
 
 //tbb::tick_count t0_DFE = tbb::tick_count::now();
 //tbb::tick_count t0_data_extraction = tbb::tick_count::now();
@@ -342,14 +342,14 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 
 	Matrix State_zero(0,0);
         // apply state transformation via the Groq chip
-        //apply_to_groq_sv(device_num, qbit_num, u3_qbit, State, target_qbit, control_qbit);
-        apply_to_groq_sv(device_num, qbit_num, u3_qbit, State_zero, target_qbit, control_qbit); 
-        State = State_zero;
+        apply_to_groq_sv(device_num, qbit_num, u3_qbit, State, target_qbit, control_qbit);
+        //apply_to_groq_sv(device_num, qbit_num, u3_qbit, State_zero, target_qbit, control_qbit); 
+        //State = State_zero;
 
 //tbb::tick_count t1_DFE = tbb::tick_count::now();
 //std::cout << "Time elapsed with Groq: " << (t1_DFE-t0_DFE).seconds() << std::endl;
 
-/*
+
         ///////////////////////////////
 tbb::tick_count t0_CPU = tbb::tick_count::now();
         Decomposition_Base::apply_to(parameters, State_copy );
@@ -365,7 +365,10 @@ std::cout << "Time elapsed with CPU: " << (t1_CPU-t0_CPU).seconds() << std::endl
             QGD_Complex16 element_diff;
             element_diff.real = element.real - element_copy.real;
             element_diff.imag = element.imag - element_copy.imag;
-            diff = diff + element_diff.real*element_diff.real + element_diff.imag*element_diff.imag;
+ 
+            double diff_increment = element_diff.real*element_diff.real + element_diff.imag*element_diff.imag;
+
+            diff = diff + diff_increment;
         }
        
         std::cout << "Variational_Quantum_Eigensolver_Base::apply_to checking diff: " << diff << std::endl;
@@ -374,7 +377,7 @@ std::cout << State[0].real <<  " " << State_copy[0].real << " " << initial_state
 std::cout << State[1].real <<  " " << State_copy[1].real << " " << initial_state[1].real << std::endl;
 
         //////////////////////////////
-*/
+
 
     }
     else {
@@ -532,14 +535,31 @@ void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
 
     initial_state = Matrix( 1 << qbit_num , 1);
 
+double norm = 0.0;
 
+    for( int idx=0; idx<1 << qbit_num; idx++ ) {
+        initial_state[idx].real = -1.0 + rand() / (1.0 + 0.1);
+        initial_state[idx].imag = -1.0 + rand() / (1.0 + 0.1);
+
+        norm = norm + initial_state[idx].real*initial_state[idx].real + initial_state[idx].imag*initial_state[idx].imag;
+    }
+
+    norm = std::sqrt(norm);
+
+    for( int idx=0; idx<1 << qbit_num; idx++ ) {
+        initial_state[idx].real = initial_state[idx].real/norm;
+        initial_state[idx].imag = initial_state[idx].imag/norm;
+
+    }
+
+/*
     initial_state[0].real = 1.0;
     initial_state[0].imag = 0.0;
     memset(initial_state.get_data()+2, 0.0, (initial_state.size()*2-2)*sizeof(double) );    
 
     initial_state[1].real = 0.0;
     initial_state[1].imag = 0.0;  
-
+*/
 
     return;
 }
@@ -627,7 +647,7 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
                 std::string error("Variational_Quantum_Eigensolver_Base::generate_initial_circuit: number of qubits should be at least 2");
                 throw error;
             }
-
+/*
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
 
                 for( int idx=0; idx<inner_blocks; idx++) {
@@ -668,7 +688,9 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
                             block_2->add_rz(control_qbit+2);  
                             add_gate( block_2 );                              
 
-                            add_cnot(control_qbit+2,control_qbit+1);
+                            if (control_qbit+2 != 17) {
+                                add_cnot(control_qbit+2,control_qbit+1);
+                            }
                         }
 
                     }
@@ -693,6 +715,9 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
 
                 }
             }
+*/
+//add_x(17);
+add_cnot(18, 16);
 
             return;
         }        
