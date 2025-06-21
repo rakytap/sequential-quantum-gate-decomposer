@@ -2327,7 +2327,7 @@ qgd_Circuit_Wrapper_getstate( qgd_Circuit_Wrapper *self ) {
         // get metadata about the idx-th gate
         PyObject* gate = get_gate( self->circuit, idx );
 
-        PyObject* gate_state  = PyObject_CallMethodNoArgs( gate, method_name );   
+        PyObject* gate_state  = PyObject_CallMethodObjArgs( gate, method_name, NULL );   
 
 
         // remove the field qbit_num from gate dict sice this will be redundant information
@@ -2459,7 +2459,7 @@ qgd_Circuit_Wrapper_setstate( qgd_Circuit_Wrapper *self, PyObject *args ) {
             PyObject* py_gate    = PyObject_CallObject(py_gate_class, gate_input);
 
             // turn the generic gate into a specific gate
-            PyObject_CallMethodOneArg( py_gate, setstate_name, gate_state_dict );
+            PyObject_CallMethodObjArgs( py_gate, setstate_name, gate_state_dict, NULL );
             
             Gate* gate_loc = static_cast<Gate*>( ((qgd_Gate*)py_gate)->gate->clone() );
             self->circuit->add_gate( gate_loc );

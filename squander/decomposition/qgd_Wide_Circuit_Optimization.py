@@ -10,8 +10,7 @@ from squander.utils import CompareCircuits
 import numpy as np
 from qiskit import QuantumCircuit
 
-from typing import List
-from collections.abc import Callable
+from typing import List, Callable
 
 import multiprocessing as mp
 from multiprocessing import Process, Pool

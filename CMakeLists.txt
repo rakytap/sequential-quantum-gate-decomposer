@@ -420,6 +420,19 @@ if (DEFINED ENV{QGD_DFE})
 endif()
 
 
+
+if (DEFINED ENV{QGD_GROQ})
+  list(APPEND qgd_files 
+      ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/common_DFE.cpp
+  )
+
+  list(APPEND CXX_FLAGS_DEBUG "-D__GROQ__=1")
+  list(APPEND CXX_FLAGS_RELEASE "-D__GROQ__=1")
+
+
+endif()
+
+
 add_library(qgd SHARED
     ${qgd_files})
 

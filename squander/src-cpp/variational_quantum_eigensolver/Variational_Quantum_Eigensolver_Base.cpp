@@ -313,7 +313,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 
     Matrix State;
 
-#ifdef __DFE__
+#ifdef __GROQ__
     if ( get_accelerator_num() > 0 ) {
 
         // initialize the initial state if it was not given
@@ -325,7 +325,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
 
 
         //////////////////////////////
-        Matrix State_copy = State.copy();
+        //Matrix State_copy = State.copy();
 
 
 //tbb::tick_count t0_DFE = tbb::tick_count::now();
@@ -387,7 +387,7 @@ std::cout << State[1].real <<  " " << State_copy[1].real << " " << initial_state
         State = initial_state.copy();
         apply_to(parameters, State);
 
-#ifdef __DFE__
+#ifdef __GROQ__
     }
 #endif
 
