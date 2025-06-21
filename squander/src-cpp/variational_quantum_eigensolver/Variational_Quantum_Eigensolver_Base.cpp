@@ -376,6 +376,11 @@ std::cout << "Time elapsed with CPU: " << (t1_CPU-t0_CPU).seconds() << std::endl
 std::cout << State[0].real <<  " " << State_copy[0].real << " " << initial_state[0].real << std::endl;
 std::cout << State[1].real <<  " " << State_copy[1].real << " " << initial_state[1].real << std::endl;
 
+        if ( diff > 1e-4 ) {
+            std::string error("Groq and CPU results do not match");
+            throw(error);
+        }
+
         //////////////////////////////
 
 
