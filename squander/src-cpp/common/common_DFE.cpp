@@ -228,6 +228,10 @@ int get_chained_gates_num() {
 // pointer to the dynamically loaded groq library
 void* handle_sv = NULL;
 
+
+/**
+@brief Call to unload the programs from the reserved Groq cards
+*/
 void unload_groq_sv_lib()
 {
     if (handle_sv) {
@@ -237,7 +241,13 @@ void unload_groq_sv_lib()
     }
 }
 
-int init_groq_sv_lib( const int accelerator_num )  {  
+
+/**
+@brief Call to allocated Groq cards for calculations
+@param reserved_device_num The number of Groq accelerator cards to be allocated for the calulations
+@return Returns with 1 on success
+*/
+int init_groq_sv_lib( const int reserved_device_num )  {  
     
     unload_groq_sv_lib();
 
@@ -258,7 +268,7 @@ int init_groq_sv_lib( const int accelerator_num )  {
         releive_groq_sv_dll               = (void (*)())dlsym(handle_sv, "releive_groq_sv");
         initialize_groq_sv_dll            = (int (*)(int))dlsym(handle_sv, "initialize_groq_sv");
 
-        if (initialize_groq_sv_dll(accelerator_num)) return 0;
+        if (initialize_groq_sv_dll(reserved_device_num)) return 0;
 
     }
     return 1;
@@ -266,8 +276,17 @@ int init_groq_sv_lib( const int accelerator_num )  {
 }
 
 
-
-void apply_to_groq_sv(int device_num, int qbit_num, std::vector<Matrix>& u3_qbit, Matrix& State, std::vector<int>& target_qbit, std::vector<int>& control_qbit) {
+/**
+@brief Call to pefrom the state vector simulation on the Groq hardware
+@param reserved_device_num The number of Groq accelerator cards to be allocated for the calulations
+@param chosen_device_num The ordinal number of the Groq accelerator card on which the calculation should be performed (0<=chosen_device_num<reserved_device_num)
+@param qbit_num The number of qubits
+@param u3_qbit An array of the gate kernels
+@param target_qbits The array of target qubits
+@param control_qbits The array of control qubits
+@param quantum_state The input state vector on which the transformation is applied. The transformed state is returned via this input.
+*/
+void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_num, std::vector<Matrix>& u3_qbit, std::vector<int>& target_qbits, std::vector<int>& control_qbits, Matrix& quantum_state) {
 
     //struct timespec starttime;
     //timespec_get(&starttime, TIME_UTC);
@@ -275,9 +294,8 @@ void apply_to_groq_sv(int device_num, int qbit_num, std::vector<Matrix>& u3_qbit
     size_t matrix_size = 1 << qbit_num;
 
     // the number of chips to be allocated for the calculations
-    int alloc_dfes = 1;
-    if (handle_sv == NULL && !init_groq_sv_lib(alloc_dfes)) {
-        throw std::string("Could not load and initialize DFE library");
+    if (handle_sv == NULL && !init_groq_sv_lib(reserved_device_num)) {
+        throw std::string("Could not load and initialize Groq library");
     }
 
     //struct timespec t;
@@ -285,30 +303,30 @@ void apply_to_groq_sv(int device_num, int qbit_num, std::vector<Matrix>& u3_qbit
     //printf("Total time on uploading the Groq program: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
 
 
-    if ( State.size() == 0 ) {
-        if (load_sv_dll( NULL, qbit_num, device_num) ) {
+    if ( quantum_state.size() == 0 ) {
+        if (load_sv_dll( NULL, qbit_num, chosen_device_num) ) {
             throw std::string("Error occured while reseting the state vector to Groq LPU");
         }
 
-        State = Matrix( matrix_size, 1);
+        quantum_state = Matrix( matrix_size, 1);
 
     }
     else {
 
-	if ( State.size() != matrix_size ) {
+	if ( quantum_state.size() != matrix_size ) {
             throw std::string("apply_to_groq_sv: the size of the input vector should be in match with the number of qubits");
         }
 
-	if ( State.cols != 1 ) {
+	if ( quantum_state.cols != 1 ) {
             throw std::string("apply_to_groq_sv: the input state should have a single column");
         }
 
         //timespec_get(&starttime, TIME_UTC);
         std::vector<float> inout;
-        inout.reserve(State.size()*2);
-        for (size_t idx = 0; idx < State.rows; idx++) {
-            inout.push_back(State.data[idx].real);
-            inout.push_back(State.data[idx].imag);
+        inout.reserve(quantum_state.size()*2);
+        for (size_t idx = 0; idx < quantum_state.rows; idx++) {
+            inout.push_back(quantum_state.data[idx].real);
+            inout.push_back(quantum_state.data[idx].imag);
         }
 
         //timespec_get(&t, TIME_UTC);
@@ -316,7 +334,7 @@ void apply_to_groq_sv(int device_num, int qbit_num, std::vector<Matrix>& u3_qbit
 
 
         //timespec_get(&starttime, TIME_UTC);
-        if (load_sv_dll(inout.data(), qbit_num, device_num)) {
+        if (load_sv_dll(inout.data(), qbit_num, chosen_device_num)) {
             throw std::string("Error occured while uploading state vector to Groq LPU");
         }
 
@@ -344,7 +362,7 @@ void apply_to_groq_sv(int device_num, int qbit_num, std::vector<Matrix>& u3_qbit
     matrix_base<float> transformed_sv_real( matrix_size, 1);
     matrix_base<float> transformed_sv_imag( matrix_size, 1);
 
-    if (calcsvKernelGroq_dll(u3_qbit.size(), gateMatrices.data(), target_qbit.data(), control_qbit.data(), transformed_sv_real.get_data(), transformed_sv_imag.get_data(), device_num)) {
+    if (calcsvKernelGroq_dll(u3_qbit.size(), gateMatrices.data(), target_qbits.data(), control_qbits.data(), transformed_sv_real.get_data(), transformed_sv_imag.get_data(), chosen_device_num)) {
         throw std::string("Error running gate kernels on groq");
     }
 
@@ -355,8 +373,8 @@ void apply_to_groq_sv(int device_num, int qbit_num, std::vector<Matrix>& u3_qbit
     //timespec_get(&starttime, TIME_UTC);  
     // transform the state vector to double representation  
     for (size_t idx = 0; idx < matrix_size; idx++) {
-        State.data[idx].real = transformed_sv_real[idx];
-        State.data[idx].imag = transformed_sv_imag[idx];        
+        quantum_state.data[idx].real = transformed_sv_real[idx];
+        quantum_state.data[idx].imag = transformed_sv_imag[idx];        
     }
     //timespec_get(&t, TIME_UTC);
     //printf("Total time on transforming state vector to double: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);

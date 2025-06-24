@@ -313,26 +313,57 @@ void solve_layer_optimization_problem_ADAM( int num_of_parameters, Matrix_real& 
 */
 void randomize_parameters( Matrix_real& input, Matrix_real& output, const double& f0 );
 
+
 /**
-@brief The optimization problem of the final optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@brief Evaluate the optimization problem of the optimization
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function.
 */
 double optimization_problem( double* parameters);
 
 
 /**
 @brief The optimization problem of the final optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function.
 */
 virtual double optimization_problem( Matrix_real& parameters);
 
 
+
+#ifdef __DFE__
 /**
-@brief The optimization problem of the final optimization with batched input (implemented only for the Frobenius norm cost function)
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@brief The cost function of the optimization with batched input executed on DFE (implemented only for the Frobenius norm cost function)
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function values.
+*/
+Matrix_real optimization_problem_batched_DFE( std::vector<Matrix_real>& parameters_vec);
+#endif
+
+#ifdef __GROQ__
+
+/**
+@brief The optimization problem of the final optimization implemented to be run on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@param chosen_device Indicate the device on which the state vector emulation is performed
+@return Returns with the cost function.
+*/
+virtual double optimization_problem_Groq( Matrix_real& parameters, int chosen_device);
+
+
+/**
+@brief The cost function of the optimization with batched input executed on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function values.
+*/
+Matrix_real optimization_problem_batched_Groq( std::vector<Matrix_real>& parameters_vec);
+#endif
+
+
+/**
+@brief The cost function of the optimization with batched input (implemented only for the Frobenius norm cost function when run with DFE)
+@param parameters An array of the free parameters to be optimized.
+@return Returns with the cost function values.
 */
 Matrix_real optimization_problem_batched( std::vector<Matrix_real>& parameters_vec);
 

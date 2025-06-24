@@ -136,6 +136,18 @@ virtual double optimization_problem(Matrix_real& parameters) override;
 virtual double optimization_problem_non_static( Matrix_real parameters, void* void_instance) override;
 
 
+#ifdef __GROQ__
+/**
+@brief The optimization problem of the final optimization implemented to be run on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@param chosen_device Indicate the device on which the state vector emulation is performed
+@return Returns with the cost function.
+*/
+double optimization_problem_Groq(Matrix_real& parameters, int chosen_device) ;
+#endif
+
+
+
 /**
 @brief The optimization problem of the final optimization
 @param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)

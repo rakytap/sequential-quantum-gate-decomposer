@@ -147,14 +147,14 @@ void unlock_lib();
 int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in);
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to allocated Groq cards for calculations
+@param reserved_device_num The number of Groq accelerator cards to be allocated for the calulations
+@return Returns with 1 on success
 */
-int init_groq_sv_lib( const int accelerator_num );
+int init_groq_sv_lib( const int reserved_device_num );
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to unload the programs from the reserved Groq cards
 */
 void unload_groq_sv_lib();
 
@@ -165,10 +165,16 @@ void unload_groq_sv_lib();
 unsigned int ctz(unsigned int v);
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to pefrom the state vector simulation on the Groq hardware
+@param reserved_device_num The number of Groq accelerator cards to be allocated for the calulations
+@param chosen_device_num The ordinal number of the Groq accelerator card on which the calculation should be performed (0<=chosen_device_num<reserved_device_num)
+@param qbit_num The number of qubits
+@param u3_qbit An array of the gate kernels
+@param target_qbits The array of target qubits
+@param control_qbits The array of control qubits
+@param quantum_state The input state vector on which the transformation is applied. The transformed state is returned via this input.
 */
-void apply_to_groq_sv(int device_num, int qbit_num, std::vector<Matrix>& u3_qbit, Matrix& input, std::vector<int>& target_qbit, std::vector<int>& control_qbit);
+void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_num, std::vector<Matrix>& u3_qbit, std::vector<int>& target_qbits, std::vector<int>& control_qbits, Matrix& quantum_state);
 
 #endif
 
