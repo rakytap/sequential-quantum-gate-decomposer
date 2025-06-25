@@ -75,34 +75,41 @@ typedef struct {
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to get the available number of accelerators
+@return Retirns with the number of the available accelerators
 */
 size_t get_accelerator_avail_num();
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to get the number of free accelerators
+@return Retirns with the number of the free accelerators
 */
 size_t get_accelerator_free_num();
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to get the identification number of the inititalization of the library
+@return Returns with the identification number of the inititalization of the library
 */
 int get_initialize_id();
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to execute the calculation on the reserved DFE engines.
+@param rows The number of rows in the input matrix
+@param cols the number of columns in the input matrix
+@param gates The metadata describing the gates to be applied on the input
+@param gatesNum The number of the chained up gates.
+@param gateSetNum Integer descibing how many individual gate chains are encoded in the gates input.
+@param traceOffset In integer describing an offset in the trace calculation
+@param trace The trace of the transformed unitaries are returned through this pointer
+@return Return with 0 on success
 */
 int calcqgdKernelDFE(size_t rows, size_t cols, DFEgate_kernel_type* gates, int gatesNum, int gateSetNum, int traceOffset, double* trace);
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to retrieve the number of gates that should be chained up during the execution of the DFE library
+@return Returns with the number of the chained gates.
 */
 int get_chained_gates_num();
 
@@ -110,59 +117,63 @@ int get_chained_gates_num();
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to upload the input matrix to the DFE engine
+@param input The input matrix
 */
 void uploadMatrix2DFE( Matrix& input );
 
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to unload the DFE libarary and release the allocated devices
 */
 void unload_dfe_lib();
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to lock the access to the execution of the DFE library
 */
 void lock_lib();
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to unlock the access to the execution of the DFE library
 */
 void unlock_lib();
 
 
 
 
+
 /**
-@brief ????????????
-@return ??????????
+@brief Call to initialize the DFE library support and allocate the requested devices
+@param accelerator_num The number of requested devices
+@param qbit_num The number of the supported qubits
+@param initialize_id_in Identification number of the inititalization of the library
+@return Returns with the identification number of the inititalization of the library.
 */
 int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in);
+
+
+
+
+
 
 /**
 @brief Call to allocated Groq cards for calculations
 @param reserved_device_num The number of Groq accelerator cards to be allocated for the calulations
+@param initialize_id_in Identification number of the inititalization of the library
 @return Returns with 1 on success
 */
-int init_groq_sv_lib( const int reserved_device_num );
+int init_groq_sv_lib( const int reserved_device_num, int initialize_id_in );
 
 /**
 @brief Call to unload the programs from the reserved Groq cards
 */
 void unload_groq_sv_lib();
 
-/**
-@brief ????????????
-@return ??????????
-*/
-unsigned int ctz(unsigned int v);
+
+
 
 /**
 @brief Call to pefrom the state vector simulation on the Groq hardware
@@ -173,8 +184,9 @@ unsigned int ctz(unsigned int v);
 @param target_qbits The array of target qubits
 @param control_qbits The array of control qubits
 @param quantum_state The input state vector on which the transformation is applied. The transformed state is returned via this input.
+@param id_in Identification number of the inititalized library
 */
-void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_num, std::vector<Matrix>& u3_qbit, std::vector<int>& target_qbits, std::vector<int>& control_qbits, Matrix& quantum_state);
+void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_num, std::vector<Matrix>& u3_qbit, std::vector<int>& target_qbits, std::vector<int>& control_qbits, Matrix& quantum_state, int id_in);
 
 #endif
 

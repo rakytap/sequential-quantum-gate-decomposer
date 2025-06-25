@@ -216,17 +216,19 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum, Mat
     FILE* pFile;
     std::string filename("costfuncs_and_entropy.txt");
     
-    if (project_name != ""){filename = project_name + "_" + filename;}
-
-        const char* c_filename = filename.c_str();
-	pFile = fopen(c_filename, "a");
-
-        if (pFile==NULL) {
-            fputs ("File error",stderr); 
-            std::string error("Cannot open file.");
-            throw error;
+    if (project_name != "") {
+        filename = project_name + "_" + filename;
     }
 
+    const char* c_filename = filename.c_str();
+	pFile = fopen(c_filename, "a");
+
+    if (pFile==NULL) {
+        fputs ("File error",stderr); 
+        std::string error("Cannot open file.");
+        throw error;
+    }
+    
     Matrix input_state(Power_of_2(qbit_num),1);
 
     std::uniform_int_distribution<> distrib(0, qbit_num-2); 
@@ -239,10 +241,10 @@ void Optimization_Interface::export_current_cost_fnc(double current_minimum, Mat
     qbit_sublist[1] = 1;//qbit_sublist[0]+1;
 
     double renyi_entropy = get_second_Renyi_entropy(parameters, input_state, qbit_sublist);
-
+    
     fprintf(pFile,"%i\t%f\t%f\n", (int)number_of_iters, current_minimum, renyi_entropy);
     fclose(pFile);
-
+    
     return;
 }
 
@@ -698,8 +700,9 @@ Optimization_Interface::optimization_problem_batched_Groq( std::vector<Matrix_re
     
     Matrix_real cost_fnc_mtx(task_num, 1);
     
-            
-    init_groq_sv_lib(accelerator_num);
+    if ( get_initialize_id() != id ) {     
+        init_groq_sv_lib(accelerator_num, id);
+    }
     
     if ( accelerator_num == 1 ) {
     

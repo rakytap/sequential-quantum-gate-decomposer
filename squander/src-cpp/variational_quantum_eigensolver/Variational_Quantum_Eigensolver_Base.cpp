@@ -325,10 +325,10 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_Groq(Matrix_re
         
 
     // initialize the initial state on the chip if it was not given
-    if ( initial_state.size() == 0 ) {
+    if ( true ) { //initial_state.size() == 0 ) {
         
         Matrix State_zero(0,0);  
-        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State_zero); 
+        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State_zero, id); 
             
         State = State_zero;
             
@@ -337,7 +337,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_Groq(Matrix_re
 	
         State = initial_state.copy();
         // apply state transformation via the Groq chip
-        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State);
+        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State, id);
 
     }
         

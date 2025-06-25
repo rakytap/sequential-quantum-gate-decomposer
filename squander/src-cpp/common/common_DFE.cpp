@@ -16,13 +16,10 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file common.cpp
-    \brief Provides commonly used functions and wrappers to CBLAS functions.
+/*! \file common_DFE.cpp
+    \brief Provides functions to link and manage data-flow accelerator libarries
 */
 
-//
-// @brief A base class responsible for constructing matrices of C-NOT, U3
-// gates acting on the N-qubit space
 
 #include "common_DFE.h"
 #include "matrix_base.hpp"
@@ -61,14 +58,14 @@ void (*releive_groq_sv_dll)() = NULL;
 int (*initialize_groq_sv_dll)( int accelerator_num ) = NULL;
 }
 
-// The ID of the class initializing the DFE lib
+// The ID of the class that has initialized the accelerator lib (used to not initialze again if not necessary)
 int initialize_id = -1;
 
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to upload the input matrix to the DFE engine
+@param input The input matrix
 */
 void uploadMatrix2DFE( Matrix& input ) {
 
@@ -81,8 +78,7 @@ void uploadMatrix2DFE( Matrix& input ) {
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to unload the DFE libarary and release the allocated devices
 */
 void unload_dfe_lib()
 {
@@ -101,8 +97,11 @@ void unload_dfe_lib()
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to initialize the DFE library support and allocate the requested devices
+@param accelerator_num The number of requested devices
+@param qbit_num The number of the supported qubits
+@param initialize_id_in Identification number of the inititalization of the library
+@return Returns with the identification number of the inititalization of the library.
 */
 int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in )  {
 
@@ -146,8 +145,7 @@ int init_dfe_lib( const int accelerator_num, int qbit_num, int initialize_id_in 
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to lock the access to the execution of the DFE library
 */
 void lock_lib()
 {
@@ -157,8 +155,7 @@ void lock_lib()
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to unlock the access to the execution of the DFE library
 */
 void unlock_lib()
 {
@@ -171,8 +168,8 @@ void unlock_lib()
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to get the available number of accelerators
+@return Retirns with the number of the available accelerators
 */
 size_t get_accelerator_avail_num() {
 
@@ -182,8 +179,8 @@ size_t get_accelerator_avail_num() {
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to get the number of free accelerators
+@return Retirns with the number of the free accelerators
 */
 size_t get_accelerator_free_num() {
 
@@ -192,8 +189,8 @@ size_t get_accelerator_free_num() {
 }
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to get the identification number of the inititalization of the library
+@return Returns with the identification number of the inititalization of the library
 */
 int get_initialize_id() {
 
@@ -202,8 +199,15 @@ int get_initialize_id() {
 }
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to execute the calculation on the reserved DFE engines.
+@param rows The number of rows in the input matrix
+@param cols the number of columns in the input matrix
+@param gates The metadata describing the gates to be applied on the input
+@param gatesNum The number of the chained up gates.
+@param gateSetNum Integer descibing how many individual gate chains are encoded in the gates input.
+@param traceOffset In integer describing an offset in the trace calculation
+@param trace The trace of the transformed unitaries are returned through this pointer
+@return Return with 0 on success
 */
 int calcqgdKernelDFE(size_t rows, size_t cols, DFEgate_kernel_type* gates, int gatesNum, int gateSetNum, int traceOffset, double* trace) {
 
@@ -215,8 +219,8 @@ int calcqgdKernelDFE(size_t rows, size_t cols, DFEgate_kernel_type* gates, int g
 
 
 /**
-@brief ????????????
-@return ??????????
+@brief Call to retrieve the number of gates that should be chained up during the execution of the DFE library
+@return Returns with the number of the chained gates.
 */
 int get_chained_gates_num() {
 
@@ -234,6 +238,8 @@ void* handle_sv = NULL;
 */
 void unload_groq_sv_lib()
 {
+    const std::lock_guard<std::recursive_mutex> lock(libmutex);
+    
     if (handle_sv) {
         releive_groq_sv_dll();
         dlclose(handle_sv);
@@ -245,10 +251,15 @@ void unload_groq_sv_lib()
 /**
 @brief Call to allocated Groq cards for calculations
 @param reserved_device_num The number of Groq accelerator cards to be allocated for the calulations
+@param initialize_id_in Identification number of the inititalization of the library
 @return Returns with 1 on success
 */
-int init_groq_sv_lib( const int reserved_device_num )  {  
-    
+int init_groq_sv_lib( const int reserved_device_num, int initialize_id_in )  {  
+
+    const std::lock_guard<std::recursive_mutex> lock(libmutex);
+
+    initialize_id = initialize_id_in;
+        
     unload_groq_sv_lib();
 
 
@@ -285,8 +296,9 @@ int init_groq_sv_lib( const int reserved_device_num )  {
 @param target_qbits The array of target qubits
 @param control_qbits The array of control qubits
 @param quantum_state The input state vector on which the transformation is applied. The transformed state is returned via this input.
+@param id_in Identification number of the inititalized library
 */
-void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_num, std::vector<Matrix>& u3_qbit, std::vector<int>& target_qbits, std::vector<int>& control_qbits, Matrix& quantum_state) {
+void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_num, std::vector<Matrix>& u3_qbit, std::vector<int>& target_qbits, std::vector<int>& control_qbits, Matrix& quantum_state, int id_in) {
 
     //struct timespec starttime;
     //timespec_get(&starttime, TIME_UTC);
@@ -294,7 +306,7 @@ void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_n
     size_t matrix_size = 1 << qbit_num;
 
     // the number of chips to be allocated for the calculations
-    if (handle_sv == NULL && !init_groq_sv_lib(reserved_device_num)) {
+    if (handle_sv == NULL && !init_groq_sv_lib(reserved_device_num, id_in)) {
         throw std::string("Could not load and initialize Groq library");
     }
 
@@ -303,6 +315,9 @@ void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_n
     //printf("Total time on uploading the Groq program: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
 
 
+{ 
+    std::lock_guard<std::recursive_mutex> lock(libmutex);
+    
     if ( quantum_state.size() == 0 ) {
         if (load_sv_dll( NULL, qbit_num, chosen_device_num) ) {
             throw std::string("Error occured while reseting the state vector to Groq LPU");
@@ -313,11 +328,11 @@ void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_n
     }
     else {
 
-	if ( quantum_state.size() != matrix_size ) {
+	    if ( quantum_state.size() != matrix_size ) {
             throw std::string("apply_to_groq_sv: the size of the input vector should be in match with the number of qubits");
         }
 
-	if ( quantum_state.cols != 1 ) {
+	    if ( quantum_state.cols != 1 ) {
             throw std::string("apply_to_groq_sv: the input state should have a single column");
         }
 
@@ -342,6 +357,7 @@ void apply_to_groq_sv(int reserved_device_num, int chosen_device_num, int qbit_n
         //printf("Total time on uploading the state vector: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
 
     }
+}
 
 
     std::vector<float> gateMatrices;
