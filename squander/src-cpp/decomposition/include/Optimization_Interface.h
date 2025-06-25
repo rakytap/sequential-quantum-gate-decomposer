@@ -32,7 +32,7 @@ limitations under the License.
 #if defined __DFE__
     #include "common_DFE.h"
 #elif defined __GROQ__
-    #include "common_DFE.h"
+    #include "common_GROQ.h"
 #endif
 
 

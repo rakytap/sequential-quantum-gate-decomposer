@@ -325,7 +325,7 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_Groq(Matrix_re
         
 
     // initialize the initial state on the chip if it was not given
-    if ( true ) { //initial_state.size() == 0 ) {
+    if ( initial_state.size() == 0 ) {
         
         Matrix State_zero(0,0);  
         apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State_zero, id); 
@@ -554,6 +554,22 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem( double* param
 @brief Initialize the state used in the quantun circuit. All qubits are initialized to state 0
 */
 void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
+
+    int initialize_state;
+    if ( config.count("initialize_state") > 0 ) { 
+         long long value;                   
+         config["initialize_state"].get_property( value );  
+         initialize_state = (int) value;
+    }
+    else {
+        initialize_state = 1;
+         
+    }
+    
+    if( initialize_state == 0 ) {
+        initial_state = Matrix(0, 0);
+        return;
+    }
 
     initial_state = Matrix( 1 << qbit_num , 1);
 

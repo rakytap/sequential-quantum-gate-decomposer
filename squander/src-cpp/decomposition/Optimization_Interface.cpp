@@ -32,12 +32,6 @@ limitations under the License.
 #include <fstream>
 
 
-#if defined __DFE__
-    #include "common_DFE.h"
-#elif defined __GROQ__
-    #include "common_DFE.h"
-#endif
-
 
 
 
