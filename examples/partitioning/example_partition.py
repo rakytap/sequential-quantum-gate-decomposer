@@ -8,7 +8,7 @@ def ExamplePartition():
     filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
     
     max_partition_size = 4
-    partitioned_circuit, parameters = PartitionCircuitQasm( filename, max_partition_size )
+    partitioned_circuit, parameters = PartitionCircuitQasm( filename, max_partition_size, True )
 
     print(f"{filename} Partitions ({len(partitioned_circuit.get_Gates())}):")
     total = 0

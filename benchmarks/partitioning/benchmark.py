@@ -1,4 +1,4 @@
-from squander.partitioning.partition import qasm_to_partitioned_circuit
+from squander.partitioning.partition import PartitionCircuitQasm
 import glob
 import os
 from qiskit import QuantumCircuit
@@ -13,7 +13,7 @@ from bqskit.passes.partitioning.cluster import ClusteringPartitioner #does a bad
 from bqskit.passes.partitioning.scan import ScanPartitioner
 
 async def test_partitions():
-    allowed_gates = {'u', 'u3', 'cx', 'cry', 'cz', 'ch', 'rx', 'ry', 'rz', 'h', 'x', 'y', 'z', 'sx'}
+    allowed_gates = {'u', 'u3', 'cx', 'cry', 'cz', 'ch', 'rx', 'ry', 'rz', 'h', 'x', 'y', 'z', 'sx', 't', 'tdg', 'r'}
     max_partition_size = 4
     files = glob.glob("benchmarks/partitioning/test_circuit/*.qasm")
     print("Total QASM:", len(files))
@@ -26,10 +26,10 @@ async def test_partitions():
         if num_gates > 1024:
             continue
         res = {}
-        partitioned_circuit, parameters = qasm_to_partitioned_circuit( filename, max_partition_size )
+        partitioned_circuit, parameters = PartitionCircuitQasm( filename, max_partition_size )
         res["Greedy"] = len(partitioned_circuit.get_Gates())
         print("ILP")
-        partitioned_circuit_ilp, parameters_ilp = qasm_to_partitioned_circuit( filename, max_partition_size, True )
+        partitioned_circuit_ilp, parameters_ilp = PartitionCircuitQasm( filename, max_partition_size, True )
         res["ILP"] = len(partitioned_circuit_ilp.get_Gates())
         pm = PassManager([
             CollectMultiQBlocks(max_block_size=max_partition_size),
@@ -61,7 +61,7 @@ async def test_partitions():
     sorted_items = sorted(allfiles.items(), key=lambda item: (item[1][0], item[1][1]))
     circuits_sorted = [name for name, _ in sorted_items]
     markers = ["o", "*", "D", "s"]
-    for i, strat in enumerate(("Greedy", "ILP",""
+    for i, strat in enumerate(("Greedy","ILP",""
                   "Qiskit", "BQSKit-Quick")):
         y = [allfiles[name][2][strat] for name in circuits_sorted]
         plt.plot(circuits_sorted, y, marker=markers[i], label=strat)

@@ -205,20 +205,20 @@ class Test_operations:
             
             
 
-	    #SQUANDER
+        #SQUANDER
 
             # get the gate matrix     
 
             # determine the number of input arguments of the get_Matrix function
             parameter_num = squander_gate.get_Parameter_Num()
             if parameter_num == 0:
-	            gate_matrix_squander = squander_gate.get_Matrix( )
-            elif parameter_num > 0:
-                    parameters = ( np.random.rand( parameter_num )*2-1.0 ) * np.pi
-                    gate_matrix_squander = squander_gate.get_Matrix( parameters )
+                gate_matrix_squander = squander_gate.get_Matrix( )
+            elif parameter_num > 0: # Inconsistent use of tabs and spaces in indentation
+                parameters = ( np.random.rand( parameter_num )*2-1.0 ) * np.pi
+                gate_matrix_squander = squander_gate.get_Matrix( parameters )
 
 
-	    #QISKIT
+        #QISKIT
 
             # Create a Quantum Circuit acting on the q register
             circuit = QuantumCircuit(qbit_num)
@@ -315,7 +315,7 @@ class Test_operations:
 
             
 
-	    #SQUANDER
+        #SQUANDER
 
             state_squander = initial_state.copy()
 
@@ -323,13 +323,13 @@ class Test_operations:
             # determine the number of input arguments of the get_Matrix function
             parameter_num = squander_gate.get_Parameter_Num()
             if parameter_num == 0:
-	            squander_gate.apply_to( state_squander )
-            elif parameter_num > 0:
-                    parameters = ( np.random.rand( parameter_num )*2-1.0 ) * np.pi
-                    squander_gate.apply_to( state_squander, parameters )
+                squander_gate.apply_to( state_squander )
+            elif parameter_num > 0: # Inconsistent use of tabs and spaces in indentation
+                parameters = ( np.random.rand( parameter_num )*2-1.0 ) * np.pi
+                squander_gate.apply_to( state_squander, parameters )
 
 
-	    #QISKIT
+        #QISKIT
 
             # Create a Quantum Circuit acting on the q register
             circuit_qiskit = QuantumCircuit(qbit_num)
@@ -377,24 +377,24 @@ class Test_operations:
 
             # Execute and get the state vector
             if qiskit_version[0] == '1' or qiskit_version[0] == '2':
-	
+    
                 circuit_qiskit.save_statevector()
-	
+    
                 backend = Aer.AerSimulator(method='statevector')
                 compiled_circuit = transpile(circuit_qiskit, backend)
                 result = backend.run(compiled_circuit).result()
-		
+        
                 state_QISKIT = result.get_statevector(compiled_circuit)		
        
         
             elif qiskit_version[0] == '0':
-	
+    
                 # Select the StatevectorSimulator from the Aer provider
                 simulator = Aer.get_backend('statevector_simulator')	
-		
+        
                 backend = Aer.get_backend('aer_simulator')
                 result = execute(circuit_qiskit, simulator).result()
-		
+        
                 state_QISKIT = result.get_statevector(circuit_qiskit)
 
             state_QISKIT = np.array(state_QISKIT)

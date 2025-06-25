@@ -29,7 +29,6 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 import numpy as np
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 
-from squander.gates.qgd_R import qgd_R as R 
 
 from squander.gates.gates_Wrapper import (
     U3,
@@ -37,6 +36,9 @@ from squander.gates.gates_Wrapper import (
     X,
     Y,
     Z,
+    T,
+    Tdg,
+    R,
     CH,
     CNOT,
     CZ,
@@ -136,6 +138,14 @@ def get_Qiskit_Circuit( Squander_circuit, parameters ):
         elif isinstance( gate, SX ):
             # SX gate
             circuit.sx( gate.get_Target_Qbit() )  
+        
+        elif isinstance( gate, T ):
+            # T gate
+            circuit.t( gate.get_Target_Qbit() )  
+        
+        elif isinstance( gate, Tdg ):
+            # T gate
+            circuit.tdg( gate.get_Target_Qbit() ) 
 
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
@@ -189,7 +199,7 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
         elif isinstance( gate, SYC ):
             # Sycamore gate
             print("Unsupported gate in the circuit export: Sycamore gate")
-            return None;
+            return None
 
         elif isinstance( gate, U3 ):
             # adding U3 gate to the quantum circuit
@@ -230,6 +240,14 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
         elif isinstance( gate, SX ):
             # SX gate
             circuit.sx( gate.get_Target_Qbit() )
+        
+        elif isinstance( gate, T ):
+            # T gate (inverse is Tdg)
+            circuit.tdg( gate.get_Target_Qbit() )
+        
+        elif isinstance( gate, Tdg ):
+            # Tdg gate (inverse is T)
+            circuit.t( gate.get_Target_Qbit() )
 
         elif isinstance( gate, Circuit ):
             # Sub-circuit gate
@@ -381,6 +399,31 @@ def convert_Qiskit_to_Squander( qc_in ):
             qubit = q_register.index( qubits[0] ) 
 
             Circuit_Squander.add_SX( qubit )
+        
+        elif name == "t":
+            qubits = gate[1]                
+            qubit = q_register.index( qubits[0] ) 
+
+            Circuit_Squander.add_T( qubit )
+        
+        elif name == "tdg":
+            qubits = gate[1]                
+            qubit = q_register.index( qubits[0] ) 
+
+            Circuit_Squander.add_Tdg( qubit )
+        
+        elif name == "r":
+            qubits = gate[1]                
+            qubit = q_register.index( qubits[0] ) 
+            
+            params = gate[0].params
+            params[0] = params[0]/2 #SQUADER works with theta/2
+                    
+            for param in params:
+                parameters = parameters + [float(param)]
+            
+            Circuit_Squander.add_R( qubit )
+
         else:
             print(f"convert_Qiskit_to_Squander: Unimplemented gate: {name}")
 

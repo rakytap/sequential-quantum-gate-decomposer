@@ -46,6 +46,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Z.h"
 #include "T.h"
 #include "Tdg.h"
+#include <R.h>
 #include "numpy_interface.h"
 
 
@@ -943,7 +944,7 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         break; 
     }
     case R_OPERATION: {
-        gate = create_gate<X>( qbit_num, target_qbit );
+        gate = create_gate<R>( qbit_num, target_qbit );
         break;
     }    
     case RX_OPERATION: {
@@ -1000,7 +1001,27 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
 }
 
 
+static PyObject *
+U3_get_Theta(Gate_Wrapper *self, void *closure) {
+    return PyBool_FromLong(static_cast<U3*>(self->gate)->is_theta_parameter());
+}
 
+static PyObject *
+U3_get_Phi(Gate_Wrapper *self, void *closure) {
+    return PyBool_FromLong(static_cast<U3*>(self->gate)->is_phi_parameter());
+}
+
+static PyObject *
+U3_get_Lambda(Gate_Wrapper *self, void *closure) {
+    return PyBool_FromLong(static_cast<U3*>(self->gate)->is_lambda_parameter());
+}
+
+static PyGetSetDef U3_getters[] = {
+    {(char*)"Theta", (getter)U3_get_Theta, NULL, NULL, NULL},
+    {(char*)"Phi", (getter)U3_get_Phi, NULL, NULL, NULL},
+    {(char*)"Lambda", (getter)U3_get_Lambda, NULL, NULL, NULL},
+    {NULL}
+};
 
 
 extern "C"
@@ -1198,8 +1219,9 @@ struct U3_Wrapper_Type : Gate_Wrapper_Type_tmp {
     U3_Wrapper_Type() {    
         tp_name      = "U3";
         tp_doc       = "Object to represent python binding for a U3 gate of the Squander package.";
-        tp_new      = (newfunc) U3_Wrapper_new;
+        tp_new       = (newfunc) U3_Wrapper_new;
         tp_base      = &Gate_Wrapper_Type;
+        tp_getset    = U3_getters;
     }
 };
 
@@ -1256,6 +1278,17 @@ struct Tdg_Wrapper_Type : Gate_Wrapper_Type_tmp {
 };
 
 
+struct R_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    R_Wrapper_Type() {    
+        tp_name      = "R";
+        tp_doc       = "Object to represent python binding for a R gate of the Squander package.";
+        tp_new      = (newfunc) Gate_Wrapper_new<R>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
+
 static CH_Wrapper_Type CH_Wrapper_Type_ins;
 static CNOT_Wrapper_Type CNOT_Wrapper_Type_ins;
 static CZ_Wrapper_Type CZ_Wrapper_Type_ins;
@@ -1272,7 +1305,7 @@ static Y_Wrapper_Type Y_Wrapper_Type_ins;
 static Z_Wrapper_Type Z_Wrapper_Type_ins;
 static T_Wrapper_Type T_Wrapper_Type_ins;
 static Tdg_Wrapper_Type Tdg_Wrapper_Type_ins;
-
+static R_Wrapper_Type R_Wrapper_Type_ins;
 
 
 
@@ -1325,7 +1358,8 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&Y_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Z_Wrapper_Type_ins) < 0 || 
         PyType_Ready(&T_Wrapper_Type_ins) < 0 ||
-        PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ) {
+        PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&R_Wrapper_Type_ins) < 0 ) {
 
         Py_DECREF(m);
         return NULL;
@@ -1449,9 +1483,17 @@ PyInit_gates_Wrapper(void)
     }
 
 
-    Py_INCREF(&T_Wrapper_Type_ins);
-    if (PyModule_AddObject(m, "Tdg", (PyObject *) & T_Wrapper_Type_ins) < 0) {
-        Py_DECREF(& T_Wrapper_Type_ins);
+    Py_INCREF(&Tdg_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "Tdg", (PyObject *) & Tdg_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& Tdg_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+
+    Py_INCREF(&R_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "R", (PyObject *) & R_Wrapper_Type_ins) < 0) {
+        Py_DECREF(&R_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }
