@@ -33,10 +33,12 @@ async def test_partitions():
         res["ILP"] = len(partitioned_circuit_ilp.get_Gates())
         pm = PassManager([
             CollectMultiQBlocks(max_block_size=max_partition_size),
-            ConsolidateBlocks()
         ])
-        optimized_circuit = pm.run(qc)
-        res["Qiskit"] = len(optimized_circuit.data)
+        pm.run(qc)
+        blocks = pm.property_set['block_list']
+        # we count each block as 1 partition
+        # we count each ungrouped gate as 1 partition
+        res["Qiskit"] = len(blocks) + (len(qc.data) - sum(map(len, blocks))) # num of block partitions + num of individual gate partitions
         for name, partitioner in {"BQSKit-Quick": QuickPartitioner(block_size=max_partition_size),
                             "BQSKit-Scan": ScanPartitioner(block_size=max_partition_size), "BQSKit-Greedy": GreedyPartitioner(block_size=max_partition_size),
                             "BQSKit-Cluster": ClusteringPartitioner(block_size=max_partition_size)}.items():
