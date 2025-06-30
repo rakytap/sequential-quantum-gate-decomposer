@@ -36,7 +36,7 @@ U2::U2() {
     type = U2_OPERATION;
     target_qbit = -1;
     control_qbit = -1;
-    parameter_num = 1;
+    parameter_num = 2;
 }
 
 /**
@@ -292,13 +292,13 @@ Matrix U2::calc_one_qubit_u3(double Phi, double Lambda ) {
     Matrix u2_1qbit = Matrix(2,2); 
 
     // U2(phi, lambda) = U3(pi/2, phi, lambda)
-    double ThetaOver2 = M_PI/4; // ThetaOver2 = pi/4 (since in SQUANDER, theta = pi/2)
+    const double THETA_OVER_2 = M_PI/4; // ThetaOver2 = pi/4 (since in SQUANDER, theta = pi/2)
 
     double cos_theta = 1.0, sin_theta = 0.0;
     double cos_phi = 1.0, sin_phi = 0.0;
     double cos_lambda = 1.0, sin_lambda = 0.0;
 
-    if (ThetaOver2!=0.0) sincos(ThetaOver2, &sin_theta, &cos_theta);
+    sincos(THETA_OVER_2, &sin_theta, &cos_theta);
     if (Phi!=0.0) sincos(Phi, &sin_phi, &cos_phi);
     if (Lambda!=0.0) sincos(Lambda, &sin_lambda, &cos_lambda);
 
