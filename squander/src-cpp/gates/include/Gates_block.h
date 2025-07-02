@@ -363,6 +363,33 @@ void add_z(int target_qbit);
 */
 void add_z_to_front(int target_qbit);
 
+
+/**
+@brief Append a T gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_t(int target_qbit);
+
+/**
+@brief Add a T gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_t_to_front(int target_qbit);
+
+
+/**
+@brief Append a Tdg gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_tdg(int target_qbit);
+
+/**
+@brief Add a Tdg gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_tdg_to_front(int target_qbit);
+
+
 /**
 @brief Append a SX gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
@@ -519,7 +546,7 @@ void list_gates( const Matrix_real &parameters, int start_index );
 @param qbit_map The map to reorder the qbits in a form of map: {int(initial_qbit): int(remapped_qbit)}.
 @return Returns with the remapped circuit
 */
-Gates_block* Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map );
+Gates_block* create_remapped_circuit( const std::map<int, int>& qbit_map );
 
 
 /**
@@ -528,7 +555,7 @@ Gates_block* Gates_block::create_remapped_circuit( const std::map<int, int>& qbi
 @param qbit_num The number of qubits in the remapped circuit
 @return Returns with the remapped circuit
 */
-Gates_block* Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const int qbit_num_ );
+Gates_block* create_remapped_circuit( const std::map<int, int>& qbit_map, const int qbit_num_ );
 
 
 /**
@@ -679,7 +706,9 @@ DFEgate_kernel_type* convert_to_DFE_gates( Matrix_real& parameters_mtx, int& gat
 */
 void convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEgate_kernel_type* DFEgates, int& start_index );
 
-void get_matrices_target_control(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx);
+
+
+void extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx);
 
 #endif
 

@@ -16,89 +16,100 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file CH.h
-    \brief Header file for a class representing a CH operation.
+/*! \file T.h
+    \brief Header file for a class representing the T gate.
 */
 
-#ifndef CH_H
-#define CH_H
+#ifndef T_H
+#define T_H
 
+#include "U3.h"
 #include "matrix.h"
-#include "Gate.h"
 #define _USE_MATH_DEFINES
 #include <math.h>
-#include "CNOT.h"
 
 
 /**
-@brief A class representing a CH operation.
+@brief A class representing a U3 gate.
 */
-class CH: public CNOT {
-
-protected:
+class T: public U3 {
 
 
 public:
 
 /**
-@brief Nullary constructor of the class.
+@brief NullaRX constructor of the class.
 */
-CH();
+T();
 
 
 /**
 @brief Constructor of the class.
-@param qbit_num_in The number of qubits in the unitaries
-@param target_qbit_in The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
-@param control_qbit_in The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+@param qbit_num_in The number of qubits spanning the gate.
+@param target_qbit_in The 0<=ID<qbit_num of the target qubit.
+@param theta_in logical value indicating whether the matrix creation takes an argument theta.
+@param phi_in logical value indicating whether the matrix creation takes an argument phi
+@param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-CH(int qbit_num_in, int target_qbit_in,  int control_qbit_in);
+T(int qbit_num_in, int target_qbit_in);
 
 /**
 @brief Destructor of the class
 */
-~CH();
+~T();
 
 
 /**
-@brief Call to retrieve the operation matrix
-@return Returns with the matrix of the operation
+@brief Call to retrieve the gate matrix
+@return Returns with a matrix of the gate
 */
 Matrix get_matrix();
 
 /**
-@brief Call to retrieve the operation matrix
+@brief Call to retrieve the gate matrix
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
-@return Returns with the matrix of the operation
+@return Returns with a matrix of the gate
 */
-Matrix get_matrix(int parallel);
+Matrix get_matrix( int parallel );
+
 
 /**
-@brief Call to apply the gate on the input array/matrix CH*input
+@brief Call to apply the gate on the input array/matrix by U3*input
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void apply_to( Matrix& input, int parallel );
 
+
 /**
-@brief Call to apply the gate on the input array/matrix by input*CH
+@brief Call to apply the gate on the input array/matrix by input*U3
+@param parameters An array of parameters to calculate the matrix of the U3 gate.
 @param input The input array on which the gate is applied
 */
 void apply_from_right( Matrix& input );
 
+
 /**
-@brief Call to set the number of qubits spanning the matrix of the operation
-@param qbit_num The number of qubits
+@brief Call to create a clone of the present class
+@return Return with a pointer pointing to the cloned object
 */
-void set_qbit_num(int qbit_num);
+T* clone();
 
 
 /**
-@brief Call to reorder the qubits in the matrix of the operation
+@brief Call to set the number of qubits spanning the matrix of the gate
+@param qbit_num_in The number of qubits
+*/
+void set_qbit_num(int qbit_num_in);
+
+
+
+/**
+@brief Call to reorder the qubits in the matrix of the gate
 @param qbit_list The reordered list of qubits spanning the matrix
 */
 void reorder_qubits( std::vector<int> qbit_list);
-
 
 /**
 @brief Set static values for matrix of the gates.
@@ -107,13 +118,8 @@ void reorder_qubits( std::vector<int> qbit_list);
 */
 Matrix calc_one_qubit_u3( );
 
-
-/**
-@brief Call to create a clone of the present class
-@return Return with a pointer pointing to the cloned object
-*/
-CH* clone();
-
 };
 
-#endif //CH
+
+#endif //T
+

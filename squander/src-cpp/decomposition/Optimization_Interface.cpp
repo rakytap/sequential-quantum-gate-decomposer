@@ -590,7 +590,6 @@ Optimization_Interface::optimization_problem_batched( std::vector<Matrix_real>& 
 tbb::tick_count t0_DFE = tbb::tick_count::now();    
 
 
-
     Matrix_real cost_fnc_mtx(parameters_vec.size(), 1);
 
     int parallel = get_parallel_configuration();
@@ -1462,6 +1461,7 @@ Optimization_Interface::get_accelerator_num() {
     return accelerator_num;
 
 }
+
 
 
 #endif

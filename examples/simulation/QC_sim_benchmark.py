@@ -177,7 +177,7 @@ for qbit_num in range(qbit_num_min, qbit_num_max+1, 1):
 	t0 = time.time()
 
 	# Execute and get the state vector
-	if qiskit_version[0] == '1':
+	if qiskit_version[0] == '1' or qiskit_version[0] == '2':
 	
 		circuit_qiskit.save_statevector()
 	

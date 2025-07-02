@@ -25,6 +25,7 @@ limitations under the License.
 // gates acting on the N-qubit space
 
 #include "common_DFE.h"
+#include "matrix_base.hpp"
 
 #include <atomic>
 #include <dlfcn.h>
@@ -54,7 +55,7 @@ int (*get_chained_gates_num_dll)() = NULL;
 
 size_t (*get_accelerator_avail_num_sv_dll)() = NULL;
 size_t (*get_accelerator_free_num_sv_dll)() = NULL;
-int (*calcsvKernelGroq_dll)(int num_gates, float* gates, int* target_qubits, int* control_qubits, float* result, int device_num) = NULL;
+int (*calcsvKernelGroq_dll)(int num_gates, float* gates, int* target_qubits, int* control_qubits, float* result_real, float* result_imag, int device_num) = NULL;
 int (*load_sv_dll)(float* data, size_t num_qubits, size_t device_num) = NULL;
 void (*releive_groq_sv_dll)() = NULL;
 int (*initialize_groq_sv_dll)( int accelerator_num ) = NULL;
@@ -252,8 +253,8 @@ int init_groq_sv_lib( const int accelerator_num )  {
     else {
         get_accelerator_avail_num_sv_dll = (size_t (*)())dlsym(handle_sv, "get_accelerator_avail_num_sv");
         get_accelerator_free_num_sv_dll  = (size_t (*)())dlsym(handle_sv, "get_accelerator_free_num_sv");
-        calcsvKernelGroq_dll          = (int (*)(int, float*, int*, int*, float*, int))dlsym(handle_sv, "calcsvKernelGroq");
-        load_sv_dll                 = (int (*)(float*, size_t, size_t))dlsym(handle_sv, "load_sv");
+        calcsvKernelGroq_dll          = (int (*)(int, float*, int*, int*, float*, float*, int))dlsym(handle_sv, "calcsvKernelGroq");
+        load_sv_dll                 = (int (*)(float*, size_t, size_t))dlsym(handle_sv, "prepare_state_vector");
         releive_groq_sv_dll               = (void (*)())dlsym(handle_sv, "releive_groq_sv");
         initialize_groq_sv_dll            = (int (*)(int))dlsym(handle_sv, "initialize_groq_sv");
 
@@ -264,47 +265,103 @@ int init_groq_sv_lib( const int accelerator_num )  {
 
 }
 
-//https://graphics.stanford.edu/~seander/bithacks.html#ZerosOnRightParallel
-unsigned int ctz(unsigned int v) { //can use consecutive trailing zero bits if and only if v is exact power of 2
-    unsigned int c = 32; // c will be the number of zero bits on the right
-    v &= -signed(v);
-    if (v) c--;
-    if (v & 0x0000FFFF) c -= 16;
-    if (v & 0x00FF00FF) c -= 8;
-    if (v & 0x0F0F0F0F) c -= 4;
-    if (v & 0x33333333) c -= 2;
-    if (v & 0x55555555) c -= 1;
-    return c;
-}
 
-void apply_to_groq_sv(int device_num, std::vector<Matrix>& u3_qbit, Matrix& input, std::vector<int>& target_qbit, std::vector<int>& control_qbit) {
-    int alloc_dfes = 2;
-    if (handle_sv == NULL && !init_groq_sv_lib(alloc_dfes))
+
+void apply_to_groq_sv(int device_num, int qbit_num, std::vector<Matrix>& u3_qbit, Matrix& State, std::vector<int>& target_qbit, std::vector<int>& control_qbit) {
+
+    //struct timespec starttime;
+    //timespec_get(&starttime, TIME_UTC);
+
+    size_t matrix_size = 1 << qbit_num;
+
+    // the number of chips to be allocated for the calculations
+    int alloc_dfes = 1;
+    if (handle_sv == NULL && !init_groq_sv_lib(alloc_dfes)) {
         throw std::string("Could not load and initialize DFE library");
-    std::vector<float> inout;
-    inout.reserve(input.size()*2);
-    for (size_t i = 0; i < input.rows; i++) {
-        for (size_t j = 0; j < input.cols; j++) {
-            inout.push_back(input.data[i*input.stride+j].real);
-            inout.push_back(input.data[i*input.stride+j].imag);
-        }
     }
+
+    //struct timespec t;
+    //timespec_get(&t, TIME_UTC);
+    //printf("Total time on uploading the Groq program: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+
+
+    if ( State.size() == 0 ) {
+        if (load_sv_dll( NULL, qbit_num, device_num) ) {
+            throw std::string("Error occured while reseting the state vector to Groq LPU");
+        }
+
+        State = Matrix( matrix_size, 1);
+
+    }
+    else {
+
+	if ( State.size() != matrix_size ) {
+            throw std::string("apply_to_groq_sv: the size of the input vector should be in match with the number of qubits");
+        }
+
+	if ( State.cols != 1 ) {
+            throw std::string("apply_to_groq_sv: the input state should have a single column");
+        }
+
+        //timespec_get(&starttime, TIME_UTC);
+        std::vector<float> inout;
+        inout.reserve(State.size()*2);
+        for (size_t idx = 0; idx < State.rows; idx++) {
+            inout.push_back(State.data[idx].real);
+            inout.push_back(State.data[idx].imag);
+        }
+
+        //timespec_get(&t, TIME_UTC);
+        //printf("Total time on converting State data to float: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+
+
+        //timespec_get(&starttime, TIME_UTC);
+        if (load_sv_dll(inout.data(), qbit_num, device_num)) {
+            throw std::string("Error occured while uploading state vector to Groq LPU");
+        }
+
+        //timespec_get(&t, TIME_UTC);
+        //printf("Total time on uploading the state vector: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+
+    }
+
+
     std::vector<float> gateMatrices;
+    gateMatrices.reserve( 4*u3_qbit.size()*2 );
     for (const Matrix& m : u3_qbit) {
         for (size_t i = 0; i < m.rows; i++) {
             for (size_t j = 0; j < m.cols; j++) {
-                gateMatrices.push_back(m.data[i*m.stride+j].real);
-                gateMatrices.push_back(m.data[i*m.stride+j].imag);
+
+                gateMatrices.push_back( m.data[i*m.stride+j].real );
+                gateMatrices.push_back( m.data[i*m.stride+j].imag );
+
             }
         }
     }
-    if (load_sv_dll(inout.data(), ctz(input.rows), device_num)) throw std::string("Error loading state vector to groq");
-    if (calcsvKernelGroq_dll(u3_qbit.size(), gateMatrices.data(), target_qbit.data(), control_qbit.data(), inout.data(), device_num)) throw std::string("Error running gate kernels on groq");
-    for (size_t i = 0; i < input.rows; i++) {
-        for (size_t j = 0; j < input.cols; j++) {
-            input.data[i*input.stride+j].real = inout[2*(i*input.cols+j)];
-            input.data[i*input.stride+j].imag = inout[2*(i*input.cols+j)+1];
-        }
+
+    //timespec_get(&starttime, TIME_UTC);
+    // evaluate the gate kernels on the Groq chip
+    matrix_base<float> transformed_sv_real( matrix_size, 1);
+    matrix_base<float> transformed_sv_imag( matrix_size, 1);
+
+    if (calcsvKernelGroq_dll(u3_qbit.size(), gateMatrices.data(), target_qbit.data(), control_qbit.data(), transformed_sv_real.get_data(), transformed_sv_imag.get_data(), device_num)) {
+        throw std::string("Error running gate kernels on groq");
     }
+
+    //timespec_get(&t, TIME_UTC);
+    //printf("Total time on calcsvKernelGroq: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+
+
+    //timespec_get(&starttime, TIME_UTC);  
+    // transform the state vector to double representation  
+    for (size_t idx = 0; idx < matrix_size; idx++) {
+        State.data[idx].real = transformed_sv_real[idx];
+        State.data[idx].imag = transformed_sv_imag[idx];        
+    }
+    //timespec_get(&t, TIME_UTC);
+    //printf("Total time on transforming state vector to double: %.9f\n", (t.tv_sec - starttime.tv_sec) + (t.tv_nsec - starttime.tv_nsec) / 1e9);
+
+
+
 }
 

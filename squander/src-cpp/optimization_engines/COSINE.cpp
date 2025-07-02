@@ -89,10 +89,9 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         double optimization_time = 0.0;
         tbb::tick_count optimization_start = tbb::tick_count::now();
 
-
         // the current result
         current_minimum = optimization_problem( optimized_parameters_mtx );
-
+    
 
         // the array storing the optimized parameters
         Matrix_real solution_guess_tmp_mtx = Matrix_real( num_of_parameters, 1 );

@@ -3,7 +3,7 @@ cmake_minimum_required(VERSION 3.10.2)
 # CMAKE to create the shared library of the quantum gate decomposition project
 
 # set the project name and version
-project(CQGD VERSION 1.9.2)
+project(CQGD VERSION 1.9.3)
 
 # reuse compilation time linking for use runtime linking 
 SET(CMAKE_INSTALL_RPATH_USE_LINK_PATH TRUE)
@@ -343,6 +343,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/X.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Y.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Z.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/T.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Tdg.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SX.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RY.cpp
@@ -414,6 +416,19 @@ if (DEFINED ENV{QGD_DFE})
 
   list(APPEND CXX_FLAGS_DEBUG "-D__DFE__=1")
   list(APPEND CXX_FLAGS_RELEASE "-D__DFE__=1")
+
+
+endif()
+
+
+
+if (DEFINED ENV{QGD_GROQ})
+  list(APPEND qgd_files 
+      ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/common_DFE.cpp
+  )
+
+  list(APPEND CXX_FLAGS_DEBUG "-D__GROQ__=1")
+  list(APPEND CXX_FLAGS_RELEASE "-D__GROQ__=1")
 
 
 endif()

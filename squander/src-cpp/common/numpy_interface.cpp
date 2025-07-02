@@ -95,13 +95,27 @@ PyObject* matrix_real_to_numpy( Matrix_real &mtx ) {
         // initialize Numpy API
         import_array();
 
-
         npy_intp shape[2];
-        shape[0] = (npy_intp) mtx.rows;
-        shape[1] = (npy_intp) mtx.cols;
+
+        // TODO: this logic should be implemented on higher level of API logic in the interfaces.
+        // fix this issue after redesigning the decomposition interfaces
+        int dims;
+        if ( mtx.rows == 1 ) {
+            dims = 1;
+            shape[0] = mtx.cols;
+        }
+        else if ( mtx.cols == 1 ) {
+            dims = 1;
+            shape[0] = mtx.rows;
+        }
+        else {
+            dims = 2;
+            shape[0] = (npy_intp) mtx.rows;
+            shape[1] = (npy_intp) mtx.cols;
+        }
 
         double* data = mtx.get_data();
-        return array_from_ptr( (void*) data, 2, shape, NPY_DOUBLE);
+        return array_from_ptr( (void*) data, dims, shape, NPY_DOUBLE);
 
 
 }

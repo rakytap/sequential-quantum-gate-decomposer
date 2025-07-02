@@ -474,7 +474,7 @@ N_Qubit_Decomposition_Tree_Search::tree_search_over_gate_structures( int level_n
 //std::cout << "levels " << level_num << std::endl;
     tbb::parallel_for( tbb::blocked_range<int64_t>((int64_t)0, concurrency, work_batch), [&](tbb::blocked_range<int64_t> r) {
         for (int64_t job_idx=r.begin(); job_idx<r.end(); ++job_idx) { 
-        
+       
     //for( int64_t job_idx=0; job_idx<concurrency; job_idx++ ) {  
     
             // initial offset and upper boundary of the gray code counter
@@ -729,7 +729,7 @@ N_Qubit_Decomposition_Tree_Search::add_two_qubit_block(Gates_block* gate_structu
 
         bool Theta = true;
         bool Phi = true;
-        bool Lambda = false;
+        bool Lambda = true;
 /*
 layer->add_rz(target_qbit);
 layer->add_ry(target_qbit);

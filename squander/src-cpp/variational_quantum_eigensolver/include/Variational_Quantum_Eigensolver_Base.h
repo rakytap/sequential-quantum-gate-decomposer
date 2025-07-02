@@ -93,7 +93,7 @@ Variational_Quantum_Eigensolver_Base();
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in);
+Variational_Quantum_Eigensolver_Base( Matrix_sparse Hamiltonian_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in, int accelerator_num=0);
 
 /**
 @brief Destructor of the class

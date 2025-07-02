@@ -27,27 +27,32 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 
 
 import numpy as np
-from squander import Circuit
+from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 
-from squander import CNOT
-from squander import CRY
-from squander import CZ
-from squander import CH
-from squander import SYC
-from squander import U3
-from squander import RX
-from squander import RY
-from squander import RZ
-from squander import H
-from squander import X
-from squander import Y
-from squander import Z
-from squander import SX
-from squander import R 
+from squander.gates.qgd_R import qgd_R as R 
+
+from squander.gates.gates_Wrapper import (
+    U3,
+    H,
+    X,
+    Y,
+    Z,
+    CH,
+    CNOT,
+    CZ,
+    RX,
+    RY,
+    RZ,
+    SX,
+    SYC,
+    CRY )
 
 
 
 
+def scalar(param):
+    """Extract scalar value from array or return as is"""
+    return param.item() if hasattr(param, 'item') else param
 
 
 ##
@@ -167,7 +172,7 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
             
         elif isinstance( gate, CRY ):
             # adding CNOT gate to the quantum circuit
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.cry( -parameters_gate[0], gate.get_Control_Qbit(), gate.get_Target_Qbit() )
         elif isinstance( gate, R ):
             # R gate
@@ -188,22 +193,22 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
 
         elif isinstance( gate, U3 ):
             # adding U3 gate to the quantum circuit
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.u( -parameters_gate[0], -parameters_gate[2], -parameters_gate[1], gate.get_Target_Qbit() )   
 
         elif isinstance( gate, RX ):
             # RX gate
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.rx( -parameters_gate[0], gate.get_Target_Qbit() )    
             
         elif isinstance( gate, RY ):
             # RY gate
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.ry( -parameters_gate[0], gate.get_Target_Qbit() )    
 
         elif isinstance( gate, RZ ):
             # RZ gate
-            parameters_gate = gate.Extract_Parameters( parameters )
+            parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
             circuit.rz( -parameters_gate[0], gate.get_Target_Qbit() )    
             
         elif isinstance( gate, H ):
@@ -377,7 +382,7 @@ def convert_Qiskit_to_Squander( qc_in ):
 
             Circuit_Squander.add_SX( qubit )
         else:
-            print("convert_Qiskit_to_Squander: Unimplemented gate: ", name )
+            print(f"convert_Qiskit_to_Squander: Unimplemented gate: {name}")
 
 
     parameters = np.asarray(parameters, dtype=np.float64)

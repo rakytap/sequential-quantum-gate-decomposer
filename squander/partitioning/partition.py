@@ -1,7 +1,10 @@
-from squander import Circuit, CNOT, CH, CZ, CRY
+from squander.gates.gates_Wrapper import CNOT, CH, CZ, CRY
+from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander import utils
 from itertools import dropwhile
+from typing import List, Tuple
 import numpy as np
+import os
 
 
 #@brief Retrieves qubit indices used by a SQUANDER gate
@@ -129,12 +132,13 @@ def find_next_biggest_partition(c, max_qubits_per_partition, prevparts=None):
             prob += a[j] >= a[i]
             prob += x[j] + a[j] >= x[i]
     prob.setObjective(-pulp.lpSum(x[i] for i in range(num_gates)))
-    from gurobilic import get_gurobi_options
-    prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
+    #from gurobilic import get_gurobi_options
+    #prob.solve(pulp.GUROBI(manageEnv=True, msg=False, envOptions=get_gurobi_options()))
+    prob.solve(pulp.GUROBI(manageEnv=True, msg=False, timeLimit=180, Threads=os.cpu_count()))
     #prob.solve(pulp.PULP_CBC_CMD(msg=False))
     gates = {i for i in range(num_gates) if int(pulp.value(x[i]))}
     qubits = set.union(*(get_qubits(gatedict[i]) for i in gates))
-    print(f"Status: {pulp.LpStatus[prob.status]}  Found partition with {len(gates)} gates: {gates} and {len(qubits)} qubits: {qubits}")
+    #print(f"Status: {pulp.LpStatus[prob.status]}  Found partition with {len(gates)} gates: {gates} and {len(qubits)} qubits: {qubits}")
     return gates
 
 
@@ -173,29 +177,82 @@ def ilp_max_partitions(c, max_qubits_per_partition):
     return kahn_partition(c, max_qubits_per_partition, L)
 
 
-#@brief Reorders circuit parameters based on partitioned execution order
-#@param params Original parameter array
-#@param param_order Tuples specifying new parameter positions: source_idx, dest_idx, param_count
-#@return reordered Reordered parameter array
-def translate_param_order(params, param_order):
+
+def translate_param_order(params: np.ndarray, param_order: List[Tuple[int,int]]) -> np.ndarray:
+    """
+    Call to reorder circuit parameters based on partitioned execution order
+    
+    Args:
+
+        params ( np.ndarray ) Original parameter array
+
+        param_order (List[int] ) Tuples specifying new parameter positions: source_idx, dest_idx, param_count
+    
+    Return:
+
+        Returns with the reordered Reordered parameter array
+    """ 
+
     reordered = np.empty_like(params)
+
     for s_idx, n_idx, n_params in param_order:
         reordered[n_idx:n_idx + n_params] = params[s_idx:s_idx + n_params]
+
     return reordered
 
 
-#@brief Converts a QASM file to a partitioned SQUANDER circuit with reordered parameters
-#@param filename Path to the QASM file
-#@param max_qubit Maximum qubits allowed per partition
-#@param use_ilp Flag to use ILP-based partitioning
-#@return Tuple: Partitioned SQUANDER circuit, Reordered parameter array
-def qasm_to_partitioned_circuit(filename, max_qubit, use_ilp=False):
 
-    c, param = utils.qasm_to_squander_circuit(filename)
-    top_c, param_order, _ = ilp_max_partitions(c, max_qubit) if use_ilp else kahn_partition(c, max_qubit)
-    param_reordered = translate_param_order(param, param_order)
-    return top_c, param_reordered
+def PartitionCircuit( circ: Circuit, parameters: np.ndarray, max_partition_size: int, use_ilp : bool = False) -> (Circuit, np.ndarray):
+    """
+    Call to partition a circuit
+    
+    Args:
+
+        circ ( Circuit ) A circuit to be partitioned
+
+        parameters ( np.ndarray ) A parameter array associated with the input circuit
+
+        max_partition_size (int) : The maximal number of qubits in the partitions
+
+        use_ilp (bool, optional) Set True to use ILP partitioning startegy (slow, but giving optimal result), or False (default) to use Kahn topological sorting
+    
+    Return:
+
+        Returns with the paritioned circuit and the associated parameter array. Partitions are organized into subcircuits of the resulting circuit
+    """ 
+
+    if use_ilp:
+        partitioned_circ, param_order, _ = ilp_max_partitions(circ, max_partition_size) 
+
+    else:
+        partitioned_circ, param_order, _ = kahn_partition(circ, max_partition_size)
+
+
+    param_reordered = translate_param_order(parameters, param_order)
+
+    return partitioned_circ, param_reordered
+
+
+def PartitionCircuitQasm(filename: str, max_partition_size: int, use_ilp : bool = False) -> (Circuit, np.ndarray):
+    """
+    Call to partition a circuit loaded from a qasm file
+    
+    Args:
+
+        filename ( str ) A path to a qasm file to be imported
+
+        max_partition_size (int) : The maximal number of qubits in the partitions
+
+        use_ilp (bool, optional) Set True to use ILP partitioning startegy (slow, but giving optimal result), or False (default) otherwise
+    
+    Return:
+
+        Returns with the paritioned circuit and the associated parameter array. Partitions are organized into subcircuits of the resulting circuit
+    """ 
+
+    circ, parameters = utils.qasm_to_squander_circuit(filename)
+    return PartitionCircuit( circ, parameters, max_partition_size, use_ilp )
 
 
 if __name__ == "__main__":
-    qasm_to_partitioned_circuit("examples/partitioning/qasm_samples/heisenberg-16-20.qasm", 4, True)
+    PartitionCircuitQasm("examples/partitioning/qasm_samples/heisenberg-16-20.qasm", 4, True)

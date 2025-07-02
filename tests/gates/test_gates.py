@@ -17,206 +17,30 @@ You should have received a copy of the GNU General Public License
 along with this program.  If not, see http://www.gnu.org/licenses/.
 '''
 
+import inspect
+
+
+from squander.utils import get_unitary_from_qiskit_circuit
+from scipy.stats import unitary_group
+import numpy as np
+
+import qiskit
+qiskit_version = qiskit.version.get_version_info()
+
+from qiskit import QuantumCircuit
+import qiskit_aer as Aer    
+    
+if qiskit_version[0] == '1' or qiskit_version[0] == '2':
+    from qiskit import transpile
+else :
+    from qiskit import execute
+    
+
+
 
 class Test_operations:
     """This is a test class of the python iterface to the gates of the QGD package"""
 
-    def test_CNOT_creation(self):
-        r"""
-        This method is called by pytest. 
-        Test to create an instance of CNOT gate.
-
-        """
-
-        from squander.gates.qgd_CNOT import qgd_CNOT
-
-
-        # number of qubits
-        qbit_num = 3
-
-        # target qbit
-        target_qbit = 0
-
-        # control_qbit
-        control_qbit = 1        
-
-        # creating an instance of the C++ class
-        CNOT = qgd_CNOT( qbit_num, target_qbit, control_qbit )
-
-
-    def test_CZ_creation(self):
-        r"""
-        This method is called by pytest. 
-        Test to create an instance of CZ gate.
-
-        """
-
-        from squander.gates.qgd_CZ import qgd_CZ
-
-
-        # number of qubits
-        qbit_num = 3
-
-        # target qbit
-        target_qbit = 0
-
-        # control_qbit
-        control_qbit = 1        
-
-        # creating an instance of the C++ class
-        CZ = qgd_CZ( qbit_num, target_qbit, control_qbit )
-
-
-
-    def test_CH_creation(self):
-        r"""
-        This method is called by pytest. 
-        Test to create an instance of CH gate.
-
-        """
-
-        from squander.gates.qgd_CH import qgd_CH
-
-
-        # number of qubits
-        qbit_num = 3
-
-        # target qbit
-        target_qbit = 0
-
-        # control_qbit
-        control_qbit = 1        
-
-        # creating an instance of the C++ class
-        CH = qgd_CH( qbit_num, target_qbit, control_qbit )
-
-
-    def test_U3_creation(self):
-        r"""
-        This method is called by pytest. 
-        Test to create an instance of U3 gate.
-
-        """
-
-        from squander.gates.qgd_U3 import qgd_U3
-
-        # number of qubits
-        qbit_num = 3
-
-        # target qbit
-        target_qbit = 0
-
-        # set the free parameters
-        Theta = True
-        Phi = True
-        Lambda = True        
-
-        # creating an instance of the C++ class
-        U3 = qgd_U3( qbit_num, target_qbit, Theta, Phi, Lambda )
-
-
-
-    def test_RY_creation(self):
-        r"""
-        This method is called by pytest. 
-        Test to create an instance of U3 gate.
-
-        """
-
-        from squander.gates.qgd_RY import qgd_RY
-
-        # number of qubits
-        qbit_num = 3
-
-        # target qbit
-        target_qbit = 0
-    
-
-        # creating an instance of the C++ class
-        RY = qgd_RY( qbit_num, target_qbit )
-
-
-
-    def test_RX_creation(self):
-        r"""
-        This method is called by pytest. 
-        Test to create an instance of U3 gate.
-
-        """
-
-        from squander.gates.qgd_RX import qgd_RX
-
-        # number of qubits
-        qbit_num = 3
-
-        # target qbit
-        target_qbit = 0
-    
-
-        # creating an instance of the C++ class
-        RX = qgd_RX( qbit_num, target_qbit )
-
-
-
-    def test_RZ_creation(self):
-        r"""
-        This method is called by pytest. 
-        Test to create an instance of U3 gate.
-
-        """
-
-        from squander.gates.qgd_RZ import qgd_RZ
-
-        # number of qubits
-        qbit_num = 3
-
-        # target qbit
-        target_qbit = 0
-    
-
-        # creating an instance of the C++ class
-        RZ = qgd_RZ( qbit_num, target_qbit )
-
-
-    def test_X_creation(self):
-        r"""
-        This method is called by pytest. 
-        Test to create an instance of U3 gate.
-
-        """
-
-        from squander.gates.qgd_X import qgd_X
-
-        # number of qubits
-        qbit_num = 3
-
-        # target qbit
-        target_qbit = 0
-    
-
-        # creating an instance of the C++ class
-        X = qgd_X( qbit_num, target_qbit )
-
-
-
-    def test_SX_creation(self):
-        r"""
-        This method is called by pytest. 
-        Test to create an instance of U3 gate.
-
-        """
-
-        from squander.gates.qgd_SX import qgd_SX
-
-        # number of qubits
-        qbit_num = 3
-
-        # target qbit
-        target_qbit = 0
-    
-
-        # creating an instance of the C++ class
-        SX = qgd_SX( qbit_num, target_qbit )
 
 
     def test_SYC_creation(self):
@@ -226,7 +50,7 @@ class Test_operations:
 
         """
 
-        from squander.gates.qgd_SYC import qgd_SYC
+        from squander import SYC
 
 
         # number of qubits
@@ -239,7 +63,7 @@ class Test_operations:
         control_qbit = 1       
 
         # creating an instance of the C++ class
-        SYC = qgd_SYC( qbit_num, target_qbit, control_qbit )
+        SYC_gate = SYC( qbit_num, target_qbit, control_qbit )
 
 
     def test_Operation_Block_creation(self):
@@ -353,6 +177,257 @@ class Test_operations:
         # add inner operation block to the outher operation block
         cCircuit.add_Circuit( layer )
 
+
+
+    def perform_gate_matrix_testing( self, gate_obj ):
+        """
+        This method is called to test the individual gates 
+        Test by comparing the gate matrix of squander gate to Qiskit implementation
+
+        """
+
+        is_controlled_gate = (len(gate_obj.__name__) > 1) and (gate_obj.__name__[0] == 'C')
+
+        for qbit_num in range(2,7):
+
+            # target qbit
+            target_qbit = qbit_num-2
+
+            # creating an instance of the C++ class
+            if not is_controlled_gate:
+                # single qbit gate
+                squander_gate = gate_obj( qbit_num, target_qbit )
+            elif is_controlled_gate:
+                # gate with control qbit
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj( qbit_num, target_qbit, control_qbit )
+
+            
+            
+
+	    #SQUANDER
+
+            # get the gate matrix     
+
+            # determine the number of input arguments of the get_Matrix function
+            parameter_num = squander_gate.get_Parameter_Num()
+            if parameter_num == 0:
+	            gate_matrix_squander = squander_gate.get_Matrix( )
+            elif parameter_num > 0:
+                    parameters = ( np.random.rand( parameter_num )*2-1.0 ) * np.pi
+                    gate_matrix_squander = squander_gate.get_Matrix( parameters )
+
+
+	    #QISKIT
+
+            # Create a Quantum Circuit acting on the q register
+            circuit = QuantumCircuit(qbit_num)
+
+            # Add the gate
+            gate_name = gate_obj.__name__
+
+            #special cases:
+            if gate_name == "U3":
+                gate_name = "u"
+
+            elif gate_name == "CNOT":
+                gate_name = "cx"
+
+            gate_name = gate_name.lower()
+            
+
+            gate_adding_fnc = getattr(circuit, gate_name )
+            if not is_controlled_gate and parameter_num == 0:
+                # add parameter-free single qbit gate to Qiskit circuit
+                gate_adding_fnc(target_qbit)
+
+            elif not is_controlled_gate and parameter_num > 0:
+                # add single qbit gate to Qiskit circuit
+                parameters_QISKIT = list(parameters)
+
+                #Squander uses half of the theta function for numerical performance
+                parameters_QISKIT[0] = parameters_QISKIT[0]*2 
+                gate_adding_fnc( *parameters_QISKIT, target_qbit)
+
+            elif is_controlled_gate and parameter_num == 0:
+                # add parameter-free two-qbit controlled gate to Qiskit circuit
+                control_qbit = qbit_num-1
+                gate_adding_fnc(control_qbit, target_qbit)
+
+            elif is_controlled_gate and parameter_num > 0:
+                # add parameter-free two-qbit controlled gate to Qiskit circuit
+                parameters_QISKIT = list(parameters)
+
+                #Squander uses half of the theta function for numerical performance
+                parameters_QISKIT[0] = parameters_QISKIT[0]*2 
+                gate_adding_fnc( *parameters_QISKIT, control_qbit, target_qbit)
+
+
+
+            # the unitary matrix from the result object
+            gate_matrix_qiskit = get_unitary_from_qiskit_circuit( circuit )
+            gate_matrix_qiskit = np.asarray(gate_matrix_qiskit)
+        
+            #the difference between the SQUANDER and the qiskit result        
+            delta_matrix=gate_matrix_squander-gate_matrix_qiskit
+
+            # compute norm of matrix
+            error=np.linalg.norm(delta_matrix)
+
+            #print("Get_matrix: The difference between the SQUANDER and the qiskit result is: " , np.around(error,2))
+            assert( error < 1e-3 )        
+
+
+    def perform_gate_apply_to_testing( self, gate_obj ):
+        """
+        This method is called to test the individual gates 
+        Test by comparing the effect of a gate on an input state 
+        by squander gate to Qiskit implementation
+
+        """
+
+        is_controlled_gate = (len(gate_obj.__name__) > 1) and (gate_obj.__name__[0] == 'C')
+
+        for qbit_num in range(2,7):
+
+            # target qbit
+            target_qbit = qbit_num-2
+
+            # creating an instance of the C++ class
+            if not is_controlled_gate:
+                # single qbit gate
+                squander_gate = gate_obj( qbit_num, target_qbit )
+            elif is_controlled_gate:
+                # gate with control qbit
+                control_qbit = qbit_num-1
+                squander_gate = gate_obj( qbit_num, target_qbit, control_qbit )
+
+            
+            # matrix size of the unitary
+            matrix_size = 1 << qbit_num #pow(2, qbit_num )
+
+            initial_state_real = np.random.uniform(-1.0,1.0, (matrix_size,) )
+            initial_state_imag = np.random.uniform(-1.0,1.0, (matrix_size,) )
+            initial_state = initial_state_real + initial_state_imag*1j
+            initial_state = initial_state/np.linalg.norm(initial_state)
+
+            
+
+            
+
+	    #SQUANDER
+
+            state_squander = initial_state.copy()
+
+
+            # determine the number of input arguments of the get_Matrix function
+            parameter_num = squander_gate.get_Parameter_Num()
+            if parameter_num == 0:
+	            squander_gate.apply_to( state_squander )
+            elif parameter_num > 0:
+                    parameters = ( np.random.rand( parameter_num )*2-1.0 ) * np.pi
+                    squander_gate.apply_to( state_squander, parameters )
+
+
+	    #QISKIT
+
+            # Create a Quantum Circuit acting on the q register
+            circuit_qiskit = QuantumCircuit(qbit_num)
+            circuit_qiskit.initialize( initial_state )
+
+            # Add the gate
+            gate_name = gate_obj.__name__
+
+            #special cases:
+            if gate_name == "U3":
+                gate_name = "u"
+
+            elif gate_name == "CNOT":
+                gate_name = "cx"
+
+            gate_name = gate_name.lower()
+            
+
+            gate_adding_fnc = getattr(circuit_qiskit, gate_name )
+            if not is_controlled_gate and parameter_num == 0:
+                # add parameter-free single qbit gate to Qiskit circuit
+                gate_adding_fnc(target_qbit)
+
+            elif not is_controlled_gate and parameter_num > 0:
+                # add single qbit gate to Qiskit circuit
+                parameters_QISKIT = list(parameters)
+
+                #Squander uses half of the theta function for numerical performance
+                parameters_QISKIT[0] = parameters_QISKIT[0]*2 
+                gate_adding_fnc( *parameters_QISKIT, target_qbit)
+
+            elif is_controlled_gate and parameter_num == 0:
+                # add parameter-free two-qbit controlled gate to Qiskit circuit
+                control_qbit = qbit_num-1
+                gate_adding_fnc(control_qbit, target_qbit)
+
+            elif is_controlled_gate and parameter_num > 0:
+                # add parameter-free two-qbit controlled gate to Qiskit circuit
+                parameters_QISKIT = list(parameters)
+
+                #Squander uses half of the theta function for numerical performance
+                parameters_QISKIT[0] = parameters_QISKIT[0]*2 
+                gate_adding_fnc( *parameters_QISKIT, control_qbit, target_qbit)
+
+
+            # Execute and get the state vector
+            if qiskit_version[0] == '1' or qiskit_version[0] == '2':
+	
+                circuit_qiskit.save_statevector()
+	
+                backend = Aer.AerSimulator(method='statevector')
+                compiled_circuit = transpile(circuit_qiskit, backend)
+                result = backend.run(compiled_circuit).result()
+		
+                state_QISKIT = result.get_statevector(compiled_circuit)		
+       
+        
+            elif qiskit_version[0] == '0':
+	
+                # Select the StatevectorSimulator from the Aer provider
+                simulator = Aer.get_backend('statevector_simulator')	
+		
+                backend = Aer.get_backend('aer_simulator')
+                result = execute(circuit_qiskit, simulator).result()
+		
+                state_QISKIT = result.get_statevector(circuit_qiskit)
+
+            state_QISKIT = np.array(state_QISKIT)
+
+            # compute norm of matrix
+            error=np.linalg.norm( state_squander-state_QISKIT )
+
+            assert( error < 1e-3 )        
+
+
+    def test_gates(self):
+        """
+        This method is called by pytest. 
+        Test by comparing all of the squander gates to Qiskit implementation
+
+        """
+
+        import squander.gates.gates_Wrapper as gates
+
+        for name in dir(gates):
+            obj = getattr(gates, name)
+
+            if inspect.isclass(obj):
+                print(f"testing gate: {name}")
+
+                if name == "SYC" or name == "Gate":
+                    continue
+
+                self.perform_gate_matrix_testing( obj )
+                self.perform_gate_apply_to_testing( obj )
+
+
+                
 
 
 
