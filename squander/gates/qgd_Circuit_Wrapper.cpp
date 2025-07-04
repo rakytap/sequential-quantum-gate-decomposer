@@ -32,6 +32,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "CZ.h"
 #include "CH.h"
 #include "CNOT.h"
+#include "U1.h"
+#include "U2.h"
 #include "U3.h"
 #include "RX.h"
 #include "R.h"
@@ -57,166 +59,17 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "numpy_interface.h"
 #endif
 
-
 /**
-@brief Type definition of the qgd_U3_Wrapper Python class of the qgd_U3_Wrapper module
+@brief Type definition of the qgd_CROT Python class of the qgd_CROT module
 */
 typedef struct {
     PyObject_HEAD
-    /// Pointer to the C++ class of the U3 gate
-    U3* gate;
-} qgd_U3_Wrapper;
-
-/**
-@brief Type definition of the qgd_RX_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    RX* gate;
-} qgd_RX_Wrapper;
-
-/**
-@brief Type definition of the qgd_R_Wrapper Python class of the qgd_R_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the R gate
-    R* gate;
-} qgd_R_Wrapper;
-
-/**
-@brief Type definition of the qgd_RY_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    RY* gate;
-} qgd_RY_Wrapper;
-
-
-/**
-@brief Type definition of the qgd_CRY_Wrapper Python class of the qgd_CRY_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the CRY gate
-    CRY* gate;
-} qgd_CRY_Wrapper;
-
-
-/**
-@brief Type definition of the qgd_RX_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    RZ* gate;
-} qgd_RZ_Wrapper;
-
-
-
-/**
-@brief Type definition of the qgd_H_Wrapper Python class of the qgd_H_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the X gate
-    X* gate;
-} qgd_X_Wrapper;
-
-
-/**
-@brief Type definition of the qgd_RX_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    Y* gate;
-} qgd_Y_Wrapper;
-
-
-
-/**
-@brief Type definition of the qgd_RX_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    Z* gate;
-} qgd_Z_Wrapper;
-
-
-
-
-/**
-@brief Type definition of the qgd_H_Wrapper Python class of the qgd_H_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the X gate
-    H* gate;
-} qgd_H_Wrapper;
-
-
-/**
-@brief Type definition of the qgd_RX_Wrapper Python class of the qgd_RX_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the RX gate
-    SX* gate;
-} qgd_SX_Wrapper;
-
-
-/**
-@brief Type definition of the  qgd_CNOT_Wrapper Python class of the  qgd_CNOT_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the CNOT gate
-    CNOT* gate;
-} qgd_CNOT_Wrapper;
-
-
-/**
-@brief Type definition of the  qgd_CZ_Wrapper Python class of the  qgd_CZ_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the CZ gate
-    CZ* gate;
-} qgd_CZ_Wrapper;
-
-/**
-@brief Type definition of the  qgd_CH_Wrapper Python class of the  qgd_CH_Wrapper module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the CH gate
-    CH* gate;
-} qgd_CH_Wrapper;
-
-/**
-@brief Type definition of the  qgd_SYC Python class of the  qgd_SYC module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the SYC gate
-    SYC* gate;
-} qgd_SYC;
-
-/**
-@brief Type definition of the  qgd_CROT Python class of the  qgd_CROT module
-*/
-typedef struct {
-    PyObject_HEAD
-    /// Pointer to the C++ class of the SYC gate
+    /// Pointer to the C++ class of the CROT gate
     CROT* gate;
 } qgd_CROT_Wrapper;
 
 /**
-@brief Type definition of the  qgd_Gate Python class of the  qgd_Gate module
+@brief Type definition of the qgd_Gate Python class of the qgd_Gate module
 */
 typedef struct {
     PyObject_HEAD
@@ -224,15 +77,14 @@ typedef struct {
     Gate* gate;
 } qgd_Gate;
 
-
 /**
 @brief Type definition of the qgd_Operation_Block Python class of the qgd_Operation_Block module
 */
 typedef struct qgd_Circuit_Wrapper {
     PyObject_HEAD
+    /// Pointer to the C++ class of the base Gate_block module
     Gates_block* circuit;
 } qgd_Circuit_Wrapper;
-
 
 /**
 @brief Creates an instance of class N_Qubit_Decomposition and return with a pointer pointing to the class instance (C++ linking is needed)
@@ -241,7 +93,6 @@ typedef struct qgd_Circuit_Wrapper {
 */
 Gates_block* 
 create_Circuit( int qbit_num ) {
-
     return new Gates_block(qbit_num);
 }
 
@@ -332,9 +183,69 @@ static PyMemberDef qgd_Circuit_Wrapper_Members[] = {
 
 
 /**
+@brief Wrapper function to add a U1 gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_U1(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
+
+    // initiate variables for input arguments
+    int target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U1 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_u1(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+/**
+@brief Wrapper function to add a U2 gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_U2(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *kwds)
+{
+    // The tuple of expected keywords
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
+
+    // initiate variables for input arguments
+    int target_qbit = -1; 
+
+    // parsing input arguments
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
+        return Py_BuildValue("i", -1);
+
+    // adding U2 gate to the end of the gate structure
+    if (target_qbit != -1 ) {
+        self->circuit->add_u2(target_qbit);
+    }
+
+    return Py_BuildValue("i", 0);
+}
+
+
+
+/**
 @brief Wrapper function to add a U3 gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit.
-@param args A tuple of the input arguments: target_qbit (int), Theta (bool), Phi (bool), Lambda (bool)
+@param args A tuple of the input arguments: target_qbit (int)
 @param kwds A tuple of keywords
 */
 static PyObject *
@@ -342,26 +253,22 @@ qgd_Circuit_Wrapper_add_U3(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 {
 
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"target_qbit", (char*)"Theta", (char*)"Phi", (char*)"Lambda", NULL};
+    static char *kwlist[] = {(char*)"target_qbit", NULL};
 
     // initiate variables for input arguments
-    int  target_qbit = -1; 
-    bool Theta = true;
-    bool Phi = true;
-    bool Lambda = true;
+    int target_qbit = -1; 
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|ibbb", kwlist,
-                                     &target_qbit, &Theta, &Phi, &Lambda))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|i", kwlist,
+                                     &target_qbit))
         return Py_BuildValue("i", -1);
 
     // adding U3 gate to the end of the gate structure
     if (target_qbit != -1 ) {
-        self->circuit->add_u3(target_qbit, Theta, Phi, Lambda);
+        self->circuit->add_u3(target_qbit);
     }
 
     return Py_BuildValue("i", 0);
-
 }
 
 
@@ -396,6 +303,8 @@ qgd_Circuit_Wrapper_add_RX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
 }
 
+
+
 /**
 @brief Wrapper function to add a R gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
@@ -425,7 +334,6 @@ qgd_Circuit_Wrapper_add_R(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
     return Py_BuildValue("i", 0);
 
 }
-
 
 
 
@@ -461,7 +369,6 @@ qgd_Circuit_Wrapper_add_RY(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
 
 
-
 /**
 @brief Wrapper function to add a RZ gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
@@ -491,6 +398,7 @@ qgd_Circuit_Wrapper_add_RZ(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
     return Py_BuildValue("i", 0);
 
 }
+
 
 
 /**
@@ -561,7 +469,6 @@ qgd_Circuit_Wrapper_add_CZ(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 
 
 
-
 /**
 @brief Wrapper function to add a CH gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
@@ -593,8 +500,6 @@ qgd_Circuit_Wrapper_add_CH(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
     return Py_BuildValue("i", 0);
 
 }
-
-
 
 
 
@@ -630,6 +535,8 @@ qgd_Circuit_Wrapper_add_SYC(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
 
 }
 
+
+
 /**
 @brief Wrapper function to add a Hadamard gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class Circuit.
@@ -660,6 +567,8 @@ qgd_Circuit_Wrapper_add_H(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
     return Py_BuildValue("i", 0);
 
 }
+
+
 
 /**
 @brief Wrapper function to add a X gate to the front of the gate structure.
@@ -693,6 +602,7 @@ qgd_Circuit_Wrapper_add_X(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
 }
 
 
+
 /**
 @brief Wrapper function to add a X gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class Circuit.
@@ -723,6 +633,7 @@ qgd_Circuit_Wrapper_add_Y(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
     return Py_BuildValue("i", 0);
 
 }
+
 
 
 /**
@@ -790,6 +701,7 @@ qgd_Circuit_Wrapper_add_SX(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *
 }
 
 
+
 /**
 @brief Wrapper function to add a T gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class Circuit.
@@ -820,6 +732,7 @@ qgd_Circuit_Wrapper_add_T(qgd_Circuit_Wrapper *self, PyObject *args, PyObject *k
     return Py_BuildValue("i", 0);
 
 }
+
 
 
 /**
@@ -854,6 +767,7 @@ qgd_Circuit_Wrapper_add_Tdg(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
 }
 
 
+
 /**
 @brief Wrapper function to add an adaptive gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
@@ -884,6 +798,7 @@ qgd_Circuit_Wrapper_add_CRY(qgd_Circuit_Wrapper *self, PyObject *args, PyObject 
     return Py_BuildValue("i", 0);
 
 }
+
 
 /**
 @brief Wrapper function to add an adaptive gate to the front of the gate structure.
@@ -929,6 +844,7 @@ qgd_Circuit_Wrapper_add_CROT(qgd_Circuit_Wrapper *self, PyObject *args, PyObject
 }
 
 
+
 /**
 @brief Wrapper function to add an adaptive gate to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
@@ -959,6 +875,7 @@ qgd_Circuit_Wrapper_add_adaptive(qgd_Circuit_Wrapper *self, PyObject *args, PyOb
     return Py_BuildValue("i", 0);
 
 }
+
 
 
 /**
@@ -1688,6 +1605,42 @@ get_gate( Gates_block* circuit, int &idx ) {
         Py_DECREF( qgd_gate );                
         Py_DECREF( gate_input );
 
+
+    }
+    else if (gate->get_type() == U1_OPERATION) {
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "U1");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
+
+    }
+    else if (gate->get_type() == U2_OPERATION) {
+
+        PyObject* qgd_gate_Dict  = PyModule_GetDict( qgd_gate );
+        // PyDict_GetItemString creates a borrowed reference to the item in the dict. Reference counting is not increased on this element, dont need to decrease the reference counting at the end
+        PyObject* py_gate_class = PyDict_GetItemString( qgd_gate_Dict, "U2");
+
+        PyObject* gate_input = Py_BuildValue("(OO)", qbit_num, target_qbit);
+        py_gate              = PyObject_CallObject(py_gate_class, gate_input);
+
+        // replace dummy data with real gate data
+        qgd_Gate* py_gate_C = reinterpret_cast<qgd_Gate*>( py_gate );
+        delete( py_gate_C->gate );
+        py_gate_C->gate = static_cast<Gate*>( gate->clone() );
+
+        Py_DECREF( qgd_gate );                
+        Py_DECREF( gate_input );
 
     }
     else if (gate->get_type() == U3_OPERATION) {
@@ -2613,6 +2566,12 @@ qgd_Circuit_Wrapper_get_Parameter_Start_Index( qgd_Circuit_Wrapper *self ) {
 
 
 static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
+    {"add_U1", (PyCFunction) qgd_Circuit_Wrapper_add_U1, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a U1 gate to the front of the gate structure"
+    },
+    {"add_U2", (PyCFunction) qgd_Circuit_Wrapper_add_U2, METH_VARARGS | METH_KEYWORDS,
+     "Call to add a U2 gate to the front of the gate structure"
+    },
     {"add_U3", (PyCFunction) qgd_Circuit_Wrapper_add_U3, METH_VARARGS | METH_KEYWORDS,
      "Call to add a U3 gate to the front of the gate structure"
     },

@@ -20,6 +20,8 @@ from squander.gates.qgd_CROT import qgd_CROT  as CROT
 
 from squander.gates.gates_Wrapper import (
     Gate,
+    U1,
+    U2,
     U3,
     H,
     X,
