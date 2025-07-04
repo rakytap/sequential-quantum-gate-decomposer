@@ -706,10 +706,6 @@ N_Qubit_Decomposition_Tree_Search::add_two_qubit_block(Gates_block* gate_structu
         }        
 
         Gates_block* layer = new Gates_block( qbit_num );
-
-        bool Theta = true;
-        bool Phi = true;
-        bool Lambda = true;
 /*
 layer->add_rz(target_qbit);
 layer->add_ry(target_qbit);
@@ -720,8 +716,8 @@ layer->add_ry(control_qbit);
 layer->add_rz(control_qbit);     
 */
 
-        layer->add_u3(target_qbit, Theta, Phi, Lambda);
-        layer->add_u3(control_qbit, Theta, Phi, Lambda);
+        layer->add_u3(target_qbit);
+        layer->add_u3(control_qbit);
         layer->add_cnot(target_qbit, control_qbit); 
         gate_structure->add_gate(layer);
 

@@ -586,8 +586,8 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
             for (int layer_idx=0; layer_idx<layers ;layer_idx++){
 
                 for( int idx=0; idx<inner_blocks; idx++) {
-                    add_u3(1, true, true, true);                          
-                    add_u3(0, true, true, true);
+                    add_u3(1);                          
+                    add_u3(0);
                     add_cnot(1,0);
                 }
 
@@ -596,8 +596,8 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
                     if (control_qbit+2<qbit_num){
 
                         for( int idx=0; idx<inner_blocks; idx++) {
-                            add_u3(control_qbit+1, true, true, true);
-                            add_u3(control_qbit+2, true, true, true); 
+                            add_u3(control_qbit+1);
+                            add_u3(control_qbit+2); 
                         
                             add_cnot(control_qbit+2,control_qbit+1);
                         }
@@ -605,8 +605,8 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
                     }
 
                     for( int idx=0; idx<inner_blocks; idx++) {
-                        add_u3(control_qbit+1, true, true, true);  
-                        add_u3(control_qbit, true, true, true);  
+                        add_u3(control_qbit+1);  
+                        add_u3(control_qbit);  
 
                         add_cnot(control_qbit+1,control_qbit);
 
