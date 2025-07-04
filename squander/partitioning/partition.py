@@ -202,7 +202,7 @@ def translate_param_order(params: np.ndarray, param_order: List[Tuple[int,int]])
 
 
 
-def PartitionCircuit( circ: Circuit, parameters: np.ndarray, max_partition_size: int, use_ilp : bool = False) -> (Circuit, np.ndarray):
+def PartitionCircuit( circ: Circuit, parameters: np.ndarray, max_partition_size: int, use_ilp : bool = False) -> tuple[Circuit, np.ndarray]:
     """
     Call to partition a circuit
     
@@ -233,7 +233,7 @@ def PartitionCircuit( circ: Circuit, parameters: np.ndarray, max_partition_size:
     return partitioned_circ, param_reordered
 
 
-def PartitionCircuitQasm(filename: str, max_partition_size: int, use_ilp : bool = False) -> (Circuit, np.ndarray):
+def PartitionCircuitQasm(filename: str, max_partition_size: int, use_ilp : bool = False) -> tuple[Circuit, np.ndarray]:
     """
     Call to partition a circuit loaded from a qasm file
     

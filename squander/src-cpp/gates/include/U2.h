@@ -16,12 +16,12 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file U3.h
-    \brief Header file for a class representing a U3 gate.
+/*! \file U2.h
+    \brief Header file for a class representing a U2 gate.
 */
 
-#ifndef U3_H
-#define U3_H
+#ifndef U2_H
+#define U2_H
 
 #include "Gate.h"
 #include "matrix.h"
@@ -29,14 +29,13 @@ limitations under the License.
 #define _USE_MATH_DEFINES
 #include <math.h>
 
-
 /**
-@brief A class representing a U3 gate.
+@brief A class representing a U2 gate.
 */
-class U3: public Gate {
+class U2: public Gate {
 
 protected:
-   /// Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
+   /// Parameters of the U2 gate after the decomposition of the unitary is done
    Matrix_real parameters;
 
 public:
@@ -44,60 +43,60 @@ public:
 /**
 @brief Nullary constructor of the class.
 */
-U3();
+U2();
 
 /**
 @brief Constructor of the class.
 @param qbit_num_in The number of qubits spanning the gate.
 @param target_qbit_in The 0<=ID<qbit_num of the target qubit.
 */
-U3(int qbit_num_in, int target_qbit_in);
+U2(int qbit_num_in, int target_qbit_in);
 
 /**
 @brief Destructor of the class
 */
-virtual ~U3();
+virtual ~U2();
 
 /**
 @brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parameters An array of parameters to calculate the matrix of the U2 gate.
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( Matrix_real& parameters  );
+virtual Matrix get_matrix( Matrix_real& parameters  );
 
 /**
 @brief Call to retrieve the gate matrix
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@param parameters An array of parameters to calculate the matrix of the U2 gate.
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 @return Returns with a matrix of the gate
 */
-Matrix get_matrix( Matrix_real& parameters, int parallel  );
+virtual Matrix get_matrix( Matrix_real& parameters, int parallel  );
 
 /**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
-@param input The input array on which the gate is applied
+@brief Call to apply the gate on a list of inputs
+@param parameters An array of parameters to calculate the matrix of the U2 gate.
+@param inputs The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int parallel );
+virtual void apply_to_list( Matrix_real& parameters, std::vector<Matrix>& inputs, int parallel );
 
 /**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@brief Call to apply the gate on the input array/matrix
+@param parameters An array of parameters to calculate the matrix of the U2 gate.
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 virtual void apply_to( Matrix_real& parameters, Matrix& input, int parallel );
 
 /**
-@brief Call to apply the gate on the input array/matrix by input*U3
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@brief Call to apply the gate on the input array/matrix by input*U2
+@param parameters An array of parameters to calculate the matrix of the U2 gate.
 @param input The input array on which the gate is applied
 */
 virtual void apply_from_right( Matrix_real& parameters, Matrix& input );
 
 /**
-@brief Call to evaluate the derivate of the circuit on an inout with respect to all of the free parameters.
+@brief Call to evaluate the derivate of the circuit on an input with respect to all of the free parameters.
 @param parameters An array of the input parameters.
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
@@ -120,19 +119,18 @@ virtual void reorder_qubits( std::vector<int> qbit_list);
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-virtual U3* clone();
+virtual U2* clone();
 
 /**
 @brief Call to set the final optimized parameters of the gate.
-@param Theta Real parameter standing for the parameter theta.
 @param Phi Real parameter standing for the parameter phi.
 @param Lambda Real parameter standing for the parameter lambda.
 */
-void set_optimized_parameters(double Theta, double Phi, double Lambda );
+void set_optimized_parameters(double Phi, double Lambda );
 
 /**
 @brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
+@return Returns with the parameters of the U2 gate.
 */
 Matrix_real get_optimized_parameters();
 
@@ -144,15 +142,22 @@ Matrix_real get_optimized_parameters();
 virtual Matrix_real extract_parameters( Matrix_real& parameters );
 
 /**
-@brief Calculate the matrix of a U3 gate corresponding to the given parameters acting on a single qbit space. (Virtual method override)
-@param Theta Real parameter standing for the parameter theta.
+@brief Calculate the matrix of a U2 gate corresponding to the given parameters acting on a single qbit space. (Virtual method override)
+@param Theta Real parameter standing for the parameter theta (ignored for U2).
 @param Phi Real parameter standing for the parameter phi.
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
 virtual Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda) override;
 
+/**
+@brief Calculate the matrix of a U2 gate corresponding to the given parameters acting on a single qbit space. (Convenience method)
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+Matrix calc_one_qubit_u3(double Phi, double Lambda);
+
 };
 
-#endif //U3
-
+#endif //U2

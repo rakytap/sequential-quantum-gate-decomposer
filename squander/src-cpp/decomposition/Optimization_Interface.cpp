@@ -269,13 +269,9 @@ Optimization_Interface::add_finalyzing_layer() {
     // creating block of gates
     Gates_block* block = new Gates_block( qbit_num );
 
-    // adding U3 gate to the block
-    bool Theta = true;
-    bool Phi = false;
-    bool Lambda = true;
-
+    // adding U1 gates for final phase corrections
     for (int qbit=0; qbit<qbit_num; qbit++) {
-        block->add_u3(qbit, Theta, Phi, Lambda);
+        block->add_u1(qbit);
     }
 
     // adding the opeartion block to the gates
