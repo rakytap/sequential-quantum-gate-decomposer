@@ -95,6 +95,7 @@ int main() {
         Umtx_adj[element_idx].real = element.real;
         Umtx_adj[element_idx].imag = -element.imag;
     }
+
 //! [creating decomp class]
     // creating the class for the decomposition. Here Umtx_adj is the complex transposition of unitary Umtx
     N_Qubit_Decomposition cDecomposition =

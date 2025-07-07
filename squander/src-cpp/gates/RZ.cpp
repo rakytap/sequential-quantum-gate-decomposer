@@ -44,21 +44,7 @@ RZ::RZ() {
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
     control_qbit = -1;
 
-    // logical value indicating whether the matrix creation takes an argument theta
-    theta = false;
-    // logical value indicating whether the matrix creation takes an argument phi
-    phi = false;
-    // logical value indicating whether the matrix creation takes an argument lambda
-    lambda = false;
-
-    // set static values for the angles
-    theta0 = 0.0;
-    lambda0 = 0.0;
-
-
     parameter_num = 0;
-
-
 
 }
 
@@ -103,17 +89,6 @@ RZ::RZ(int qbit_num_in, int target_qbit_in) {
     target_qbit = target_qbit_in;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
     control_qbit = -1;
-
-    // logical value indicating whether the matrix creation takes an argument theta
-    theta = false;
-    // logical value indicating whether the matrix creation takes an argument phi
-    phi = true;
-    // logical value indicating whether the matrix creation takes an argument lambda
-    lambda = false;
-
-    // set static values for the angles
-    theta0 = 0.0;
-    lambda0 = 0.0;
 
     parameter_num = 1;
 

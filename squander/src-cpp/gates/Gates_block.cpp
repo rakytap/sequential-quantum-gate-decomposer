@@ -295,7 +295,7 @@ Gates_block::apply_to( Matrix_real& parameters_mtx_in, Matrix& input, int parall
 #ifdef USE_AVX
                 apply_large_kernel_to_input_AVX(Umtx_mini, input, qbits, input.size() );
 #else
-                apply_large_kernel_to_state_vector_input(Umtx_mini, input, qbits, input.size() );
+                apply_large_kernel_to_state_vector_input(Umtx_mini, input, qbits, input.size() ); // identifier "apply_large_kernel_to_state_vector_input" is undefined
 #endif                
        
 

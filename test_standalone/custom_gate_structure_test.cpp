@@ -68,12 +68,9 @@ Gates_block* create_custom_gate_structure( int qbit_num ) {
                 int target_qbit = 0;
 		int control_qbit = 1;
 
-                // add U3 gate to the block
-                bool Theta = true;
-                bool Phi = false;
-                bool Lambda = true;
-                layer->add_u3( 0, Theta, Phi, Lambda );
-                layer->add_u3( 1, Theta, Phi, Lambda );
+                // add U1 gate to the block
+                layer->add_u1( 0 );
+                layer->add_u1( 1 );
 
                 // add CNOT gate to the block		
                 layer->add_cnot( target_qbit, control_qbit );
@@ -85,12 +82,9 @@ Gates_block* create_custom_gate_structure( int qbit_num ) {
                 int target_qbit = qbit;
 		int control_qbit = disentangle_qubit;
 
-                // add U3 gate to the block
-                bool Theta = true;
-                bool Phi = false;
-                bool Lambda = true;
-                layer->add_u3( qbit, Theta, Phi, Lambda );
-                layer->add_u3( disentangle_qubit, Theta, Phi, Lambda );
+                // add U1 gate to the block
+                layer->add_u1( qbit );
+                layer->add_u1( disentangle_qubit );
 
                 // add CNOT gate to the block
                 layer->add_cnot( target_qbit, control_qbit );

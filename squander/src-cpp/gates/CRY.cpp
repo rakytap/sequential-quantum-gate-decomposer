@@ -98,9 +98,10 @@ CRY::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
     double ThetaOver2, Phi, Lambda;
 
+
     ThetaOver2 = parameters[0];
-    Phi = phi0;
-    Lambda = lambda0;
+    Phi = 0.0;
+    Lambda = 0.0;
 /*
     ThetaOver2 = theta0;
     Phi = parameters[0];
@@ -143,8 +144,8 @@ CRY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
-    Phi = phi0;
-    Lambda = lambda0;
+    Phi = 0.0;
+    Lambda = 0.0;
 /*
     ThetaOver2 = theta0;
     Phi = parameters[0];
@@ -188,8 +189,8 @@ CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters_mtx[0]+M_PI/2;
-    Phi = phi0;
-    Lambda = lambda0;
+    Phi = 0.0;
+    Lambda = 0.0;
 
     // the resulting matrix
     Matrix res_mtx = input.copy();   

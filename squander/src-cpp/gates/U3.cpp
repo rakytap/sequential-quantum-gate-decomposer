@@ -57,7 +57,7 @@ U3::U3(int qbit_num_in, int target_qbit_in) {
         print(sstream, 0);	             
         throw "The index of the target qubit is larger than the number of qubits";
     }
-	
+
     target_qbit = target_qbit_in;
     control_qbit = -1;
     parameter_num = 3;
@@ -203,26 +203,26 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 
     Matrix u3_1qbit_theta = calc_one_qubit_u3(Theta+M_PIOver2, Phi, Lambda);
     
-    Matrix res_mtx = input.copy();
-    apply_kernel_to( u3_1qbit_theta, res_mtx, deriv, parallel );
-    ret.push_back(res_mtx);
+    Matrix res_mtx_theta = input.copy();
+    apply_kernel_to( u3_1qbit_theta, res_mtx_theta, deriv, parallel );
+    ret.push_back(res_mtx_theta);
 
 
     Matrix u3_1qbit_phi = calc_one_qubit_u3(Theta, Phi+M_PIOver2, Lambda );
     memset(u3_1qbit_phi.get_data(), 0.0, 2*sizeof(QGD_Complex16) );
 
-    Matrix res_mtx = input.copy();
-    apply_kernel_to( u3_1qbit_phi, res_mtx, deriv, parallel );
-    ret.push_back(res_mtx);
+    Matrix res_mtx_phi = input.copy();
+    apply_kernel_to( u3_1qbit_phi, res_mtx_phi, deriv, parallel );
+    ret.push_back(res_mtx_phi);
 
 
     Matrix u3_1qbit_lambda = calc_one_qubit_u3(Theta, Phi, Lambda+M_PIOver2 );
     memset(u3_1qbit_lambda.get_data(), 0.0, sizeof(QGD_Complex16) );
     memset(u3_1qbit_lambda.get_data()+2, 0.0, sizeof(QGD_Complex16) );
 
-    Matrix res_mtx = input.copy();
-    apply_kernel_to( u3_1qbit_lambda, res_mtx, deriv, parallel );
-    ret.push_back(res_mtx);
+    Matrix res_mtx_lambda = input.copy();
+    apply_kernel_to( u3_1qbit_lambda, res_mtx_lambda, deriv, parallel );
+    ret.push_back(res_mtx_lambda);
 
     return ret;
 }

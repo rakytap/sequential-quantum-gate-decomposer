@@ -98,6 +98,16 @@ Matrix_real get_optimized_parameters();
 
 
 /**
+@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
+@param Theta Real parameter standing for the parameter theta.
+@param Phi Real parameter standing for the parameter phi.
+@param Lambda Real parameter standing for the parameter lambda.
+@return Returns with the matrix of the one-qubit matrix.
+*/
+void parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda);
+
+
+/**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
