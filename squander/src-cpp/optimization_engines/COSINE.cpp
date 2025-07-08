@@ -88,6 +88,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         std::stringstream sstream;
         double optimization_time = 0.0;
         tbb::tick_count optimization_start = tbb::tick_count::now();
+        
 
         // the current result
         current_minimum = optimization_problem( optimized_parameters_mtx );
@@ -177,8 +178,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
         if ( output_periodicity>0 ) {
             export_current_cost_fnc(current_minimum);
         }
-      
-
+        
         // vector stroing the lates values of current minimums to identify convergence
         Matrix_real f0_vec(1, 100); 
         memset( f0_vec.get_data(), 0.0, f0_vec.size()*sizeof(double) );

@@ -303,10 +303,92 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem_non_static(Mat
 }
 
 
+#ifdef __GROQ__
+/**
+@brief The optimization problem of the final optimization implemented to be run on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@param chosen_device Indicate the device on which the state vector emulation is performed
+@return Returns with the cost function.
+*/
+double Variational_Quantum_Eigensolver_Base::optimization_problem_Groq(Matrix_real& parameters, int chosen_device)  {
+
+
+
+    Matrix State;
+
+
+    //tbb::tick_count t0_DFE = tbb::tick_count::now();
+    std::vector<int> target_qbits;
+    std::vector<int> control_qbits;
+    std::vector<Matrix> u3_qbit;
+    extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbits, control_qbits, parameters);
+        
+
+    // initialize the initial state on the chip if it was not given
+    if ( initial_state.size() == 0 ) {
+        
+        Matrix State_zero(0,0);  
+        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State_zero, id); 
+            
+        State = State_zero;
+            
+    }
+    else {
+	
+        State = initial_state.copy();
+        // apply state transformation via the Groq chip
+        apply_to_groq_sv(accelerator_num, chosen_device, qbit_num, u3_qbit, target_qbits, control_qbits, State, id);
+
+    }
+        
+        
+/*        
+    //////////////////////////////
+    Matrix State_copy = State.copy();
+
+
+    Decomposition_Base::apply_to(parameters, State_copy );
+
+
+    double diff = 0.0;
+    for( int64_t idx=0; idx<State_copy.size(); idx++ ) {
+
+        QGD_Complex16 element = State[idx];
+        QGD_Complex16 element_copy = State_copy[idx];
+        QGD_Complex16 element_diff;
+        element_diff.real = element.real - element_copy.real;
+        element_diff.imag = element.imag - element_copy.imag;
+ 
+        double diff_increment = element_diff.real*element_diff.real + element_diff.imag*element_diff.imag;
+        diff = diff + diff_increment;
+    }
+       
+    std::cout << "Variational_Quantum_Eigensolver_Base::apply_to checking diff: " << diff << std::endl;
+
+
+    if ( diff > 1e-4 ) {
+        std::string error("Groq and CPU results do not match");
+        throw(error);
+    }
+
+    //////////////////////////////
+*/
+
+
+	
+    double Energy = Expectation_value_of_energy_real(State, State);
+	
+    return Energy;
+
+}
+
+#endif
+
+
 /**
 @brief The optimization problem of the final optimization
-@param parameters An array of the free parameters to be optimized. (The number of teh free paramaters should be equal to the number of parameters in one sub-layer)
-@return Returns with the cost function. (zero if the qubits are desintangled.)
+@param parameters An array of the free parameters associated with the circuit. 
+@return Returns with the cost function.
 */
 double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& parameters)  {
 
@@ -314,68 +396,11 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem(Matrix_real& p
     Matrix State;
 
 #ifdef __GROQ__
-    if ( get_accelerator_num() > 0 ) {
-
-        // initialize the initial state if it was not given
-        if ( initial_state.size() == 0 ) {
-            initialize_zero_state();
-        }
-	
-        State = initial_state.copy();
-
-
-        //////////////////////////////
-        //Matrix State_copy = State.copy();
-
-
-//tbb::tick_count t0_DFE = tbb::tick_count::now();
-//tbb::tick_count t0_data_extraction = tbb::tick_count::now();
-        std::vector<int> target_qbit;
-        std::vector<int> control_qbit;
-        std::vector<Matrix> u3_qbit;
-        extract_gate_kernels_target_and_control_qubits(u3_qbit, target_qbit, control_qbit, parameters);
-//tbb::tick_count t1_data_extraction = tbb::tick_count::now();
-//std::cout << "Time elapsed with extracting gate kernels: " << (t1_data_extraction-t0_data_extraction).seconds() << std::endl;
-
-        // starting logical index of the device to bu used to run the IOP
-        const int device_num = 0;
-
-	Matrix State_zero(0,0);
-        // apply state transformation via the Groq chip
-        //apply_to_groq_sv(device_num, qbit_num, u3_qbit, State, target_qbit, control_qbit);
-        apply_to_groq_sv(device_num, qbit_num, u3_qbit, State_zero, target_qbit, control_qbit); 
-        State = State_zero;
-
-//tbb::tick_count t1_DFE = tbb::tick_count::now();
-//std::cout << "Time elapsed with Groq: " << (t1_DFE-t0_DFE).seconds() << std::endl;
-
-/*
-        ///////////////////////////////
-tbb::tick_count t0_CPU = tbb::tick_count::now();
-        Decomposition_Base::apply_to(parameters, State_copy );
-
-tbb::tick_count t1_CPU = tbb::tick_count::now();
-std::cout << "Time elapsed with CPU: " << (t1_CPU-t0_CPU).seconds() << std::endl;
-
-        double diff = 0.0;
-        for( int64_t idx=0; idx<State_copy.size(); idx++ ) {
-
-            QGD_Complex16 element = State[idx];
-            QGD_Complex16 element_copy = State_copy[idx];
-            QGD_Complex16 element_diff;
-            element_diff.real = element.real - element_copy.real;
-            element_diff.imag = element.imag - element_copy.imag;
-            diff = diff + element_diff.real*element_diff.real + element_diff.imag*element_diff.imag;
-        }
-       
-        std::cout << "Variational_Quantum_Eigensolver_Base::apply_to checking diff: " << diff << std::endl;
-
-std::cout << State[0].real <<  " " << State_copy[0].real << " " << initial_state[0].real << std::endl;
-std::cout << State[1].real <<  " " << State_copy[1].real << " " << initial_state[1].real << std::endl;
-
-        //////////////////////////////
-*/
-
+    if ( accelerator_num > 0 ) {
+    
+        
+        return optimization_problem_Groq( parameters, 0 );
+            
     }
     else {
 #endif
@@ -530,6 +555,22 @@ double Variational_Quantum_Eigensolver_Base::optimization_problem( double* param
 */
 void Variational_Quantum_Eigensolver_Base::initialize_zero_state( ) {
 
+    int initialize_state;
+    if ( config.count("initialize_state") > 0 ) { 
+         long long value;                   
+         config["initialize_state"].get_property( value );  
+         initialize_state = (int) value;
+    }
+    else {
+        initialize_state = 1;
+         
+    }
+    
+    if( initialize_state == 0 ) {
+        initial_state = Matrix(0, 0);
+        return;
+    }
+
     initial_state = Matrix( 1 << qbit_num , 1);
 
 
@@ -669,6 +710,7 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
                             add_gate( block_2 );                              
 
                             add_cnot(control_qbit+2,control_qbit+1);
+                            
                         }
 
                     }
@@ -693,6 +735,7 @@ void Variational_Quantum_Eigensolver_Base::generate_circuit( int layers, int inn
 
                 }
             }
+
 
             return;
         }        

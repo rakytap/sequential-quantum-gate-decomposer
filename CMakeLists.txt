@@ -423,7 +423,7 @@ endif()
 
 if (DEFINED ENV{QGD_GROQ})
   list(APPEND qgd_files 
-      ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/common_DFE.cpp
+      ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/common_GROQ.cpp
   )
 
   list(APPEND CXX_FLAGS_DEBUG "-D__GROQ__=1")

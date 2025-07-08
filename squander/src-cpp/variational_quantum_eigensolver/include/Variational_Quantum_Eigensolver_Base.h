@@ -29,31 +29,6 @@ limitations under the License.
 /// @brief Type definition of the fifferent types of ansatz
 typedef enum ansatz_type {HEA, HEA_ZYZ} ansatz_type;
     
-#ifdef __cplusplus
-extern "C" 
-{
-#endif
-
-/// Definition of the zggev function from Lapacke to calculate the eigenvalues of a complex matrix
-int LAPACKE_zggev 	( 	int  	matrix_layout,
-		char  	jobvl,
-		char  	jobvr,
-		int  	n,
-		QGD_Complex16 *  	a,
-		int  	lda,
-		QGD_Complex16 *  	b,
-		int  	ldb,
-		QGD_Complex16 *  	alpha,
-		QGD_Complex16 *  	beta,
-		QGD_Complex16 *  	vl,
-		int  	ldvl,
-		QGD_Complex16 *  	vr,
-		int  	ldvr 
-	); 	
-
-#ifdef __cplusplus
-}
-#endif
 
 
 
@@ -134,6 +109,18 @@ virtual double optimization_problem(Matrix_real& parameters) override;
 @return Returns with the cost function. (zero if the qubits are desintangled.)
 */
 virtual double optimization_problem_non_static( Matrix_real parameters, void* void_instance) override;
+
+
+#ifdef __GROQ__
+/**
+@brief The optimization problem of the final optimization implemented to be run on Groq hardware
+@param parameters An array of the free parameters to be optimized.
+@param chosen_device Indicate the device on which the state vector emulation is performed
+@return Returns with the cost function.
+*/
+double optimization_problem_Groq(Matrix_real& parameters, int chosen_device) ;
+#endif
+
 
 
 /**

@@ -3658,7 +3658,10 @@ void Gates_block::convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEga
 }
 
 
+#endif
 
+
+#ifdef __GROQ__
 
 //TODO docstring
 void 
