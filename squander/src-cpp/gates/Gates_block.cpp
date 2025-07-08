@@ -49,6 +49,7 @@ limitations under the License.
 #include "Adaptive.h"
 #include "CZ_NU.h"
 #include "Composite.h"
+#include "N_Qubit_Phase_Gate.h"
 #include "Gates_block.h"
 
 #include "custom_kernel_1qubit_gate.h"
@@ -1582,6 +1583,35 @@ void Gates_block::add_composite_to_front()  {
         add_gate_to_front( gate );
 
 }
+
+
+
+/**
+@brief Append a Composite gate to the list of gates
+*/
+void Gates_block::add_phase_gate()  {
+
+        // create the operation
+        Gate* operation = static_cast<Gate*>(new N_Qubit_Phase_Gate( qbit_num ));
+
+        // adding the operation to the end of the list of gates
+        add_gate( operation );
+}
+
+/**
+@brief Add a Composite gate to the front of the list of gates
+*/
+void Gates_block::add_phase_gate_to_front()  {
+
+        // create the operation
+        Gate* gate = static_cast<Gate*>(new N_Qubit_Phase_Gate( qbit_num ));
+
+        // adding the operation to the front of the list of gates
+        add_gate_to_front( gate );
+
+}
+
+
 
 
 

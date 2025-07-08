@@ -236,6 +236,13 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 
 	# call the C wrapper function
         super().add_SX(target_qbit)
+        
+
+    def add_Phase_Gate( self):
+
+	# call the C wrapper function
+        super().add_Phase_Gate()
+
 
 #@brief Call to add a T gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
