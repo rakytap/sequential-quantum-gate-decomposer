@@ -48,7 +48,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "Z.h"
 #include "T.h"
 #include "Tdg.h"
-#include <R.h>
+#include "R.h"
 #include "numpy_interface.h"
 
 

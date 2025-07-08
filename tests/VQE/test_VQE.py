@@ -32,19 +32,19 @@ def generate_hamiltonian(topology, n):
         else:
             rhs_1 = sp.sparse.eye(2,format='coo')
         for k in range(n-i[0]-2):
-	        rhs_1 = sp.sparse.kron(rhs_1,sp.sparse.eye(2,format='coo'),format='coo')
+            rhs_1 = sp.sparse.kron(rhs_1,sp.sparse.eye(2,format='coo'),format='coo')
         if i[1]==0:
             lhs_2 = sp.sparse.eye(1,format='coo')
         else:
             lhs_2 = sp.sparse.eye(2,format='coo')
         for k in range(i[1]-1):
-	        lhs_2 = sp.sparse.kron(lhs_2,sp.sparse.eye(2,format='coo'),format='coo')
+            lhs_2 = sp.sparse.kron(lhs_2,sp.sparse.eye(2,format='coo'),format='coo')
         if i[1]==n-1:
             rhs_2 = sp.sparse.eye(1,format='coo')
         else:
             rhs_2 = sp.sparse.eye(2,format='coo')
         for k in range(n-i[1]-2):
-	        rhs_2 = sp.sparse.kron(rhs_2,sp.sparse.eye(2,format='coo'),format='coo')
+            rhs_2 = sp.sparse.kron(rhs_2,sp.sparse.eye(2,format='coo'),format='coo')
         Hamiltonian += -0.5*sp.sparse.kron(sp.sparse.kron(lhs_1,sigmax,format='coo'),rhs_1,format='coo')@sp.sparse.kron(sp.sparse.kron(lhs_2 ,sigmax,format='coo'),rhs_2 ,format='coo')
         Hamiltonian += -0.5*sp.sparse.kron(sp.sparse.kron(lhs_1,sigmay,format='coo'),rhs_1,format='coo')@sp.sparse.kron(sp.sparse.kron(lhs_2 ,sigmay,format='coo'),rhs_2 ,format='coo')
         Hamiltonian += -0.5*sp.sparse.kron(sp.sparse.kron(lhs_1,sigmaz,format='coo'),rhs_1,format='coo')@sp.sparse.kron(sp.sparse.kron(lhs_2 ,sigmaz,format='coo'),rhs_2 ,format='coo')
@@ -61,7 +61,7 @@ def generate_hamiltonian(topology, n):
         else:
             rhs_1 = sp.sparse.eye(2,format='coo')
         for k in range(n-i-2):
-	        rhs_1 = sp.sparse.kron(rhs_1,sp.sparse.eye(2,format='coo'),format='coo')
+            rhs_1 = sp.sparse.kron(rhs_1,sp.sparse.eye(2,format='coo'),format='coo')
         Hamiltonian += -0.5*sp.sparse.kron(sp.sparse.kron(lhs_1,sigmaz,format='coo'),rhs_1,format='coo')
         
 
