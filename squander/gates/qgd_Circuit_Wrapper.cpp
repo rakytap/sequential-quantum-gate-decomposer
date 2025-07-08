@@ -952,6 +952,25 @@ qgd_Circuit_Wrapper_add_adaptive(qgd_Circuit_Wrapper *self, PyObject *args, PyOb
 
 
 /**
+@brief Wrapper function to add an adaptive gate to the front of the gate structure.
+@param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
+@param args A tuple of the input arguments: target_qbit (int)
+@param kwds A tuple of keywords
+*/
+static PyObject *
+qgd_Circuit_Wrapper_add_phase_gate(qgd_Circuit_Wrapper *self)
+{
+
+
+    self->circuit->add_phase_gate();
+    
+
+    return Py_BuildValue("i", 0);
+
+}
+
+
+/**
 @brief Wrapper function to add a block of operations to the front of the gate structure.
 @param self A pointer pointing to an instance of the class qgd_Circuit_Wrapper.
 @param args A tuple of the input arguments: Py_qgd_Circuit_Wrapper (PyObject)
@@ -2789,6 +2808,9 @@ static PyMethodDef qgd_Circuit_Wrapper_Methods[] = {
     },
     {"add_adaptive", (PyCFunction) qgd_Circuit_Wrapper_add_adaptive, METH_VARARGS | METH_KEYWORDS,
      "Call to add an adaptive gate to the front of the gate structure"
+    },
+    {"add_Phase_Gate", (PyCFunction) qgd_Circuit_Wrapper_add_phase_gate, METH_NOARGS,
+     "Call to add an phase gate to the front of the gate structure"
     },
     {"add_Circuit", (PyCFunction) qgd_Circuit_Wrapper_add_Circuit, METH_VARARGS,
      "Call to add a block of operations to the front of the gate structure."
