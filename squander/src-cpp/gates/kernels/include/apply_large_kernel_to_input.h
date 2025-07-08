@@ -42,4 +42,6 @@ void apply_3qbit_kernel_to_state_vector_input(Matrix& unitary, Matrix& input, st
 void apply_crot_kernel_to_matrix_input(Matrix& u3_1qbit1, Matrix& u3_qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
 
 void apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_qbit2, Matrix& input, const int& target_qbit, const int& control_qbit, const int& matrix_size);
+
+void apply_diagonal_gate_to_matrix_input(Matrix& diag_Nqbit, Matrix& input, const int& matrix_size);
 #endif

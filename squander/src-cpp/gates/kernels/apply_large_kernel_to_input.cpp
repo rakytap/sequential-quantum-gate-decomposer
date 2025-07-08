@@ -539,8 +539,20 @@ apply_crot_kernel_to_matrix_input_AVX(Matrix& u3_1qbit1, Matrix& u3_1qbit2, Matr
 
 
             current_idx = current_idx + (index_step_target << 1);
-
+            
     }
 
 
+}
+
+void apply_diagonal_gate_to_matrix_input(Matrix& diag_Nqbit, Matrix& input, const int& matrix_size){
+
+    for (int col_idx = 0; col_idx < input.cols; col_idx++) {
+            	for (int idx=0; idx<matrix_size; idx++){
+	                    int index = idx * input.stride + col_idx;
+                        QGD_Complex16 tmp = mult(diag_Nqbit[idx], input[index]);
+                        input[index].real = tmp.real;
+                        input[index].imag = tmp.imag;
+            	}
+    }
 }
