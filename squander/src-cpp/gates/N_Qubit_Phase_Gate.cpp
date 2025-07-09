@@ -254,12 +254,14 @@ N_Qubit_Phase_Gate::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& inpu
     std::vector<Matrix> ret;
     for (int idx=0;idx<parameter_num;idx++){
         Matrix res_mtx = input.copy();
-        Matrix_real params_tmp = parameters_mtx.copy();
-        double param_shifted = params_tmp[idx] + M_PIOver2;
-        params_tmp[idx] = param_shifted;
-        apply_to(params_tmp, res_mtx,0);
+        Matrix com_matrix(matrix_size,1);
+        memset(com_matrix.get_data(),0.0,(com_matrix.size()*2)*sizeof(double));
+        double param_shifted = parameters_mtx[idx] + M_PIOver2;
+        com_matrix[idx].real = std::cos(param_shifted);
+        com_matrix[idx].imag = std::sin(param_shifted);
+        apply_diagonal_gate_to_matrix_input(com_matrix,res_mtx,res_mtx.rows);
         ret.push_back(res_mtx);
-        params_tmp.release_data();
+        com_matrix.release_data();
     }
 
     return ret;
