@@ -42,6 +42,17 @@ R::R() {
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
         control_qbit = -1;
 
+        // logical value indicating whether the matrix creation takes an argument theta
+        theta = false;
+        // logical value indicating whether the matrix creation takes an argument phi
+        phi = false;
+        // logical value indicating whether the matrix creation takes an argument lambda
+        lambda = false;
+
+        // set static values for the angles
+        phi0 = -M_PI/2;
+        lambda0 = M_PI/2;
+
         parameter_num = 0;
 
         name = "R";
@@ -80,6 +91,17 @@ R::R(int qbit_num_in, int target_qbit_in) {
         target_qbit = target_qbit_in;
         // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
         control_qbit = -1;
+
+        // logical value indicating whether the matrix creation takes an argument theta
+        theta = true;
+        // logical value indicating whether the matrix creation takes an argument phi
+        phi = true;
+        // logical value indicating whether the matrix creation takes an argument lambda
+        lambda = false;
+
+        // set static values for the angles
+        phi0 = -M_PI/2;
+        lambda0 = M_PI/2;
 
         parameter_num = 2;
 
@@ -270,20 +292,6 @@ Matrix_real R::get_optimized_parameters() {
 
     return parameters.copy();
 
-}
-
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the one-qubit matrix.
-*/
-void
-R::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda) {
-
-    Phi = -M_PI/2;
-    Lambda = M_PI/2;
 }
 
 

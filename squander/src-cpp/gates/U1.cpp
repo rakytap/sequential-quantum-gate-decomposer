@@ -181,13 +181,13 @@ std::vector<Matrix> U1::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& 
     double Lambda = parameters_mtx[0];
     bool deriv = true;
 
-    Matrix u1_1qbit_lambda = calc_one_qubit_u3(Lambda + M_PIOver2);
-    memset(u1_1qbit_lambda.get_data(), 0.0, sizeof(QGD_Complex16) );
-    memset(u1_1qbit_lambda.get_data()+2, 0.0, sizeof(QGD_Complex16) );
+    Matrix u1_1qbit = calc_one_qubit_u3(Lambda + M_PIOver2);
+    memset(u1_1qbit.get_data(), 0.0, sizeof(QGD_Complex16) );
+    memset(u1_1qbit.get_data()+2, 0.0, sizeof(QGD_Complex16) );
 
-    Matrix res_mtx_lambda = input.copy();
-    apply_kernel_to( u1_1qbit_lambda, res_mtx_lambda, deriv, parallel );
-    ret.push_back(res_mtx_lambda);
+    Matrix res_mtx = input.copy();
+    apply_kernel_to( u1_1qbit, res_mtx, deriv, parallel );
+    ret.push_back(res_mtx);
 
     return ret;
 }
