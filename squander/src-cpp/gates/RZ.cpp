@@ -44,21 +44,7 @@ RZ::RZ() {
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
     control_qbit = -1;
 
-    // logical value indicating whether the matrix creation takes an argument theta
-    theta = false;
-    // logical value indicating whether the matrix creation takes an argument phi
-    phi = false;
-    // logical value indicating whether the matrix creation takes an argument lambda
-    lambda = false;
-
-    // set static values for the angles
-    theta0 = 0.0;
-    lambda0 = 0.0;
-
-
     parameter_num = 0;
-
-
 
 }
 
@@ -104,21 +90,7 @@ RZ::RZ(int qbit_num_in, int target_qbit_in) {
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
     control_qbit = -1;
 
-    // logical value indicating whether the matrix creation takes an argument theta
-    theta = false;
-    // logical value indicating whether the matrix creation takes an argument phi
-    phi = true;
-    // logical value indicating whether the matrix creation takes an argument lambda
-    lambda = false;
-
-    // set static values for the angles
-    theta0 = 0.0;
-    lambda0 = 0.0;
-
     parameter_num = 1;
-
-    // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitaRZ is done
-    parameters = Matrix_real(1, parameter_num);
 
 }
 
@@ -230,33 +202,6 @@ RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 }
 
 
-
-
-/**
-@brief Call to set the final optimized parameters of the gate.
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-*/
-void RZ::set_optimized_parameters(double PhiOver2 ) {
-
-    parameters = Matrix_real(1, parameter_num);
-
-    parameters[0] = PhiOver2;
-
-}
-
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
-*/
-Matrix_real RZ::get_optimized_parameters() {
-
-    return parameters.copy();
-
-}
-
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
 @param Theta Real parameter standing for the parameter theta.
@@ -278,10 +223,6 @@ RZ::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lamb
 RZ* RZ::clone() {
 
     RZ* ret = new RZ(qbit_num, target_qbit);
-
-    if ( parameters.size() > 0 ) {
-        ret->set_optimized_parameters(parameters[0]);
-    }
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );

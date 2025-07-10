@@ -69,9 +69,6 @@ virtual void set_qbit_num(int qbit_num_in);
 
 virtual void reorder_qubits( std::vector<int> qbit_list);
 
-void set_optimized_parameters(double Theta0Over2, double Phi0, double Theta1Over2, double Phi1 );
-
-Matrix_real get_optimized_parameters();
 
 crot_type get_subtype();
 

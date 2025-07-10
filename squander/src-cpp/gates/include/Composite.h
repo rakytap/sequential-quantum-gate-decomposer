@@ -121,17 +121,6 @@ virtual void reorder_qubits( std::vector<int> qbit_list );
 
 
 /**
-@brief Call to set the final optimized parameters of the gate.
-@param parameters_ Real array of the optimized parameters
-*/
-void set_optimized_parameters( Matrix_real parameters_ );
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-*/
-Matrix_real get_optimized_parameters();
-
-/**
 @brief Call to get the number of free parameters
 @return Return with the number of the free parameters
 */

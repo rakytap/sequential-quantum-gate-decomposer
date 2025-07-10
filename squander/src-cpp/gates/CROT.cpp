@@ -550,34 +550,6 @@ void CROT::reorder_qubits( std::vector<int> qbit_list) {
 
 }
 
-/**
-@brief Call to set the final optimized parameters of the gate.
-@param ThetaOver2 Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-*/
-void CROT::set_optimized_parameters(double Theta0Over2, double Phi0, double Theta1Over2, double Phi1) {
-
-    parameters = Matrix_real(1, 4);
-
-    parameters[0] = Theta0Over2;
-    parameters[1] = Phi0;
-    parameters[2] = Theta1Over2;
-    parameters[3] = Phi1;
-
-}
-
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters ThetaOver2, Phi and Lambda of the U3 gate.
-*/
-Matrix_real CROT::get_optimized_parameters() {
-
-    return parameters.copy();
-
-}
-
 
 
 /**
@@ -587,10 +559,6 @@ Matrix_real CROT::get_optimized_parameters() {
 CROT* CROT::clone() {
 
     CROT* ret = new CROT(qbit_num, target_qbit, control_qbit, subtype);
-
-    if ( parameters.size() >0 ) {
-        ret->set_optimized_parameters(parameters[0],parameters[1],parameters[2],parameters[3]);
-    }
 
     ret->set_parameter_start_idx( get_parameter_start_idx() );
 
