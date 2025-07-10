@@ -31,13 +31,24 @@ static double M_PIOver2 = M_PI/2;
 @brief Nullary constructor of the class.
 */
 U3::U3() {
-    name = "U3"; // A string labeling the gate operation
-    qbit_num = -1; // number of qubits spanning the matrix of the gate
-    matrix_size = -1; // the size of the matrix
-    type = U3_OPERATION; // A string describing the type of the gate
-    target_qbit = -1; // The index of the qubit on which the gate acts (target_qbit >= 0)
-    control_qbit = -1; // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-    parameter_num = 3;
+
+    // A string labeling the gate operation
+    name = "U3";
+
+    // number of qubits spanning the matrix of the gate
+    qbit_num = -1;
+    // the size of the matrix
+    matrix_size = -1;
+    // A string describing the type of the gate
+    type = U3_OPERATION;
+
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = -1;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
+
+    parameter_num = 0;
+
 }
 
 /**
@@ -46,30 +57,41 @@ U3::U3() {
 @param target_qbit_in The 0<=ID<qbit_num of the target qubit.
 */
 U3::U3(int qbit_num_in, int target_qbit_in) {
-    name = "U3"; // A string labeling the gate operation
-    qbit_num = qbit_num_in; // number of qubits spanning the matrix of the gate
-    matrix_size = Power_of_2(qbit_num); // the size of the matrix
-    type = U3_OPERATION; // A string describing the type of the gate
+    
+    // A string labeling the gate operation
+    name = "U3";
+
+    // number of qubits spanning the matrix of the gate
+    qbit_num = qbit_num_in;
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+    // A string describing the type of the gate
+    type = U3_OPERATION;
 
     if (target_qbit_in >= qbit_num) {
         std::stringstream sstream;
         sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-        print(sstream, 0);	             
+    print(sstream, 0);        
         throw "The index of the target qubit is larger than the number of qubits";
     }
 	
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
     target_qbit = target_qbit_in;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
     control_qbit = -1;
+
     parameter_num = 3;
-    parameters = Matrix_real(1, parameter_num); // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
 
 }
+
 
 /**
 @brief Destructor of the class
 */
 U3::~U3() {
+
 }
+
 
 /**
 @brief Call to retrieve the gate matrix
@@ -78,8 +100,10 @@ U3::~U3() {
 */
 Matrix
 U3::get_matrix( Matrix_real& parameters ) {
-    return get_matrix( parameters, false );
+        
+        return get_matrix( parameters, false );
 }
+
 
 /**
 @brief Call to retrieve the gate matrix
@@ -105,6 +129,7 @@ U3::get_matrix( Matrix_real& parameters, int parallel ) {
         return U3_matrix;
 
 }
+
 
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
@@ -137,6 +162,7 @@ U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int
 
 }
 
+
 /**
 @brief Call to apply the gate on the input array/matrix by U3*input
 @param parameters An array of parameters to calculate the matrix of the U3 gate.
@@ -145,6 +171,7 @@ U3::apply_to_list( Matrix_real& parameters_mtx, std::vector<Matrix>& inputs, int
 */
 void 
 U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
+    
     if (input.rows != matrix_size ) {
         std::string err("U3::apply_to: Wrong input size in U3 gate apply.");
         throw err;    
@@ -167,6 +194,7 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 */
 void 
 U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
+    
     if (input.cols != matrix_size ) {
         std::string err("U3::apply_from_right: Wrong matrix size in U3 apply_from_right.");
         throw err;    
@@ -190,39 +218,40 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
 */
 std::vector<Matrix> 
 U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
+    
     if (input.rows != matrix_size ) {
         std::string err("U3::apply_derivate_to: Wrong matrix size in U3 gate apply.");
         throw err;    
     }
 
     std::vector<Matrix> ret;
+
     double Theta = parameters_mtx[0];
     double Phi = parameters_mtx[1];
     double Lambda = parameters_mtx[2];
     bool deriv = true;
 
+
     Matrix u3_1qbit_theta = calc_one_qubit_u3(Theta+M_PIOver2, Phi, Lambda);
-    
-    Matrix res_mtx = input.copy();
-    apply_kernel_to( u3_1qbit_theta, res_mtx, deriv, parallel );
-    ret.push_back(res_mtx);
+    Matrix res_mtx_theta = input.copy();
+    apply_kernel_to( u3_1qbit_theta, res_mtx_theta, deriv, parallel );
+    ret.push_back(res_mtx_theta);
 
 
     Matrix u3_1qbit_phi = calc_one_qubit_u3(Theta, Phi+M_PIOver2, Lambda );
     memset(u3_1qbit_phi.get_data(), 0.0, 2*sizeof(QGD_Complex16) );
-
-    Matrix res_mtx = input.copy();
-    apply_kernel_to( u3_1qbit_phi, res_mtx, deriv, parallel );
-    ret.push_back(res_mtx);
+    Matrix res_mtx_phi = input.copy();
+    apply_kernel_to( u3_1qbit_phi, res_mtx_phi, deriv, parallel );
+    ret.push_back(res_mtx_phi);
 
 
     Matrix u3_1qbit_lambda = calc_one_qubit_u3(Theta, Phi, Lambda+M_PIOver2 );
     memset(u3_1qbit_lambda.get_data(), 0.0, sizeof(QGD_Complex16) );
     memset(u3_1qbit_lambda.get_data()+2, 0.0, sizeof(QGD_Complex16) );
+    Matrix res_mtx_lambda = input.copy();
+    apply_kernel_to( u3_1qbit_lambda, res_mtx_lambda, deriv, parallel );
+    ret.push_back(res_mtx_lambda);
 
-    Matrix res_mtx = input.copy();
-    apply_kernel_to( u3_1qbit_lambda, res_mtx, deriv, parallel );
-    ret.push_back(res_mtx);
 
     return ret;
 }
@@ -248,11 +277,8 @@ void U3::reorder_qubits( std::vector<int> qbit_list) {
 @return Return with a pointer pointing to the cloned object
 */
 U3* U3::clone() {
-    U3* ret = new U3(qbit_num, target_qbit);
 
-    if ( parameters.size() > 0 ) {
-        ret->set_optimized_parameters(parameters[0], parameters[1], parameters[2]);
-    }
+    U3* ret = new U3(qbit_num, target_qbit);
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
@@ -261,26 +287,6 @@ U3* U3::clone() {
     return ret;
 }
 
-/**
-@brief Call to set the final optimized parameters of the gate.
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-*/
-void U3::set_optimized_parameters(double Theta, double Phi, double Lambda ) {
-    parameters = Matrix_real(1, 3);
-    parameters[0] = Theta;
-    parameters[1] = Phi;
-    parameters[2] = Lambda;
-}
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters ThetaOver2, Phi and Lambda of the U3 gate.
-*/
-Matrix_real U3::get_optimized_parameters() {
-    return parameters.copy();
-}
 
 /**
 @brief Call to extract parameters from the parameter array corresponding to the circuit, in which the gate is embedded.
@@ -295,9 +301,13 @@ U3::extract_parameters( Matrix_real& parameters ) {
         throw err;     
     }
 
-    Matrix_real ret(1, get_parameter_num());
-    memcpy(ret.get_data(), parameters.get_data()+get_parameter_start_idx(), get_parameter_num()*sizeof(double));
-    return ret;
+    Matrix_real extracted_parameters(1, 3);
+
+    extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
+    extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx()+1 ], 2*M_PI);
+    extracted_parameters[2] = std::fmod( parameters[ get_parameter_start_idx()+2 ], 2*M_PI);
+
+    return extracted_parameters;
 }
 
 /**
