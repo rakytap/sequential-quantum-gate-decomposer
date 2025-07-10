@@ -468,7 +468,7 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         elif isinstance(qgd_gate,SX):
             self.add_SX(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,U3):
-            self.add_U3(qgd_gate.get_Target_Qbit(),qgd_gate.Theta,qgd_gate.Phi,qgd_gate.Lambda)
+            self.add_U3(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,CRY):
             self.add_CRY(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
         elif isinstance(qgd_gate,CNOT):
