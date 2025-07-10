@@ -159,9 +159,10 @@ R::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0]; 
-    ThetaOver2 = parameters[0];
     Phi = parameters[1] - M_PI/2;
     Lambda = -1.*parameters[1] + M_PI/2;
+    
+    
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 

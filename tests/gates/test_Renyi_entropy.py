@@ -46,7 +46,7 @@ class Test_Renyi_entropy:
 
         Layer = Circuit( qbit_num )
         for target_qbit in range(qbit_num):
-            Layer.add_U3(target_qbit, True, True, True )
+            Layer.add_U3(target_qbit)
 
         Circuit_ret.add_Circuit( Layer )
 			   
@@ -60,8 +60,8 @@ class Test_Renyi_entropy:
                     Layer = Circuit( qbit_num )
 
                     Layer.add_CNOT( target_qbit=target_qbit, control_qbit=target_qbit+1 )
-                    Layer.add_U3( target_qbit, True, True, True )
-                    Layer.add_U3( target_qbit+1, True, True, True )
+                    Layer.add_U3( target_qbit )
+                    Layer.add_U3( target_qbit+1 )
 
                     Circuit_ret.add_Circuit( Layer )
 
@@ -72,8 +72,8 @@ class Test_Renyi_entropy:
                     Layer = Circuit( qbit_num )
         
                     Layer.add_CNOT( target_qbit=target_qbit, control_qbit=target_qbit+1 )
-                    Layer.add_U3( target_qbit, True, True, True )
-                    Layer.add_U3( target_qbit+1, True, True, True )
+                    Layer.add_U3( target_qbit )
+                    Layer.add_U3( target_qbit+1 )
 
                     Circuit_ret.add_Circuit( Layer )
 
@@ -122,7 +122,7 @@ class Test_Renyi_entropy:
 
 
 
-
+Test_Renyi_entropy().test_Renyi_entropy()
 
 
 

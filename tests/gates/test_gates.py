@@ -28,7 +28,14 @@ import qiskit
 qiskit_version = qiskit.version.get_version_info()
 
 from qiskit import QuantumCircuit
-import qiskit_aer as Aer    
+def make_u2(self, phi, lam, target_qbit):
+    """
+    This function is used to add a U2 gate to the circuit.
+    It is a workaround for the fact that Qiskit does not have a U2 gate.
+    """
+    self.u( np.pi/2.0, phi, lam, target_qbit )
+QuantumCircuit.u2 = make_u2
+import qiskit_aer as Aer   
     
 if qiskit_version[0] == '1' or qiskit_version[0] == '2':
     from qiskit import transpile
@@ -105,14 +112,8 @@ class Test_operations:
         # target qbit
         target_qbit = 0
 
-        # set the free parameters
-        Theta = True
-        Phi = True
-        Lambda = True        
-
-
         # add U3 gate to the block
-        cCircuit.add_U3( target_qbit, Theta, Phi, Lambda )
+        cCircuit.add_U3( target_qbit )
 
 
         # target qbit
@@ -147,14 +148,8 @@ class Test_operations:
         # target qbit
         target_qbit = 0
 
-        # set the free parameters
-        Theta = True
-        Phi = True
-        Lambda = True        
-
-
         # add U3 gate to the block
-        layer.add_U3( target_qbit, Theta, Phi, Lambda )
+        layer.add_U3( target_qbit )
 
 
 
@@ -229,6 +224,9 @@ class Test_operations:
             #special cases:
             if gate_name == "U3":
                 gate_name = "u"
+            
+            elif gate_name == "U1":
+                gate_name = "p"
 
             elif gate_name == "CNOT":
                 gate_name = "cx"
@@ -246,7 +244,8 @@ class Test_operations:
                 parameters_QISKIT = list(parameters)
 
                 #Squander uses half of the theta function for numerical performance
-                parameters_QISKIT[0] = parameters_QISKIT[0]*2 
+                if gate_name != "p" and gate_name != "u2":
+                    parameters_QISKIT[0] = parameters_QISKIT[0]*2 
                 gate_adding_fnc( *parameters_QISKIT, target_qbit)
 
             elif is_controlled_gate and parameter_num == 0:
@@ -341,7 +340,10 @@ class Test_operations:
             #special cases:
             if gate_name == "U3":
                 gate_name = "u"
-
+            
+            elif gate_name == "U1":
+                gate_name = "p"
+    
             elif gate_name == "CNOT":
                 gate_name = "cx"
 
@@ -358,7 +360,8 @@ class Test_operations:
                 parameters_QISKIT = list(parameters)
 
                 #Squander uses half of the theta function for numerical performance
-                parameters_QISKIT[0] = parameters_QISKIT[0]*2 
+                if gate_name != "p" and gate_name != "u2":
+                    parameters_QISKIT[0] = parameters_QISKIT[0]*2 
                 gate_adding_fnc( *parameters_QISKIT, target_qbit)
 
             elif is_controlled_gate and parameter_num == 0:
@@ -372,6 +375,7 @@ class Test_operations:
 
                 #Squander uses half of the theta function for numerical performance
                 parameters_QISKIT[0] = parameters_QISKIT[0]*2 
+                control_qbit = qbit_num-1
                 gate_adding_fnc( *parameters_QISKIT, control_qbit, target_qbit)
 
 
@@ -423,11 +427,12 @@ class Test_operations:
                 if name == "SYC" or name == "Gate":
                     continue
 
+                # NEEDS FIXING: CRY, RX, RY, U1, U2, U3
                 self.perform_gate_matrix_testing( obj )
                 self.perform_gate_apply_to_testing( obj )
 
 
-                
+
 
 
 

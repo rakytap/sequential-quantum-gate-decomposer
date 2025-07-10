@@ -144,7 +144,7 @@ virtual Matrix_real extract_parameters( Matrix_real& parameters );
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-virtual Matrix calc_one_qubit_u3(double Theta, double Phi, double Lambda) override;
+virtual Matrix calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda) override;
 
 };
 

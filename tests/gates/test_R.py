@@ -98,7 +98,7 @@ class Test_operations_squander:
             R_gate = R( qbit_num, target_qbit )
 
             #create text matrix 
-            test_matrix= np.identity( 2**qbit_num, dtype=complex )
+            test_matrix= np.identity( 2**qbit_num, dtype=np.complex128 )
 
 	    #QISKIT      
 
@@ -121,9 +121,10 @@ class Test_operations_squander:
 	    #SQUANDER
 
             R_squander=test_matrix
+            print(R_squander.dtype)
 
             # apply the gate on the input array/matrix                
-            R_gate.apply_to(parameters, R_squander )
+            R_gate.apply_to( R_squander, parameters )
 
             #the difference between the SQUANDER and the qiskit result        
             delta_matrix=R_squander-R_qiskit

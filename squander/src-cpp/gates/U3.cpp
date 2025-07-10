@@ -177,12 +177,12 @@ U3::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
         throw err;    
     }
 
-    double Theta = parameters_mtx[0];
+    double ThetaOver2 = parameters_mtx[0];
     double Phi = parameters_mtx[1];
     double Lambda = parameters_mtx[2];
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
     apply_kernel_to( u3_1qbit, input, false, parallel );
 }
@@ -200,12 +200,12 @@ U3::apply_from_right( Matrix_real& parameters_mtx, Matrix& input ) {
         throw err;    
     }
 
-    double Theta = parameters_mtx[0];
+    double ThetaOver2 = parameters_mtx[0];
     double Phi = parameters_mtx[1];
     double Lambda = parameters_mtx[2];
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(Theta, Phi, Lambda );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
     apply_kernel_from_right(u3_1qbit, input);
 }
@@ -226,26 +226,26 @@ U3::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 
     std::vector<Matrix> ret;
 
-    double Theta = parameters_mtx[0];
+    double ThetaOver2 = parameters_mtx[0];
     double Phi = parameters_mtx[1];
     double Lambda = parameters_mtx[2];
     bool deriv = true;
 
 
-    Matrix u3_1qbit_theta = calc_one_qubit_u3(Theta+M_PIOver2, Phi, Lambda);
+    Matrix u3_1qbit_theta = calc_one_qubit_u3(ThetaOver2+M_PIOver2, Phi, Lambda);
     Matrix res_mtx_theta = input.copy();
     apply_kernel_to( u3_1qbit_theta, res_mtx_theta, deriv, parallel );
     ret.push_back(res_mtx_theta);
 
 
-    Matrix u3_1qbit_phi = calc_one_qubit_u3(Theta, Phi+M_PIOver2, Lambda );
+    Matrix u3_1qbit_phi = calc_one_qubit_u3(ThetaOver2, Phi+M_PIOver2, Lambda );
     memset(u3_1qbit_phi.get_data(), 0.0, 2*sizeof(QGD_Complex16) );
     Matrix res_mtx_phi = input.copy();
     apply_kernel_to( u3_1qbit_phi, res_mtx_phi, deriv, parallel );
     ret.push_back(res_mtx_phi);
 
 
-    Matrix u3_1qbit_lambda = calc_one_qubit_u3(Theta, Phi, Lambda+M_PIOver2 );
+    Matrix u3_1qbit_lambda = calc_one_qubit_u3(ThetaOver2, Phi, Lambda+M_PIOver2 );
     memset(u3_1qbit_lambda.get_data(), 0.0, sizeof(QGD_Complex16) );
     memset(u3_1qbit_lambda.get_data()+2, 0.0, sizeof(QGD_Complex16) );
     Matrix res_mtx_lambda = input.copy();
@@ -317,10 +317,8 @@ U3::extract_parameters( Matrix_real& parameters ) {
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
-Matrix U3::calc_one_qubit_u3(double Theta, double Phi, double Lambda) {
-    Matrix u3_1qbit = Matrix(2,2); 
-
-    double ThetaOver2 = Theta/2.0; 
+Matrix U3::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda) {
+    Matrix u3_1qbit = Matrix(2,2);
 
     double cos_theta = 1.0, sin_theta = 0.0;
     double cos_phi = 1.0, sin_phi = 0.0;
