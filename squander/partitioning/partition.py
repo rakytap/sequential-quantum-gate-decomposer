@@ -6,16 +6,12 @@ from typing import List, Tuple
 import numpy as np
 import os
 
-
 #@brief Retrieves qubit indices used by a SQUANDER gate
 #@param gate The SQUANDER gate
 #@return Set of qubit indices used by the gate
 def get_qubits(gate):
     return ({gate.get_Target_Qbit(), gate.get_Control_Qbit()}
             if isinstance(gate, (CH, CRY, CNOT, CZ)) else {gate.get_Target_Qbit()})
-
-
-
 
 
 #@brief Partitions a flat circuit into subcircuits using Kahn's algorithm
@@ -53,6 +49,10 @@ def kahn_partition(c, max_qubit, preparts=None):
     while S:
         if preparts is None:
             n = next(dropwhile(partition_condition, S), None)
+        elif isinstance(next(iter(preparts[0])), tuple):
+            Scomp = {(frozenset(get_qubits(gate_dict[x])), gate_dict[x].get_Name()): x for x in S}
+            n = next(iter(Scomp.keys() & preparts[len(parts)-1]), None)
+            if n is not None: n = Scomp[n]
         else:
             n = next(iter(S & preparts[len(parts)-1]), None)
             assert (n is None) == (len(preparts[len(parts)-1]) == len(parts[-1])) #sanity check valid partitioning
@@ -65,7 +65,12 @@ def kahn_partition(c, max_qubit, preparts=None):
             curr_partition = set()
             c = Circuit(c.get_Qbit_Num())
             parts.append([])
-            n = next(iter(S)) if preparts is None else next(iter(S & preparts[len(parts)-1]))
+            if preparts is None: n = next(iter(S))
+            elif isinstance(next(iter(preparts[0])), tuple):
+                Scomp = {(frozenset(get_qubits(gate_dict[x])), gate_dict[x].get_Name()): x for x in S}
+                n = next(iter(Scomp.keys() & preparts[len(parts)-1]), None)
+                if n is not None: n = Scomp[n]
+            else: n = next(iter(S & preparts[len(parts)-1]))
 
 
         # Add gate to current partition
@@ -93,6 +98,7 @@ def kahn_partition(c, max_qubit, preparts=None):
     top_circuit.add_Circuit(c)
     total += len(c.get_Gates())
     assert total == len(gate_dict)
+    print(parts)
     return top_circuit, param_order, parts
 
 
