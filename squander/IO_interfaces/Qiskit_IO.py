@@ -286,7 +286,7 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
 # @brief Call to import initial quantum circuit in QISKIT format to be further comporessed
 # @param qc_in The quantum circuit to be imported
 def convert_Qiskit_to_Squander( qc_in ):  
-
+    print("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiII")
     from qiskit import QuantumCircuit
     from qiskit.circuit import ParameterExpression
 
@@ -336,7 +336,8 @@ def convert_Qiskit_to_Squander( qc_in ):
             qubits = gate[1]                
             qubit = q_register.index( qubits[0] )
 
-            params = gate[0].params 
+            params = gate[0].params
+            params[0] = params[0]/2 #SQUADER works with theta/2            
 
             for param in params:
                 parameters = parameters + [float(param)]
@@ -471,8 +472,7 @@ def convert_Qiskit_to_Squander( qc_in ):
 
 
     parameters = np.asarray(parameters, dtype=np.float64)
-
-
+    
     return Circuit_Squander, parameters
 
 
