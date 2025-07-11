@@ -226,7 +226,7 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
         elif isinstance( gate, U3 ):
             # adding U3 gate to the quantum circuit
             parameters_gate = [scalar(p) for p in gate.Extract_Parameters( parameters )]
-            circuit.u( -parameters_gate[0], -parameters_gate[1], -parameters_gate[2], gate.get_Target_Qbit() )   
+            circuit.u( -parameters_gate[0], -parameters_gate[2], -parameters_gate[1], gate.get_Target_Qbit() )   
 
         elif isinstance( gate, RX ):
             # RX gate
@@ -278,7 +278,8 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
         else:
             print(gate)
             raise ValueError("Unsupported gate in the circuit export.")
-    #print( circuit )
+            
+            
     return( circuit )
 
 
@@ -286,7 +287,7 @@ def get_Qiskit_Circuit_inverse( Squander_circuit, parameters ):
 # @brief Call to import initial quantum circuit in QISKIT format to be further comporessed
 # @param qc_in The quantum circuit to be imported
 def convert_Qiskit_to_Squander( qc_in ):  
-    print("iiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiiII")
+
     from qiskit import QuantumCircuit
     from qiskit.circuit import ParameterExpression
 
