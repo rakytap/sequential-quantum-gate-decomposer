@@ -149,8 +149,8 @@ class Test_Decomposition:
                 Theta = True
                 Phi = False
                 Lambda = True      
-                Layer.add_U3( 0, Theta, Phi, Lambda )                 
-                Layer.add_U3( disentangle_qbit, Theta, Phi, Lambda ) 
+                Layer.add_U3( 0 )                 
+                Layer.add_U3( disentangle_qbit ) 
 
                 # add CNOT gate to the block
                 Layer.add_CNOT( 0, disentangle_qbit)
@@ -161,8 +161,8 @@ class Test_Decomposition:
                 Theta = True
                 Phi = False
                 Lambda = True      
-                Layer.add_U3( 0, Theta, Phi, Lambda )                 
-                Layer.add_U3( 1, Theta, Phi, Lambda ) 
+                Layer.add_U3( 0 )                 
+                Layer.add_U3( 1 ) 
 
                 # add CNOT gate to the block
                 Layer.add_CNOT( 0, 1)
@@ -175,8 +175,8 @@ class Test_Decomposition:
                 Theta = True
                 Phi = False
                 Lambda = True      
-                Layer.add_U3( 2, Theta, Phi, Lambda )                 
-                Layer.add_U3( disentangle_qbit, Theta, Phi, Lambda ) 
+                Layer.add_U3( 2 )                 
+                Layer.add_U3( disentangle_qbit ) 
 
                 # add CNOT gate to the block
                 Layer.add_CNOT( 2, disentangle_qbit )

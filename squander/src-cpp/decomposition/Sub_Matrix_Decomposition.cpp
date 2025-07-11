@@ -292,11 +292,8 @@ void Sub_Matrix_Decomposition::add_default_gate_layers() {
             Gates_block* block = new Gates_block( qbit_num );
 
             // adding U3 gate to the block
-            bool Theta = true;
-            bool Phi = false;
-            bool Lambda = true;
-            block->add_u2(target_qbit_loc);
-            block->add_u2(control_qbit_loc);
+            block->add_u3(target_qbit_loc);
+            block->add_u3(control_qbit_loc);
 
 
             // add CNOT gate to the block
