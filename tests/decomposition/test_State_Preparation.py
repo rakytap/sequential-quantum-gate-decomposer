@@ -75,7 +75,7 @@ class Test_State_Preparation:
         # creating a class to decompose the unitary
 
         with pytest.raises(Exception):
-            cDecompose = qgd_N_qubit_State_Preparation_adaptive(Umtx,
+            cDecompose = qgd_N_Qubit_State_Preparation_adaptive(Umtx,
                     level_limit_max=5, level_limit_min=0)
 
     def State_Preparation_adaptive_base(self, optimizer, cost_func, compression_enabled=1):
