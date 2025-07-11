@@ -137,14 +137,6 @@ virtual U3* clone();
 */
 virtual Matrix_real extract_parameters( Matrix_real& parameters );
 
-/**
-@brief Calculate the matrix of a U3 gate corresponding to the given parameters acting on a single qbit space. (Virtual method override)
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the one-qubit matrix.
-*/
-virtual Matrix calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda) override;
 
 };
 

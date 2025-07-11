@@ -309,38 +309,3 @@ U3::extract_parameters( Matrix_real& parameters ) {
 
     return extracted_parameters;
 }
-
-/**
-@brief Calculate the matrix of a U3 gate corresponding to the given parameters acting on a single qbit space. (Virtual method override)
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-@return Returns with the matrix of the one-qubit matrix.
-*/
-Matrix U3::calc_one_qubit_u3(double ThetaOver2, double Phi, double Lambda) {
-    Matrix u3_1qbit = Matrix(2,2);
-
-    double cos_theta = 1.0, sin_theta = 0.0;
-    double cos_phi = 1.0, sin_phi = 0.0;
-    double cos_lambda = 1.0, sin_lambda = 0.0;
-
-    if (ThetaOver2!=0.0) sincos(ThetaOver2, &sin_theta, &cos_theta);
-    if (Phi!=0.0) sincos(Phi, &sin_phi, &cos_phi);
-    if (Lambda!=0.0) sincos(Lambda, &sin_lambda, &cos_lambda);
-
-    // U3 gate matrix elements (Qiskit convention)
-    // the 1,1 element
-    u3_1qbit[0].real = cos_theta;
-    u3_1qbit[0].imag = 0;
-    // the 1,2 element
-    u3_1qbit[1].real = -cos_lambda*sin_theta;
-    u3_1qbit[1].imag = -sin_lambda*sin_theta;
-    // the 2,1 element
-    u3_1qbit[2].real = cos_phi*sin_theta;
-    u3_1qbit[2].imag = sin_phi*sin_theta;
-    // the 2,2 element
-    u3_1qbit[3].real = (cos_phi*cos_lambda-sin_phi*sin_lambda)*cos_theta;
-    u3_1qbit[3].imag = (sin_phi*cos_lambda+cos_phi*sin_lambda)*cos_theta;
-
-    return u3_1qbit;
-}
