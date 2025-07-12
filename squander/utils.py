@@ -132,7 +132,7 @@ def qasm_to_squander_circuit( filename: str, return_transpiled=False):
 
     allowed_gates = {'u', 'u3', 'cx', 'cry', 'cz', 'ch', 'rx', 'ry', 'rz', 'h', 'x', 'y', 'z', 'sx'}
 
-    if any(gate[0].name not in allowed_gates for gate in qc.data):
+    if any(gate.operation.name not in allowed_gates for gate in qc.data):
         qc_transpiled = qiskit.transpile(qc, basis_gates=allowed_gates, optimization_level=0)
     else: 
         qc_transpiled = qc

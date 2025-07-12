@@ -306,14 +306,14 @@ def convert_Qiskit_to_Squander( qc_in ):
 
     for gate in qc_in.data:
 
-        name = gate[0].name            
+        name = gate.operation.name            
         #print('Gate name in Qiskit: ', name )
         if name == 'u1' or name == 'p':
             # add U1 gate - lambda parameter used directly
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] )
             
-            params = gate[0].params
+            params = gate.operation.params
 
             for param in params:
                 parameters = parameters + [float(param)]
@@ -322,10 +322,10 @@ def convert_Qiskit_to_Squander( qc_in ):
 
         elif name == 'u2':
             # add U2 gate - phi and lambda parameters used directly
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] )
 
-            params = gate[0].params
+            params = gate.operation.params
 
             for param in params:
                 parameters = parameters + [float(param)]
@@ -334,10 +334,10 @@ def convert_Qiskit_to_Squander( qc_in ):
 
         elif name == 'u3' or name == 'u':
             # add U3 gate - theta/2 handled internally by U3 gate implementation
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] )
 
-            params = gate[0].params
+            params = gate.operation.params
             params[0] = params[0]/2 #SQUADER works with theta/2            
 
             for param in params:
@@ -347,18 +347,18 @@ def convert_Qiskit_to_Squander( qc_in ):
 
         elif name == 'cx':
             # add cx gate 
-            qubits = gate[1]
+            qubits = gate.qubits
             qubit0 = q_register.index( qubits[0] )
             qubit1 = q_register.index( qubits[1] )
             Circuit_Squander.add_CNOT( qubit1, qubit0 )
 
         elif name == "cry":
 
-            qubits = gate[1]
+            qubits = gate.qubits
             qubit0 = q_register.index( qubits[0] )
             qubit1 = q_register.index( qubits[1] )
 
-            params = gate[0].params
+            params = gate.operation.params
             params[0] = params[0]/2 #SQUADER works with theta/2
 
             for param in params:
@@ -367,22 +367,22 @@ def convert_Qiskit_to_Squander( qc_in ):
             Circuit_Squander.add_CRY( qubit1, qubit0 )
 
         elif name == "cz":
-            qubits = gate[1]
+            qubits = gate.qubits
             qubit0 = q_register.index( qubits[0] ) 
             qubit1 = q_register.index( qubits[1] )
             Circuit_Squander.add_CZ( qubit1, qubit0 )
 
         elif name == "ch":
-            qubits = gate[1]
+            qubits = gate.qubits
             qubit0 = q_register.index( qubits[0] ) 
             qubit1 = q_register.index( qubits[1] )
             Circuit_Squander.add_CH( qubit1, qubit0 )
 
         elif name == "rx":
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] ) 
 
-            params = gate[0].params
+            params = gate.operation.params
             params[0] = params[0]/2 #SQUADER works with theta/2
                     
             for param in params:
@@ -391,10 +391,10 @@ def convert_Qiskit_to_Squander( qc_in ):
             Circuit_Squander.add_RX( qubit )
 
         elif name == "ry":
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] ) 
 
-            params = gate[0].params
+            params = gate.operation.params
             params[0] = params[0]/2 #SQUADER works with theta/2
                     
             for param in params:
@@ -403,10 +403,10 @@ def convert_Qiskit_to_Squander( qc_in ):
             Circuit_Squander.add_RY( qubit )
 
         elif name == "rz" :
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] ) 
 
-            params    = gate[0].params
+            params    = gate.operation.params
             params[0] = params[0]/2 #SQUADER works with phi/2
                     
             for param in params:
@@ -415,52 +415,52 @@ def convert_Qiskit_to_Squander( qc_in ):
             Circuit_Squander.add_RZ( qubit )
 
         elif name == "h":
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] ) 
 
             Circuit_Squander.add_H( qubit )
 
         elif name == "x":
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] ) 
 
             Circuit_Squander.add_X( qubit )
 
         elif name == "y":
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] ) 
 
             Circuit_Squander.add_Y( qubit )
 
         elif name == "z":
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] ) 
 
             Circuit_Squander.add_Z( qubit )
 
         elif name == "sx":
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] ) 
 
             Circuit_Squander.add_SX( qubit )
         
         elif name == "t":
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] ) 
 
             Circuit_Squander.add_T( qubit )
         
         elif name == "tdg":
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] ) 
 
             Circuit_Squander.add_Tdg( qubit )
         
         elif name == "r":
-            qubits = gate[1]                
+            qubits = gate.qubits                
             qubit = q_register.index( qubits[0] ) 
             
-            params = gate[0].params
+            params = gate.operation.params
             params[0] = params[0]/2 #SQUADER works with theta/2
                     
             for param in params:

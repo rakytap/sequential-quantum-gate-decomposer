@@ -168,7 +168,7 @@ class Test_State_Preparation:
 		
             transformed_state = result.get_statevector(circuit_qiskit)
         
-        overlap = np.abs( transformed_state.conj().T @ State )
+        overlap = np.abs( np.asarray(transformed_state).conj().T @ State )
 	
         print( 'Overlap integral with the initial state: ', overlap )        
         assert( np.abs(overlap - 1) < 1e-4 )

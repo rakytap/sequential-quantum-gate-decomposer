@@ -259,17 +259,17 @@ class qgd_N_Qubit_Decomposition_adaptive(qgd_N_Qubit_Decomposition_adaptive_Wrap
 
         for gate in qc.data:
 
-            name = gate[0].name
+            name = gate.operation.name
             if name == 'u3':
                 # add u3 gate 
-                qubits = gate[1]
+                qubits = gate.qubits
 
                 qubit = q_register.index( qubits[0] )   # qubits[0].index
-                single_qubit_gates[qubit].append( {'params': gate[0].params, 'type': 'u3'} )
+                single_qubit_gates[qubit].append( {'params': gate.operation.params, 'type': 'u3'} )
 
             elif name == 'cz':
                 # add cz gate 
-                qubits = gate[1]
+                qubits = gate.qubits
 
                 qubit0 = q_register.index( qubits[0] ) #qubits[0].index
                 qubit1 = q_register.index( qubits[1] ) #qubits[1].index
