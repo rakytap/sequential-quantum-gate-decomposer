@@ -139,8 +139,29 @@ virtual void apply_from_right( Matrix_real& parameters_mtx, Matrix& input );
 */
 virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel );
 
+/**
+@brief Append a U1 gate to the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_u1(int target_qbit);
 
+/**
+@brief Add a U1 gate to the front of the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_u1_to_front(int target_qbit);
 
+/**
+@brief Append a U2 gate to the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_u2(int target_qbit);
+
+/**
+@brief Add a U2 gate to the front of the list of gates
+@param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_u2_to_front(int target_qbit);
 
 /**
 @brief Append a U3 gate to the list of gates
@@ -149,7 +170,7 @@ virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters_mtx, Matr
 @param Phi The Phi parameter of the U3 gate
 @param Lambda The Lambda parameter of the U3 gate
 */
-void add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda);
+void add_u3(int target_qbit);
 
 /**
 @brief Add a U3 gate to the front of the list of gates
@@ -158,8 +179,7 @@ void add_u3(int target_qbit, bool Theta, bool Phi, bool Lambda);
 @param Phi The Phi parameter of the U3 gate
 @param Lambda The Lambda parameter of the U3 gate
 */
-void add_u3_to_front(int target_qbit, bool Theta, bool Phi, bool Lambda);
-
+void add_u3_to_front(int target_qbit);
 
 /**
 @brief Append a RX gate to the list of gates
@@ -706,7 +726,10 @@ DFEgate_kernel_type* convert_to_DFE_gates( Matrix_real& parameters_mtx, int& gat
 */
 void convert_to_DFE_gates( const Matrix_real& parameters_mtx, DFEgate_kernel_type* DFEgates, int& start_index );
 
+#endif
 
+
+#ifdef __GROQ__
 
 void extract_gate_kernels_target_and_control_qubits(std::vector<Matrix> &u3_qbit, std::vector<int> &target_qbit, std::vector<int> &control_qbit, Matrix_real& parameters_mtx);
 

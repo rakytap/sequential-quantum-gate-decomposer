@@ -84,18 +84,6 @@ virtual std::vector<Matrix> apply_derivate_to( Matrix_real& parameters, Matrix& 
 
 
 /**
-@brief Call to set the final optimized parameters of the gate.
-@param Theta Real parameter standing for the parameter theta.
-*/
-void set_optimized_parameters(double Theta );
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
-*/
-Matrix_real get_optimized_parameters();
-
-/**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */

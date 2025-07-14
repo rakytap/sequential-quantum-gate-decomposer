@@ -45,21 +45,8 @@ RZ_P::RZ_P() {
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
     control_qbit = -1;
 
-    // logical value indicating whether the matrix creation takes an argument theta
-    theta = false;
-    // logical value indicating whether the matrix creation takes an argument phi
-    phi = false;
-    // logical value indicating whether the matrix creation takes an argument lambda
-    lambda = false;
-
-    // set static values for the angles
-    theta0 = 0.0;
-    lambda0 = 0.0;
-
 
     parameter_num = 0;
-
-
 
 }
 
@@ -105,21 +92,7 @@ RZ_P::RZ_P(int qbit_num_in, int target_qbit_in) {
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
     control_qbit = -1;
 
-    // logical value indicating whether the matrix creation takes an argument theta
-    theta = false;
-    // logical value indicating whether the matrix creation takes an argument phi
-    phi = true;
-    // logical value indicating whether the matrix creation takes an argument lambda
-    lambda = false;
-
-    // set static values for the angles
-    theta0 = 0.0;
-    lambda0 = 0.0;
-
     parameter_num = 1;
-
-    // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitay is done
-    parameters = Matrix_real(1, parameter_num);
 
 }
 
@@ -151,12 +124,13 @@ RZ_P::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
     }
 
 
-    double Phi = parameters[0];
+    double ThetaOver2, Phi, Lambda;
 
-    
+    Phi = parameters[0];
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
     apply_kernel_to( u3_1qbit, input, false, parallel );
 
@@ -179,12 +153,13 @@ RZ_P::apply_from_right( Matrix_real& parameters, Matrix& input ) {
         throw err;    
     }
 
-    double Phi = parameters[0];
+    double ThetaOver2, Phi, Lambda;
 
-    
+    Phi = parameters[0];
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
 
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
     apply_kernel_from_right(u3_1qbit, input);
@@ -209,19 +184,21 @@ RZ_P::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int paralle
         throw err;
     }
 
-    double Phi = parameters[0] + M_PI/2;
+    std::vector<Matrix> ret;
+
+    double ThetaOver2, Phi, Lambda;
+    
+    Phi = parameters_mtx[0] + M_PI/2;
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
 
     
-
     // get the U3 gate of one qubit
-    Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 ); 
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda);
     u3_1qbit[0].real = 0.0;
     u3_1qbit[0].imag = 0.0;
 
     Matrix&& res_mtx = input.copy();
-    apply_kernel_to( u3_1qbit, res_mtx, parallel );
-
-    std::vector<Matrix> ret;
+    apply_kernel_to( u3_1qbit, res_mtx, true, parallel );
     ret.push_back(res_mtx);
 
 
@@ -230,33 +207,6 @@ RZ_P::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int paralle
 
 }
 
-
-
-
-/**
-@brief Call to set the final optimized parameters of the gate.
-@param Theta Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-*/
-void RZ_P::set_optimized_parameters(double PhiOver2 ) {
-
-    parameters = Matrix_real(1, parameter_num);
-
-    parameters[0] = PhiOver2;
-
-}
-
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters Theta, Phi and Lambda of the U3 gate.
-*/
-Matrix_real RZ_P::get_optimized_parameters() {
-
-    return parameters.copy();
-
-}
 
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
@@ -280,10 +230,6 @@ RZ_P* RZ_P::clone() {
 
     RZ_P* ret = new RZ_P(qbit_num, target_qbit);
 
-    if ( parameters.size() > 0 ) {
-        ret->set_optimized_parameters(parameters[0]);
-    }
-    
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
     ret->set_children( children );

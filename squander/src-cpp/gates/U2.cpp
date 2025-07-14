@@ -16,28 +16,27 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file RZ.cpp
-    \brief Class representing a RZ gate.
+/*! \file U2.cpp
+    \brief Class representing a U2 gate.
 */
 
-#include "RZ.h"
+#include "U2.h"
 
 
-
-//static tbb::spin_mutex my_mutex;
 /**
 @brief Nullary constructor of the class.
 */
-RZ::RZ() {
+U2::U2() {
 
     // A string labeling the gate operation
-    name = "RZ";
+    name = "U2";
+
     // number of qubits spanning the matrix of the gate
     qbit_num = -1;
     // the size of the matrix
     matrix_size = -1;
     // A string describing the type of the gate
-    type = RZ_OPERATION;
+    type = U2_OPERATION;
 
     // The index of the qubit on which the gate acts (target_qbit >= 0)
     target_qbit = -1;
@@ -49,48 +48,36 @@ RZ::RZ() {
 }
 
 
-
 /**
 @brief Constructor of the class.
 @param qbit_num_in The number of qubits spanning the gate.
 @param target_qbit_in The 0<=ID<qbit_num of the target qubit.
-@param theta_in logical value indicating whether the matrix creation takes an argument theta.
-@param phi_in logical value indicating whether the matrix creation takes an argument phi
-@param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-RZ::RZ(int qbit_num_in, int target_qbit_in) {
-
+U2::U2(int qbit_num_in, int target_qbit_in) {
+    
     // A string labeling the gate operation
-    name = "RZ";
-
-    //The stringstream input to store the output messages.
-    std::stringstream sstream;
-
-    //Integer value to set the verbosity level of the output messages.
-    int verbose_level;
+    name = "U2";
 
     // number of qubits spanning the matrix of the gate
     qbit_num = qbit_num_in;
     // the size of the matrix
     matrix_size = Power_of_2(qbit_num);
     // A string describing the type of the gate
-    type = RZ_OPERATION;
-
+    type = U2_OPERATION;
 
     if (target_qbit_in >= qbit_num) {
-        verbose_level=1;
+        std::stringstream sstream;
         sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-	print(sstream,verbose_level);	    	
-	            
+    print(sstream, 0);        
         throw "The index of the target qubit is larger than the number of qubits";
     }
-	
+    
     // The index of the qubit on which the gate acts (target_qbit >= 0)
     target_qbit = target_qbit_in;
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
     control_qbit = -1;
 
-    parameter_num = 1;
+    parameter_num = 2;
 
 }
 
@@ -98,39 +85,34 @@ RZ::RZ(int qbit_num_in, int target_qbit_in) {
 /**
 @brief Destructor of the class
 */
-RZ::~RZ() {
-
+U2::~U2() {
 
 }
 
 
-
-
 /**
-@brief Call to apply the gate on the input array/matrix by U3*input
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@brief Call to apply the gate on the input array/matrix by U2*input
+@param parameters An array of parameters to calculate the matrix of the U2 gate.
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
 void 
-RZ::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
-
+U2::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::string err("RZ::apply_to: Wrong input size in RZ gate apply.");
+        std::string err("U2::apply_to: Wrong input size in U2 gate apply.");
         throw err;    
     }
 
 
+    double ThetaOver2, Phi, Lambda;
 
-    double Phi_over_2 = parameters[0];
-
-    
-
+    Phi = parameters[0];
+    Lambda = parameters[1];
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+  
     // get the U3 gate of one qubit
-    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
-    Matrix u3_1qbit = calc_one_qubit_u3( Phi_over_2 );
-
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
     apply_kernel_to( u3_1qbit, input, false, parallel );
@@ -139,36 +121,34 @@ RZ::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
 }
 
 
-
 /**
-@brief Call to apply the gate on the input array/matrix by input*U3
-@param parameters An array of parameters to calculate the matrix of the U3 gate.
+@brief Call to apply the gate on the input array/matrix by input*U2
+@param parameters An array of parameters to calculate the matrix of the U2 gate.
 @param input The input array on which the gate is applied
 */
 void 
-RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
-
+U2::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 
     if (input.cols != matrix_size ) {
-        std::string err("Wrong matrix size in U3 apply_from_right");
+        std::string err("U2::apply_from_right: Wrong matrix size in U2 apply_from_right.");
         throw err;    
     }
 
-    double Phi_over_2 = parameters[0];
 
-    
+    double ThetaOver2, Phi, Lambda;
+
+    Phi = parameters[0];
+    Lambda = parameters[1];
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
 
     // get the U3 gate of one qubit
-    //Matrix u3_1qbit = calc_one_qubit_u3(theta0, Phi, lambda0 );
-    Matrix u3_1qbit = calc_one_qubit_u3( Phi_over_2 );
+    Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
 
     apply_kernel_from_right(u3_1qbit, input);
 
 
-
 }
-
 
 
 /**
@@ -177,25 +157,33 @@ RZ::apply_from_right( Matrix_real& parameters, Matrix& input ) {
 @param input The input array on which the gate is applied
 @param parallel Set 0 for sequential execution, 1 for parallel execution with OpenMP and 2 for parallel with TBB (optional)
 */
-std::vector<Matrix> 
-RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
+std::vector<Matrix> U2::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::string err("Wrong matrix size in RZ apply_derivate_to");
-        throw err;
+        std::string err("U2::apply_derivate_to: Wrong matrix size in U2 gate apply.");
+        throw err;    
     }
+
 
     std::vector<Matrix> ret;
 
-    Matrix_real parameters_tmp(1,1);
+    Matrix_real parameters_tmp(1,2);
 
     parameters_tmp[0] = parameters_mtx[0] + M_PI/2;
-    Matrix res_mtx = input.copy();
-    apply_to(parameters_tmp, res_mtx, parallel);
-    ret.push_back(res_mtx);
+    parameters_tmp[1] = parameters_mtx[1];
+    Matrix res_mtx_phi = input.copy();
+    apply_to(parameters_tmp, res_mtx_phi, parallel);
+    ret.push_back(res_mtx_phi);
+
+    
+    parameters_tmp[0] = parameters_mtx[0];
+    parameters_tmp[1] = parameters_mtx[1] + M_PI/2;
+    Matrix res_mtx_lambda = input.copy();
+    apply_to(parameters_tmp, res_mtx_lambda, parallel);
+    ret.push_back(res_mtx_lambda);
     
 
-
+    
     return ret;
 
 
@@ -204,61 +192,35 @@ RZ::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
-@param Theta Real parameter standing for the parameter theta.
+@param ThetaOver2 Real parameter standing for the parameter theta/2.
 @param Phi Real parameter standing for the parameter phi.
 @param Lambda Real parameter standing for the parameter lambda.
 @return Returns with the matrix of the one-qubit matrix.
 */
 void 
-RZ::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda){
+U2::parameters_for_calc_one_qubit( double& ThetaOver2, double& Phi, double& Lambda){
 
-    ThetaOver2 = 0;
-    Lambda = 0;
+    ThetaOver2 = M_PI/4;
+    // Phi is passed through unchanged
+    // Lambda is passed through unchanged
+
 }
+
 
 /**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
 */
-RZ* RZ::clone() {
+U2* U2::clone() {
 
-    RZ* ret = new RZ(qbit_num, target_qbit);
+    U2* ret = new U2(qbit_num, target_qbit);
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
     ret->set_children( children );
 
-
     return ret;
-
 }
-
-
-
-/**
-@brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
-@param PhiOver2 Real parameter standing for the parameter phi/2.
-@return Returns with the matrix of the one-qubit matrix.
-*/
-Matrix RZ::calc_one_qubit_u3(double PhiOver2 ) {
-
-
-    Matrix u3_1qbit(2, 2);
-    double cos_phi = cos(PhiOver2);
-    double sin_phi = sin(PhiOver2);
-    
-    memset( u3_1qbit.get_data(), 0.0, 4*sizeof(QGD_Complex16) );
-    u3_1qbit[0].real = cos_phi;
-    u3_1qbit[0].imag = -sin_phi;    
-
-    u3_1qbit[3].real = cos_phi;
-    u3_1qbit[3].imag = sin_phi; 
-
-
-    return u3_1qbit;
-
-}
-
 
 
 /**
@@ -267,16 +229,17 @@ Matrix RZ::calc_one_qubit_u3(double PhiOver2 ) {
 @return Returns with the array of the extracted parameters.
 */
 Matrix_real 
-RZ::extract_parameters( Matrix_real& parameters ) {
+U2::extract_parameters( Matrix_real& parameters ) {
 
     if ( get_parameter_start_idx() + get_parameter_num() > parameters.size()  ) {
-        std::string err("RZ::extract_parameters: Cant extract parameters, since the dinput arary has not enough elements.");
+        std::string err("U2::extract_parameters: Cant extract parameters, since the dinput arary has not enough elements.");
         throw err;     
     }
 
-    Matrix_real extracted_parameters(1,1);
+    Matrix_real extracted_parameters(1,2);
 
-    extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
+    extracted_parameters[0] = std::fmod( parameters[ get_parameter_start_idx() ], 2*M_PI);
+    extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx() + 1 ], 2*M_PI);
 
     return extracted_parameters;
 

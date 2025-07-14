@@ -99,8 +99,8 @@ CRY::apply_to( Matrix_real& parameters, Matrix& input, int parallel ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
-    Phi = phi0;
-    Lambda = lambda0;
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+
 /*
     ThetaOver2 = theta0;
     Phi = parameters[0];
@@ -143,8 +143,8 @@ CRY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
-    Phi = phi0;
-    Lambda = lambda0;
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
+
 /*
     ThetaOver2 = theta0;
     Phi = parameters[0];
@@ -188,8 +188,7 @@ CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters_mtx[0]+M_PI/2;
-    Phi = phi0;
-    Lambda = lambda0;
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
 
     // the resulting matrix
     Matrix res_mtx = input.copy();   
@@ -210,32 +209,6 @@ CRY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel
 }
 
 
-
-/**
-@brief Call to set the final optimized parameters of the gate.
-@param ThetaOver2 Real parameter standing for the parameter theta.
-*/
-void CRY::set_optimized_parameters(double ThetaOver2 ) {
-
-    parameters = Matrix_real(1, parameter_num);
-
-    parameters[0] = ThetaOver2;
-
-}
-
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-@return Returns with an array containing the optimized parameter
-*/
-Matrix_real CRY::get_optimized_parameters() {
-
-    return parameters.copy();
-
-}
-
-
-
 /**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
@@ -243,10 +216,6 @@ Matrix_real CRY::get_optimized_parameters() {
 CRY* CRY::clone() {
 
     CRY* ret = new CRY(qbit_num, target_qbit, control_qbit);
-
-    if ( parameters.size() > 0 ) {
-        ret->set_optimized_parameters(parameters[0]);
-    }
 
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );

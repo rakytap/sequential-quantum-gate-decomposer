@@ -30,33 +30,21 @@ limitations under the License.
 */
 R::R() {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = -1;
-        // the size of the matrix
-        matrix_size = -1;
-        // A string describing the type of the gate
-        type = R_OPERATION;
+    name = "R";
 
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = -1;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    // number of qubits spanning the matrix of the gate
+    qbit_num = -1;
+    // the size of the matrix
+    matrix_size = -1;
+    // A string describing the type of the gate
+    type = R_OPERATION;
 
-        // logical value indicating whether the matrix creation takes an argument theta
-        theta = false;
-        // logical value indicating whether the matrix creation takes an argument phi
-        phi = false;
-        // logical value indicating whether the matrix creation takes an argument lambda
-        lambda = false;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = -1;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        // set static values for the angles
-        phi0 = -M_PI/2;
-        lambda0 = M_PI/2;
-
-        parameter_num = 0;
-
-        name = "R";
-
+    parameter_num = 0;
 
 }
 
@@ -72,43 +60,28 @@ R::R() {
 */
 R::R(int qbit_num_in, int target_qbit_in) {
 
-        // number of qubits spanning the matrix of the gate
-        qbit_num = qbit_num_in;
-        // the size of the matrix
-        matrix_size = Power_of_2(qbit_num);
-        // A string describing the type of the gate
-        type = R_OPERATION;
+    name = "R";
 
+    // number of qubits spanning the matrix of the gate
+    qbit_num = qbit_num_in;
+    // the size of the matrix
+    matrix_size = Power_of_2(qbit_num);
+    // A string describing the type of the gate
+    type = R_OPERATION;
 
-        if (target_qbit_in >= qbit_num) {
-            std::stringstream sstream;
-	    sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
-	    print(sstream, 0);		
-            throw "The index of the target qubit is larger than the number of qubits";
-        }
-	
-        // The index of the qubit on which the gate acts (target_qbit >= 0)
-        target_qbit = target_qbit_in;
-        // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
-        control_qbit = -1;
+    if (target_qbit_in >= qbit_num) {
+        std::stringstream sstream;
+    sstream << "The index of the target qubit is larger than the number of qubits" << std::endl;
+    print(sstream, 0);		
+        throw "The index of the target qubit is larger than the number of qubits";
+    }
 
-        // logical value indicating whether the matrix creation takes an argument theta
-        theta = true;
-        // logical value indicating whether the matrix creation takes an argument phi
-        phi = true;
-        // logical value indicating whether the matrix creation takes an argument lambda
-        lambda = false;
+    // The index of the qubit on which the gate acts (target_qbit >= 0)
+    target_qbit = target_qbit_in;
+    // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
+    control_qbit = -1;
 
-        // set static values for the angles
-        phi0 = -M_PI/2;
-        lambda0 = M_PI/2;
-
-        parameter_num = 2;
-
-        // Parameter theta of the RX gate after the decomposition of the unitary is done
-        parameters = Matrix_real(1, parameter_num);
-        
-        name = "R";
+    parameter_num = 2;
 
 }
 
@@ -186,9 +159,10 @@ R::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0]; 
-    ThetaOver2 = parameters[0];
     Phi = parameters[1] - M_PI/2;
     Lambda = -1.*parameters[1] + M_PI/2;
+    
+    
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
 
@@ -266,35 +240,6 @@ R::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel )
 }
 
 
-
-/**
-@brief Call to set the final optimized parameters of the gate.
-@param ThetaOver2 Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-*/
-void R::set_optimized_parameters(double ThetaOver2, double Phi ) {
-
-    parameters = Matrix_real(1, parameter_num);
-
-
-    parameters[0] = ThetaOver2;
-    parameters[1] = Phi;
-
-}
-
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters ThetaOver2, Phi and Lambda of the U3 gate.
-*/
-Matrix_real R::get_optimized_parameters() {
-
-    return parameters.copy();
-
-}
-
-
 /**
 @brief Call to create a clone of the present class
 @return Return with a pointer pointing to the cloned object
@@ -302,15 +247,10 @@ Matrix_real R::get_optimized_parameters() {
 R* R::clone() {
 
     R* ret = new R(qbit_num, target_qbit);
-
-    if ( parameters.size() > 0 ) {
-        ret->set_optimized_parameters(parameters[0],parameters[1]);
-    }
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
     ret->set_children( children );
-
 
     return ret;
 

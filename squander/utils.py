@@ -114,7 +114,7 @@ def get_unitary_from_qiskit_circuit_operator( circuit: QuantumCircuit ):
 
 
 
-def qasm_to_squander_circuit( filename: str):
+def qasm_to_squander_circuit( filename: str, return_transpiled=False):
     """
     Converts a QASM file to a SQUANDER circuit
 
@@ -130,15 +130,16 @@ def qasm_to_squander_circuit( filename: str):
     
     qc = qiskit.QuantumCircuit.from_qasm_file(filename)
 
-    allowed_gates = {'u', 'u3', 'cx', 'cry', 'cz', 'ch', 'rx', 'ry', 'rz', 'h', 'x', 'y', 'z', 'sx', 't', 'tdg'}
+    allowed_gates = {'u', 'u3', 'cx', 'cry', 'cz', 'ch', 'rx', 'ry', 'rz', 'h', 'x', 'y', 'z', 'sx'}
 
-    if any(gate[0].name not in allowed_gates for gate in qc.data):
+    if any(gate.operation.name not in allowed_gates for gate in qc.data):
         qc_transpiled = qiskit.transpile(qc, basis_gates=allowed_gates, optimization_level=0)
     else: 
         qc_transpiled = qc
 
     circuit_squander, circut_parameters = Qiskit_IO.convert_Qiskit_to_Squander(qc_transpiled)
     
+    if return_transpiled: return circuit_squander, circut_parameters, qc_transpiled
     return circuit_squander, circut_parameters
 
 

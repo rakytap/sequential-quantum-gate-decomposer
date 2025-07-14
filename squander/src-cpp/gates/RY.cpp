@@ -46,20 +46,7 @@ RY::RY() {
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
     control_qbit = -1;
 
-    // logical value indicating whether the matrix creation takes an argument theta
-    theta = false;
-    // logical value indicating whether the matrix creation takes an argument phi
-    phi = false;
-    // logical value indicating whether the matrix creation takes an argument lambda
-    lambda = false;
-
-    // set static values for the angles
-    phi0 = 0.0;
-    lambda0 = 0.0;
-
     parameter_num = 0;
-
-
 
 }
 
@@ -97,21 +84,7 @@ RY::RY(int qbit_num_in, int target_qbit_in) {
     // The index of the qubit which acts as a control qubit (control_qbit >= 0) in controlled gates
     control_qbit = -1;
 
-    // logical value indicating whether the matrix creation takes an argument theta
-    theta = true;
-    // logical value indicating whether the matrix creation takes an argument phi
-    phi = false;
-    // logical value indicating whether the matrix creation takes an argument lambda
-    lambda = false;
-
-    // set static values for the angles
-    phi0 = 0.0;
-    lambda0 = 0.0;
-
     parameter_num = 1;
-
-    // Parameters theta, phi, lambda of the U3 gate after the decomposition of the unitary is done
-    parameters = Matrix_real(1, parameter_num);
 
 }
 
@@ -177,6 +150,7 @@ RY::apply_from_right( Matrix_real& parameters, Matrix& input ) {
     double ThetaOver2, Phi, Lambda;
 
     ThetaOver2 = parameters[0];
+    parameters_for_calc_one_qubit(ThetaOver2, Phi, Lambda);
   
     // get the U3 gate of one qubit
     Matrix u3_1qbit = calc_one_qubit_u3(ThetaOver2, Phi, Lambda );
@@ -223,32 +197,6 @@ RY::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int parallel 
 }
 
 
-
-/**
-@brief Call to set the final optimized parameters of the gate.
-@param ThetaOver2 Real parameter standing for the parameter theta.
-@param Phi Real parameter standing for the parameter phi.
-@param Lambda Real parameter standing for the parameter lambda.
-*/
-void RY::set_optimized_parameters(double ThetaOver2 ) {
-
-    parameters = Matrix_real(1, parameter_num);
-
-    parameters[0] = ThetaOver2;
-
-}
-
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-@param parameters_in Preallocated pointer to store the parameters ThetaOver2, Phi and Lambda of the U3 gate.
-*/
-Matrix_real RY::get_optimized_parameters() {
-
-    return parameters.copy();
-
-}
-
 /**
 @brief Calculate the matrix of a U3 gate gate corresponding to the given parameters acting on a single qbit space.
 @param Theta Real parameter standing for the parameter theta.
@@ -271,14 +219,9 @@ RY* RY::clone() {
 
     RY* ret = new RY(qbit_num, target_qbit);
 
-    if ( parameters.size() > 0 ) {
-        ret->set_optimized_parameters(parameters[0]);
-    }
-    
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );
     ret->set_children( children );
-
 
     return ret;
 

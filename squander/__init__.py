@@ -18,16 +18,19 @@ from squander.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolve
 
 #gates
 from squander.gates.qgd_CROT import qgd_CROT  as CROT 
-from squander.gates.qgd_R import qgd_R  as R 
 
 from squander.gates.gates_Wrapper import (
     Gate,
+    U1,
+    U2,
     U3,
     H,
     X,
     Y,
     Z,
     T,
+    Tdg,
+    R,
     CH,
     CNOT,
     CZ,

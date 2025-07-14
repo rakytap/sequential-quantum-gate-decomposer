@@ -75,7 +75,7 @@ class Test_State_Preparation:
         # creating a class to decompose the unitary
 
         with pytest.raises(Exception):
-            cDecompose = qgd_N_qubit_State_Preparation_adaptive(Umtx,
+            cDecompose = qgd_N_Qubit_State_Preparation_adaptive(Umtx,
                     level_limit_max=5, level_limit_min=0)
 
     def State_Preparation_adaptive_base(self, optimizer, cost_func, compression_enabled=1):
@@ -168,7 +168,7 @@ class Test_State_Preparation:
 		
             transformed_state = result.get_statevector(circuit_qiskit)
         
-        overlap = np.abs( transformed_state.conj().T @ State )
+        overlap = np.abs( np.asarray(transformed_state).conj().T @ State )
 	
         print( 'Overlap integral with the initial state: ', overlap )        
         assert( np.abs(overlap - 1) < 1e-4 )

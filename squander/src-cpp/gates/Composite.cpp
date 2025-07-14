@@ -241,27 +241,6 @@ void Composite::reorder_qubits( std::vector<int> qbit_list ) {
     target_qbit = target_qbit_new;
 }
 
-/**
-@brief Call to set the final optimized parameters of the gate.
-@param parameters_ Real array of the optimized parameters
-*/
-void 
-Composite::set_optimized_parameters( Matrix_real parameters_ ) {
-
-    parameters = parameters_.copy();
-
-}
-
-
-/**
-@brief Call to get the final optimized parameters of the gate.
-*/
-Matrix_real 
-Composite::get_optimized_parameters() {
-
-    return parameters.copy();
-
-}
 
 /**
 @brief Call to get the number of free parameters
@@ -300,10 +279,6 @@ Composite::get_qbit_num() {
 Composite* Composite::clone() {
 
     Composite* ret = new Composite( qbit_num );
-
-    if ( parameters.size() > 0 ) {
-        ret->set_optimized_parameters( parameters );
-    }
     
     ret->set_parameter_start_idx( get_parameter_start_idx() );
     ret->set_parents( parents );

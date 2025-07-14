@@ -346,6 +346,8 @@ list(APPEND qgd_files
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/T.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/Tdg.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/SX.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U1.cpp
+    ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U2.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/U3.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/RY.cpp
     ${PROJECT_SOURCE_DIR}/squander/src-cpp/gates/CRY.cpp
@@ -424,7 +426,7 @@ endif()
 
 if (DEFINED ENV{QGD_GROQ})
   list(APPEND qgd_files 
-      ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/common_DFE.cpp
+      ${PROJECT_SOURCE_DIR}/squander/src-cpp/common/common_GROQ.cpp
   )
 
   list(APPEND CXX_FLAGS_DEBUG "-D__GROQ__=1")

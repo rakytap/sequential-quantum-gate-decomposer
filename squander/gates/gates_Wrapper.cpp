@@ -40,12 +40,15 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "RZ.h"
 #include "SX.h"
 #include "SYC.h"
+#include "U1.h"
+#include "U2.h"
 #include "U3.h"
 #include "X.h"
 #include "Y.h"
 #include "Z.h"
 #include "T.h"
 #include "Tdg.h"
+#include "R.h"
 #include "numpy_interface.h"
 
 
@@ -193,42 +196,6 @@ static PyObject *
     
 }
 
-
-/**
-@brief Method called when a python instance of a U3 gate is initialized
-@param self A pointer pointing to an instance of the class  Gate_Wrapper.
-@param args A tuple of the input arguments: qbit_num (int), target_qbit (int), Theta (bool), Phi (bool), Lambda (bool)
-@param kwds A tuple of keywords
-*/
-static PyObject *
- U3_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
-{
-    static char *kwlist[] = {(char*)"qbit_num", (char*)"target_qbit", (char*)"Theta", (char*)"Phi", (char*)"Lambda", NULL};
-    int qbit_num = -1; 
-    int target_qbit = -1;
-    int Theta = 1;
-    int Phi = 1;
-    int Lambda = 1;
-
-    
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|iiiiii", kwlist, &qbit_num, &target_qbit, &Theta, &Phi, &Lambda)) {
-        std::string err( "Unable to parse arguments");
-        PyErr_SetString(PyExc_Exception, err.c_str());
-        return NULL;   
-    }
-
-
-    Gate_Wrapper *self;
-    self = (Gate_Wrapper *) type->tp_alloc(type, 0);
-    if (self != NULL) {
-        self->gate = static_cast<Gate*>(new U3(qbit_num, target_qbit, (bool)Theta, (bool)Phi, (bool)Lambda));
-    }
-
-    
-
-
-    return (PyObject *) self;
-}
 
 /**
 @brief Method called when a python instance of a non-controlled gate class is initialized
@@ -879,7 +846,7 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         Py_DECREF( type_key );
         return NULL;
     }    
-    PyObject* type_py = PyDict_GetItem(gate_state, control_qbit_key); // borrowed reference
+    PyObject* type_py = PyDict_GetItem(gate_state, type_key); // borrowed reference
     Py_DECREF( type_key );
 
 
@@ -937,13 +904,21 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
     case H_OPERATION: {
         gate = create_gate<H>( qbit_num, target_qbit );
         break;
+    }  
+    case U1_OPERATION: {
+        gate = create_gate<U1>( qbit_num, target_qbit );
+        break;
     }    
+    case U2_OPERATION: {
+        gate = create_gate<U2>( qbit_num, target_qbit );
+        break;
+    }      
     case U3_OPERATION: {
-        gate = static_cast<Gate*>( new U3(qbit_num, target_qbit, true, true, true));
+        gate = create_gate<U3>( qbit_num, target_qbit );
         break; 
     }
     case R_OPERATION: {
-        gate = create_gate<X>( qbit_num, target_qbit );
+        gate = create_gate<R>( qbit_num, target_qbit );
         break;
     }    
     case RX_OPERATION: {
@@ -963,18 +938,13 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         break;
     }    
     case BLOCK_OPERATION: {
-        std::string err( "Unsoppurted gate tye: block operation");
+        std::string err( "Unsupported gate type: block operation");
         PyErr_SetString(PyExc_Exception, err.c_str());
-
-        Py_DECREF( control_qbit_key );
         return NULL;  
-        break;
     }
     default:
-        std::string err( "Unsoppurted gate tye");
+        std::string err( "Unsupported gate type");
         PyErr_SetString(PyExc_Exception, err.c_str());
-
-        Py_DECREF( control_qbit_key );
         return NULL;  
     }
 
@@ -1005,12 +975,6 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
 
 extern "C"
 {
-
-
-
-
-
-
 
 /**
 @brief Structure containing metadata about the methods of class qgd_U3.
@@ -1193,12 +1157,32 @@ struct SYC_Wrapper_Type : Gate_Wrapper_Type_tmp {
     }
 };
 
+struct U1_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    U1_Wrapper_Type() {    
+        tp_name      = "U1";
+        tp_doc       = "Object to represent python binding for a U1 gate of the Squander package.";
+        tp_new       = (newfunc) Gate_Wrapper_new<U1>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
+struct U2_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    U2_Wrapper_Type() {    
+        tp_name      = "U2";
+        tp_doc       = "Object to represent python binding for a U2 gate of the Squander package.";
+        tp_new       = (newfunc) Gate_Wrapper_new<U2>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
 struct U3_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     U3_Wrapper_Type() {    
         tp_name      = "U3";
         tp_doc       = "Object to represent python binding for a U3 gate of the Squander package.";
-        tp_new      = (newfunc) U3_Wrapper_new;
+        tp_new       = (newfunc) Gate_Wrapper_new<U3>;
         tp_base      = &Gate_Wrapper_Type;
     }
 };
@@ -1256,6 +1240,17 @@ struct Tdg_Wrapper_Type : Gate_Wrapper_Type_tmp {
 };
 
 
+struct R_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    R_Wrapper_Type() {    
+        tp_name      = "R";
+        tp_doc       = "Object to represent python binding for a R gate of the Squander package.";
+        tp_new      = (newfunc) Gate_Wrapper_new<R>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
+
 static CH_Wrapper_Type CH_Wrapper_Type_ins;
 static CNOT_Wrapper_Type CNOT_Wrapper_Type_ins;
 static CZ_Wrapper_Type CZ_Wrapper_Type_ins;
@@ -1266,13 +1261,15 @@ static RY_Wrapper_Type RY_Wrapper_Type_ins;
 static RZ_Wrapper_Type RZ_Wrapper_Type_ins;
 static SX_Wrapper_Type SX_Wrapper_Type_ins;
 static SYC_Wrapper_Type SYC_Wrapper_Type_ins;
+static U1_Wrapper_Type U1_Wrapper_Type_ins;
+static U2_Wrapper_Type U2_Wrapper_Type_ins;
 static U3_Wrapper_Type U3_Wrapper_Type_ins;
 static X_Wrapper_Type X_Wrapper_Type_ins;
 static Y_Wrapper_Type Y_Wrapper_Type_ins;
 static Z_Wrapper_Type Z_Wrapper_Type_ins;
 static T_Wrapper_Type T_Wrapper_Type_ins;
 static Tdg_Wrapper_Type Tdg_Wrapper_Type_ins;
-
+static R_Wrapper_Type R_Wrapper_Type_ins;
 
 
 
@@ -1320,12 +1317,15 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&RZ_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SX_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&SYC_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&U1_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&U2_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&U3_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&X_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Y_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Z_Wrapper_Type_ins) < 0 || 
         PyType_Ready(&T_Wrapper_Type_ins) < 0 ||
-        PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ) {
+        PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&R_Wrapper_Type_ins) < 0 ) {
 
         Py_DECREF(m);
         return NULL;
@@ -1412,6 +1412,20 @@ PyInit_gates_Wrapper(void)
         return NULL;
     }
 
+    Py_INCREF(&U1_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "U1", (PyObject *) & U1_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& U1_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&U2_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "U2", (PyObject *) & U2_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& U2_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
     Py_INCREF(&U3_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "U3", (PyObject *) & U3_Wrapper_Type_ins) < 0) {
         Py_DECREF(& U3_Wrapper_Type_ins);
@@ -1449,9 +1463,17 @@ PyInit_gates_Wrapper(void)
     }
 
 
-    Py_INCREF(&T_Wrapper_Type_ins);
-    if (PyModule_AddObject(m, "Tdg", (PyObject *) & T_Wrapper_Type_ins) < 0) {
-        Py_DECREF(& T_Wrapper_Type_ins);
+    Py_INCREF(&Tdg_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "Tdg", (PyObject *) & Tdg_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& Tdg_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+
+    Py_INCREF(&R_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "R", (PyObject *) & R_Wrapper_Type_ins) < 0) {
+        Py_DECREF(&R_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }

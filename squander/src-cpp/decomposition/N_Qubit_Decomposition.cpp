@@ -351,7 +351,7 @@ void N_Qubit_Decomposition::finalize_decomposition() {
         optimized_parameters_mtx = Matrix_real(0,0);
 
         for( int target_qbit=0; target_qbit<qbit_num; target_qbit++) {
-            add_u3(target_qbit, true, true, true );
+            add_u3(target_qbit);
         }
 
 
