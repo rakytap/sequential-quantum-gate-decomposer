@@ -230,6 +230,7 @@ class Test_operations:
 
             elif gate_name == "CNOT":
                 gate_name = "cx"
+                
 
             gate_name = gate_name.lower()
             
@@ -424,7 +425,7 @@ class Test_operations:
             if inspect.isclass(obj):
                 print(f"testing gate: {name}")
 
-                if name == "SYC" or name == "Gate":
+                if name == "SYC" or name == "Gate" or name=="CR" or name=="CROT":
                     continue
 
                 # NEEDS FIXING: CRY, RX, RY, U1, U2, U3

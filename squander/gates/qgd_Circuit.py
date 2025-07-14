@@ -30,8 +30,6 @@ import numpy as np
 from os import path
 from squander.gates.qgd_Circuit_Wrapper import qgd_Circuit_Wrapper
 
-from squander.gates.qgd_CROT import qgd_CROT
-
 
 from squander.gates.gates_Wrapper import (
     U1,
@@ -52,7 +50,9 @@ from squander.gates.gates_Wrapper import (
     RZ,
     SX,
     SYC,
-    CRY )
+    CRY,
+    CR,
+    CROT )
 
 
 ##
@@ -263,10 +263,19 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input arguments: target_qbit (int).
 
-    def add_CROT( self, target_qbit, control_qbit, subtype):
+    def add_CROT( self, target_qbit, control_qbit):
 
 	# call the C wrapper function
-        super(qgd_Circuit, self).add_CROT(target_qbit, control_qbit, subtype)
+        super(qgd_Circuit, self).add_CROT(target_qbit, control_qbit)
+
+#@brief Call to add a CR gate to the front of the gate structure.
+#@param self A pointer pointing to an instance of the class qgd_Circuit.
+#@param Input arguments: target_qbit (int), control_qbit (int).
+
+    def add_CR( self, target_qbit, control_qbit):
+
+	# call the C wrapper function
+        super(qgd_Circuit, self).add_CR(target_qbit, control_qbit)
 
 #@brief Call to add adaptive gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
@@ -522,7 +531,9 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
             self.add_Tdg(qgd_gate.get_Target_Qbit())
         elif isinstance(qgd_gate,R):
             self.add_R(qgd_gate.get_Target_Qbit())
-        elif isinstance(qgd_gate,qgd_CROT):
-            self.add_CROT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit(),qgd_gate.subtype)
+        elif isinstance(qgd_gate,CROT):
+            self.add_CROT(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
+        elif isinstance(qgd_gate,CR):
+            self.add_CR(qgd_gate.get_Target_Qbit(),qgd_gate.get_Control_Qbit())
         else:
             raise Exception("Cannot add gate: unimplemented gate type")
