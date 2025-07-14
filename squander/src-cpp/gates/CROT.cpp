@@ -35,9 +35,7 @@ CROT::CROT(){
         // A string describing the type of the gate
         type = CROT_OPERATION;
         
-        subtype = CONTROL_OPPOSITE;
-        
-                // number of qubits spanning the matrix of the gate
+         // number of qubits spanning the matrix of the gate
         qbit_num = -1;
         // the size of the matrix
         matrix_size = -1;
@@ -61,7 +59,7 @@ CROT::CROT(){
 @param phi_in logical value indicating whether the matrix creation takes an argument phi
 @param lambda_in logical value indicating whether the matrix creation takes an argument lambda
 */
-CROT::CROT(int qbit_num_in, int target_qbit_in, int control_qbit_in, crot_type subtype_in) {
+CROT::CROT(int qbit_num_in, int target_qbit_in, int control_qbit_in) {
 
         name = "CROT";
 
@@ -74,7 +72,7 @@ CROT::CROT(int qbit_num_in, int target_qbit_in, int control_qbit_in, crot_type s
         // A string describing the type of the gate
         type = CROT_OPERATION;
         
-        subtype = subtype_in;
+
 
 
         if (control_qbit_in >= qbit_num) {
@@ -91,18 +89,9 @@ CROT::CROT(int qbit_num_in, int target_qbit_in, int control_qbit_in, crot_type s
         // The index of the qubit on which the gate acts (target_qbit >= 0)
         target_qbit = target_qbit_in;
         
-        if (subtype == CONTROL_R || subtype == CONTROL_OPPOSITE){
-            parameter_num=2;
-        }
-        else if (subtype == CONTROL_INDEPENDENT){
-            parameter_num = 4;
-        }
-        else{
-	    std::stringstream sstream2;
-	    sstream2 << "ERROR: CROT subtype not implemented" << std::endl;
-	    print(sstream2, 0);	  
-            throw sstream2.str();
-        }
+
+        parameter_num=2;
+
         parameters = Matrix_real(1, parameter_num);
 }
 
@@ -178,79 +167,53 @@ CROT::apply_to( Matrix_real& parameters_mtx, Matrix& input, int parallel ) {
     }
 
 
-    double Theta0Over2, Theta1Over2, Phi0, Phi1;
+    double ThetaOver2, Phi;
     
-    if (subtype == CONTROL_R){
-       Theta0Over2 = parameters_mtx[0];
-       Phi0 = parameters_mtx[1];
-    }
-    else if (subtype == CONTROL_OPPOSITE){
-       Theta0Over2 = parameters_mtx[0];
-       Theta1Over2 = -1.*parameters_mtx[0];
-       Phi0 = parameters_mtx[1];
-       Phi1 = parameters_mtx[1];
-    }
-    else if (subtype == CONTROL_INDEPENDENT){
-       Theta0Over2 = parameters_mtx[0];
-       Theta1Over2 = parameters_mtx[2];
-       Phi0 = parameters_mtx[1];
-       Phi1 = parameters_mtx[3];
-    }
-    else {
-       Theta0Over2 = 0.0;
-       Theta1Over2 = 0.0;
-       Phi0 = 0.0;
-       Phi1 = 0.0;
-    }
-    
-    
-    
-    if (subtype == CONTROL_R){
-        Matrix U3_matrix = calc_one_qubit_rotation(Theta0Over2,Phi0);
-        apply_kernel_to( U3_matrix, input, false, parallel );
+
+   ThetaOver2 = parameters_mtx[0];
+   Phi = parameters_mtx[1];
+   
+    if (input.cols==1){
+
+    Matrix U_2qbit(4,4);
+    memset(U_2qbit.get_data(),0.0,(U_2qbit.size()*2)*sizeof(double));
+    U_2qbit[0].real = std::cos(ThetaOver2);
+    U_2qbit[2].real = std::sin(ThetaOver2)*std::sin(Phi);
+    U_2qbit[2].imag = std::sin(ThetaOver2)*std::cos(Phi);
+    U_2qbit[1*4+3].real = -1.*std::sin(-1.*ThetaOver2)*std::sin(Phi);
+    U_2qbit[1*4+3].imag = -1.*std::sin(-1.*ThetaOver2)*std::cos(Phi);
+    U_2qbit[1*4+1].real = std::cos(-1.*ThetaOver2);
+    U_2qbit[2*4+2].real = std::cos(ThetaOver2);
+    U_2qbit[2*4].real = -1.*std::sin(ThetaOver2)*std::sin(Phi);
+    U_2qbit[2*4].imag = std::sin(ThetaOver2)*std::cos(Phi);
+    U_2qbit[3*4+3].real = std::cos(-1.*ThetaOver2);
+    U_2qbit[3*4+1].real = std::sin(-1.*ThetaOver2)*std::sin(Phi);
+    U_2qbit[3*4+1].imag = -1.*std::sin(-1.*ThetaOver2)*std::cos(Phi);
+
+    // apply the computing kernel on the matrix
+    std::vector<int> involved_qbits = {control_qbit,target_qbit};
+    if (parallel){
+      apply_large_kernel_to_input_AVX(U_2qbit,input,involved_qbits,input.size());
     }
     else{
-        if (input.cols==1){
-
-        Matrix U_2qbit(4,4);
-        memset(U_2qbit.get_data(),0.0,(U_2qbit.size()*2)*sizeof(double));
-        U_2qbit[0].real = std::cos(Theta0Over2);
-        U_2qbit[2].real = std::sin(Theta0Over2)*std::sin(Phi0);
-        U_2qbit[2].imag = std::sin(Theta0Over2)*std::cos(Phi0);
-        U_2qbit[1*4+3].real = -1.*std::sin(Theta1Over2)*std::sin(Phi1);
-        U_2qbit[1*4+3].imag = -1.*std::sin(Theta1Over2)*std::cos(Phi1);
-        U_2qbit[1*4+1].real = std::cos(Theta1Over2);
-        U_2qbit[2*4+2].real = std::cos(Theta0Over2);
-        U_2qbit[2*4].real = -1.*std::sin(Theta0Over2)*std::sin(Phi0);
-        U_2qbit[2*4].imag = std::sin(Theta0Over2)*std::cos(Phi0);
-        U_2qbit[3*4+3].real = std::cos(Theta1Over2);
-        U_2qbit[3*4+1].real = std::sin(Theta1Over2)*std::sin(Phi1);
-        U_2qbit[3*4+1].imag = -1.*std::sin(Theta1Over2)*std::cos(Phi1);
-        //U_2qbit[0].real =1.;U_2qbit[7].real =1.;U_2qbit[10].real =1.;U_2qbit[13].real =1.; 
-        // apply the computing kernel on the matrix
-        std::vector<int> involved_qbits = {control_qbit,target_qbit};
-        if (parallel){
-          apply_large_kernel_to_input_AVX(U_2qbit,input,involved_qbits,input.size());
-        }
-        else{
-            apply_large_kernel_to_input(U_2qbit,input,involved_qbits,input.size());
-        }
-        
-        }
-    
-        else{
-        
-          Matrix U3_matrix = calc_one_qubit_rotation(Theta0Over2,Phi0);
-          Matrix U3_matrix2 = calc_one_qubit_rotation(Theta1Over2,Phi1);
-          if(parallel){
-            apply_crot_kernel_to_matrix_input_AVX_parallel(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
-          }
-          else{
-            apply_crot_kernel_to_matrix_input_AVX(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
-          }
-      }
-
+        apply_large_kernel_to_input(U_2qbit,input,involved_qbits,input.size());
     }
+    
+    }
+
+    else{
+    
+      Matrix U3_matrix = calc_one_qubit_u3(ThetaOver2, Phi-M_PIOver2, -1*Phi+M_PIOver2 );
+      Matrix U3_matrix2 = calc_one_qubit_u3(-1.*ThetaOver2, Phi-M_PIOver2, -1*Phi+M_PIOver2 );
+      if(parallel){
+        apply_crot_kernel_to_matrix_input_AVX_parallel(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
+      }
+      else{
+        apply_crot_kernel_to_matrix_input_AVX(U3_matrix2,U3_matrix, input, target_qbit, control_qbit, input.rows);
+      }
+  }
+
+    
 
 }
 
@@ -286,58 +249,29 @@ CROT::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int paralle
 
     std::vector<Matrix> ret;
 
-    double Theta0Over2, Theta1Over2, Phi0, Phi1;
+    double ThetaOver2, Phi;
 
-    if (subtype == CONTROL_R){
-       Theta0Over2 = parameters_mtx[0];
-       Phi0 = parameters_mtx[1];
-    }
-    else if (subtype == CONTROL_OPPOSITE){
-       Theta0Over2 = parameters_mtx[0];
-       Theta1Over2 = -1.*(parameters_mtx[0]);
-       Phi0 = parameters_mtx[1];
-       Phi1 = parameters_mtx[1];
-    }
-    else if (subtype == CONTROL_INDEPENDENT){
-       Theta0Over2 = parameters_mtx[0];
-       Theta1Over2 = parameters_mtx[2];
-       Phi0 = parameters_mtx[1];
-       Phi1 = parameters_mtx[3];
-    }
-    else {
-       Theta0Over2 = 0.0;
-       Theta1Over2 = 0.0;
-       Phi0 = 0.0;
-       Phi1 = 0.0;
-    }
+
+   ThetaOver2 = parameters_mtx[0];
+
+   Phi = parameters_mtx[1];
+
+    
 
 
 
     // the resulting matrix
-    if (subtype == CONTROL_R){
 
-
-
-        Matrix res_mtx = input.copy();
-        Matrix u3_1qbit = calc_one_qubit_rotation(Theta0Over2 +M_PIOver2 ,Phi0);
-        apply_kernel_to( u3_1qbit, res_mtx, true, parallel );
-        ret.push_back(res_mtx);
-        Matrix res_mtx2 = input.copy();
-        u3_1qbit = calc_one_qubit_rotation_deriv_Phi(Theta0Over2,Phi0+M_PIOver2 );
-        apply_kernel_to( u3_1qbit, res_mtx2, true, parallel );
-        ret.push_back(res_mtx2);
-    }
-    else{
 
     if (input.cols==1){
-     if ( subtype == CONTROL_OPPOSITE){
-        double Theta0Over2_shifted = Theta0Over2 + M_PIOver2;
-        double Theta1Over2_shifted;
 
-        Theta1Over2_shifted = -1.*Theta0Over2_shifted;
-      
-        double Phi0_shifted = Phi0 + M_PIOver2;
-        double Phi1_shifted = Phi1 + M_PIOver2; 
+    double Theta0Over2_shifted = ThetaOver2 + M_PIOver2;
+    double Theta1Over2_shifted;
+
+    Theta1Over2_shifted = -1.*Theta0Over2_shifted;
+  
+    double Phi0_shifted = Phi + M_PIOver2;
+    double Phi1_shifted = Phi + M_PIOver2; 
     
     //Theta derivative
     Matrix res_mtx = input.copy();   
@@ -345,20 +279,20 @@ CROT::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int paralle
     memset(U_2qbit.get_data(),0.0,(U_2qbit.size()*2)*sizeof(double));
     
     U_2qbit[0].real = std::cos(Theta0Over2_shifted);
-    U_2qbit[2].real = std::sin(Theta0Over2_shifted)*std::sin(Phi0);
-    U_2qbit[2].imag = std::sin(Theta0Over2_shifted)*std::cos(Phi0);
+    U_2qbit[2].real = std::sin(Theta0Over2_shifted)*std::sin(Phi);
+    U_2qbit[2].imag = std::sin(Theta0Over2_shifted)*std::cos(Phi);
     
     U_2qbit[2*4+2].real = std::cos(Theta0Over2_shifted);
-    U_2qbit[2*4].real = -1.*std::sin(Theta0Over2_shifted)*std::sin(Phi0);
-    U_2qbit[2*4].imag = std::sin(Theta0Over2_shifted)*std::cos(Phi0);
+    U_2qbit[2*4].real = -1.*std::sin(Theta0Over2_shifted)*std::sin(Phi);
+    U_2qbit[2*4].imag = std::sin(Theta0Over2_shifted)*std::cos(Phi);
     
-    U_2qbit[1*4+3].real = -1.*std::sin(Theta1Over2_shifted)*std::sin(Phi1);
-    U_2qbit[1*4+3].imag = -1.*std::sin(Theta1Over2_shifted)*std::cos(Phi1);
+    U_2qbit[1*4+3].real = -1.*std::sin(Theta1Over2_shifted)*std::sin(Phi);
+    U_2qbit[1*4+3].imag = -1.*std::sin(Theta1Over2_shifted)*std::cos(Phi);
     U_2qbit[1*4+1].real = std::cos(Theta1Over2_shifted);
     
     U_2qbit[3*4+3].real = std::cos(Theta1Over2_shifted);
-    U_2qbit[3*4+1].real = std::sin(Theta1Over2_shifted)*std::sin(Phi1);
-    U_2qbit[3*4+1].imag = -1.*std::sin(Theta1Over2_shifted)*std::cos(Phi1);
+    U_2qbit[3*4+1].real = std::sin(Theta1Over2_shifted)*std::sin(Phi);
+    U_2qbit[3*4+1].imag = -1.*std::sin(Theta1Over2_shifted)*std::cos(Phi);
 
 
     std::vector<int> involved_qbits = {control_qbit,target_qbit};
@@ -370,163 +304,54 @@ CROT::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int paralle
     Matrix res_mtx1 = input.copy();   
     memset(U_2qbit.get_data(),0.0,(U_2qbit.size()*2)*sizeof(double));
 
-    U_2qbit[2].real = std::sin(Theta0Over2)*std::sin(Phi0_shifted);
-    U_2qbit[2].imag = std::sin(Theta0Over2)*std::cos(Phi0_shifted);
+    U_2qbit[2].real = std::sin(ThetaOver2)*std::sin(Phi0_shifted);
+    U_2qbit[2].imag = std::sin(ThetaOver2)*std::cos(Phi0_shifted);
 
-    U_2qbit[2*4].real = -1.*std::sin(Theta0Over2)*std::sin(Phi0_shifted);
-    U_2qbit[2*4].imag = std::sin(Theta0Over2)*std::cos(Phi0_shifted);
+    U_2qbit[2*4].real = -1.*std::sin(ThetaOver2)*std::sin(Phi0_shifted);
+    U_2qbit[2*4].imag = std::sin(ThetaOver2)*std::cos(Phi0_shifted);
     
-    U_2qbit[1*4+3].real = -1.*std::sin(Theta1Over2)*std::sin(Phi1_shifted);
-    U_2qbit[1*4+3].imag = -1.*std::sin(Theta1Over2)*std::cos(Phi1_shifted);
+    U_2qbit[1*4+3].real = -1.*std::sin(-1.*ThetaOver2)*std::sin(Phi1_shifted);
+    U_2qbit[1*4+3].imag = -1.*std::sin(-1.*ThetaOver2)*std::cos(Phi1_shifted);
 
-    U_2qbit[3*4+1].real = std::sin(Theta1Over2)*std::sin(Phi1_shifted);
-    U_2qbit[3*4+1].imag = -1.*std::sin(Theta1Over2)*std::cos(Phi1_shifted);
+    U_2qbit[3*4+1].real = std::sin(-1.*ThetaOver2)*std::sin(Phi1_shifted);
+    U_2qbit[3*4+1].imag = -1.*std::sin(-1.*ThetaOver2)*std::cos(Phi1_shifted);
 
     apply_large_kernel_to_input(U_2qbit,res_mtx1,involved_qbits,res_mtx1.size());
     ret.push_back(res_mtx1);
 
+   
     }
     else{
-    double Theta0Over2_shifted = Theta0Over2 + M_PIOver2;
-    double Theta1Over2_shifted = Theta1Over2 + M_PIOver2;
-    double Phi0_shifted = Phi0 + M_PIOver2;
-    double Phi1_shifted = Phi1 + M_PIOver2; 
-    
-    //theta0 derivative
-    Matrix res_mtx = input.copy();   
-    Matrix U_2qbit(4,4);
-    memset(U_2qbit.get_data(),0.0,(U_2qbit.size()*2)*sizeof(double));
-    U_2qbit[0].real = std::cos(Theta0Over2_shifted);
-    U_2qbit[2].real = std::sin(Theta0Over2_shifted)*std::sin(Phi0);
-    U_2qbit[2].imag = std::sin(Theta0Over2_shifted)*std::cos(Phi0);
-    
-    U_2qbit[2*4+2].real = std::cos(Theta0Over2_shifted);
-    U_2qbit[2*4].real = -1.*std::sin(Theta0Over2_shifted)*std::sin(Phi0);
-    U_2qbit[2*4].imag = std::sin(Theta0Over2_shifted)*std::cos(Phi0);
-
-    std::vector<int> involved_qbits = {control_qbit,target_qbit};
-
-    apply_large_kernel_to_input(U_2qbit,res_mtx,involved_qbits,res_mtx.size());
-    ret.push_back(res_mtx);
-    
-    //Phi0 derivative
-    Matrix res_mtx1 = input.copy();   
-    memset(U_2qbit.get_data(),0.0,(U_2qbit.size()*2)*sizeof(double));
-
-    U_2qbit[2].real = std::sin(Theta0Over2)*std::sin(Phi0_shifted);
-    U_2qbit[2].imag = std::sin(Theta0Over2)*std::cos(Phi0_shifted);
-
-    U_2qbit[2*4].real = -1.*std::sin(Theta0Over2)*std::sin(Phi0_shifted);
-    U_2qbit[2*4].imag = std::sin(Theta0Over2)*std::cos(Phi0_shifted);
-
-    apply_large_kernel_to_input(U_2qbit,res_mtx1,involved_qbits,res_mtx1.size());
-    ret.push_back(res_mtx1);
-      
-    //theta1 derivative
-    Matrix res_mtx2 = input.copy();   
-    memset(U_2qbit.get_data(),0.0,(U_2qbit.size()*2)*sizeof(double));
-    
-    U_2qbit[1*4+3].real = -1.*std::sin(Theta1Over2_shifted)*std::sin(Phi1);
-    U_2qbit[1*4+3].imag = -1.*std::sin(Theta1Over2_shifted)*std::cos(Phi1);
-    U_2qbit[1*4+1].real = std::cos(Theta1Over2_shifted);
-    
-    U_2qbit[3*4+3].real = std::cos(Theta1Over2_shifted);
-    U_2qbit[3*4+1].real = std::sin(Theta1Over2_shifted)*std::sin(Phi1);
-    U_2qbit[3*4+1].imag = -1.*std::sin(Theta1Over2_shifted)*std::cos(Phi1);
-
-    apply_large_kernel_to_input(U_2qbit,res_mtx2,involved_qbits,res_mtx2.size());
-    ret.push_back(res_mtx2);
-    
-    //Phi1 derivative
-    Matrix res_mtx3 = input.copy();   
-    memset(U_2qbit.get_data(),0.0,(U_2qbit.size()*2)*sizeof(double));
-
-    U_2qbit[1*4+3].real = -1.*std::sin(Theta1Over2)*std::sin(Phi1_shifted);
-    U_2qbit[1*4+3].imag = -1.*std::sin(Theta1Over2)*std::cos(Phi1_shifted);
-
-    U_2qbit[3*4+1].real = std::sin(Theta1Over2)*std::sin(Phi1_shifted);
-    U_2qbit[3*4+1].imag = -1.*std::sin(Theta1Over2)*std::cos(Phi1_shifted);
-
-    apply_large_kernel_to_input(U_2qbit,res_mtx3,involved_qbits,res_mtx3.size());
-    ret.push_back(res_mtx3);
-    }
-    }
-    else{
-     if (subtype == CONTROL_OPPOSITE){
-        double Theta0Over2_shifted = Theta0Over2 + M_PIOver2;
-        double Theta1Over2_shifted;
-
-        Theta1Over2_shifted = -1.*Theta0Over2_shifted;
       
       //Theta derivative
       Matrix res_mtx = input.copy();   
-      Matrix U3_matrix = calc_one_qubit_rotation(Theta0Over2_shifted,Phi0);
-      Matrix U3_matrix2 = calc_one_qubit_rotation(Theta1Over2_shifted,Phi1);
+      Matrix U3_matrix = calc_one_qubit_u3(ThetaOver2+M_PIOver2, Phi-M_PIOver2, -1*Phi+M_PIOver2 );
+      Matrix U3_matrix2 = calc_one_qubit_u3(-1.*(ThetaOver2+M_PIOver2), Phi-M_PIOver2, -1*Phi+M_PIOver2 );
       
       apply_crot_kernel_to_matrix_input_AVX(U3_matrix2, U3_matrix, res_mtx, target_qbit, control_qbit, res_mtx.rows);
       ret.push_back(res_mtx);
       ///Phi derivative
-      double Phi0_shifted = Phi0 + M_PIOver2;
-      double Phi1_shifted = Phi1 + M_PIOver2; 
       Matrix res_mtx1 = input.copy();   
-      U3_matrix = calc_one_qubit_rotation_deriv_Phi(Theta0Over2,Phi0_shifted);
-      U3_matrix2 = calc_one_qubit_rotation_deriv_Phi(Theta1Over2,Phi1_shifted);
+      U3_matrix = calc_one_qubit_u3(ThetaOver2, Phi, -1*Phi );
+      U3_matrix2 = calc_one_qubit_u3(-1.*ThetaOver2, Phi, -1*Phi );
+      U3_matrix[0].real = 0; 
+      U3_matrix[0].imag = 0;
+      U3_matrix[3].real = 0; 
+      U3_matrix[3].imag = 0;
+      U3_matrix2[0].real = 0; 
+      U3_matrix2[0].imag = 0;
+      U3_matrix2[3].real = 0; 
+      U3_matrix2[3].imag = 0;
       apply_crot_kernel_to_matrix_input_AVX(U3_matrix2, U3_matrix, res_mtx1, target_qbit, control_qbit, res_mtx1.rows);
       ret.push_back(res_mtx1); 
+      
     }
-    else if (subtype == CONTROL_INDEPENDENT){
     
-      ///Theta0 derivative
-      double Theta0Over2_shifted = Theta0Over2 + M_PIOver2;
-      Matrix res_mtx = input.copy();   
-      Matrix U3_matrix = calc_one_qubit_rotation(Theta0Over2_shifted,Phi0);
-      Matrix U3_matrix2(2,2);
-      memset(U3_matrix2.get_data(),0.0,U3_matrix2.size()*sizeof(QGD_Complex16));
-      apply_crot_kernel_to_matrix_input_AVX(U3_matrix2, U3_matrix, res_mtx, target_qbit, control_qbit, res_mtx.rows);
-      ret.push_back(res_mtx);
-      
-      ///Phi0 derivative
-      double Phi0_shifted = Phi0 + M_PIOver2;
-      Matrix res_mtx1 = input.copy();   
-      U3_matrix = calc_one_qubit_rotation_deriv_Phi(Theta0Over2,Phi0_shifted);
-      memset(U3_matrix2.get_data(),0.0,U3_matrix2.size()*sizeof(QGD_Complex16));
-      apply_crot_kernel_to_matrix_input_AVX(U3_matrix2, U3_matrix, res_mtx1, target_qbit, control_qbit, res_mtx1.rows);
-      ret.push_back(res_mtx1);
-      
-    ///Theta1 derivative
-      double Theta1Over2_shifted = Theta1Over2 + M_PIOver2;
-      Matrix res_mtx2 = input.copy();   
-      U3_matrix2 = calc_one_qubit_rotation(Theta1Over2_shifted,Phi1);
-      memset(U3_matrix.get_data(),0.0,U3_matrix.size()*sizeof(QGD_Complex16));
-      apply_crot_kernel_to_matrix_input_AVX(U3_matrix2, U3_matrix, res_mtx2, target_qbit, control_qbit, res_mtx2.rows);
-      ret.push_back(res_mtx2);
-      
-      ///Phi1 derivative
-      double Phi1_shifted = Phi1 + M_PIOver2;
-      Matrix res_mtx3 = input.copy();   
-      U3_matrix2 = calc_one_qubit_rotation_deriv_Phi(Theta1Over2,Phi1_shifted);
-      memset(U3_matrix.get_data(),0.0,U3_matrix.size()*sizeof(QGD_Complex16));
-      apply_crot_kernel_to_matrix_input_AVX(U3_matrix2, U3_matrix, res_mtx3, target_qbit, control_qbit, res_mtx3.rows);
-      ret.push_back(res_mtx3);
-
-    }
-    else{
-            std::stringstream sstream;
-	sstream << "Subtype not implemented for gradient" << std::endl;
-        print(sstream, 1);	      
-        exit(-1);
-    }
-      
-    }
-    }
 
     return ret;
 
 
 }
- crot_type CROT::get_subtype(){
-    return subtype;
- }
 
 /**
 @brief Call to set the number of qubits spanning the matrix of the gate
@@ -558,46 +383,14 @@ void CROT::reorder_qubits( std::vector<int> qbit_list) {
 */
 CROT* CROT::clone() {
 
-    CROT* ret = new CROT(qbit_num, target_qbit, control_qbit, subtype);
+    CROT* ret = new CROT(qbit_num, target_qbit, control_qbit);
 
     ret->set_parameter_start_idx( get_parameter_start_idx() );
+    ret->set_parents( parents );
+    ret->set_children( children );
 
     return ret;
 
-}
-
-Matrix CROT::calc_one_qubit_rotation(double ThetaOver2, double Phi) {
-    Matrix u3_1qbit = Matrix(2,2);
-    u3_1qbit[0].real = std::cos(ThetaOver2); 
-    u3_1qbit[0].imag = 0;
-    
-    u3_1qbit[1].real = -1.*std::sin(ThetaOver2)*std::sin(Phi); 
-    u3_1qbit[1].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi);
-    
-    u3_1qbit[2].real = std::sin(ThetaOver2)*std::sin(Phi); 
-    u3_1qbit[2].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi);
-    
-    u3_1qbit[3].real = std::cos(ThetaOver2); 
-    u3_1qbit[3].imag = 0;
-    
-    return u3_1qbit;
-}
-
-Matrix CROT::calc_one_qubit_rotation_deriv_Phi(double ThetaOver2, double Phi) {
-    Matrix u3_1qbit = Matrix(2,2);
-    u3_1qbit[0].real = 0; 
-    u3_1qbit[0].imag = 0;
-    
-    u3_1qbit[1].real = -1.*std::sin(ThetaOver2)*std::sin(Phi); 
-    u3_1qbit[1].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi);
-    
-    u3_1qbit[2].real = std::sin(ThetaOver2)*std::sin(Phi); 
-    u3_1qbit[2].imag = -1.*std::sin(ThetaOver2)*std::cos(Phi);
-    
-    u3_1qbit[3].real = 0; 
-    u3_1qbit[3].imag = 0;
-    
-    return u3_1qbit;
 }
 
 /**
@@ -612,23 +405,12 @@ CROT::extract_parameters( Matrix_real& parameters ) {
         std::string err("CROT::extract_parameters: Cant extract parameters, since the dinput arary has not enough elements.");
         throw err;     
     }
-    if (subtype == CONTROL_R || subtype == CONTROL_OPPOSITE){
+
     Matrix_real extracted_parameters(1,2);
 
     extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
     extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx() + 1 ], 2*M_PI);
-    return extracted_parameters;
-    }
-    else if (subtype == CONTROL_INDEPENDENT){
-    Matrix_real extracted_parameters(1,4);
 
-    extracted_parameters[0] = std::fmod( 2*parameters[ get_parameter_start_idx() ], 4*M_PI);
-    extracted_parameters[1] = std::fmod( parameters[ get_parameter_start_idx() + 1 ], 2*M_PI);
-    extracted_parameters[2] = std::fmod( 2*parameters[ get_parameter_start_idx() +2 ], 4*M_PI);
-    extracted_parameters[3] = std::fmod( parameters[ get_parameter_start_idx() + 3 ], 2*M_PI);
-    return extracted_parameters;
-    }
-    Matrix_real extracted_parameters(1,1);
     return extracted_parameters;
 
 }

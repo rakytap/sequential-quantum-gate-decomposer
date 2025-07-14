@@ -17,8 +17,6 @@ from squander.decomposition.qgd_Wide_Circuit_Optimization import qgd_Wide_Circui
 from squander.variational_quantum_eigensolver.qgd_Variational_Quantum_Eigensolver_Base import qgd_Variational_Quantum_Eigensolver_Base as Variational_Quantum_Eigensolver
 
 #gates
-from squander.gates.qgd_CROT import qgd_CROT  as CROT 
-
 from squander.gates.gates_Wrapper import (
     Gate,
     U1,
@@ -39,7 +37,9 @@ from squander.gates.gates_Wrapper import (
     RZ,
     SX,
     SYC,
-    CRY
+    CRY,
+    CR,
+    CROT
 )
 
 
