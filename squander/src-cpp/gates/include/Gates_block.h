@@ -235,6 +235,20 @@ void add_cry(int target_qbit, int control_qbit);
 void add_cry_to_front(int target_qbit, int control_qbit);
 
 /**
+@brief Append a CR gate to the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cr(int target_qbit, int control_qbit);
+
+/**
+@brief Add a CR gate to the front of the list of gates
+@param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
+@param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
+*/
+void add_cr_to_front(int target_qbit, int control_qbit);
+
+/**
 @brief Append a CZ_NU gate to the list of gates
 @param target_qbit The identification number of the targt qubit. (0 <= target_qbit <= qbit_num-1)
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
@@ -284,20 +298,20 @@ void add_cnot_to_front( int target_qbit, int control_qbit );
 
 
 /**
-@brief Append a CNOT gate gate to the list of gates
+@brief Append a CROT gate gate to the list of gates
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_crot( int target_qbit, int control_qbit, crot_type subtype_in);
+void add_crot( int target_qbit, int control_qbit);
 
 
 
 /**
-@brief Add a C_NOT gate gate to the front of the list of gates
+@brief Add a CROT gate gate to the front of the list of gates
 @param control_qbit The identification number of the control qubit. (0 <= target_qbit <= qbit_num-1)
 @param target_qbit The identification number of the target qubit. (0 <= target_qbit <= qbit_num-1)
 */
-void add_crot_to_front( int target_qbit, int control_qbit, crot_type subtype_in );
+void add_crot_to_front( int target_qbit, int control_qbit );
 
 /**
 @brief Append a CZ gate gate to the list of gates

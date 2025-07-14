@@ -49,6 +49,8 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "T.h"
 #include "Tdg.h"
 #include "R.h"
+#include "CR.h"
+#include "CROT.h"
 #include "numpy_interface.h"
 
 
@@ -933,6 +935,15 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         gate = create_controlled_gate<CRY>( qbit_num, target_qbit, control_qbit );
         break;
     }    
+    case CROT_OPERATION: {
+        gate = create_controlled_gate<CROT>( qbit_num, target_qbit, control_qbit );
+        break;
+    }    
+    case CR_OPERATION: {
+        gate = create_controlled_gate<CR>( qbit_num, target_qbit, control_qbit );
+        break;
+    }    
+    
     case RZ_OPERATION: {
         gate = create_gate<RZ>( qbit_num, target_qbit );
         break;
@@ -1250,6 +1261,26 @@ struct R_Wrapper_Type : Gate_Wrapper_Type_tmp {
     }
 };
 
+struct CR_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    CR_Wrapper_Type() {    
+        tp_name      = "CR";
+        tp_doc       = "Object to represent python binding for a CR gate of the Squander package.";
+        tp_new      = (newfunc) controlled_gate_Wrapper_new<CR>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
+struct CROT_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    CROT_Wrapper_Type() {    
+        tp_name      = "CROT";
+        tp_doc       = "Object to represent python binding for a CROT gate of the Squander package.";
+        tp_new      = (newfunc) controlled_gate_Wrapper_new<CROT>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
 
 static CH_Wrapper_Type CH_Wrapper_Type_ins;
 static CNOT_Wrapper_Type CNOT_Wrapper_Type_ins;
@@ -1270,6 +1301,8 @@ static Z_Wrapper_Type Z_Wrapper_Type_ins;
 static T_Wrapper_Type T_Wrapper_Type_ins;
 static Tdg_Wrapper_Type Tdg_Wrapper_Type_ins;
 static R_Wrapper_Type R_Wrapper_Type_ins;
+static CR_Wrapper_Type CR_Wrapper_Type_ins;
+static CROT_Wrapper_Type CROT_Wrapper_Type_ins;
 
 
 
@@ -1325,6 +1358,8 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&Z_Wrapper_Type_ins) < 0 || 
         PyType_Ready(&T_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&CR_Wrapper_Type_ins) < 0 ||
+        PyType_Ready(&CROT_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&R_Wrapper_Type_ins) < 0 ) {
 
         Py_DECREF(m);
@@ -1474,6 +1509,20 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&R_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "R", (PyObject *) & R_Wrapper_Type_ins) < 0) {
         Py_DECREF(&R_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+    
+    Py_INCREF(&CR_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CR", (PyObject *) & CR_Wrapper_Type_ins) < 0) {
+        Py_DECREF(&CR_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+    
+    Py_INCREF(&CROT_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "CROT", (PyObject *) & CROT_Wrapper_Type_ins) < 0) {
+        Py_DECREF(&CROT_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }

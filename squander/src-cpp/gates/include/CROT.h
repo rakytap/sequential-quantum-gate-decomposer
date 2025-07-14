@@ -31,7 +31,6 @@ limitations under the License.
 #include <math.h>
 
 
-typedef enum crot_type {CONTROL_R, CONTROL_OPPOSITE, CONTROL_INDEPENDENT} crot_type;
 
 /**
 @brief A class representing a CROT gate.
@@ -41,7 +40,7 @@ class CROT: public Gate {
 protected:
     
     
-   crot_type subtype;
+
 
    Matrix_real parameters;
 public:
@@ -51,7 +50,7 @@ public:
 */
 CROT();
 
-CROT(int qbit_num_in, int target_qbit_in, int control_qbit_in, crot_type subtype_in);
+CROT(int qbit_num_in, int target_qbit_in, int control_qbit_in);
 
 virtual ~CROT();
 
@@ -69,14 +68,7 @@ virtual void set_qbit_num(int qbit_num_in);
 
 virtual void reorder_qubits( std::vector<int> qbit_list);
 
-
-crot_type get_subtype();
-
 virtual CROT* clone();
-
-Matrix calc_one_qubit_rotation(double ThetaOver2, double Phi);
-
-Matrix calc_one_qubit_rotation_deriv_Phi(double ThetaOver2, double Phi);
 
 virtual Matrix_real extract_parameters( Matrix_real& parameters );
 
