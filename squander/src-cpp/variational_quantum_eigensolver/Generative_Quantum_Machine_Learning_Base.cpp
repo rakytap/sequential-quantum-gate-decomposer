@@ -201,7 +201,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
             for (int idx2=0; idx2<x_vectors.size(); idx2++) {
                 // if (idx1 != idx2) {
-                    ev_local += P_star[x_vectors[idx1]]*P_star[x_vectors[idx2]]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2], sigma);
+                    ev_local += P_star[x_vectors[idx1]]*P_star[x_vectors[idx2]]*Gaussian_kernel(idx1, idx2, sigma);
                 // }
             }
         }
@@ -211,6 +211,20 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
     });
     ev /= x_vectors.size()*x_vectors.size();
     return ev;
+}
+
+double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix& State_right) {
+    std::vector<double> P_theta;
+
+    for (size_t x_idx=0; x_idx<x_vectors.size(); x_idx++){
+        P_theta.push_back(State_right[x_idx].real*State_right[x_idx].real +State_right[x_idx].imag*State_right[x_idx].imag);
+    }
+
+    double TV = 0.0;
+    for (int i=0; i<P_theta.size(); i++) {
+        TV += abs(P_theta[i]-P_star[i]);
+    }
+    return TV/2;
 }
 
 
@@ -249,8 +263,8 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
             for (int idx2=0; idx2 < x_vectors.size(); idx2++) {
                 // if(idx1 != idx2)
-                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2], sigma);
-                ev_P_theta_P_star_local += P_theta[idx1]*P_star[x_vectors[idx2]]*Gaussian_kernel(x_vectors[idx1], x_vectors[idx2], sigma);
+                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(idx1, idx2, sigma);
+                ev_P_theta_P_star_local += P_theta[idx1]*P_star[x_vectors[idx2]]*Gaussian_kernel(idx1, idx2, sigma);
             }
         }
     });
@@ -272,6 +286,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
     }
     // std::cout << ev_P_theta_P_theta << " " << ev_P_star_P_star << " " << ev_P_theta_P_star << std::endl;
     double result = ev_P_theta_P_theta + ev_P_star_P_star - 2*ev_P_theta_P_star;
+    // std::cout << "TV=" << TV_of_the_distributions(State_right) << std::endl;
     return result;
 }
 

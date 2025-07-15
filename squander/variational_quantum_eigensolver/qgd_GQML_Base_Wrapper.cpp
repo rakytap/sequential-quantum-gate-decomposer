@@ -198,7 +198,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     }
     
     std::vector<int> x_bitstrings_continous(x_bitsring_data, x_bitsring_data+(x_bistring_shape[0]*x_bistring_shape[1]));
-    std::vector<std::vector<int>> x_bitstrings(x_bistring_shape[0], std::vector<int>(x_bistring_shape[0]));
+    std::vector<std::vector<int>> x_bitstrings(x_bistring_shape[0], std::vector<int>(x_bistring_shape[1]));
     std::vector<int> x_indices(x_bistring_shape[0], 0);
     for (int idx_data=0; idx_data < x_bistring_shape[0]; idx_data++) {
         for (int idx=0; idx < x_bistring_shape[1]; idx++) {
@@ -258,6 +258,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     }
 
 
+    std::cout << "reading args done" << std::endl;
     return 0;
 }
 

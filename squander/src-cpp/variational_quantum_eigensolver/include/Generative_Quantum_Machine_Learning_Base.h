@@ -112,6 +112,7 @@ double Gaussian_kernel(int x, int y, double sigma);
 
 double expectation_value_P_star_P_star();
 
+double TV_of_the_distributions(Matrix& State_right);
 
 /**
 @brief Call to evaluate the expectation value of the energy  <State_left| H | State_right>. Calculates only the real part of the expectation value.
