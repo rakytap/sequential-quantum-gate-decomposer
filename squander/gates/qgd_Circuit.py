@@ -88,6 +88,11 @@ class qgd_Circuit(qgd_Circuit_Wrapper):
         return super().__new__(cls, *args, **kwargs)
     """
 
+    def __copy__(self):
+        cCircuit = qgd_Circuit(self.get_Qbit_Num())
+        for gate in self.get_Gates():
+            cCircuit.add_Gate(gate)
+        return cCircuit
 #@brief Call to add a U1 gate to the front of the gate structure.
 #@param self A pointer pointing to an instance of the class qgd_Circuit.
 #@param Input argument: target_qbit (int)

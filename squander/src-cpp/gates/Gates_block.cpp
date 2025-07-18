@@ -2070,7 +2070,7 @@ Gates_block::create_remapped_circuit( const std::map<int, int>& qbit_map, const 
         case CNOT_OPERATION: case CZ_OPERATION:
         case CH_OPERATION: case SYC_OPERATION:
         case U1_OPERATION: case U2_OPERATION: case U3_OPERATION:
-        case RY_OPERATION: case CRY_OPERATION: case RX_OPERATION:
+        case RY_OPERATION: case CRY_OPERATION: case RX_OPERATION: case CROT_OPERATION:
         case RZ_OPERATION: case X_OPERATION:
         case Y_OPERATION: case Z_OPERATION:
         case SX_OPERATION: case BLOCK_OPERATION:
