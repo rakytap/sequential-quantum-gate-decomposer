@@ -4,7 +4,15 @@ from squander import utils
 from itertools import dropwhile
 from typing import List, Tuple
 import numpy as np
+from enum import Enum
 import os
+
+
+class PartitionStrategy(Enum):
+    KAHN = "kahn"
+    ILP = "ilp" 
+    TDAG = "tdag"
+
 
 #@brief Retrieves qubit indices used by a SQUANDER gate
 #@param gate The SQUANDER gate
@@ -208,7 +216,7 @@ def translate_param_order(params: np.ndarray, param_order: List[Tuple[int,int]])
 
 
 
-def PartitionCircuit( circ: Circuit, parameters: np.ndarray, max_partition_size: int, use_ilp : bool = False) -> tuple[Circuit, np.ndarray]:
+def PartitionCircuit( circ: Circuit, parameters: np.ndarray, max_partition_size: int, strategy : PartitionStrategy) -> tuple[Circuit, np.ndarray]:
     """
     Call to partition a circuit
     
@@ -220,26 +228,27 @@ def PartitionCircuit( circ: Circuit, parameters: np.ndarray, max_partition_size:
 
         max_partition_size (int) : The maximal number of qubits in the partitions
 
-        use_ilp (bool, optional) Set True to use ILP partitioning startegy (slow, but giving optimal result), or False (default) to use Kahn topological sorting
+        strategy (PartitionStrategy, optional) Set to ILP (slow, but giving optimal result), TDAG, or KAHN (default)
     
     Return:
 
         Returns with the paritioned circuit and the associated parameter array. Partitions are organized into subcircuits of the resulting circuit
     """ 
 
-    if use_ilp:
-        partitioned_circ, param_order, _ = ilp_max_partitions(circ, max_partition_size) 
-
-    else:
-        partitioned_circ, param_order, _ = kahn_partition(circ, max_partition_size)
-
+    if strategy == PartitionStrategy.KAHN:
+        partitioned_circ, param_order, _ = kahn_partition(circ, max_partition_size) 
+    elif strategy == PartitionStrategy.ILP:
+        partitioned_circ, param_order, _ = ilp_max_partitions(circ, max_partition_size)
+    elif strategy == PartitionStrategy.TDAG:
+        from squander.partitioning.tdag import tdag_max_partitions
+        partitioned_circ, param_order, _ = tdag_max_partitions(circ, max_partition_size)
 
     param_reordered = translate_param_order(parameters, param_order)
 
     return partitioned_circ, param_reordered
 
 
-def PartitionCircuitQasm(filename: str, max_partition_size: int, use_ilp : bool = False) -> tuple[Circuit, np.ndarray]:
+def PartitionCircuitQasm(filename: str, max_partition_size: int, strategy : PartitionStrategy = PartitionStrategy.KAHN) -> tuple[Circuit, np.ndarray]:
     """
     Call to partition a circuit loaded from a qasm file
     
@@ -249,7 +258,7 @@ def PartitionCircuitQasm(filename: str, max_partition_size: int, use_ilp : bool 
 
         max_partition_size (int) : The maximal number of qubits in the partitions
 
-        use_ilp (bool, optional) Set True to use ILP partitioning startegy (slow, but giving optimal result), or False (default) otherwise
+        strategy (PartitionStrategy, optional) Set to ILP (slow, but giving optimal result), TDAG, or KAHN (default)
     
     Return:
 
@@ -257,8 +266,8 @@ def PartitionCircuitQasm(filename: str, max_partition_size: int, use_ilp : bool 
     """ 
 
     circ, parameters = utils.qasm_to_squander_circuit(filename)
-    return PartitionCircuit( circ, parameters, max_partition_size, use_ilp )
+    return PartitionCircuit( circ, parameters, max_partition_size, strategy )
 
 
 if __name__ == "__main__":
-    PartitionCircuitQasm("examples/partitioning/qasm_samples/heisenberg-16-20.qasm", 4, True)
+    PartitionCircuitQasm("examples/partitioning/qasm_samples/heisenberg-16-20.qasm", 4, PartitionStrategy.TDAG)
