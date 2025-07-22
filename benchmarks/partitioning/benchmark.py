@@ -1,9 +1,11 @@
-from squander.partitioning.partition import PartitionCircuitQasm, kahn_partition, translate_param_order
+from squander.partitioning.partition import PartitionCircuitQasm
+from squander.partitioning.kahn import kahn_partition
+from squander.partitioning.tools import translate_param_order
 import glob
 import os
 from qiskit import QuantumCircuit
 from qiskit.transpiler import PassManager
-from qiskit.transpiler.passes import CollectMultiQBlocks, ConsolidateBlocks
+from qiskit.transpiler.passes import CollectMultiQBlocks
 from squander import utils
 
 import asyncio
@@ -74,10 +76,10 @@ def test_partitions():
         if num_gates > 1024:
             continue
         res = {}
-        partitioned_circuit, parameters = PartitionCircuitQasm( filename, max_partition_size )
+        partitioned_circuit, parameters = PartitionCircuitQasm( filename, max_partition_size, "kahn" )
         res["Greedy"] = len(partitioned_circuit.get_Gates())
         print("ILP")
-        partitioned_circuit_ilp, parameters_ilp = PartitionCircuitQasm( filename, max_partition_size, True )
+        partitioned_circuit_ilp, parameters_ilp = PartitionCircuitQasm( filename, max_partition_size, "ilp" )
         res["ILP"] = len(partitioned_circuit_ilp.get_Gates())
         res["Qiskit"] = do_get_qiskit_partitions(filename, max_partition_size)
         for name in ("Quick", "Greedy", "Scan", "Cluster"):
