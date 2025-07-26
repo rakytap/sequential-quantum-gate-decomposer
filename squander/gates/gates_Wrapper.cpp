@@ -1244,7 +1244,7 @@ struct Tdg_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     Tdg_Wrapper_Type() {    
         tp_name      = "Tdg";
-        tp_doc       = "Object to represent python binding for a T gate of the Squander package.";
+        tp_doc       = "Object to represent python binding for a Tdg gate of the Squander package.";
         tp_new      = (newfunc) Gate_Wrapper_new<Tdg>;
         tp_base      = &Gate_Wrapper_Type;
     }
