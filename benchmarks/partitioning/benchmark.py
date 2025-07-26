@@ -5,7 +5,7 @@ import timeit
 import glob
 import os
 
-USE_ILP = True
+USE_ILP = False
 
 MAX_GATES_ALLOWED = 1024
 
