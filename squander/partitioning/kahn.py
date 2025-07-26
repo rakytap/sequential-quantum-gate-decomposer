@@ -55,6 +55,7 @@ def kahn_partition(c, max_qubit, preparts=None):
                 Scomp = {(frozenset(get_qubits(gate_dict[x])), gate_dict[x].get_Name()): x for x in S}
                 n = next(iter(Scomp.keys() & preparts[len(parts)-1]), None)
                 if n is not None: n = Scomp[n]
+                else: assert False, (Scomp, "preparts", preparts[len(parts)-1])
             else: n = next(iter(S & preparts[len(parts)-1]))
 
 
@@ -83,5 +84,5 @@ def kahn_partition(c, max_qubit, preparts=None):
     top_circuit.add_Circuit(c)
     total += len(c.get_Gates())
     assert total == len(gate_dict)
-    print(parts)
+    # print(parts)
     return top_circuit, param_order, parts

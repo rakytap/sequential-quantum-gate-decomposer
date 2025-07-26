@@ -10,7 +10,8 @@ def tdag_max_partitions(c, max_qubit):
     while len(g) != 0:
         groups = _enumerate_groups(c, gate_dict, g, rg, max_qubit)
         L.append(_remove_best_partition(groups, gate_dict, g, rg))
-    return L
+    from squander.partitioning.kahn import kahn_partition
+    return kahn_partition(c, max_qubit, preparts=L)
 
 
 
@@ -39,8 +40,8 @@ def _enumerate_groups(c, gate_dict, g, rg, max_qubit):
     for qubit in range(c.get_Qbit_Num()):
         if len(rev_deps[qubit]) == 0:
             continue
-        target_gate = rev_deps[qubit][0]
-        result.append(_enumerate(target_gate, qubit, {frozenset({qubit})}, deps, rev_deps, gate_dict, max_qubit))
+        for target_gate in rev_deps[qubit]:
+            result.append(_enumerate(target_gate, qubit, {frozenset({qubit})}, deps, rev_deps, gate_dict, max_qubit))
     return result
 
 
@@ -61,10 +62,11 @@ def _enumerate(target_gate, target_qubit, input_groups, deps, rev_deps, gate_dic
         for group in output:
             if len(group) > max_qubit:
                 continue
-            next_qubit = next(iter(get_qubits(gate_dict[next_gate]) - {target_qubit})) 
-            input_groups = output
-            output = _enumerate(next_gate, next_qubit, input_groups, deps, rev_deps, gate_dict, max_qubit)
-            result |= output
+            # next_qubit = next(iter(get_qubits(gate_dict[next_gate]) - {target_qubit}))
+            for next_qubit in get_qubits(gate_dict[next_gate]) - {target_qubit}:                
+                input_groups = output
+                output = _enumerate(next_gate, next_qubit, input_groups, deps, rev_deps, gate_dict, max_qubit)
+                result |= output
     return result
 
 
@@ -73,14 +75,14 @@ def _remove_best_partition(qubit_results, gate_dict, g, rg):
     S = {m for m in rg if len(rg[m]) == 0}
     gate_info = []
     for result in (y for x in qubit_results for y in x):
-        pos_gates, gates = S, set()
+        pos_gates, gates = set(S), set()
         while True:
             t = {x for x in pos_gates if get_qubits(gate_dict[x]) <= result}
             if len(t) == 0:
                 break
-            pos_gates |= {child for n in t for child in g[n]}
-            pos_gates -= t
             gates |= t
+            pos_gates |= {child for n in t for child in g[n] if not (rg[child] - gates)}
+            pos_gates -= t
         gate_info.append(gates)
     best_part = max(gate_info, key=lambda x: len(x))
     
@@ -95,6 +97,34 @@ def _remove_best_partition(qubit_results, gate_dict, g, rg):
 
     return best_part
 
+def _test_tdag_qasm():
+    K = 4
+    filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
+    from squander import utils
+    circ, parameters = utils.qasm_to_squander_circuit(filename)
+    partition = tdag_max_partitions(circ, K)
+    # print("partitions", partition[2], len(partition[2]))
+
+
+def _test_tdag_single_qubit():
+    K = 4
+
+    c = Circuit(2)
+    c.add_H(0)
+    c.add_H(1)
+    c.add_CNOT(0, 1)
+
+    gate_dict, g, rg = build_dependency(c)
+
+    result = _get_gate_dependencies(c, gate_dict, g, rg, K)
+
+    # print("gate_dependencies: ", result)
+
+    _enumerate_groups(c, gate_dict, g, rg, K)
+
+    partition = tdag_max_partitions(c, K)
+
+    # print(partition)
 
 
 def _test_tdag():
@@ -125,9 +155,10 @@ def _test_tdag():
 
     partition = tdag_max_partitions(c, K)
 
-    print(partition)
+    # print(partition)
 
 
 
 if __name__ == "__main__":
-    _test_tdag()
+    # _test_tdag()
+    _test_tdag_qasm()
