@@ -64,7 +64,7 @@ Tdg::Tdg() {
 Tdg::Tdg(int qbit_num_in, int target_qbit_in) {
 
     // A string labeling the gate operation
-    name = "Z";
+    name = "Tdg";
     // number of qubits spanning the matrix of the gate
     qbit_num = qbit_num_in;
     // the size of the matrix
@@ -148,14 +148,14 @@ void
 Tdg::apply_to( Matrix& input, int parallel ) {
 
     if (input.rows != matrix_size ) {
-        std::string err("Tdg::apply_to: Wrong input size in Z gate apply");     
+        std::string err("Tdg::apply_to: Wrong input size in Tdg gate apply");     
         throw(err);
     }
 
 
     Matrix u3_1qbit = calc_one_qubit_u3();
 
-    //apply_kernel_to function to Z gate 
+    //apply_kernel_to function to Tdg gate 
     apply_kernel_to( u3_1qbit, input, false, parallel );
    
 
@@ -184,7 +184,7 @@ Tdg::apply_from_right( Matrix& input ) {
 
 
     Matrix u3_1qbit = calc_one_qubit_u3();   
-    //apply_kernel_from_right function to Z gate 
+    //apply_kernel_from_right function to Tdg gate 
     apply_kernel_from_right(u3_1qbit, input);
 
 
