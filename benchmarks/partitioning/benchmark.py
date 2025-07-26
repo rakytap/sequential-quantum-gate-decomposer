@@ -1,18 +1,20 @@
 from squander.partitioning.partition import PartitionCircuitQasm
 from qiskit import QuantumCircuit
 
+import timeit
 import glob
 import os
 
-USE_ILP = False
+USE_ILP = True
 
-MAX_GATES = 1024
+MAX_GATES_ALLOWED = 1024
 
 METHOD_NAMES = [
     "kahn", 
-    "tdag", 
-    "qiskit"
-    # "bqskit-Quick",
+    "tdag",
+    "gtqcp",
+    "qiskit",
+    "bqskit-Quick",
     # "bqskit-Greedy", 
     # "bqskit-Scan",
     # "bqskit-Cluster", 
@@ -27,13 +29,18 @@ def test_partitions():
         qc = QuantumCircuit.from_qasm_file(filename)
         num_gates = len(qc.data)
         fname = os.path.basename(filename)      
-        if num_gates > MAX_GATES:
+        if num_gates > MAX_GATES_ALLOWED:
             print(f"Skipping {fname}; qubits {qc.num_qubits} gates {num_gates}")
             continue
+        print(fname)
         res = {}
         for method in METHOD_NAMES:
-            partitioned_circuit, parameters = PartitionCircuitQasm( filename, max_partition_size, method )
-            res[method] = len(partitioned_circuit.get_Gates())
+            ls = []
+            def f():
+                ls.extend(PartitionCircuitQasm( filename, max_partition_size, method ))
+            t = timeit.timeit(f, number=1)
+            partitioned_circuit, parameters = ls
+            res[method] = len(partitioned_circuit.get_Gates()), t
         allfiles[fname] = (qc.num_qubits, num_gates, res)
         print(fname, allfiles[fname])
     import json
@@ -41,9 +48,9 @@ def test_partitions():
     import matplotlib.pyplot as plt
     sorted_items = sorted(allfiles.items(), key=lambda item: (item[1][0], item[1][1]))
     circuits_sorted = [name for name, _ in sorted_items]
-    markers = ["o", "*", "D", "s"]
+    markers = ["o", "*", "D", "s", "+", "<", ">", "v", "^"]
     for i, strat in enumerate(METHOD_NAMES):
-        y = [allfiles[name][2][strat] for name in circuits_sorted]
+        y = [allfiles[name][2][strat][0] for name in circuits_sorted]
         plt.plot(circuits_sorted, y, marker=markers[i], label=strat)
     plt.xlabel("Circuit (sorted by qubits, gates)")
     plt.ylabel("Partition Count")

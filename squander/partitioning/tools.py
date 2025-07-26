@@ -22,7 +22,7 @@ import bqskit.ir
 bqs_to_squander = {bqskit.ir.gates.constant.cx.CNOTGate: "CNOT",
                    bqskit.ir.gates.constant.t.TGate: "T",
                    bqskit.ir.gates.constant.h.HGate: "H",
-                   bqskit.ir.gates.constant.tdg.TdgGate: "TDG",
+                   bqskit.ir.gates.constant.tdg.TdgGate: "Tdg",
                    bqskit.ir.gates.constant.x.XGate: "X",
                    bqskit.ir.gates.constant.y.YGate: "Y",
                    bqskit.ir.gates.constant.z.ZGate: "Z",
@@ -93,18 +93,74 @@ def build_dependency(c: Circuit) -> Tuple[Dict[int, Gate], Dict[int, Set[int]], 
     return gate_dict, g, rg
 
 
+def qiskit_to_squander_name(qiskit_name):
+    name = qiskit_name.upper()
+    if name == "CX":
+        return "CNOT"
+    elif name == "U":
+        return "U3"
+    elif name == "TDG":
+        return "Tdg"
+    else:
+        return name
+
+def gate_desc_to_gate_index(circ, preparts):
+    gate_dict, g, rg = build_dependency(circ)
+    L, S = [], {m for m in rg if len(rg[m]) == 0}
+    
+    curr_partition = set()
+    curr_idx = 0
+    total = 0
+    parts = [[]]
+
+    while S:
+        Scomp = {(frozenset(get_qubits(gate_dict[x])), gate_dict[x].get_Name()): x for x in S}
+        rev_Scomp = { y: x for x, y in Scomp.items()}
+        n = next(iter(Scomp.keys() & preparts[len(parts)-1]), None)
+        if n is not None: n = Scomp[n]
+
+        if n is None:
+            total += len(parts[-1])
+            curr_partition = set()
+            parts.append([])
+            n = next(iter(Scomp.keys() & preparts[len(parts)-1]), None)
+            if n is not None: n = Scomp[n]
+        
+        preparts[len(parts)-1].remove(rev_Scomp[n])
+        parts[-1].append(n)
+        curr_partition |= get_qubits(gate_dict[n])
+        curr_idx += gate_dict[n].get_Parameter_Num()
+
+        # Update dependencies
+        L.append(n)
+        S.remove(n)
+        assert len(rg[n]) == 0
+        for child in set(g[n]):
+            g[n].remove(child)
+            rg[child].remove(n)
+            if not rg[child]:
+                S.add(child)
+
+    # Add the last partition
+    total += len(parts[-1])
+    assert total == len(gate_dict)
+    # print(parts)
+    return parts
+
 def get_qiskit_partitions(filename, max_partition_size):
     circ, parameters, qc = utils.qasm_to_squander_circuit(filename, True)
     pm = PassManager([
         CollectMultiQBlocks(max_block_size=max_partition_size),
     ])
+
     pm.run(qc)
-    blocks = pm.property_set['block_list']
-    L = [{(frozenset(qc.find_bit(x)[0] for x in dagop.qargs), dagop.name.upper().replace("CX", "CNOT")) for dagop in block} for block in blocks]
-    print("L", L)
+    blocks = pm.property_set['block_list'] # is not in topological order
+
+    L = [[(frozenset(qc.find_bit(x)[0] for x in dagop.qargs), 
+           qiskit_to_squander_name(dagop.name)) for dagop in block] for block in blocks]
     assert len(qc.data) == sum(map(len, blocks))
     from squander.partitioning.kahn import kahn_partition
-    partitioned_circ, param_order, parts = kahn_partition(circ, max_partition_size, L)
+    partitioned_circ, param_order, parts = kahn_partition(circ, max_partition_size, gate_desc_to_gate_index(circ, L))
     return parameters, partitioned_circ, param_order, parts
 
 
@@ -121,7 +177,7 @@ def get_bqskit_partitions(filename, max_partition_size, partitioner):
     asyncio.run(partitioner.run(bq_circuit, None))
     # Count number of blocks (partitions)
     circ, parameters, qc = utils.qasm_to_squander_circuit(filename, True)
-    L = [{(frozenset(curloc.location[x] for x in op.location), bqs_to_squander[type(op.gate)]) for op in curloc.gate._circuit.operations()} for curloc in bq_circuit.operations()]
+    L = [[(frozenset(curloc.location[x] for x in op.location), bqs_to_squander[type(op.gate)]) for op in curloc.gate._circuit.operations()] for curloc in bq_circuit.operations()]
     from squander.partitioning.kahn import kahn_partition
-    partitioned_circ, param_order, parts = kahn_partition(circ, max_partition_size, L)
+    partitioned_circ, param_order, parts = kahn_partition(circ, max_partition_size, gate_desc_to_gate_index(circ, L))
     return parameters, partitioned_circ, param_order, parts
