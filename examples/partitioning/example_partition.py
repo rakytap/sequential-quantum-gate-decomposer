@@ -4,7 +4,6 @@ from squander.partitioning.tools import get_qubits
 
 
 def ExamplePartition():
-    print("test")
     filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
 
     max_partition_size = 4

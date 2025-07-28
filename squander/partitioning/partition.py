@@ -5,7 +5,7 @@ import numpy as np
 from squander.gates.qgd_Circuit import qgd_Circuit as Circuit
 from squander import utils
 
-from squander.partitioning.kahn import kahn_partition_only
+from squander.partitioning.kahn import kahn_partition
 from squander.partitioning.ilp import ilp_max_partitions
 from squander.partitioning.tdag import tdag_max_partitions
 from squander.partitioning.tools import translate_param_order, get_qiskit_partitions, get_bqskit_partitions
@@ -13,7 +13,7 @@ from squander.partitioning.tools import translate_param_order, get_qiskit_partit
 PartitionStrategy = Literal["kahn", "ilp", "tdag", "qiskit", "bqskit-Quick", "bqskit-Scan", "bqskit-Greedy", "bqskit-Cluster"]
 
 PARTITION_FUNCTIONS = {
-    "kahn": kahn_partition_only,
+    "kahn": kahn_partition,
     "ilp": ilp_max_partitions, 
     "tdag": tdag_max_partitions,
     "gtqcp": functools.partial(tdag_max_partitions, use_gtqcp = True),
@@ -44,7 +44,7 @@ def PartitionCircuit( circ: Circuit, parameters: np.ndarray, max_partition_size:
         Returns with the paritioned circuit and the associated parameter array. Partitions are organized into subcircuits of the resulting circuit
     """  
        
-    func = PARTITION_FUNCTIONS.get(strategy, kahn_partition_only)
+    func = PARTITION_FUNCTIONS.get(strategy, kahn_partition)
     if strategy in ["qiskit", "bqskit-Quick", "bqskit-Scan", "bqskit-Greedy", "bqskit-Cluster"]:
         parameters, partitioned_circ, param_order, _ = func(filename, max_partition_size)
     else:

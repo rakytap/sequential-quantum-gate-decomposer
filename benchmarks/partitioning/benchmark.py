@@ -14,7 +14,7 @@ METHOD_NAMES = [
     "tdag",
     "gtqcp",
     "qiskit",
-    "bqskit-Quick",
+    # "bqskit-Quick",
     # "bqskit-Greedy", 
     # "bqskit-Scan",
     # "bqskit-Cluster", 
