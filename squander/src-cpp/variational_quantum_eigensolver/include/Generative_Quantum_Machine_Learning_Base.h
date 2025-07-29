@@ -16,8 +16,8 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file Variational_Quantum_Eigensolver_Base.h
-    \brief Class to solve VQE problems
+/*! \file Generative_Quantum_Machine_Learning_Base.h
+    \brief Class to solve GQML problems
 */
 
 
@@ -58,8 +58,8 @@ int LAPACKE_zggev 	( 	int  	matrix_layout,
 
 
 /**
-@brief A base class to solve VQE problems
-This class can be used to approximate the ground state of the input Hamiltonian (sparse format) via a quantum circuit
+@brief A base class to solve GQML problems
+This class can be used to approximate a given distribution via a quantum circuit
 */
 class Generative_Quantum_Machine_Learning_Base : public Optimization_Interface {
 public:
@@ -67,9 +67,13 @@ public:
 
 private:
 
-    /// The Hamiltonian of the system
+    /// The state vector's corresponding indices of the training data
     std::vector<int> x_vectors;
 
+    /// Same as the x_vectors but in binary 
+    std::vector<std::vector<int>> x_bitstrings;
+
+    /// The distribution we are trying to approximate
     Matrix_real P_star;
     
     /// Quantum state used as an initial state in the VQE iterations
@@ -78,11 +82,13 @@ private:
     /// Ansatz type (HEA stands for hardware efficient ansatz)
     ansatz_type ansatz;
 
+    /// The expectation value of the the square of the given ditribution (only needed to calculate once)
     double ev_P_star_P_star;
 
+    /// Parameter of the Gaussian kernel
+    /// TODO: an array of 3 different sigmas
     double sigma;
 
-    std::vector<std::vector<int>> x_bitstrings;
 
 public:
 
@@ -96,29 +102,49 @@ Generative_Quantum_Machine_Learning_Base();
 
 /**
 @brief Constructor of the class.
-@param Hamiltonian_in The Hamiltonian describing the physical system
+@param x_vectors_in The input data indices
+@param x_bitstrings_in The input data bitstrings
+@param P_star_in The distribution to approximate
+@param sigma_in Parameter of the gaussian kernels
 @param qbit_num_in The number of qubits spanning the unitary Umtx
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings, Matrix_real P_star_in, double sigma_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in);
+Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in);
 
 /**
 @brief Destructor of the class
 */
 virtual ~Generative_Quantum_Machine_Learning_Base();
 
+
+/**
+@brief Call to evaluate the value of one gaussian kernel function
+@param x The index of the first input data
+@param y The index of the second input data
+@param sigma The parameters of the kernel
+@return The calculated value of the kernel function
+*/
 double Gaussian_kernel(int x, int y, double sigma);
 
+/**
+@brief Call to evaluate the expectation value of the square of distribution we want to approximate
+@return The calculated value of the expectation value of the square of the distribution we want to approximate
+*/
 double expectation_value_P_star_P_star();
 
+/**
+@brief Call to evaluate the total variational distance of the given distribution and the one created by our circuit
+@param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
+@return The calculated total variational distance of the distributions
+*/
 double TV_of_the_distributions(Matrix& State_right);
 
 /**
-@brief Call to evaluate the expectation value of the energy  <State_left| H | State_right>. Calculates only the real part of the expectation value.
+@brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
 @param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
 @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
-@return The calculated expectation value
+@return The calculated mmd
 */
 double MMD_of_the_distributions(Matrix& State_left, Matrix& State_right);
 
@@ -184,7 +210,7 @@ void initialize_zero_state();
 
 
 /**
-@brief Call to start solving the VQE problem to get the approximation for the ground state  
+@brief Call to start solving the GQML problem
 */ 
 void start_optimization();
 
@@ -205,7 +231,7 @@ void generate_circuit( int layers, int inner_blocks );
 
 
 /**
-@brief Call to set custom layers to the gate structure that are intended to be used in the VQE process.
+@brief Call to set custom layers to the gate structure that are intended to be used in the GQML process.
 @param filename The path to the binary file
 */
 void set_gate_structure( std::string filename );

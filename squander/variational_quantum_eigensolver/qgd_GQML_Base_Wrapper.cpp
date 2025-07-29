@@ -60,12 +60,14 @@ typedef struct qgd_Generative_Quantum_Machine_Learning_Base_Wrapper{
 
 
 /**
-@brief Creates an instance of class N_Qubit_Decomposition and return with a pointer pointing to the class instance (C++ linking is needed)
-@param Umtx An instance of class Matrix containing the unitary to be decomposed
-@param qbit_num Number of qubits spanning the unitary
-@param optimize_layer_num Logical value. Set true to optimize the number of decomposing layers during the decomposition procedure, or false otherwise.
-@param initial_guess Type to guess the initial values for the optimization. Possible values: ZEROS=0, RANDOM=1, CLOSE_TO_ZERO=2
-@return Return with a void pointer pointing to an instance of N_Qubit_Decomposition class.
+@brief Creates an instance of class Generative_Quantum_Machine_Learning_Base and return with a pointer pointing to the class instance (C++ linking is needed)
+@param x_vectors The input data indices
+@param x_bitstrings The input data bitstrings
+@param P_star The distribution to approximate
+@param sigma Parameter of the gaussian kernels
+@param qbit_num The number of qubits spanning the unitary Umtx
+@param config A map that can be used to set hyperparameters during the process
+@return Return with a void pointer pointing to an instance of Generative_Quantum_Machine_Learning_Base class.
 */
 Generative_Quantum_Machine_Learning_Base* 
 create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, std::vector<std::vector<int>> x_bitstrings, Matrix_real P_star, double sigma, int qbit_num, std::map<std::string, Config_Element>& config) {
@@ -75,8 +77,8 @@ create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors,
 
 
 /**
-@brief Call to deallocate an instance of N_Qubit_Decomposition class
-@param ptr A pointer pointing to an instance of N_Qubit_Decomposition class.
+@brief Call to deallocate an instance of Generative_Quantum_Machine_Learning_Base class
+@param ptr A pointer pointing to an instance of Generative_Quantum_Machine_Learning_Base class.
 */
 void
 release_Generative_Quantum_Machine_Learning_Base( Generative_Quantum_Machine_Learning_Base*  instance ) {
@@ -94,15 +96,15 @@ extern "C"
 
 
 /**
-@brief Method called when a python instance of the class qgd_N_Qubit_Decomposition_Wrapper is destroyed
-@param self A pointer pointing to an instance of class qgd_N_Qubit_Decomposition_Wrapper.
+@brief Method called when a python instance of the class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper is destroyed
+@param self A pointer pointing to an instance of class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper.
 */
 static void
 qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_dealloc(qgd_Generative_Quantum_Machine_Learning_Base_Wrapper *self)
 {
 
     if ( self->gqml != NULL ) {
-        // deallocate the instance of class N_Qubit_Decomposition
+        // deallocate the instance of class Generative_Quantum_Machine_Learning_Base 
         release_Generative_Quantum_Machine_Learning_Base( self->gqml );
         self->gqml = NULL;
     }
@@ -124,8 +126,8 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_dealloc(qgd_Generative_Quan
 }
 
 /**
-@brief Method called when a python instance of the class qgd_N_Qubit_Decomposition_Wrapper is allocated
-@param type A pointer pointing to a structure describing the type of the class qgd_N_Qubit_Decomposition_Wrapper.
+@brief Method called when a python instance of the class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper is allocated
+@param type A pointer pointing to a structure describing the type of the class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper.
 */
 static PyObject *
 qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_new(PyTypeObject *type, PyObject *args, PyObject *kwds)
@@ -143,9 +145,9 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_new(PyTypeObject *type, PyO
 
 
 /**
-@brief Method called when a python instance of the class qgd_N_Qubit_Decomposition_Wrapper is initialized
-@param self A pointer pointing to an instance of the class qgd_N_Qubit_Decomposition_Wrapper.
-@param args A tuple of the input arguments: Umtx (numpy array), qbit_num (integer), optimize_layer_num (bool), initial_guess (string PyObject 
+@brief Method called when a python instance of the class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper is initialized
+@param self A pointer pointing to an instance of the class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper.
+@param args A tuple of the input arguments: x_bitsring_data (numpy array), p_star_data (numpy array), sigma (double), qbit_num (integer)
 @param kwds A tuple of keywords
 */
 static int
@@ -199,6 +201,8 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
     
     std::vector<int> x_bitstrings_continous(x_bitsring_data, x_bitsring_data+(x_bistring_shape[0]*x_bistring_shape[1]));
     std::vector<std::vector<int>> x_bitstrings(x_bistring_shape[0], std::vector<int>(x_bistring_shape[1]));
+
+    // Calculate which data corresponds with which element of the state vector
     std::vector<int> x_indices(x_bistring_shape[0], 0);
     for (int idx_data=0; idx_data < x_bistring_shape[0]; idx_data++) {
         for (int idx=0; idx < x_bistring_shape[1]; idx++) {
@@ -248,7 +252,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
         return -1;
     }
 
-    // create an instance of the class N_Qubit_Decomposition
+    // create an instance of the class Generative_Quantum_Machine_Learning_Base
     if (qbit_num > 0 ) {
         self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices, x_bitstrings, p_stars, sigma, qbit_num, config);
     }

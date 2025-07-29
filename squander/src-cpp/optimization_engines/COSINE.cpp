@@ -145,6 +145,17 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
             export_circuit_2_binary_loc = 0;
         }        
 
+        long long check_for_convergence;
+        if ( config.count("check_for_convergence") > 0 ) {
+             config["check_for_convergence"].get_property( check_for_convergence );  
+        }
+        else if ( config.count("check_for_convergence_cosine") > 0 ) {
+             config["check_for_convergence_cosine"].get_property( check_for_convergence );  
+        }
+        else {
+            check_for_convergence = 1;
+        }        
+
 
         double optimization_tolerance_loc;
         if ( config.count("optimization_tolerance_cosine") > 0 ) {
@@ -566,7 +577,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
             if ( iter_idx % output_periodicity == 0 ) {
                 std::stringstream sstream;
                 sstream << "COSINE: processed iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
-                sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
+                sstream << " " << " circuit simulation time: " << circuit_simulation_time  << std::endl;
                 print(sstream, 0);   
                 if ( export_circuit_2_binary_loc > 0 ) {
                     std::string filename("initial_circuit_iteration.binary");
@@ -601,7 +612,7 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
 
 
      
-            if ( std::abs( f0_mean - current_minimum) < 1e-7  && var_f0/f0_mean < 1e-7 ) {
+            if ( std::abs( (f0_mean - current_minimum)/f0_mean) < 1e-7  && std::abs(var_f0/f0_mean) < 1e-7 && check_for_convergence > 0 ) {
                 std::stringstream sstream;
                 sstream << "COSINE: converged to minimum at iterations " << (double)iter_idx/max_inner_iterations_loc*100 << "\%, current minimum:" << current_minimum;
                 sstream << " circuit simulation time: " << circuit_simulation_time  << std::endl;
@@ -613,8 +624,8 @@ void Optimization_Interface::solve_layer_optimization_problem_COSINE( int num_of
                     }
                     export_gate_list_to_binary(solution_guess_tmp_mtx, this, filename, verbose);
                 }
-                
-
+               
+            
                 break;
             }
 

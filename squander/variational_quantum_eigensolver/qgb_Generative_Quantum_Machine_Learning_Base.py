@@ -21,8 +21,8 @@ limitations under the License.
 
 """
 
-## \file qgd_N_Qubit_Decomposition.py
-##    \brief A QGD Python interface class for the decomposition of N-qubit unitaries into a set of two-qubit and one-qubit gates.
+## \file qgd_Generative_Quantum_Machine_Learning_Base.py
+##    \brief A QGD Python interface class for solvin generative quantum machine learning problems.
 
 
 import numpy as np
@@ -33,15 +33,16 @@ from squander.gates.qgd_Circuit import qgd_Circuit
 
 
 ##
-# @brief A QGD Python interface class for the decomposition of N-qubit unitaries into U3 and CNOT gates.
+# @brief A QGD Python interface class for solvin generative quantum machine learning problems.
 class qgd_Generative_Quantum_Machine_Learning_Base(qgd_Generative_Quantum_Machine_Learning_Base_Wrapper):
     
     
 ## 
 # @brief Constructor of the class.
-# @param Umtx The unitary matrix to be decomposed.
-# @param optimize_layer_num Set true to optimize the minimum number of operation layers required in the decomposition, or false when the predefined maximal number of layer gates is used (ideal for general unitaries).
-# @param initial_guess String indicating the method to guess initial values for the optimalization. Possible values: "zeros" ,"random", "close_to_zero".
+# @param x_bitstrings The input data bitstrings
+# @param P_star The distribution to approximate
+# @param sigma Parameter of the gaussian kernels
+# @param qbit_num The number of qubits spanning the unitary Umtx
 # @return An instance of the class
     def __init__( self, x_bitstrings, p_stars, sigma, qbit_num, config):
     
@@ -51,14 +52,14 @@ class qgd_Generative_Quantum_Machine_Learning_Base(qgd_Generative_Quantum_Machin
 
 
 ## 
-# @brief Call to set the optimizer used in the VQE process
+# @brief Call to set the optimizer used in the GQML process
 # @param optimizer String indicating the optimizer. Possible values: "BFGS" ,"ADAM", "BFGS2", "ADAM_BATCHED", "AGENTS", "COSINE", "AGENTS_COMBINED".
     def set_Optimizer(self, alg):    
 
         super(qgd_Generative_Quantum_Machine_Learning_Base, self).set_Optimizer(alg)
 
 ## 
-# @brief Call to start solving the VQE problem to get the approximation for the ground state   
+# @brief Call to start solving the GQML problem
     def Start_Optimization(self):
 
 	# call the C wrapper function
@@ -118,7 +119,7 @@ class qgd_Generative_Quantum_Machine_Learning_Base(qgd_Generative_Quantum_Machin
         super(qgd_Generative_Quantum_Machine_Learning_Base, self).Generate_Circuit( layers, inner_blocks )
         
 ## 
-# @brief Call to evaluate the VQE energy.
+# @brief Call to evaluate the MMD between our and the goal distribution.
 # @param parameters A float64 numpy array. The number of parameters can be  retrieved with method get_Parameter_Num 
     def Optimization_Problem(self, parameters):
     

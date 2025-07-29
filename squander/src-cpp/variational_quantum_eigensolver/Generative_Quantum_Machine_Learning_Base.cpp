@@ -16,8 +16,8 @@ limitations under the License.
 
 @author: Peter Rakyta, Ph.D.
 */
-/*! \file Variational_Quantum_Eigensolver_Base.cpp
-    \brief Class to solve VQE problems
+/*! \file Generative_Quantum_Machine_Learning_Base.cpp
+    \brief Class to solve GQML problems
 */
 #include "Generative_Quantum_Machine_Learning_Base.h"
 #include <iostream>
@@ -25,8 +25,8 @@ limitations under the License.
 static tbb::spin_mutex my_mutex;
 
 /**
-@brief A base class to solve VQE problems
-This class can be used to approximate the ground state of the input Hamiltonian (sparse format) via a quantum circuit
+@brief A base class to solve GQML problems
+This class can be used to approximate a given distribution via a quantum circuit
 */
 Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base() {
 
@@ -73,7 +73,10 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 
 /**
 @brief Constructor of the class.
-@param Hamiltonian_in The Hamiltonian describing the physical system
+@param x_vectors_in The input data indices
+@param x_bitstrings_in The input data bitstrings
+@param P_star_in The distribution to approximate
+@param sigma_in Parameter of the gaussian kernels
 @param qbit_num_in The number of qubits spanning the unitary Umtx
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
@@ -146,7 +149,7 @@ Generative_Quantum_Machine_Learning_Base::~Generative_Quantum_Machine_Learning_B
 
 
 /**
-@brief Call to start solving the VQE problem to get the approximation for the ground state  
+@brief Call to start solving the GQML problem
 */ 
 void Generative_Quantum_Machine_Learning_Base::start_optimization(){
 
@@ -157,7 +160,7 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
 
 
     if (gates.size() == 0 ) {
-        std::string error("Variational_Quantum_Eigensolver_Base::Get_ground_state: for VQE process the circuit needs to be initialized");
+        std::string error("Variational_Quantum_Eigensolver_Base::Get_ground_state: for GQML process the circuit needs to be initialized");
         throw error;
     }
 
@@ -175,7 +178,7 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
 
     ev_P_star_P_star = expectation_value_P_star_P_star();
 
-    // start the VQE process
+    // start the GQML process
     Matrix_real solution_guess = optimized_parameters_mtx.copy();
     solve_layer_optimization_problem(num_of_parameters, solution_guess);
 
@@ -183,16 +186,28 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
     return;
 }
 
+/**
+@brief Call to evaluate the value of one gaussian kernel function
+@param x The index of the first input data
+@param y The index of the second input data
+@param sigma The parameters of the kernel
+@return The calculated value of the kernel function
+*/
 double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y, double sigma) {
+    // The norm stores the distance between the two data points (the more qbit they differ in the bigger it is)
     double norm=0;
-    for (int idx=0; idx<x_bitstrings[x].size(); idx++) {
+    for (int idx=0; idx<qbit_num; idx++) {
         norm += (x_bitstrings[x][idx] - x_bitstrings[y][idx])*(x_bitstrings[x][idx]-x_bitstrings[y][idx]);
     }
-    double norm2 = norm*norm;
-    double result = (exp(-norm*norm/2/0.25)+ exp(-norm*norm/2/10)+ exp(-norm*norm/2/1000))/3;
+    double norm_squared = norm*norm;
+    double result = (exp(-norm_squared*0.5*4)+ exp(-norm_squared*0.5*0.1)+ exp(-norm_squared*0.5*0.001))/3;
     return result;
 }
 
+/**
+@brief Call to evaluate the expectation value of the square of distribution we want to approximate
+@return The calculated value of the expectation value of the square of the distribution we want to approximate
+*/
 double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star() {
     double ev=0.0;
     tbb::combinable<double> priv_partial_ev{[](){return 0.0;}};
@@ -213,6 +228,11 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
     return ev;
 }
 
+/**
+@brief Call to evaluate the total variational distance of the given distribution and the one created by our circuit
+@param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
+@return The calculated total variational distance of the distributions
+*/
 double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix& State_right) {
     std::vector<double> P_theta;
 
@@ -224,15 +244,15 @@ double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix&
     for (int i=0; i<P_theta.size(); i++) {
         TV += abs(P_theta[i]-P_star[i]);
     }
-    return TV/2;
+    return TV*0.5;
 }
 
 
 /**
-@brief Call to evaluate the expectation value of the energy  <State_left| H | State_right>. Calculates only the real part of the expectation value.
+@brief Call to evaluate the maximum mean discrepancy of the given distribution and the one created by our circuit
 @param State_left The state on the let for which the expectation value is evaluated. It is a column vector. In the sandwich product it is transposed and conjugated inside the function.
 @param State_right The state on the right for which the expectation value is evaluated. It is a column vector.
-@return The calculated expectation value
+@return The calculated mmd
 */
 double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matrix& State_left, Matrix& State_right ) {
     if ( State_left.rows != State_right.rows) {
@@ -240,12 +260,13 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
         throw error;
     }
 
+    // If the ev of the P_star hasnt been evaluated we need to evaluate it
     if (ev_P_star_P_star < 0 ) {
         ev_P_star_P_star = expectation_value_P_star_P_star();
     }
 
+    // We calculate the distribution created by our circuit at the given traing data points "we sample our distribution"
     std::vector<double> P_theta;
-
     for (size_t x_idx=0; x_idx<x_vectors.size(); x_idx++){
         QGD_Complex16 x_times_state = State_right[x_vectors[x_idx]];
 
@@ -253,6 +274,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
     }
 
 
+    // Calculate the expectation values 
     double ev_P_theta_P_theta   = 0.0;
     double ev_P_theta_P_star    = 0.0;
     tbb::combinable<double> priv_partial_ev_P_theta_P_theta{[](){return 0.0;}};
@@ -284,9 +306,7 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
         number_of_iters++;
         
     }
-    // std::cout << ev_P_theta_P_theta << " " << ev_P_star_P_star << " " << ev_P_theta_P_star << std::endl;
     double result = ev_P_theta_P_theta + ev_P_star_P_star - 2*ev_P_theta_P_star;
-    // std::cout << "TV=" << TV_of_the_distributions(State_right) << std::endl;
     return result;
 }
 
@@ -681,7 +701,7 @@ Generative_Quantum_Machine_Learning_Base::set_gate_structure( std::string filena
 
 
 /**
-@brief Call to set the initial quantum state in the VQE iterations
+@brief Call to set the initial quantum state in the GQML iterations
 @param initial_state_in A vector containing the amplitudes of the initial state.
 */
 void Generative_Quantum_Machine_Learning_Base::set_initial_state( Matrix initial_state_in ) {
