@@ -234,7 +234,7 @@ void export_current_cost_fnc(double current_minimum );
 @param current_minimum The current minimum (to avoid calculating it again
 @param parameters Parameters to be used in the calculations (For Rényi entropy)
 */
-void export_current_cost_fnc(double current_minimum, Matrix_real& parameters );
+virtual void export_current_cost_fnc(double current_minimum, Matrix_real& parameters );
 
 
 /**

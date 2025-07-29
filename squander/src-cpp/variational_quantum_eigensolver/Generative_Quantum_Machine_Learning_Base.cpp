@@ -236,7 +236,7 @@ double Generative_Quantum_Machine_Learning_Base::expectation_value_P_star_P_star
 double Generative_Quantum_Machine_Learning_Base::TV_of_the_distributions(Matrix& State_right) {
     std::vector<double> P_theta;
 
-    for (size_t x_idx=0; x_idx<x_vectors.size(); x_idx++){
+    for (size_t x_idx=0; x_idx<State_right.size(); x_idx++){
         P_theta.push_back(State_right[x_idx].real*State_right[x_idx].real +State_right[x_idx].imag*State_right[x_idx].imag);
     }
 
@@ -479,6 +479,55 @@ double Generative_Quantum_Machine_Learning_Base::optimization_problem( double* p
 
 }
 
+/**
+@brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1, and the TV distance.
+@param current_minimum The current minimum (to avoid calculating it again
+@param parameters Parameters to be used in the calculations (For Rényi entropy)
+*/
+void Generative_Quantum_Machine_Learning_Base::export_current_cost_fnc(double current_minimum, Matrix_real& parameters){
+
+    FILE* pFile;
+    std::string filename("costfuncs_entropy_and_tv.txt");
+    
+    if (project_name != ""){filename = project_name + "_" + filename;}
+
+        const char* c_filename = filename.c_str();
+	pFile = fopen(c_filename, "a");
+
+        if (pFile==NULL) {
+            fputs ("File error",stderr); 
+            std::string error("Cannot open file.");
+            throw error;
+    }
+
+    Matrix input_state(Power_of_2(qbit_num),1);
+
+    std::uniform_int_distribution<> distrib(0, qbit_num-2); 
+
+    memset(input_state.get_data(), 0.0, (input_state.size()*2)*sizeof(double) ); 
+    input_state[0].real = 1.0;
+
+    matrix_base<int> qbit_sublist(1,2);
+    qbit_sublist[0] = 0;//distrib(gen);
+    qbit_sublist[1] = 1;//qbit_sublist[0]+1;
+
+    double renyi_entropy = get_second_Renyi_entropy(parameters, input_state, qbit_sublist);
+
+    // initialize the initial state if it was not given
+    if ( initial_state.size() == 0 ) {
+        initialize_zero_state();
+    }
+	
+    Matrix State = initial_state.copy();
+    apply_to(parameters, State);
+
+    double tv_distance = TV_of_the_distributions(State);
+
+    fprintf(pFile,"%i\t%f\t%f\t%f\n", (int)number_of_iters, current_minimum, renyi_entropy, tv_distance);
+    fclose(pFile);
+
+    return;
+}
 
 
 

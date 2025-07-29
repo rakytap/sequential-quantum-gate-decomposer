@@ -202,6 +202,12 @@ virtual void optimization_problem_combined( Matrix_real parameters, double* f0, 
 */
 static void optimization_problem_grad_vqe( Matrix_real parameters, void* void_instance, Matrix_real& grad );
 
+/**
+@brief Call to print out into a file the current cost function and the second Rényi entropy on the subsystem made of qubits 0 and 1, and the TV distance.
+@param current_minimum The current minimum (to avoid calculating it again
+@param parameters Parameters to be used in the calculations (For Rényi entropy)
+*/
+void export_current_cost_fnc(double current_minimum, Matrix_real& parameters);
 
 /**
 @brief Initialize the state used in the quantun circuit. All qubits are initialized to state 0
