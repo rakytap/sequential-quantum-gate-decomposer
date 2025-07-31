@@ -328,7 +328,7 @@ CROT::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int paralle
       Matrix U3_matrix = calc_one_qubit_u3(ThetaOver2+M_PIOver2, Phi-M_PIOver2, -1*Phi+M_PIOver2 );
       Matrix U3_matrix2 = calc_one_qubit_u3(-1.*(ThetaOver2+M_PIOver2), Phi-M_PIOver2, -1*Phi+M_PIOver2 );
       
-      apply_crot_kernel_to_matrix_input_AVX(U3_matrix2, U3_matrix, res_mtx, target_qbit, control_qbit, res_mtx.rows);
+      apply_crot_kernel_to_matrix_input(U3_matrix2, U3_matrix, res_mtx, target_qbit, control_qbit, res_mtx.rows);
       ret.push_back(res_mtx);
       ///Phi derivative
       Matrix res_mtx1 = input.copy();   
@@ -342,7 +342,7 @@ CROT::apply_derivate_to( Matrix_real& parameters_mtx, Matrix& input, int paralle
       U3_matrix2[0].imag = 0;
       U3_matrix2[3].real = 0; 
       U3_matrix2[3].imag = 0;
-      apply_crot_kernel_to_matrix_input_AVX(U3_matrix2, U3_matrix, res_mtx1, target_qbit, control_qbit, res_mtx1.rows);
+      apply_crot_kernel_to_matrix_input(U3_matrix2, U3_matrix, res_mtx1, target_qbit, control_qbit, res_mtx1.rows);
       ret.push_back(res_mtx1); 
       
     }
