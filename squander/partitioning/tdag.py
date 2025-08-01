@@ -13,8 +13,8 @@ def tdag_max_partitions(c, max_qubit, use_gtqcp=False):
     while len(g) != 0:
         groups = _enumerate_groups(c, gate_dict, g, rg, max_qubit, use_gtqcp)
         L.append(_remove_best_partition(groups, gate_dict, g, rg))
-    from squander.partitioning.kahn import kahn_partition
-    return kahn_partition(c, max_qubit, preparts=L)
+    from squander.partitioning.kahn import kahn_partition_preparts
+    return kahn_partition_preparts(c, max_qubit, preparts=L)
 
 
 

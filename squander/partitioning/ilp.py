@@ -36,8 +36,8 @@ def ilp_max_partitions(c, max_qubits_per_partition):
                 S.add(m)
     assert len(L) == len(parts)
     
-    from squander.partitioning.kahn import kahn_partition
-    return kahn_partition(c, max_qubits_per_partition, L)
+    from squander.partitioning.kahn import kahn_partition_preparts
+    return kahn_partition_preparts(c, max_qubits_per_partition, L)
 
 
 

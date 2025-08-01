@@ -133,8 +133,8 @@ def get_qiskit_partitions(filename, max_partition_size):
     L = [[(frozenset(qc.find_bit(x)[0] for x in dagop.qargs), 
            qiskit_to_squander_name(dagop.name)) for dagop in block] for block in blocks]
     assert len(qc.data) == sum(map(len, blocks))
-    from squander.partitioning.kahn import kahn_partition
-    partitioned_circ, param_order, parts = kahn_partition(circ, max_partition_size, gate_desc_to_gate_index(circ, L))
+    from squander.partitioning.kahn import kahn_partition_preparts
+    partitioned_circ, param_order, parts = kahn_partition_preparts(circ, max_partition_size, gate_desc_to_gate_index(circ, L))
     return parameters, partitioned_circ, param_order, parts
 
 
@@ -179,8 +179,8 @@ def get_bqskit_partitions(filename, max_partition_size, partitioner):
         # Count number of blocks (partitions)
         circ, parameters, qc = utils.qasm_to_squander_circuit(filename, True)
         L = [[(frozenset(curloc.location[x] for x in op.location), bqs_to_squander[type(op.gate)]) for op in curloc.gate._circuit.operations()] for curloc in bq_circuit.operations()]
-        from squander.partitioning.kahn import kahn_partition
-        partitioned_circ, param_order, parts = kahn_partition(circ, max_partition_size, gate_desc_to_gate_index(circ, L))
+        from squander.partitioning.kahn import kahn_partition_preparts
+        partitioned_circ, param_order, parts = kahn_partition_preparts(circ, max_partition_size, gate_desc_to_gate_index(circ, L))
         return parameters, partitioned_circ, param_order, parts
 
     except ImportError as e:
