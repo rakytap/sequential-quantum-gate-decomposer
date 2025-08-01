@@ -48,17 +48,21 @@ def test_partitions(max_qubits = 4):
     sorted_items = sorted(allfiles.items(), key=lambda item: (item[1][0], item[1][1]))
     circuits_sorted = [name for name, _ in sorted_items]
     markers = ["o", "*", "D", "s", "+", "<", ">", "v", "^"]
-    for i, strat in enumerate(METHOD_NAMES):
-        y = [allfiles[name][2][strat][0] for name in circuits_sorted]
-        plt.plot(circuits_sorted, y, marker=markers[i], label=strat)
-    plt.xlabel("Circuit (sorted by qubits, gates)")
-    plt.ylabel("Partition Count")
-    plt.title(f"Partition Count - {max_qubits} per Circuit by Strategy")
-    plt.xticks(rotation=45, ha="right")
-    plt.legend()
-    plt.tight_layout()
-    plt.grid(True)
-    plt.savefig(f"partition_counts-{max_qubits}.svg", format="svg", transparent=True)
+    for perf in (True, False):
+        title = "Partition_count" if not perf else "Performance"
+        y_label = "Partition Count" if not perf else "Time in seconds"
+        for i, strat in enumerate(METHOD_NAMES):
+            y = [allfiles[name][2][strat][1 if perf else 0] for name in circuits_sorted]
+            plt.plot(circuits_sorted, y, marker=markers[i], label=strat)
+        plt.xlabel("Circuit (sorted by qubits, gates)")
+        plt.ylabel(y_label)
+        plt.title(f"{y_label} - {max_qubits} per Circuit by Strategy")
+        plt.xticks(rotation=45, ha="right")
+        plt.legend()
+        plt.tight_layout()
+        plt.grid(True)
+        plt.savefig(f"{title}-{max_qubits}-max_qubit.svg", format="svg", transparent=True)
+        plt.clf()
 
 if __name__ == "__main__":
     for max_qubits in range(3, 6):
