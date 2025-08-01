@@ -5,7 +5,7 @@ import timeit
 import glob
 import os
 
-USE_ILP = False
+USE_ILP = True
 
 MAX_GATES_ALLOWED = 1024
 
@@ -14,16 +14,15 @@ METHOD_NAMES = [
     "tdag",
     "gtqcp",
     "qiskit",
-    # "bqskit-Quick",
+    "bqskit-Quick",
     # "bqskit-Greedy", 
     # "bqskit-Scan",
     # "bqskit-Cluster", 
 ] + (["ilp"] if USE_ILP else [])
 
-def test_partitions():
-    max_partition_size = 4
+def test_partitions(max_qubits = 4):
     files = glob.glob("benchmarks/partitioning/test_circuit/*.qasm")
-    print("Total QASM:", len(files))
+    print(f"Total QASM: {len(files)}, max qubits: {max_qubits}")
     allfiles = {}
     for filename in files:
         qc = QuantumCircuit.from_qasm_file(filename)
@@ -37,7 +36,7 @@ def test_partitions():
         for method in METHOD_NAMES:
             ls = []
             def f():
-                ls.extend(PartitionCircuitQasm( filename, max_partition_size, method ))
+                ls.extend(PartitionCircuitQasm( filename, max_qubits, method ))
             t = timeit.timeit(f, number=1)
             partitioned_circuit, parameters = ls
             res[method] = len(partitioned_circuit.get_Gates()), t
@@ -54,12 +53,13 @@ def test_partitions():
         plt.plot(circuits_sorted, y, marker=markers[i], label=strat)
     plt.xlabel("Circuit (sorted by qubits, gates)")
     plt.ylabel("Partition Count")
-    plt.title("Partition Count per Circuit by Strategy")
+    plt.title(f"Partition Count - {max_qubits} per Circuit by Strategy")
     plt.xticks(rotation=45, ha="right")
     plt.legend()
     plt.tight_layout()
     plt.grid(True)
-    plt.savefig("partition_counts.svg", format="svg", transparent=True)
+    plt.savefig(f"partition_counts-{max_qubits}.svg", format="svg", transparent=True)
 
 if __name__ == "__main__":
-    test_partitions()
+    for max_qubits in range(3, 6):
+        test_partitions(max_qubits)
