@@ -8,22 +8,24 @@ import dataset_generator
 
 n_nodes = 4
 graph_type = "grid"
-dataset_size = 100
+dataset_size = 1000
 
 training_set, target_distribution, training_indices = dataset_generator.generate_MRF_dataset(n_nodes, graph_type, dataset_size)
 # generate configuration dictionary for the solver
 config = {"max_inner_iterations":800, 
 	"batch_size": 64,
     "check_for_convergence": True,
-	"convergence_length": 20}
+	"convergence_length": 20,
+    "output_periodicity": 50}
 qbit_num = n_nodes
 sigma = 10
 x = np.astype(training_set, np.int32)
 P_star = target_distribution
 # print(P_star)
 mrf_samples = np.array(range(2**qbit_num))
+use_lookup_table = True
 
-GQML = Generative_Quantum_Machine_Learning(x, P_star, sigma, qbit_num, config)
+GQML = Generative_Quantum_Machine_Learning(x, P_star, sigma, qbit_num, use_lookup_table, config)
 
 
 # set the optimization engine to agents
@@ -38,7 +40,7 @@ print(param_num)
 
 
 parameters = np.zeros(param_num)
-print("MMD", GQML.Optimization_Problem(parameters))
+# print("MMD", GQML.Optimization_Problem(parameters))
 GQML.set_Optimized_Parameters(parameters)
 initial_state = np.zeros( (1 << qbit_num), dtype=np.complex128 )
 initial_state[0] = 1.0 + 0j        

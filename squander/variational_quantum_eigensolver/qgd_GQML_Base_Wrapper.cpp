@@ -70,9 +70,9 @@ typedef struct qgd_Generative_Quantum_Machine_Learning_Base_Wrapper{
 @return Return with a void pointer pointing to an instance of Generative_Quantum_Machine_Learning_Base class.
 */
 Generative_Quantum_Machine_Learning_Base* 
-create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, std::vector<std::vector<int>> x_bitstrings, Matrix_real P_star, double sigma, int qbit_num, std::map<std::string, Config_Element>& config) {
+create_qgd_Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors, std::vector<std::vector<int>> x_bitstrings, Matrix_real P_star, double sigma, int qbit_num, bool use_lookup_table, std::map<std::string, Config_Element>& config) {
 
-    return new Generative_Quantum_Machine_Learning_Base( x_vectors, x_bitstrings, P_star, sigma, qbit_num, config);
+    return new Generative_Quantum_Machine_Learning_Base( x_vectors, x_bitstrings, P_star, sigma, qbit_num, use_lookup_table, config);
 }
 
 
@@ -147,25 +147,26 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_new(PyTypeObject *type, PyO
 /**
 @brief Method called when a python instance of the class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper is initialized
 @param self A pointer pointing to an instance of the class qgd_Generative_Quantum_Machine_Learning_Base_Wrapper.
-@param args A tuple of the input arguments: x_bitsring_data (numpy array), p_star_data (numpy array), sigma (double), qbit_num (integer)
+@param args A tuple of the input arguments: x_bitsring_data (numpy array), p_star_data (numpy array), sigma (double), qbit_num (integer), use_lookup_table (bool)
 @param kwds A tuple of keywords
 */
 static int
 qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum_Machine_Learning_Base_Wrapper *self, PyObject *args, PyObject *kwds)
 {
     // The tuple of expected keywords
-    static char *kwlist[] = {(char*)"x_bitstring_data", (char*)"p_star_data", (char*) "sigma", (char*)"qbit_num", (char*)"config", NULL};
+    static char *kwlist[] = {(char*)"x_bitstring_data", (char*)"p_star_data", (char*) "sigma", (char*)"qbit_num", (char*)"use_lookup_table", (char*)"config", NULL};
  
     // initiate variables for input arguments
     PyArrayObject *x_bitstring_data_arg = NULL;
     PyArrayObject *p_star_data_arg = NULL;
     double sigma=1.0;
     int  qbit_num = -1; 
+    int use_lookup_table;
     PyObject *config_arg = NULL;
     
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOdiO", kwlist,
-                                   &x_bitstring_data_arg, &p_star_data_arg, &sigma, &qbit_num, &config_arg))
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OOdipO", kwlist,
+                                   &x_bitstring_data_arg, &p_star_data_arg, &sigma, &qbit_num, &use_lookup_table, &config_arg))
         return -1;
     
     int shape = Power_of_2(qbit_num);
@@ -254,7 +255,7 @@ qgd_Generative_Quantum_Machine_Learning_Base_Wrapper_init(qgd_Generative_Quantum
 
     // create an instance of the class Generative_Quantum_Machine_Learning_Base
     if (qbit_num > 0 ) {
-        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices, x_bitstrings, p_stars, sigma, qbit_num, config);
+        self->gqml =  create_qgd_Generative_Quantum_Machine_Learning_Base(x_indices, x_bitstrings, p_stars, sigma, qbit_num, use_lookup_table, config);
     }
     else {
         std::cout << "The number of qubits should be given as a positive integer, " << qbit_num << "  was given" << std::endl;

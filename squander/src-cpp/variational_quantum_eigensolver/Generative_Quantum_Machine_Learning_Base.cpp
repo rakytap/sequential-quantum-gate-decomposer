@@ -78,10 +78,11 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
 @param P_star_in The distribution to approximate
 @param sigma_in Parameter of the gaussian kernels
 @param qbit_num_in The number of qubits spanning the unitary Umtx
+@param use_lookup_table_in Use lookup table for the gaussian kernel
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
+Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Base(std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::map<std::string, Config_Element>& config_in) : Optimization_Interface(Matrix(Power_of_2(qbit_num_in),1), qbit_num_in, false, config_in, RANDOM, accelerator_num) {
 
 	x_vectors = x_vectors_in;
 
@@ -133,6 +134,12 @@ Generative_Quantum_Machine_Learning_Base::Generative_Quantum_Machine_Learning_Ba
     sigma = sigma_in;
 
     x_bitstrings = x_bitstrings_in;
+
+    use_lookup = use_lookup_table_in;
+    ev_P_star_P_star = expectation_value_P_star_P_star();
+    if (use_lookup) {
+        fill_lookup_table();
+    }
 }
 
 
@@ -176,12 +183,17 @@ void Generative_Quantum_Machine_Learning_Base::start_optimization(){
         throw error;
     }    
 
-    ev_P_star_P_star = expectation_value_P_star_P_star();
 
     // start the GQML process
     Matrix_real solution_guess = optimized_parameters_mtx.copy();
     solve_layer_optimization_problem(num_of_parameters, solution_guess);
 
+    if (ev_P_star_P_star == -1) {
+        ev_P_star_P_star = expectation_value_P_star_P_star();
+    }
+    if (use_lookup && gaussian_lookup_table.size() == 0) {
+        fill_lookup_table();
+    }
 
     return;
 }
@@ -202,6 +214,18 @@ double Generative_Quantum_Machine_Learning_Base::Gaussian_kernel(int x, int y, d
     double norm_squared = norm*norm;
     double result = (exp(-norm_squared*0.5*4)+ exp(-norm_squared*0.5*0.1)+ exp(-norm_squared*0.5*0.001))/3;
     return result;
+}
+
+/**
+@brief Call to calculate and save the values of the gaussian kernel needed for traing
+*/
+void Generative_Quantum_Machine_Learning_Base::fill_lookup_table() {
+    gaussian_lookup_table = std::vector<std::vector<double>>(x_vectors.size(), std::vector<double>(x_vectors.size(), 0));
+    for (int idx1=0; idx1 < x_vectors.size(); idx1++) {
+        for (int idx2=0; idx2 < x_vectors.size(); idx2++) {
+            gaussian_lookup_table[idx1][idx2] = Gaussian_kernel(idx1, idx2, 10);
+        }
+    }
 }
 
 /**
@@ -284,9 +308,14 @@ double Generative_Quantum_Machine_Learning_Base::MMD_of_the_distributions( Matri
         double& ev_P_theta_P_star_local = priv_partial_ev_P_theta_P_star.local();
         for (int idx1=r.begin(); idx1<r.end(); idx1++) {
             for (int idx2=0; idx2 < x_vectors.size(); idx2++) {
-                // if(idx1 != idx2)
+                if (use_lookup) {
+                    ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*gaussian_lookup_table[idx1][idx2];
+                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[x_vectors[idx2]]*gaussian_lookup_table[idx1][idx2];
+                }
+                else {
                     ev_P_theta_P_theta_local += P_theta[idx1]*P_theta[idx2]*Gaussian_kernel(idx1, idx2, sigma);
-                ev_P_theta_P_star_local += P_theta[idx1]*P_star[x_vectors[idx2]]*Gaussian_kernel(idx1, idx2, sigma);
+                    ev_P_theta_P_star_local += P_theta[idx1]*P_star[x_vectors[idx2]]*Gaussian_kernel(idx1, idx2, sigma);
+                }
             }
         }
     });

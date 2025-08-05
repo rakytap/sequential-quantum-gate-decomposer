@@ -88,7 +88,10 @@ private:
     /// Parameter of the Gaussian kernel
     /// TODO: an array of 3 different sigmas
     double sigma;
+    
+    std::vector<std::vector<double>> gaussian_lookup_table;
 
+    bool use_lookup;
 
 public:
 
@@ -107,10 +110,11 @@ Generative_Quantum_Machine_Learning_Base();
 @param P_star_in The distribution to approximate
 @param sigma_in Parameter of the gaussian kernels
 @param qbit_num_in The number of qubits spanning the unitary Umtx
+@param use_lookup_table_in Use lookup table for the gaussian kernel
 @param config_in A map that can be used to set hyperparameters during the process
 @return An instance of the class
 */
-Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, std::map<std::string, Config_Element>& config_in);
+Generative_Quantum_Machine_Learning_Base( std::vector<int> x_vectors_in, std::vector<std::vector<int>> x_bitstrings_in, Matrix_real P_star_in, double sigma_in, int qbit_num_in, bool use_lookup_table_in, std::map<std::string, Config_Element>& config_in);
 
 /**
 @brief Destructor of the class
@@ -132,6 +136,11 @@ double Gaussian_kernel(int x, int y, double sigma);
 @return The calculated value of the expectation value of the square of the distribution we want to approximate
 */
 double expectation_value_P_star_P_star();
+
+/**
+@brief Call to calculate and save the values of the gaussian kernel needed for traing
+*/
+void fill_lookup_table();
 
 /**
 @brief Call to evaluate the total variational distance of the given distribution and the one created by our circuit

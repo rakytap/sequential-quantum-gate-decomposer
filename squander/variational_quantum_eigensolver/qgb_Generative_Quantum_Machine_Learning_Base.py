@@ -43,11 +43,12 @@ class qgd_Generative_Quantum_Machine_Learning_Base(qgd_Generative_Quantum_Machin
 # @param P_star The distribution to approximate
 # @param sigma Parameter of the gaussian kernels
 # @param qbit_num The number of qubits spanning the unitary Umtx
+# @param use_lookup_table_in Use lookup table for the gaussian kernel (may take up large amount of memory)
 # @return An instance of the class
-    def __init__( self, x_bitstrings, p_stars, sigma, qbit_num, config):
+    def __init__( self, x_bitstrings, p_stars, sigma, qbit_num, use_lookup_table, config):
     
         # call the constructor of the wrapper class
-        super(qgd_Generative_Quantum_Machine_Learning_Base, self).__init__(x_bitstrings.data, p_stars.data, sigma, qbit_num, config)
+        super(qgd_Generative_Quantum_Machine_Learning_Base, self).__init__(x_bitstrings.data, p_stars.data, sigma, qbit_num, use_lookup_table, config)
         self.qbit_num = qbit_num
 
 
