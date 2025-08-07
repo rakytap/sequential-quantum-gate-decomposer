@@ -2,12 +2,11 @@ import pytest
 import numpy as np
 from squander import Circuit
 from squander import utils
-from squander.partitioning.partition import (
-    get_qubits,
-    kahn_partition,
-    translate_param_order,
-    PartitionCircuitQasm
-)
+
+from squander.partitioning.partition import PartitionCircuitQasm
+from squander.partitioning.kahn import kahn_partition
+from squander.partitioning.tools import get_qubits
+
 
 """
 CORRECTNESS TESTS

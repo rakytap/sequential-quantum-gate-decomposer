@@ -1,14 +1,13 @@
-from squander.partitioning.partition import (
-    get_qubits,
-    PartitionCircuitQasm
-)
+from squander.partitioning.partition import PartitionCircuitQasm
+from squander.partitioning.tools import get_qubits
+
 
 
 def ExamplePartition():
     filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm"
-    
+
     max_partition_size = 4
-    partitioned_circuit, parameters = PartitionCircuitQasm( filename, max_partition_size, True )
+    partitioned_circuit, parameters = PartitionCircuitQasm( filename, max_partition_size, "kahn" )
 
     print(f"{filename} Partitions ({len(partitioned_circuit.get_Gates())}):")
     total = 0
@@ -20,10 +19,10 @@ def ExamplePartition():
         total += num_gates
         print(f"#{i + 1}: {num_gates} {qubits}")
 
-    print(f"Total gates: {total}")
-    
-    
-    
+    print(f"{filename} Params {parameters}")
+
+    print(f"Total gates: {total}\n")
+
 
 
 if __name__ == "__main__":
