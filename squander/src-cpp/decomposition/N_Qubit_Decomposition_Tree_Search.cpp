@@ -338,7 +338,6 @@ N_Qubit_Decomposition_Tree_Search::determine_gate_structure(Matrix_real& optimiz
     }      
     
     if  (config.count("tree_level_max") > 0 ){
-        std::cout << "lefut\n";
         config["tree_level_max"].get_property( level_max );
     } 
     else {
