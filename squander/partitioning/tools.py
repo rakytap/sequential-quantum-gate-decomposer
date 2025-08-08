@@ -57,6 +57,7 @@ def build_dependency(c: Circuit) -> Tuple[Dict[int, Gate], Dict[int, Set[int]], 
         tuple: (gate_dict, forward_graph, reverse_graph)
     """
     gate_dict = {i: gate for i, gate in enumerate(c.get_Gates())}
+    gate_to_qubit = { i: get_qubits(g) for i, g in enumerate(c.get_Gates())}
     g, rg = {i: set() for i in gate_dict}, {i: set() for i in gate_dict}
     
     for gate in gate_dict:
@@ -64,7 +65,9 @@ def build_dependency(c: Circuit) -> Tuple[Dict[int, Gate], Dict[int, Set[int]], 
             g[gate].add(child)
             rg[child].add(gate)
     
-    return gate_dict, g, rg
+    S = {m for m in rg if len(rg[m]) == 0}
+
+    return gate_dict, g, rg, gate_to_qubit, S
 
 
 def qiskit_to_squander_name(qiskit_name):
@@ -79,8 +82,8 @@ def qiskit_to_squander_name(qiskit_name):
         return name
 
 def gate_desc_to_gate_index(circ, preparts):
-    gate_dict, g, rg = build_dependency(circ)
-    L, S = [], {m for m in rg if len(rg[m]) == 0}
+    gate_dict, g, rg, gate_to_qubit, S = build_dependency(circ)
+    L = []
     
     curr_partition = set()
     curr_idx = 0
@@ -88,7 +91,7 @@ def gate_desc_to_gate_index(circ, preparts):
     parts = [[]]
 
     while S:
-        Scomp = {(frozenset(get_qubits(gate_dict[x])), gate_dict[x].get_Name()): x for x in S}
+        Scomp = {(frozenset(gate_to_qubit[x]), gate_dict[x].get_Name()): x for x in S}
         rev_Scomp = { y: x for x, y in Scomp.items()}
         n = next(iter(Scomp.keys() & preparts[len(parts)-1]), None)
         if n is not None: n = Scomp[n]
@@ -102,7 +105,7 @@ def gate_desc_to_gate_index(circ, preparts):
         
         preparts[len(parts)-1].remove(rev_Scomp[n])
         parts[-1].append(n)
-        curr_partition |= get_qubits(gate_dict[n])
+        curr_partition |= gate_to_qubit[n]
         curr_idx += gate_dict[n].get_Parameter_Num()
 
         # Update dependencies
