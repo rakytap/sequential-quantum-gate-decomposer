@@ -170,7 +170,7 @@ qgd_N_Qubit_Decomposition_Plywood_Wrapper_init(qgd_N_Qubit_Decomposition_Plywood
 
 
     // parsing input arguments
-    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiOOii", kwlist,
+    if (!PyArg_ParseTupleAndKeywords(args, kwds, "|OiiOOi", kwlist,
                                      &Umtx_arg, &qbit_num, &level_limit, &topology, &config_arg, &accelerator_num))
         return -1;
 

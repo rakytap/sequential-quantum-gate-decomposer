@@ -130,9 +130,6 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
         print(sstream, 0);	
         return;
     }
-
-    Gates_block* gate_structure_loc = determine_gate_structure(optimized_parameters_mtx);
-     
     long long minimum_level_loc;
     if ( config.count("minimum_level") > 0 ) {
         config["minimum_level"].get_property( minimum_level_loc );  
@@ -140,7 +137,6 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
     else {
         minimum_level_loc = 0;
     } 
-    minimum_level = (int)minimum_level_loc;
     double optimization_tolerance_loc;
     if ( config.count("optimization_tolerance") > 0 ) {
         config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
@@ -149,6 +145,9 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
         optimization_tolerance_loc = optimization_tolerance;
     }      
 
+    minimum_level = (int)minimum_level_loc;
+
+    Gates_block* gate_structure_loc = determine_gate_structure(optimized_parameters_mtx);
     // solve the optimization problem
     N_Qubit_Decomposition_adaptive cDecomp_custom;
     // solve the optimization problem in isolated optimization process
@@ -157,7 +156,7 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
     cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size() );
     cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
     cDecomp_custom.set_max_iteration( max_outer_iterations );
-    cDecomp_custom.set_verbose(3);
+    cDecomp_custom.set_verbose(verbose);
     cDecomp_custom.set_cost_function_variant( cost_fnc );
     cDecomp_custom.set_debugfile("");
     cDecomp_custom.set_iteration_loops( iteration_loops );
@@ -184,13 +183,6 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
     }
     cDecomp_custom.compress_circuit_PBC();
     std::map<std::string, int>&& gate_nums = cDecomp_custom.get_gate_nums();
-	bool Adaptives = false;
-    for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
-        if (it->first == "Adaptive"){Adaptives=true; break;}
-    } 
-    if (Adaptives==true){
-        cDecomp_custom.finalize_circuit();
-    }
     optimized_parameters_mtx = cDecomp_custom.get_optimized_parameters();
     gate_structure_loc = NULL;
     gate_structure_loc =  (static_cast<Gates_block*>(&cDecomp_custom))->clone();

@@ -2046,7 +2046,7 @@ void N_Qubit_Decomposition_adaptive::compress_circuit_PBC() {
         print(sstream, 1);
         return;
     }
-    
+    int iter =0;
     int uncompressed_iter_num = 0;
     
     int PBC_window;         
@@ -2058,9 +2058,11 @@ void N_Qubit_Decomposition_adaptive::compress_circuit_PBC() {
         PBC_window_loc = 5;
     } 
     PBC_window = (int)PBC_window_loc;
-    int max_uncompressed_iters = (gate_structure_loc->get_gate_num()-1)/PBC_window +  (gate_structure_loc->get_gate_num()-1)%PBC_window;
-    
-    while ( uncompressed_iter_num <= max_uncompressed_iters ) {
+    int max_uncompressed_iters = (int)((gate_structure_loc->get_gate_num()-1)/PBC_window);
+    if ( (int)((gate_structure_loc->get_gate_num()-1)%PBC_window) == 0 ){
+        max_uncompressed_iters--;
+    }
+    while ( iter<25 && uncompressed_iter_num <= max_uncompressed_iters ) {
         Gates_block* gate_structure_compressed;
 
         gate_structure_compressed = compress_gate_structure_PBC( gate_structure_loc,uncompressed_iter_num );
@@ -2076,12 +2078,15 @@ void N_Qubit_Decomposition_adaptive::compress_circuit_PBC() {
             delete( gate_structure_loc );
             gate_structure_loc = gate_structure_compressed;
             gate_structure_compressed = NULL;
-            max_uncompressed_iters = (gate_structure_loc->get_gate_num()-1)/PBC_window +  (gate_structure_loc->get_gate_num()-1)%PBC_window;
+            max_uncompressed_iters = (int)((gate_structure_loc->get_gate_num()-1)/PBC_window);
+            if ( (int)((gate_structure_loc->get_gate_num()-1)%PBC_window) == 0 ){
+            max_uncompressed_iters--;
+            }
             
         }
 
 
-            // store the decomposing gate structure
+        iter++;    // store the decomposing gate structure
     }
 
     release_gates();
@@ -2145,19 +2150,15 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure_PBC( Gates_block* gate_s
      sort( layers_idx_sorted.begin(),layers_idx_sorted.end(), [&](int i,int j){return layers_parameters[i]<layers_parameters[j];} );
     
     for (int idx=0; idx<layer_num_max; idx++ ) { // TODO: see line 1558 to explain the -1
-        layers_to_remove.push_back( layers_idx_sorted[uncompressed_iter_num*PBC_window+idx]);
+        layers_to_remove.push_back( layers_idx_sorted[uncompressed_iter_num*PBC_window+idx] );//layers_idx_sorted[idx]);
     }   
-    
-    
-    
-#ifdef __MPI__        
-    MPI_Bcast( &layers_to_remove[0], layers_to_remove.size(), MPI_INT, 0, MPI_COMM_WORLD);
-#endif    
+
+
 
     // make a copy of the original unitary. (By removing trivial gates global phase might be added to the unitary)
     Matrix&& Umtx_orig = Umtx.copy();
 
-    int panelties_num = layer_num_max;
+    int panelties_num = layer_num_max < layer_num_orig ? layer_num_max : layer_num_orig;
 
     if ( panelties_num == 0 ) {
         return gate_structure;
@@ -2190,12 +2191,12 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure_PBC( Gates_block* gate_s
 
         // remove further adaptive gates if possible
         Gates_block* gate_structure_tmp;
-        if ( gate_structure_reduced->get_gate_num() ==  gate_structure->get_gate_num() ) {
+        //if ( gate_structure_reduced->get_gate_num() ==  gate_structure->get_gate_num() ) {
             gate_structure_tmp = gate_structure_reduced->clone();
-        }
+       /* }
         else {
             gate_structure_tmp = remove_trivial_gates( gate_structure_reduced, optimized_parameters_loc, current_minimum_loc ); //TODO: reverse gate order
-        }
+        }*/
       
         panelties[idx]                = get_panelty(gate_structure_tmp, optimized_parameters_loc);
         gate_structures_vec[idx]      = gate_structure_tmp;
@@ -2236,9 +2237,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure_PBC( Gates_block* gate_s
 
     }
 
-#ifdef __MPI__        
-    MPI_Bcast( &idx_min, 1, MPI_UNSIGNED, 0, MPI_COMM_WORLD);
-#endif    
+
 
 
     // release gate structures other than the best one
@@ -2281,7 +2280,4 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure_PBC( Gates_block* gate_s
 
 
     return gate_structure;
-
-
-
 }
