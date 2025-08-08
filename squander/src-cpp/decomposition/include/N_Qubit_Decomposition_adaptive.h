@@ -164,7 +164,7 @@ Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_
 @brief Call to run compression iterations on the circuit. (Trying to remove a CRY block in each iteration)
 @param gate_structure The gate structure to be optimized
 */
-Gates_block* compress_gate_structure( Gates_block* gate_structure, int uncompressed_iter_num );
+Gates_block* compress_gate_structure( Gates_block* gate_structure );
 
 /**
 @brief Call to run compression iterations on the circuit. (Trying to remove a CRY block in each iteration)

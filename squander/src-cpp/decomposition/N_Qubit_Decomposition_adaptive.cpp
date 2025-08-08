@@ -349,15 +349,15 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
         export_circuit_2_binary_loc = 0;
     }      
     
-    
     while ( iter<25 || uncompressed_iter_num <= 5 ) {
         std::stringstream sstream;
         sstream.str("");
         sstream << "iteration " << iter+1 << ": ";
         print(sstream, 1);	
-        Gates_block* gate_structure_compressed;
 
-        gate_structure_compressed = compress_gate_structure( gate_structure_loc,uncompressed_iter_num );
+       
+        Gates_block* gate_structure_compressed = compress_gate_structure( gate_structure_loc );
+
         if ( gate_structure_compressed->get_gate_num() < gate_structure_loc->get_gate_num() ) {
             uncompressed_iter_num = 0;
         }
@@ -393,7 +393,7 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
 
         iter++;
 
-        if (uncompressed_iter_num>1) break;
+        if (uncompressed_iter_num>10) break;
             // store the decomposing gate structure
     }
 
@@ -412,6 +412,7 @@ void N_Qubit_Decomposition_adaptive::compress_circuit() {
 #endif
 
 }
+
 
 
 
@@ -953,15 +954,24 @@ return NULL;
 @param gate_structure The gate structure to be optimized
 */
 Gates_block*
-N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure, int uncompressed_iter_num ) {
+N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_structure ) {
 
 
 
     int layer_num_max;
     int layer_num_orig = gate_structure->get_gate_num()-1; // TODO: see line 1558 to explain the -1: the last finalyzing layer of U3 gates is not tested for removal
-    if ( layer_num_orig < 50 ) layer_num_max = layer_num_orig;
+    if ( layer_num_orig < 50 ) layer_num_max = 10;
     else if ( layer_num_orig < 60 ) layer_num_max = 4;
     else layer_num_max = 2;
+
+    // create a list of layers to be tested for removal.
+    std::vector<int> layers_to_remove;
+    layers_to_remove.reserve(layer_num_orig); 
+    for (int idx=0; idx<layer_num_orig; idx++ ) { // TODO: see line 1558 to explain the -1
+        layers_to_remove.push_back(idx);
+    }   
+    
+    
     double optimization_tolerance_loc;
     if ( config.count("optimization_tolerance") > 0 ) {
         config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
@@ -972,40 +982,12 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure( Gates_block* gate_struc
 
     // random generator of integers   
     std::uniform_int_distribution<> distrib_int(0, 5000);  
-    // create a list of layers to be tested for removal.
-    std::vector<int> layers_to_remove;
-    if (uncompressed_iter_num==0){
-    layer_num_max = 5<layer_num_orig ? 5 : layer_num_orig;
-    // create a list of layers to be tested for removal.
-    std::vector<double> layers_parameters(layer_num_orig,15.0);
-    std::vector<int> layers_idx_sorted(layer_num_orig,0);
-    //layers_to_remove.reserve(layer_num_orig);
-    for (int idx=0; idx<layer_num_orig;idx++){
-        layers_parameters[idx] = extract_theta_from_layer(gate_structure,idx,optimized_parameters_mtx);
-        layers_idx_sorted[idx] = idx;
-    }
-    
-     std::iota(layers_idx_sorted.begin(),layers_idx_sorted.end(),0); //Initializing
-     sort( layers_idx_sorted.begin(),layers_idx_sorted.end(), [&](int i,int j){return layers_parameters[i]<layers_parameters[j];} );
-    
-    for (int idx=0; idx<layer_num_max; idx++ ) { // TODO: see line 1558 to explain the -1
-        layers_to_remove.push_back( layers_idx_sorted[idx]);
-    }   
-    }
-    else{
-    layers_to_remove.reserve(layer_num_orig); 
-    for (int idx=0; idx<layer_num_orig; idx++ ) { // TODO: see line 1558 to explain the -1
-        layers_to_remove.push_back(idx);
-    }   
-    
 
     while ( (int)layers_to_remove.size() > layer_num_max ) {
         int remove_idx = distrib_int(gen) % layers_to_remove.size();
        
         layers_to_remove.erase( layers_to_remove.begin() + remove_idx );
     }
-    }
-    
     
 #ifdef __MPI__        
     MPI_Bcast( &layers_to_remove[0], layers_to_remove.size(), MPI_INT, 0, MPI_COMM_WORLD);
@@ -2065,15 +2047,20 @@ void N_Qubit_Decomposition_adaptive::compress_circuit_PBC() {
         return;
     }
     
-    int iter = 0;
     int uncompressed_iter_num = 0;
     
+    int PBC_window;         
+    long long PBC_window_loc;
+    if ( config.count("PBC_window") > 0 ) {
+        config["PBC_window"].get_property( PBC_window_loc );  
+    }
+    else {
+        PBC_window_loc = 5;
+    } 
+    PBC_window = (int)PBC_window_loc;
+    int max_uncompressed_iters = (gate_structure_loc->get_gate_num()-1)/PBC_window +  (gate_structure_loc->get_gate_num()-1)%PBC_window;
     
-    while ( iter<25 || uncompressed_iter_num <= 5 ) {
-        std::stringstream sstream;
-        sstream.str("");
-        sstream << "iteration " << iter+1 << ": ";
-        print(sstream, 1);	
+    while ( uncompressed_iter_num <= max_uncompressed_iters ) {
         Gates_block* gate_structure_compressed;
 
         gate_structure_compressed = compress_gate_structure_PBC( gate_structure_loc,uncompressed_iter_num );
@@ -2089,12 +2076,11 @@ void N_Qubit_Decomposition_adaptive::compress_circuit_PBC() {
             delete( gate_structure_loc );
             gate_structure_loc = gate_structure_compressed;
             gate_structure_compressed = NULL;
+            max_uncompressed_iters = (gate_structure_loc->get_gate_num()-1)/PBC_window +  (gate_structure_loc->get_gate_num()-1)%PBC_window;
             
         }
 
-        iter++;
 
-        if (uncompressed_iter_num>1) break;
             // store the decomposing gate structure
     }
 
@@ -2125,23 +2111,27 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure_PBC( Gates_block* gate_s
 
     int layer_num_max;
     int layer_num_orig = gate_structure->get_gate_num()-1; // TODO: see line 1558 to explain the -1: the last finalyzing layer of U3 gates is not tested for removal
-    if ( layer_num_orig < 50 ) layer_num_max = layer_num_orig;
-    else if ( layer_num_orig < 60 ) layer_num_max = 4;
-    else layer_num_max = 2;
     double optimization_tolerance_loc;
     if ( config.count("optimization_tolerance") > 0 ) {
         config["optimization_tolerance"].get_property( optimization_tolerance_loc );  
     }
     else {
         optimization_tolerance_loc = optimization_tolerance;
-    }         
-
+    }
+    int PBC_window;         
+    long long PBC_window_loc;
+    if ( config.count("PBC_window") > 0 ) {
+        config["PBC_window"].get_property( PBC_window_loc );  
+    }
+    else {
+        PBC_window_loc = 5;
+    } 
+    PBC_window = (int)PBC_window_loc;
     // random generator of integers   
     std::uniform_int_distribution<> distrib_int(0, 5000);  
     // create a list of layers to be tested for removal.
     std::vector<int> layers_to_remove;
-    if (uncompressed_iter_num==0){
-    layer_num_max = 5<layer_num_orig ? 5 : layer_num_orig;
+    layer_num_max = PBC_window<layer_num_orig-uncompressed_iter_num*PBC_window ? PBC_window : layer_num_orig-uncompressed_iter_num*PBC_window;
     // create a list of layers to be tested for removal.
     std::vector<double> layers_parameters(layer_num_orig,15.0);
     std::vector<int> layers_idx_sorted(layer_num_orig,0);
@@ -2155,22 +2145,9 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure_PBC( Gates_block* gate_s
      sort( layers_idx_sorted.begin(),layers_idx_sorted.end(), [&](int i,int j){return layers_parameters[i]<layers_parameters[j];} );
     
     for (int idx=0; idx<layer_num_max; idx++ ) { // TODO: see line 1558 to explain the -1
-        layers_to_remove.push_back( layers_idx_sorted[idx]);
-    }   
-    }
-    else{
-    layers_to_remove.reserve(layer_num_orig); 
-    for (int idx=0; idx<layer_num_orig; idx++ ) { // TODO: see line 1558 to explain the -1
-        layers_to_remove.push_back(idx);
+        layers_to_remove.push_back( layers_idx_sorted[uncompressed_iter_num*PBC_window+idx]);
     }   
     
-
-    while ( (int)layers_to_remove.size() > layer_num_max ) {
-        int remove_idx = distrib_int(gen) % layers_to_remove.size();
-       
-        layers_to_remove.erase( layers_to_remove.begin() + remove_idx );
-    }
-    }
     
     
 #ifdef __MPI__        
@@ -2180,7 +2157,7 @@ N_Qubit_Decomposition_adaptive::compress_gate_structure_PBC( Gates_block* gate_s
     // make a copy of the original unitary. (By removing trivial gates global phase might be added to the unitary)
     Matrix&& Umtx_orig = Umtx.copy();
 
-    int panelties_num = layer_num_max < layer_num_orig ? layer_num_max : layer_num_orig;
+    int panelties_num = layer_num_max;
 
     if ( panelties_num == 0 ) {
         return gate_structure;
