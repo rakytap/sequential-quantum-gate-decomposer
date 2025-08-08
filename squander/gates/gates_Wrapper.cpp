@@ -46,6 +46,7 @@ along with this program.  If not, see http://www.gnu.org/licenses/.
 #include "X.h"
 #include "Y.h"
 #include "Z.h"
+#include "S.h"
 #include "T.h"
 #include "Tdg.h"
 #include "R.h"
@@ -891,6 +892,10 @@ Gate_Wrapper_setstate( Gate_Wrapper *self, PyObject *args ) {
         gate = create_gate<Z>( qbit_num, target_qbit );
         break;
     }    
+    case S_OPERATION: {
+        gate = create_gate<S>( qbit_num, target_qbit );
+        break;
+    }    
     case SX_OPERATION: {
         gate = create_gate<SX>( qbit_num, target_qbit );
         break;
@@ -1229,6 +1234,17 @@ struct Z_Wrapper_Type : Gate_Wrapper_Type_tmp {
 };
 
 
+struct S_Wrapper_Type : Gate_Wrapper_Type_tmp {
+
+    S_Wrapper_Type() {    
+        tp_name      = "S";
+        tp_doc       = "Object to represent python binding for a S gate of the Squander package.";
+        tp_new      = (newfunc) Gate_Wrapper_new<S>;
+        tp_base      = &Gate_Wrapper_Type;
+    }
+};
+
+
 struct T_Wrapper_Type : Gate_Wrapper_Type_tmp {
 
     T_Wrapper_Type() {    
@@ -1298,6 +1314,7 @@ static U3_Wrapper_Type U3_Wrapper_Type_ins;
 static X_Wrapper_Type X_Wrapper_Type_ins;
 static Y_Wrapper_Type Y_Wrapper_Type_ins;
 static Z_Wrapper_Type Z_Wrapper_Type_ins;
+static S_Wrapper_Type S_Wrapper_Type_ins;
 static T_Wrapper_Type T_Wrapper_Type_ins;
 static Tdg_Wrapper_Type Tdg_Wrapper_Type_ins;
 static R_Wrapper_Type R_Wrapper_Type_ins;
@@ -1356,6 +1373,7 @@ PyInit_gates_Wrapper(void)
         PyType_Ready(&X_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Y_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Z_Wrapper_Type_ins) < 0 || 
+        PyType_Ready(&S_Wrapper_Type_ins) < 0 || 
         PyType_Ready(&T_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&Tdg_Wrapper_Type_ins) < 0 ||
         PyType_Ready(&CR_Wrapper_Type_ins) < 0 ||
@@ -1485,6 +1503,13 @@ PyInit_gates_Wrapper(void)
     Py_INCREF(&Z_Wrapper_Type_ins);
     if (PyModule_AddObject(m, "Z", (PyObject *) & Z_Wrapper_Type_ins) < 0) {
         Py_DECREF(& Z_Wrapper_Type_ins);
+        Py_DECREF(m);
+        return NULL;
+    }
+
+    Py_INCREF(&S_Wrapper_Type_ins);
+    if (PyModule_AddObject(m, "S", (PyObject *) & S_Wrapper_Type_ins) < 0) {
+        Py_DECREF(& S_Wrapper_Type_ins);
         Py_DECREF(m);
         return NULL;
     }
