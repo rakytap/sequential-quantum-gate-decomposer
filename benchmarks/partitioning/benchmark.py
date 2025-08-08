@@ -8,7 +8,7 @@ import os
 
 USE_ILP = False
 
-MAX_GATES_ALLOWED = 4096 #1024**2
+MAX_GATES_ALLOWED = 1024**2
 
 METHOD_NAMES = [
     "kahn", 

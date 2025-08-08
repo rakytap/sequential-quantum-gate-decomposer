@@ -37,8 +37,8 @@ def tdag_max_partitions(c, max_qubit, use_gtqcp=False):
     L = []
     topo = _get_topo_order(g, rg, S)
     start_qubit = _get_starting_gates(topo, g, gate_to_qubit)
-
-    while len(g) != 0:
+    deps = {x : set(gate_to_qubit[x]) for x in g}
+    while g:
         groups = _enumerate_groups(c, g, gate_to_qubit, start_qubit, max_qubit, use_gtqcp)
         L.append(_remove_best_partition(groups, g, rg, gate_to_qubit, S, start_qubit, topo))
     assert sum(len(x) for x in L) == len(gate_dict), (sum(len(x) for x in L), len(gate_dict))
@@ -47,21 +47,24 @@ def tdag_max_partitions(c, max_qubit, use_gtqcp=False):
 
 
 def _get_gate_dependencies(c, g, gate_to_qubit, S, max_qubit):
-    deps = {x : set(gate_to_qubit[x]) for x in g}
-    next_level = set()
-    for qubit in range(c.get_Qbit_Num()):
-        if qubit not in S:
-            continue
+    deps = {}
+    level, next_level = set(), set()
+    for qubit in S:
         next_level.add(S[qubit])
+        deps[S[qubit]] = set(gate_to_qubit[S[qubit]])
     while next_level:
+        tmp = level
         level = next_level
-        next_level = set()
+        next_level = tmp
+        tmp.clear()
         for curr_gate in level:
             for gate in g[curr_gate]:
-                if len(deps[gate]) > max_qubit:
-                    continue
+                if gate not in deps:
+                    deps[gate] = set(gate_to_qubit[gate])
                 deps[gate] |= deps[curr_gate]
-                next_level.add(gate)
+            next_level |= g[curr_gate]
+        if all(len(deps[gate]) >= max_qubit for gate in next_level):
+            break
     return deps
 
 
@@ -103,7 +106,7 @@ def _enumerate_gtqcp(target_gate, target_qubit, input_groups, deps, g, gate_to_q
     gate = target_gate
     while True:
         next_gate = next(iter(x for x in g[gate] if target_qubit in gate_to_qubit[x]), None)
-        if next_gate is None or len(input_groups | deps[next_gate]) > max_qubit:
+        if next_gate is None or next_gate not in deps or len(input_groups | deps[next_gate]) > max_qubit:
             break
         gate = next_gate
     if len(input_groups | deps[gate]) > max_qubit:
@@ -125,7 +128,7 @@ def _remove_best_partition(qubit_results, g, rg, gate_to_qubit, S, start_qubit, 
         pos_gates, gates = set(S), set()
         while True:
             t = {x for x in pos_gates if gate_to_qubit[x] <= result}
-            if len(t) == 0:
+            if not t:
                 break
             gates |= t
             pos_gates |= {child for n in t for child in g[n] if not (rg[child] - gates)}
@@ -144,7 +147,7 @@ def _remove_best_partition(qubit_results, g, rg, gate_to_qubit, S, start_qubit, 
     
     S.clear()
     for m in rg:
-        if len(rg[m]) == 0:
+        if not rg[m]:
             S.add(m)
 
     start_qubit.clear()
@@ -155,7 +158,7 @@ def _remove_best_partition(qubit_results, g, rg, gate_to_qubit, S, start_qubit, 
 def _test_tdag_qasm(use_gtqcp=False):
     K = 3
     # filename = "examples/partitioning/qasm_samples/heisenberg-16-20.qasm" 
-    filename = "benchmarks/partitioning/test_circuit/cm42a_207_squander.qasm"
+    filename = "benchmarks/partitioning/test_circuit/9symml_195.qasm"
     from squander import utils
     
     circ, parameters = utils.qasm_to_squander_circuit(filename)
