@@ -157,7 +157,7 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
     cDecomp_custom.set_optimized_parameters( optimized_parameters_mtx.get_data(), optimized_parameters_mtx.size() );
     cDecomp_custom.set_optimization_blocks( gate_structure_loc->get_gate_num() );
     cDecomp_custom.set_max_iteration( max_outer_iterations );
-    cDecomp_custom.set_verbose(verbose);
+    cDecomp_custom.set_verbose(3);
     cDecomp_custom.set_cost_function_variant( cost_fnc );
     cDecomp_custom.set_debugfile("");
     cDecomp_custom.set_iteration_loops( iteration_loops );
@@ -182,7 +182,7 @@ N_Qubit_Decomposition_Plywood::start_decomposition() {
         int max_inner_iterations_loc = 10000;
         cDecomp_custom.set_max_inner_iterations( max_inner_iterations_loc );    
     }
-    cDecomp_custom.compress_circuit();
+    cDecomp_custom.compress_circuit_PBC();
     std::map<std::string, int>&& gate_nums = cDecomp_custom.get_gate_nums();
 	bool Adaptives = false;
     for( auto it=gate_nums.begin(); it != gate_nums.end(); it++ ) {
