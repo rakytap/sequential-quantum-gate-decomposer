@@ -134,6 +134,12 @@ virtual void get_initial_circuit();
 */
 virtual void compress_circuit();
 
+
+/**
+@brief Compress the circuit with PBC
+*/
+virtual void compress_circuit_PBC();
+
 /**
 @brief Finalize the circuit
 */
@@ -160,6 +166,11 @@ Gates_block* determine_initial_gate_structure(Matrix_real& optimized_parameters_
 */
 Gates_block* compress_gate_structure( Gates_block* gate_structure, int uncompressed_iter_num );
 
+/**
+@brief Call to run compression iterations on the circuit. (Trying to remove a CRY block in each iteration)
+@param gate_structure The gate structure to be optimized
+*/
+Gates_block* compress_gate_structure_PBC( Gates_block* gate_structure, int uncompressed_iter_num );
 /**
 @brief Call to run compression iterations on the circuit. (Trying to remove a CRY block in each iteration)
 @param gate_structure The gate structure to be optimized
