@@ -37,7 +37,6 @@ def tdag_max_partitions(c, max_qubit, use_gtqcp=False):
     L = []
     topo = _get_topo_order(g, rg, S)
     start_qubit = _get_starting_gates(topo, g, gate_to_qubit)
-    deps = {x : set(gate_to_qubit[x]) for x in g}
     while g:
         groups = _enumerate_groups(c, g, gate_to_qubit, start_qubit, max_qubit, use_gtqcp)
         L.append(_remove_best_partition(groups, g, rg, gate_to_qubit, S, start_qubit, topo))
