@@ -19,7 +19,7 @@ def _get_topo_order(g, rg, S):
             if not rg[m]:
                 S.add(m)
         L.append(n)
-    return L
+    return { x: i for i, x in enumerate(L) }
 
 def _get_starting_gates(L, g, gate_to_qubit):
     start_qubit = {}
@@ -135,8 +135,12 @@ def _remove_best_partition(qubit_results, g, rg, gate_to_qubit, S, start_qubit, 
         gate_info.append(gates)
     best_part = max(gate_info, key=lambda x: len(x))
     
+    d = { qubit : set() for gate in best_part for qubit in gate_to_qubit[gate] }
     for gate in best_part:
         for child in g[gate]:
+            for qubit in gate_to_qubit[gate] & gate_to_qubit[child]:
+                if child not in best_part:
+                    d[qubit].add(child)
             rg[child].remove(gate)
         for child in rg[gate]:
             g[child].remove(gate)
@@ -148,9 +152,12 @@ def _remove_best_partition(qubit_results, g, rg, gate_to_qubit, S, start_qubit, 
     for m in rg:
         if not rg[m]:
             S.add(m)
-
-    start_qubit.clear()
-    start_qubit.update( _get_starting_gates(topo, g, gate_to_qubit) )
+    
+    for qubit in d:
+        if not d[qubit]:
+            del start_qubit[qubit]
+        else:
+            start_qubit[qubit] = min((x for x in d[qubit]), key=lambda y: topo[y])
 
     return best_part
 
